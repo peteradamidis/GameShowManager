@@ -16,6 +16,7 @@ interface SeatCardProps {
   blockIndex: number;
   seatIndex: number;
   isDragging?: boolean;
+  onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
 }
 
 const groupColors = [
@@ -28,7 +29,7 @@ const groupColors = [
   "border-yellow-500",
 ];
 
-export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false }: SeatCardProps) {
+export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEmptySeatClick }: SeatCardProps) {
   const isEmpty = !seat.contestantName;
   const groupColorClass = seat.groupId
     ? groupColors[parseInt(seat.groupId.replace(/\D/g, "")) % groupColors.length]
@@ -37,14 +38,21 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false }: Se
   // Extract seat label from ID (e.g., "A1", "B3")
   const seatLabel = seat.id.split('-').pop() || '';
 
+  const handleClick = () => {
+    if (isEmpty && onEmptySeatClick) {
+      onEmptySeatClick(blockIndex + 1, seatLabel);
+    }
+  };
+
   return (
     <Card
       className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity ${
         isEmpty
-          ? "border-dashed bg-muted/30"
+          ? "border-dashed bg-muted/30 cursor-pointer hover-elevate"
           : `${groupColorClass} border-2`
       } ${isDragging ? "opacity-50" : ""}`}
       data-testid={`seat-${blockIndex}-${seatIndex}`}
+      onClick={handleClick}
     >
       {isEmpty ? (
         <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-1">

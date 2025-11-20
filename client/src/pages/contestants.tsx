@@ -22,11 +22,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const BLOCKS = [1, 2, 3, 4, 5, 6, 7];
+const SEAT_ROWS = [
+  { label: 'A', count: 5 },
+  { label: 'B', count: 5 },
+  { label: 'C', count: 4 },
+  { label: 'D', count: 4 },
+  { label: 'E', count: 4 },
+];
+
 export default function Contestants() {
   const { toast } = useToast();
   const [selectedContestants, setSelectedContestants] = useState<string[]>([]);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
+  const [selectedBlock, setSelectedBlock] = useState<string>("");
+  const [selectedSeat, setSelectedSeat] = useState<string>("");
 
   // Fetch contestants
   const { data: contestants = [], isLoading: loadingContestants, refetch: refetchContestants } = useQuery<Contestant[]>({
@@ -65,29 +76,82 @@ export default function Contestants() {
     });
   };
 
-  const handleAssignToRecordDay = async () => {
-    if (!selectedRecordDay || selectedContestants.length === 0) return;
+  // Fetch occupied seats for the selected record day
+  const { data: occupiedSeats = [] } = useQuery({
+    queryKey: ['/api/seat-assignments', selectedRecordDay],
+    enabled: !!selectedRecordDay,
+    queryFn: async () => {
+      const response = await fetch(`/api/seat-assignments/${selectedRecordDay}`);
+      if (!response.ok) {
+        if (response.status === 404) return [];
+        throw new Error('Failed to fetch seat assignments');
+      }
+      return response.json();
+    },
+  });
+
+  // Generate available seats for selected block
+  const availableSeats = selectedBlock ? (() => {
+    const blockNum = parseInt(selectedBlock);
+    const occupied = new Set(
+      occupiedSeats
+        .filter((a: any) => a.blockNumber === blockNum)
+        .map((a: any) => a.seatLabel)
+    );
+    
+    const allSeats: string[] = [];
+    SEAT_ROWS.forEach(row => {
+      for (let i = 1; i <= row.count; i++) {
+        const seatLabel = `${row.label}${i}`;
+        if (!occupied.has(seatLabel)) {
+          allSeats.push(seatLabel);
+        }
+      }
+    });
+    return allSeats;
+  })() : [];
+
+  const handleAssignToSeat = async () => {
+    if (!selectedRecordDay || !selectedBlock || !selectedSeat || selectedContestants.length === 0) return;
 
     try {
-      // Add contestants to the selected record day
-      await apiRequest('POST', `/api/record-days/${selectedRecordDay}/contestants`, {
-        contestantIds: selectedContestants,
-      });
+      // For single contestant, assign to specific seat
+      if (selectedContestants.length === 1) {
+        await apiRequest('POST', '/api/seat-assignments', {
+          recordDayId: selectedRecordDay,
+          contestantId: selectedContestants[0],
+          blockNumber: parseInt(selectedBlock),
+          seatLabel: selectedSeat,
+        });
+        
+        toast({
+          title: "Contestant assigned",
+          description: `Assigned to Block ${selectedBlock}, Seat ${selectedSeat}`,
+        });
+      } else {
+        // For multiple contestants, mark as assigned to record day (will auto-assign later)
+        await apiRequest('POST', `/api/record-days/${selectedRecordDay}/contestants`, {
+          contestantIds: selectedContestants,
+        });
+        
+        toast({
+          title: "Contestants assigned to record day",
+          description: `${selectedContestants.length} contestants assigned. Use Auto-Assign to seat them.`,
+        });
+      }
 
       await refetchContestants();
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', selectedRecordDay] });
       
-      toast({
-        title: "Contestants assigned",
-        description: `${selectedContestants.length} contestant(s) assigned to record day.`,
-      });
-
       setAssignDialogOpen(false);
       setSelectedContestants([]);
       setSelectedRecordDay("");
+      setSelectedBlock("");
+      setSelectedSeat("");
     } catch (error) {
       toast({
         title: "Assignment failed",
-        description: "Could not assign contestants to record day.",
+        description: "Could not assign contestant(s).",
         variant: "destructive",
       });
     }
@@ -141,29 +205,74 @@ export default function Contestants() {
         />
       )}
 
-      {/* Assign to Record Day Dialog */}
+      {/* Assign to Seat Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent data-testid="dialog-assign-record-day">
+        <DialogContent data-testid="dialog-assign-seat">
           <DialogHeader>
-            <DialogTitle>Assign to Record Day</DialogTitle>
+            <DialogTitle>Assign to Seat</DialogTitle>
             <DialogDescription>
-              Select a record day to assign {selectedContestants.length} contestant(s) to.
+              {selectedContestants.length === 1 
+                ? "Select record day, block, and seat for this contestant."
+                : `Assigning ${selectedContestants.length} contestants to record day.`}
             </DialogDescription>
           </DialogHeader>
           
-          <div className="py-4">
-            <Select value={selectedRecordDay} onValueChange={setSelectedRecordDay}>
-              <SelectTrigger data-testid="select-record-day">
-                <SelectValue placeholder="Select a record day" />
-              </SelectTrigger>
-              <SelectContent>
-                {recordDays.map((day: any) => (
-                  <SelectItem key={day.id} value={day.id}>
-                    {new Date(day.date).toLocaleDateString()} - {day.status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Record Day</label>
+              <Select value={selectedRecordDay} onValueChange={setSelectedRecordDay}>
+                <SelectTrigger data-testid="select-record-day">
+                  <SelectValue placeholder="Select a record day" />
+                </SelectTrigger>
+                <SelectContent>
+                  {recordDays.map((day: any) => (
+                    <SelectItem key={day.id} value={day.id}>
+                      {new Date(day.date).toLocaleDateString()} - {day.status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedContestants.length === 1 && selectedRecordDay && (
+              <>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Block</label>
+                  <Select value={selectedBlock} onValueChange={setSelectedBlock}>
+                    <SelectTrigger data-testid="select-block">
+                      <SelectValue placeholder="Select a block" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BLOCKS.map(block => (
+                        <SelectItem key={block} value={block.toString()}>
+                          Block {block}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedBlock && (
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      Seat ({availableSeats.length} available)
+                    </label>
+                    <Select value={selectedSeat} onValueChange={setSelectedSeat}>
+                      <SelectTrigger data-testid="select-seat">
+                        <SelectValue placeholder="Select a seat" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableSeats.map(seat => (
+                          <SelectItem key={seat} value={seat}>
+                            {seat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           <DialogFooter>
@@ -171,11 +280,11 @@ export default function Contestants() {
               Cancel
             </Button>
             <Button 
-              onClick={handleAssignToRecordDay} 
-              disabled={!selectedRecordDay}
+              onClick={handleAssignToSeat} 
+              disabled={!selectedRecordDay || (selectedContestants.length === 1 && (!selectedBlock || !selectedSeat))}
               data-testid="button-confirm-assign"
             >
-              Assign Contestants
+              {selectedContestants.length === 1 ? "Assign to Seat" : "Assign to Record Day"}
             </Button>
           </DialogFooter>
         </DialogContent>

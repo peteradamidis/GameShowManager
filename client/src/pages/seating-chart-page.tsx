@@ -7,6 +7,22 @@ import { SeatData } from "@/components/seat-card";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Generate seats with the proper row structure
 const SEAT_ROWS = [
@@ -33,6 +49,10 @@ function generateEmptyBlocks(): SeatData[][] {
 
 export default function SeatingChartPage() {
   const { toast } = useToast();
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [selectedBlock, setSelectedBlock] = useState<number>(0);
+  const [selectedSeat, setSelectedSeat] = useState<string>("");
+  const [selectedContestant, setSelectedContestant] = useState<string>("");
   
   // Get record day ID from query parameter
   const searchParams = new URLSearchParams(window.location.search);
@@ -51,6 +71,23 @@ export default function SeatingChartPage() {
       }
       return response.json();
     },
+  });
+
+  // Fetch available contestants (assigned to this record day but not yet seated)
+  const { data: availableContestants = [] } = useQuery({
+    queryKey: ['/api/contestants', 'available', recordDayId],
+    queryFn: async () => {
+      const response = await fetch('/api/contestants');
+      if (!response.ok) throw new Error('Failed to fetch contestants');
+      const allContestants = await response.json();
+      
+      // Filter to those assigned to this record day but not yet seated
+      const seatedIds = new Set((assignments || []).map((a: any) => a.contestantId));
+      return allContestants.filter((c: any) => 
+        c.availabilityStatus === 'assigned' && !seatedIds.has(c.id)
+      );
+    },
+    enabled: !!assignments,
   });
 
   // Build seat data from assignments
@@ -119,6 +156,43 @@ export default function SeatingChartPage() {
     }
   };
 
+  const handleEmptySeatClick = (blockNumber: number, seatLabel: string) => {
+    setSelectedBlock(blockNumber);
+    setSelectedSeat(seatLabel);
+    setSelectedContestant("");
+    setAssignDialogOpen(true);
+  };
+
+  const handleAssignContestant = async () => {
+    if (!selectedContestant || !selectedBlock || !selectedSeat) return;
+
+    try {
+      await apiRequest('POST', '/api/seat-assignments', {
+        recordDayId,
+        contestantId: selectedContestant,
+        blockNumber: selectedBlock,
+        seatLabel: selectedSeat,
+      });
+      
+      await refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants', 'available', recordDayId] });
+      
+      toast({
+        title: "Contestant assigned",
+        description: `Assigned to Block ${selectedBlock}, Seat ${selectedSeat}`,
+      });
+
+      setAssignDialogOpen(false);
+      setSelectedContestant("");
+    } catch (error) {
+      toast({
+        title: "Assignment failed",
+        description: "Could not assign contestant to seat.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -176,8 +250,55 @@ export default function SeatingChartPage() {
           recordDayId={recordDayId} 
           initialSeats={seats}
           onRefreshNeeded={refetch}
+          onEmptySeatClick={handleEmptySeatClick}
         />
       )}
+
+      {/* Assign Contestant to Empty Seat Dialog */}
+      <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+        <DialogContent data-testid="dialog-assign-contestant-to-seat">
+          <DialogHeader>
+            <DialogTitle>Assign Contestant to Seat</DialogTitle>
+            <DialogDescription>
+              Select a contestant to assign to Block {selectedBlock}, Seat {selectedSeat}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            {availableContestants.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No available contestants. Assign contestants to this record day from the Contestants page first.
+              </p>
+            ) : (
+              <Select value={selectedContestant} onValueChange={setSelectedContestant}>
+                <SelectTrigger data-testid="select-contestant">
+                  <SelectValue placeholder="Select a contestant" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableContestants.map((contestant: any) => (
+                    <SelectItem key={contestant.id} value={contestant.id}>
+                      {contestant.name} ({contestant.age}, {contestant.gender})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAssignContestant} 
+              disabled={!selectedContestant || availableContestants.length === 0}
+              data-testid="button-confirm-seat-assign"
+            >
+              Assign to Seat
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

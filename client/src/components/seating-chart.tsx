@@ -25,16 +25,19 @@ interface SeatingChartProps {
   recordDayId: string;
   initialSeats?: SeatData[][];
   onRefreshNeeded?: () => void; // Callback to trigger data refetch from parent
+  onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
 }
 
 function SortableSeat({
   seat,
   blockIndex,
   seatIndex,
+  onEmptySeatClick,
 }: {
   seat: SeatData;
   blockIndex: number;
   seatIndex: number;
+  onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
 }) {
   const {
     attributes,
@@ -57,6 +60,7 @@ function SortableSeat({
         blockIndex={blockIndex}
         seatIndex={seatIndex}
         isDragging={isDragging}
+        onEmptySeatClick={onEmptySeatClick}
       />
     </div>
   );
@@ -75,12 +79,14 @@ function SeatingBlock({
   block, 
   blockIndex, 
   blockLabel,
-  reverseRows = false
+  reverseRows = false,
+  onEmptySeatClick,
 }: { 
   block: SeatData[]; 
   blockIndex: number;
   blockLabel: string;
   reverseRows?: boolean;
+  onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
 }) {
   const stats = calculateBlockStats(block);
 
@@ -125,6 +131,7 @@ function SeatingBlock({
                       seat={seat}
                       blockIndex={blockIndex}
                       seatIndex={absoluteSeatIdx}
+                      onEmptySeatClick={onEmptySeatClick}
                     />
                   );
                 })}
@@ -160,7 +167,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick }: SeatingChartProps) {
   const [blocks, setBlocks] = useState<SeatData[][]>(
     initialSeats || Array(7).fill(null).map((_, blockIdx) => 
       generateBlockSeats(recordDayId, blockIdx)
@@ -344,6 +351,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded }: Sea
                   blockIndex={idx}
                   blockLabel={`Block ${idx + 1} (Top)`}
                   reverseRows={true}
+                  onEmptySeatClick={onEmptySeatClick}
                 />
               ))}
             </div>
@@ -367,6 +375,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded }: Sea
                     blockIndex={originalIdx}
                     blockLabel={`Block ${originalIdx + 1} (Bottom)`}
                     reverseRows={false}
+                    onEmptySeatClick={onEmptySeatClick}
                   />
                 );
               })}
@@ -383,6 +392,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded }: Sea
                 block={standingBlock}
                 blockIndex={6}
                 blockLabel="Block 7 (Standing)"
+                onEmptySeatClick={onEmptySeatClick}
               />
             </div>
           </div>
