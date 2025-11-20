@@ -11,6 +11,8 @@ An automated system for managing TV game show contestants that imports applicant
    - Groups: automatically identified from "Attending With" column
    - Record Days: recording session management with status tracking
    - Seat Assignments: tracks contestant assignments to specific seats
+     - **Uniqueness constraints**: one contestant per record day, one contestant per seat
+     - Prevents duplicate bookings at database level
 
 2. **Excel Import**
    - Parses Cast It Reach exports
@@ -33,6 +35,10 @@ An automated system for managing TV game show contestants that imports applicant
    - PUT /api/record-days/:id/status - Status updates
    - POST /api/auto-assign - Intelligent seat assignment
    - GET/PUT/DELETE /api/seat-assignments - Seat management
+     - **POST /api/seat-assignments - Manual seat assignment with duplicate prevention**
+       - Validates contestant not already seated in record day
+       - Validates seat not already occupied
+       - Returns 409 on conflicts with clear error messages
    - **POST /api/seat-assignments/swap - Atomic seat swapping with database transactions**
    - **POST /api/availability/send - Generate availability check tokens**
    - **GET /api/availability/token/:token - Fetch contestant context for public form (no auth)**
@@ -88,6 +94,10 @@ An automated system for managing TV game show contestants that imports applicant
   - Cross-block dragging (all 154 seats in single DnD context)
   - Drag contestant to another seat to swap positions
   - Drag to empty seats to move contestants
+  - **Click empty seat to assign any contestant**
+    - Shows all contestants not currently seated
+    - Derived from latest data (useMemo) - no staleness issues
+    - Database-level uniqueness constraints prevent duplicates
   - Optimistic UI updates for instant feedback
   - Single atomic API call per swap/move
   - Automatic UI revert on errors

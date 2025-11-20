@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, pgEnum, date } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, pgEnum, date, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -45,7 +45,12 @@ export const seatAssignments = pgTable("seat_assignments", {
   blockNumber: integer("block_number").notNull(), // 1-7
   seatLabel: text("seat_label").notNull(), // e.g., "A1", "B3"
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  // Ensure one contestant per record day
+  uniqueContestantPerDay: unique().on(table.recordDayId, table.contestantId),
+  // Ensure one contestant per seat
+  uniqueSeatPerDay: unique().on(table.recordDayId, table.blockNumber, table.seatLabel),
+}));
 
 // Availability Tokens table - stores unique tokens for availability check responses
 export const availabilityTokens = pgTable("availability_tokens", {

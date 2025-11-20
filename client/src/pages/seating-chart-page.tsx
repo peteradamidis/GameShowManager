@@ -214,11 +214,16 @@ export default function SeatingChartPage() {
       setAssignDialogOpen(false);
       setSelectedContestant("");
     } catch (error: any) {
+      // Refresh to get latest seat assignments
+      await refetch();
+      
+      const errorMessage = error?.message || "Could not assign contestant to seat.";
       toast({
         title: "Assignment failed",
-        description: error?.message || "Could not assign contestant to seat.",
+        description: errorMessage,
         variant: "destructive",
       });
+      // Keep dialog open so user can try a different contestant/seat
     }
   };
 
