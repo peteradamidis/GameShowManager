@@ -43,7 +43,7 @@ interface ContestantTableProps {
 
 const statusColors = {
   Pending: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  Available: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
+  Available: "bg-gray-500/10 text-gray-700 dark:text-gray-400",
   Assigned: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
   Invited: "bg-purple-500/10 text-purple-700 dark:text-purple-400",
 };
