@@ -307,9 +307,13 @@ export default function Contestants() {
 
           <div className="flex-1 min-w-[200px] max-w-xs">
             <label className="text-sm font-medium mb-2 block">Rating</label>
-            <Select value={filterRating} onValueChange={setFilterRating}>
+            <Select 
+              value={filterRating} 
+              onValueChange={setFilterRating}
+              disabled={uniqueRatings.length === 0}
+            >
               <SelectTrigger data-testid="select-filter-rating">
-                <SelectValue placeholder="All ratings" />
+                <SelectValue placeholder={uniqueRatings.length === 0 ? "No ratings available" : "All ratings"} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All ratings</SelectItem>
@@ -320,13 +324,22 @@ export default function Contestants() {
                 ))}
               </SelectContent>
             </Select>
+            {uniqueRatings.length === 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Ratings are assigned in Booking Master
+              </p>
+            )}
           </div>
 
           <div className="flex-1 min-w-[200px] max-w-xs">
             <label className="text-sm font-medium mb-2 block">Location</label>
-            <Select value={filterLocation} onValueChange={setFilterLocation}>
+            <Select 
+              value={filterLocation} 
+              onValueChange={setFilterLocation}
+              disabled={uniqueLocations.length === 0}
+            >
               <SelectTrigger data-testid="select-filter-location">
-                <SelectValue placeholder="All locations" />
+                <SelectValue placeholder={uniqueLocations.length === 0 ? "No locations available" : "All locations"} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All locations</SelectItem>
@@ -337,6 +350,11 @@ export default function Contestants() {
                 ))}
               </SelectContent>
             </Select>
+            {uniqueLocations.length === 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Locations are assigned in Booking Master
+              </p>
+            )}
           </div>
         </div>
 
