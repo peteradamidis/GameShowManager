@@ -516,14 +516,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check global ratio
       const totalAssigned = globalFemaleCount + globalMaleCount;
       const finalFemaleRatio = totalAssigned > 0 ? globalFemaleCount / totalAssigned : 0;
+      
+      // Calculate pool ratio
+      const poolFemaleCount = available.filter(c => c.gender === "Female").length;
+      const poolMaleCount = available.filter(c => c.gender === "Male").length;
+      const poolTotal = poolFemaleCount + poolMaleCount;
+      const poolFemaleRatio = poolTotal > 0 ? poolFemaleCount / poolTotal : 0;
 
-      if (finalFemaleRatio < TARGET_FEMALE_MIN || finalFemaleRatio > TARGET_FEMALE_MAX) {
+      // If pool itself doesn't meet requirements, be flexible
+      const poolMeetsRequirements = poolFemaleRatio >= TARGET_FEMALE_MIN && poolFemaleRatio <= TARGET_FEMALE_MAX;
+      
+      if (!poolMeetsRequirements) {
+        // Pool doesn't meet requirements - assign anyway but add warning
+        console.log(`Warning: Available pool has ${(poolFemaleRatio * 100).toFixed(1)}% female, outside target range of 60-70%. Proceeding with assignment.`);
+      } else if (finalFemaleRatio < TARGET_FEMALE_MIN || finalFemaleRatio > TARGET_FEMALE_MAX) {
+        // Pool meets requirements but assignment doesn't - this is an algorithm failure
         return res.status(400).json({
           error: `Could not achieve 60-70% female ratio. Final ratio: ${(finalFemaleRatio * 100).toFixed(1)}%`,
           availablePool: {
-            femaleCount: available.filter(c => c.gender === "Female").length,
-            maleCount: available.filter(c => c.gender === "Male").length,
-            total: available.length,
+            femaleCount: poolFemaleCount,
+            maleCount: poolMaleCount,
+            total: poolTotal,
+            femalePercentage: (poolFemaleRatio * 100).toFixed(1),
           },
           assigned: {
             femaleCount: globalFemaleCount,
@@ -590,7 +604,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             femaleCount: globalFemaleCount,
             maleCount: globalMaleCount,
             femalePercentage: (finalFemaleRatio * 100).toFixed(1),
-            targetRange: "60-70%"
+            targetRange: "60-70%",
+            meetsTarget: finalFemaleRatio >= TARGET_FEMALE_MIN && finalFemaleRatio <= TARGET_FEMALE_MAX,
+            warning: !poolMeetsRequirements ? `Available pool has ${(poolFemaleRatio * 100).toFixed(1)}% female, outside target range` : undefined,
           },
           blockStats: blocks.map(b => ({
             block: b.blockNumber,

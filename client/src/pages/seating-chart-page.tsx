@@ -126,9 +126,14 @@ export default function SeatingChartPage() {
       const demographics = result.demographics;
       const blockCount = result.blockStats?.length || 0;
       
+      const description = demographics.warning 
+        ? `⚠️ ${demographics.warning}. Assigned ${demographics.femaleCount + demographics.maleCount} contestants (${demographics.femalePercentage}% female).`
+        : `Assigned ${demographics.femaleCount + demographics.maleCount} contestants across ${blockCount} blocks. Gender ratio: ${demographics.femalePercentage}% female (target: ${demographics.targetRange})`;
+      
       toast({
-        title: "Auto-assign completed",
-        description: `Assigned ${demographics.femaleCount + demographics.maleCount} contestants across ${blockCount} blocks. Gender ratio: ${demographics.femalePercentage}% female (target: ${demographics.targetRange})`,
+        title: demographics.meetsTarget ? "Auto-assign completed" : "Auto-assign completed with warning",
+        description,
+        variant: demographics.meetsTarget ? "default" : "default",
       });
     } catch (error: any) {
       const errorMsg = error?.message || "Could not assign contestants to seats.";
