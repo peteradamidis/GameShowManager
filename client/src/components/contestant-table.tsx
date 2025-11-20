@@ -265,17 +265,19 @@ export function ContestantTable({
               )}
 
               {/* Medical Information */}
-              {contestantDetails.medicalInfo && (
-                <div>
-                  <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Medical Information</h3>
-                  <div className="flex items-start gap-3">
-                    <Heart className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <div className="flex-1">
+              <div>
+                <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Medical Information</h3>
+                <div className="flex items-start gap-3">
+                  <Heart className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                  <div className="flex-1">
+                    {contestantDetails.medicalInfo ? (
                       <p className="text-sm whitespace-pre-wrap">{contestantDetails.medicalInfo}</p>
-                    </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">No medical information provided</p>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
