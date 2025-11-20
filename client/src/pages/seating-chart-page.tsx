@@ -120,16 +120,21 @@ export default function SeatingChartPage() {
 
   const handleAutoAssign = async () => {
     try {
-      await apiRequest('POST', `/api/auto-assign/${recordDayId}`, {});
+      const result: any = await apiRequest('POST', `/api/auto-assign/${recordDayId}`, {});
       await refetch();
+      
+      const demographics = result.demographics;
+      const blockCount = result.blockStats?.length || 0;
+      
       toast({
         title: "Auto-assign completed",
-        description: "Contestants have been intelligently assigned to seats.",
+        description: `Assigned ${demographics.femaleCount + demographics.maleCount} contestants across ${blockCount} blocks. Gender ratio: ${demographics.femalePercentage}% female (target: ${demographics.targetRange})`,
       });
-    } catch (error) {
+    } catch (error: any) {
+      const errorMsg = error?.message || "Could not assign contestants to seats.";
       toast({
         title: "Auto-assign failed",
-        description: "Could not assign contestants to seats.",
+        description: errorMsg,
         variant: "destructive",
       });
     }

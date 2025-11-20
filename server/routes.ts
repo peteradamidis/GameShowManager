@@ -319,9 +319,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Auto-assign seats with demographic balancing
-  app.post("/api/auto-assign", async (req, res) => {
+  app.post("/api/auto-assign/:recordDayId", async (req, res) => {
     try {
-      const { recordDayId } = req.body;
+      const { recordDayId } = req.params;
 
       if (!recordDayId) {
         return res.status(400).json({ error: "recordDayId is required" });
@@ -335,10 +335,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No available contestants to assign" });
       }
 
-      // Seat layout: 7 blocks, 22 seats each
+      // Configuration
       const BLOCKS = 7;
       const SEATS_PER_BLOCK = 22;
-      const TOTAL_SEATS = BLOCKS * SEATS_PER_BLOCK;
+      const TARGET_FEMALE_RATIO = 0.65; // Midpoint of 60-70%
       const TARGET_FEMALE_MIN = 0.60;
       const TARGET_FEMALE_MAX = 0.70;
       const ROWS = [
@@ -349,145 +349,217 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { label: "E", count: 4 },
       ];
 
-      // Group contestants by their groupId
-      const groupedContestants = new Map<string | null, typeof available>();
+      // PHASE 1: Create Group Bundles
+      type GroupBundle = {
+        id: string;
+        contestants: typeof available;
+        size: number;
+        femaleCount: number;
+        maleCount: number;
+        femaleRatio: number;
+        totalAge: number;
+        meanAge: number;
+      };
+
+      const groupMap = new Map<string, typeof available>();
       available.forEach((contestant) => {
-        const key = contestant.groupId || contestant.id;
-        if (!groupedContestants.has(key)) {
-          groupedContestants.set(key, []);
+        const key = contestant.groupId || `solo-${contestant.id}`;
+        if (!groupMap.has(key)) {
+          groupMap.set(key, []);
         }
-        groupedContestants.get(key)!.push(contestant);
+        groupMap.get(key)!.push(contestant);
       });
 
-      const groups = Array.from(groupedContestants.values());
-      
-      // Separate groups by gender composition
-      const femaleGroups = groups.filter(g => g.every(c => c.gender === "Female"));
-      const maleGroups = groups.filter(g => g.every(c => c.gender === "Male"));
-      const mixedGroups = groups.filter(g => !femaleGroups.includes(g) && !maleGroups.includes(g));
+      const bundles: GroupBundle[] = Array.from(groupMap.entries()).map(([id, contestants]) => {
+        const femaleCount = contestants.filter(c => c.gender === "Female").length;
+        const maleCount = contestants.filter(c => c.gender === "Male").length;
+        const totalAge = contestants.reduce((sum, c) => sum + c.age, 0);
+        return {
+          id,
+          contestants,
+          size: contestants.length,
+          femaleCount,
+          maleCount,
+          femaleRatio: femaleCount / contestants.length,
+          totalAge,
+          meanAge: totalAge / contestants.length,
+        };
+      });
 
-      // Sort each category by size (larger groups first)
-      femaleGroups.sort((a, b) => b.length - a.length);
-      maleGroups.sort((a, b) => b.length - a.length);
-      mixedGroups.sort((a, b) => b.length - a.length);
+      // Sort bundles: larger groups first (easier to place early)
+      bundles.sort((a, b) => b.size - a.size);
 
-      // PHASE 1: Build assignment plan in-memory with comprehensive search
+      // PHASE 2: Initialize Block States
+      type BlockState = {
+        blockNumber: number;
+        seatsUsed: number;
+        femaleCount: number;
+        maleCount: number;
+        totalAge: number;
+        ageCount: number;
+        meanAge: number;
+        bundles: string[];
+      };
+
+      const blocks: BlockState[] = Array.from({ length: BLOCKS }, (_, i) => ({
+        blockNumber: i + 1,
+        seatsUsed: 0,
+        femaleCount: 0,
+        maleCount: 0,
+        totalAge: 0,
+        ageCount: 0,
+        meanAge: 0,
+        bundles: [],
+      }));
+
+      // Global tracking
+      let globalFemaleCount = 0;
+      let globalMaleCount = 0;
+      let globalTotalAge = 0;
+      let globalAgeCount = 0;
+
+      // PHASE 3: Greedy Assignment with Scoring
+      const assignments: { bundle: GroupBundle; blockNumber: number }[] = [];
+
+      for (const bundle of bundles) {
+        // Find feasible blocks (enough capacity)
+        const feasibleBlocks = blocks.filter(
+          (block) => block.seatsUsed + bundle.size <= SEATS_PER_BLOCK
+        );
+
+        if (feasibleBlocks.length === 0) {
+          console.log(`Warning: Could not place group ${bundle.id} (size ${bundle.size}) - no block has capacity`);
+          continue; // Skip this bundle
+        }
+
+        // Score each feasible block
+        type BlockScore = {
+          block: BlockState;
+          score: number;
+        };
+
+        const scored: BlockScore[] = feasibleBlocks.map((block) => {
+          // Simulate adding bundle to block
+          const newSeatsUsed = block.seatsUsed + bundle.size;
+          const newFemaleCount = block.femaleCount + bundle.femaleCount;
+          const newMaleCount = block.maleCount + bundle.maleCount;
+          const newTotal = newFemaleCount + newMaleCount;
+          const newFemaleRatio = newTotal > 0 ? newFemaleCount / newTotal : 0;
+          const newTotalAge = block.totalAge + bundle.totalAge;
+          const newAgeCount = block.ageCount + bundle.size;
+          const newMeanAge = newAgeCount > 0 ? newTotalAge / newAgeCount : 0;
+
+          // Simulate global state
+          const simGlobalFemale = globalFemaleCount + bundle.femaleCount;
+          const simGlobalMale = globalMaleCount + bundle.maleCount;
+          const simGlobalTotal = simGlobalFemale + simGlobalMale;
+          const simGlobalRatio = simGlobalTotal > 0 ? simGlobalFemale / simGlobalTotal : 0;
+
+          // Calculate global mean age
+          const simGlobalTotalAge = globalTotalAge + bundle.totalAge;
+          const simGlobalAgeCount = globalAgeCount + bundle.size;
+          const simGlobalMeanAge = simGlobalAgeCount > 0 ? simGlobalTotalAge / simGlobalAgeCount : 0;
+
+          // Scoring components (lower is better)
+          let score = 0;
+
+          // 1. Gender penalty - quadratic distance from target
+          const genderDeviation = Math.abs(newFemaleRatio - TARGET_FEMALE_RATIO);
+          score += genderDeviation * genderDeviation * 1000;
+
+          // 2. Global ratio constraint - heavy penalty if violating
+          if (simGlobalRatio < TARGET_FEMALE_MIN || simGlobalRatio > TARGET_FEMALE_MAX) {
+            score += 10000; // Heavy penalty for violating global constraint
+          }
+
+          // 3. Age deviation penalty - prefer blocks with similar age
+          const ageDeviation = Math.abs(newMeanAge - simGlobalMeanAge);
+          score += ageDeviation * 2;
+
+          // 4. Capacity utilization bonus - prefer filling blocks
+          const utilizationRatio = newSeatsUsed / SEATS_PER_BLOCK;
+          score -= utilizationRatio * 50; // Negative = bonus
+
+          // 5. Balance penalty - avoid very skewed blocks
+          if (newTotal > 5) { // Only check if meaningful sample size
+            if (newFemaleRatio < 0.3 || newFemaleRatio > 0.9) {
+              score += 500; // Penalty for very skewed block
+            }
+          }
+
+          return { block, score };
+        });
+
+        // Pick best block (lowest score)
+        scored.sort((a, b) => a.score - b.score);
+        const bestBlock = scored[0].block;
+
+        // Assign bundle to this block
+        assignments.push({ bundle, blockNumber: bestBlock.blockNumber });
+
+        // Update block state
+        bestBlock.seatsUsed += bundle.size;
+        bestBlock.femaleCount += bundle.femaleCount;
+        bestBlock.maleCount += bundle.maleCount;
+        bestBlock.totalAge += bundle.totalAge;
+        bestBlock.ageCount += bundle.size;
+        bestBlock.meanAge = bestBlock.ageCount > 0 ? bestBlock.totalAge / bestBlock.ageCount : 0;
+        bestBlock.bundles.push(bundle.id);
+
+        // Update global state
+        globalFemaleCount += bundle.femaleCount;
+        globalMaleCount += bundle.maleCount;
+        globalTotalAge += bundle.totalAge;
+        globalAgeCount += bundle.size;
+      }
+
+      // Check global ratio
+      const totalAssigned = globalFemaleCount + globalMaleCount;
+      const finalFemaleRatio = totalAssigned > 0 ? globalFemaleCount / totalAssigned : 0;
+
+      if (finalFemaleRatio < TARGET_FEMALE_MIN || finalFemaleRatio > TARGET_FEMALE_MAX) {
+        return res.status(400).json({
+          error: `Could not achieve 60-70% female ratio. Final ratio: ${(finalFemaleRatio * 100).toFixed(1)}%`,
+          availablePool: {
+            femaleCount: available.filter(c => c.gender === "Female").length,
+            maleCount: available.filter(c => c.gender === "Male").length,
+            total: available.length,
+          },
+          assigned: {
+            femaleCount: globalFemaleCount,
+            maleCount: globalMaleCount,
+            total: totalAssigned,
+            femalePercentage: (finalFemaleRatio * 100).toFixed(1),
+          },
+        });
+      }
+
+      // PHASE 4: Generate seat assignments
       type PlanItem = {
         contestant: typeof available[0];
         blockNumber: number;
         seatLabel: string;
       };
 
-      // Calculate demographics
-      const totalFemales = available.filter(c => c.gender === "Female").length;
-      const totalMales = available.filter(c => c.gender === "Male").length;
-      const totalAvailable = available.length;
-
-      // All groups to consider
-      const allGroups = [...mixedGroups, ...femaleGroups, ...maleGroups];
+      const plan: PlanItem[] = [];
       
-      // Function to try building a plan with a specific group ordering
-      const tryBuildPlan = (groupOrder: typeof allGroups): PlanItem[] | null => {
-        const plan: PlanItem[] = [];
-        let currentBlock = 1;
-        let currentSeatInBlock = 0;
-        let femaleCount = 0;
-        let maleCount = 0;
+      // For each block, assign seats to bundles
+      for (const block of blocks) {
+        const blockAssignments = assignments.filter(a => a.blockNumber === block.blockNumber);
+        let seatIndex = 0;
 
-        for (const group of groupOrder) {
-          // Check capacity
-          if (plan.length + group.length > TOTAL_SEATS) continue;
-
-          // Check block capacity
-          if (currentSeatInBlock + group.length > SEATS_PER_BLOCK) {
-            currentBlock++;
-            currentSeatInBlock = 0;
-            if (currentBlock > BLOCKS) break;
-          }
-
-          // Add group to plan
-          for (const contestant of group) {
-            const seatLabel = getSeatLabel(currentSeatInBlock, ROWS);
+        for (const { bundle } of blockAssignments) {
+          for (const contestant of bundle.contestants) {
+            const seatLabel = getSeatLabel(seatIndex, ROWS);
             plan.push({
               contestant,
-              blockNumber: currentBlock,
+              blockNumber: block.blockNumber,
               seatLabel,
             });
-
-            if (contestant.gender === "Female") femaleCount++;
-            else if (contestant.gender === "Male") maleCount++;
-            currentSeatInBlock++;
+            seatIndex++;
           }
         }
-
-        // Check if final ratio meets requirements
-        const total = plan.length;
-        if (total === 0) return null;
-        
-        const femaleRatio = femaleCount / total;
-        if (femaleRatio >= TARGET_FEMALE_MIN && femaleRatio <= TARGET_FEMALE_MAX) {
-          return plan;
-        }
-
-        return null;
-      };
-
-      // Helper to shuffle array
-      const shuffle = <T>(array: T[]): T[] => {
-        const result = [...array];
-        for (let i = result.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [result[i], result[j]] = [result[j], result[i]];
-        }
-        return result;
-      };
-
-      // Try to find a valid plan
-      let bestPlan: PlanItem[] | null = null;
-
-      // Strategy 1: Deterministic orderings
-      const deterministicStrategies = [
-        [...mixedGroups, ...femaleGroups, ...maleGroups],
-        [...mixedGroups, ...maleGroups, ...femaleGroups],
-        [...femaleGroups, ...mixedGroups, ...maleGroups],
-        [...femaleGroups, ...maleGroups, ...mixedGroups],
-        [...maleGroups, ...mixedGroups, ...femaleGroups],
-        [...maleGroups, ...femaleGroups, ...mixedGroups],
-      ];
-
-      for (const strategy of deterministicStrategies) {
-        bestPlan = tryBuildPlan(strategy);
-        if (bestPlan) break;
       }
-
-      // Strategy 2: Random shuffles if deterministic failed
-      if (!bestPlan) {
-        const MAX_RANDOM_ATTEMPTS = 50;
-        for (let i = 0; i < MAX_RANDOM_ATTEMPTS && !bestPlan; i++) {
-          const shuffled = shuffle(allGroups);
-          bestPlan = tryBuildPlan(shuffled);
-        }
-      }
-
-      if (!bestPlan) {
-        return res.status(400).json({
-          error: `Could not find a seating arrangement that meets the 60-70% female demographic requirement while keeping groups together.`,
-          availablePool: {
-            femaleCount: totalFemales,
-            maleCount: totalMales,
-            total: totalAvailable,
-            femalePercentage: totalAvailable > 0 ? ((totalFemales / totalAvailable) * 100).toFixed(1) : "0",
-          },
-          target: "60-70%",
-          suggestion: "Try adjusting the available contestant pool or relaxing group constraints."
-        });
-      }
-
-      const plan = bestPlan;
-      const assignedFemales = plan.filter(p => p.contestant.gender === "Female").length;
-      const assignedMales = plan.filter(p => p.contestant.gender === "Male").length;
-      const totalAssigned = plan.length;
-      const finalFemaleRatio = assignedFemales / totalAssigned;
 
       // PHASE 2: Persist the plan to database with transaction-like semantics
       const createdAssignments: any[] = [];
@@ -515,11 +587,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: `Assigned ${totalAssigned} contestants to seats`,
           assignments: createdAssignments,
           demographics: {
-            femaleCount: assignedFemales,
-            maleCount: assignedMales,
+            femaleCount: globalFemaleCount,
+            maleCount: globalMaleCount,
             femalePercentage: (finalFemaleRatio * 100).toFixed(1),
             targetRange: "60-70%"
-          }
+          },
+          blockStats: blocks.map(b => ({
+            block: b.blockNumber,
+            seats: b.seatsUsed,
+            females: b.femaleCount,
+            males: b.maleCount,
+            femaleRatio: b.femaleCount + b.maleCount > 0 ? (b.femaleCount / (b.femaleCount + b.maleCount) * 100).toFixed(1) + '%' : 'N/A',
+            meanAge: b.meanAge.toFixed(1),
+          })).filter(b => b.seats > 0)
         });
       } catch (persistError: any) {
         // If persistence fails, attempt cleanup (best effort)
