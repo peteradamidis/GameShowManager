@@ -1177,7 +1177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Generate cryptographically strong token
-        const token = randomBytes(32).toString('hex');
+        const token = crypto.randomBytes(32).toString('hex');
         
         // Token expires in 30 days
         const expiresAt = new Date();

@@ -14,6 +14,7 @@ import AvailabilityManagement from "@/pages/availability-management";
 import ReschedulePage from "@/pages/reschedule";
 import Settings from "@/pages/settings";
 import AvailabilityResponsePage from "@/pages/availability-response-page";
+import BookingConfirmationPage from "@/pages/booking-confirmation-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/reschedule" component={ReschedulePage} />
       <Route path="/settings" component={Settings} />
       <Route path="/availability/respond/:token" component={AvailabilityResponsePage} />
+      <Route path="/booking-confirmation/:token" component={BookingConfirmationPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -35,7 +37,7 @@ function Router() {
 
 export default function App() {
   const [location] = useLocation();
-  const isPublicRoute = location.startsWith('/availability/respond/');
+  const isPublicRoute = location.startsWith('/availability/respond/') || location.startsWith('/booking-confirmation/');
   
   const style = {
     "--sidebar-width": "16rem",
