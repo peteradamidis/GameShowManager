@@ -326,6 +326,11 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         );
       }
 
+      // Trigger refetch to get fresh data from server
+      if (onRefreshNeeded) {
+        await onRefreshNeeded();
+      }
+
       toast({
         title: "Seats updated",
         description: `${sourceSeat.seat.contestantName} moved to ${targetLocation.seatLabel}${targetSeat.seat.contestantName ? `, ${targetSeat.seat.contestantName} moved to ${sourceLocation.seatLabel}` : ''}`,
