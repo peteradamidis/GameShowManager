@@ -1,9 +1,12 @@
 import { SeatingChart } from "@/components/seating-chart";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, RotateCcw, Save } from "lucide-react";
+import { Wand2, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SeatData } from "@/components/seat-card";
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "wouter";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 // Generate seats with the proper row structure
 const SEAT_ROWS = [
@@ -14,49 +17,106 @@ const SEAT_ROWS = [
   { label: 'E', count: 4 },
 ];
 
-function generateMockBlock(blockIdx: number): SeatData[] {
-  const seats: SeatData[] = [];
-  SEAT_ROWS.forEach(row => {
-    for (let i = 1; i <= row.count; i++) {
-      const shouldFill = Math.random() > 0.3;
-      seats.push({
-        id: `block${blockIdx}-${row.label}${i}`,
-        ...(shouldFill && {
-          contestantName: `Person ${blockIdx * 20 + seats.length + 1}`,
-          age: Math.floor(Math.random() * 40) + 20,
-          gender: Math.random() > 0.4 ? ("Female" as const) : ("Male" as const),
-          groupId: Math.random() > 0.6 ? `GRP${Math.floor(Math.random() * 5) + 1}` : undefined,
-        }),
-      });
-    }
+function generateEmptyBlocks(): SeatData[][] {
+  return Array(7).fill(null).map((_, blockIdx) => {
+    const seats: SeatData[] = [];
+    SEAT_ROWS.forEach(row => {
+      for (let i = 1; i <= row.count; i++) {
+        seats.push({
+          id: `block${blockIdx}-${row.label}${i}`,
+        });
+      }
+    });
+    return seats;
   });
-  return seats;
 }
 
 export default function SeatingChartPage() {
   const { toast } = useToast();
+  
+  // Get record day ID from query parameter
+  const searchParams = new URLSearchParams(window.location.search);
+  const recordDayId = searchParams.get('day') || 'default';
 
-  const mockSeats: SeatData[][] = Array(7).fill(null).map((_, blockIdx) => generateMockBlock(blockIdx));
+  // Fetch seat assignments for this record day
+  const { data: assignments, isLoading, refetch } = useQuery({
+    queryKey: ['/api/seat-assignments', recordDayId],
+    queryFn: async () => {
+      const response = await fetch(`/api/seat-assignments/${recordDayId}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          return []; // No assignments yet
+        }
+        throw new Error('Failed to fetch seat assignments');
+      }
+      return response.json();
+    },
+  });
 
-  const handleAutoAssign = () => {
-    toast({
-      title: "Auto-assign started",
-      description: "Intelligently assigning contestants to seats with demographic balancing...",
+  // Build seat data from assignments
+  const seats: SeatData[][] = generateEmptyBlocks();
+  
+  if (assignments && Array.isArray(assignments)) {
+    assignments.forEach((assignment: any) => {
+      const blockIdx = assignment.blockNumber - 1;
+      if (blockIdx >= 0 && blockIdx < 7 && seats[blockIdx]) {
+        const seatIdx = seats[blockIdx].findIndex(seat => 
+          seat.id.endsWith(`-${assignment.seatLabel}`)
+        );
+        if (seatIdx !== -1) {
+          seats[blockIdx][seatIdx] = {
+            ...seats[blockIdx][seatIdx],
+            contestantName: assignment.contestantName,
+            age: assignment.age,
+            gender: assignment.gender,
+            groupId: assignment.groupId,
+            assignmentId: assignment.assignmentId,
+            contestantId: assignment.contestantId,
+          };
+        }
+      }
     });
+  }
+
+  const handleAutoAssign = async () => {
+    try {
+      await apiRequest('POST', `/api/auto-assign/${recordDayId}`, {});
+      await refetch();
+      toast({
+        title: "Auto-assign completed",
+        description: "Contestants have been intelligently assigned to seats.",
+      });
+    } catch (error) {
+      toast({
+        title: "Auto-assign failed",
+        description: "Could not assign contestants to seats.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleReset = () => {
-    toast({
-      title: "Seating reset",
-      description: "All seat assignments have been cleared.",
-    });
-  };
-
-  const handleSave = () => {
-    toast({
-      title: "Changes saved",
-      description: "Seating chart has been updated successfully.",
-    });
+  const handleReset = async () => {
+    try {
+      // Delete all seat assignments for this record day
+      if (assignments && Array.isArray(assignments)) {
+        await Promise.all(
+          assignments.map((a: any) => 
+            apiRequest('DELETE', `/api/seat-assignments/${a.assignmentId}`, {})
+          )
+        );
+      }
+      await refetch();
+      toast({
+        title: "Seating reset",
+        description: "All seat assignments have been cleared.",
+      });
+    } catch (error) {
+      toast({
+        title: "Reset failed",
+        description: "Could not clear seat assignments.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -79,10 +139,6 @@ export default function SeatingChartPage() {
           <Button variant="outline" onClick={handleAutoAssign} data-testid="button-auto-assign">
             <Wand2 className="h-4 w-4 mr-2" />
             Auto-Assign Seats
-          </Button>
-          <Button onClick={handleSave} data-testid="button-save-seating">
-            <Save className="h-4 w-4 mr-2" />
-            Save Changes
           </Button>
         </div>
       </div>
@@ -111,7 +167,17 @@ export default function SeatingChartPage() {
         </div>
       </div>
 
-      <SeatingChart recordDayId="dec-15-2025" initialSeats={mockSeats} />
+      {isLoading ? (
+        <div className="text-center py-12 text-muted-foreground">
+          Loading seating chart...
+        </div>
+      ) : (
+        <SeatingChart 
+          recordDayId={recordDayId} 
+          initialSeats={seats}
+          onRefreshNeeded={refetch}
+        />
+      )}
     </div>
   );
 }
