@@ -126,7 +126,7 @@ export default function SeatingChartPage() {
             age: assignment.age,
             gender: assignment.gender,
             groupId: assignment.groupId,
-            assignmentId: assignment.assignmentId,
+            assignmentId: assignment.id,
             contestantId: assignment.contestantId,
           };
         }
