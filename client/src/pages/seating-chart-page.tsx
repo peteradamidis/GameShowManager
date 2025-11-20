@@ -7,7 +7,7 @@ import { SeatData } from "@/components/seat-card";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -84,22 +84,18 @@ export default function SeatingChartPage() {
     enabled: !!recordDayId, // Only fetch when we have a valid record day ID
   });
 
-  // Fetch available contestants (assigned to this record day but not yet seated)
-  const { data: availableContestants = [] } = useQuery({
-    queryKey: ['/api/contestants', 'available', recordDayId],
-    queryFn: async () => {
-      const response = await fetch('/api/contestants');
-      if (!response.ok) throw new Error('Failed to fetch contestants');
-      const allContestants = await response.json();
-      
-      // Filter to those assigned to this record day but not yet seated
-      const seatedIds = new Set((assignments || []).map((a: any) => a.contestantId));
-      return allContestants.filter((c: any) => 
-        c.availabilityStatus === 'assigned' && !seatedIds.has(c.id)
-      );
-    },
-    enabled: !!assignments,
+  // Fetch all contestants
+  const { data: allContestants = [] } = useQuery({
+    queryKey: ['/api/contestants'],
   });
+
+  // Derive available contestants from assignments and all contestants
+  // This eliminates staleness issues since it's computed from latest data
+  const availableContestants = useMemo(() => {
+    if (!assignments || !allContestants || !Array.isArray(allContestants)) return [];
+    const seatedIds = new Set(assignments.map((a: any) => a.contestantId));
+    return allContestants.filter((c: any) => !seatedIds.has(c.id));
+  }, [assignments, allContestants]);
 
   // Show loading or error if no record day
   if (!recordDayId) {
@@ -207,8 +203,8 @@ export default function SeatingChartPage() {
         seatLabel: selectedSeat,
       });
       
+      // Refresh seat assignments (available contestants auto-updates via useMemo)
       await refetch();
-      queryClient.invalidateQueries({ queryKey: ['/api/contestants', 'available', recordDayId] });
       
       toast({
         title: "Contestant assigned",
@@ -217,10 +213,10 @@ export default function SeatingChartPage() {
 
       setAssignDialogOpen(false);
       setSelectedContestant("");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Assignment failed",
-        description: "Could not assign contestant to seat.",
+        description: error?.message || "Could not assign contestant to seat.",
         variant: "destructive",
       });
     }
@@ -300,7 +296,7 @@ export default function SeatingChartPage() {
           <div className="py-4">
             {availableContestants.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No available contestants. Assign contestants to this record day from the Contestants page first.
+                No available contestants. All contestants are already seated in this record day.
               </p>
             ) : (
               <Select value={selectedContestant} onValueChange={setSelectedContestant}>

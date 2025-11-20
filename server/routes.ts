@@ -275,6 +275,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
+      // Check for duplicate assignments
+      const existingAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
+      
+      // Check if contestant is already seated in this record day
+      const isContestantSeated = existingAssignments.some((a: any) => a.contestantId === contestantId);
+      if (isContestantSeated) {
+        return res.status(409).json({ error: "Contestant is already seated in this record day" });
+      }
+      
+      // Check if seat is already occupied
+      const isSeatOccupied = existingAssignments.some((a: any) => 
+        a.blockNumber === parseInt(blockNumber) && a.seatLabel === seatLabel
+      );
+      if (isSeatOccupied) {
+        return res.status(409).json({ error: "This seat is already occupied" });
+      }
+
       const assignment = await storage.createSeatAssignment({
         recordDayId,
         contestantId,
