@@ -65,7 +65,7 @@ const SEAT_ROWS = [
   { label: 'B', count: 5 },
   { label: 'C', count: 4 },
   { label: 'D', count: 4 },
-  { label: 'E', count: 2 },
+  { label: 'E', count: 4 },
 ];
 
 function SeatingBlock({ 
@@ -97,7 +97,7 @@ function SeatingBlock({
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium">{blockLabel}</CardTitle>
         <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-          <div>{stats.total}/20 filled</div>
+          <div>{stats.total}/22 filled</div>
           <Badge variant="secondary" className="text-xs w-fit">
             {stats.femalePercent}% F
           </Badge>

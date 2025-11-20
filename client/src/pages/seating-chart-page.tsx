@@ -11,7 +11,7 @@ const SEAT_ROWS = [
   { label: 'B', count: 5 },
   { label: 'C', count: 4 },
   { label: 'D', count: 4 },
-  { label: 'E', count: 2 },
+  { label: 'E', count: 4 },
 ];
 
 function generateMockBlock(blockIdx: number): SeatData[] {
@@ -106,7 +106,7 @@ export default function SeatingChartPage() {
             <span>Empty Seat</span>
           </div>
           <div className="ml-auto text-muted-foreground">
-            Rows: A-E (5-5-4-4-2 seats)
+            Rows: A-E (5-5-4-4-4 seats)
           </div>
         </div>
       </div>
