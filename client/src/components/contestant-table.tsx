@@ -44,7 +44,7 @@ interface ContestantTableProps {
 const StatusBadge = ({ status }: { status: string }) => {
   const colors: Record<string, string> = {
     pending: "border-amber-200 bg-amber-500/10 text-amber-700 dark:border-amber-800 dark:text-amber-400",
-    available: "border-gray-200 bg-gray-500/10 text-gray-700 dark:border-gray-800 dark:text-gray-400",
+    available: "border-green-200 bg-green-500/10 text-green-700 dark:border-green-800 dark:text-green-400",
     assigned: "border-blue-200 bg-blue-500/10 text-blue-700 dark:border-blue-800 dark:text-blue-400",
     invited: "border-purple-200 bg-purple-500/10 text-purple-700 dark:border-purple-800 dark:text-purple-400",
   };
