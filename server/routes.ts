@@ -177,36 +177,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { name: "Olivia Young", age: 24, gender: "Female" as const },
       ];
 
-      // Create contestants and identify groups
+      // Create contestants
       const createdContestants = [];
-      const groupMap = new Map<string, string>();
 
       for (const data of fakeContestants) {
         const contestant = await storage.createContestant({
           name: data.name,
           age: data.age,
           gender: data.gender,
-          availabilityStatus: "Available",
+          availabilityStatus: "available",
+          attendingWith: data.attendingWith,
         });
         createdContestants.push(contestant);
-
-        // Track group associations
-        if (data.attendingWith) {
-          const groupKey = [data.name, ...data.attendingWith.split(',').map(n => n.trim())].sort().join('|');
-          if (!groupMap.has(groupKey)) {
-            const group = await storage.createGroup({
-              name: `Group ${groupMap.size + 1}`,
-              memberNames: groupKey.split('|'),
-            });
-            groupMap.set(groupKey, group.id);
-          }
-        }
       }
 
       res.json({ 
-        message: `Generated ${createdContestants.length} fake contestants with ${groupMap.size} groups`,
+        message: `Generated ${createdContestants.length} fake contestants`,
         count: createdContestants.length,
-        groups: groupMap.size
       });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -252,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update each contestant's availability to show they're assigned
       const updates = contestantIds.map((contestantId: string) =>
-        storage.updateContestantAvailability(contestantId, "Assigned")
+        storage.updateContestantAvailability(contestantId, "assigned")
       );
       await Promise.all(updates);
 

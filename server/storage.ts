@@ -1,5 +1,6 @@
 import { drizzle } from "drizzle-orm/neon-serverless";
-import { Pool } from "@neondatabase/serverless";
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import ws from "ws";
 import { 
   contestants, 
   groups, 
@@ -15,6 +16,9 @@ import {
   type InsertSeatAssignment,
 } from "@shared/schema";
 import { eq, and, sql } from "drizzle-orm";
+
+// Configure WebSocket for server-side Neon connection
+neonConfig.webSocketConstructor = ws as any;
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle(pool);
