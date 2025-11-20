@@ -56,6 +56,7 @@ export interface IStorage {
   getSeatAssignmentsByRecordDay(recordDayId: string): Promise<SeatAssignment[]>;
   deleteSeatAssignment(id: string): Promise<void>;
   updateSeatAssignment(id: string, blockNumber: number, seatLabel: string): Promise<SeatAssignment | undefined>;
+  updateSeatAssignmentWorkflow(id: string, workflowFields: Partial<SeatAssignment>): Promise<SeatAssignment | undefined>;
   atomicSwapSeats(
     sourceId: string,
     targetId: string | null,
@@ -221,6 +222,44 @@ export class DbStorage implements IStorage {
     const [updated] = await db
       .update(seatAssignments)
       .set({ blockNumber, seatLabel })
+      .where(eq(seatAssignments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateSeatAssignmentWorkflow(
+    id: string,
+    workflowFields: Partial<SeatAssignment>
+  ): Promise<SeatAssignment | undefined> {
+    const allowedFields = {
+      firstNations: workflowFields.firstNations,
+      rating: workflowFields.rating,
+      location: workflowFields.location,
+      medicalQuestion: workflowFields.medicalQuestion,
+      criminalBankruptcy: workflowFields.criminalBankruptcy,
+      castingCategory: workflowFields.castingCategory,
+      notes: workflowFields.notes,
+      bookingEmailSent: workflowFields.bookingEmailSent,
+      confirmedRsvp: workflowFields.confirmedRsvp,
+      paperworkSent: workflowFields.paperworkSent,
+      paperworkReceived: workflowFields.paperworkReceived,
+      signedIn: workflowFields.signedIn,
+      otdNotes: workflowFields.otdNotes,
+      standbyReplacementSwaps: workflowFields.standbyReplacementSwaps,
+    };
+
+    const fieldsToUpdate = Object.fromEntries(
+      Object.entries(allowedFields).filter(([_, value]) => value !== undefined)
+    );
+
+    if (Object.keys(fieldsToUpdate).length === 0) {
+      const [existing] = await db.select().from(seatAssignments).where(eq(seatAssignments.id, id));
+      return existing;
+    }
+
+    const [updated] = await db
+      .update(seatAssignments)
+      .set(fieldsToUpdate)
       .where(eq(seatAssignments.id, id))
       .returning();
     return updated;

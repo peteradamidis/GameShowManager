@@ -765,6 +765,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update booking workflow fields for a seat assignment
+  app.patch("/api/seat-assignments/:id/workflow", async (req, res) => {
+    try {
+      const workflowFields = req.body;
+      const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, workflowFields);
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+      
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Delete seat assignment (remove from record day)
   app.delete("/api/seat-assignments/:id", async (req, res) => {
     try {
