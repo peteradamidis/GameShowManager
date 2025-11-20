@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertContestantSchema, insertRecordDaySchema, insertSeatAssignmentSchema } from "@shared/schema";
 import xlsx from "xlsx";
 import multer from "multer";
+import crypto from "crypto";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -782,7 +783,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.revokeContestantTokens(contestantId);
 
         // Generate new cryptographically strong token
-        const token = require('crypto').randomBytes(32).toString('hex');
+        const token = crypto.randomBytes(32).toString('hex');
         const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
 
         // Create token record

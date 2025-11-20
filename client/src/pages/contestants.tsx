@@ -49,8 +49,8 @@ export default function Contestants() {
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
   const [selectedBlock, setSelectedBlock] = useState<string>("");
   const [selectedSeat, setSelectedSeat] = useState<string>("");
-  const [filterRecordDayId, setFilterRecordDayId] = useState<string>("");
-  const [filterResponseValue, setFilterResponseValue] = useState<string>("");
+  const [filterRecordDayId, setFilterRecordDayId] = useState<string>("all");
+  const [filterResponseValue, setFilterResponseValue] = useState<string>("all");
 
   // Fetch all contestants
   const { data: contestants = [], isLoading: loadingContestants, refetch: refetchContestants } = useQuery<Contestant[]>({
@@ -69,9 +69,9 @@ export default function Contestants() {
   });
 
   // Determine which contestants to display
-  const displayedContestants = filterRecordDayId 
+  const displayedContestants = filterRecordDayId && filterRecordDayId !== "all"
     ? filteredAvailability
-        .filter(item => !filterResponseValue || item.responseValue === filterResponseValue)
+        .filter(item => !filterResponseValue || filterResponseValue === "all" || item.responseValue === filterResponseValue)
         .map(item => item.contestant)
     : contestants;
 
@@ -235,13 +235,13 @@ export default function Contestants() {
           </label>
           <Select value={filterRecordDayId} onValueChange={(value) => {
             setFilterRecordDayId(value);
-            setFilterResponseValue("");
+            setFilterResponseValue("all");
           }}>
             <SelectTrigger data-testid="select-filter-record-day">
               <SelectValue placeholder="All contestants" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All contestants</SelectItem>
+              <SelectItem value="all">All contestants</SelectItem>
               {recordDays.map((day: any) => (
                 <SelectItem key={day.id} value={day.id}>
                   {new Date(day.date).toLocaleDateString('en-US', { 
@@ -256,7 +256,7 @@ export default function Contestants() {
           </Select>
         </div>
 
-        {filterRecordDayId && (
+        {filterRecordDayId && filterRecordDayId !== "all" && (
           <div className="flex-1 max-w-xs">
             <label className="text-sm font-medium mb-2 block">Response</label>
             <Select value={filterResponseValue} onValueChange={setFilterResponseValue}>
@@ -264,7 +264,7 @@ export default function Contestants() {
                 <SelectValue placeholder="All responses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All responses</SelectItem>
+                <SelectItem value="all">All responses</SelectItem>
                 <SelectItem value="yes">Yes</SelectItem>
                 <SelectItem value="maybe">Maybe</SelectItem>
                 <SelectItem value="no">No</SelectItem>
@@ -274,12 +274,12 @@ export default function Contestants() {
           </div>
         )}
 
-        {filterRecordDayId && (
+        {filterRecordDayId && filterRecordDayId !== "all" && (
           <Button 
             variant="outline" 
             onClick={() => {
-              setFilterRecordDayId("");
-              setFilterResponseValue("");
+              setFilterRecordDayId("all");
+              setFilterResponseValue("all");
             }}
             data-testid="button-clear-filter"
           >
@@ -290,11 +290,11 @@ export default function Contestants() {
       </div>
 
       {/* Results Summary */}
-      {filterRecordDayId && (
+      {filterRecordDayId && filterRecordDayId !== "all" && (
         <div className="flex items-center gap-2">
           <Badge variant="secondary" data-testid="badge-filter-count">
             {displayedContestants.length} contestant{displayedContestants.length !== 1 ? 's' : ''} 
-            {filterResponseValue && ` (${filterResponseValue})`}
+            {filterResponseValue && filterResponseValue !== "all" && ` (${filterResponseValue})`}
           </Badge>
           <span className="text-sm text-muted-foreground">
             for {recordDays.find((d: any) => d.id === filterRecordDayId)?.date && 

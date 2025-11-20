@@ -54,12 +54,9 @@ export default function AvailabilityManagement() {
 
   const sendMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("/api/availability/send", {
-        method: "POST",
-        body: JSON.stringify({
-          contestantIds: Array.from(selectedContestants),
-          recordDayIds: Array.from(selectedRecordDays),
-        }),
+      return apiRequest("POST", "/api/availability/send", {
+        contestantIds: Array.from(selectedContestants),
+        recordDayIds: Array.from(selectedRecordDays),
       });
     },
     onSuccess: (data: any) => {
