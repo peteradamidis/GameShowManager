@@ -17,6 +17,7 @@ interface SeatCardProps {
   seatIndex: number;
   isDragging?: boolean;
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
+  onOccupiedSeatClick?: (contestantId: string) => void;
 }
 
 const groupColors = [
@@ -29,7 +30,7 @@ const groupColors = [
   "border-yellow-500",
 ];
 
-export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEmptySeatClick }: SeatCardProps) {
+export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEmptySeatClick, onOccupiedSeatClick }: SeatCardProps) {
   const isEmpty = !seat.contestantName;
   const groupColorClass = seat.groupId
     ? groupColors[parseInt(seat.groupId.replace(/\D/g, "")) % groupColors.length]
@@ -38,9 +39,14 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
   // Extract seat label from ID (e.g., "A1", "B3")
   const seatLabel = seat.id.split('-').pop() || '';
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    // Stop propagation to prevent drag-and-drop from interfering
+    e.stopPropagation();
+    
     if (isEmpty && onEmptySeatClick) {
       onEmptySeatClick(blockIndex + 1, seatLabel);
+    } else if (!isEmpty && onOccupiedSeatClick && seat.contestantId) {
+      onOccupiedSeatClick(seat.contestantId);
     }
   };
 
@@ -49,7 +55,7 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
       className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity ${
         isEmpty
           ? "border-dashed bg-muted/30 cursor-pointer hover-elevate"
-          : `${groupColorClass} border-2`
+          : `${groupColorClass} border-2 cursor-pointer hover-elevate`
       } ${isDragging ? "opacity-50" : ""}`}
       data-testid={`seat-${blockIndex}-${seatIndex}`}
       onClick={handleClick}

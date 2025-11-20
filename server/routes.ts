@@ -130,6 +130,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get single contestant by ID
+  app.get("/api/contestants/:id", async (req, res) => {
+    try {
+      const contestant = await storage.getContestantById(req.params.id);
+      if (!contestant) {
+        return res.status(404).json({ error: "Contestant not found" });
+      }
+      res.json(contestant);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Generate fake contestants for testing
   app.post("/api/contestants/generate-fake", async (req, res) => {
     try {
