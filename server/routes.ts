@@ -313,6 +313,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all seat assignments (for filtering purposes)
+  app.get("/api/seat-assignments", async (req, res) => {
+    try {
+      const allAssignments = await storage.getAllSeatAssignments();
+      res.json(allAssignments);
+    } catch (error: any) {
+      console.error("Error fetching all seat assignments:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get seat assignments for a record day
   app.get("/api/seat-assignments/:recordDayId", async (req, res) => {
     try {

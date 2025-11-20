@@ -51,6 +51,10 @@ export default function Contestants() {
   const [selectedSeat, setSelectedSeat] = useState<string>("");
   const [filterRecordDayId, setFilterRecordDayId] = useState<string>("all");
   const [filterResponseValue, setFilterResponseValue] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterGender, setFilterGender] = useState<string>("all");
+  const [filterRating, setFilterRating] = useState<string>("all");
+  const [filterLocation, setFilterLocation] = useState<string>("all");
 
   // Fetch all contestants
   const { data: contestants = [], isLoading: loadingContestants, refetch: refetchContestants } = useQuery<Contestant[]>({
@@ -68,12 +72,48 @@ export default function Contestants() {
     queryKey: ['/api/record-days'],
   });
 
+  // Fetch all seat assignments for rating/location filtering
+  const { data: allSeatAssignments = [] } = useQuery<any[]>({
+    queryKey: ['/api/seat-assignments'],
+  });
+
+  // Get unique values for filter dropdowns
+  const uniqueGenders = Array.from(new Set(contestants.map(c => c.gender).filter(Boolean)));
+  const uniqueRatings = Array.from(new Set(allSeatAssignments.map((a: any) => a.rating).filter(Boolean)));
+  const uniqueLocations = Array.from(new Set(allSeatAssignments.map((a: any) => a.location).filter(Boolean)));
+
   // Determine which contestants to display
-  const displayedContestants = filterRecordDayId && filterRecordDayId !== "all"
+  let displayedContestants = filterRecordDayId && filterRecordDayId !== "all"
     ? filteredAvailability
         .filter(item => !filterResponseValue || filterResponseValue === "all" || item.responseValue === filterResponseValue)
         .map(item => item.contestant)
     : contestants;
+
+  // Apply additional filters
+  if (filterStatus !== "all") {
+    displayedContestants = displayedContestants.filter(c => c.availabilityStatus === filterStatus);
+  }
+  if (filterGender !== "all") {
+    displayedContestants = displayedContestants.filter(c => c.gender === filterGender);
+  }
+  if (filterRating !== "all") {
+    // Filter contestants who have a seat assignment with this rating
+    const contestantIdsWithRating = new Set(
+      allSeatAssignments
+        .filter((a: any) => a.rating === filterRating)
+        .map((a: any) => a.contestantId)
+    );
+    displayedContestants = displayedContestants.filter(c => contestantIdsWithRating.has(c.id));
+  }
+  if (filterLocation !== "all") {
+    // Filter contestants who have a seat assignment with this location
+    const contestantIdsWithLocation = new Set(
+      allSeatAssignments
+        .filter((a: any) => a.location === filterLocation)
+        .map((a: any) => a.contestantId)
+    );
+    displayedContestants = displayedContestants.filter(c => contestantIdsWithLocation.has(c.id));
+  }
 
   const isLoading = loadingContestants || (filterRecordDayId && loadingFiltered);
 
@@ -227,79 +267,172 @@ export default function Contestants() {
       </div>
 
       {/* Filter Controls */}
-      <div className="flex gap-4 items-end">
-        <div className="flex-1 max-w-xs">
-          <label className="text-sm font-medium mb-2 block">
-            <Filter className="w-3 h-3 inline mr-1" />
-            Filter by Record Day
-          </label>
-          <Select value={filterRecordDayId} onValueChange={(value) => {
-            setFilterRecordDayId(value);
-            setFilterResponseValue("all");
-          }}>
-            <SelectTrigger data-testid="select-filter-record-day">
-              <SelectValue placeholder="All contestants" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All contestants</SelectItem>
-              {recordDays.map((day: any) => (
-                <SelectItem key={day.id} value={day.id}>
-                  {new Date(day.date).toLocaleDateString('en-US', { 
-                    weekday: 'short', 
-                    year: 'numeric', 
-                    month: 'short', 
-                    day: 'numeric' 
-                  })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {filterRecordDayId && filterRecordDayId !== "all" && (
-          <div className="flex-1 max-w-xs">
-            <label className="text-sm font-medium mb-2 block">Response</label>
-            <Select value={filterResponseValue} onValueChange={setFilterResponseValue}>
-              <SelectTrigger data-testid="select-filter-response">
-                <SelectValue placeholder="All responses" />
+      <div className="space-y-4">
+        <div className="flex gap-4 items-end flex-wrap">
+          <div className="flex-1 min-w-[200px] max-w-xs">
+            <label className="text-sm font-medium mb-2 block">
+              <Filter className="w-3 h-3 inline mr-1" />
+              Status
+            </label>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger data-testid="select-filter-status">
+                <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All responses</SelectItem>
-                <SelectItem value="yes">Yes</SelectItem>
-                <SelectItem value="maybe">Maybe</SelectItem>
-                <SelectItem value="no">No</SelectItem>
+                <SelectItem value="all">All statuses</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="available">Available</SelectItem>
+                <SelectItem value="assigned">Assigned</SelectItem>
+                <SelectItem value="invited">Invited</SelectItem>
               </SelectContent>
             </Select>
           </div>
-        )}
 
-        {filterRecordDayId && filterRecordDayId !== "all" && (
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              setFilterRecordDayId("all");
+          <div className="flex-1 min-w-[200px] max-w-xs">
+            <label className="text-sm font-medium mb-2 block">Gender</label>
+            <Select value={filterGender} onValueChange={setFilterGender}>
+              <SelectTrigger data-testid="select-filter-gender">
+                <SelectValue placeholder="All genders" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All genders</SelectItem>
+                {uniqueGenders.map((gender) => (
+                  <SelectItem key={gender} value={gender}>
+                    {gender}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex-1 min-w-[200px] max-w-xs">
+            <label className="text-sm font-medium mb-2 block">Rating</label>
+            <Select value={filterRating} onValueChange={setFilterRating}>
+              <SelectTrigger data-testid="select-filter-rating">
+                <SelectValue placeholder="All ratings" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All ratings</SelectItem>
+                {uniqueRatings.map((rating) => (
+                  <SelectItem key={rating} value={rating}>
+                    {rating}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex-1 min-w-[200px] max-w-xs">
+            <label className="text-sm font-medium mb-2 block">Location</label>
+            <Select value={filterLocation} onValueChange={setFilterLocation}>
+              <SelectTrigger data-testid="select-filter-location">
+                <SelectValue placeholder="All locations" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All locations</SelectItem>
+                {uniqueLocations.map((location) => (
+                  <SelectItem key={location} value={location}>
+                    {location}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="flex gap-4 items-end flex-wrap">
+          <div className="flex-1 min-w-[200px] max-w-xs">
+            <label className="text-sm font-medium mb-2 block">Record Day</label>
+            <Select value={filterRecordDayId} onValueChange={(value) => {
+              setFilterRecordDayId(value);
               setFilterResponseValue("all");
-            }}
-            data-testid="button-clear-filter"
-          >
-            <X className="h-4 w-4 mr-2" />
-            Clear Filter
-          </Button>
-        )}
+            }}>
+              <SelectTrigger data-testid="select-filter-record-day">
+                <SelectValue placeholder="All record days" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All record days</SelectItem>
+                {recordDays.map((day: any) => (
+                  <SelectItem key={day.id} value={day.id}>
+                    {new Date(day.date).toLocaleDateString('en-US', { 
+                      weekday: 'short', 
+                      year: 'numeric', 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {filterRecordDayId && filterRecordDayId !== "all" && (
+            <div className="flex-1 min-w-[200px] max-w-xs">
+              <label className="text-sm font-medium mb-2 block">Availability Response</label>
+              <Select value={filterResponseValue} onValueChange={setFilterResponseValue}>
+                <SelectTrigger data-testid="select-filter-response">
+                  <SelectValue placeholder="All responses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All responses</SelectItem>
+                  <SelectItem value="yes">Yes</SelectItem>
+                  <SelectItem value="maybe">Maybe</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
+            filterLocation !== "all" || filterRecordDayId !== "all") && (
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setFilterStatus("all");
+                setFilterGender("all");
+                setFilterRating("all");
+                setFilterLocation("all");
+                setFilterRecordDayId("all");
+                setFilterResponseValue("all");
+              }}
+              data-testid="button-clear-filters"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Clear All Filters
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Results Summary */}
-      {filterRecordDayId && filterRecordDayId !== "all" && (
-        <div className="flex items-center gap-2">
+      {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
+        filterLocation !== "all" || filterRecordDayId !== "all") && (
+        <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="secondary" data-testid="badge-filter-count">
-            {displayedContestants.length} contestant{displayedContestants.length !== 1 ? 's' : ''} 
-            {filterResponseValue && filterResponseValue !== "all" && ` (${filterResponseValue})`}
+            {displayedContestants.length} contestant{displayedContestants.length !== 1 ? 's' : ''}
           </Badge>
-          <span className="text-sm text-muted-foreground">
-            for {recordDays.find((d: any) => d.id === filterRecordDayId)?.date && 
-              new Date(recordDays.find((d: any) => d.id === filterRecordDayId)?.date).toLocaleDateString()}
-          </span>
+          <span className="text-sm text-muted-foreground">matching:</span>
+          {filterStatus !== "all" && (
+            <Badge variant="outline">Status: {filterStatus}</Badge>
+          )}
+          {filterGender !== "all" && (
+            <Badge variant="outline">Gender: {filterGender}</Badge>
+          )}
+          {filterRating !== "all" && (
+            <Badge variant="outline">Rating: {filterRating}</Badge>
+          )}
+          {filterLocation !== "all" && (
+            <Badge variant="outline">Location: {filterLocation}</Badge>
+          )}
+          {filterRecordDayId !== "all" && (
+            <Badge variant="outline">
+              Record Day: {new Date(recordDays.find((d: any) => d.id === filterRecordDayId)?.date).toLocaleDateString()}
+            </Badge>
+          )}
+          {filterRecordDayId !== "all" && filterResponseValue !== "all" && (
+            <Badge variant="outline">Response: {filterResponseValue}</Badge>
+          )}
         </div>
       )}
 

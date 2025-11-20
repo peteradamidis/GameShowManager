@@ -36,8 +36,9 @@ An automated system for managing TV game show contestants that imports applicant
    - GET/POST /api/record-days - Record day management
    - PUT /api/record-days/:id/status - Status updates
    - POST /api/auto-assign - Intelligent seat assignment
-   - GET/PUT/DELETE /api/seat-assignments - Seat management
-     - **POST /api/seat-assignments - Manual seat assignment with duplicate prevention**
+   - **GET /api/seat-assignments - Get all seat assignments (for filtering)**
+   - **GET /api/seat-assignments/:recordDayId - Get seat assignments for specific record day**
+   - **POST /api/seat-assignments - Manual seat assignment with duplicate prevention**
        - Validates contestant not already seated in record day
        - Validates seat not already occupied
        - Returns 409 on conflicts with clear error messages
@@ -150,6 +151,16 @@ An automated system for managing TV game show contestants that imports applicant
     - Contact information (email, phone, address) with icons
     - Medical information
   - Search and selection functionality
+  - **Comprehensive filtering system:**
+    - Status filter: pending/available/assigned/invited
+    - Gender filter: dynamically populated from contestant data
+    - Rating filter: shows contestants with specific ratings (from Booking Master)
+    - Location filter: shows contestants with specific locations (from Booking Master)
+    - Record Day filter: filter by availability for specific shoot days
+    - Availability Response filter: yes/maybe/no/pending (when record day selected)
+    - All filters work together and can be combined
+    - Active filters displayed as badges in results summary
+    - Clear All Filters button to reset all selections
 - Record day management cards
 - **Interactive drag-and-drop seating chart**
   - Cross-block dragging (all 154 seats in single DnD context)

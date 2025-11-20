@@ -58,6 +58,7 @@ export interface IStorage {
   createSeatAssignment(assignment: InsertSeatAssignment): Promise<SeatAssignment>;
   getSeatAssignmentById(id: string): Promise<SeatAssignment | undefined>;
   getSeatAssignmentsByRecordDay(recordDayId: string): Promise<SeatAssignment[]>;
+  getAllSeatAssignments(): Promise<SeatAssignment[]>;
   deleteSeatAssignment(id: string): Promise<void>;
   updateSeatAssignment(id: string, blockNumber: number, seatLabel: string): Promise<SeatAssignment | undefined>;
   updateSeatAssignmentWorkflow(id: string, workflowFields: Partial<SeatAssignment>): Promise<SeatAssignment | undefined>;
@@ -211,6 +212,10 @@ export class DbStorage implements IStorage {
       .select()
       .from(seatAssignments)
       .where(eq(seatAssignments.recordDayId, recordDayId));
+  }
+
+  async getAllSeatAssignments(): Promise<SeatAssignment[]> {
+    return db.select().from(seatAssignments);
   }
 
   async deleteSeatAssignment(id: string): Promise<void> {
