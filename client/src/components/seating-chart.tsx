@@ -73,13 +73,15 @@ function SeatingBlock({
   blockIndex, 
   blockLabel,
   sensors,
-  onDragEnd 
+  onDragEnd,
+  reverseRows = false
 }: { 
   block: SeatData[]; 
   blockIndex: number;
   blockLabel: string;
   sensors: any;
   onDragEnd: (event: DragEndEvent) => void;
+  reverseRows?: boolean;
 }) {
   const stats = calculateBlockStats(block);
   const allSeatIds = block.map((s) => s.id);
@@ -91,6 +93,9 @@ function SeatingBlock({
     seatIdx += row.count;
     return { ...row, seats: rowSeats };
   });
+
+  // Reverse rows if needed (for top blocks, A should be at bottom)
+  const displayRows = reverseRows ? [...seatsByRow].reverse() : seatsByRow;
 
   return (
     <Card data-testid={`block-${blockIndex}`} className="w-full">
@@ -110,26 +115,31 @@ function SeatingBlock({
           onDragEnd={onDragEnd}
         >
           <SortableContext items={allSeatIds} strategy={rectSortingStrategy}>
-            {seatsByRow.map((row, rowIdx) => (
-              <div key={row.label} className="space-y-1">
-                <div className="text-xs font-medium text-muted-foreground px-1">
-                  Row {row.label}
+            {displayRows.map((row, displayIdx) => {
+              // Find the original row index in SEAT_ROWS
+              const originalRowIdx = SEAT_ROWS.findIndex(r => r.label === row.label);
+              
+              return (
+                <div key={row.label} className="space-y-1">
+                  <div className="text-xs font-medium text-muted-foreground px-1">
+                    Row {row.label}
+                  </div>
+                  <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${row.count}, minmax(0, 1fr))` }}>
+                    {row.seats.map((seat, seatIdxInRow) => {
+                      const absoluteSeatIdx = SEAT_ROWS.slice(0, originalRowIdx).reduce((sum, r) => sum + r.count, 0) + seatIdxInRow;
+                      return (
+                        <SortableSeat
+                          key={seat.id}
+                          seat={seat}
+                          blockIndex={blockIndex}
+                          seatIndex={absoluteSeatIdx}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${row.count}, minmax(0, 1fr))` }}>
-                  {row.seats.map((seat, seatIdxInRow) => {
-                    const absoluteSeatIdx = SEAT_ROWS.slice(0, rowIdx).reduce((sum, r) => sum + r.count, 0) + seatIdxInRow;
-                    return (
-                      <SortableSeat
-                        key={seat.id}
-                        seat={seat}
-                        blockIndex={blockIndex}
-                        seatIndex={absoluteSeatIdx}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </SortableContext>
         </DndContext>
       </CardContent>
@@ -187,6 +197,9 @@ export function SeatingChart({ recordDayId, initialSeats }: SeatingChartProps) {
   const bottomBlocks = blocks.slice(3, 6);
   const standingBlock = blocks[6];
 
+  // Bottom blocks need to be reordered: 6, 5, 4 (swap 4 and 6)
+  const reorderedBottomBlocks = [bottomBlocks[2], bottomBlocks[1], bottomBlocks[0]]; // blocks 5, 4, 3 -> display as 6, 5, 4
+
   return (
     <div className="space-y-8">
       {/* Circular Seating Area */}
@@ -195,7 +208,7 @@ export function SeatingChart({ recordDayId, initialSeats }: SeatingChartProps) {
           <Badge variant="outline" className="text-sm">Circular Studio Seating</Badge>
         </div>
         
-        {/* Top Row - 3 Blocks */}
+        {/* Top Row - 3 Blocks (rows reversed: A at bottom, E at top) */}
         <div className="grid grid-cols-3 gap-4">
           {topBlocks.map((block, idx) => (
             <SeatingBlock
@@ -205,6 +218,7 @@ export function SeatingChart({ recordDayId, initialSeats }: SeatingChartProps) {
               blockLabel={`Block ${idx + 1} (Top)`}
               sensors={sensors}
               onDragEnd={handleDragEnd}
+              reverseRows={true}
             />
           ))}
         </div>
@@ -217,18 +231,22 @@ export function SeatingChart({ recordDayId, initialSeats }: SeatingChartProps) {
           </div>
         </div>
 
-        {/* Bottom Row - 3 Blocks */}
+        {/* Bottom Row - 3 Blocks (reordered: 6, 5, 4) */}
         <div className="grid grid-cols-3 gap-4">
-          {bottomBlocks.map((block, idx) => (
-            <SeatingBlock
-              key={idx + 3}
-              block={block}
-              blockIndex={idx + 3}
-              blockLabel={`Block ${idx + 4} (Bottom)`}
-              sensors={sensors}
-              onDragEnd={handleDragEnd}
-            />
-          ))}
+          {reorderedBottomBlocks.map((block, idx) => {
+            const originalIdx = 5 - idx; // Maps to 5, 4, 3 (blocks 6, 5, 4 for display)
+            return (
+              <SeatingBlock
+                key={originalIdx}
+                block={block}
+                blockIndex={originalIdx}
+                blockLabel={`Block ${originalIdx + 1} (Bottom)`}
+                sensors={sensors}
+                onDragEnd={handleDragEnd}
+                reverseRows={false}
+              />
+            );
+          })}
         </div>
       </div>
 
