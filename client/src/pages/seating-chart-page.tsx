@@ -33,13 +33,13 @@ const SEAT_ROWS = [
   { label: 'E', count: 4 },
 ];
 
-function generateEmptyBlocks(): SeatData[][] {
+function generateEmptyBlocks(recordDayId: string): SeatData[][] {
   return Array(7).fill(null).map((_, blockIdx) => {
     const seats: SeatData[] = [];
     SEAT_ROWS.forEach(row => {
       for (let i = 1; i <= row.count; i++) {
         seats.push({
-          id: `block${blockIdx}-${row.label}${i}`,
+          id: `${recordDayId}-block${blockIdx}-${row.label}${i}`,
         });
       }
     });
@@ -91,15 +91,16 @@ export default function SeatingChartPage() {
   });
 
   // Build seat data from assignments
-  const seats: SeatData[][] = generateEmptyBlocks();
+  const seats: SeatData[][] = generateEmptyBlocks(recordDayId);
   
   if (assignments && Array.isArray(assignments)) {
     assignments.forEach((assignment: any) => {
       const blockIdx = assignment.blockNumber - 1;
       if (blockIdx >= 0 && blockIdx < 7 && seats[blockIdx]) {
-        const seatIdx = seats[blockIdx].findIndex(seat => 
-          seat.id.endsWith(`-${assignment.seatLabel}`)
-        );
+        // Match exact seat ID: recordDayId-blockX-seatLabel
+        const expectedId = `${recordDayId}-block${blockIdx}-${assignment.seatLabel}`;
+        const seatIdx = seats[blockIdx].findIndex(seat => seat.id === expectedId);
+        
         if (seatIdx !== -1) {
           seats[blockIdx][seatIdx] = {
             ...seats[blockIdx][seatIdx],

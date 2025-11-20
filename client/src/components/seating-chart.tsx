@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DndContext,
   closestCenter,
@@ -7,14 +7,11 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverEvent,
+  useDraggable,
+  useDroppable,
+  DragOverlay,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  rectSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { SeatCard, SeatData } from "./seat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,33 +25,44 @@ interface SeatingChartProps {
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
 }
 
-function SortableSeat({
+function DraggableDroppableSeat({
   seat,
   blockIndex,
   seatIndex,
+  isOver,
   onEmptySeatClick,
 }: {
   seat: SeatData;
   blockIndex: number;
   seatIndex: number;
+  isOver: boolean;
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: seat.id, disabled: !seat.contestantName });
+  // Make occupied seats draggable
+  const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
+    id: seat.id,
+    disabled: !seat.contestantName,
+  });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
+  // Make all seats droppable
+  const { setNodeRef: setDropRef } = useDroppable({
+    id: seat.id,
+  });
+
+  // Combine refs
+  const setRefs = (element: HTMLDivElement | null) => {
+    setDragRef(element);
+    setDropRef(element);
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div 
+      ref={setRefs} 
+      {...attributes} 
+      {...listeners}
+      className={isOver ? "ring-4 ring-primary rounded-lg scale-105 transition-all" : ""}
+      style={isOver ? { zIndex: 10 } : undefined}
+    >
       <SeatCard
         seat={seat}
         blockIndex={blockIndex}
@@ -80,12 +88,14 @@ function SeatingBlock({
   blockIndex, 
   blockLabel,
   reverseRows = false,
+  overId,
   onEmptySeatClick,
 }: { 
   block: SeatData[]; 
   blockIndex: number;
   blockLabel: string;
   reverseRows?: boolean;
+  overId: string | null;
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
 }) {
   const stats = calculateBlockStats(block);
@@ -126,11 +136,12 @@ function SeatingBlock({
                 {row.seats.map((seat, seatIdxInRow) => {
                   const absoluteSeatIdx = SEAT_ROWS.slice(0, originalRowIdx).reduce((sum, r) => sum + r.count, 0) + seatIdxInRow;
                   return (
-                    <SortableSeat
+                    <DraggableDroppableSeat
                       key={seat.id}
                       seat={seat}
                       blockIndex={blockIndex}
                       seatIndex={absoluteSeatIdx}
+                      isOver={overId === seat.id}
                       onEmptySeatClick={onEmptySeatClick}
                     />
                   );
@@ -173,12 +184,22 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
       generateBlockSeats(recordDayId, blockIdx)
     )
   );
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Update blocks when initialSeats changes (after data loads from API)
+  useEffect(() => {
+    if (initialSeats) {
+      setBlocks(initialSeats);
+    }
+  }, [initialSeats]);
+
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px movement before dragging starts
+      },
     })
   );
 
@@ -193,8 +214,19 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     return null;
   };
 
+  const handleDragStart = (event: any) => {
+    setActiveId(event.active.id);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    setOverId(event.over?.id as string | null);
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+    
+    setActiveId(null);
+    setOverId(null);
 
     if (!over || active.id === over.id) return;
 
@@ -325,16 +357,17 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   // Bottom blocks need to be reordered: 6, 5, 4 (swap 4 and 6)
   const reorderedBottomBlocks = [bottomBlocks[2], bottomBlocks[1], bottomBlocks[0]]; // blocks 5, 4, 3 -> display as 6, 5, 4
 
-  // Collect all seat IDs for a single SortableContext
-  const allSeatIds = blocks.flat().map(seat => seat.id);
+  // Get active seat for drag overlay
+  const activeSeat = activeId ? findSeat(activeId)?.seat : null;
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <SortableContext items={allSeatIds} strategy={rectSortingStrategy}>
         <div className="space-y-8">
           {/* Circular Seating Area */}
           <div className="space-y-6">
@@ -351,6 +384,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   blockIndex={idx}
                   blockLabel={`Block ${idx + 1} (Top)`}
                   reverseRows={true}
+                  overId={overId}
                   onEmptySeatClick={onEmptySeatClick}
                 />
               ))}
@@ -375,6 +409,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     blockIndex={originalIdx}
                     blockLabel={`Block ${originalIdx + 1} (Bottom)`}
                     reverseRows={false}
+                    overId={overId}
                     onEmptySeatClick={onEmptySeatClick}
                   />
                 );
@@ -392,12 +427,26 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 block={standingBlock}
                 blockIndex={6}
                 blockLabel="Block 7 (Standing)"
+                overId={overId}
                 onEmptySeatClick={onEmptySeatClick}
               />
             </div>
           </div>
         </div>
-      </SortableContext>
+        
+        <DragOverlay>
+          {activeSeat ? (
+            <div className="opacity-80">
+              <SeatCard
+                seat={activeSeat}
+                blockIndex={0}
+                seatIndex={0}
+                isDragging={true}
+                onEmptySeatClick={undefined}
+              />
+            </div>
+          ) : null}
+        </DragOverlay>
     </DndContext>
   );
 }
