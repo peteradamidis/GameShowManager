@@ -25,6 +25,10 @@ export const contestants = pgTable("contestants", {
   groupId: varchar("group_id").references(() => groups.id),
   availabilityStatus: availabilityStatusEnum("availability_status").default('pending').notNull(),
   attendingWith: text("attending_with"), // Raw data from Excel
+  email: text("email"),
+  phone: text("phone"),
+  address: text("address"),
+  medicalInfo: text("medical_info"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

@@ -69,6 +69,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         age: parseInt(row.Age || row.age),
         gender: row.Gender || row.gender,
         attendingWith: row["Attending With"] || row["attending_with"] || row.attendingWith || null,
+        email: row.Email || row.email || null,
+        phone: row.Phone || row.phone || null,
+        address: row.Address || row.address || null,
+        medicalInfo: row["Medical Info"] || row["medical_info"] || row.medicalInfo || null,
       }));
 
       // Identify groups
@@ -104,6 +108,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           age: row.age,
           gender: row.gender,
           attendingWith: row.attendingWith,
+          email: row.email,
+          phone: row.phone,
+          address: row.address,
+          medicalInfo: row.medicalInfo,
           groupId: nameToGroupId.get(row.name) || null,
           availabilityStatus: "pending",
         });

@@ -7,7 +7,7 @@ An automated system for managing TV game show contestants that imports applicant
 
 ### Backend (Complete)
 1. **Database Schema**
-   - Contestants: name, age, gender, availability status, group membership
+   - Contestants: name, age, gender, availability status, group membership, email, phone, address, medical info
    - Groups: automatically identified from "Attending With" column
    - Record Days: recording session management with status tracking
    - Seat Assignments: tracks contestant assignments to specific seats
@@ -16,9 +16,10 @@ An automated system for managing TV game show contestants that imports applicant
 
 2. **Excel Import**
    - Parses Cast It Reach exports
-   - Normalizes column names (handles "Attending With", "Name", "Age", "Gender")
+   - Normalizes column names (handles "Attending With", "Name", "Age", "Gender", "Email", "Phone", "Address", "Medical Info")
    - Automatically identifies groups by matching names in "Attending With" column
    - Creates groups and links contestants
+   - Captures additional contact and medical information if present in Excel file
 
 3. **Auto-Assignment Algorithm**
    - Target: 60-70% female demographic balance
@@ -96,7 +97,13 @@ An automated system for managing TV game show contestants that imports applicant
 ### Frontend (Complete)
 - Material Design-inspired UI with Inter font
 - Dashboard with statistics
-- Contestant table with import functionality
+- **Contestant table with import and detail view**
+  - Click any row to view complete contestant information
+  - Detail dialog shows:
+    - Basic information (name, age, gender, status, group)
+    - Contact information (email, phone, address) with icons
+    - Medical information
+  - Search and selection functionality
 - Record day management cards
 - **Interactive drag-and-drop seating chart**
   - Cross-block dragging (all 154 seats in single DnD context)
