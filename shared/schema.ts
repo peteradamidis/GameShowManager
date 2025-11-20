@@ -48,6 +48,23 @@ export const seatAssignments = pgTable("seat_assignments", {
   contestantId: varchar("contestant_id").references(() => contestants.id).notNull(),
   blockNumber: integer("block_number").notNull(), // 1-7
   seatLabel: text("seat_label").notNull(), // e.g., "A1", "B3"
+  
+  // Booking Master workflow fields
+  firstNations: text("first_nations"),
+  rating: text("rating"),
+  location: text("location"),
+  medicalQuestion: text("medical_question"),
+  criminalBankruptcy: text("criminal_bankruptcy"),
+  castingCategory: text("casting_category"),
+  notes: text("notes"),
+  bookingEmailSent: timestamp("booking_email_sent"),
+  confirmedRsvp: timestamp("confirmed_rsvp"),
+  paperworkSent: timestamp("paperwork_sent"),
+  paperworkReceived: timestamp("paperwork_received"),
+  signedIn: timestamp("signed_in"),
+  otdNotes: text("otd_notes"),
+  standbyReplacementSwaps: text("standby_replacement_swaps"),
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   // Ensure one contestant per record day
