@@ -278,16 +278,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/seat-assignments/:recordDayId", async (req, res) => {
     try {
       const assignments = await storage.getSeatAssignmentsByRecordDay(req.params.recordDayId);
-      const contestantIds = assignments.map((a) => a.contestantId);
       
       // Get full contestant data
       const contestantsData = await storage.getContestants();
       const contestantsMap = new Map(contestantsData.map((c) => [c.id, c]));
 
-      const enrichedAssignments = assignments.map((assignment) => ({
-        ...assignment,
-        contestant: contestantsMap.get(assignment.contestantId),
-      }));
+      // Flatten the data structure for frontend compatibility
+      const enrichedAssignments = assignments.map((assignment) => {
+        const contestant = contestantsMap.get(assignment.contestantId);
+        return {
+          assignmentId: assignment.id,
+          recordDayId: assignment.recordDayId,
+          contestantId: assignment.contestantId,
+          blockNumber: assignment.blockNumber,
+          seatLabel: assignment.seatLabel,
+          contestantName: contestant?.name,
+          age: contestant?.age,
+          gender: contestant?.gender,
+          groupId: contestant?.groupId,
+        };
+      });
 
       res.json(enrichedAssignments);
     } catch (error: any) {
