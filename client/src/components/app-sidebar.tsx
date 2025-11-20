@@ -23,6 +23,11 @@ const menuItems = [
     icon: Users,
   },
   {
+    title: "Availability",
+    url: "/availability",
+    icon: CheckSquare,
+  },
+  {
     title: "Record Days",
     url: "/record-days",
     icon: Calendar,
@@ -36,11 +41,6 @@ const menuItems = [
     title: "Booking Master",
     url: "/booking-master",
     icon: ClipboardList,
-  },
-  {
-    title: "Availability",
-    url: "/availability",
-    icon: CheckSquare,
   },
   {
     title: "Reschedule",
