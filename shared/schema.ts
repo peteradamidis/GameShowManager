@@ -52,6 +52,17 @@ export const seatAssignments = pgTable("seat_assignments", {
   uniqueSeatPerDay: unique().on(table.recordDayId, table.blockNumber, table.seatLabel),
 }));
 
+// Canceled Assignments table - tracks contestants who canceled from a specific record day
+export const canceledAssignments = pgTable("canceled_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contestantId: varchar("contestant_id").references(() => contestants.id).notNull(),
+  recordDayId: varchar("record_day_id").references(() => recordDays.id).notNull(),
+  blockNumber: integer("block_number"),
+  seatLabel: text("seat_label"),
+  canceledAt: timestamp("canceled_at").defaultNow().notNull(),
+  reason: text("reason"),
+});
+
 // Availability Tokens table - stores unique tokens for availability check responses
 export const availabilityTokens = pgTable("availability_tokens", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -95,6 +106,11 @@ export const insertSeatAssignmentSchema = createInsertSchema(seatAssignments).om
   createdAt: true,
 });
 
+export const insertCanceledAssignmentSchema = createInsertSchema(canceledAssignments).omit({
+  id: true,
+  canceledAt: true,
+});
+
 export const insertAvailabilityTokenSchema = createInsertSchema(availabilityTokens).omit({
   id: true,
   createdAt: true,
@@ -117,6 +133,9 @@ export type RecordDay = typeof recordDays.$inferSelect;
 
 export type InsertSeatAssignment = z.infer<typeof insertSeatAssignmentSchema>;
 export type SeatAssignment = typeof seatAssignments.$inferSelect;
+
+export type InsertCanceledAssignment = z.infer<typeof insertCanceledAssignmentSchema>;
+export type CanceledAssignment = typeof canceledAssignments.$inferSelect;
 
 export type InsertAvailabilityToken = z.infer<typeof insertAvailabilityTokenSchema>;
 export type AvailabilityToken = typeof availabilityTokens.$inferSelect;

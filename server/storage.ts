@@ -6,6 +6,7 @@ import {
   groups, 
   recordDays, 
   seatAssignments,
+  canceledAssignments,
   availabilityTokens,
   contestantAvailability,
   type Contestant,
@@ -16,6 +17,8 @@ import {
   type InsertRecordDay,
   type SeatAssignment,
   type InsertSeatAssignment,
+  type CanceledAssignment,
+  type InsertCanceledAssignment,
   type AvailabilityToken,
   type InsertAvailabilityToken,
   type ContestantAvailability,
@@ -59,6 +62,11 @@ export interface IStorage {
     targetBlock?: number,
     targetSeat?: string
   ): Promise<{ source: SeatAssignment; target?: SeatAssignment }>;
+  cancelSeatAssignment(id: string, reason?: string): Promise<CanceledAssignment>;
+  
+  // Canceled Assignments
+  getCanceledAssignments(): Promise<Array<CanceledAssignment & { contestant: Contestant; recordDay: RecordDay }>>;
+  deleteCanceledAssignment(id: string): Promise<void>;
   
   // Availability Tokens
   createAvailabilityToken(token: InsertAvailabilityToken): Promise<AvailabilityToken>;
@@ -329,6 +337,64 @@ export class DbStorage implements IStorage {
         return { source: updatedSource };
       }
     });
+  }
+
+  async cancelSeatAssignment(id: string, reason?: string): Promise<CanceledAssignment> {
+    return await db.transaction(async (tx) => {
+      const [assignment] = await tx
+        .select()
+        .from(seatAssignments)
+        .where(eq(seatAssignments.id, id));
+
+      if (!assignment) {
+        throw new Error('Seat assignment not found');
+      }
+
+      const [canceled] = await tx
+        .insert(canceledAssignments)
+        .values({
+          contestantId: assignment.contestantId,
+          recordDayId: assignment.recordDayId,
+          blockNumber: assignment.blockNumber,
+          seatLabel: assignment.seatLabel,
+          reason,
+        })
+        .returning();
+
+      await tx.delete(seatAssignments).where(eq(seatAssignments.id, id));
+
+      await tx
+        .update(contestants)
+        .set({ availabilityStatus: 'available' })
+        .where(eq(contestants.id, assignment.contestantId));
+
+      return canceled;
+    });
+  }
+
+  // Canceled Assignments
+  async getCanceledAssignments(): Promise<Array<CanceledAssignment & { contestant: Contestant; recordDay: RecordDay }>> {
+    const results = await db
+      .select({
+        id: canceledAssignments.id,
+        contestantId: canceledAssignments.contestantId,
+        recordDayId: canceledAssignments.recordDayId,
+        blockNumber: canceledAssignments.blockNumber,
+        seatLabel: canceledAssignments.seatLabel,
+        canceledAt: canceledAssignments.canceledAt,
+        reason: canceledAssignments.reason,
+        contestant: contestants,
+        recordDay: recordDays,
+      })
+      .from(canceledAssignments)
+      .innerJoin(contestants, eq(canceledAssignments.contestantId, contestants.id))
+      .innerJoin(recordDays, eq(canceledAssignments.recordDayId, recordDays.id));
+
+    return results as any;
+  }
+
+  async deleteCanceledAssignment(id: string): Promise<void> {
+    await db.delete(canceledAssignments).where(eq(canceledAssignments.id, id));
   }
 
   // Availability Tokens
