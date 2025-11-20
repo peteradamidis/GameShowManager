@@ -757,7 +757,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete seat assignment
+  // Delete seat assignment (remove from record day)
   app.delete("/api/seat-assignments/:id", async (req, res) => {
     try {
       // Get assignment to find contestant
@@ -767,12 +767,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Seat assignment not found" });
       }
 
-      // Set contestant back to available
-      await storage.updateContestantAvailability(assignment.contestantId, "available");
-
-      // Delete the assignment
+      // Delete the assignment (storage handles updating contestant status)
       await storage.deleteSeatAssignment(req.params.id);
-      res.json({ message: "Seat assignment deleted" });
+      res.json({ message: "Seat assignment removed" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Cancel seat assignment (move to reschedule)
+  app.post("/api/seat-assignments/:id/cancel", async (req, res) => {
+    try {
+      const { reason } = req.body;
+      const canceled = await storage.cancelSeatAssignment(req.params.id, reason);
+      res.json(canceled);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get all canceled assignments
+  app.get("/api/canceled-assignments", async (req, res) => {
+    try {
+      const canceled = await storage.getCanceledAssignments();
+      res.json(canceled);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete canceled assignment (when rebooking or permanently removing)
+  app.delete("/api/canceled-assignments/:id", async (req, res) => {
+    try {
+      await storage.deleteCanceledAssignment(req.params.id);
+      res.json({ message: "Canceled assignment removed" });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
