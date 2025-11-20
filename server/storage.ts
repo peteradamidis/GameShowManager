@@ -41,6 +41,7 @@ export interface IStorage {
   getContestants(): Promise<Contestant[]>;
   getContestantById(id: string): Promise<Contestant | undefined>;
   updateContestantAvailability(id: string, status: string): Promise<Contestant | undefined>;
+  updateContestantField(id: string, field: string, value: any): Promise<Contestant | undefined>;
   
   // Groups
   createGroup(group: InsertGroup): Promise<Group>;
@@ -129,6 +130,22 @@ export class DbStorage implements IStorage {
     const [updated] = await db
       .update(contestants)
       .set({ availabilityStatus: status as any })
+      .where(eq(contestants.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateContestantField(id: string, field: string, value: any): Promise<Contestant | undefined> {
+    // Whitelist allowed fields to prevent mass-assignment vulnerabilities
+    const allowedFields = ['attendingWith'];
+    
+    if (!allowedFields.includes(field)) {
+      throw new Error(`Cannot update field '${field}': not in whitelist`);
+    }
+    
+    const [updated] = await db
+      .update(contestants)
+      .set({ [field]: value })
       .where(eq(contestants.id, id))
       .returning();
     return updated;
@@ -633,10 +650,17 @@ export class DbStorage implements IStorage {
       updateData.notes = notes;
     }
 
+    // Use transactional WHERE clause to prevent race conditions
+    // Only update if confirmation status is still 'pending'
     const [updated] = await db
       .update(bookingConfirmationTokens)
       .set(updateData)
-      .where(eq(bookingConfirmationTokens.id, id))
+      .where(
+        and(
+          eq(bookingConfirmationTokens.id, id),
+          eq(bookingConfirmationTokens.confirmationStatus, 'pending')
+        )
+      )
       .returning();
     return updated;
   }

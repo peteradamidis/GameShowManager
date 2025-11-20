@@ -55,10 +55,19 @@ export default function BookingConfirmationPage() {
 
   const submitMutation = useMutation({
     mutationFn: async (confirmationStatus: "confirmed" | "declined") => {
-      return apiRequest(`/api/booking-confirmations/respond/${token}`, {
+      const response = await fetch(`/api/booking-confirmations/respond/${token}`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ confirmationStatus, attendingWith, notes }),
       });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw data;
+      }
+      
+      return data;
     },
     onSuccess: (data, confirmationStatus) => {
       setSubmitted(true);
@@ -72,9 +81,22 @@ export default function BookingConfirmationPage() {
       });
     },
     onError: (error: any) => {
+      let errorMessage = "Failed to submit confirmation";
+      
+      if (error.error) {
+        errorMessage = error.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      // Handle already responded case
+      if (error.alreadyResponded) {
+        errorMessage = `This link has already been used. You previously ${error.previousResponse === 'confirmed' ? 'confirmed' : 'declined'} this booking.`;
+      }
+      
       toast({
-        title: "Error",
-        description: error.message || "Failed to submit confirmation",
+        title: "Cannot Submit Response",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -109,6 +131,21 @@ export default function BookingConfirmationPage() {
   }
 
   if (error || !tokenData) {
+    const errorData = error as any;
+    let errorTitle = "Invalid Confirmation Link";
+    let errorMessage = "This confirmation link is not valid. Please contact the show producers if you believe this is an error.";
+    
+    if (errorData?.message?.includes("expired")) {
+      errorTitle = "Link Expired";
+      errorMessage = "This confirmation link has expired. Please contact the show producers to request a new confirmation link.";
+    } else if (errorData?.message?.includes("already been used")) {
+      errorTitle = "Link Already Used";
+      errorMessage = "This confirmation link has already been used. If you need to make changes, please contact the show producers.";
+    } else if (errorData?.message?.includes("no longer active")) {
+      errorTitle = "Link Inactive";
+      errorMessage = "This confirmation link is no longer active. Please contact the show producers for assistance.";
+    }
+    
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <Card className="w-full max-w-2xl">
@@ -116,7 +153,10 @@ export default function BookingConfirmationPage() {
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                {error ? "Invalid or expired confirmation link. Please contact the show producers." : "Failed to load booking confirmation."}
+                <div className="space-y-2">
+                  <p className="font-semibold">{errorTitle}</p>
+                  <p>{errorMessage}</p>
+                </div>
               </AlertDescription>
             </Alert>
           </CardContent>
