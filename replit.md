@@ -13,6 +13,7 @@ An automated system for managing TV game show contestants that imports applicant
    - Seat Assignments: tracks contestant assignments to specific seats
      - **Uniqueness constraints**: one contestant per record day, one contestant per seat
      - Prevents duplicate bookings at database level
+     - **Booking workflow fields**: firstNations, rating, location, medicalQuestion, criminalBankruptcy, castingCategory, notes, bookingEmailSent, confirmedRsvp, paperworkSent, paperworkReceived, signedIn, otdNotes, standbyReplacementSwaps
 
 2. **Excel Import**
    - Parses Cast It Reach exports
@@ -40,6 +41,10 @@ An automated system for managing TV game show contestants that imports applicant
        - Validates contestant not already seated in record day
        - Validates seat not already occupied
        - Returns 409 on conflicts with clear error messages
+     - **PATCH /api/seat-assignments/:id/workflow - Update booking workflow fields**
+       - Updates workflow tracking fields (rating, location, medical, paperwork, sign-in, etc.)
+       - Field validation prevents overwriting seat metadata
+       - Only allowed workflow fields accepted
      - **DELETE /api/seat-assignments/:id - Remove contestant from record day**
        - Updates contestant status back to 'available'
      - **POST /api/seat-assignments/:id/cancel - Cancel and move to reschedule**
@@ -127,6 +132,22 @@ An automated system for managing TV game show contestants that imports applicant
   - "Make Available" button removes from canceled list
   - "Remove" button permanently deletes cancellation record
   - Contestants can be reassigned using Seating Chart or Auto-Assign
+- **Booking Master page**
+  - Complete booking workflow tracking system
+  - Record day selector - switches between different shoot days
+  - Auto-populates with contestants assigned via Seating Chart
+  - Displays all 154 seats (assigned and empty) for selected record day
+  - Inline editing for workflow fields:
+    - Location, Rating, Medical Question (Y/N)
+    - Criminal/Bankruptcy, Casting Category
+    - Notes, OTD Notes, Standby/Replacement/Swaps
+  - Checkbox tracking for workflow stages:
+    - Booking Email Sent, Confirmed RSVP
+    - Paperwork Sent, Paperwork Received
+    - Signed In
+  - Shows contestant details: name, age, phone, email, attending with, medical info
+  - Excel export functionality matching Cast It Reach template format
+  - Includes record day metadata in exported file
 - Studio layout visualization with 7 blocks
 
 ## Studio Layout

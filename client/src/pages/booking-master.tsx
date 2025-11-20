@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Download, Calendar } from "lucide-react";
 import { format } from "date-fns";
+import * as XLSX from "xlsx";
 
 interface RecordDay {
   id: string;
@@ -39,6 +40,7 @@ interface Contestant {
   phone?: string;
   address?: string;
   medicalInfo?: string;
+  attendingWith?: string;
 }
 
 interface SeatAssignment {
@@ -91,7 +93,7 @@ export default function BookingMaster() {
   });
 
   const { data: assignments = [], isLoading: loadingAssignments } = useQuery<SeatAssignment[]>({
-    queryKey: ["/api/seat-assignments", selectedRecordDay],
+    queryKey: [`/api/seat-assignments/${selectedRecordDay}`],
     enabled: !!selectedRecordDay,
   });
 
@@ -104,7 +106,7 @@ export default function BookingMaster() {
       return await apiRequest("PATCH", `/api/seat-assignments/${assignmentId}/workflow`, fields);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/seat-assignments", selectedRecordDay] });
+      queryClient.invalidateQueries({ queryKey: [`/api/seat-assignments/${selectedRecordDay}`] });
     },
   });
 
@@ -167,7 +169,71 @@ export default function BookingMaster() {
   };
 
   const exportToExcel = () => {
-    alert("Excel export functionality coming soon!");
+    if (!selectedRecordDay || bookingRows.length === 0) {
+      return;
+    }
+
+    const selectedDay = recordDays.find(d => d.id === selectedRecordDay);
+    const dayName = selectedDay ? format(new Date(selectedDay.date), "MMMM-d-yyyy") : "booking-master";
+    const dayDate = selectedDay ? format(new Date(selectedDay.date), "MMMM d, yyyy") : "";
+
+    const exportData = bookingRows.map(row => ({
+      "SEAT": row.seatId,
+      "FIRST NATIONS": row.assignment?.firstNations || "",
+      "RATING": row.assignment?.rating || "",
+      "AGE": row.contestant?.age?.toString() || "",
+      "NAME": row.contestant?.name || "",
+      "MOBILE": row.contestant?.phone || "",
+      "EMAIL": row.contestant?.email || "",
+      "ATTENDING WITH": row.contestant?.attendingWith || "",
+      "LOCATION": row.assignment?.location || "",
+      "MEDICAL Q (Y/N)": row.assignment?.medicalQuestion || "",
+      "MOBILITY / MEDICAL NOTES": row.contestant?.medicalInfo || "",
+      "CRIMINAL/BANKRUPTCY": row.assignment?.criminalBankruptcy || "",
+      "CASTING CATEGORY": row.assignment?.castingCategory || "",
+      "NOTES": row.assignment?.notes || "",
+      "BOOKING EMAIL SENT": row.assignment?.bookingEmailSent ? "✓" : "",
+      "CONFIRMED RSVP": row.assignment?.confirmedRsvp ? "✓" : "",
+      "PAPERWORK SENT": row.assignment?.paperworkSent ? "✓" : "",
+      "PAPERWORK RECEIVED": row.assignment?.paperworkReceived ? "✓" : "",
+      "SIGNED-IN": row.assignment?.signedIn ? "✓" : "",
+      "OTD NOTES": row.assignment?.otdNotes || "",
+      "STANDBY REPLACEMENT / SWAPS": row.assignment?.standbyReplacementSwaps || "",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    
+    XLSX.utils.sheet_add_aoa(ws, [[`Booking Master - ${dayDate}`]], { origin: "A1" });
+    XLSX.utils.sheet_add_json(ws, exportData, { origin: "A2", skipHeader: false });
+    
+    XLSX.utils.book_append_sheet(wb, ws, "Booking Master");
+
+    ws['!cols'] = [
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 8 },
+      { wch: 6 },
+      { wch: 20 },
+      { wch: 15 },
+      { wch: 25 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 25 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 25 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 20 },
+      { wch: 20 },
+    ];
+
+    XLSX.writeFile(wb, `Booking-Master-${dayName}.xlsx`);
   };
 
   return (

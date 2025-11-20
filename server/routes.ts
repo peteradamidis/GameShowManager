@@ -768,7 +768,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update booking workflow fields for a seat assignment
   app.patch("/api/seat-assignments/:id/workflow", async (req, res) => {
     try {
-      const workflowFields = req.body;
+      const allowedFields = [
+        'firstNations', 'rating', 'location', 'medicalQuestion', 
+        'criminalBankruptcy', 'castingCategory', 'notes', 
+        'bookingEmailSent', 'confirmedRsvp', 'paperworkSent', 
+        'paperworkReceived', 'signedIn', 'otdNotes', 'standbyReplacementSwaps'
+      ];
+      
+      const workflowFields: any = {};
+      for (const [key, value] of Object.entries(req.body)) {
+        if (allowedFields.includes(key)) {
+          workflowFields[key] = value;
+        }
+      }
+      
+      if (Object.keys(workflowFields).length === 0) {
+        return res.status(400).json({ error: "No valid workflow fields provided" });
+      }
+      
       const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, workflowFields);
       
       if (!updated) {
