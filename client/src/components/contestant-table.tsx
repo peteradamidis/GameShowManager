@@ -41,11 +41,21 @@ interface ContestantTableProps {
   onSelectionChange?: (ids: string[]) => void;
 }
 
-const statusColors = {
-  Pending: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  Available: "bg-gray-500/10 text-gray-700 dark:text-gray-400",
-  Assigned: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-  Invited: "bg-purple-500/10 text-purple-700 dark:text-purple-400",
+const StatusBadge = ({ status }: { status: string }) => {
+  const colors: Record<string, string> = {
+    pending: "border-amber-200 bg-amber-500/10 text-amber-700 dark:border-amber-800 dark:text-amber-400",
+    available: "border-gray-200 bg-gray-500/10 text-gray-700 dark:border-gray-800 dark:text-gray-400",
+    assigned: "border-blue-200 bg-blue-500/10 text-blue-700 dark:border-blue-800 dark:text-blue-400",
+    invited: "border-purple-200 bg-purple-500/10 text-purple-700 dark:border-purple-800 dark:text-purple-400",
+  };
+  
+  const colorClasses = colors[status.toLowerCase()] || colors.available;
+  
+  return (
+    <span className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold ${colorClasses}`}>
+      {status}
+    </span>
+  );
 };
 
 export function ContestantTable({ 
@@ -156,9 +166,7 @@ export function ContestantTable({
                 <TableCell>{contestant.age}</TableCell>
                 <TableCell>{contestant.gender}</TableCell>
                 <TableCell>
-                  <Badge className={statusColors[contestant.availabilityStatus]}>
-                    {contestant.availabilityStatus}
-                  </Badge>
+                  <StatusBadge status={contestant.availabilityStatus} />
                 </TableCell>
                 <TableCell>{contestant.recordDay || "-"}</TableCell>
               </TableRow>
@@ -198,9 +206,7 @@ export function ContestantTable({
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Status</label>
                     <div className="mt-1">
-                      <Badge className={statusColors[contestantDetails.availabilityStatus as keyof typeof statusColors]}>
-                        {contestantDetails.availabilityStatus}
-                      </Badge>
+                      <StatusBadge status={contestantDetails.availabilityStatus} />
                     </div>
                   </div>
                   {contestantDetails.groupId && (
