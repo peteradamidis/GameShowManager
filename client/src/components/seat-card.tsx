@@ -32,9 +32,12 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false }: Se
     ? groupColors[parseInt(seat.groupId.replace(/\D/g, "")) % groupColors.length]
     : "";
 
+  // Extract seat label from ID (e.g., "A1", "B3")
+  const seatLabel = seat.id.split('-').pop() || '';
+
   return (
     <Card
-      className={`p-2 min-h-[60px] flex flex-col justify-center text-xs transition-opacity ${
+      className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity ${
         isEmpty
           ? "border-dashed bg-muted/30"
           : `${groupColorClass} border-2`
@@ -42,15 +45,17 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false }: Se
       data-testid={`seat-${blockIndex}-${seatIndex}`}
     >
       {isEmpty ? (
-        <div className="flex items-center justify-center h-full text-muted-foreground">
+        <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-1">
           <User className="h-3 w-3" />
+          <span className="text-[10px] font-mono">{seatLabel}</span>
         </div>
       ) : (
         <div className="space-y-1">
-          <p className="font-medium truncate" title={seat.contestantName}>
+          <div className="text-[10px] font-mono text-muted-foreground">{seatLabel}</div>
+          <p className="font-medium truncate text-xs" title={seat.contestantName}>
             {seat.contestantName}
           </p>
-          <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="flex items-center gap-2 text-muted-foreground text-[10px]">
             <span>{seat.age}</span>
             <span>•</span>
             <span>{seat.gender?.[0]}</span>

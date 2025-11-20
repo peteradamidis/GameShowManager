@@ -5,23 +5,38 @@ import { Wand2, RotateCcw, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SeatData } from "@/components/seat-card";
 
-export default function SeatingChartPage() {
-  const { toast } = useToast();
+// Generate seats with the proper row structure
+const SEAT_ROWS = [
+  { label: 'A', count: 5 },
+  { label: 'B', count: 5 },
+  { label: 'C', count: 4 },
+  { label: 'D', count: 4 },
+  { label: 'E', count: 2 },
+];
 
-  const mockSeats: SeatData[][] = Array(7).fill(null).map((_, blockIdx) =>
-    Array(20).fill(null).map((_, seatIdx) => {
+function generateMockBlock(blockIdx: number): SeatData[] {
+  const seats: SeatData[] = [];
+  SEAT_ROWS.forEach(row => {
+    for (let i = 1; i <= row.count; i++) {
       const shouldFill = Math.random() > 0.3;
-      return {
-        id: `block${blockIdx}-seat${seatIdx}`,
+      seats.push({
+        id: `block${blockIdx}-${row.label}${i}`,
         ...(shouldFill && {
-          contestantName: `Person ${blockIdx * 20 + seatIdx + 1}`,
+          contestantName: `Person ${blockIdx * 20 + seats.length + 1}`,
           age: Math.floor(Math.random() * 40) + 20,
           gender: Math.random() > 0.4 ? ("Female" as const) : ("Male" as const),
           groupId: Math.random() > 0.6 ? `GRP${Math.floor(Math.random() * 5) + 1}` : undefined,
         }),
-      };
-    })
-  );
+      });
+    }
+  });
+  return seats;
+}
+
+export default function SeatingChartPage() {
+  const { toast } = useToast();
+
+  const mockSeats: SeatData[][] = Array(7).fill(null).map((_, blockIdx) => generateMockBlock(blockIdx));
 
   const handleAutoAssign = () => {
     toast({
@@ -73,7 +88,7 @@ export default function SeatingChartPage() {
       </div>
 
       <div className="bg-muted/30 rounded-lg p-4">
-        <div className="flex items-center gap-6 text-sm">
+        <div className="flex items-center gap-6 text-sm flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded border-2 border-blue-500"></div>
             <span>Group 1</span>
@@ -89,6 +104,9 @@ export default function SeatingChartPage() {
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded border-dashed"></div>
             <span>Empty Seat</span>
+          </div>
+          <div className="ml-auto text-muted-foreground">
+            Rows: A-E (5-5-4-4-2 seats)
           </div>
         </div>
       </div>

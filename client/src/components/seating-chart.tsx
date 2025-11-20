@@ -12,7 +12,7 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { SeatCard, SeatData } from "./seat-card";
@@ -59,6 +59,15 @@ function SortableSeat({
   );
 }
 
+// Define the row structure: [rowLabel, numSeats]
+const SEAT_ROWS = [
+  { label: 'A', count: 5 },
+  { label: 'B', count: 5 },
+  { label: 'C', count: 4 },
+  { label: 'D', count: 4 },
+  { label: 'E', count: 2 },
+];
+
 function SeatingBlock({ 
   block, 
   blockIndex, 
@@ -75,6 +84,14 @@ function SeatingBlock({
   const stats = calculateBlockStats(block);
   const allSeatIds = block.map((s) => s.id);
 
+  // Organize seats by row
+  let seatIdx = 0;
+  const seatsByRow = SEAT_ROWS.map(row => {
+    const rowSeats = block.slice(seatIdx, seatIdx + row.count);
+    seatIdx += row.count;
+    return { ...row, seats: rowSeats };
+  });
+
   return (
     <Card data-testid={`block-${blockIndex}`} className="w-full">
       <CardHeader className="pb-3">
@@ -86,20 +103,32 @@ function SeatingBlock({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-1">
+      <CardContent className="space-y-2">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={onDragEnd}
         >
-          <SortableContext items={allSeatIds} strategy={verticalListSortingStrategy}>
-            {block.map((seat, seatIdx) => (
-              <SortableSeat
-                key={seat.id}
-                seat={seat}
-                blockIndex={blockIndex}
-                seatIndex={seatIdx}
-              />
+          <SortableContext items={allSeatIds} strategy={rectSortingStrategy}>
+            {seatsByRow.map((row, rowIdx) => (
+              <div key={row.label} className="space-y-1">
+                <div className="text-xs font-medium text-muted-foreground px-1">
+                  Row {row.label}
+                </div>
+                <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${row.count}, minmax(0, 1fr))` }}>
+                  {row.seats.map((seat, seatIdxInRow) => {
+                    const absoluteSeatIdx = SEAT_ROWS.slice(0, rowIdx).reduce((sum, r) => sum + r.count, 0) + seatIdxInRow;
+                    return (
+                      <SortableSeat
+                        key={seat.id}
+                        seat={seat}
+                        blockIndex={blockIndex}
+                        seatIndex={absoluteSeatIdx}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
             ))}
           </SortableContext>
         </DndContext>
@@ -118,12 +147,23 @@ function calculateBlockStats(block: SeatData[]) {
   return { total, femaleCount, maleCount, femalePercent };
 }
 
+// Generate seat IDs based on the row structure
+function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
+  const seats: SeatData[] = [];
+  SEAT_ROWS.forEach(row => {
+    for (let i = 1; i <= row.count; i++) {
+      seats.push({
+        id: `${recordDayId}-block${blockIdx}-${row.label}${i}`,
+      });
+    }
+  });
+  return seats;
+}
+
 export function SeatingChart({ recordDayId, initialSeats }: SeatingChartProps) {
   const [blocks, setBlocks] = useState<SeatData[][]>(
-    initialSeats || Array(7).fill(null).map((_, blockIdx) =>
-      Array(20).fill(null).map((_, seatIdx) => ({
-        id: `${recordDayId}-block${blockIdx}-seat${seatIdx}`,
-      }))
+    initialSeats || Array(7).fill(null).map((_, blockIdx) => 
+      generateBlockSeats(recordDayId, blockIdx)
     )
   );
 
