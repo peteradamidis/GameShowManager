@@ -8,6 +8,7 @@ export const availabilityStatusEnum = pgEnum('availability_status', ['pending', 
 export const recordDayStatusEnum = pgEnum('record_day_status', ['draft', 'ready', 'invited', 'completed']);
 export const tokenStatusEnum = pgEnum('token_status', ['active', 'expired', 'used', 'revoked']);
 export const responseValueEnum = pgEnum('response_value', ['pending', 'yes', 'no', 'maybe']);
+export const confirmationStatusEnum = pgEnum('confirmation_status', ['pending', 'confirmed', 'declined']);
 
 // Groups table
 export const groups = pgTable("groups", {
@@ -106,6 +107,21 @@ export const contestantAvailability = pgTable("contestant_availability", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Booking Confirmation Tokens table - stores unique tokens for booking confirmations
+export const bookingConfirmationTokens = pgTable("booking_confirmation_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  seatAssignmentId: varchar("seat_assignment_id").references(() => seatAssignments.id).notNull(),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  status: tokenStatusEnum("status").default('active').notNull(),
+  confirmationStatus: confirmationStatusEnum("confirmation_status").default('pending').notNull(),
+  attendingWith: text("attending_with"), // Updated attending with info
+  notes: text("notes"), // Dietary requirements, special requests, etc.
+  confirmedAt: timestamp("confirmed_at"),
+  expiresAt: timestamp("expires_at").notNull(),
+  lastSentAt: timestamp("last_sent_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertGroupSchema = createInsertSchema(groups).omit({
   id: true,
@@ -142,6 +158,11 @@ export const insertContestantAvailabilitySchema = createInsertSchema(contestantA
   createdAt: true,
 });
 
+export const insertBookingConfirmationTokenSchema = createInsertSchema(bookingConfirmationTokens).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertGroup = z.infer<typeof insertGroupSchema>;
 export type Group = typeof groups.$inferSelect;
@@ -163,6 +184,9 @@ export type AvailabilityToken = typeof availabilityTokens.$inferSelect;
 
 export type InsertContestantAvailability = z.infer<typeof insertContestantAvailabilitySchema>;
 export type ContestantAvailability = typeof contestantAvailability.$inferSelect;
+
+export type InsertBookingConfirmationToken = z.infer<typeof insertBookingConfirmationTokenSchema>;
+export type BookingConfirmationToken = typeof bookingConfirmationTokens.$inferSelect;
 
 // Legacy user table (can be removed if not needed for auth)
 export const users = pgTable("users", {
