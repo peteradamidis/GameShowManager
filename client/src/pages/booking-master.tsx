@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -20,7 +21,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Download, Calendar } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Download, Calendar, Mail } from "lucide-react";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 
@@ -87,6 +89,8 @@ const ROWS = [
 
 export default function BookingMaster() {
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
+  const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
     queryKey: ["/api/record-days"],
@@ -107,6 +111,33 @@ export default function BookingMaster() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/seat-assignments/${selectedRecordDay}`] });
+    },
+  });
+
+  const sendBookingEmailsMutation = useMutation({
+    mutationFn: async (seatAssignmentIds: string[]) => {
+      return await apiRequest("POST", "/api/booking-confirmations/send", { 
+        seatAssignmentIds 
+      });
+    },
+    onSuccess: (data: any) => {
+      const successCount = data.results.filter((r: any) => r.success).length;
+      const failCount = data.results.filter((r: any) => !r.success).length;
+      
+      toast({
+        title: "Booking Emails Sent",
+        description: `${successCount} email(s) sent successfully${failCount > 0 ? `, ${failCount} failed` : ''}. ${data.emailsStubbed ? '(Emails are currently stubbed - check console for details)' : ''}`,
+      });
+      
+      setSelectedAssignments(new Set());
+      queryClient.invalidateQueries({ queryKey: [`/api/seat-assignments/${selectedRecordDay}`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send booking emails",
+        variant: "destructive",
+      });
     },
   });
 
@@ -166,6 +197,41 @@ export default function BookingMaster() {
   const handleCheckboxToggle = (assignmentId: string, field: string, currentValue: any) => {
     const newValue = !currentValue;
     handleFieldUpdate(assignmentId, field, newValue);
+  };
+
+  const handleSelectAssignment = (assignmentId: string, checked: boolean) => {
+    const newSelection = new Set(selectedAssignments);
+    if (checked) {
+      newSelection.add(assignmentId);
+    } else {
+      newSelection.delete(assignmentId);
+    }
+    setSelectedAssignments(newSelection);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allAssignmentIds = new Set(
+        bookingRows
+          .filter(row => row.assignment)
+          .map(row => row.assignment!.id)
+      );
+      setSelectedAssignments(allAssignmentIds);
+    } else {
+      setSelectedAssignments(new Set());
+    }
+  };
+
+  const handleSendBookingEmails = () => {
+    if (selectedAssignments.size === 0) {
+      toast({
+        title: "No contestants selected",
+        description: "Please select at least one contestant to send booking emails",
+        variant: "destructive",
+      });
+      return;
+    }
+    sendBookingEmailsMutation.mutate(Array.from(selectedAssignments));
   };
 
   const exportToExcel = () => {
@@ -245,10 +311,20 @@ export default function BookingMaster() {
             Complete booking workflow tracking for each record day
           </p>
         </div>
-        <Button onClick={exportToExcel} variant="outline" data-testid="button-export-excel">
-          <Download className="h-4 w-4 mr-2" />
-          Export to Excel
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleSendBookingEmails} 
+            disabled={selectedAssignments.size === 0 || sendBookingEmailsMutation.isPending}
+            data-testid="button-send-booking-emails"
+          >
+            <Mail className="h-4 w-4 mr-2" />
+            Send Booking Emails {selectedAssignments.size > 0 && `(${selectedAssignments.size})`}
+          </Button>
+          <Button onClick={exportToExcel} variant="outline" data-testid="button-export-excel">
+            <Download className="h-4 w-4 mr-2" />
+            Export to Excel
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
@@ -265,6 +341,11 @@ export default function BookingMaster() {
             ))}
           </SelectContent>
         </Select>
+        {selectedAssignments.size > 0 && (
+          <Badge variant="secondary" data-testid="badge-selected-count">
+            {selectedAssignments.size} selected
+          </Badge>
+        )}
       </div>
 
       {selectedRecordDay && (
@@ -277,6 +358,13 @@ export default function BookingMaster() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="sticky top-0 bg-background z-10 w-12">
+                    <Checkbox
+                      checked={selectedAssignments.size > 0 && selectedAssignments.size === bookingRows.filter(r => r.assignment).length}
+                      onCheckedChange={handleSelectAll}
+                      data-testid="checkbox-select-all"
+                    />
+                  </TableHead>
                   <TableHead className="sticky top-0 bg-background z-10">Seat</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10">Name</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10">Age</TableHead>
@@ -297,6 +385,15 @@ export default function BookingMaster() {
               <TableBody>
                 {bookingRows.map((row) => (
                   <TableRow key={row.seatId} className={!row.assignment ? "bg-muted/20" : ""}>
+                    <TableCell>
+                      {row.assignment && (
+                        <Checkbox
+                          checked={selectedAssignments.has(row.assignment.id)}
+                          onCheckedChange={(checked) => handleSelectAssignment(row.assignment!.id, checked as boolean)}
+                          data-testid={`checkbox-select-${row.seatId}`}
+                        />
+                      )}
+                    </TableCell>
                     <TableCell className="font-mono text-sm">{row.seatId}</TableCell>
                     <TableCell className="font-medium">
                       {row.contestant?.name || <span className="text-muted-foreground italic">Empty</span>}
