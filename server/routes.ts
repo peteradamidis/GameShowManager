@@ -326,11 +326,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const enrichedAssignments = assignments.map((assignment) => {
         const contestant = contestantsMap.get(assignment.contestantId);
         return {
-          assignmentId: assignment.id,
+          id: assignment.id,
           recordDayId: assignment.recordDayId,
           contestantId: assignment.contestantId,
           blockNumber: assignment.blockNumber,
           seatLabel: assignment.seatLabel,
+          firstNations: assignment.firstNations,
+          rating: assignment.rating,
+          location: assignment.location,
+          medicalQuestion: assignment.medicalQuestion,
+          criminalBankruptcy: assignment.criminalBankruptcy,
+          castingCategory: assignment.castingCategory,
+          notes: assignment.notes,
+          bookingEmailSent: assignment.bookingEmailSent,
+          confirmedRsvp: assignment.confirmedRsvp,
+          paperworkSent: assignment.paperworkSent,
+          paperworkReceived: assignment.paperworkReceived,
+          signedIn: assignment.signedIn,
+          otdNotes: assignment.otdNotes,
+          standbyReplacementSwaps: assignment.standbyReplacementSwaps,
           contestantName: contestant?.name,
           age: contestant?.age,
           gender: contestant?.gender,
@@ -775,10 +789,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'paperworkReceived', 'signedIn', 'otdNotes', 'standbyReplacementSwaps'
       ];
       
+      const timestampFields = [
+        'bookingEmailSent', 'confirmedRsvp', 'paperworkSent', 
+        'paperworkReceived', 'signedIn'
+      ];
+      
       const workflowFields: any = {};
       for (const [key, value] of Object.entries(req.body)) {
         if (allowedFields.includes(key)) {
-          workflowFields[key] = value;
+          if (timestampFields.includes(key)) {
+            if (typeof value === 'boolean') {
+              workflowFields[key] = value ? new Date() : null;
+            } else if (value === null || value === undefined) {
+              workflowFields[key] = null;
+            } else if (typeof value === 'string') {
+              workflowFields[key] = new Date(value);
+            } else {
+              workflowFields[key] = value;
+            }
+          } else {
+            workflowFields[key] = value;
+          }
         }
       }
       

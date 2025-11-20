@@ -164,7 +164,7 @@ export default function BookingMaster() {
   };
 
   const handleCheckboxToggle = (assignmentId: string, field: string, currentValue: any) => {
-    const newValue = currentValue ? null : new Date().toISOString();
+    const newValue = !currentValue;
     handleFieldUpdate(assignmentId, field, newValue);
   };
 
