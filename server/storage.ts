@@ -9,6 +9,7 @@ import {
   canceledAssignments,
   availabilityTokens,
   contestantAvailability,
+  bookingConfirmationTokens,
   type Contestant,
   type InsertContestant,
   type Group,
@@ -23,6 +24,8 @@ import {
   type InsertAvailabilityToken,
   type ContestantAvailability,
   type InsertContestantAvailability,
+  type BookingConfirmationToken,
+  type InsertBookingConfirmationToken,
 } from "@shared/schema";
 import { eq, and, sql, inArray } from "drizzle-orm";
 
@@ -83,6 +86,13 @@ export interface IStorage {
   updateAvailabilityResponse(id: string, responseValue: string, notes?: string): Promise<ContestantAvailability | undefined>;
   upsertContestantAvailability(contestantId: string, recordDayId: string, responseValue: string, notes?: string): Promise<ContestantAvailability>;
   getContestantsAvailableForRecordDay(recordDayId: string): Promise<Contestant[]>;
+  
+  // Booking Confirmation Tokens
+  createBookingConfirmationToken(token: InsertBookingConfirmationToken): Promise<BookingConfirmationToken>;
+  getBookingConfirmationByToken(token: string): Promise<BookingConfirmationToken | undefined>;
+  getBookingConfirmationBySeatAssignment(seatAssignmentId: string): Promise<BookingConfirmationToken | undefined>;
+  updateBookingConfirmationResponse(id: string, confirmationStatus: string, attendingWith?: string, notes?: string): Promise<BookingConfirmationToken | undefined>;
+  revokeBookingConfirmationToken(seatAssignmentId: string): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -576,6 +586,66 @@ export class DbStorage implements IStorage {
       );
     
     return results.map(row => row.contestants);
+  }
+
+  // Booking Confirmation Tokens
+  async createBookingConfirmationToken(token: InsertBookingConfirmationToken): Promise<BookingConfirmationToken> {
+    const [created] = await db
+      .insert(bookingConfirmationTokens)
+      .values(token)
+      .returning();
+    return created;
+  }
+
+  async getBookingConfirmationByToken(token: string): Promise<BookingConfirmationToken | undefined> {
+    const [confirmation] = await db
+      .select()
+      .from(bookingConfirmationTokens)
+      .where(eq(bookingConfirmationTokens.token, token));
+    return confirmation;
+  }
+
+  async getBookingConfirmationBySeatAssignment(seatAssignmentId: string): Promise<BookingConfirmationToken | undefined> {
+    const [confirmation] = await db
+      .select()
+      .from(bookingConfirmationTokens)
+      .where(eq(bookingConfirmationTokens.seatAssignmentId, seatAssignmentId));
+    return confirmation;
+  }
+
+  async updateBookingConfirmationResponse(
+    id: string,
+    confirmationStatus: string,
+    attendingWith?: string,
+    notes?: string
+  ): Promise<BookingConfirmationToken | undefined> {
+    const updateData: any = {
+      confirmationStatus,
+      confirmedAt: new Date(),
+      status: 'used',
+    };
+    
+    if (attendingWith !== undefined) {
+      updateData.attendingWith = attendingWith;
+    }
+    
+    if (notes !== undefined) {
+      updateData.notes = notes;
+    }
+
+    const [updated] = await db
+      .update(bookingConfirmationTokens)
+      .set(updateData)
+      .where(eq(bookingConfirmationTokens.id, id))
+      .returning();
+    return updated;
+  }
+
+  async revokeBookingConfirmationToken(seatAssignmentId: string): Promise<void> {
+    await db
+      .update(bookingConfirmationTokens)
+      .set({ status: 'revoked' })
+      .where(eq(bookingConfirmationTokens.seatAssignmentId, seatAssignmentId));
   }
 }
 

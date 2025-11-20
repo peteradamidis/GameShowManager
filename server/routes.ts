@@ -1121,6 +1121,252 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========================================
+  // Booking Confirmation Routes
+  // ========================================
+
+  // Send booking confirmation emails for selected seat assignments
+  app.post("/api/booking-confirmations/send", async (req, res) => {
+    try {
+      const { seatAssignmentIds } = req.body;
+
+      if (!seatAssignmentIds || !Array.isArray(seatAssignmentIds)) {
+        return res.status(400).json({ error: "seatAssignmentIds array is required" });
+      }
+
+      const results = [];
+
+      for (const seatAssignmentId of seatAssignmentIds) {
+        // Get seat assignment with contestant and record day data
+        const assignment = await storage.getSeatAssignmentById(seatAssignmentId);
+        
+        if (!assignment) {
+          results.push({
+            seatAssignmentId,
+            success: false,
+            error: "Seat assignment not found",
+          });
+          continue;
+        }
+
+        const contestant = await storage.getContestantById(assignment.contestantId);
+        const recordDay = await storage.getRecordDayById(assignment.recordDayId);
+
+        if (!contestant || !recordDay) {
+          results.push({
+            seatAssignmentId,
+            success: false,
+            error: "Contestant or record day not found",
+          });
+          continue;
+        }
+
+        if (!contestant.email) {
+          results.push({
+            seatAssignmentId,
+            success: false,
+            error: "Contestant has no email address",
+          });
+          continue;
+        }
+
+        // Check for existing token and revoke it
+        const existingToken = await storage.getBookingConfirmationBySeatAssignment(seatAssignmentId);
+        if (existingToken) {
+          await storage.revokeBookingConfirmationToken(seatAssignmentId);
+        }
+
+        // Generate cryptographically strong token
+        const token = randomBytes(32).toString('hex');
+        
+        // Token expires in 30 days
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 30);
+
+        // Create token record
+        const tokenRecord = await storage.createBookingConfirmationToken({
+          seatAssignmentId,
+          token,
+          expiresAt,
+          lastSentAt: new Date(),
+          status: 'active',
+          confirmationStatus: 'pending',
+        });
+
+        // Generate response URL
+        const responseUrl = `/booking-confirmation/${token}`;
+
+        // EMAIL SENDING STUBBED (like availability system)
+        // When Outlook integration is set up, send email here:
+        // await sendBookingConfirmationEmail(contestant.email, {
+        //   name: contestant.name,
+        //   recordDate: recordDay.date,
+        //   seatLocation: `Block ${assignment.blockNumber}, Seat ${assignment.seatLabel}`,
+        //   confirmationUrl: responseUrl,
+        // });
+
+        console.log(`📧 [STUBBED] Booking confirmation email for ${contestant.name} (${contestant.email})`);
+        console.log(`   Record Date: ${recordDay.date}`);
+        console.log(`   Seat: Block ${assignment.blockNumber}, ${assignment.seatLabel}`);
+        console.log(`   Confirmation URL: ${responseUrl}`);
+
+        // Update bookingEmailSent timestamp
+        await storage.updateSeatAssignmentWorkflow(seatAssignmentId, {
+          bookingEmailSent: new Date(),
+        });
+
+        results.push({
+          seatAssignmentId,
+          success: true,
+          contestantName: contestant.name,
+          email: contestant.email,
+          responseUrl,
+        });
+      }
+
+      res.json({
+        message: `Processed ${results.length} booking confirmations`,
+        results,
+        emailsStubbed: true,
+      });
+    } catch (error: any) {
+      console.error("Error sending booking confirmations:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get booking confirmation details by token (public endpoint - no auth)
+  app.get("/api/booking-confirmations/token/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+
+      // Validate token
+      const tokenRecord = await storage.getBookingConfirmationByToken(token);
+      
+      if (!tokenRecord) {
+        return res.status(404).json({ error: "Invalid confirmation link" });
+      }
+
+      if (tokenRecord.status === 'revoked') {
+        return res.status(400).json({ error: "This confirmation link has been revoked" });
+      }
+
+      if (new Date(tokenRecord.expiresAt) < new Date()) {
+        return res.status(400).json({ error: "This confirmation link has expired" });
+      }
+
+      // Get seat assignment, contestant, and record day
+      const assignment = await storage.getSeatAssignmentById(tokenRecord.seatAssignmentId);
+      
+      if (!assignment) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      const contestant = await storage.getContestantById(assignment.contestantId);
+      const recordDay = await storage.getRecordDayById(assignment.recordDayId);
+
+      if (!contestant || !recordDay) {
+        return res.status(404).json({ error: "Booking details not found" });
+      }
+
+      // Get group members if applicable
+      let groupMembers: Array<{ id: string; name: string }> = [];
+      if (contestant.groupId) {
+        const allContestants = await storage.getContestants();
+        groupMembers = allContestants
+          .filter(c => c.groupId === contestant.groupId && c.id !== contestant.id)
+          .map(c => ({ id: c.id, name: c.name }));
+      }
+
+      res.json({
+        contestant: {
+          id: contestant.id,
+          name: contestant.name,
+          age: contestant.age,
+          gender: contestant.gender,
+          attendingWith: contestant.attendingWith,
+        },
+        groupMembers,
+        booking: {
+          recordDate: recordDay.date,
+          seatLocation: `Block ${assignment.blockNumber}, Seat ${assignment.seatLabel}`,
+        },
+        confirmationStatus: tokenRecord.confirmationStatus,
+        currentAttendingWith: tokenRecord.attendingWith || contestant.attendingWith,
+        currentNotes: tokenRecord.notes,
+      });
+    } catch (error: any) {
+      console.error("Error fetching booking confirmation:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Submit booking confirmation response (public endpoint - no auth)
+  app.post("/api/booking-confirmations/respond/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const { confirmationStatus, attendingWith, notes } = req.body;
+
+      // Validate token
+      const tokenRecord = await storage.getBookingConfirmationByToken(token);
+      
+      if (!tokenRecord) {
+        return res.status(404).json({ error: "Invalid confirmation link" });
+      }
+
+      if (tokenRecord.status !== 'active') {
+        return res.status(400).json({ error: "This confirmation link is no longer active" });
+      }
+
+      if (new Date(tokenRecord.expiresAt) < new Date()) {
+        return res.status(400).json({ error: "This confirmation link has expired" });
+      }
+
+      if (!confirmationStatus || !['confirmed', 'declined'].includes(confirmationStatus)) {
+        return res.status(400).json({ error: "Valid confirmationStatus required (confirmed or declined)" });
+      }
+
+      // Get seat assignment
+      const assignment = await storage.getSeatAssignmentById(tokenRecord.seatAssignmentId);
+      
+      if (!assignment) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      // Update confirmation response
+      await storage.updateBookingConfirmationResponse(
+        tokenRecord.id,
+        confirmationStatus,
+        attendingWith,
+        notes
+      );
+
+      // Update seat assignment workflow based on response
+      if (confirmationStatus === 'confirmed') {
+        // Update confirmedRsvp timestamp
+        await storage.updateSeatAssignmentWorkflow(tokenRecord.seatAssignmentId, {
+          confirmedRsvp: new Date(),
+        });
+      } else if (confirmationStatus === 'declined') {
+        // Cancel the booking and move to reschedule list
+        await storage.cancelSeatAssignment(
+          tokenRecord.seatAssignmentId,
+          `Declined confirmation: ${notes || 'No reason provided'}`
+        );
+      }
+
+      res.json({
+        message: confirmationStatus === 'confirmed' 
+          ? "Booking confirmed successfully!" 
+          : "Booking cancelled. You've been moved to the reschedule list.",
+        confirmationStatus,
+      });
+    } catch (error: any) {
+      console.error("Error processing confirmation response:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
