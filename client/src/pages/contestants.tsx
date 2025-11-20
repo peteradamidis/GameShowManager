@@ -1,30 +1,76 @@
 import { ContestantTable, Contestant } from "@/components/contestant-table";
 import { ImportExcelDialog } from "@/components/import-excel-dialog";
 import { Button } from "@/components/ui/button";
-import { Mail } from "lucide-react";
+import { Mail, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Contestants() {
   const { toast } = useToast();
+  const [selectedContestants, setSelectedContestants] = useState<string[]>([]);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
 
-  const mockContestants: Contestant[] = [
-    { id: "1", name: "Sarah Johnson", groupId: "GRP001", age: 28, gender: "Female", availabilityStatus: "Assigned", recordDay: "Dec 15, 2025" },
-    { id: "2", name: "Mike Chen", groupId: "GRP001", age: 32, gender: "Male", availabilityStatus: "Assigned", recordDay: "Dec 15, 2025" },
-    { id: "3", name: "Emma Williams", groupId: null, age: 24, gender: "Female", availabilityStatus: "Available" },
-    { id: "4", name: "James Brown", groupId: "GRP002", age: 45, gender: "Male", availabilityStatus: "Pending" },
-    { id: "5", name: "Lisa Anderson", groupId: "GRP002", age: 41, gender: "Female", availabilityStatus: "Pending" },
-    { id: "6", name: "David Martinez", groupId: "GRP003", age: 36, gender: "Male", availabilityStatus: "Available" },
-    { id: "7", name: "Jennifer Lee", groupId: "GRP003", age: 29, gender: "Female", availabilityStatus: "Available" },
-    { id: "8", name: "Robert Taylor", groupId: null, age: 52, gender: "Male", availabilityStatus: "Invited", recordDay: "Dec 22, 2025" },
-    { id: "9", name: "Amanda White", groupId: "GRP004", age: 31, gender: "Female", availabilityStatus: "Assigned", recordDay: "Dec 15, 2025" },
-    { id: "10", name: "Chris Evans", groupId: "GRP004", age: 33, gender: "Male", availabilityStatus: "Assigned", recordDay: "Dec 15, 2025" },
-  ];
+  // Fetch contestants
+  const { data: contestants = [], isLoading: loadingContestants, refetch: refetchContestants } = useQuery<Contestant[]>({
+    queryKey: ['/api/contestants'],
+  });
+
+  // Fetch record days
+  const { data: recordDays = [] } = useQuery<any[]>({
+    queryKey: ['/api/record-days'],
+  });
 
   const handleSendAvailabilityForms = () => {
     toast({
       title: "Availability forms sent",
       description: "Forms have been sent to all pending contestants.",
     });
+  };
+
+  const handleAssignToRecordDay = async () => {
+    if (!selectedRecordDay || selectedContestants.length === 0) return;
+
+    try {
+      // Add contestants to the selected record day
+      await apiRequest('POST', `/api/record-days/${selectedRecordDay}/contestants`, {
+        contestantIds: selectedContestants,
+      });
+
+      await refetchContestants();
+      
+      toast({
+        title: "Contestants assigned",
+        description: `${selectedContestants.length} contestant(s) assigned to record day.`,
+      });
+
+      setAssignDialogOpen(false);
+      setSelectedContestants([]);
+      setSelectedRecordDay("");
+    } catch (error) {
+      toast({
+        title: "Assignment failed",
+        description: "Could not assign contestants to record day.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -37,6 +83,15 @@ export default function Contestants() {
           </p>
         </div>
         <div className="flex gap-2">
+          {selectedContestants.length > 0 && (
+            <Button 
+              onClick={() => setAssignDialogOpen(true)} 
+              data-testid="button-assign-contestants"
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              Assign {selectedContestants.length} to Record Day
+            </Button>
+          )}
           <Button variant="outline" onClick={handleSendAvailabilityForms} data-testid="button-send-availability">
             <Mail className="h-4 w-4 mr-2" />
             Send Availability Forms
@@ -45,7 +100,57 @@ export default function Contestants() {
         </div>
       </div>
 
-      <ContestantTable contestants={mockContestants} />
+      {loadingContestants ? (
+        <div className="text-center py-12 text-muted-foreground">
+          Loading contestants...
+        </div>
+      ) : (
+        <ContestantTable 
+          contestants={contestants}
+          selectedIds={selectedContestants}
+          onSelectionChange={setSelectedContestants}
+        />
+      )}
+
+      {/* Assign to Record Day Dialog */}
+      <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+        <DialogContent data-testid="dialog-assign-record-day">
+          <DialogHeader>
+            <DialogTitle>Assign to Record Day</DialogTitle>
+            <DialogDescription>
+              Select a record day to assign {selectedContestants.length} contestant(s) to.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Select value={selectedRecordDay} onValueChange={setSelectedRecordDay}>
+              <SelectTrigger data-testid="select-record-day">
+                <SelectValue placeholder="Select a record day" />
+              </SelectTrigger>
+              <SelectContent>
+                {recordDays.map((day: any) => (
+                  <SelectItem key={day.id} value={day.id}>
+                    {new Date(day.date).toLocaleDateString()} - {day.status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAssignToRecordDay} 
+              disabled={!selectedRecordDay}
+              data-testid="button-confirm-assign"
+            >
+              Assign Contestants
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Search } from "lucide-react";
 
 export interface Contestant {
@@ -23,6 +24,8 @@ export interface Contestant {
 
 interface ContestantTableProps {
   contestants: Contestant[];
+  selectedIds?: string[];
+  onSelectionChange?: (ids: string[]) => void;
 }
 
 const statusColors = {
@@ -32,12 +35,38 @@ const statusColors = {
   Invited: "bg-purple-500/10 text-purple-700 dark:text-purple-400",
 };
 
-export function ContestantTable({ contestants }: ContestantTableProps) {
+export function ContestantTable({ 
+  contestants, 
+  selectedIds = [], 
+  onSelectionChange 
+}: ContestantTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredContestants = contestants.filter((contestant) =>
     contestant.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleToggleAll = () => {
+    if (!onSelectionChange) return;
+    
+    if (selectedIds.length === filteredContestants.length) {
+      onSelectionChange([]);
+    } else {
+      onSelectionChange(filteredContestants.map(c => c.id));
+    }
+  };
+
+  const handleToggle = (id: string) => {
+    if (!onSelectionChange) return;
+    
+    if (selectedIds.includes(id)) {
+      onSelectionChange(selectedIds.filter(sid => sid !== id));
+    } else {
+      onSelectionChange([...selectedIds, id]);
+    }
+  };
+
+  const allSelected = filteredContestants.length > 0 && selectedIds.length === filteredContestants.length;
 
   return (
     <div className="space-y-4">
@@ -55,6 +84,15 @@ export function ContestantTable({ contestants }: ContestantTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
+              {onSelectionChange && (
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={allSelected}
+                    onCheckedChange={handleToggleAll}
+                    data-testid="checkbox-select-all"
+                  />
+                </TableHead>
+              )}
               <TableHead>Name</TableHead>
               <TableHead>Group ID</TableHead>
               <TableHead>Age</TableHead>
@@ -66,6 +104,15 @@ export function ContestantTable({ contestants }: ContestantTableProps) {
           <TableBody>
             {filteredContestants.map((contestant) => (
               <TableRow key={contestant.id} data-testid={`row-contestant-${contestant.id}`}>
+                {onSelectionChange && (
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.includes(contestant.id)}
+                      onCheckedChange={() => handleToggle(contestant.id)}
+                      data-testid={`checkbox-contestant-${contestant.id}`}
+                    />
+                  </TableCell>
+                )}
                 <TableCell className="font-medium">{contestant.name}</TableCell>
                 <TableCell>
                   {contestant.groupId ? (

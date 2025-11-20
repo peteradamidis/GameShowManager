@@ -151,6 +151,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Assign contestants to a record day
+  app.post("/api/record-days/:id/contestants", async (req, res) => {
+    try {
+      const { contestantIds } = req.body;
+      const recordDayId = req.params.id;
+
+      if (!Array.isArray(contestantIds) || contestantIds.length === 0) {
+        return res.status(400).json({ error: "contestantIds must be a non-empty array" });
+      }
+
+      // Verify record day exists
+      const recordDay = await storage.getRecordDayById(recordDayId);
+      if (!recordDay) {
+        return res.status(404).json({ error: "Record day not found" });
+      }
+
+      // Update each contestant's availability to show they're assigned
+      const updates = contestantIds.map((contestantId: string) =>
+        storage.updateContestantAvailability(contestantId, "Assigned")
+      );
+      await Promise.all(updates);
+
+      res.json({ 
+        message: `${contestantIds.length} contestants assigned to record day`,
+        recordDayId 
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get seat assignments for a record day
   app.get("/api/seat-assignments/:recordDayId", async (req, res) => {
     try {
