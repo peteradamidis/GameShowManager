@@ -59,6 +59,9 @@ An automated system for managing TV game show contestants that imports applicant
    - **POST /api/availability/respond/:token - Submit availability responses (no auth)**
    - **GET /api/availability/status - Availability statistics overview**
    - **GET /api/availability/record-day/:recordDayId - Filter contestants by availability**
+   - **POST /api/booking-confirmations/send - Generate booking confirmation tokens**
+   - **GET /api/booking-confirmations/token/:token - Fetch booking details for public form (no auth)**
+   - **POST /api/booking-confirmations/respond/:token - Submit booking confirmation (no auth)**
 
 5. **Atomic Seat Swapping**
    - Database-level transactions using Drizzle ORM
@@ -98,6 +101,44 @@ An automated system for managing TV game show contestants that imports applicant
      - Email sending currently stubbed (requires RESEND_API_KEY and FROM_EMAIL secrets)
      - System generates tokens and response URLs ready for email delivery
      - Note: Email integration can be completed later by adding Resend API credentials
+
+7. **Booking Confirmation System**
+   - **Database Tables:**
+     - booking_confirmation_tokens: stores unique tokens linked to specific seat assignments
+     - Includes status tracking (pending/confirmed/declined/expired)
+     - 7-day expiration from creation
+   - **Token Generation:**
+     - Cryptographically strong tokens (64-char hex)
+     - One token per seat assignment
+     - Linked to specific record day and seat booking
+   - **Public Confirmation Form:**
+     - Standalone page at `/booking-confirmation/:token` (no auth required)
+     - Shows contestant info, record day, seat assignment
+     - Confirm/Decline response options
+     - Update "Attending With" field
+     - Optional notes for admin review
+   - **Admin Management:**
+     - Booking Master page with checkbox selection
+     - "Send Booking Emails" button for bulk confirmations
+     - Shows selection count and pending email status
+     - Tracks sent/confirmed status per contestant
+   - **Automatic Workflow Updates:**
+     - Sets `bookingEmailSent` timestamp when email sent
+     - Sets `confirmedRsvp` timestamp when contestant confirms
+     - Automatically cancels and moves to Reschedule list on decline
+     - Updates "Attending With" field if contestant modifies it
+   - **API Endpoints:**
+     - POST /api/booking-confirmations/send - Generate tokens and send confirmation emails
+     - GET /api/booking-confirmations/token/:token - Fetch booking details (no auth)
+     - POST /api/booking-confirmations/respond/:token - Submit confirmation response (no auth)
+   - **Email Integration:**
+     - Email sending currently stubbed (like availability system)
+     - System generates tokens and confirmation URLs
+     - Ready for Resend API integration
+   - **Security:**
+     - Token validation (status, expiration, seat assignment checks)
+     - One-time use tokens marked as used after response
+     - Prevents duplicate confirmations
 
 ### Frontend (Complete)
 - Material Design-inspired UI with Inter font
@@ -145,9 +186,26 @@ An automated system for managing TV game show contestants that imports applicant
     - Booking Email Sent, Confirmed RSVP
     - Paperwork Sent, Paperwork Received
     - Signed In
+  - **Send Booking Emails feature:**
+    - Checkbox selection for bulk email sending
+    - "Send Booking Emails" button with selection counter
+    - Automatically generates confirmation tokens
+    - Updates `bookingEmailSent` timestamp
+    - Shows toast notifications with success/failure counts
   - Shows contestant details: name, age, phone, email, attending with, medical info
   - Excel export functionality matching Cast It Reach template format
   - Includes record day metadata in exported file
+- **Booking Confirmation page** (public, no auth)
+  - Accessed via unique token link: `/booking-confirmation/:token`
+  - Shows contestant name, record day, and seat assignment
+  - Confirm or Decline booking options
+  - Update "Attending With" field
+  - Optional notes field for contestant feedback
+  - Auto-updates Booking Master workflow:
+    - Sets `confirmedRsvp` timestamp on confirmation
+    - Cancels and moves to Reschedule list on decline
+    - Updates "Attending With" if modified
+  - One-time use tokens with 7-day expiration
 - Studio layout visualization with 7 blocks
 
 ## Studio Layout
