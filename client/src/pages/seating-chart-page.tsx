@@ -56,14 +56,24 @@ export default function SeatingChartPage() {
   const [selectedContestant, setSelectedContestant] = useState<string>("");
   const [selectedContestantDetails, setSelectedContestantDetails] = useState<any>(null);
   
-  // Get record day ID from query parameter
+  // Get record day ID from query parameter or fetch first available
   const searchParams = new URLSearchParams(window.location.search);
-  const recordDayId = searchParams.get('day') || 'default';
+  const urlRecordDayId = searchParams.get('day');
+
+  // Fetch all record days to get a valid ID if none specified
+  const { data: recordDays } = useQuery<any[]>({
+    queryKey: ['/api/record-days'],
+    enabled: !urlRecordDayId, // Only fetch if no ID in URL
+  });
+
+  // Use URL ID or first available record day
+  const recordDayId = urlRecordDayId || recordDays?.[0]?.id || null;
 
   // Fetch seat assignments for this record day
   const { data: assignments, isLoading, refetch } = useQuery({
     queryKey: ['/api/seat-assignments', recordDayId],
     queryFn: async () => {
+      if (!recordDayId) return [];
       const response = await fetch(`/api/seat-assignments/${recordDayId}`);
       if (!response.ok) {
         if (response.status === 404) {
@@ -73,6 +83,7 @@ export default function SeatingChartPage() {
       }
       return response.json();
     },
+    enabled: !!recordDayId, // Only fetch when we have a valid record day ID
   });
 
   // Fetch available contestants (assigned to this record day but not yet seated)
@@ -91,6 +102,17 @@ export default function SeatingChartPage() {
     },
     enabled: !!assignments,
   });
+
+  // Show loading or error if no record day
+  if (!recordDayId) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-muted-foreground">No record days available. Please create a record day first.</p>
+        </div>
+      </div>
+    );
+  }
 
   // Build seat data from assignments
   const seats: SeatData[][] = generateEmptyBlocks(recordDayId);
