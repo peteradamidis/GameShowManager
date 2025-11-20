@@ -135,8 +135,19 @@ export class DbStorage implements IStorage {
 
   // Seat Assignments
   async createSeatAssignment(assignment: InsertSeatAssignment): Promise<SeatAssignment> {
-    const [created] = await db.insert(seatAssignments).values(assignment).returning();
-    return created;
+    // Use transaction to atomically create assignment and update contestant status
+    return await db.transaction(async (tx) => {
+      // Create the seat assignment
+      const [created] = await tx.insert(seatAssignments).values(assignment).returning();
+      
+      // Update contestant status to 'assigned'
+      await tx
+        .update(contestants)
+        .set({ availabilityStatus: 'assigned' })
+        .where(eq(contestants.id, assignment.contestantId));
+      
+      return created;
+    });
   }
 
   async getSeatAssignmentById(id: string): Promise<SeatAssignment | undefined> {
@@ -152,7 +163,25 @@ export class DbStorage implements IStorage {
   }
 
   async deleteSeatAssignment(id: string): Promise<void> {
-    await db.delete(seatAssignments).where(eq(seatAssignments.id, id));
+    // Use transaction to atomically delete assignment and update contestant status
+    await db.transaction(async (tx) => {
+      // Get the assignment to find the contestant
+      const [assignment] = await tx
+        .select()
+        .from(seatAssignments)
+        .where(eq(seatAssignments.id, id));
+      
+      if (assignment) {
+        // Delete the seat assignment
+        await tx.delete(seatAssignments).where(eq(seatAssignments.id, id));
+        
+        // Update contestant status back to 'available'
+        await tx
+          .update(contestants)
+          .set({ availabilityStatus: 'available' })
+          .where(eq(contestants.id, assignment.contestantId));
+      }
+    });
   }
 
   async updateSeatAssignment(
