@@ -1,8 +1,85 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, pgEnum, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Enums
+export const availabilityStatusEnum = pgEnum('availability_status', ['pending', 'available', 'assigned', 'invited']);
+export const recordDayStatusEnum = pgEnum('record_day_status', ['draft', 'ready', 'invited', 'completed']);
+
+// Groups table
+export const groups = pgTable("groups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  referenceNumber: text("reference_number").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Contestants table
+export const contestants = pgTable("contestants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  age: integer("age").notNull(),
+  gender: text("gender").notNull(),
+  groupId: varchar("group_id").references(() => groups.id),
+  availabilityStatus: availabilityStatusEnum("availability_status").default('pending').notNull(),
+  attendingWith: text("attending_with"), // Raw data from Excel
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Record Days table
+export const recordDays = pgTable("record_days", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: date("date").notNull(),
+  totalSeats: integer("total_seats").default(154).notNull(),
+  status: recordDayStatusEnum("status").default('draft').notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Seat Assignments table
+export const seatAssignments = pgTable("seat_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  recordDayId: varchar("record_day_id").references(() => recordDays.id).notNull(),
+  contestantId: varchar("contestant_id").references(() => contestants.id).notNull(),
+  blockNumber: integer("block_number").notNull(), // 1-7
+  seatLabel: text("seat_label").notNull(), // e.g., "A1", "B3"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Insert schemas
+export const insertGroupSchema = createInsertSchema(groups).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertContestantSchema = createInsertSchema(contestants).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertRecordDaySchema = createInsertSchema(recordDays).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSeatAssignmentSchema = createInsertSchema(seatAssignments).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types
+export type InsertGroup = z.infer<typeof insertGroupSchema>;
+export type Group = typeof groups.$inferSelect;
+
+export type InsertContestant = z.infer<typeof insertContestantSchema>;
+export type Contestant = typeof contestants.$inferSelect;
+
+export type InsertRecordDay = z.infer<typeof insertRecordDaySchema>;
+export type RecordDay = typeof recordDays.$inferSelect;
+
+export type InsertSeatAssignment = z.infer<typeof insertSeatAssignmentSchema>;
+export type SeatAssignment = typeof seatAssignments.$inferSelect;
+
+// Legacy user table (can be removed if not needed for auth)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
