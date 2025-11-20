@@ -156,7 +156,7 @@ export function ContestantTable({
                 <TableCell>{contestant.age}</TableCell>
                 <TableCell>{contestant.gender}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary" className={statusColors[contestant.availabilityStatus]}>
+                  <Badge className={statusColors[contestant.availabilityStatus]}>
                     {contestant.availabilityStatus}
                   </Badge>
                 </TableCell>
@@ -198,7 +198,7 @@ export function ContestantTable({
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Status</label>
                     <div className="mt-1">
-                      <Badge variant="secondary" className={statusColors[contestantDetails.availabilityStatus as keyof typeof statusColors]}>
+                      <Badge className={statusColors[contestantDetails.availabilityStatus as keyof typeof statusColors]}>
                         {contestantDetails.availabilityStatus}
                       </Badge>
                     </div>
