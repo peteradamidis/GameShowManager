@@ -1329,19 +1329,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if token has already been used
       if (tokenRecord.confirmationStatus !== 'pending') {
-        return res.status(400).json({ 
+        return res.status(410).json({ 
           error: "This confirmation link has already been used",
           alreadyResponded: true,
           previousResponse: tokenRecord.confirmationStatus
         });
       }
 
+      if (tokenRecord.status === 'revoked') {
+        return res.status(403).json({ error: "This confirmation link has been revoked" });
+      }
+
       if (tokenRecord.status !== 'active') {
-        return res.status(400).json({ error: "This confirmation link is no longer active" });
+        return res.status(403).json({ error: "This confirmation link is no longer active" });
       }
 
       if (new Date(tokenRecord.expiresAt) < new Date()) {
-        return res.status(400).json({ error: "This confirmation link has expired" });
+        return res.status(410).json({ error: "This confirmation link has expired" });
       }
 
       if (!confirmationStatus || !['confirmed', 'declined'].includes(confirmationStatus)) {
@@ -1381,7 +1385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Update contestant's attendingWith if provided
         if (attendingWith) {
-          await storage.updateContestantField(assignment.contestantId, 'attendingWith', attendingWith);
+          await storage.updateContestantAttendingWith(assignment.contestantId, attendingWith);
         }
       } else if (confirmationStatus === 'declined') {
         // Cancel the booking and move to reschedule list

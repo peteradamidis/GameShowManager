@@ -135,17 +135,11 @@ export class DbStorage implements IStorage {
     return updated;
   }
 
-  async updateContestantField(id: string, field: string, value: any): Promise<Contestant | undefined> {
-    // Whitelist allowed fields to prevent mass-assignment vulnerabilities
-    const allowedFields = ['attendingWith'];
-    
-    if (!allowedFields.includes(field)) {
-      throw new Error(`Cannot update field '${field}': not in whitelist`);
-    }
-    
+  // Dedicated method to update contestant's "Attending With" field
+  async updateContestantAttendingWith(id: string, attendingWith: string): Promise<Contestant | undefined> {
     const [updated] = await db
       .update(contestants)
-      .set({ [field]: value })
+      .set({ attendingWith })
       .where(eq(contestants.id, id))
       .returning();
     return updated;
