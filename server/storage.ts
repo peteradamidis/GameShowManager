@@ -6,6 +6,8 @@ import {
   groups, 
   recordDays, 
   seatAssignments,
+  availabilityTokens,
+  contestantAvailability,
   type Contestant,
   type InsertContestant,
   type Group,
@@ -14,8 +16,12 @@ import {
   type InsertRecordDay,
   type SeatAssignment,
   type InsertSeatAssignment,
+  type AvailabilityToken,
+  type InsertAvailabilityToken,
+  type ContestantAvailability,
+  type InsertContestantAvailability,
 } from "@shared/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, inArray } from "drizzle-orm";
 
 // Configure WebSocket for server-side Neon connection
 neonConfig.webSocketConstructor = ws as any;
@@ -53,6 +59,21 @@ export interface IStorage {
     targetBlock?: number,
     targetSeat?: string
   ): Promise<{ source: SeatAssignment; target?: SeatAssignment }>;
+  
+  // Availability Tokens
+  createAvailabilityToken(token: InsertAvailabilityToken): Promise<AvailabilityToken>;
+  getAvailabilityTokenByToken(token: string): Promise<AvailabilityToken | undefined>;
+  getAvailabilityTokensByContestant(contestantId: string): Promise<AvailabilityToken[]>;
+  updateTokenStatus(id: string, status: string): Promise<AvailabilityToken | undefined>;
+  revokeContestantTokens(contestantId: string): Promise<void>;
+  
+  // Contestant Availability
+  createContestantAvailability(availability: InsertContestantAvailability): Promise<ContestantAvailability>;
+  getContestantAvailability(contestantId: string): Promise<ContestantAvailability[]>;
+  getAvailabilityByRecordDay(recordDayId: string): Promise<Array<ContestantAvailability & { contestant: Contestant }>>;
+  updateAvailabilityResponse(id: string, responseValue: string, notes?: string): Promise<ContestantAvailability | undefined>;
+  upsertContestantAvailability(contestantId: string, recordDayId: string, responseValue: string, notes?: string): Promise<ContestantAvailability>;
+  getContestantsAvailableForRecordDay(recordDayId: string): Promise<Contestant[]>;
 }
 
 export class DbStorage implements IStorage {
@@ -308,6 +329,148 @@ export class DbStorage implements IStorage {
         return { source: updatedSource };
       }
     });
+  }
+
+  // Availability Tokens
+  async createAvailabilityToken(token: InsertAvailabilityToken): Promise<AvailabilityToken> {
+    const [created] = await db.insert(availabilityTokens).values(token).returning();
+    return created;
+  }
+
+  async getAvailabilityTokenByToken(token: string): Promise<AvailabilityToken | undefined> {
+    const [result] = await db
+      .select()
+      .from(availabilityTokens)
+      .where(eq(availabilityTokens.token, token));
+    return result;
+  }
+
+  async getAvailabilityTokensByContestant(contestantId: string): Promise<AvailabilityToken[]> {
+    return db
+      .select()
+      .from(availabilityTokens)
+      .where(eq(availabilityTokens.contestantId, contestantId));
+  }
+
+  async updateTokenStatus(id: string, status: string): Promise<AvailabilityToken | undefined> {
+    const [updated] = await db
+      .update(availabilityTokens)
+      .set({ status: status as any })
+      .where(eq(availabilityTokens.id, id))
+      .returning();
+    return updated;
+  }
+
+  async revokeContestantTokens(contestantId: string): Promise<void> {
+    await db
+      .update(availabilityTokens)
+      .set({ status: 'revoked' })
+      .where(
+        and(
+          eq(availabilityTokens.contestantId, contestantId),
+          eq(availabilityTokens.status, 'active')
+        )
+      );
+  }
+
+  // Contestant Availability
+  async createContestantAvailability(availability: InsertContestantAvailability): Promise<ContestantAvailability> {
+    const [created] = await db.insert(contestantAvailability).values(availability).returning();
+    return created;
+  }
+
+  async getContestantAvailability(contestantId: string): Promise<ContestantAvailability[]> {
+    return db
+      .select()
+      .from(contestantAvailability)
+      .where(eq(contestantAvailability.contestantId, contestantId));
+  }
+
+  async getAvailabilityByRecordDay(recordDayId: string): Promise<Array<ContestantAvailability & { contestant: Contestant }>> {
+    const results = await db
+      .select()
+      .from(contestantAvailability)
+      .leftJoin(contestants, eq(contestantAvailability.contestantId, contestants.id))
+      .where(eq(contestantAvailability.recordDayId, recordDayId));
+    
+    // Drizzle uses snake_case for table names in join results
+    return results.map(row => ({
+      ...(row.contestant_availability as ContestantAvailability),
+      contestant: row.contestants!,
+    }));
+  }
+
+  async updateAvailabilityResponse(id: string, responseValue: string, notes?: string): Promise<ContestantAvailability | undefined> {
+    const [updated] = await db
+      .update(contestantAvailability)
+      .set({ 
+        responseValue: responseValue as any,
+        notes,
+        respondedAt: new Date(),
+      })
+      .where(eq(contestantAvailability.id, id))
+      .returning();
+    return updated;
+  }
+
+  async upsertContestantAvailability(
+    contestantId: string,
+    recordDayId: string,
+    responseValue: string,
+    notes?: string
+  ): Promise<ContestantAvailability> {
+    // Check if record exists
+    const [existing] = await db
+      .select()
+      .from(contestantAvailability)
+      .where(
+        and(
+          eq(contestantAvailability.contestantId, contestantId),
+          eq(contestantAvailability.recordDayId, recordDayId)
+        )
+      );
+
+    if (existing) {
+      // Update existing
+      const [updated] = await db
+        .update(contestantAvailability)
+        .set({
+          responseValue: responseValue as any,
+          notes,
+          respondedAt: new Date(),
+        })
+        .where(eq(contestantAvailability.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      // Create new
+      const [created] = await db
+        .insert(contestantAvailability)
+        .values({
+          contestantId,
+          recordDayId,
+          responseValue: responseValue as any,
+          notes,
+          respondedAt: new Date(),
+        })
+        .returning();
+      return created;
+    }
+  }
+
+  async getContestantsAvailableForRecordDay(recordDayId: string): Promise<Contestant[]> {
+    const results = await db
+      .select()
+      .from(contestants)
+      .leftJoin(contestantAvailability, eq(contestants.id, contestantAvailability.contestantId))
+      .where(
+        and(
+          eq(contestantAvailability.recordDayId, recordDayId),
+          eq(contestantAvailability.responseValue, 'yes')
+        )
+      );
+    
+    return results.map(row => row.contestants);
   }
 }
 

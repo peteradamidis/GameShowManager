@@ -6,6 +6,8 @@ import { z } from "zod";
 // Enums
 export const availabilityStatusEnum = pgEnum('availability_status', ['pending', 'available', 'assigned', 'invited']);
 export const recordDayStatusEnum = pgEnum('record_day_status', ['draft', 'ready', 'invited', 'completed']);
+export const tokenStatusEnum = pgEnum('token_status', ['active', 'expired', 'used', 'revoked']);
+export const responseValueEnum = pgEnum('response_value', ['pending', 'yes', 'no', 'maybe']);
 
 // Groups table
 export const groups = pgTable("groups", {
@@ -45,6 +47,28 @@ export const seatAssignments = pgTable("seat_assignments", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Availability Tokens table - stores unique tokens for availability check responses
+export const availabilityTokens = pgTable("availability_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contestantId: varchar("contestant_id").references(() => contestants.id).notNull(),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  status: tokenStatusEnum("status").default('active').notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  lastSentAt: timestamp("last_sent_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Contestant Availability table - join table tracking availability for specific record days
+export const contestantAvailability = pgTable("contestant_availability", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contestantId: varchar("contestant_id").references(() => contestants.id).notNull(),
+  recordDayId: varchar("record_day_id").references(() => recordDays.id).notNull(),
+  responseValue: responseValueEnum("response_value").default('pending').notNull(),
+  respondedAt: timestamp("responded_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertGroupSchema = createInsertSchema(groups).omit({
   id: true,
@@ -66,6 +90,16 @@ export const insertSeatAssignmentSchema = createInsertSchema(seatAssignments).om
   createdAt: true,
 });
 
+export const insertAvailabilityTokenSchema = createInsertSchema(availabilityTokens).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertContestantAvailabilitySchema = createInsertSchema(contestantAvailability).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertGroup = z.infer<typeof insertGroupSchema>;
 export type Group = typeof groups.$inferSelect;
@@ -78,6 +112,12 @@ export type RecordDay = typeof recordDays.$inferSelect;
 
 export type InsertSeatAssignment = z.infer<typeof insertSeatAssignmentSchema>;
 export type SeatAssignment = typeof seatAssignments.$inferSelect;
+
+export type InsertAvailabilityToken = z.infer<typeof insertAvailabilityTokenSchema>;
+export type AvailabilityToken = typeof availabilityTokens.$inferSelect;
+
+export type InsertContestantAvailability = z.infer<typeof insertContestantAvailabilitySchema>;
+export type ContestantAvailability = typeof contestantAvailability.$inferSelect;
 
 // Legacy user table (can be removed if not needed for auth)
 export const users = pgTable("users", {

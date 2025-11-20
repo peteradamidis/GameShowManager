@@ -1,7 +1,8 @@
 import { ContestantTable, Contestant } from "@/components/contestant-table";
 import { ImportExcelDialog } from "@/components/import-excel-dialog";
 import { Button } from "@/components/ui/button";
-import { Mail, UserPlus, TestTube } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Mail, UserPlus, TestTube, Filter, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -31,6 +32,16 @@ const SEAT_ROWS = [
   { label: 'E', count: 4 },
 ];
 
+type ContestantWithAvailability = {
+  id: string;
+  contestantId: string;
+  recordDayId: string;
+  responseValue: string;
+  respondedAt: string | null;
+  notes: string | null;
+  contestant: Contestant;
+};
+
 export default function Contestants() {
   const { toast } = useToast();
   const [selectedContestants, setSelectedContestants] = useState<string[]>([]);
@@ -38,16 +49,33 @@ export default function Contestants() {
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
   const [selectedBlock, setSelectedBlock] = useState<string>("");
   const [selectedSeat, setSelectedSeat] = useState<string>("");
+  const [filterRecordDayId, setFilterRecordDayId] = useState<string>("");
+  const [filterResponseValue, setFilterResponseValue] = useState<string>("");
 
-  // Fetch contestants
+  // Fetch all contestants
   const { data: contestants = [], isLoading: loadingContestants, refetch: refetchContestants } = useQuery<Contestant[]>({
     queryKey: ['/api/contestants'],
+  });
+
+  // Fetch filtered contestants by availability
+  const { data: filteredAvailability = [], isLoading: loadingFiltered } = useQuery<ContestantWithAvailability[]>({
+    queryKey: ['/api/availability/record-day', filterRecordDayId],
+    enabled: !!filterRecordDayId,
   });
 
   // Fetch record days
   const { data: recordDays = [], refetch: refetchRecordDays } = useQuery<any[]>({
     queryKey: ['/api/record-days'],
   });
+
+  // Determine which contestants to display
+  const displayedContestants = filterRecordDayId 
+    ? filteredAvailability
+        .filter(item => !filterResponseValue || item.responseValue === filterResponseValue)
+        .map(item => item.contestant)
+    : contestants;
+
+  const isLoading = loadingContestants || (filterRecordDayId && loadingFiltered);
 
   const generateFakeMutation = useMutation({
     mutationFn: async () => {
@@ -198,13 +226,90 @@ export default function Contestants() {
         </div>
       </div>
 
-      {loadingContestants ? (
+      {/* Filter Controls */}
+      <div className="flex gap-4 items-end">
+        <div className="flex-1 max-w-xs">
+          <label className="text-sm font-medium mb-2 block">
+            <Filter className="w-3 h-3 inline mr-1" />
+            Filter by Record Day
+          </label>
+          <Select value={filterRecordDayId} onValueChange={(value) => {
+            setFilterRecordDayId(value);
+            setFilterResponseValue("");
+          }}>
+            <SelectTrigger data-testid="select-filter-record-day">
+              <SelectValue placeholder="All contestants" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All contestants</SelectItem>
+              {recordDays.map((day: any) => (
+                <SelectItem key={day.id} value={day.id}>
+                  {new Date(day.date).toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                  })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {filterRecordDayId && (
+          <div className="flex-1 max-w-xs">
+            <label className="text-sm font-medium mb-2 block">Response</label>
+            <Select value={filterResponseValue} onValueChange={setFilterResponseValue}>
+              <SelectTrigger data-testid="select-filter-response">
+                <SelectValue placeholder="All responses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All responses</SelectItem>
+                <SelectItem value="yes">Yes</SelectItem>
+                <SelectItem value="maybe">Maybe</SelectItem>
+                <SelectItem value="no">No</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {filterRecordDayId && (
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              setFilterRecordDayId("");
+              setFilterResponseValue("");
+            }}
+            data-testid="button-clear-filter"
+          >
+            <X className="h-4 w-4 mr-2" />
+            Clear Filter
+          </Button>
+        )}
+      </div>
+
+      {/* Results Summary */}
+      {filterRecordDayId && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" data-testid="badge-filter-count">
+            {displayedContestants.length} contestant{displayedContestants.length !== 1 ? 's' : ''} 
+            {filterResponseValue && ` (${filterResponseValue})`}
+          </Badge>
+          <span className="text-sm text-muted-foreground">
+            for {recordDays.find((d: any) => d.id === filterRecordDayId)?.date && 
+              new Date(recordDays.find((d: any) => d.id === filterRecordDayId)?.date).toLocaleDateString()}
+          </span>
+        </div>
+      )}
+
+      {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">
           Loading contestants...
         </div>
       ) : (
         <ContestantTable 
-          contestants={contestants}
+          contestants={displayedContestants}
           selectedIds={selectedContestants}
           onSelectionChange={setSelectedContestants}
         />

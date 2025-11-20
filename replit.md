@@ -34,6 +34,11 @@ An automated system for managing TV game show contestants that imports applicant
    - POST /api/auto-assign - Intelligent seat assignment
    - GET/PUT/DELETE /api/seat-assignments - Seat management
    - **POST /api/seat-assignments/swap - Atomic seat swapping with database transactions**
+   - **POST /api/availability/send - Generate availability check tokens**
+   - **GET /api/availability/token/:token - Fetch contestant context for public form (no auth)**
+   - **POST /api/availability/respond/:token - Submit availability responses (no auth)**
+   - **GET /api/availability/status - Availability statistics overview**
+   - **GET /api/availability/record-day/:recordDayId - Filter contestants by availability**
 
 5. **Atomic Seat Swapping**
    - Database-level transactions using Drizzle ORM
@@ -42,6 +47,37 @@ An automated system for managing TV game show contestants that imports applicant
    - Three-step swap process with unique temp locations (`TEMP_${sourceId}`)
    - Automatic rollback on any error
    - Guarantees: atomicity, isolation, consistency, durability
+
+6. **Availability Check System**
+   - **Database Tables:**
+     - availability_tokens: stores unique tokens with expiration (14 days)
+     - contestant_availability: join table tracking responses per record day
+   - **Token Generation:**
+     - Cryptographically strong tokens (64-char hex)
+     - One active token per contestant
+     - Automatic revocation of old tokens
+   - **Public Response Form:**
+     - Standalone page at `/availability/respond/:token` (no auth required)
+     - Shows contestant info, group members, record days
+     - Yes/Maybe/No/Pending response options
+     - Optional notes field
+     - "Apply to group" feature propagates selections to group members
+   - **Admin Management:**
+     - Availability page with statistics dashboard
+     - Bulk token generation with contestant/record day selection
+     - Filter contestants by record day and response value
+     - Track sent/responded/pending status
+   - **Integration:**
+     - Contestants page has built-in availability filtering
+     - Filter by record day and response type (yes/maybe/no/pending)
+   - **Security:**
+     - Token validation (status, expiration checking)
+     - Public endpoints rate-limited and monitored
+     - Tokens marked as "used" after submission
+   - **Email Integration:**
+     - Email sending currently stubbed (requires RESEND_API_KEY and FROM_EMAIL secrets)
+     - System generates tokens and response URLs ready for email delivery
+     - Note: Email integration can be completed later by adding Resend API credentials
 
 ### Frontend (Complete)
 - Material Design-inspired UI with Inter font

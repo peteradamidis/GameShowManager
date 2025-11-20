@@ -760,6 +760,249 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Availability Management Routes
+
+  // Generate tokens and prepare to send availability check emails
+  app.post("/api/availability/send", async (req, res) => {
+    try {
+      const { contestantIds, recordDayIds } = req.body;
+
+      if (!contestantIds || !Array.isArray(contestantIds) || contestantIds.length === 0) {
+        return res.status(400).json({ error: "contestantIds array is required" });
+      }
+
+      if (!recordDayIds || !Array.isArray(recordDayIds) || recordDayIds.length === 0) {
+        return res.status(400).json({ error: "recordDayIds array is required" });
+      }
+
+      const tokensCreated = [];
+
+      for (const contestantId of contestantIds) {
+        // Revoke any existing active tokens for this contestant
+        await storage.revokeContestantTokens(contestantId);
+
+        // Generate new cryptographically strong token
+        const token = require('crypto').randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
+
+        // Create token record
+        const tokenRecord = await storage.createAvailabilityToken({
+          contestantId,
+          token,
+          status: 'active',
+          expiresAt,
+          lastSentAt: new Date(),
+        });
+
+        // Initialize availability records for this contestant for all specified record days
+        for (const recordDayId of recordDayIds) {
+          await storage.upsertContestantAvailability(
+            contestantId,
+            recordDayId,
+            'pending'
+          );
+        }
+
+        tokensCreated.push({
+          contestantId,
+          token: tokenRecord.token,
+          responseUrl: `/availability/respond/${tokenRecord.token}`,
+        });
+      }
+
+      // TODO: When email integration is ready, send emails here
+      // For now, just return the tokens
+      res.json({
+        message: `Tokens generated for ${tokensCreated.length} contestants`,
+        tokens: tokensCreated,
+        note: "Email sending is not yet configured. Add RESEND_API_KEY and FROM_EMAIL to enable."
+      });
+    } catch (error: any) {
+      console.error("Error sending availability checks:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get contestant and record day context for a token (public endpoint - no auth)
+  app.get("/api/availability/token/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+
+      // Validate token
+      const tokenRecord = await storage.getAvailabilityTokenByToken(token);
+      
+      if (!tokenRecord) {
+        return res.status(404).json({ error: "Invalid token" });
+      }
+
+      if (tokenRecord.status !== 'active') {
+        return res.status(400).json({ error: "Token is no longer active" });
+      }
+
+      if (new Date(tokenRecord.expiresAt) < new Date()) {
+        return res.status(400).json({ error: "Token has expired" });
+      }
+
+      // Get contestant info
+      const contestant = await storage.getContestantById(tokenRecord.contestantId);
+      
+      if (!contestant) {
+        return res.status(404).json({ error: "Contestant not found" });
+      }
+
+      // Get group info if contestant is in a group
+      let groupMembers: Array<{ id: string; name: string }> = [];
+      if (contestant.groupId) {
+        const allContestants = await storage.getContestants();
+        groupMembers = allContestants
+          .filter(c => c.groupId === contestant.groupId && c.id !== contestant.id)
+          .map(c => ({ id: c.id, name: c.name }));
+      }
+
+      // Get all record days
+      const recordDays = await storage.getRecordDays();
+
+      // Get contestant's current availability responses
+      const availability = await storage.getContestantAvailability(tokenRecord.contestantId);
+
+      res.json({
+        contestant: {
+          id: contestant.id,
+          name: contestant.name,
+          age: contestant.age,
+          gender: contestant.gender,
+        },
+        groupMembers,
+        recordDays: recordDays.map(rd => ({
+          id: rd.id,
+          date: rd.date,
+          totalSeats: rd.totalSeats,
+        })),
+        currentAvailability: availability,
+      });
+    } catch (error: any) {
+      console.error("Error fetching token context:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Submit availability response (public endpoint - no auth)
+  app.post("/api/availability/respond/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const { responses, applyToGroup, notes } = req.body;
+
+      // Validate token
+      const tokenRecord = await storage.getAvailabilityTokenByToken(token);
+      
+      if (!tokenRecord) {
+        return res.status(404).json({ error: "Invalid token" });
+      }
+
+      if (tokenRecord.status !== 'active') {
+        return res.status(400).json({ error: "Token is no longer active" });
+      }
+
+      if (new Date(tokenRecord.expiresAt) < new Date()) {
+        return res.status(400).json({ error: "Token has expired" });
+      }
+
+      if (!responses || !Array.isArray(responses)) {
+        return res.status(400).json({ error: "responses array is required" });
+      }
+
+      // Get contestant to check for group membership
+      const contestant = await storage.getContestantById(tokenRecord.contestantId);
+      
+      if (!contestant) {
+        return res.status(404).json({ error: "Contestant not found" });
+      }
+
+      // Save availability responses for this contestant
+      for (const response of responses) {
+        await storage.upsertContestantAvailability(
+          tokenRecord.contestantId,
+          response.recordDayId,
+          response.responseValue,
+          notes
+        );
+      }
+
+      // If apply to group is enabled and contestant has a group, apply to group members
+      if (applyToGroup && contestant.groupId) {
+        const allContestants = await storage.getContestants();
+        const groupMembers = allContestants.filter(
+          c => c.groupId === contestant.groupId && c.id !== contestant.id
+        );
+
+        for (const member of groupMembers) {
+          for (const response of responses) {
+            await storage.upsertContestantAvailability(
+              member.id,
+              response.recordDayId,
+              response.responseValue,
+              applyToGroup ? `Applied from ${contestant.name}: ${notes || ''}` : notes
+            );
+          }
+        }
+      }
+
+      // Mark token as used
+      await storage.updateTokenStatus(tokenRecord.id, 'used');
+
+      res.json({
+        message: "Availability responses saved successfully",
+        appliedToGroupMembers: applyToGroup && contestant.groupId,
+      });
+    } catch (error: any) {
+      console.error("Error saving availability response:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get availability status overview for admin
+  app.get("/api/availability/status", async (req, res) => {
+    try {
+      const contestants = await storage.getContestants();
+      const tokens = await Promise.all(
+        contestants.map(c => storage.getAvailabilityTokensByContestant(c.id))
+      );
+
+      const stats = {
+        total: contestants.length,
+        sent: tokens.filter(t => t.length > 0 && t.some(tk => tk.status === 'active' || tk.status === 'used')).length,
+        responded: tokens.filter(t => t.some(tk => tk.status === 'used')).length,
+        pending: tokens.filter(t => t.some(tk => tk.status === 'active')).length,
+      };
+
+      res.json(stats);
+    } catch (error: any) {
+      console.error("Error fetching availability status:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get contestants filtered by availability for a specific record day
+  app.get("/api/availability/record-day/:recordDayId", async (req, res) => {
+    try {
+      const { recordDayId } = req.params;
+
+      // Validate record day exists
+      const recordDay = await storage.getRecordDayById(recordDayId);
+      if (!recordDay) {
+        return res.status(404).json({ error: "Record day not found" });
+      }
+
+      // Get availability data with contestant info
+      const availabilityWithContestants = await storage.getAvailabilityByRecordDay(recordDayId);
+
+      res.json(availabilityWithContestants);
+    } catch (error: any) {
+      console.error("Error fetching availability by record day:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
