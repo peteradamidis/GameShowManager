@@ -45,7 +45,7 @@ export default function Contestants() {
   });
 
   // Fetch record days
-  const { data: recordDays = [] } = useQuery<any[]>({
+  const { data: recordDays = [], refetch: refetchRecordDays } = useQuery<any[]>({
     queryKey: ['/api/record-days'],
   });
 
@@ -111,6 +111,11 @@ export default function Contestants() {
     return allSeats;
   })() : [];
 
+  const handleOpenAssignDialog = () => {
+    refetchRecordDays(); // Refresh record days when opening dialog
+    setAssignDialogOpen(true);
+  };
+
   const handleAssignToSeat = async () => {
     if (!selectedRecordDay || !selectedBlock || !selectedSeat || selectedContestants.length === 0) return;
 
@@ -169,7 +174,7 @@ export default function Contestants() {
         <div className="flex gap-2">
           {selectedContestants.length > 0 && (
             <Button 
-              onClick={() => setAssignDialogOpen(true)} 
+              onClick={handleOpenAssignDialog} 
               data-testid="button-assign-contestants"
             >
               <UserPlus className="h-4 w-4 mr-2" />
