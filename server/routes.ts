@@ -130,6 +130,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate fake contestants for testing
+  app.post("/api/contestants/generate-fake", async (req, res) => {
+    try {
+      const fakeContestants = [
+        // Group 1 - Friends
+        { name: "Sarah Johnson", age: 28, gender: "Female" as const, attendingWith: "Mike Chen" },
+        { name: "Mike Chen", age: 32, gender: "Male" as const, attendingWith: "Sarah Johnson" },
+        
+        // Group 2 - Couple
+        { name: "Emma Williams", age: 35, gender: "Female" as const, attendingWith: "David Williams" },
+        { name: "David Williams", age: 37, gender: "Male" as const, attendingWith: "Emma Williams" },
+        
+        // Group 3 - Family
+        { name: "Lisa Anderson", age: 42, gender: "Female" as const, attendingWith: "James Anderson, Amy Anderson" },
+        { name: "James Anderson", age: 45, gender: "Male" as const, attendingWith: "Lisa Anderson, Amy Anderson" },
+        { name: "Amy Anderson", age: 19, gender: "Female" as const, attendingWith: "Lisa Anderson, James Anderson" },
+        
+        // Solo contestants
+        { name: "Jennifer Martinez", age: 29, gender: "Female" as const },
+        { name: "Robert Taylor", age: 52, gender: "Male" as const },
+        { name: "Amanda White", age: 31, gender: "Female" as const },
+        { name: "Christopher Lee", age: 38, gender: "Male" as const },
+        { name: "Jessica Brown", age: 26, gender: "Female" as const },
+        { name: "Daniel Garcia", age: 41, gender: "Male" as const },
+        { name: "Michelle Davis", age: 33, gender: "Female" as const },
+        { name: "Kevin Miller", age: 29, gender: "Male" as const },
+        { name: "Ashley Wilson", age: 27, gender: "Female" as const },
+        { name: "Brandon Moore", age: 34, gender: "Male" as const },
+        { name: "Stephanie Taylor", age: 36, gender: "Female" as const },
+        { name: "Justin Thomas", age: 30, gender: "Male" as const },
+        { name: "Rachel Jackson", age: 28, gender: "Female" as const },
+        
+        // Group 4 - Friends group
+        { name: "Melissa Harris", age: 25, gender: "Female" as const, attendingWith: "Nicole Martin" },
+        { name: "Nicole Martin", age: 26, gender: "Female" as const, attendingWith: "Melissa Harris" },
+        
+        // More solo contestants
+        { name: "Andrew Thompson", age: 44, gender: "Male" as const },
+        { name: "Lauren Clark", age: 31, gender: "Female" as const },
+        { name: "Tyler Rodriguez", age: 27, gender: "Male" as const },
+        { name: "Samantha Lewis", age: 29, gender: "Female" as const },
+        { name: "Jacob Walker", age: 35, gender: "Male" as const },
+        { name: "Emily Hall", age: 32, gender: "Female" as const },
+        { name: "Ryan Allen", age: 39, gender: "Male" as const },
+        { name: "Olivia Young", age: 24, gender: "Female" as const },
+      ];
+
+      // Create contestants and identify groups
+      const createdContestants = [];
+      const groupMap = new Map<string, string>();
+
+      for (const data of fakeContestants) {
+        const contestant = await storage.createContestant({
+          name: data.name,
+          age: data.age,
+          gender: data.gender,
+          availabilityStatus: "Available",
+        });
+        createdContestants.push(contestant);
+
+        // Track group associations
+        if (data.attendingWith) {
+          const groupKey = [data.name, ...data.attendingWith.split(',').map(n => n.trim())].sort().join('|');
+          if (!groupMap.has(groupKey)) {
+            const group = await storage.createGroup({
+              name: `Group ${groupMap.size + 1}`,
+              memberNames: groupKey.split('|'),
+            });
+            groupMap.set(groupKey, group.id);
+          }
+        }
+      }
+
+      res.json({ 
+        message: `Generated ${createdContestants.length} fake contestants with ${groupMap.size} groups`,
+        count: createdContestants.length,
+        groups: groupMap.size
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get all record days
   app.get("/api/record-days", async (req, res) => {
     try {

@@ -1,10 +1,10 @@
 import { ContestantTable, Contestant } from "@/components/contestant-table";
 import { ImportExcelDialog } from "@/components/import-excel-dialog";
 import { Button } from "@/components/ui/button";
-import { Mail, UserPlus } from "lucide-react";
+import { Mail, UserPlus, TestTube } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
 import {
   Dialog,
@@ -36,6 +36,26 @@ export default function Contestants() {
   // Fetch record days
   const { data: recordDays = [] } = useQuery<any[]>({
     queryKey: ['/api/record-days'],
+  });
+
+  const generateFakeMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('POST', '/api/contestants/generate-fake', {});
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      toast({
+        title: "Fake contestants generated",
+        description: `Created ${data.count} contestants with ${data.groups} groups for testing.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Generation failed",
+        description: "Could not generate fake contestants.",
+        variant: "destructive",
+      });
+    },
   });
 
   const handleSendAvailabilityForms = () => {
@@ -92,6 +112,15 @@ export default function Contestants() {
               Assign {selectedContestants.length} to Record Day
             </Button>
           )}
+          <Button 
+            variant="outline" 
+            onClick={() => generateFakeMutation.mutate()}
+            disabled={generateFakeMutation.isPending}
+            data-testid="button-generate-fake"
+          >
+            <TestTube className="h-4 w-4 mr-2" />
+            {generateFakeMutation.isPending ? "Generating..." : "Generate Test Data"}
+          </Button>
           <Button variant="outline" onClick={handleSendAvailabilityForms} data-testid="button-send-availability">
             <Mail className="h-4 w-4 mr-2" />
             Send Availability Forms
