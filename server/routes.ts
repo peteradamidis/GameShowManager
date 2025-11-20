@@ -400,6 +400,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Swap two seat assignments atomically
+  app.post("/api/seat-assignments/swap", async (req, res) => {
+    try {
+      const { sourceAssignmentId, targetAssignmentId, blockNumber, seatLabel } = req.body;
+
+      // Validation
+      if (!sourceAssignmentId || typeof sourceAssignmentId !== 'string') {
+        return res.status(400).json({ error: "sourceAssignmentId is required and must be a string" });
+      }
+
+      if (targetAssignmentId && typeof targetAssignmentId !== 'string') {
+        return res.status(400).json({ error: "targetAssignmentId must be a string" });
+      }
+
+      // For moves to empty seats, blockNumber and seatLabel are required
+      if (!targetAssignmentId && (!blockNumber || !seatLabel)) {
+        return res.status(400).json({ error: "blockNumber and seatLabel are required for moves to empty seats" });
+      }
+
+      if (blockNumber !== undefined && typeof blockNumber !== 'number') {
+        return res.status(400).json({ error: "blockNumber must be a number" });
+      }
+
+      if (seatLabel !== undefined && typeof seatLabel !== 'string') {
+        return res.status(400).json({ error: "seatLabel must be a string" });
+      }
+
+      // Use atomic storage method with database transaction and row locking
+      const result = await storage.atomicSwapSeats(
+        sourceAssignmentId,
+        targetAssignmentId || null,
+        blockNumber,
+        seatLabel
+      );
+
+      res.json({
+        message: targetAssignmentId ? "Seats swapped successfully" : "Seat moved successfully",
+        ...result,
+      });
+    } catch (error: any) {
+      console.error("Swap error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Update record day status
   app.put("/api/record-days/:id/status", async (req, res) => {
     try {

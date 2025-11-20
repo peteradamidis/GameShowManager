@@ -7,6 +7,8 @@ export interface SeatData {
   age?: number;
   gender?: "Male" | "Female" | "Other";
   groupId?: string;
+  assignmentId?: string; // Backend assignment ID for API updates
+  contestantId?: string; // Backend contestant ID
 }
 
 interface SeatCardProps {

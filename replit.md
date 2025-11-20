@@ -32,15 +32,31 @@ An automated system for managing TV game show contestants that imports applicant
    - GET/POST /api/record-days - Record day management
    - PUT /api/record-days/:id/status - Status updates
    - POST /api/auto-assign - Intelligent seat assignment
-   - GET/PUT/DELETE /api/seat-assignments - Seat management with collision detection
+   - GET/PUT/DELETE /api/seat-assignments - Seat management
+   - **POST /api/seat-assignments/swap - Atomic seat swapping with database transactions**
 
-### Frontend (In Progress)
+5. **Atomic Seat Swapping**
+   - Database-level transactions using Drizzle ORM
+   - Row-level locking (`FOR UPDATE`) prevents concurrent swaps
+   - PostgreSQL advisory locks serialize empty-seat moves
+   - Three-step swap process with unique temp locations (`TEMP_${sourceId}`)
+   - Automatic rollback on any error
+   - Guarantees: atomicity, isolation, consistency, durability
+
+### Frontend (Complete)
 - Material Design-inspired UI with Inter font
 - Dashboard with statistics
-- Contestant table
-- Record day cards
-- Interactive drag-and-drop seating chart
-- Studio layout visualization
+- Contestant table with import functionality
+- Record day management cards
+- **Interactive drag-and-drop seating chart**
+  - Cross-block dragging (all 154 seats in single DnD context)
+  - Drag contestant to another seat to swap positions
+  - Drag to empty seats to move contestants
+  - Optimistic UI updates for instant feedback
+  - Single atomic API call per swap/move
+  - Automatic UI revert on errors
+  - Built with @dnd-kit/core and @dnd-kit/sortable
+- Studio layout visualization with 7 blocks
 
 ## Studio Layout
 - 6 blocks circle the stage (blocks 1-6)
@@ -54,8 +70,13 @@ An automated system for managing TV game show contestants that imports applicant
 ### Auto-Assignment Algorithm
 - Uses heuristic search (56 orderings) rather than exhaustive search
 - May fail to find solution even when one exists if specific alternating sequences are required
-- No formal database transaction support (uses best-effort cleanup)
-- Future improvements: DFS/BFS search, database transactions
+- No formal database transaction support for auto-assignment (uses best-effort cleanup)
+- Future improvements: DFS/BFS search, transaction support for auto-assignment
+
+### Drag-and-Drop Implementation
+- Requires source seat to have valid assignment ID (won't drag unassigned/mock data)
+- Advisory lock hash collisions theoretically possible (but extremely unlikely)
+- Frontend depends on backend for all state changes (no offline mode)
 
 ## Technology Stack
 - Backend: Express.js, TypeScript

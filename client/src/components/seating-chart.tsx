@@ -18,10 +18,13 @@ import { CSS } from "@dnd-kit/utilities";
 import { SeatCard, SeatData } from "./seat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface SeatingChartProps {
   recordDayId: string;
   initialSeats?: SeatData[][];
+  onRefreshNeeded?: () => void; // Callback to trigger data refetch from parent
 }
 
 function SortableSeat({
@@ -72,19 +75,14 @@ function SeatingBlock({
   block, 
   blockIndex, 
   blockLabel,
-  sensors,
-  onDragEnd,
   reverseRows = false
 }: { 
   block: SeatData[]; 
   blockIndex: number;
   blockLabel: string;
-  sensors: any;
-  onDragEnd: (event: DragEndEvent) => void;
   reverseRows?: boolean;
 }) {
   const stats = calculateBlockStats(block);
-  const allSeatIds = block.map((s) => s.id);
 
   // Organize seats by row
   let seatIdx = 0;
@@ -109,39 +107,31 @@ function SeatingBlock({
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={onDragEnd}
-        >
-          <SortableContext items={allSeatIds} strategy={rectSortingStrategy}>
-            {displayRows.map((row, displayIdx) => {
-              // Find the original row index in SEAT_ROWS
-              const originalRowIdx = SEAT_ROWS.findIndex(r => r.label === row.label);
-              
-              return (
-                <div key={row.label} className="space-y-1">
-                  <div className="text-xs font-medium text-muted-foreground px-1">
-                    Row {row.label}
-                  </div>
-                  <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${row.count}, minmax(0, 1fr))` }}>
-                    {row.seats.map((seat, seatIdxInRow) => {
-                      const absoluteSeatIdx = SEAT_ROWS.slice(0, originalRowIdx).reduce((sum, r) => sum + r.count, 0) + seatIdxInRow;
-                      return (
-                        <SortableSeat
-                          key={seat.id}
-                          seat={seat}
-                          blockIndex={blockIndex}
-                          seatIndex={absoluteSeatIdx}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </SortableContext>
-        </DndContext>
+        {displayRows.map((row, displayIdx) => {
+          // Find the original row index in SEAT_ROWS
+          const originalRowIdx = SEAT_ROWS.findIndex(r => r.label === row.label);
+          
+          return (
+            <div key={row.label} className="space-y-1">
+              <div className="text-xs font-medium text-muted-foreground px-1">
+                Row {row.label}
+              </div>
+              <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${row.count}, minmax(0, 1fr))` }}>
+                {row.seats.map((seat, seatIdxInRow) => {
+                  const absoluteSeatIdx = SEAT_ROWS.slice(0, originalRowIdx).reduce((sum, r) => sum + r.count, 0) + seatIdxInRow;
+                  return (
+                    <SortableSeat
+                      key={seat.id}
+                      seat={seat}
+                      blockIndex={blockIndex}
+                      seatIndex={absoluteSeatIdx}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </CardContent>
     </Card>
   );
@@ -170,12 +160,13 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded }: SeatingChartProps) {
   const [blocks, setBlocks] = useState<SeatData[][]>(
     initialSeats || Array(7).fill(null).map((_, blockIdx) => 
       generateBlockSeats(recordDayId, blockIdx)
     )
   );
+  const { toast } = useToast();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -184,11 +175,138 @@ export function SeatingChart({ recordDayId, initialSeats }: SeatingChartProps) {
     })
   );
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  // Helper to find seat by ID across all blocks
+  const findSeat = (seatId: string): { blockIdx: number; seatIdx: number; seat: SeatData } | null => {
+    for (let blockIdx = 0; blockIdx < blocks.length; blockIdx++) {
+      const seatIdx = blocks[blockIdx].findIndex(s => s.id === seatId);
+      if (seatIdx !== -1) {
+        return { blockIdx, seatIdx, seat: blocks[blockIdx][seatIdx] };
+      }
+    }
+    return null;
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (over && active.id !== over.id) {
-      console.log(`Moved seat ${active.id} to position ${over.id}`);
+    if (!over || active.id === over.id) return;
+
+    const sourceSeat = findSeat(active.id as string);
+    const targetSeat = findSeat(over.id as string);
+
+    if (!sourceSeat || !targetSeat) return;
+
+    // Don't allow swapping if source is empty
+    if (!sourceSeat.seat.contestantName) return;
+
+    // Extract block number and seat label from seat IDs
+    const getBlockAndSeat = (seatId: string) => {
+      // ID format: "recordDayId-blockX-seatLabel"
+      const parts = seatId.split('-');
+      const blockPart = parts[parts.length - 2]; // e.g., "block0"
+      const seatLabel = parts[parts.length - 1]; // e.g., "A1"
+      const blockNumber = parseInt(blockPart.replace('block', '')) + 1; // Convert to 1-indexed
+      return { blockNumber, seatLabel };
+    };
+
+    const sourceLocation = getBlockAndSeat(sourceSeat.seat.id);
+    const targetLocation = getBlockAndSeat(targetSeat.seat.id);
+
+    // Update local state immediately for responsive UI
+    setBlocks(prevBlocks => {
+      const newBlocks = prevBlocks.map(block => [...block]);
+      
+      // Swap contestant data between the two seats
+      const sourceData = { ...sourceSeat.seat };
+      const targetData = { ...targetSeat.seat };
+      
+      newBlocks[sourceSeat.blockIdx][sourceSeat.seatIdx] = {
+        id: sourceSeat.seat.id,
+        contestantName: targetData.contestantName,
+        age: targetData.age,
+        gender: targetData.gender,
+        groupId: targetData.groupId,
+        assignmentId: targetData.assignmentId,
+        contestantId: targetData.contestantId,
+      };
+      
+      newBlocks[targetSeat.blockIdx][targetSeat.seatIdx] = {
+        id: targetSeat.seat.id,
+        contestantName: sourceData.contestantName,
+        age: sourceData.age,
+        gender: sourceData.gender,
+        groupId: sourceData.groupId,
+        assignmentId: sourceData.assignmentId,
+        contestantId: sourceData.contestantId,
+      };
+      
+      return newBlocks;
+    });
+
+    // Update backend using atomic swap endpoint
+    try {
+      // Only proceed if source has an assignment ID (skip for mock/unassigned data)
+      if (!sourceSeat.seat.assignmentId) {
+        toast({
+          title: "Cannot move",
+          description: "This seat is not part of a record day assignment.",
+          variant: "destructive",
+        });
+        
+        // Revert UI
+        setBlocks(prevBlocks => {
+          const newBlocks = prevBlocks.map(block => [...block]);
+          newBlocks[sourceSeat.blockIdx][sourceSeat.seatIdx] = sourceSeat.seat;
+          newBlocks[targetSeat.blockIdx][targetSeat.seatIdx] = targetSeat.seat;
+          return newBlocks;
+        });
+        return;
+      }
+
+      // Use atomic swap endpoint
+      if (targetSeat.seat.assignmentId) {
+        // Swapping two assigned seats
+        await apiRequest(
+          'POST',
+          '/api/seat-assignments/swap',
+          {
+            sourceAssignmentId: sourceSeat.seat.assignmentId,
+            targetAssignmentId: targetSeat.seat.assignmentId,
+          }
+        );
+      } else {
+        // Moving to empty seat
+        await apiRequest(
+          'POST',
+          '/api/seat-assignments/swap',
+          {
+            sourceAssignmentId: sourceSeat.seat.assignmentId,
+            blockNumber: targetLocation.blockNumber,
+            seatLabel: targetLocation.seatLabel,
+          }
+        );
+      }
+
+      toast({
+        title: "Seats updated",
+        description: `${sourceSeat.seat.contestantName} moved to ${targetLocation.seatLabel}${targetSeat.seat.contestantName ? `, ${targetSeat.seat.contestantName} moved to ${sourceLocation.seatLabel}` : ''}`,
+      });
+    } catch (error) {
+      console.error('Failed to swap seats:', error);
+      
+      // Revert UI state on any error
+      setBlocks(prevBlocks => {
+        const newBlocks = prevBlocks.map(block => [...block]);
+        newBlocks[sourceSeat.blockIdx][sourceSeat.seatIdx] = sourceSeat.seat;
+        newBlocks[targetSeat.blockIdx][targetSeat.seatIdx] = targetSeat.seat;
+        return newBlocks;
+      });
+
+      toast({
+        title: "Error updating seats",
+        description: "The change could not be saved. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -200,71 +318,76 @@ export function SeatingChart({ recordDayId, initialSeats }: SeatingChartProps) {
   // Bottom blocks need to be reordered: 6, 5, 4 (swap 4 and 6)
   const reorderedBottomBlocks = [bottomBlocks[2], bottomBlocks[1], bottomBlocks[0]]; // blocks 5, 4, 3 -> display as 6, 5, 4
 
-  return (
-    <div className="space-y-8">
-      {/* Circular Seating Area */}
-      <div className="space-y-6">
-        <div className="text-center">
-          <Badge variant="outline" className="text-sm">Circular Studio Seating</Badge>
-        </div>
-        
-        {/* Top Row - 3 Blocks (rows reversed: A at bottom, E at top) */}
-        <div className="grid grid-cols-3 gap-4">
-          {topBlocks.map((block, idx) => (
-            <SeatingBlock
-              key={idx}
-              block={block}
-              blockIndex={idx}
-              blockLabel={`Block ${idx + 1} (Top)`}
-              sensors={sensors}
-              onDragEnd={handleDragEnd}
-              reverseRows={true}
-            />
-          ))}
-        </div>
+  // Collect all seat IDs for a single SortableContext
+  const allSeatIds = blocks.flat().map(seat => seat.id);
 
-        {/* Center Stage Indicator */}
-        <div className="flex items-center justify-center py-6">
-          <div className="border-2 border-dashed border-primary rounded-lg px-12 py-8 text-center">
-            <p className="text-lg font-semibold text-primary">STAGE</p>
-            <p className="text-xs text-muted-foreground mt-1">Performance Area</p>
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={allSeatIds} strategy={rectSortingStrategy}>
+        <div className="space-y-8">
+          {/* Circular Seating Area */}
+          <div className="space-y-6">
+            <div className="text-center">
+              <Badge variant="outline" className="text-sm">Circular Studio Seating</Badge>
+            </div>
+            
+            {/* Top Row - 3 Blocks (rows reversed: A at bottom, E at top) */}
+            <div className="grid grid-cols-3 gap-4">
+              {topBlocks.map((block, idx) => (
+                <SeatingBlock
+                  key={idx}
+                  block={block}
+                  blockIndex={idx}
+                  blockLabel={`Block ${idx + 1} (Top)`}
+                  reverseRows={true}
+                />
+              ))}
+            </div>
+
+            {/* Center Stage Indicator */}
+            <div className="flex items-center justify-center py-6">
+              <div className="border-2 border-dashed border-primary rounded-lg px-12 py-8 text-center">
+                <p className="text-lg font-semibold text-primary">STAGE</p>
+                <p className="text-xs text-muted-foreground mt-1">Performance Area</p>
+              </div>
+            </div>
+
+            {/* Bottom Row - 3 Blocks (reordered: 6, 5, 4) */}
+            <div className="grid grid-cols-3 gap-4">
+              {reorderedBottomBlocks.map((block, idx) => {
+                const originalIdx = 5 - idx; // Maps to 5, 4, 3 (blocks 6, 5, 4 for display)
+                return (
+                  <SeatingBlock
+                    key={originalIdx}
+                    block={block}
+                    blockIndex={originalIdx}
+                    blockLabel={`Block ${originalIdx + 1} (Bottom)`}
+                    reverseRows={false}
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Standing Block - Separate */}
+          <div className="border-t pt-6">
+            <div className="text-center mb-4">
+              <Badge variant="outline" className="text-sm">Standing Side of Set</Badge>
+            </div>
+            <div className="max-w-sm mx-auto">
+              <SeatingBlock
+                block={standingBlock}
+                blockIndex={6}
+                blockLabel="Block 7 (Standing)"
+              />
+            </div>
           </div>
         </div>
-
-        {/* Bottom Row - 3 Blocks (reordered: 6, 5, 4) */}
-        <div className="grid grid-cols-3 gap-4">
-          {reorderedBottomBlocks.map((block, idx) => {
-            const originalIdx = 5 - idx; // Maps to 5, 4, 3 (blocks 6, 5, 4 for display)
-            return (
-              <SeatingBlock
-                key={originalIdx}
-                block={block}
-                blockIndex={originalIdx}
-                blockLabel={`Block ${originalIdx + 1} (Bottom)`}
-                sensors={sensors}
-                onDragEnd={handleDragEnd}
-                reverseRows={false}
-              />
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Standing Block - Separate */}
-      <div className="border-t pt-6">
-        <div className="text-center mb-4">
-          <Badge variant="outline" className="text-sm">Standing Side of Set</Badge>
-        </div>
-        <div className="max-w-sm mx-auto">
-          <SeatingBlock
-            block={standingBlock}
-            blockIndex={6}
-            blockLabel="Block 7 (Standing)"
-            sensors={sensors}
-            onDragEnd={handleDragEnd}
-          />
-        </div>
-      </div>
-    </div>
+      </SortableContext>
+    </DndContext>
   );
 }

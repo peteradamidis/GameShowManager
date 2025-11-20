@@ -14,7 +14,7 @@ import {
   type SeatAssignment,
   type InsertSeatAssignment,
 } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle(pool);
@@ -43,9 +43,29 @@ export interface IStorage {
   getSeatAssignmentsByRecordDay(recordDayId: string): Promise<SeatAssignment[]>;
   deleteSeatAssignment(id: string): Promise<void>;
   updateSeatAssignment(id: string, blockNumber: number, seatLabel: string): Promise<SeatAssignment | undefined>;
+  atomicSwapSeats(
+    sourceId: string,
+    targetId: string | null,
+    targetBlock?: number,
+    targetSeat?: string
+  ): Promise<{ source: SeatAssignment; target?: SeatAssignment }>;
 }
 
 export class DbStorage implements IStorage {
+  // Helper function to generate deterministic lock key from seat location
+  private hashSeatLocation(recordDayId: string, blockNumber: number, seatLabel: string): number {
+    // Simple hash function to convert seat location to integer for advisory lock
+    // Format: recordDayId-blockNumber-seatLabel
+    const str = `${recordDayId}-${blockNumber}-${seatLabel}`;
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    // Ensure positive integer for pg_advisory_xact_lock
+    return Math.abs(hash);
+  }
+
   // Contestants
   async createContestant(contestant: InsertContestant): Promise<Contestant> {
     const [created] = await db.insert(contestants).values(contestant).returning();
@@ -142,6 +162,119 @@ export class DbStorage implements IStorage {
       .where(eq(seatAssignments.id, id))
       .returning();
     return updated;
+  }
+
+  async atomicSwapSeats(
+    sourceId: string,
+    targetId: string | null,
+    targetBlock?: number,
+    targetSeat?: string
+  ): Promise<{ source: SeatAssignment; target?: SeatAssignment }> {
+    // Use Drizzle transaction for atomic operation
+    return await db.transaction(async (tx) => {
+      // Get source assignment with row-level lock
+      const [source] = await tx
+        .select()
+        .from(seatAssignments)
+        .where(eq(seatAssignments.id, sourceId))
+        .for('update'); // Row-level lock
+
+      if (!source) {
+        throw new Error('Source assignment not found');
+      }
+
+      if (targetId) {
+        // Swapping two assigned seats
+        const [target] = await tx
+          .select()
+          .from(seatAssignments)
+          .where(eq(seatAssignments.id, targetId))
+          .for('update'); // Row-level lock
+
+        if (!target) {
+          throw new Error('Target assignment not found');
+        }
+
+        if (source.recordDayId !== target.recordDayId) {
+          throw new Error('Cannot swap assignments from different record days');
+        }
+
+        // Store original source location
+        const tempBlock = source.blockNumber;
+        const tempSeat = source.seatLabel;
+
+        // Move source to a unique temporary location to avoid constraint violation
+        // Use source ID to ensure uniqueness across concurrent swaps
+        const [tempSource] = await tx
+          .update(seatAssignments)
+          .set({
+            blockNumber: -1,
+            seatLabel: `TEMP_${sourceId}`,
+          })
+          .where(eq(seatAssignments.id, sourceId))
+          .returning();
+
+        // Update target to source's original location
+        const [updatedTarget] = await tx
+          .update(seatAssignments)
+          .set({
+            blockNumber: tempBlock,
+            seatLabel: tempSeat,
+          })
+          .where(eq(seatAssignments.id, targetId))
+          .returning();
+
+        // Update source to target's original location
+        const [updatedSource] = await tx
+          .update(seatAssignments)
+          .set({
+            blockNumber: target.blockNumber,
+            seatLabel: target.seatLabel,
+          })
+          .where(eq(seatAssignments.id, sourceId))
+          .returning();
+
+        return { source: updatedSource, target: updatedTarget };
+      } else {
+        // Moving to empty seat
+        if (!targetBlock || !targetSeat) {
+          throw new Error('Target block and seat are required for moves');
+        }
+
+        // Use PostgreSQL advisory lock to serialize moves to the same destination
+        // Hash the target location to a deterministic integer for the lock
+        const lockKey = this.hashSeatLocation(source.recordDayId, targetBlock, targetSeat);
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(${lockKey})`);
+
+        // Check for collision at target location (after acquiring lock)
+        const [existing] = await tx
+          .select()
+          .from(seatAssignments)
+          .where(
+            and(
+              eq(seatAssignments.recordDayId, source.recordDayId),
+              eq(seatAssignments.blockNumber, targetBlock),
+              eq(seatAssignments.seatLabel, targetSeat)
+            )
+          );
+
+        if (existing && existing.id !== sourceId) {
+          throw new Error('Target seat is already occupied');
+        }
+
+        // Update source to new location
+        const [updatedSource] = await tx
+          .update(seatAssignments)
+          .set({
+            blockNumber: targetBlock,
+            seatLabel: targetSeat,
+          })
+          .where(eq(seatAssignments.id, sourceId))
+          .returning();
+
+        return { source: updatedSource };
+      }
+    });
   }
 }
 
