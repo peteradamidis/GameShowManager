@@ -9,7 +9,6 @@ import {
   DragEndEvent,
 } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
@@ -60,6 +59,65 @@ function SortableSeat({
   );
 }
 
+function SeatingBlock({ 
+  block, 
+  blockIndex, 
+  blockLabel,
+  sensors,
+  onDragEnd 
+}: { 
+  block: SeatData[]; 
+  blockIndex: number;
+  blockLabel: string;
+  sensors: any;
+  onDragEnd: (event: DragEndEvent) => void;
+}) {
+  const stats = calculateBlockStats(block);
+  const allSeatIds = block.map((s) => s.id);
+
+  return (
+    <Card data-testid={`block-${blockIndex}`} className="w-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium">{blockLabel}</CardTitle>
+        <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+          <div>{stats.total}/20 filled</div>
+          <Badge variant="secondary" className="text-xs w-fit">
+            {stats.femalePercent}% F
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-1">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={onDragEnd}
+        >
+          <SortableContext items={allSeatIds} strategy={verticalListSortingStrategy}>
+            {block.map((seat, seatIdx) => (
+              <SortableSeat
+                key={seat.id}
+                seat={seat}
+                blockIndex={blockIndex}
+                seatIndex={seatIdx}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
+      </CardContent>
+    </Card>
+  );
+}
+
+function calculateBlockStats(block: SeatData[]) {
+  const filled = block.filter((s) => s.contestantName);
+  const femaleCount = filled.filter((s) => s.gender === "Female").length;
+  const maleCount = filled.filter((s) => s.gender === "Male").length;
+  const total = filled.length;
+  const femalePercent = total > 0 ? Math.round((femaleCount / total) * 100) : 0;
+
+  return { total, femaleCount, maleCount, femalePercent };
+}
+
 export function SeatingChart({ recordDayId, initialSeats }: SeatingChartProps) {
   const [blocks, setBlocks] = useState<SeatData[][]>(
     initialSeats || Array(7).fill(null).map((_, blockIdx) =>
@@ -84,55 +142,70 @@ export function SeatingChart({ recordDayId, initialSeats }: SeatingChartProps) {
     }
   };
 
-  const calculateBlockStats = (block: SeatData[]) => {
-    const filled = block.filter((s) => s.contestantName);
-    const femaleCount = filled.filter((s) => s.gender === "Female").length;
-    const maleCount = filled.filter((s) => s.gender === "Male").length;
-    const total = filled.length;
-    const femalePercent = total > 0 ? Math.round((femaleCount / total) * 100) : 0;
-
-    return { total, femaleCount, maleCount, femalePercent };
-  };
+  // Split blocks: 0-2 (top row), 3-5 (bottom row), 6 (standing)
+  const topBlocks = blocks.slice(0, 3);
+  const bottomBlocks = blocks.slice(3, 6);
+  const standingBlock = blocks[6];
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-7 gap-2">
-        {blocks.map((block, blockIdx) => {
-          const stats = calculateBlockStats(block);
-          const allSeatIds = block.map((s) => s.id);
+    <div className="space-y-8">
+      {/* Circular Seating Area */}
+      <div className="space-y-6">
+        <div className="text-center">
+          <Badge variant="outline" className="text-sm">Circular Studio Seating</Badge>
+        </div>
+        
+        {/* Top Row - 3 Blocks */}
+        <div className="grid grid-cols-3 gap-4">
+          {topBlocks.map((block, idx) => (
+            <SeatingBlock
+              key={idx}
+              block={block}
+              blockIndex={idx}
+              blockLabel={`Block ${idx + 1} (Top)`}
+              sensors={sensors}
+              onDragEnd={handleDragEnd}
+            />
+          ))}
+        </div>
 
-          return (
-            <Card key={blockIdx} data-testid={`block-${blockIdx}`}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Block {blockIdx + 1}</CardTitle>
-                <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-                  <div>{stats.total}/20 filled</div>
-                  <Badge variant="secondary" className="text-xs">
-                    {stats.femalePercent}% F
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-1">
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext items={allSeatIds} strategy={verticalListSortingStrategy}>
-                    {block.map((seat, seatIdx) => (
-                      <SortableSeat
-                        key={seat.id}
-                        seat={seat}
-                        blockIndex={blockIdx}
-                        seatIndex={seatIdx}
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-              </CardContent>
-            </Card>
-          );
-        })}
+        {/* Center Stage Indicator */}
+        <div className="flex items-center justify-center py-6">
+          <div className="border-2 border-dashed border-primary rounded-lg px-12 py-8 text-center">
+            <p className="text-lg font-semibold text-primary">STAGE</p>
+            <p className="text-xs text-muted-foreground mt-1">Performance Area</p>
+          </div>
+        </div>
+
+        {/* Bottom Row - 3 Blocks */}
+        <div className="grid grid-cols-3 gap-4">
+          {bottomBlocks.map((block, idx) => (
+            <SeatingBlock
+              key={idx + 3}
+              block={block}
+              blockIndex={idx + 3}
+              blockLabel={`Block ${idx + 4} (Bottom)`}
+              sensors={sensors}
+              onDragEnd={handleDragEnd}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Standing Block - Separate */}
+      <div className="border-t pt-6">
+        <div className="text-center mb-4">
+          <Badge variant="outline" className="text-sm">Standing Side of Set</Badge>
+        </div>
+        <div className="max-w-sm mx-auto">
+          <SeatingBlock
+            block={standingBlock}
+            blockIndex={6}
+            blockLabel="Block 7 (Standing)"
+            sensors={sensors}
+            onDragEnd={handleDragEnd}
+          />
+        </div>
       </div>
     </div>
   );

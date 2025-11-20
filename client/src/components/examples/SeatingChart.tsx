@@ -17,7 +17,7 @@ const mockSeats = Array(7).fill(null).map((_, blockIdx) =>
 
 export default function SeatingChartExample() {
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-7xl mx-auto">
       <SeatingChart recordDayId="demo" initialSeats={mockSeats} />
     </div>
   );
