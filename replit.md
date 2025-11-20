@@ -39,7 +39,15 @@ An automated system for managing TV game show contestants that imports applicant
        - Validates contestant not already seated in record day
        - Validates seat not already occupied
        - Returns 409 on conflicts with clear error messages
+     - **DELETE /api/seat-assignments/:id - Remove contestant from record day**
+       - Updates contestant status back to 'available'
+     - **POST /api/seat-assignments/:id/cancel - Cancel and move to reschedule**
+       - Preserves original seat and record day information
+       - Updates contestant status to 'available'
    - **POST /api/seat-assignments/swap - Atomic seat swapping with database transactions**
+   - **GET /api/canceled-assignments - Get all canceled assignments**
+     - Includes contestant and record day details
+   - **DELETE /api/canceled-assignments/:id - Remove from reschedule list**
    - **POST /api/availability/send - Generate availability check tokens**
    - **GET /api/availability/token/:token - Fetch contestant context for public form (no auth)**
    - **POST /api/availability/respond/:token - Submit availability responses (no auth)**
@@ -98,10 +106,20 @@ An automated system for managing TV game show contestants that imports applicant
     - Shows all contestants not currently seated
     - Derived from latest data (useMemo) - no staleness issues
     - Database-level uniqueness constraints prevent duplicates
+  - **Remove and Cancel buttons in hover card**
+    - Remove: Deletes seat assignment, makes contestant available again
+    - Cancel: Moves to reschedule list with original date preserved
+    - Buttons always visible (not gated by data fetch)
   - Optimistic UI updates for instant feedback
   - Single atomic API call per swap/move
   - Automatic UI revert on errors
   - Built with @dnd-kit/core and @dnd-kit/sortable
+- **Reschedule page**
+  - Shows all canceled contestants with original record day and seat
+  - Displays cancellation date and reason
+  - "Make Available" button removes from canceled list
+  - "Remove" button permanently deletes cancellation record
+  - Contestants can be reassigned using Seating Chart or Auto-Assign
 - Studio layout visualization with 7 blocks
 
 ## Studio Layout

@@ -227,6 +227,42 @@ export default function SeatingChartPage() {
     }
   };
 
+  const handleRemove = async (assignmentId: string) => {
+    try {
+      await apiRequest('DELETE', `/api/seat-assignments/${assignmentId}`, {});
+      await refetch();
+      toast({
+        title: "Contestant removed",
+        description: "Contestant has been removed from this record day.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Remove failed",
+        description: error?.message || "Could not remove contestant.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCancel = async (assignmentId: string) => {
+    try {
+      await apiRequest('POST', `/api/seat-assignments/${assignmentId}/cancel`, {
+        reason: "Canceled by admin",
+      });
+      await refetch();
+      toast({
+        title: "Contestant canceled",
+        description: "Contestant has been moved to the reschedule list.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Cancel failed",
+        description: error?.message || "Could not cancel contestant.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -285,6 +321,8 @@ export default function SeatingChartPage() {
           initialSeats={seats}
           onRefreshNeeded={refetch}
           onEmptySeatClick={handleEmptySeatClick}
+          onRemove={handleRemove}
+          onCancel={handleCancel}
         />
       )}
 

@@ -10,6 +10,7 @@ import Contestants from "@/pages/contestants";
 import RecordDays from "@/pages/record-days";
 import SeatingChartPage from "@/pages/seating-chart-page";
 import AvailabilityManagement from "@/pages/availability-management";
+import ReschedulePage from "@/pages/reschedule";
 import Settings from "@/pages/settings";
 import AvailabilityResponsePage from "@/pages/availability-response-page";
 import NotFound from "@/pages/not-found";
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/record-days" component={RecordDays} />
       <Route path="/seating-chart" component={SeatingChartPage} />
       <Route path="/availability" component={AvailabilityManagement} />
+      <Route path="/reschedule" component={ReschedulePage} />
       <Route path="/settings" component={Settings} />
       <Route path="/availability/respond/:token" component={AvailabilityResponsePage} />
       <Route component={NotFound} />

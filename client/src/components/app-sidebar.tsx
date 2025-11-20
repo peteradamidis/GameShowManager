@@ -1,4 +1,4 @@
-import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare } from "lucide-react";
+import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -36,6 +36,11 @@ const menuItems = [
     title: "Availability",
     url: "/availability",
     icon: CheckSquare,
+  },
+  {
+    title: "Reschedule",
+    url: "/reschedule",
+    icon: RefreshCcw,
   },
   {
     title: "Settings",

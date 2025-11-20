@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Badge } from "@/components/ui/badge";
-import { User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { User, X, Ban } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 export interface SeatData {
@@ -22,6 +23,8 @@ interface SeatCardProps {
   seatIndex: number;
   isDragging?: boolean;
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
+  onRemove?: (assignmentId: string) => void;
+  onCancel?: (assignmentId: string) => void;
 }
 
 const groupColors = [
@@ -34,7 +37,7 @@ const groupColors = [
   "border-yellow-500",
 ];
 
-export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEmptySeatClick }: SeatCardProps) {
+export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEmptySeatClick, onRemove, onCancel }: SeatCardProps) {
   const isEmpty = !seat.contestantName;
   const groupColorClass = seat.groupId
     ? groupColors[parseInt(seat.groupId.replace(/\D/g, "")) % groupColors.length]
@@ -96,7 +99,7 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
   );
 
   // Wrap occupied seats with HoverCard for details
-  if (!isEmpty && contestantDetails) {
+  if (!isEmpty) {
     return (
       <HoverCard openDelay={200} closeDelay={100}>
         <HoverCardTrigger asChild>
@@ -104,43 +107,82 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
         </HoverCardTrigger>
         <HoverCardContent className="w-80" data-testid="hovercard-contestant-details">
           <div className="space-y-3">
-            <div>
-              <h4 className="text-sm font-semibold">{contestantDetails.name}</h4>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Age</label>
-                <p>{contestantDetails.age}</p>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Gender</label>
-                <p>{contestantDetails.gender}</p>
-              </div>
-            </div>
+            {contestantDetails ? (
+              <>
+                <div>
+                  <h4 className="text-sm font-semibold">{contestantDetails.name}</h4>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Age</label>
+                    <p>{contestantDetails.age}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Gender</label>
+                    <p>{contestantDetails.gender}</p>
+                  </div>
+                </div>
 
-            {contestantDetails.attendingWith && (
-              <div className="text-sm">
-                <label className="text-xs font-medium text-muted-foreground">Attending With</label>
-                <p>{contestantDetails.attendingWith}</p>
+                {contestantDetails.attendingWith && (
+                  <div className="text-sm">
+                    <label className="text-xs font-medium text-muted-foreground">Attending With</label>
+                    <p>{contestantDetails.attendingWith}</p>
+                  </div>
+                )}
+
+                {contestantDetails.groupId && (
+                  <div className="text-sm">
+                    <label className="text-xs font-medium text-muted-foreground">Group</label>
+                    <p>Group {contestantDetails.groupId}</p>
+                  </div>
+                )}
+
+                <div className="text-sm">
+                  <label className="text-xs font-medium text-muted-foreground">Status</label>
+                  <div className="mt-1">
+                    <Badge variant="secondary">
+                      {contestantDetails.availabilityStatus}
+                    </Badge>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="text-sm text-muted-foreground text-center py-2">
+                Loading contestant details...
               </div>
             )}
 
-            {contestantDetails.groupId && (
-              <div className="text-sm">
-                <label className="text-xs font-medium text-muted-foreground">Group</label>
-                <p>Group {contestantDetails.groupId}</p>
+            {seat.assignmentId && (
+              <div className="flex gap-2 pt-2 border-t">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove?.(seat.assignmentId!);
+                  }}
+                  data-testid={`button-remove-${seat.assignmentId}`}
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Remove
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCancel?.(seat.assignmentId!);
+                  }}
+                  data-testid={`button-cancel-${seat.assignmentId}`}
+                >
+                  <Ban className="h-3 w-3 mr-1" />
+                  Cancel
+                </Button>
               </div>
             )}
-
-            <div className="text-sm">
-              <label className="text-xs font-medium text-muted-foreground">Status</label>
-              <div className="mt-1">
-                <Badge variant="secondary">
-                  {contestantDetails.availabilityStatus}
-                </Badge>
-              </div>
-            </div>
           </div>
         </HoverCardContent>
       </HoverCard>
