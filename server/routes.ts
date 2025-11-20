@@ -252,6 +252,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create a seat assignment
+  app.post("/api/seat-assignments", async (req, res) => {
+    try {
+      const { recordDayId, contestantId, blockNumber, seatLabel } = req.body;
+
+      if (!recordDayId || !contestantId || !blockNumber || !seatLabel) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const assignment = await storage.createSeatAssignment({
+        recordDayId,
+        contestantId,
+        blockNumber: parseInt(blockNumber),
+        seatLabel,
+      });
+
+      res.json(assignment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get seat assignments for a record day
   app.get("/api/seat-assignments/:recordDayId", async (req, res) => {
     try {
