@@ -23,7 +23,6 @@ interface SeatingChartProps {
   initialSeats?: SeatData[][];
   onRefreshNeeded?: () => void; // Callback to trigger data refetch from parent
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
-  onOccupiedSeatClick?: (contestantId: string) => void;
 }
 
 function DraggableDroppableSeat({
@@ -32,14 +31,12 @@ function DraggableDroppableSeat({
   seatIndex,
   isOver,
   onEmptySeatClick,
-  onOccupiedSeatClick,
 }: {
   seat: SeatData;
   blockIndex: number;
   seatIndex: number;
   isOver: boolean;
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
-  onOccupiedSeatClick?: (contestantId: string) => void;
 }) {
   // Make occupied seats draggable
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
@@ -72,7 +69,6 @@ function DraggableDroppableSeat({
         seatIndex={seatIndex}
         isDragging={isDragging}
         onEmptySeatClick={onEmptySeatClick}
-        onOccupiedSeatClick={onOccupiedSeatClick}
       />
     </div>
   );
@@ -94,7 +90,6 @@ function SeatingBlock({
   reverseRows = false,
   overId,
   onEmptySeatClick,
-  onOccupiedSeatClick,
 }: { 
   block: SeatData[]; 
   blockIndex: number;
@@ -102,7 +97,6 @@ function SeatingBlock({
   reverseRows?: boolean;
   overId: string | null;
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
-  onOccupiedSeatClick?: (contestantId: string) => void;
 }) {
   const stats = calculateBlockStats(block);
 
@@ -149,7 +143,6 @@ function SeatingBlock({
                       seatIndex={absoluteSeatIdx}
                       isOver={overId === seat.id}
                       onEmptySeatClick={onEmptySeatClick}
-                      onOccupiedSeatClick={onOccupiedSeatClick}
                     />
                   );
                 })}
@@ -185,7 +178,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onOccupiedSeatClick }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick }: SeatingChartProps) {
   const [blocks, setBlocks] = useState<SeatData[][]>(
     initialSeats || Array(7).fill(null).map((_, blockIdx) => 
       generateBlockSeats(recordDayId, blockIdx)
@@ -398,7 +391,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   reverseRows={true}
                   overId={overId}
                   onEmptySeatClick={onEmptySeatClick}
-                  onOccupiedSeatClick={onOccupiedSeatClick}
                 />
               ))}
             </div>
@@ -424,7 +416,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     reverseRows={false}
                     overId={overId}
                     onEmptySeatClick={onEmptySeatClick}
-                    onOccupiedSeatClick={onOccupiedSeatClick}
                   />
                 );
               })}
@@ -443,7 +434,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 blockLabel="Block 7 (Standing)"
                 overId={overId}
                 onEmptySeatClick={onEmptySeatClick}
-                onOccupiedSeatClick={onOccupiedSeatClick}
               />
             </div>
           </div>

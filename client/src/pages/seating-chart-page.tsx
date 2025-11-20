@@ -50,11 +50,9 @@ function generateEmptyBlocks(recordDayId: string): SeatData[][] {
 export default function SeatingChartPage() {
   const { toast } = useToast();
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<number>(0);
   const [selectedSeat, setSelectedSeat] = useState<string>("");
   const [selectedContestant, setSelectedContestant] = useState<string>("");
-  const [selectedContestantDetails, setSelectedContestantDetails] = useState<any>(null);
   
   // Get record day ID from query parameter or fetch first available
   const searchParams = new URLSearchParams(window.location.search);
@@ -198,23 +196,6 @@ export default function SeatingChartPage() {
     setAssignDialogOpen(true);
   };
 
-  const handleOccupiedSeatClick = async (contestantId: string) => {
-    // Fetch full contestant details
-    try {
-      const response = await fetch(`/api/contestants/${contestantId}`);
-      if (!response.ok) throw new Error('Failed to fetch contestant details');
-      const contestant = await response.json();
-      setSelectedContestantDetails(contestant);
-      setDetailsDialogOpen(true);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Could not load contestant details.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleAssignContestant = async () => {
     if (!selectedContestant || !selectedBlock || !selectedSeat) return;
 
@@ -303,65 +284,8 @@ export default function SeatingChartPage() {
           initialSeats={seats}
           onRefreshNeeded={refetch}
           onEmptySeatClick={handleEmptySeatClick}
-          onOccupiedSeatClick={handleOccupiedSeatClick}
         />
       )}
-
-      {/* Contestant Details Dialog */}
-      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent data-testid="dialog-contestant-details">
-          <DialogHeader>
-            <DialogTitle>Contestant Details</DialogTitle>
-          </DialogHeader>
-          
-          {selectedContestantDetails && (
-            <div className="space-y-4 py-4">
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Name</label>
-                <p className="text-lg font-semibold">{selectedContestantDetails.name}</p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Age</label>
-                  <p className="text-base">{selectedContestantDetails.age}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Gender</label>
-                  <p className="text-base">{selectedContestantDetails.gender}</p>
-                </div>
-              </div>
-
-              {selectedContestantDetails.attendingWith && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Attending With</label>
-                  <p className="text-base">{selectedContestantDetails.attendingWith}</p>
-                </div>
-              )}
-
-              {selectedContestantDetails.groupId && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Group</label>
-                  <p className="text-base">Group {selectedContestantDetails.groupId}</p>
-                </div>
-              )}
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Status</label>
-                <Badge variant="secondary" className="mt-1">
-                  {selectedContestantDetails.availabilityStatus}
-                </Badge>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDetailsDialogOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Assign Contestant to Empty Seat Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
