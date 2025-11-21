@@ -97,7 +97,7 @@ export default function BookingMaster() {
   });
 
   const { data: assignments = [], isLoading: loadingAssignments } = useQuery<SeatAssignment[]>({
-    queryKey: [`/api/seat-assignments/${selectedRecordDay}`],
+    queryKey: ['/api/seat-assignments', selectedRecordDay],
     enabled: !!selectedRecordDay,
   });
 
@@ -110,7 +110,7 @@ export default function BookingMaster() {
       return await apiRequest("PATCH", `/api/seat-assignments/${assignmentId}/workflow`, fields);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/seat-assignments/${selectedRecordDay}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
     },
   });
 
@@ -130,7 +130,7 @@ export default function BookingMaster() {
       });
       
       setSelectedAssignments(new Set());
-      queryClient.invalidateQueries({ queryKey: [`/api/seat-assignments/${selectedRecordDay}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
     },
     onError: (error: any) => {
       toast({

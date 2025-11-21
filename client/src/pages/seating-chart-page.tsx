@@ -203,7 +203,10 @@ export default function SeatingChartPage() {
         seatLabel: selectedSeat,
       });
       
-      // Refresh seat assignments (available contestants auto-updates via useMemo)
+      // Invalidate all seat assignment queries to update both Seating Chart and Booking Master
+      await queryClient.invalidateQueries({ 
+        queryKey: ['/api/seat-assignments']
+      });
       await refetch();
       
       toast({
@@ -230,6 +233,10 @@ export default function SeatingChartPage() {
   const handleRemove = async (assignmentId: string) => {
     try {
       await apiRequest('DELETE', `/api/seat-assignments/${assignmentId}`, {});
+      // Invalidate all seat assignment queries to update both Seating Chart and Booking Master
+      await queryClient.invalidateQueries({ 
+        queryKey: ['/api/seat-assignments']
+      });
       await refetch();
       toast({
         title: "Contestant removed",
@@ -248,6 +255,10 @@ export default function SeatingChartPage() {
     try {
       await apiRequest('POST', `/api/seat-assignments/${assignmentId}/cancel`, {
         reason: "Canceled by admin",
+      });
+      // Invalidate all seat assignment queries to update both Seating Chart and Booking Master
+      await queryClient.invalidateQueries({ 
+        queryKey: ['/api/seat-assignments']
       });
       await refetch();
       toast({

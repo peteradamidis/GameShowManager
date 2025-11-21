@@ -16,7 +16,7 @@ import { SeatCard, SeatData } from "./seat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface SeatingChartProps {
   recordDayId: string;
@@ -340,7 +340,12 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         );
       }
 
-      // Trigger refetch to get fresh data from server
+      // Invalidate all seat assignment queries to update both Seating Chart and Booking Master
+      await queryClient.invalidateQueries({ 
+        queryKey: ['/api/seat-assignments']
+      });
+      
+      // Also call onRefreshNeeded if provided for backwards compatibility
       if (onRefreshNeeded) {
         await onRefreshNeeded();
       }
