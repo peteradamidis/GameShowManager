@@ -247,8 +247,6 @@ export function ContestantTable({
                   />
                 </TableHead>
               )}
-              <TableHead>Block</TableHead>
-              <TableHead>Seating</TableHead>
               <TableHead>Audition Rating</TableHead>
               <TableHead>Age</TableHead>
               <TableHead>Name</TableHead>
@@ -278,8 +276,6 @@ export function ContestantTable({
                       />
                     </TableCell>
                   )}
-                  <TableCell>{seatAssignment?.blockNumber || "-"}</TableCell>
-                  <TableCell>{seatAssignment?.seatLabel || "-"}</TableCell>
                   <TableCell>{seatAssignment?.rating || "-"}</TableCell>
                   <TableCell>{contestant.age}</TableCell>
                   <TableCell className="font-medium">{contestant.name}</TableCell>
