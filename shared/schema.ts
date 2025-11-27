@@ -30,6 +30,7 @@ export const contestants = pgTable("contestants", {
   phone: text("phone"),
   address: text("address"),
   medicalInfo: text("medical_info"),
+  photoUrl: text("photo_url"), // URL to contestant photo
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
