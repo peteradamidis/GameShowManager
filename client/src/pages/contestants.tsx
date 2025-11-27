@@ -139,28 +139,43 @@ export default function Contestants() {
 
   const importMutation = useMutation({
     mutationFn: async (file: File) => {
+      console.log('[Import] Starting import for file:', file.name, 'size:', file.size);
+      
       const formData = new FormData();
       formData.append('file', file);
       
       // Use absolute URL to fix Safari "string did not match expected pattern" error
       const baseUrl = window.location.origin;
-      const response = await fetch(`${baseUrl}/api/contestants/import`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'same-origin',
-      });
+      const url = `${baseUrl}/api/contestants/import`;
+      console.log('[Import] Sending request to:', url);
       
-      if (!response.ok) {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const error = await response.json();
-          throw new Error(error.error || 'Import failed');
-        } else {
-          throw new Error(`Import failed: Server returned ${response.status}`);
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData,
+          credentials: 'same-origin',
+        });
+        
+        console.log('[Import] Response status:', response.status);
+        console.log('[Import] Response headers:', Object.fromEntries(response.headers.entries()));
+        
+        const responseText = await response.text();
+        console.log('[Import] Response body:', responseText);
+        
+        if (!response.ok) {
+          try {
+            const error = JSON.parse(responseText);
+            throw new Error(error.error || 'Import failed');
+          } catch (parseError) {
+            throw new Error(`Import failed: Server returned ${response.status} - ${responseText.substring(0, 100)}`);
+          }
         }
+        
+        return JSON.parse(responseText);
+      } catch (error: any) {
+        console.error('[Import] Error:', error);
+        throw error;
       }
-      
-      return response.json();
     },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
