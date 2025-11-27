@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User, X, Ban } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
@@ -109,18 +110,18 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
           <div className="space-y-3">
             {contestantDetails ? (
               <>
-                <div>
-                  <h4 className="text-sm font-semibold">{contestantDetails.name}</h4>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12">
+                    {contestantDetails.photoUrl ? (
+                      <AvatarImage src={contestantDetails.photoUrl} alt={contestantDetails.name} />
+                    ) : null}
+                    <AvatarFallback>
+                      {contestantDetails.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Age</label>
-                    <p>{contestantDetails.age}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">Gender</label>
-                    <p>{contestantDetails.gender}</p>
+                    <h4 className="text-sm font-semibold">{contestantDetails.name}</h4>
+                    <p className="text-xs text-muted-foreground">{contestantDetails.age} years old • {contestantDetails.gender}</p>
                   </div>
                 </div>
 
@@ -131,34 +132,10 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
                   </div>
                 )}
 
-                {contestantDetails.groupId && (
+                {contestantDetails.phone && (
                   <div className="text-sm">
-                    <label className="text-xs font-medium text-muted-foreground">Group</label>
-                    <p>Group {contestantDetails.groupId}</p>
-                  </div>
-                )}
-
-                {(contestantDetails.email || contestantDetails.phone) && (
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    {contestantDetails.email && (
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Email</label>
-                        <p className="truncate text-xs">{contestantDetails.email}</p>
-                      </div>
-                    )}
-                    {contestantDetails.phone && (
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Phone</label>
-                        <p className="text-xs">{contestantDetails.phone}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {contestantDetails.address && (
-                  <div className="text-sm">
-                    <label className="text-xs font-medium text-muted-foreground">Address</label>
-                    <p className="text-xs">{contestantDetails.address}</p>
+                    <label className="text-xs font-medium text-muted-foreground">Phone</label>
+                    <p className="text-xs">{contestantDetails.phone}</p>
                   </div>
                 )}
 
