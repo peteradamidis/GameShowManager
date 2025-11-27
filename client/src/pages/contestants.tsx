@@ -142,7 +142,7 @@ export default function Contestants() {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await fetch('/api/import', {
+      const response = await fetch('/api/contestants/import', {
         method: 'POST',
         body: formData,
       });
