@@ -402,15 +402,16 @@ export default function Contestants() {
         <div className="flex gap-4 items-end flex-wrap">
           <div className="flex-1 min-w-[200px] max-w-xs">
             <label className="text-sm font-medium mb-2 block">Availability</label>
-            <Select value={filterRecordDayId || "all"} onValueChange={(value) => {
-              setFilterRecordDayId(value === "all" ? "" : value);
-              setFilterResponseValue("all");
+            <Select value={filterRecordDayId || "na"} onValueChange={(value) => {
+              setFilterRecordDayId(value === "na" ? "" : value);
+              // Default to 'yes' when selecting a date
+              setFilterResponseValue(value === "na" ? "all" : "yes");
             }}>
               <SelectTrigger data-testid="select-filter-availability">
-                <SelectValue placeholder="Select a date" />
+                <SelectValue placeholder="N/A" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All dates</SelectItem>
+                <SelectItem value="na">N/A</SelectItem>
                 {recordDays.map((day: any) => (
                   <SelectItem key={day.id} value={day.id}>
                     {new Date(day.date).toLocaleDateString('en-US', { 
@@ -419,6 +420,7 @@ export default function Contestants() {
                       month: 'short', 
                       day: 'numeric' 
                     })}
+                    {day.rxNumber ? ` (${day.rxNumber})` : ''}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -427,17 +429,17 @@ export default function Contestants() {
 
           {filterRecordDayId && (
             <div className="flex-1 min-w-[200px] max-w-xs">
-              <label className="text-sm font-medium mb-2 block">Availability Response</label>
+              <label className="text-sm font-medium mb-2 block">Response</label>
               <Select value={filterResponseValue} onValueChange={setFilterResponseValue}>
                 <SelectTrigger data-testid="select-filter-response">
-                  <SelectValue placeholder="All responses" />
+                  <SelectValue placeholder="Yes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All responses</SelectItem>
                   <SelectItem value="yes">Yes</SelectItem>
                   <SelectItem value="maybe">Maybe</SelectItem>
                   <SelectItem value="no">No</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="all">All responses</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -486,11 +488,8 @@ export default function Contestants() {
           )}
           {filterRecordDayId && (
             <Badge variant="outline">
-              Availability: {new Date(recordDays.find((d: any) => d.id === filterRecordDayId)?.date).toLocaleDateString()}
+              Availability: {new Date(recordDays.find((d: any) => d.id === filterRecordDayId)?.date).toLocaleDateString()} ({filterResponseValue === "all" ? "all responses" : filterResponseValue})
             </Badge>
-          )}
-          {filterRecordDayId && filterResponseValue !== "all" && (
-            <Badge variant="outline">Response: {filterResponseValue}</Badge>
           )}
         </div>
       )}
