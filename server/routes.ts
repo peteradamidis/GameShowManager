@@ -239,7 +239,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                        row["Medical"] || row["MEDICAL"] ||
                        row["Health Conditions"] || row["HEALTH CONDITIONS"] ||
                        row["Health"] || row["HEALTH"] || null,
-          mobilityNotes: row["MOBILITY NOTES"] || row["Mobility Notes"] || row["mobility_notes"] || 
+          mobilityNotes: row["Mobility/Access/Medical Notes"] || row["MOBILITY/ACCESS/MEDICAL NOTES"] ||
+                         row["Mobility/Access/Medical notes"] || row["mobility/access/medical notes"] ||
+                         row["MOBILITY NOTES"] || row["Mobility Notes"] || row["mobility_notes"] || 
                          row["MOBILITY/ACCESS NOTES"] || row["Mobility/Access Notes"] || 
                          row["ACCESS NOTES"] || row["Access Notes"] ||
                          row["Mobility"] || row["MOBILITY"] ||
@@ -247,7 +249,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                          row["Accessibility"] || row["ACCESSIBILITY"] ||
                          row["Special Needs"] || row["SPECIAL NEEDS"] ||
                          row["Disability"] || row["DISABILITY"] || null,
-          criminalRecord: row["CRIMINAL RECORD"] || row["Criminal Record"] || row["criminal_record"] ||
+          criminalRecord: row["Criminal Record"] || row["CRIMINAL RECORD"] || row["criminal record"] ||
+                          row["criminal_record"] ||
                           row["Criminal"] || row["CRIMINAL"] ||
                           row["Background"] || row["BACKGROUND"] ||
                           row["Background Check"] || row["BACKGROUND CHECK"] || null,
