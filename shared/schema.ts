@@ -38,6 +38,7 @@ export const contestants = pgTable("contestants", {
 export const recordDays = pgTable("record_days", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   date: date("date").notNull(),
+  rxNumber: text("rx_number"), // e.g., "RX EP 6 - 10"
   totalSeats: integer("total_seats").default(154).notNull(),
   status: recordDayStatusEnum("status").default('draft').notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

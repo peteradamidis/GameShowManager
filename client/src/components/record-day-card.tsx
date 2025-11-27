@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 export interface RecordDay {
   id: string;
   date: string;
+  rxNumber?: string | null;
   totalSeats: number;
   filledSeats: number;
   femalePercent: number;
@@ -38,7 +39,9 @@ export function RecordDayCard({ recordDay, onViewSeating, onSendInvitations }: R
               <Calendar className="h-5 w-5" />
               {recordDay.date}
             </CardTitle>
-            <CardDescription>Record Day</CardDescription>
+            <CardDescription>
+              {recordDay.rxNumber || "Record Day"}
+            </CardDescription>
           </div>
           <Badge variant="secondary" className={statusColors[recordDay.status]}>
             {recordDay.status}

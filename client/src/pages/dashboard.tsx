@@ -13,6 +13,7 @@ interface Contestant {
 interface RecordDayData {
   id: string;
   date: string;
+  rxNumber?: string | null;
   totalSeats: number;
   status: string;
 }
@@ -72,6 +73,7 @@ export default function Dashboard() {
         day: 'numeric', 
         year: 'numeric' 
       }),
+      rxNumber: rd.rxNumber,
       totalSeats: rd.totalSeats || 154,
       filledSeats,
       femalePercent,
