@@ -2,171 +2,164 @@
 
 ## Design Approach
 
-**Selected Approach:** Design System - Material Design Inspired
-**Justification:** This is a data-intensive productivity tool requiring efficient workflows, clear information hierarchy, and intuitive drag-and-drop interactions. Material Design's elevation system and interactive feedback patterns are ideal for the complex seating chart and dashboard requirements.
+**Selected Approach:** Modern Design System - Linear/Notion Inspired
+**Justification:** Contemporary productivity tools demand refined aesthetics with excellent information density. Linear's precision and Notion's clarity provide the perfect foundation for a data-intensive contestant management system that feels both powerful and approachable.
 
 ## Core Design Principles
 
-1. **Information Clarity:** Prioritize readability and scannable data displays
-2. **Workflow Efficiency:** Minimize clicks and cognitive load for repetitive tasks
-3. **Visual Feedback:** Provide clear status indicators and interaction feedback
-4. **Flexible Control:** Balance automation with manual override capabilities
+1. **Contemporary Minimalism:** Clean interfaces with purposeful elements
+2. **Information Density:** Maximize data visibility without overwhelming
+3. **Refined Interactions:** Subtle, polished micro-interactions
+4. **Spatial Intelligence:** Strategic use of whitespace for visual hierarchy
 
 ## Typography
 
-**Font Family:** Inter (Google Fonts) for all interface elements
-- **Headings (H1):** 2xl (24px), font-semibold - Dashboard titles, page headers
-- **Headings (H2):** xl (20px), font-semibold - Section headers, card titles
-- **Headings (H3):** lg (18px), font-medium - Subsections, block headers
-- **Body Text:** base (16px), font-normal - Forms, table content, descriptions
-- **Labels:** sm (14px), font-medium - Form labels, table headers, status badges
-- **Small Text:** xs (12px), font-normal - Helper text, metadata, timestamps
+**Font Stack:** Inter (primary), SF Mono (tabular data)
+
+- **Page Titles:** 3xl (30px), font-semibold, tracking-tight
+- **Section Headers:** 2xl (24px), font-semibold
+- **Card Titles:** lg (18px), font-medium
+- **Body Text:** sm (14px), font-normal - Primary interface text
+- **Labels:** xs (12px), font-medium, uppercase, tracking-wide, text-gray-500
+- **Data/Numbers:** base (16px), font-mono - Table cells, statistics
+- **Metadata:** xs (12px), font-normal - Timestamps, helper text
 
 ## Layout System
 
-**Spacing Units:** Use Tailwind spacing units of 2, 4, 6, and 8 for consistency
-- Component padding: p-4 to p-6
-- Section margins: mb-6 to mb-8
-- Card spacing: gap-4 to gap-6
-- Form element spacing: space-y-4
+**Spacing Strategy:** Tailwind units of 3, 4, 6, 8, 12, 16
 
-**Container Widths:**
-- Full application wrapper: max-w-7xl with mx-auto
-- Dashboard cards: Full width within grid columns
-- Forms: max-w-2xl for optimal readability
-- Modals: max-w-4xl for seating chart interactions
+- Cards/panels: p-6
+- Section spacing: space-y-8
+- Component gaps: gap-4
+- Dense areas (tables): p-3
 
-**Grid Structure:**
-- Dashboard overview: 3-column grid (lg:grid-cols-3) for statistics cards
-- Main workspace: 2-column layout (sidebar + main content area)
-- Seating chart: Custom 7-column grid for blocks with 20 rows each
-- Contestant tables: Single column with responsive horizontal scrolling
+**Grid Architecture:**
+- Dashboard stats: grid-cols-4 (single-metric cards)
+- Main layout: Sidebar (w-64) + Content area (flex-1)
+- Seating chart: Custom 7-column grid with gap-1.5
+- Responsive: Full-width mobile, multi-column desktop
 
 ## Component Library
 
-### Navigation & Layout
-**Top Navigation Bar:**
-- Fixed header with shadow
-- Logo/title left-aligned
-- Primary actions right-aligned (Import Data, Send Invitations buttons)
-- Height: h-16
+### Navigation & Structure
 
-**Sidebar Navigation:**
-- Width: w-64 on desktop, collapsible on mobile
-- Menu items with icons and labels
-- Active state highlighting
-- Sections: Dashboard, Contestants, Record Days, Seating Chart, Settings
+**App Header:**
+- Height: h-14, backdrop-blur, border-b
+- Logo + Navigation pills (rounded-full backgrounds for active states)
+- Action buttons right-aligned with subtle spacing (gap-3)
 
-### Dashboard Components
-**Statistics Cards:**
-- Elevated surface with rounded corners (rounded-lg)
-- Large number display (text-4xl, font-bold)
-- Label below (text-sm)
-- Icon in corner
-- Grid layout showing: Total Applicants, Pending Availability, Assigned Contestants, Upcoming Record Days
+**Sidebar:**
+- Full-height, border-r, bg-gray-50/50
+- Icon + label menu items, rounded-lg hover states
+- Active indicator: Left border accent + background tint
+- Collapsible with icon-only state
 
-**Progress Indicators:**
-- Horizontal bar charts for demographic breakdowns
-- Percentage displays for fill rates (7 blocks × 20 seats = 140 per day)
-- Gender balance visualization (target: 60-70% female)
+### Dashboard Elements
+
+**Metric Cards:**
+- Minimal design: border, rounded-xl, p-6
+- Large number: text-3xl, font-semibold, tabular-nums
+- Label: text-xs, uppercase, tracking-wide, text-gray-500
+- Trend indicator: Small arrow + percentage change
+- No shadows, rely on borders for definition
+
+**Progress Visualizations:**
+- Slim progress bars (h-1.5, rounded-full)
+- Inline demographic breakdowns with labels
+- Block fill-rate indicators (140 seats per day)
+- Gender ratio gauge (60-70% target range)
 
 ### Data Tables
-**Contestant List Table:**
-- Sticky header row
-- Sortable columns: Name, Group ID, Age, Gender, Availability Status, Record Day Assigned
-- Row hover states
-- Checkbox selection for bulk actions
-- Pagination footer (20 entries per page)
-- Search/filter bar above table
 
-**Table Row Structure:**
-- Standard row height: h-12
-- Alternating row backgrounds for readability
-- Group indicators (colored dot or badge) for members of same group
+**Modern Table Design:**
+- Borderless rows with hover backgrounds (hover:bg-gray-50)
+- Header: text-xs, uppercase, font-medium, pb-3, border-b
+- Cell padding: px-4 py-3
+- Tight leading for density (leading-tight)
+- Sticky header with backdrop-blur
+- Alternating rows: subtle striping on hover only
+- Selection checkboxes: rounded, indeterminate states
 
-### Forms
-**Availability Request Form (sent to contestants):**
-- Clean, single-column layout
-- Clear section headers
-- Checkbox grid for available dates
-- Text area for additional notes
-- Prominent submit button at bottom
+**Columns:** Name, Group Badge, Age, Gender, Status Pill, Record Day, Actions (icon menu)
 
-**Import Excel Interface:**
-- Drag-and-drop upload zone with dashed border
-- File preview table after upload
-- Column mapping interface
-- "Process & Import" action button
+### Forms & Inputs
+
+**Input Fields:**
+- Height: h-10, rounded-lg, border
+- Focus: ring-2 with offset, border color change
+- Labels positioned above with mb-2
+- Helper text below: text-xs, text-gray-500
+
+**Availability Grid:**
+- Calendar-style checkbox grid
+- Selected dates: filled background, rounded
+- Disabled dates: opacity-50
+
+**File Upload:**
+- Dashed border zone, rounded-xl, p-8
+- Center-aligned upload icon + text
+- Drag-over state: border color shift + background tint
 
 ### Interactive Seating Chart
-**Chart Structure:**
-- 7 vertical blocks side-by-side (grid-cols-7)
-- Each block contains 20 seat positions (grid-rows-20)
-- Block headers showing: Block number, Gender ratio, Age distribution
-- Compact spacing between blocks (gap-2)
 
-**Seat Cards:**
-- Small rectangular cards (aspect ratio 3:4)
-- Displays: Name (truncated), Age, Gender icon
-- Draggable with cursor feedback
-- Color-coded borders for groups (same color = same group)
-- Empty seats: dashed border, light background
-- Hover state: subtle elevation increase
+**Chart Layout:**
+- 7 blocks × 20 rows, ultra-compact spacing (gap-1.5)
+- Block headers: Sticky top, text-xs, font-medium, pb-2
+- Real-time stats per block: Gender count, age range
 
-**Drag-and-Drop Interactions:**
-- Visual indicators during drag (ghost element, drop zones highlighted)
-- Snap-to-grid behavior
-- Invalid drop zones shown with visual feedback
-- Undo/redo buttons for seating changes
+**Seat Elements:**
+- Compact cards: w-full aspect-square, rounded-md, border
+- Content: Initials (large), age (small), gender icon (corner)
+- Group affiliation: 3px left border in group color
+- Empty seats: Dashed border, muted background
+- Drag feedback: Opacity-50 on source, shadow-lg on ghost
+- Drop zones: Ring highlight, background pulse
 
-### Buttons & Actions
-**Primary Actions:** Large, prominent buttons (px-6, py-3)
-- "Auto-Assign Seats" - triggers algorithm
-- "Send Invitations" - final approval step
-- "Import Data" - upload trigger
+**Bulk Actions Toolbar:**
+- Appears on selection, sticky bottom
+- Compact height (h-12), backdrop-blur, border-top
+- Actions: Auto-assign, Clear, Reset with counts
 
-**Secondary Actions:** Medium buttons (px-4, py-2)
-- "Reset Block," "Clear Selection," "Export"
+### Buttons
 
-**Tertiary Actions:** Small text links or icon buttons
-- "Edit," "Delete," "View Details"
+**Primary:** px-4 py-2, rounded-lg, font-medium, text-sm
+**Secondary:** Same size, border variant
+**Ghost:** Hover background only, no border
+**Icon buttons:** w-8 h-8, rounded-lg, centered icon
 
-### Status Badges
-**Small pill-shaped indicators:**
-- "Pending Availability" - amber
-- "Available" - green
-- "Assigned" - blue
-- "Invited" - purple
-- "Confirmed" - dark green
+### Status System
 
-### Modals & Overlays
-**Confirmation Dialogs:**
-- Centered overlay (max-w-md)
-- Clear heading, description, action buttons
-- Used for: Send invitations, reset assignments, bulk operations
+**Pill Badges:**
+- Inline-flex, px-2.5 py-0.5, rounded-full, text-xs, font-medium
+- Dot indicator + label
+- States: Pending (gray), Available (emerald), Assigned (blue), Invited (violet), Confirmed (green)
 
-**Detail Panels:**
-- Slide-out from right (max-w-lg)
-- Shows full contestant details, group members, availability responses
-- Close button in top-right
+### Modals & Panels
+
+**Dialog Overlays:**
+- Backdrop: bg-black/20, backdrop-blur-sm
+- Content: max-w-2xl, rounded-xl, shadow-2xl
+- Padding: p-6, with header/body/footer sections
+
+**Slide-out Panels:**
+- Right-aligned, w-96, full-height
+- Smooth slide transition (300ms)
+- Detail view for contestants with tabbed sections
 
 ## Animations
 
-**Minimal, purposeful animations only:**
-- Drag-and-drop: Smooth position transitions (transition-transform duration-200)
-- Modal/panel entry: Fade + slide (transition-opacity duration-300)
-- Button feedback: Subtle scale on click
-- NO decorative animations, scroll effects, or auto-playing elements
-
-## Images
-
-**No images required** - This is a pure data management interface focused on functionality over aesthetics. Icons only (using Heroicons via CDN).
+**Refined Micro-interactions:**
+- Drag: transform + opacity (200ms ease-out)
+- Modal entry: scale-95 to scale-100 + fade (150ms)
+- Button press: scale-[0.98] (100ms)
+- Table row hover: background transition (150ms)
+- NO decorative scroll effects or auto-play
 
 ## Accessibility
 
-- Maintain WCAG 2.1 AA standards throughout
-- Keyboard navigation for all interactive elements (especially drag-and-drop alternatives)
-- Clear focus states on all inputs and buttons
-- Sufficient contrast ratios for text and interactive elements
-- Screen reader labels for icon-only buttons
-- Alt text for status indicators
+- WCAG 2.1 AA compliance throughout
+- Keyboard shortcuts overlay (⌘K for quick actions)
+- Drag-and-drop keyboard alternatives (arrow keys + space)
+- Focus-visible rings on all interactive elements
+- Adequate touch targets (min 44×44px)
+- High contrast status indicators
