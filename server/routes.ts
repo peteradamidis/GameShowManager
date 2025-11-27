@@ -192,6 +192,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "The uploaded file is empty or has no data rows." });
       }
 
+      // Log all column names from first row for debugging
+      if (rawData.length > 0) {
+        console.log("Excel columns found:", Object.keys(rawData[0]));
+      }
+
       // Normalize column names - handle various case formats
       const data = rawData.map((row: any) => {
         // Get age value with fallbacks for different column name formats
@@ -202,23 +207,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const genderValue = row.GENDER || row.Gender || row.gender || "Not Specified";
         
         return {
-          name: row.NAME || row.Name || row.name,
+          name: row.NAME || row.Name || row.name || row["Full Name"] || row["FULL NAME"],
           age: isNaN(parsedAge) ? 0 : parsedAge,
           gender: genderValue,
           // Handle GROUP ID column or Attending With column
-          groupIdFromFile: row["GROUP ID"] || row["Group ID"] || row["group id"] || null,
-          attendingWith: row["ATTENDING WITH"] || row["Attending With"] || row["attending_with"] || row.attendingWith || null,
-          email: row.EMAIL || row.Email || row.email || null,
+          groupIdFromFile: row["GROUP ID"] || row["Group ID"] || row["group id"] || row["Group"] || row["GROUP"] || null,
+          attendingWith: row["ATTENDING WITH"] || row["Attending With"] || row["attending with"] || 
+                         row["Attending with"] || row.attendingWith || row["AttendingWith"] ||
+                         row["GUEST"] || row["Guest"] || row["Guests"] || row["GUESTS"] ||
+                         row["With"] || row["WITH"] || null,
+          email: row.EMAIL || row.Email || row.email || row["E-mail"] || row["E-MAIL"] || 
+                 row["Email Address"] || row["EMAIL ADDRESS"] || null,
           phone: row.PHONE || row.Phone || row.phone || 
-                 row.MOBILE || row.Mobile || row.mobile || null,
+                 row.MOBILE || row.Mobile || row.mobile ||
+                 row["Phone Number"] || row["PHONE NUMBER"] ||
+                 row["Mobile Number"] || row["MOBILE NUMBER"] ||
+                 row["Contact"] || row["CONTACT"] || null,
           address: row.ADDRESS || row.Address || row.address || 
-                   row.CITY || row.City || row.city || null,
+                   row.CITY || row.City || row.city ||
+                   row["Location"] || row["LOCATION"] || null,
           medicalInfo: row["MEDICAL INFO"] || row["Medical Info"] || row["medical_info"] || row.medicalInfo ||
-                       row["MEDICAL CONDITIONS"] || row["Medical Conditions"] || null,
+                       row["MEDICAL CONDITIONS"] || row["Medical Conditions"] || row["medical conditions"] ||
+                       row["Medical"] || row["MEDICAL"] ||
+                       row["Health Conditions"] || row["HEALTH CONDITIONS"] ||
+                       row["Health"] || row["HEALTH"] || null,
           mobilityNotes: row["MOBILITY NOTES"] || row["Mobility Notes"] || row["mobility_notes"] || 
                          row["MOBILITY/ACCESS NOTES"] || row["Mobility/Access Notes"] || 
-                         row["ACCESS NOTES"] || row["Access Notes"] || null,
-          criminalRecord: row["CRIMINAL RECORD"] || row["Criminal Record"] || row["criminal_record"] || null,
+                         row["ACCESS NOTES"] || row["Access Notes"] ||
+                         row["Mobility"] || row["MOBILITY"] ||
+                         row["Access"] || row["ACCESS"] ||
+                         row["Accessibility"] || row["ACCESSIBILITY"] ||
+                         row["Special Needs"] || row["SPECIAL NEEDS"] ||
+                         row["Disability"] || row["DISABILITY"] || null,
+          criminalRecord: row["CRIMINAL RECORD"] || row["Criminal Record"] || row["criminal_record"] ||
+                          row["Criminal"] || row["CRIMINAL"] ||
+                          row["Background"] || row["BACKGROUND"] ||
+                          row["Background Check"] || row["BACKGROUND CHECK"] || null,
         };
       });
 
