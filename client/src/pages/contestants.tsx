@@ -646,7 +646,7 @@ export default function Contestants() {
                   mode="single"
                   selected={selectedCalendarDate}
                   onSelect={handleCalendarSelect}
-                  defaultMonth={new Date(2025, 1, 1)}
+                  defaultMonth={new Date(2026, 1, 1)}
                   disabled={(date) => {
                     const dateStr = format(date, 'yyyy-MM-dd');
                     return !recordDayDates.has(dateStr);
