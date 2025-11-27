@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -26,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, User } from "lucide-react";
+import { Calendar, User, Mail, Phone, MapPin, Users, Heart, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
@@ -36,6 +37,13 @@ export default function ReschedulePage() {
   const [rebookDialogOpen, setRebookDialogOpen] = useState(false);
   const [selectedCancellation, setSelectedCancellation] = useState<any>(null);
   const [selectedRecordDayId, setSelectedRecordDayId] = useState<string>("");
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedContestant, setSelectedContestant] = useState<any>(null);
+
+  const handleRowClick = (contestant: any) => {
+    setSelectedContestant(contestant);
+    setDetailDialogOpen(true);
+  };
 
   const { data: canceledAssignments = [], isLoading, refetch } = useQuery<any[]>({
     queryKey: ['/api/canceled-assignments'],
@@ -188,7 +196,12 @@ export default function ReschedulePage() {
               </TableHeader>
               <TableBody>
                 {canceledAssignments.map((cancellation: any) => (
-                  <TableRow key={cancellation.id} data-testid={`row-canceled-${cancellation.id}`}>
+                  <TableRow 
+                    key={cancellation.id} 
+                    data-testid={`row-canceled-${cancellation.id}`}
+                    onClick={() => handleRowClick(cancellation.contestant)}
+                    className="cursor-pointer hover-elevate"
+                  >
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-muted-foreground" />
@@ -231,7 +244,10 @@ export default function ReschedulePage() {
                         <Button
                           size="sm"
                           variant="default"
-                          onClick={() => handleRebook(cancellation)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRebook(cancellation);
+                          }}
                           data-testid={`button-rebook-${cancellation.id}`}
                         >
                           Rebook
@@ -239,7 +255,10 @@ export default function ReschedulePage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleRemovePermanently(cancellation.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemovePermanently(cancellation.id);
+                          }}
                           data-testid={`button-remove-${cancellation.id}`}
                         >
                           Remove
@@ -297,6 +316,118 @@ export default function ReschedulePage() {
               data-testid="button-confirm-rebook"
             >
               Confirm Rebook
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Contestant Details Dialog */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="max-w-2xl" data-testid="dialog-contestant-details">
+          <DialogHeader>
+            <DialogTitle>Contestant Details</DialogTitle>
+            <DialogDescription>
+              Complete information for {selectedContestant?.name || "this contestant"}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedContestant && (
+            <div className="space-y-4">
+              {/* Photo and Basic Info Header */}
+              <div className="flex gap-4">
+                <Avatar className="h-20 w-20 border-2 border-border">
+                  {selectedContestant.photoUrl ? (
+                    <AvatarImage 
+                      src={selectedContestant.photoUrl} 
+                      alt={selectedContestant.name}
+                      className="object-cover"
+                    />
+                  ) : null}
+                  <AvatarFallback className="text-xl bg-muted">
+                    <User className="h-8 w-8 text-muted-foreground" />
+                  </AvatarFallback>
+                </Avatar>
+
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold">{selectedContestant.name}</h3>
+                  <div className="flex gap-2 mt-1">
+                    <Badge variant="secondary">{selectedContestant.age} years old</Badge>
+                    <Badge variant="outline">{selectedContestant.gender}</Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="grid grid-cols-2 gap-4">
+                {selectedContestant.email && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span>{selectedContestant.email}</span>
+                  </div>
+                )}
+                {selectedContestant.phone && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>{selectedContestant.phone}</span>
+                  </div>
+                )}
+                {selectedContestant.address && (
+                  <div className="flex items-center gap-2 text-sm col-span-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{selectedContestant.address}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Attending With */}
+              {selectedContestant.attendingWith && (
+                <div className="border-t pt-3">
+                  <div className="flex items-center gap-2 text-sm font-medium mb-1">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    Attending With
+                  </div>
+                  <p className="text-sm text-muted-foreground">{selectedContestant.attendingWith}</p>
+                </div>
+              )}
+
+              {/* Medical Info */}
+              {selectedContestant.medicalInfo && (
+                <div className="border-t pt-3">
+                  <div className="flex items-center gap-2 text-sm font-medium mb-1">
+                    <Heart className="h-4 w-4 text-muted-foreground" />
+                    Medical Information
+                  </div>
+                  <p className="text-sm text-muted-foreground">{selectedContestant.medicalInfo}</p>
+                </div>
+              )}
+
+              {/* Mobility Notes */}
+              {selectedContestant.mobilityNotes && (
+                <div className="border-t pt-3">
+                  <div className="flex items-center gap-2 text-sm font-medium mb-1">
+                    <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                    Mobility/Access Notes
+                  </div>
+                  <p className="text-sm text-muted-foreground">{selectedContestant.mobilityNotes}</p>
+                </div>
+              )}
+
+              {/* Criminal Record */}
+              {selectedContestant.criminalRecord && (
+                <div className="border-t pt-3">
+                  <div className="flex items-center gap-2 text-sm font-medium mb-1">
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                    Criminal Record
+                  </div>
+                  <p className="text-sm text-muted-foreground">{selectedContestant.criminalRecord}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailDialogOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
