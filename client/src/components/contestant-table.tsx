@@ -40,10 +40,20 @@ export interface Contestant {
   photoUrl?: string | null;
 }
 
+interface SeatAssignment {
+  id: string;
+  contestantId: string;
+  recordDayId: string;
+  blockNumber: number;
+  seatLabel: string;
+  rating?: string | null;
+}
+
 interface ContestantTableProps {
   contestants: Contestant[];
   selectedIds?: string[];
   onSelectionChange?: (ids: string[]) => void;
+  seatAssignments?: SeatAssignment[];
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -66,8 +76,15 @@ const StatusBadge = ({ status }: { status: string }) => {
 export function ContestantTable({ 
   contestants, 
   selectedIds = [], 
-  onSelectionChange 
+  onSelectionChange,
+  seatAssignments = []
 }: ContestantTableProps) {
+  // Create a map for quick lookup of seat assignments by contestant ID
+  // Use the most recent assignment if multiple exist
+  const seatAssignmentMap = new Map<string, SeatAssignment>();
+  seatAssignments.forEach(sa => {
+    seatAssignmentMap.set(sa.contestantId, sa);
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedContestantId, setSelectedContestantId] = useState<string | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -230,49 +247,52 @@ export function ContestantTable({
                   />
                 </TableHead>
               )}
-              <TableHead>Name</TableHead>
-              <TableHead>Group ID</TableHead>
+              <TableHead>Block</TableHead>
+              <TableHead>Seating</TableHead>
+              <TableHead>Audition Rating</TableHead>
               <TableHead>Age</TableHead>
-              <TableHead>Gender</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Record Day</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Mobile</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Attending With</TableHead>
+              <TableHead>City</TableHead>
+              <TableHead>Medical Conditions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredContestants.map((contestant) => (
-              <TableRow 
-                key={contestant.id} 
-                data-testid={`row-contestant-${contestant.id}`}
-                onClick={() => handleRowClick(contestant.id)}
-                className="cursor-pointer hover-elevate"
-              >
-                {onSelectionChange && (
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <Checkbox
-                      checked={selectedIds.includes(contestant.id)}
-                      onCheckedChange={() => handleToggle(contestant.id)}
-                      data-testid={`checkbox-contestant-${contestant.id}`}
-                    />
-                  </TableCell>
-                )}
-                <TableCell className="font-medium">{contestant.name}</TableCell>
-                <TableCell>
-                  {contestant.groupId ? (
-                    <Badge variant="outline" className="font-mono text-xs">
-                      {contestant.groupId}
-                    </Badge>
-                  ) : (
-                    <span className="text-muted-foreground text-sm">-</span>
+            {filteredContestants.map((contestant) => {
+              const seatAssignment = seatAssignmentMap.get(contestant.id);
+              return (
+                <TableRow 
+                  key={contestant.id} 
+                  data-testid={`row-contestant-${contestant.id}`}
+                  onClick={() => handleRowClick(contestant.id)}
+                  className="cursor-pointer hover-elevate"
+                >
+                  {onSelectionChange && (
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={selectedIds.includes(contestant.id)}
+                        onCheckedChange={() => handleToggle(contestant.id)}
+                        data-testid={`checkbox-contestant-${contestant.id}`}
+                      />
+                    </TableCell>
                   )}
-                </TableCell>
-                <TableCell>{contestant.age}</TableCell>
-                <TableCell>{contestant.gender}</TableCell>
-                <TableCell>
-                  <StatusBadge status={contestant.availabilityStatus} />
-                </TableCell>
-                <TableCell>{contestant.recordDay || "-"}</TableCell>
-              </TableRow>
-            ))}
+                  <TableCell>{seatAssignment?.blockNumber || "-"}</TableCell>
+                  <TableCell>{seatAssignment?.seatLabel || "-"}</TableCell>
+                  <TableCell>{seatAssignment?.rating || "-"}</TableCell>
+                  <TableCell>{contestant.age}</TableCell>
+                  <TableCell className="font-medium">{contestant.name}</TableCell>
+                  <TableCell>{contestant.phone || "-"}</TableCell>
+                  <TableCell>{contestant.email || "-"}</TableCell>
+                  <TableCell>{contestant.attendingWith || "-"}</TableCell>
+                  <TableCell>{contestant.address || "-"}</TableCell>
+                  <TableCell className="max-w-[200px] truncate" title={contestant.medicalInfo || ""}>
+                    {contestant.medicalInfo || "-"}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

@@ -522,6 +522,7 @@ export default function Contestants() {
           contestants={displayedContestants}
           selectedIds={selectedContestants}
           onSelectionChange={setSelectedContestants}
+          seatAssignments={allSeatAssignments}
         />
       )}
 
