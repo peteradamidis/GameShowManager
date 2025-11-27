@@ -401,16 +401,16 @@ export default function Contestants() {
 
         <div className="flex gap-4 items-end flex-wrap">
           <div className="flex-1 min-w-[200px] max-w-xs">
-            <label className="text-sm font-medium mb-2 block">Record Day</label>
+            <label className="text-sm font-medium mb-2 block">Availability</label>
             <Select value={filterRecordDayId || "all"} onValueChange={(value) => {
               setFilterRecordDayId(value === "all" ? "" : value);
               setFilterResponseValue("all");
             }}>
-              <SelectTrigger data-testid="select-filter-record-day">
-                <SelectValue placeholder="All record days" />
+              <SelectTrigger data-testid="select-filter-availability">
+                <SelectValue placeholder="Select a date" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All record days</SelectItem>
+                <SelectItem value="all">All dates</SelectItem>
                 {recordDays.map((day: any) => (
                   <SelectItem key={day.id} value={day.id}>
                     {new Date(day.date).toLocaleDateString('en-US', { 
@@ -486,7 +486,7 @@ export default function Contestants() {
           )}
           {filterRecordDayId && (
             <Badge variant="outline">
-              Record Day: {new Date(recordDays.find((d: any) => d.id === filterRecordDayId)?.date).toLocaleDateString()}
+              Availability: {new Date(recordDays.find((d: any) => d.id === filterRecordDayId)?.date).toLocaleDateString()}
             </Badge>
           )}
           {filterRecordDayId && filterResponseValue !== "all" && (
