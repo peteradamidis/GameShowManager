@@ -624,7 +624,7 @@ export default function Contestants() {
 
       {/* Assign to Seat Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent className="max-w-lg" data-testid="dialog-assign-seat">
+        <DialogContent className="max-w-2xl" data-testid="dialog-assign-seat">
           <DialogHeader>
             <DialogTitle>
               {isGroupSeating ? "Assign Group Together" : "Assign to Seat"}
@@ -664,10 +664,10 @@ export default function Contestants() {
                       const dateStr = format(date, 'yyyy-MM-dd');
                       const recordDay = recordDayDates.get(dateStr);
                       return (
-                        <div className="flex flex-col items-center justify-center w-full h-full">
+                        <div className="flex flex-col items-center justify-center w-full h-full py-1">
                           <span className="text-base font-medium">{date.getDate()}</span>
                           {recordDay?.rxNumber && (
-                            <span className="text-[9px] leading-none text-primary truncate max-w-[50px]">
+                            <span className="text-[10px] leading-tight text-primary text-center whitespace-nowrap">
                               {recordDay.rxNumber}
                             </span>
                           )}
