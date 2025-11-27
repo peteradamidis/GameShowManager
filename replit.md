@@ -7,7 +7,7 @@ An automated system for managing TV game show contestants that imports applicant
 
 ### Backend (Complete)
 1. **Database Schema**
-   - Contestants: name, age, gender, availability status, group membership, email, phone, address, medical info
+   - Contestants: name, age, gender, availability status, group membership, email, phone, address, medical info, photoUrl
    - Groups: automatically identified from "Attending With" column
    - Record Days: recording session management with status tracking
    - Seat Assignments: tracks contestant assignments to specific seats
@@ -63,6 +63,12 @@ An automated system for managing TV game show contestants that imports applicant
    - **POST /api/booking-confirmations/send - Generate booking confirmation tokens**
    - **GET /api/booking-confirmations/token/:token - Fetch booking details for public form (no auth)**
    - **POST /api/booking-confirmations/respond/:token - Submit booking confirmation (no auth)**
+   - **POST /api/contestants/:id/photo - Upload contestant photo**
+     - Multer disk storage in uploads/photos directory
+     - Supports JPEG, PNG, GIF, WebP (max 5MB)
+     - Deletes old photo when uploading new one
+   - **DELETE /api/contestants/:id/photo - Remove contestant photo**
+     - Deletes file from disk and clears database URL
 
 5. **Atomic Seat Swapping**
    - Database-level transactions using Drizzle ORM
@@ -147,6 +153,11 @@ An automated system for managing TV game show contestants that imports applicant
 - **Contestant table with import and detail view**
   - Click any row to view complete contestant information
   - Detail dialog shows:
+    - **Photo section with upload/delete capabilities**
+      - Avatar displays contestant photo or fallback icon
+      - Upload button for adding/replacing photos
+      - Delete button to remove photo
+      - Hover overlay for quick upload
     - Basic information (name, age, gender, status, group)
     - Contact information (email, phone, address) with icons
     - Medical information
