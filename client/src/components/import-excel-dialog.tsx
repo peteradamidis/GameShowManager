@@ -55,6 +55,7 @@ export function ImportExcelDialog({ onImport }: ImportExcelDialogProps) {
   };
 
   const handleImport = () => {
+    alert('Import button clicked! File: ' + (selectedFile?.name || 'none'));
     if (selectedFile) {
       console.log('[ImportDialog] handleImport called with file:', selectedFile.name);
       console.log('[ImportDialog] onImport function exists:', !!onImport);
@@ -62,6 +63,7 @@ export function ImportExcelDialog({ onImport }: ImportExcelDialogProps) {
         onImport(selectedFile);
       } else {
         console.error('[ImportDialog] onImport is undefined!');
+        alert('ERROR: onImport function is undefined!');
       }
       toast({
         title: "Import started",
