@@ -138,6 +138,51 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
                   </div>
                 )}
 
+                {(contestantDetails.email || contestantDetails.phone) && (
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    {contestantDetails.email && (
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Email</label>
+                        <p className="truncate text-xs">{contestantDetails.email}</p>
+                      </div>
+                    )}
+                    {contestantDetails.phone && (
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Phone</label>
+                        <p className="text-xs">{contestantDetails.phone}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {contestantDetails.address && (
+                  <div className="text-sm">
+                    <label className="text-xs font-medium text-muted-foreground">Address</label>
+                    <p className="text-xs">{contestantDetails.address}</p>
+                  </div>
+                )}
+
+                {contestantDetails.medicalInfo && (
+                  <div className="text-sm">
+                    <label className="text-xs font-medium text-muted-foreground">Medical Info</label>
+                    <p className="text-xs">{contestantDetails.medicalInfo}</p>
+                  </div>
+                )}
+
+                {contestantDetails.mobilityNotes && (
+                  <div className="text-sm">
+                    <label className="text-xs font-medium text-muted-foreground">Mobility/Access Notes</label>
+                    <p className="text-xs">{contestantDetails.mobilityNotes}</p>
+                  </div>
+                )}
+
+                {contestantDetails.criminalRecord && (
+                  <div className="text-sm">
+                    <label className="text-xs font-medium text-muted-foreground">Criminal Record</label>
+                    <p className="text-xs">{contestantDetails.criminalRecord}</p>
+                  </div>
+                )}
+
                 <div className="text-sm">
                   <label className="text-xs font-medium text-muted-foreground">Status</label>
                   <div className="mt-1">

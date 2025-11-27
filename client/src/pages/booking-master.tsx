@@ -42,7 +42,11 @@ interface Contestant {
   phone?: string;
   address?: string;
   medicalInfo?: string;
+  mobilityNotes?: string;
+  criminalRecord?: string;
   attendingWith?: string;
+  groupId?: string;
+  photoUrl?: string;
 }
 
 interface SeatAssignment {
@@ -249,12 +253,16 @@ export default function BookingMaster() {
       "RATING": row.assignment?.rating || "",
       "AGE": row.contestant?.age?.toString() || "",
       "NAME": row.contestant?.name || "",
+      "GENDER": row.contestant?.gender || "",
       "MOBILE": row.contestant?.phone || "",
       "EMAIL": row.contestant?.email || "",
+      "ADDRESS": row.contestant?.address || "",
       "ATTENDING WITH": row.contestant?.attendingWith || "",
       "LOCATION": row.assignment?.location || "",
       "MEDICAL Q (Y/N)": row.assignment?.medicalQuestion || "",
-      "MOBILITY / MEDICAL NOTES": row.contestant?.medicalInfo || "",
+      "MEDICAL INFO": row.contestant?.medicalInfo || "",
+      "MOBILITY/ACCESS/MEDICAL NOTES": row.contestant?.mobilityNotes || "",
+      "CRIMINAL RECORD": row.contestant?.criminalRecord || "",
       "CRIMINAL/BANKRUPTCY": row.assignment?.criminalBankruptcy || "",
       "CASTING CATEGORY": row.assignment?.castingCategory || "",
       "NOTES": row.assignment?.notes || "",
@@ -276,27 +284,31 @@ export default function BookingMaster() {
     XLSX.utils.book_append_sheet(wb, ws, "Booking Master");
 
     ws['!cols'] = [
-      { wch: 10 },
-      { wch: 12 },
-      { wch: 8 },
-      { wch: 6 },
-      { wch: 20 },
-      { wch: 15 },
-      { wch: 25 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 12 },
-      { wch: 25 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 25 },
-      { wch: 12 },
-      { wch: 12 },
-      { wch: 12 },
-      { wch: 12 },
-      { wch: 10 },
-      { wch: 20 },
-      { wch: 20 },
+      { wch: 10 },  // SEAT
+      { wch: 12 },  // FIRST NATIONS
+      { wch: 8 },   // RATING
+      { wch: 6 },   // AGE
+      { wch: 20 },  // NAME
+      { wch: 10 },  // GENDER
+      { wch: 15 },  // MOBILE
+      { wch: 25 },  // EMAIL
+      { wch: 25 },  // ADDRESS
+      { wch: 15 },  // ATTENDING WITH
+      { wch: 15 },  // LOCATION
+      { wch: 12 },  // MEDICAL Q (Y/N)
+      { wch: 25 },  // MEDICAL INFO
+      { wch: 30 },  // MOBILITY/ACCESS/MEDICAL NOTES
+      { wch: 20 },  // CRIMINAL RECORD
+      { wch: 15 },  // CRIMINAL/BANKRUPTCY
+      { wch: 15 },  // CASTING CATEGORY
+      { wch: 25 },  // NOTES
+      { wch: 12 },  // BOOKING EMAIL SENT
+      { wch: 12 },  // CONFIRMED RSVP
+      { wch: 12 },  // PAPERWORK SENT
+      { wch: 12 },  // PAPERWORK RECEIVED
+      { wch: 10 },  // SIGNED-IN
+      { wch: 20 },  // OTD NOTES
+      { wch: 20 },  // STANDBY REPLACEMENT / SWAPS
     ];
 
     XLSX.writeFile(wb, `Booking-Master-${dayName}.xlsx`);
