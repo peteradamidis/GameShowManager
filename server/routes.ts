@@ -192,46 +192,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "The uploaded file is empty or has no data rows." });
       }
 
-      // Normalize column names to camelCase
-      const data = rawData.map((row: any) => ({
-        name: row.Name || row.name,
-        age: parseInt(row.Age || row.age),
-        gender: row.Gender || row.gender,
-        attendingWith: row["Attending With"] || row["attending_with"] || row.attendingWith || null,
-        email: row.Email || row.email || null,
-        phone: row.Phone || row.phone || null,
-        address: row.Address || row.address || null,
-        medicalInfo: row["Medical Info"] || row["medical_info"] || row.medicalInfo || null,
-      }));
+      // Normalize column names - handle various case formats
+      const data = rawData.map((row: any) => {
+        // Get age value with fallbacks for different column name formats
+        const ageValue = row.AGE || row.Age || row.age;
+        const parsedAge = parseInt(ageValue);
+        
+        return {
+          name: row.NAME || row.Name || row.name,
+          age: isNaN(parsedAge) ? 0 : parsedAge,
+          gender: row.GENDER || row.Gender || row.gender,
+          // Handle GROUP ID column or Attending With column
+          groupIdFromFile: row["GROUP ID"] || row["Group ID"] || row["group id"] || null,
+          attendingWith: row["ATTENDING WITH"] || row["Attending With"] || row["attending_with"] || row.attendingWith || null,
+          email: row.EMAIL || row.Email || row.email || null,
+          phone: row.PHONE || row.Phone || row.phone || null,
+          address: row.ADDRESS || row.Address || row.address || null,
+          medicalInfo: row["MEDICAL INFO"] || row["Medical Info"] || row["medical_info"] || row.medicalInfo || null,
+        };
+      });
 
-      // Identify groups
-      const groupMap = identifyGroups(data);
-      const createdGroups = new Map<string, string>();
-
-      // Create groups in database
-      let groupCounter = 1;
-      for (const [groupId, members] of Array.from(groupMap.entries())) {
-        if (members.length > 1) {
-          const group = await storage.createGroup({
-            referenceNumber: `GRP${String(groupCounter).padStart(3, "0")}`,
-          });
-          createdGroups.set(groupId, group.id);
-          groupCounter++;
+      // Check if file has GROUP ID column - if so, use it for grouping
+      const hasGroupIdColumn = data.some((row: any) => row.groupIdFromFile != null);
+      
+      let createdGroups = new Map<string, string>();
+      let nameToGroupId = new Map<string, string>();
+      
+      if (hasGroupIdColumn) {
+        // Group by GROUP ID from file
+        const fileGroupIds = new Set(data.map((row: any) => row.groupIdFromFile).filter(Boolean));
+        
+        for (const fileGroupId of Array.from(fileGroupIds)) {
+          const membersInGroup = data.filter((row: any) => row.groupIdFromFile === fileGroupId);
+          if (membersInGroup.length > 1) {
+            const group = await storage.createGroup({
+              referenceNumber: `GRP${String(fileGroupId)}`,
+            });
+            createdGroups.set(String(fileGroupId), group.id);
+            membersInGroup.forEach((member: any) => {
+              nameToGroupId.set(member.name, group.id);
+            });
+          }
+        }
+      } else {
+        // Use Attending With column for grouping
+        const groupMap = identifyGroups(data);
+        
+        let groupCounter = 1;
+        for (const [groupId, members] of Array.from(groupMap.entries())) {
+          if (members.length > 1) {
+            const group = await storage.createGroup({
+              referenceNumber: `GRP${String(groupCounter).padStart(3, "0")}`,
+            });
+            createdGroups.set(groupId, group.id);
+            members.forEach((member: string) => {
+              nameToGroupId.set(member, group.id);
+            });
+            groupCounter++;
+          }
         }
       }
 
       // Create contestants
       const createdContestants = [];
       for (const row of data as any[]) {
-        const nameToGroupId = new Map<string, string>();
-        for (const [groupId, members] of Array.from(groupMap.entries())) {
-          members.forEach((member: string) => {
-            if (createdGroups.has(groupId)) {
-              nameToGroupId.set(member, createdGroups.get(groupId)!);
-            }
-          });
-        }
-
         const contestant = await storage.createContestant({
           name: row.name,
           age: row.age,
