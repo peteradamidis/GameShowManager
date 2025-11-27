@@ -193,9 +193,13 @@ export function ContestantTable({
     }
   };
 
-  const filteredContestants = contestants.filter((contestant) =>
-    contestant.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredContestants = contestants.filter((contestant) => {
+    const search = searchTerm.toLowerCase();
+    return (
+      contestant.name.toLowerCase().includes(search) ||
+      (contestant.attendingWith?.toLowerCase().includes(search) ?? false)
+    );
+  });
 
   const handleToggleAll = () => {
     if (!onSelectionChange) return;
