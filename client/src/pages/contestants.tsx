@@ -137,6 +137,40 @@ export default function Contestants() {
     },
   });
 
+  const importMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('/api/import', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Import failed');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
+      toast({
+        title: "Import successful",
+        description: `Imported ${data.contestantsCreated} contestants${data.groupsCreated > 0 ? ` and ${data.groupsCreated} groups` : ''}.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Import failed",
+        description: error.message || "Could not import the Excel file. Please check the file format.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSendAvailabilityForms = () => {
     toast({
       title: "Availability forms sent",
@@ -262,7 +296,7 @@ export default function Contestants() {
             <Mail className="h-4 w-4 mr-2" />
             Send Availability Forms
           </Button>
-          <ImportExcelDialog onImport={(file) => console.log('Importing:', file.name)} />
+          <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
         </div>
       </div>
 
