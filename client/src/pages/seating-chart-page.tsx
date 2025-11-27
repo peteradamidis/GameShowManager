@@ -23,6 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 // Generate seats with the proper row structure
 const SEAT_ROWS = [
@@ -53,6 +55,11 @@ export default function SeatingChartPage() {
   const [selectedBlock, setSelectedBlock] = useState<number>(0);
   const [selectedSeat, setSelectedSeat] = useState<string>("");
   const [selectedContestant, setSelectedContestant] = useState<string>("");
+  
+  // Cancel dialog state
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelAssignmentId, setCancelAssignmentId] = useState<string>("");
+  const [cancelReason, setCancelReason] = useState<string>("");
   
   // Get record day ID from query parameter or fetch first available
   const searchParams = new URLSearchParams(window.location.search);
@@ -251,16 +258,27 @@ export default function SeatingChartPage() {
     }
   };
 
-  const handleCancel = async (assignmentId: string) => {
+  const handleCancel = (assignmentId: string) => {
+    setCancelAssignmentId(assignmentId);
+    setCancelReason("");
+    setCancelDialogOpen(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelAssignmentId) return;
+    
     try {
-      await apiRequest('POST', `/api/seat-assignments/${assignmentId}/cancel`, {
-        reason: "Canceled by admin",
+      await apiRequest('POST', `/api/seat-assignments/${cancelAssignmentId}/cancel`, {
+        reason: cancelReason || "No reason provided",
       });
       // Invalidate all seat assignment queries to update both Seating Chart and Booking Master
       await queryClient.invalidateQueries({ 
         queryKey: ['/api/seat-assignments']
       });
       await refetch();
+      setCancelDialogOpen(false);
+      setCancelAssignmentId("");
+      setCancelReason("");
       toast({
         title: "Contestant canceled",
         description: "Contestant has been moved to the reschedule list.",
@@ -378,6 +396,51 @@ export default function SeatingChartPage() {
               data-testid="button-confirm-seat-assign"
             >
               Assign to Seat
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Reason Dialog */}
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <DialogContent data-testid="dialog-cancel-reason">
+          <DialogHeader>
+            <DialogTitle>Cancel Contestant</DialogTitle>
+            <DialogDescription>
+              This contestant will be moved to the reschedule list.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-2">
+            <Label htmlFor="cancel-reason">Reason for cancellation</Label>
+            <Textarea
+              id="cancel-reason"
+              placeholder="Enter reason for cancellation..."
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              className="min-h-[100px]"
+              data-testid="textarea-cancel-reason"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setCancelDialogOpen(false);
+                setCancelAssignmentId("");
+                setCancelReason("");
+              }}
+              data-testid="button-cancel-dialog-close"
+            >
+              Go Back
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleConfirmCancel}
+              data-testid="button-confirm-cancel"
+            >
+              Confirm Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
