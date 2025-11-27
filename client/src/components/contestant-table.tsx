@@ -91,7 +91,9 @@ export function ContestantTable({
   const [selectedContestantId, setSelectedContestantId] = useState<string | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadingContestantId, setUploadingContestantId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const tableFileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const { data: contestantDetails } = useQuery<Contestant>({
@@ -100,11 +102,11 @@ export function ContestantTable({
   });
 
   const uploadPhotoMutation = useMutation({
-    mutationFn: async (file: File) => {
+    mutationFn: async ({ file, contestantId }: { file: File; contestantId: string }) => {
       const formData = new FormData();
       formData.append('photo', file);
       
-      const response = await fetch(`/api/contestants/${selectedContestantId}/photo`, {
+      const response = await fetch(`/api/contestants/${contestantId}/photo`, {
         method: 'POST',
         body: formData,
       });
@@ -118,6 +120,7 @@ export function ContestantTable({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      setUploadingContestantId(null);
       toast({
         title: "Photo uploaded",
         description: "Contestant photo has been updated successfully.",
@@ -166,7 +169,7 @@ export function ContestantTable({
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
+    if (file && selectedContestantId) {
       if (!file.type.startsWith('image/')) {
         toast({
           title: "Invalid file type",
@@ -186,10 +189,45 @@ export function ContestantTable({
       }
       
       setIsUploading(true);
-      uploadPhotoMutation.mutate(file);
+      uploadPhotoMutation.mutate({ file, contestantId: selectedContestantId });
     }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleTablePhotoUpload = (contestantId: string) => {
+    setUploadingContestantId(contestantId);
+    tableFileInputRef.current?.click();
+  };
+
+  const handleTableFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && uploadingContestantId) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file (JPEG, PNG, etc.)",
+          variant: "destructive",
+        });
+        setUploadingContestantId(null);
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB",
+          variant: "destructive",
+        });
+        setUploadingContestantId(null);
+        return;
+      }
+      
+      uploadPhotoMutation.mutate({ file, contestantId: uploadingContestantId });
+    }
+    if (tableFileInputRef.current) {
+      tableFileInputRef.current.value = '';
     }
   };
 
@@ -240,6 +278,14 @@ export function ContestantTable({
           data-testid="input-search-contestants"
         />
       </div>
+      <input
+        ref={tableFileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleTableFileChange}
+        className="hidden"
+        data-testid="input-table-photo-upload"
+      />
       <div className="border rounded-md">
         <Table>
           <TableHeader>
@@ -253,6 +299,7 @@ export function ContestantTable({
                   />
                 </TableHead>
               )}
+              <TableHead className="w-16">Photo</TableHead>
               <TableHead>Audition Rating</TableHead>
               <TableHead>Age</TableHead>
               <TableHead>Name</TableHead>
@@ -268,6 +315,7 @@ export function ContestantTable({
           <TableBody>
             {filteredContestants.map((contestant) => {
               const seatAssignment = seatAssignmentMap.get(contestant.id);
+              const isUploadingThis = uploadingContestantId === contestant.id && uploadPhotoMutation.isPending;
               return (
                 <TableRow 
                   key={contestant.id} 
@@ -284,6 +332,28 @@ export function ContestantTable({
                       />
                     </TableCell>
                   )}
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <div 
+                      className="relative group cursor-pointer"
+                      onClick={() => handleTablePhotoUpload(contestant.id)}
+                    >
+                      <Avatar className="h-10 w-10">
+                        {contestant.photoUrl ? (
+                          <AvatarImage src={contestant.photoUrl} alt={contestant.name} />
+                        ) : null}
+                        <AvatarFallback className="text-xs">
+                          {isUploadingThis ? (
+                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          ) : (
+                            contestant.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Camera className="h-4 w-4 text-white" />
+                      </div>
+                    </div>
+                  </TableCell>
                   <TableCell>{seatAssignment?.rating || "-"}</TableCell>
                   <TableCell>{contestant.age}</TableCell>
                   <TableCell className="font-medium">{contestant.name}</TableCell>
