@@ -197,6 +197,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Excel columns found:", Object.keys(rawData[0]));
       }
 
+      // Helper function to get value by trying multiple column name variations
+      const getColumnValue = (row: any, ...names: string[]): string | null => {
+        for (const name of names) {
+          // Try exact match first
+          if (row[name] !== undefined && row[name] !== null && row[name] !== '') {
+            return row[name];
+          }
+          // Try trimmed keys match
+          for (const key of Object.keys(row)) {
+            if (key.trim().toLowerCase() === name.toLowerCase()) {
+              if (row[key] !== undefined && row[key] !== null && row[key] !== '') {
+                return row[key];
+              }
+            }
+          }
+        }
+        return null;
+      };
+
       // Normalize column names - handle various case formats
       const data = rawData.map((row: any) => {
         // Get name with multiple fallbacks
@@ -239,21 +258,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
                        row["Medical"] || row["MEDICAL"] ||
                        row["Health Conditions"] || row["HEALTH CONDITIONS"] ||
                        row["Health"] || row["HEALTH"] || null,
-          mobilityNotes: row["Mobility/Access/Medical Notes"] || row["MOBILITY/ACCESS/MEDICAL NOTES"] ||
-                         row["Mobility/Access/Medical notes"] || row["mobility/access/medical notes"] ||
-                         row["MOBILITY NOTES"] || row["Mobility Notes"] || row["mobility_notes"] || 
-                         row["MOBILITY/ACCESS NOTES"] || row["Mobility/Access Notes"] || 
-                         row["ACCESS NOTES"] || row["Access Notes"] ||
-                         row["Mobility"] || row["MOBILITY"] ||
-                         row["Access"] || row["ACCESS"] ||
-                         row["Accessibility"] || row["ACCESSIBILITY"] ||
-                         row["Special Needs"] || row["SPECIAL NEEDS"] ||
-                         row["Disability"] || row["DISABILITY"] || null,
-          criminalRecord: row["Criminal Record"] || row["CRIMINAL RECORD"] || row["criminal record"] ||
-                          row["criminal_record"] ||
-                          row["Criminal"] || row["CRIMINAL"] ||
-                          row["Background"] || row["BACKGROUND"] ||
-                          row["Background Check"] || row["BACKGROUND CHECK"] || null,
+          mobilityNotes: getColumnValue(row, 
+                         "Mobility/Access/Medical Notes", "MOBILITY/ACCESS/MEDICAL NOTES",
+                         "Mobility/Access/Medical notes", "mobility/access/medical notes",
+                         "MOBILITY NOTES", "Mobility Notes", "mobility_notes", 
+                         "MOBILITY/ACCESS NOTES", "Mobility/Access Notes", 
+                         "ACCESS NOTES", "Access Notes",
+                         "Mobility", "MOBILITY",
+                         "Access", "ACCESS",
+                         "Accessibility", "ACCESSIBILITY",
+                         "Special Needs", "SPECIAL NEEDS",
+                         "Disability", "DISABILITY"),
+          criminalRecord: getColumnValue(row,
+                          "Criminal Record", "CRIMINAL RECORD", "criminal record",
+                          "Criminal", "CRIMINAL",
+                          "Background", "BACKGROUND",
+                          "Background Check", "BACKGROUND CHECK"),
         };
       }).filter((row): row is NonNullable<typeof row> => row !== null);
 
