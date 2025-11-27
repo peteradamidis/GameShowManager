@@ -42,6 +42,7 @@ export interface IStorage {
   getContestantById(id: string): Promise<Contestant | undefined>;
   updateContestantAvailability(id: string, status: string): Promise<Contestant | undefined>;
   updateContestantField(id: string, field: string, value: any): Promise<Contestant | undefined>;
+  updateContestantPhoto(id: string, photoUrl: string | null): Promise<Contestant | undefined>;
   
   // Groups
   createGroup(group: InsertGroup): Promise<Group>;
@@ -131,6 +132,24 @@ export class DbStorage implements IStorage {
     const [updated] = await db
       .update(contestants)
       .set({ availabilityStatus: status as any })
+      .where(eq(contestants.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateContestantPhoto(id: string, photoUrl: string | null): Promise<Contestant | undefined> {
+    const [updated] = await db
+      .update(contestants)
+      .set({ photoUrl })
+      .where(eq(contestants.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateContestantField(id: string, field: string, value: any): Promise<Contestant | undefined> {
+    const [updated] = await db
+      .update(contestants)
+      .set({ [field]: value })
       .where(eq(contestants.id, id))
       .returning();
     return updated;

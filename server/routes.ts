@@ -5,8 +5,40 @@ import { insertContestantSchema, insertRecordDaySchema, insertSeatAssignmentSche
 import xlsx from "xlsx";
 import multer from "multer";
 import crypto from "crypto";
+import path from "path";
+import express from "express";
+import fs from "fs";
 
 const upload = multer({ storage: multer.memoryStorage() });
+
+// Photo upload configuration - store on disk
+const photoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(process.cwd(), 'uploads', 'photos');
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, `contestant-${uniqueSuffix}${ext}`);
+  }
+});
+
+const photoUpload = multer({
+  storage: photoStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'));
+    }
+  }
+});
 
 // Helper function to identify groups from "Attending With" column
 function identifyGroups(contestants: any[]): Map<string, string[]> {
@@ -51,6 +83,64 @@ function identifyGroups(contestants: any[]): Map<string, string[]> {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve uploaded photos as static files
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+  // Upload contestant photo
+  app.post("/api/contestants/:id/photo", photoUpload.single("photo"), async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      if (!req.file) {
+        return res.status(400).json({ error: "No photo uploaded" });
+      }
+
+      const photoUrl = `/uploads/photos/${req.file.filename}`;
+      
+      // Update contestant with photo URL
+      const updated = await storage.updateContestantPhoto(id, photoUrl);
+      
+      if (!updated) {
+        // Delete the uploaded file if contestant not found
+        fs.unlinkSync(req.file.path);
+        return res.status(404).json({ error: "Contestant not found" });
+      }
+
+      res.json({ photoUrl, message: "Photo uploaded successfully" });
+    } catch (error) {
+      console.error("Photo upload error:", error);
+      res.status(500).json({ error: "Failed to upload photo" });
+    }
+  });
+
+  // Delete contestant photo
+  app.delete("/api/contestants/:id/photo", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const contestant = await storage.getContestantById(id);
+      if (!contestant) {
+        return res.status(404).json({ error: "Contestant not found" });
+      }
+
+      // Delete the file if it exists
+      if (contestant.photoUrl) {
+        const filePath = path.join(process.cwd(), contestant.photoUrl);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+
+      // Clear photo URL in database
+      await storage.updateContestantPhoto(id, null);
+      
+      res.json({ message: "Photo deleted successfully" });
+    } catch (error) {
+      console.error("Photo delete error:", error);
+      res.status(500).json({ error: "Failed to delete photo" });
+    }
+  });
+
   // Import contestants from Excel
   app.post("/api/contestants/import", upload.single("file"), async (req, res) => {
     try {
