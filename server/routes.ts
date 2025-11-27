@@ -1265,6 +1265,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all availability tokens with contestant info for tracking table
+  app.get("/api/availability/tokens", async (req, res) => {
+    try {
+      const contestants = await storage.getContestants();
+      const tokensWithContestants = [];
+
+      for (const contestant of contestants) {
+        const tokens = await storage.getAvailabilityTokensByContestant(contestant.id);
+        if (tokens.length > 0) {
+          // Get the most recent token for this contestant
+          const latestToken = tokens.sort((a, b) => 
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )[0];
+          
+          tokensWithContestants.push({
+            ...latestToken,
+            contestant: {
+              id: contestant.id,
+              name: contestant.name,
+              email: contestant.email,
+              phone: contestant.phone,
+            },
+          });
+        }
+      }
+
+      res.json(tokensWithContestants);
+    } catch (error: any) {
+      console.error("Error fetching availability tokens:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get response statistics breakdown by record day
+  app.get("/api/availability/stats-by-day", async (req, res) => {
+    try {
+      const recordDays = await storage.getRecordDays();
+      const statsByDay = [];
+
+      for (const recordDay of recordDays) {
+        const availability = await storage.getAvailabilityByRecordDay(recordDay.id);
+        
+        const stats = {
+          recordDayId: recordDay.id,
+          date: recordDay.date,
+          rxNumber: recordDay.rxNumber,
+          yes: availability.filter(a => a.responseValue === 'yes').length,
+          maybe: availability.filter(a => a.responseValue === 'maybe').length,
+          no: availability.filter(a => a.responseValue === 'no').length,
+          pending: availability.filter(a => a.responseValue === 'pending').length,
+          total: availability.length,
+        };
+        
+        statsByDay.push(stats);
+      }
+
+      res.json(statsByDay);
+    } catch (error: any) {
+      console.error("Error fetching availability stats by day:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get contestants filtered by availability for a specific record day
   app.get("/api/availability/record-day/:recordDayId", async (req, res) => {
     try {

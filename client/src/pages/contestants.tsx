@@ -2,7 +2,7 @@ import { ContestantTable, Contestant } from "@/components/contestant-table";
 import { ImportExcelDialog } from "@/components/import-excel-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Mail, UserPlus, TestTube, Filter, X } from "lucide-react";
+import { UserPlus, TestTube, Filter, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -195,13 +195,6 @@ export default function Contestants() {
     },
   });
 
-  const handleSendAvailabilityForms = () => {
-    toast({
-      title: "Availability forms sent",
-      description: "Forms have been sent to all pending contestants.",
-    });
-  };
-
   // Fetch occupied seats for the selected record day
   const { data: occupiedSeats = [] } = useQuery({
     queryKey: ['/api/seat-assignments', selectedRecordDay],
@@ -315,10 +308,6 @@ export default function Contestants() {
           >
             <TestTube className="h-4 w-4 mr-2" />
             {generateFakeMutation.isPending ? "Generating..." : "Generate Test Data"}
-          </Button>
-          <Button variant="outline" onClick={handleSendAvailabilityForms} data-testid="button-send-availability">
-            <Mail className="h-4 w-4 mr-2" />
-            Send Availability Forms
           </Button>
           <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
         </div>
