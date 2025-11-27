@@ -1270,6 +1270,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { recordDayId } = req.params;
 
+      // Handle "all" case gracefully - return empty array
+      if (recordDayId === "all") {
+        return res.json([]);
+      }
+
       // Validate record day exists
       const recordDay = await storage.getRecordDayById(recordDayId);
       if (!recordDay) {
