@@ -113,7 +113,11 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12">
                     {contestantDetails.photoUrl ? (
-                      <AvatarImage src={contestantDetails.photoUrl} alt={contestantDetails.name} />
+                      <AvatarImage 
+                        src={contestantDetails.photoUrl} 
+                        alt={contestantDetails.name}
+                        className="object-cover"
+                      />
                     ) : null}
                     <AvatarFallback>
                       {contestantDetails.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
