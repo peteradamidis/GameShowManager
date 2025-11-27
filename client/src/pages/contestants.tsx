@@ -142,9 +142,12 @@ export default function Contestants() {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await fetch('/api/contestants/import', {
+      // Use absolute URL to fix Safari "string did not match expected pattern" error
+      const baseUrl = window.location.origin;
+      const response = await fetch(`${baseUrl}/api/contestants/import`, {
         method: 'POST',
         body: formData,
+        credentials: 'same-origin',
       });
       
       if (!response.ok) {
