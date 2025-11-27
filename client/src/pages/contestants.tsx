@@ -45,22 +45,31 @@ function getAllSeatsInOrder(): string[] {
   return seats;
 }
 
-// Find available consecutive seat groups of a given size
+// Find available consecutive seat groups of a given size (within same row only)
 function findConsecutiveSeatGroups(occupiedSeats: Set<string>, groupSize: number): { startSeat: string; seats: string[] }[] {
-  const allSeats = getAllSeatsInOrder();
   const groups: { startSeat: string; seats: string[] }[] = [];
   
-  for (let i = 0; i <= allSeats.length - groupSize; i++) {
-    const potentialGroup = allSeats.slice(i, i + groupSize);
-    const allAvailable = potentialGroup.every(seat => !occupiedSeats.has(seat));
-    
-    if (allAvailable) {
-      groups.push({
-        startSeat: potentialGroup[0],
-        seats: potentialGroup
-      });
+  // Check each row separately - groups must stay within the same row
+  SEAT_ROWS.forEach(row => {
+    // Generate all seats in this row
+    const rowSeats: string[] = [];
+    for (let i = 1; i <= row.count; i++) {
+      rowSeats.push(`${row.label}${i}`);
     }
-  }
+    
+    // Find consecutive available seats within this row
+    for (let i = 0; i <= rowSeats.length - groupSize; i++) {
+      const potentialGroup = rowSeats.slice(i, i + groupSize);
+      const allAvailable = potentialGroup.every(seat => !occupiedSeats.has(seat));
+      
+      if (allAvailable) {
+        groups.push({
+          startSeat: potentialGroup[0],
+          seats: potentialGroup
+        });
+      }
+    }
+  });
   
   return groups;
 }
@@ -267,10 +276,10 @@ export default function Contestants() {
   const isGroupSeating = selectedContestants.length >= 2 && selectedContestants.length <= MAX_GROUP_SIZE;
   const consecutiveSeatGroups = (selectedBlock && isGroupSeating) ? (() => {
     const blockNum = parseInt(selectedBlock);
-    const occupied = new Set(
+    const occupied = new Set<string>(
       occupiedSeats
         .filter((a: any) => a.blockNumber === blockNum)
-        .map((a: any) => a.seatLabel)
+        .map((a: any) => a.seatLabel as string)
     );
     return findConsecutiveSeatGroups(occupied, selectedContestants.length);
   })() : [];
@@ -304,7 +313,7 @@ export default function Contestants() {
         });
       } else if (selectedContestants.length <= MAX_GROUP_SIZE) {
         // Group seating (2-4 contestants) - assign to consecutive seats
-        const result = await apiRequest('POST', '/api/seat-assignments/group', {
+        const result: any = await apiRequest('POST', '/api/seat-assignments/group', {
           recordDayId: selectedRecordDay,
           contestantIds: selectedContestants,
           blockNumber: parseInt(selectedBlock),

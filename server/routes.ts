@@ -555,37 +555,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Define seat structure - same as frontend for consistency
-      const SEAT_ROWS = [
-        { label: 'A', count: 5 },
-        { label: 'B', count: 5 },
-        { label: 'C', count: 4 },
-        { label: 'D', count: 4 },
-        { label: 'E', count: 4 },
-      ];
+      const SEAT_ROWS: Record<string, number> = { A: 5, B: 5, C: 4, D: 4, E: 4 };
 
-      // Generate all valid seats in order (22 seats total)
-      const allValidSeats: string[] = [];
-      SEAT_ROWS.forEach(row => {
-        for (let i = 1; i <= row.count; i++) {
-          allValidSeats.push(`${row.label}${i}`);
-        }
-      });
+      // Parse starting seat into row letter and seat number
+      const rowLetter = startingSeat.charAt(0).toUpperCase();
+      const seatNum = parseInt(startingSeat.slice(1));
 
-      // Validate starting seat exists
-      const startIndex = allValidSeats.indexOf(startingSeat);
-      if (startIndex === -1) {
-        return res.status(400).json({ error: `Invalid starting seat: ${startingSeat}` });
+      // Validate row exists
+      if (!SEAT_ROWS[rowLetter]) {
+        return res.status(400).json({ error: `Invalid row: ${rowLetter}. Valid rows are A, B, C, D, E.` });
       }
 
-      // Check if we have enough seats from the starting position
-      if (startIndex + contestantIds.length > allValidSeats.length) {
+      const maxSeatsInRow = SEAT_ROWS[rowLetter];
+
+      // Validate starting seat number is valid for this row
+      if (seatNum < 1 || seatNum > maxSeatsInRow) {
+        return res.status(400).json({ error: `Invalid seat number ${seatNum} for row ${rowLetter}. Row ${rowLetter} has seats 1-${maxSeatsInRow}.` });
+      }
+
+      // Check if we have enough seats in this row from the starting position
+      const seatsRemainingInRow = maxSeatsInRow - seatNum + 1;
+      if (contestantIds.length > seatsRemainingInRow) {
         return res.status(400).json({ 
-          error: `Not enough consecutive seats from ${startingSeat}. Need ${contestantIds.length} seats but only ${allValidSeats.length - startIndex} available.` 
+          error: `Not enough consecutive seats in row ${rowLetter} from seat ${seatNum}. Need ${contestantIds.length} seats but only ${seatsRemainingInRow} available in this row.` 
         });
       }
 
-      // Get consecutive seat labels from the ordered list
-      const seatLabels = allValidSeats.slice(startIndex, startIndex + contestantIds.length);
+      // Generate consecutive seat labels within the same row
+      const seatLabels: string[] = [];
+      for (let i = 0; i < contestantIds.length; i++) {
+        seatLabels.push(`${rowLetter}${seatNum + i}`);
+      }
 
       // Double-check we have the right number of seats
       if (seatLabels.length !== contestantIds.length) {
