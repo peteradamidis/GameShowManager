@@ -199,6 +199,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Normalize column names - handle various case formats
       const data = rawData.map((row: any) => {
+        // Get name with multiple fallbacks
+        const nameValue = row.NAME || row.Name || row.name || row["Full Name"] || row["FULL NAME"] || null;
+        
+        // Skip rows without a name (empty rows, summary rows, etc.)
+        if (!nameValue || nameValue.toString().trim() === '') {
+          return null;
+        }
+        
         // Get age value with fallbacks for different column name formats
         const ageValue = row.AGE || row.Age || row.age;
         const parsedAge = parseInt(ageValue);
@@ -207,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const genderValue = row.GENDER || row.Gender || row.gender || "Not Specified";
         
         return {
-          name: row.NAME || row.Name || row.name || row["Full Name"] || row["FULL NAME"],
+          name: nameValue.toString().trim(),
           age: isNaN(parsedAge) ? 0 : parsedAge,
           gender: genderValue,
           // Handle GROUP ID column or Attending With column
@@ -244,7 +252,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                           row["Background"] || row["BACKGROUND"] ||
                           row["Background Check"] || row["BACKGROUND CHECK"] || null,
         };
-      });
+      }).filter((row): row is NonNullable<typeof row> => row !== null);
+
+      // Log how many valid rows found
+      console.log(`Found ${data.length} valid contestant rows (filtered from ${rawData.length} total rows)`);
+
+      if (data.length === 0) {
+        return res.status(400).json({ error: "No valid contestant data found. Make sure your file has a NAME column." });
+      }
 
       // Check if file has GROUP ID column - if so, use it for grouping
       const hasGroupIdColumn = data.some((row: any) => row.groupIdFromFile != null);
