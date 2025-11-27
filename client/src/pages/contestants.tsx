@@ -49,7 +49,7 @@ export default function Contestants() {
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
   const [selectedBlock, setSelectedBlock] = useState<string>("");
   const [selectedSeat, setSelectedSeat] = useState<string>("");
-  const [filterRecordDayId, setFilterRecordDayId] = useState<string>("all");
+  const [filterRecordDayId, setFilterRecordDayId] = useState<string>("");
   const [filterResponseValue, setFilterResponseValue] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterGender, setFilterGender] = useState<string>("all");
@@ -64,7 +64,7 @@ export default function Contestants() {
   // Fetch filtered contestants by availability
   const { data: filteredAvailability = [], isLoading: loadingFiltered } = useQuery<ContestantWithAvailability[]>({
     queryKey: ['/api/availability/record-day', filterRecordDayId],
-    enabled: !!filterRecordDayId && filterRecordDayId !== "all",
+    enabled: !!filterRecordDayId,
   });
 
   // Fetch record days
@@ -83,7 +83,7 @@ export default function Contestants() {
   const uniqueLocations = Array.from(new Set(allSeatAssignments.map((a: any) => a.location).filter(Boolean)));
 
   // Determine which contestants to display
-  let displayedContestants = filterRecordDayId && filterRecordDayId !== "all"
+  let displayedContestants = filterRecordDayId
     ? filteredAvailability
         .filter(item => !filterResponseValue || filterResponseValue === "all" || item.responseValue === filterResponseValue)
         .map(item => item.contestant)
@@ -418,8 +418,8 @@ export default function Contestants() {
         <div className="flex gap-4 items-end flex-wrap">
           <div className="flex-1 min-w-[200px] max-w-xs">
             <label className="text-sm font-medium mb-2 block">Record Day</label>
-            <Select value={filterRecordDayId} onValueChange={(value) => {
-              setFilterRecordDayId(value);
+            <Select value={filterRecordDayId || "all"} onValueChange={(value) => {
+              setFilterRecordDayId(value === "all" ? "" : value);
               setFilterResponseValue("all");
             }}>
               <SelectTrigger data-testid="select-filter-record-day">
@@ -441,7 +441,7 @@ export default function Contestants() {
             </Select>
           </div>
 
-          {filterRecordDayId && filterRecordDayId !== "all" && (
+          {filterRecordDayId && (
             <div className="flex-1 min-w-[200px] max-w-xs">
               <label className="text-sm font-medium mb-2 block">Availability Response</label>
               <Select value={filterResponseValue} onValueChange={setFilterResponseValue}>
@@ -460,7 +460,7 @@ export default function Contestants() {
           )}
 
           {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
-            filterLocation !== "all" || filterRecordDayId !== "all") && (
+            filterLocation !== "all" || filterRecordDayId) && (
             <Button 
               variant="outline" 
               onClick={() => {
@@ -468,7 +468,7 @@ export default function Contestants() {
                 setFilterGender("all");
                 setFilterRating("all");
                 setFilterLocation("all");
-                setFilterRecordDayId("all");
+                setFilterRecordDayId("");
                 setFilterResponseValue("all");
               }}
               data-testid="button-clear-filters"
@@ -482,7 +482,7 @@ export default function Contestants() {
 
       {/* Results Summary */}
       {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
-        filterLocation !== "all" || filterRecordDayId !== "all") && (
+        filterLocation !== "all" || filterRecordDayId) && (
         <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="secondary" data-testid="badge-filter-count">
             {displayedContestants.length} contestant{displayedContestants.length !== 1 ? 's' : ''}
@@ -500,12 +500,12 @@ export default function Contestants() {
           {filterLocation !== "all" && (
             <Badge variant="outline">Location: {filterLocation}</Badge>
           )}
-          {filterRecordDayId !== "all" && (
+          {filterRecordDayId && (
             <Badge variant="outline">
               Record Day: {new Date(recordDays.find((d: any) => d.id === filterRecordDayId)?.date).toLocaleDateString()}
             </Badge>
           )}
-          {filterRecordDayId !== "all" && filterResponseValue !== "all" && (
+          {filterRecordDayId && filterResponseValue !== "all" && (
             <Badge variant="outline">Response: {filterResponseValue}</Badge>
           )}
         </div>
