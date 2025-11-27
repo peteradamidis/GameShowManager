@@ -32,6 +32,39 @@ const SEAT_ROWS = [
   { label: 'E', count: 4 },
 ];
 
+const MAX_GROUP_SIZE = 4;
+
+// Generate all seats in order for a block
+function getAllSeatsInOrder(): string[] {
+  const seats: string[] = [];
+  SEAT_ROWS.forEach(row => {
+    for (let i = 1; i <= row.count; i++) {
+      seats.push(`${row.label}${i}`);
+    }
+  });
+  return seats;
+}
+
+// Find available consecutive seat groups of a given size
+function findConsecutiveSeatGroups(occupiedSeats: Set<string>, groupSize: number): { startSeat: string; seats: string[] }[] {
+  const allSeats = getAllSeatsInOrder();
+  const groups: { startSeat: string; seats: string[] }[] = [];
+  
+  for (let i = 0; i <= allSeats.length - groupSize; i++) {
+    const potentialGroup = allSeats.slice(i, i + groupSize);
+    const allAvailable = potentialGroup.every(seat => !occupiedSeats.has(seat));
+    
+    if (allAvailable) {
+      groups.push({
+        startSeat: potentialGroup[0],
+        seats: potentialGroup
+      });
+    }
+  }
+  
+  return groups;
+}
+
 type ContestantWithAvailability = {
   id: string;
   contestantId: string;
@@ -209,7 +242,7 @@ export default function Contestants() {
     },
   });
 
-  // Generate available seats for selected block
+  // Generate available seats for selected block (single contestant)
   const availableSeats = selectedBlock ? (() => {
     const blockNum = parseInt(selectedBlock);
     const occupied = new Set(
@@ -230,17 +263,34 @@ export default function Contestants() {
     return allSeats;
   })() : [];
 
+  // Generate available consecutive seat groups for multiple contestants (2-4)
+  const isGroupSeating = selectedContestants.length >= 2 && selectedContestants.length <= MAX_GROUP_SIZE;
+  const consecutiveSeatGroups = (selectedBlock && isGroupSeating) ? (() => {
+    const blockNum = parseInt(selectedBlock);
+    const occupied = new Set(
+      occupiedSeats
+        .filter((a: any) => a.blockNumber === blockNum)
+        .map((a: any) => a.seatLabel)
+    );
+    return findConsecutiveSeatGroups(occupied, selectedContestants.length);
+  })() : [];
+
   const handleOpenAssignDialog = () => {
     refetchRecordDays(); // Refresh record days when opening dialog
     setAssignDialogOpen(true);
   };
 
   const handleAssignToSeat = async () => {
-    if (!selectedRecordDay || !selectedBlock || !selectedSeat || selectedContestants.length === 0) return;
+    if (!selectedRecordDay || selectedContestants.length === 0) return;
+    
+    // For seat assignment (1-4 contestants), need block and seat
+    if (selectedContestants.length <= MAX_GROUP_SIZE) {
+      if (!selectedBlock || !selectedSeat) return;
+    }
 
     try {
-      // For single contestant, assign to specific seat
       if (selectedContestants.length === 1) {
+        // Single contestant - assign to specific seat
         await apiRequest('POST', '/api/seat-assignments', {
           recordDayId: selectedRecordDay,
           contestantId: selectedContestants[0],
@@ -252,8 +302,22 @@ export default function Contestants() {
           title: "Contestant assigned",
           description: `Assigned to Block ${selectedBlock}, Seat ${selectedSeat}`,
         });
+      } else if (selectedContestants.length <= MAX_GROUP_SIZE) {
+        // Group seating (2-4 contestants) - assign to consecutive seats
+        const result = await apiRequest('POST', '/api/seat-assignments/group', {
+          recordDayId: selectedRecordDay,
+          contestantIds: selectedContestants,
+          blockNumber: parseInt(selectedBlock),
+          startingSeat: selectedSeat,
+        });
+        
+        const seatRange = result.seats?.map((s: any) => s.seat).join(', ') || selectedSeat;
+        toast({
+          title: "Group assigned together",
+          description: `${selectedContestants.length} contestants assigned to Block ${selectedBlock}, Seats ${seatRange}`,
+        });
       } else {
-        // For multiple contestants, mark as assigned to record day (will auto-assign later)
+        // More than 4 contestants - just mark as assigned to record day
         await apiRequest('POST', `/api/record-days/${selectedRecordDay}/contestants`, {
           contestantIds: selectedContestants,
         });
@@ -272,10 +336,10 @@ export default function Contestants() {
       setSelectedRecordDay("");
       setSelectedBlock("");
       setSelectedSeat("");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Assignment failed",
-        description: "Could not assign contestant(s).",
+        description: error?.message || "Could not assign contestant(s).",
         variant: "destructive",
       });
     }
@@ -511,11 +575,15 @@ export default function Contestants() {
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
         <DialogContent data-testid="dialog-assign-seat">
           <DialogHeader>
-            <DialogTitle>Assign to Seat</DialogTitle>
+            <DialogTitle>
+              {isGroupSeating ? "Assign Group Together" : "Assign to Seat"}
+            </DialogTitle>
             <DialogDescription>
               {selectedContestants.length === 1 
                 ? "Select record day, block, and seat for this contestant."
-                : `Assigning ${selectedContestants.length} contestants to record day.`}
+                : isGroupSeating
+                  ? `Seat ${selectedContestants.length} contestants in consecutive seats.`
+                  : `Assigning ${selectedContestants.length} contestants to record day (use Auto-Assign to seat them).`}
             </DialogDescription>
           </DialogHeader>
           
@@ -536,11 +604,12 @@ export default function Contestants() {
               </Select>
             </div>
 
-            {selectedContestants.length === 1 && selectedRecordDay && (
+            {/* Show block/seat selection for 1-4 contestants */}
+            {selectedContestants.length <= MAX_GROUP_SIZE && selectedRecordDay && (
               <>
                 <div>
                   <label className="text-sm font-medium mb-2 block">Block</label>
-                  <Select value={selectedBlock} onValueChange={setSelectedBlock}>
+                  <Select value={selectedBlock} onValueChange={(val) => { setSelectedBlock(val); setSelectedSeat(""); }}>
                     <SelectTrigger data-testid="select-block">
                       <SelectValue placeholder="Select a block" />
                     </SelectTrigger>
@@ -556,21 +625,48 @@ export default function Contestants() {
 
                 {selectedBlock && (
                   <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      Seat ({availableSeats.length} available)
-                    </label>
-                    <Select value={selectedSeat} onValueChange={setSelectedSeat}>
-                      <SelectTrigger data-testid="select-seat">
-                        <SelectValue placeholder="Select a seat" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableSeats.map(seat => (
-                          <SelectItem key={seat} value={seat}>
-                            {seat}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {selectedContestants.length === 1 ? (
+                      <>
+                        <label className="text-sm font-medium mb-2 block">
+                          Seat ({availableSeats.length} available)
+                        </label>
+                        <Select value={selectedSeat} onValueChange={setSelectedSeat}>
+                          <SelectTrigger data-testid="select-seat">
+                            <SelectValue placeholder="Select a seat" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableSeats.map(seat => (
+                              <SelectItem key={seat} value={seat}>
+                                {seat}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </>
+                    ) : (
+                      <>
+                        <label className="text-sm font-medium mb-2 block">
+                          Starting Seat ({consecutiveSeatGroups.length} available positions for {selectedContestants.length} consecutive seats)
+                        </label>
+                        <Select value={selectedSeat} onValueChange={setSelectedSeat}>
+                          <SelectTrigger data-testid="select-seat-group">
+                            <SelectValue placeholder="Select starting position" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {consecutiveSeatGroups.map(group => (
+                              <SelectItem key={group.startSeat} value={group.startSeat}>
+                                {group.seats.join(' → ')}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {consecutiveSeatGroups.length === 0 && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            No positions with {selectedContestants.length} consecutive empty seats in this block.
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
                 )}
               </>
@@ -583,10 +679,17 @@ export default function Contestants() {
             </Button>
             <Button 
               onClick={handleAssignToSeat} 
-              disabled={!selectedRecordDay || (selectedContestants.length === 1 && (!selectedBlock || !selectedSeat))}
+              disabled={
+                !selectedRecordDay || 
+                (selectedContestants.length <= MAX_GROUP_SIZE && (!selectedBlock || !selectedSeat))
+              }
               data-testid="button-confirm-assign"
             >
-              {selectedContestants.length === 1 ? "Assign to Seat" : "Assign to Record Day"}
+              {selectedContestants.length === 1 
+                ? "Assign to Seat" 
+                : isGroupSeating 
+                  ? "Assign Group Together"
+                  : "Assign to Record Day"}
             </Button>
           </DialogFooter>
         </DialogContent>

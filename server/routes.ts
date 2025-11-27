@@ -541,6 +541,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create group seat assignments (2-4 contestants to consecutive seats)
+  app.post("/api/seat-assignments/group", async (req, res) => {
+    try {
+      const { recordDayId, contestantIds, blockNumber, startingSeat } = req.body;
+
+      if (!recordDayId || !contestantIds || !blockNumber || !startingSeat) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      if (!Array.isArray(contestantIds) || contestantIds.length < 2 || contestantIds.length > 4) {
+        return res.status(400).json({ error: "Must provide 2-4 contestants for group seating" });
+      }
+
+      // Define seat structure - same as frontend for consistency
+      const SEAT_ROWS = [
+        { label: 'A', count: 5 },
+        { label: 'B', count: 5 },
+        { label: 'C', count: 4 },
+        { label: 'D', count: 4 },
+        { label: 'E', count: 4 },
+      ];
+
+      // Generate all valid seats in order (22 seats total)
+      const allValidSeats: string[] = [];
+      SEAT_ROWS.forEach(row => {
+        for (let i = 1; i <= row.count; i++) {
+          allValidSeats.push(`${row.label}${i}`);
+        }
+      });
+
+      // Validate starting seat exists
+      const startIndex = allValidSeats.indexOf(startingSeat);
+      if (startIndex === -1) {
+        return res.status(400).json({ error: `Invalid starting seat: ${startingSeat}` });
+      }
+
+      // Check if we have enough seats from the starting position
+      if (startIndex + contestantIds.length > allValidSeats.length) {
+        return res.status(400).json({ 
+          error: `Not enough consecutive seats from ${startingSeat}. Need ${contestantIds.length} seats but only ${allValidSeats.length - startIndex} available.` 
+        });
+      }
+
+      // Get consecutive seat labels from the ordered list
+      const seatLabels = allValidSeats.slice(startIndex, startIndex + contestantIds.length);
+
+      // Double-check we have the right number of seats
+      if (seatLabels.length !== contestantIds.length) {
+        return res.status(400).json({ 
+          error: `Could not generate ${contestantIds.length} consecutive seats from ${startingSeat}` 
+        });
+      }
+
+      // Check for duplicate assignments
+      const existingAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
+      
+      // Check if any contestant is already seated in this record day
+      for (const contestantId of contestantIds) {
+        const isContestantSeated = existingAssignments.some((a: any) => a.contestantId === contestantId);
+        if (isContestantSeated) {
+          const contestant = await storage.getContestantById(contestantId);
+          return res.status(409).json({ error: `${contestant?.name || 'A contestant'} is already seated in this record day` });
+        }
+      }
+      
+      // Check if any seat is already occupied
+      for (const seatLabel of seatLabels) {
+        const isSeatOccupied = existingAssignments.some((a: any) => 
+          a.blockNumber === parseInt(blockNumber) && a.seatLabel === seatLabel
+        );
+        if (isSeatOccupied) {
+          return res.status(409).json({ error: `Seat ${seatLabel} is already occupied` });
+        }
+      }
+
+      // Create all assignments
+      const assignments = [];
+      for (let i = 0; i < contestantIds.length; i++) {
+        const assignment = await storage.createSeatAssignment({
+          recordDayId,
+          contestantId: contestantIds[i],
+          blockNumber: parseInt(blockNumber),
+          seatLabel: seatLabels[i],
+        });
+        assignments.push(assignment);
+      }
+
+      res.json({
+        message: `${contestantIds.length} contestants assigned to consecutive seats`,
+        assignments,
+        seats: seatLabels.map((seat, i) => ({ seat, block: blockNumber }))
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get all seat assignments (for filtering purposes)
   app.get("/api/seat-assignments", async (req, res) => {
     try {
