@@ -174,10 +174,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No file uploaded" });
       }
 
-      const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const rawData = xlsx.utils.sheet_to_json(sheet);
+      let rawData: any[];
+      
+      try {
+        const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        rawData = xlsx.utils.sheet_to_json(sheet);
+      } catch (parseError: any) {
+        console.error("Excel parse error:", parseError);
+        return res.status(400).json({ 
+          error: "Could not parse Excel file. Please ensure you're uploading a valid .xlsx or .xls file exported from Cast It Reach." 
+        });
+      }
+      
+      if (!rawData || rawData.length === 0) {
+        return res.status(400).json({ error: "The uploaded file is empty or has no data rows." });
+      }
 
       // Normalize column names to camelCase
       const data = rawData.map((row: any) => ({
@@ -237,6 +250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         message: `Successfully imported ${createdContestants.length} contestants`,
         contestants: createdContestants,
+        contestantsCreated: createdContestants.length,
         groupsCreated: createdGroups.size,
       });
     } catch (error: any) {
