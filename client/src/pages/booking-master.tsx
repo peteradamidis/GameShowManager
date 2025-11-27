@@ -425,13 +425,21 @@ export default function BookingMaster() {
                     </TableCell>
                     <TableCell>
                       {row.assignment && (
-                        <Input
+                        <Select
                           value={row.assignment.rating || ""}
-                          onChange={(e) => handleFieldUpdate(row.assignment!.id, "rating", e.target.value)}
-                          placeholder="Rating"
-                          className="h-8 text-sm w-20"
-                          data-testid={`input-rating-${row.seatId}`}
-                        />
+                          onValueChange={(value) => handleFieldUpdate(row.assignment!.id, "rating", value)}
+                        >
+                          <SelectTrigger className="h-8 text-sm w-20" data-testid={`select-rating-${row.seatId}`}>
+                            <SelectValue placeholder="-" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="A+">A+</SelectItem>
+                            <SelectItem value="A">A</SelectItem>
+                            <SelectItem value="B+">B+</SelectItem>
+                            <SelectItem value="B">B</SelectItem>
+                            <SelectItem value="C">C</SelectItem>
+                          </SelectContent>
+                        </Select>
                       )}
                     </TableCell>
                     <TableCell>

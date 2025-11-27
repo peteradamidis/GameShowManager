@@ -81,7 +81,6 @@ export default function Contestants() {
 
   // Get unique values for filter dropdowns
   const uniqueGenders = Array.from(new Set(contestants.map(c => c.gender).filter(Boolean)));
-  const uniqueRatings = Array.from(new Set(allSeatAssignments.map((a: any) => a.rating).filter(Boolean)));
   const uniqueLocations = Array.from(new Set(allSeatAssignments.map((a: any) => a.location).filter(Boolean)));
 
   // Determine which contestants to display
@@ -369,25 +368,19 @@ export default function Contestants() {
             <Select 
               value={filterRating} 
               onValueChange={setFilterRating}
-              disabled={uniqueRatings.length === 0}
             >
               <SelectTrigger data-testid="select-filter-rating">
-                <SelectValue placeholder={uniqueRatings.length === 0 ? "No ratings available" : "All ratings"} />
+                <SelectValue placeholder="All ratings" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All ratings</SelectItem>
-                {uniqueRatings.map((rating) => (
-                  <SelectItem key={rating} value={rating}>
-                    {rating}
-                  </SelectItem>
-                ))}
+                <SelectItem value="A+">A+</SelectItem>
+                <SelectItem value="A">A</SelectItem>
+                <SelectItem value="B+">B+</SelectItem>
+                <SelectItem value="B">B</SelectItem>
+                <SelectItem value="C">C</SelectItem>
               </SelectContent>
             </Select>
-            {uniqueRatings.length === 0 && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Ratings are assigned in Booking Master
-              </p>
-            )}
           </div>
 
           <div className="flex-1 min-w-[200px] max-w-xs">
