@@ -6,7 +6,7 @@ import { UserPlus, TestTube, Filter, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { format, isSameDay, parseISO } from "date-fns";
 
 const BLOCKS = [1, 2, 3, 4, 5, 6, 7];
 const SEAT_ROWS = [
@@ -283,6 +285,46 @@ export default function Contestants() {
     );
     return findConsecutiveSeatGroups(occupied, selectedContestants.length);
   })() : [];
+
+  // Create a map of dates to record days for the calendar
+  const recordDayDates = useMemo(() => {
+    const dateMap = new Map<string, any>();
+    recordDays.forEach((day: any) => {
+      const dateStr = day.date.split('T')[0]; // Get YYYY-MM-DD
+      dateMap.set(dateStr, day);
+    });
+    return dateMap;
+  }, [recordDays]);
+
+  // Get the selected record day details
+  const selectedRecordDayDetails = useMemo(() => {
+    return recordDays.find((day: any) => day.id === selectedRecordDay);
+  }, [recordDays, selectedRecordDay]);
+
+  // Handle calendar date selection
+  const handleCalendarSelect = (date: Date | undefined) => {
+    if (!date) {
+      setSelectedRecordDay("");
+      return;
+    }
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const recordDay = recordDayDates.get(dateStr);
+    if (recordDay) {
+      setSelectedRecordDay(recordDay.id);
+    }
+  };
+
+  // Get the currently selected date for the calendar
+  const selectedCalendarDate = useMemo(() => {
+    if (!selectedRecordDayDetails) return undefined;
+    const dateStr = selectedRecordDayDetails.date.split('T')[0];
+    return parseISO(dateStr);
+  }, [selectedRecordDayDetails]);
+
+  // Determine which dates have record days (for styling)
+  const recordDayDatesList = useMemo(() => {
+    return recordDays.map((day: any) => parseISO(day.date.split('T')[0]));
+  }, [recordDays]);
 
   const handleOpenAssignDialog = () => {
     refetchRecordDays(); // Refresh record days when opening dialog
@@ -582,7 +624,7 @@ export default function Contestants() {
 
       {/* Assign to Seat Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent data-testid="dialog-assign-seat">
+        <DialogContent className="max-w-md" data-testid="dialog-assign-seat">
           <DialogHeader>
             <DialogTitle>
               {isGroupSeating ? "Assign Group Together" : "Assign to Seat"}
@@ -599,18 +641,52 @@ export default function Contestants() {
           <div className="space-y-4 py-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Record Day</label>
-              <Select value={selectedRecordDay} onValueChange={setSelectedRecordDay}>
-                <SelectTrigger data-testid="select-record-day">
-                  <SelectValue placeholder="Select a record day" />
-                </SelectTrigger>
-                <SelectContent>
-                  {recordDays.map((day: any) => (
-                    <SelectItem key={day.id} value={day.id}>
-                      {new Date(day.date).toLocaleDateString()} - {day.status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="border rounded-md p-2">
+                <Calendar
+                  mode="single"
+                  selected={selectedCalendarDate}
+                  onSelect={handleCalendarSelect}
+                  disabled={(date) => {
+                    const dateStr = format(date, 'yyyy-MM-dd');
+                    return !recordDayDates.has(dateStr);
+                  }}
+                  modifiers={{
+                    recordDay: recordDayDatesList,
+                  }}
+                  modifiersStyles={{
+                    recordDay: {
+                      fontWeight: 'bold',
+                    },
+                  }}
+                  components={{
+                    DayContent: ({ date }) => {
+                      const dateStr = format(date, 'yyyy-MM-dd');
+                      const recordDay = recordDayDates.get(dateStr);
+                      return (
+                        <div className="flex flex-col items-center justify-center w-full h-full">
+                          <span>{date.getDate()}</span>
+                          {recordDay?.rxNumber && (
+                            <span className="text-[8px] leading-none text-primary truncate max-w-[36px]">
+                              {recordDay.rxNumber}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    },
+                  }}
+                  className="w-full"
+                  data-testid="calendar-record-day"
+                />
+              </div>
+              {selectedRecordDayDetails && (
+                <div className="mt-2 p-2 bg-muted rounded text-sm">
+                  <span className="font-medium">Selected: </span>
+                  {format(parseISO(selectedRecordDayDetails.date.split('T')[0]), 'MMMM d, yyyy')}
+                  {selectedRecordDayDetails.rxNumber && (
+                    <span className="ml-2 text-muted-foreground">({selectedRecordDayDetails.rxNumber})</span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Show block/seat selection for 1-4 contestants */}
