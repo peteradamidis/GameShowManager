@@ -37,6 +37,8 @@ export interface Contestant {
   phone?: string;
   address?: string;
   medicalInfo?: string;
+  mobilityNotes?: string;
+  criminalRecord?: string;
   photoUrl?: string | null;
 }
 
@@ -255,6 +257,8 @@ export function ContestantTable({
               <TableHead>Attending With</TableHead>
               <TableHead>City</TableHead>
               <TableHead>Medical Conditions</TableHead>
+              <TableHead>Mobility/Access Notes</TableHead>
+              <TableHead>Criminal Record</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -285,6 +289,12 @@ export function ContestantTable({
                   <TableCell>{contestant.address || "-"}</TableCell>
                   <TableCell className="max-w-[200px] truncate" title={contestant.medicalInfo || ""}>
                     {contestant.medicalInfo || "-"}
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate" title={contestant.mobilityNotes || ""}>
+                    {contestant.mobilityNotes || "-"}
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate" title={contestant.criminalRecord || ""}>
+                    {contestant.criminalRecord || "-"}
                   </TableCell>
                 </TableRow>
               );
@@ -457,13 +467,41 @@ export function ContestantTable({
               {/* Medical Information */}
               <div>
                 <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Medical Information</h3>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <Heart className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                    <div className="flex-1">
+                      <label className="text-xs font-medium text-muted-foreground">Medical Conditions</label>
+                      {contestantDetails.medicalInfo ? (
+                        <p className="text-sm whitespace-pre-wrap mt-1">{contestantDetails.medicalInfo}</p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic mt-1">No medical information provided</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Heart className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                    <div className="flex-1">
+                      <label className="text-xs font-medium text-muted-foreground">Mobility/Access Notes</label>
+                      {contestantDetails.mobilityNotes ? (
+                        <p className="text-sm whitespace-pre-wrap mt-1">{contestantDetails.mobilityNotes}</p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic mt-1">No mobility/access notes provided</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Criminal Record */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Criminal Record</h3>
                 <div className="flex items-start gap-3">
-                  <Heart className="h-4 w-4 mt-0.5 text-muted-foreground" />
                   <div className="flex-1">
-                    {contestantDetails.medicalInfo ? (
-                      <p className="text-sm whitespace-pre-wrap">{contestantDetails.medicalInfo}</p>
+                    {contestantDetails.criminalRecord ? (
+                      <p className="text-sm whitespace-pre-wrap">{contestantDetails.criminalRecord}</p>
                     ) : (
-                      <p className="text-sm text-muted-foreground italic">No medical information provided</p>
+                      <p className="text-sm text-muted-foreground italic">No criminal record information provided</p>
                     )}
                   </div>
                 </div>
