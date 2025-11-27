@@ -148,8 +148,13 @@ export default function Contestants() {
       });
       
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Import failed');
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const error = await response.json();
+          throw new Error(error.error || 'Import failed');
+        } else {
+          throw new Error(`Import failed: Server returned ${response.status}`);
+        }
       }
       
       return response.json();
