@@ -337,11 +337,15 @@ export function ContestantTable({
                       className="relative group cursor-pointer"
                       onClick={() => handleTablePhotoUpload(contestant.id)}
                     >
-                      <Avatar className="h-10 w-10">
+                      <Avatar className="h-12 w-12">
                         {contestant.photoUrl ? (
-                          <AvatarImage src={contestant.photoUrl} alt={contestant.name} />
+                          <AvatarImage 
+                            src={contestant.photoUrl} 
+                            alt={contestant.name}
+                            className="object-cover"
+                          />
                         ) : null}
-                        <AvatarFallback className="text-xs">
+                        <AvatarFallback className="text-sm">
                           {isUploadingThis ? (
                             <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                           ) : (
