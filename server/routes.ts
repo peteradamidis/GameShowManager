@@ -198,17 +198,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const ageValue = row.AGE || row.Age || row.age;
         const parsedAge = parseInt(ageValue);
         
+        // Get gender with fallback to "Not Specified" if column doesn't exist
+        const genderValue = row.GENDER || row.Gender || row.gender || "Not Specified";
+        
         return {
           name: row.NAME || row.Name || row.name,
           age: isNaN(parsedAge) ? 0 : parsedAge,
-          gender: row.GENDER || row.Gender || row.gender,
+          gender: genderValue,
           // Handle GROUP ID column or Attending With column
           groupIdFromFile: row["GROUP ID"] || row["Group ID"] || row["group id"] || null,
           attendingWith: row["ATTENDING WITH"] || row["Attending With"] || row["attending_with"] || row.attendingWith || null,
           email: row.EMAIL || row.Email || row.email || null,
-          phone: row.PHONE || row.Phone || row.phone || null,
-          address: row.ADDRESS || row.Address || row.address || null,
-          medicalInfo: row["MEDICAL INFO"] || row["Medical Info"] || row["medical_info"] || row.medicalInfo || null,
+          phone: row.PHONE || row.Phone || row.phone || 
+                 row.MOBILE || row.Mobile || row.mobile || null,
+          address: row.ADDRESS || row.Address || row.address || 
+                   row.CITY || row.City || row.city || null,
+          medicalInfo: row["MEDICAL INFO"] || row["Medical Info"] || row["medical_info"] || row.medicalInfo ||
+                       row["MEDICAL CONDITIONS"] || row["Medical Conditions"] || null,
+          mobilityNotes: row["MOBILITY NOTES"] || row["Mobility Notes"] || row["mobility_notes"] || 
+                         row["MOBILITY/ACCESS NOTES"] || row["Mobility/Access Notes"] || 
+                         row["ACCESS NOTES"] || row["Access Notes"] || null,
+          criminalRecord: row["CRIMINAL RECORD"] || row["Criminal Record"] || row["criminal_record"] || null,
         };
       });
 
@@ -265,6 +275,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           phone: row.phone,
           address: row.address,
           medicalInfo: row.medicalInfo,
+          mobilityNotes: row.mobilityNotes,
+          criminalRecord: row.criminalRecord,
           groupId: nameToGroupId.get(row.name) || null,
           availabilityStatus: "pending",
         });
