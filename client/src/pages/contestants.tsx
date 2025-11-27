@@ -62,9 +62,11 @@ export default function Contestants() {
   });
 
   // Fetch filtered contestants by availability
+  // Only fetch when we have a valid record day ID (not empty and not "all")
+  const shouldFetchAvailability = Boolean(filterRecordDayId && filterRecordDayId !== "all" && filterRecordDayId.length > 0);
   const { data: filteredAvailability = [], isLoading: loadingFiltered } = useQuery<ContestantWithAvailability[]>({
     queryKey: ['/api/availability/record-day', filterRecordDayId],
-    enabled: !!filterRecordDayId,
+    enabled: shouldFetchAvailability,
   });
 
   // Fetch record days

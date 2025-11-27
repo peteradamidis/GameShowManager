@@ -47,9 +47,11 @@ export default function AvailabilityManagement() {
     queryKey: ["/api/record-days"],
   });
 
+  // Only fetch when we have a valid record day ID (not empty and not "all")
+  const shouldFetchAvailability = Boolean(filterRecordDayId && filterRecordDayId !== "all" && filterRecordDayId.length > 0);
   const { data: filteredAvailability } = useQuery<ContestantWithAvailability[]>({
     queryKey: ["/api/availability/record-day", filterRecordDayId],
-    enabled: !!filterRecordDayId,
+    enabled: shouldFetchAvailability,
   });
 
   const sendMutation = useMutation({
