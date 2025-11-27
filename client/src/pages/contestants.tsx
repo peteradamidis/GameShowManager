@@ -64,7 +64,7 @@ export default function Contestants() {
   // Fetch filtered contestants by availability
   const { data: filteredAvailability = [], isLoading: loadingFiltered } = useQuery<ContestantWithAvailability[]>({
     queryKey: ['/api/availability/record-day', filterRecordDayId],
-    enabled: !!filterRecordDayId,
+    enabled: !!filterRecordDayId && filterRecordDayId !== "all",
   });
 
   // Fetch record days
