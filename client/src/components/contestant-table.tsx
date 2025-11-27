@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -10,7 +10,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Mail, Phone, MapPin, Heart } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useQuery } from "@tanstack/react-query";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export interface Contestant {
   id: string;
@@ -33,6 +37,7 @@ export interface Contestant {
   phone?: string;
   address?: string;
   medicalInfo?: string;
+  photoUrl?: string | null;
 }
 
 interface ContestantTableProps {
@@ -66,11 +71,108 @@ export function ContestantTable({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedContestantId, setSelectedContestantId] = useState<string | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const { data: contestantDetails } = useQuery<Contestant>({
-    queryKey: [`/api/contestants/${selectedContestantId}`],
+    queryKey: ['/api/contestants', selectedContestantId],
     enabled: !!selectedContestantId && detailDialogOpen,
   });
+
+  const uploadPhotoMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('photo', file);
+      
+      const response = await fetch(`/api/contestants/${selectedContestantId}/photo`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to upload photo');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      toast({
+        title: "Photo uploaded",
+        description: "Contestant photo has been updated successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      setIsUploading(false);
+    },
+  });
+
+  const deletePhotoMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/contestants/${selectedContestantId}/photo`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete photo');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      toast({
+        title: "Photo removed",
+        description: "Contestant photo has been removed.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Delete failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file (JPEG, PNG, etc.)",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setIsUploading(true);
+      uploadPhotoMutation.mutate(file);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const filteredContestants = contestants.filter((contestant) =>
     contestant.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -187,44 +289,116 @@ export function ContestantTable({
 
           {contestantDetails ? (
             <div className="space-y-6">
-              {/* Basic Information */}
-              <div>
-                <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Basic Information</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">Name</label>
-                    <p className="text-sm mt-1">{contestantDetails.name}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">Age</label>
-                    <p className="text-sm mt-1">{contestantDetails.age}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">Gender</label>
-                    <p className="text-sm mt-1">{contestantDetails.gender}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">Status</label>
-                    <div className="mt-1">
-                      <StatusBadge status={contestantDetails.availabilityStatus} />
+              {/* Photo and Basic Info Header */}
+              <div className="flex gap-6">
+                {/* Photo Section */}
+                <div className="flex flex-col items-center gap-2">
+                  <div className="relative group">
+                    <Avatar className="h-24 w-24 border-2 border-border">
+                      {contestantDetails.photoUrl ? (
+                        <AvatarImage 
+                          src={contestantDetails.photoUrl} 
+                          alt={contestantDetails.name}
+                          className="object-cover"
+                        />
+                      ) : null}
+                      <AvatarFallback className="text-2xl bg-muted">
+                        <User className="h-10 w-10 text-muted-foreground" />
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    {/* Upload overlay on hover */}
+                    <div 
+                      className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Camera className="h-6 w-6 text-white" />
                     </div>
                   </div>
-                  {contestantDetails.groupId && (
+                  
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    data-testid="input-photo-upload"
+                  />
+                  
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading || uploadPhotoMutation.isPending}
+                      data-testid="button-upload-photo"
+                    >
+                      {isUploading ? (
+                        <span className="flex items-center gap-1">
+                          <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          Uploading...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1">
+                          <Upload className="h-3 w-3" />
+                          Upload
+                        </span>
+                      )}
+                    </Button>
+                    
+                    {contestantDetails.photoUrl && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => deletePhotoMutation.mutate()}
+                        disabled={deletePhotoMutation.isPending}
+                        data-testid="button-delete-photo"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Basic Information */}
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Basic Information</h3>
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground">Group ID</label>
+                      <label className="text-xs font-medium text-muted-foreground">Name</label>
+                      <p className="text-sm mt-1">{contestantDetails.name}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Age</label>
+                      <p className="text-sm mt-1">{contestantDetails.age}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Gender</label>
+                      <p className="text-sm mt-1">{contestantDetails.gender}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Status</label>
                       <div className="mt-1">
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {contestantDetails.groupId}
-                        </Badge>
+                        <StatusBadge status={contestantDetails.availabilityStatus} />
                       </div>
                     </div>
-                  )}
-                  {contestantDetails.attendingWith && (
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">Attending With</label>
-                      <p className="text-sm mt-1">{contestantDetails.attendingWith}</p>
-                    </div>
-                  )}
+                    {contestantDetails.groupId && (
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Group ID</label>
+                        <div className="mt-1">
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {contestantDetails.groupId}
+                          </Badge>
+                        </div>
+                      </div>
+                    )}
+                    {contestantDetails.attendingWith && (
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Attending With</label>
+                        <p className="text-sm mt-1">{contestantDetails.attendingWith}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

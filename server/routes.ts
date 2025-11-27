@@ -87,7 +87,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
   // Upload contestant photo
-  app.post("/api/contestants/:id/photo", photoUpload.single("photo"), async (req, res) => {
+  app.post("/api/contestants/:id/photo", (req, res, next) => {
+    photoUpload.single("photo")(req, res, (err: any) => {
+      if (err) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ error: "File too large. Maximum size is 5MB." });
+        }
+        if (err.message === 'Only image files are allowed') {
+          return res.status(400).json({ error: "Only image files (JPEG, PNG, GIF, WebP) are allowed." });
+        }
+        console.error("Multer error:", err);
+        return res.status(400).json({ error: err.message || "File upload failed" });
+      }
+      next();
+    });
+  }, async (req, res) => {
     try {
       const { id } = req.params;
       
@@ -95,16 +109,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No photo uploaded" });
       }
 
-      const photoUrl = `/uploads/photos/${req.file.filename}`;
+      // Get existing contestant to check for old photo
+      const existingContestant = await storage.getContestantById(id);
       
-      // Update contestant with photo URL
-      const updated = await storage.updateContestantPhoto(id, photoUrl);
-      
-      if (!updated) {
+      if (!existingContestant) {
         // Delete the uploaded file if contestant not found
         fs.unlinkSync(req.file.path);
         return res.status(404).json({ error: "Contestant not found" });
       }
+
+      // Delete old photo if it exists
+      if (existingContestant.photoUrl) {
+        const oldFilePath = path.join(process.cwd(), existingContestant.photoUrl.replace(/^\//, ''));
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath);
+        }
+      }
+
+      const photoUrl = `/uploads/photos/${req.file.filename}`;
+      
+      // Update contestant with photo URL
+      const updated = await storage.updateContestantPhoto(id, photoUrl);
 
       res.json({ photoUrl, message: "Photo uploaded successfully" });
     } catch (error) {
@@ -125,7 +150,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Delete the file if it exists
       if (contestant.photoUrl) {
-        const filePath = path.join(process.cwd(), contestant.photoUrl);
+        // Remove leading slash to get relative path, then join with cwd
+        const filePath = path.join(process.cwd(), contestant.photoUrl.replace(/^\//, ''));
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
         }
