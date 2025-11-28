@@ -1237,6 +1237,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // PHASE 3B: Ensure all solos are assigned (solos always fill available spots)
+      // Track which bundles were assigned
+      const assignedBundleIds = new Set(assignments.map(a => a.bundle.id));
+      
+      // Find unassigned solo bundles
+      const unassignedSoloBundles = bundles.filter(bundle => 
+        !assignedBundleIds.has(bundle.id) && bundle.size === 1
+      );
+      
+      // For each unassigned solo, find a block with available capacity
+      for (const solo of unassignedSoloBundles) {
+        // C-rated solos can ONLY go to NPB blocks (with max 6 C-rated per NPB block)
+        let eligibleBlocks = blocks.filter(block => {
+          const maxSeats = block.blockType === 'NPB' ? SEATS_PER_BLOCK : MAX_AUTO_ASSIGN_SEATS;
+          if (block.seatsUsed + 1 > maxSeats) return false;
+          
+          if (solo.hasCRating) {
+            if (block.blockType !== 'NPB') return false;
+            const cCount = block.ratingCounts['C'] + solo.ratingCounts['C'];
+            if (cCount > 6) return false;
+          }
+          
+          return true;
+        });
+        
+        if (eligibleBlocks.length === 0) {
+          console.log(`Warning: Could not place solo ${solo.id} (${solo.contestants[0].name}) - no block has capacity`);
+          skippedBundles.push({ id: solo.id, reason: 'No block has capacity for solo' });
+          continue;
+        }
+        
+        // Pick the first eligible block (or could use a simple strategy like least-filled block)
+        const selectedBlock = eligibleBlocks[0];
+        assignments.push({ bundle: solo, blockNumber: selectedBlock.blockNumber });
+        
+        // Update block state
+        selectedBlock.seatsUsed += 1;
+        selectedBlock.femaleCount += solo.femaleCount;
+        selectedBlock.maleCount += solo.maleCount;
+        selectedBlock.totalAge += solo.totalAge;
+        selectedBlock.ageCount += 1;
+        selectedBlock.meanAge = selectedBlock.ageCount > 0 ? selectedBlock.totalAge / selectedBlock.ageCount : 0;
+        Object.keys(solo.ratingCounts).forEach(rating => {
+          selectedBlock.ratingCounts[rating] += solo.ratingCounts[rating];
+        });
+        selectedBlock.bundles.push(solo.id);
+        
+        // Update global state
+        globalFemaleCount += solo.femaleCount;
+        globalMaleCount += solo.maleCount;
+        globalTotalAge += solo.totalAge;
+        globalAgeCount += 1;
+        Object.keys(solo.ratingCounts).forEach(rating => {
+          globalRatingCounts[rating] += solo.ratingCounts[rating];
+        });
+      }
+
       // Check global ratio
       const totalAssigned = globalFemaleCount + globalMaleCount;
       const finalFemaleRatio = totalAssigned > 0 ? globalFemaleCount / totalAssigned : 0;
