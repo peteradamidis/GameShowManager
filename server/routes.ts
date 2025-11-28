@@ -1092,6 +1092,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get block types for a record day
+  app.get("/api/record-days/:id/block-types", async (req, res) => {
+    try {
+      const recordDayId = req.params.id;
+      const blockTypesData = await storage.getBlockTypesByRecordDay(recordDayId);
+      res.json(blockTypesData);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update block type (PB/NPB) for a specific block on a record day
+  app.put("/api/record-days/:id/block-types/:blockNumber", async (req, res) => {
+    try {
+      const { id: recordDayId, blockNumber } = req.params;
+      const { blockType } = req.body;
+      
+      const blockNum = parseInt(blockNumber);
+      if (isNaN(blockNum) || blockNum < 1 || blockNum > 7) {
+        return res.status(400).json({ error: "Block number must be between 1 and 7" });
+      }
+      
+      if (!['PB', 'NPB'].includes(blockType)) {
+        return res.status(400).json({ error: "Block type must be 'PB' or 'NPB'" });
+      }
+      
+      const updated = await storage.upsertBlockType(recordDayId, blockNum, blockType);
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Update seat assignment (for drag-and-drop) with collision detection
   app.put("/api/seat-assignments/:id", async (req, res) => {
     try {
