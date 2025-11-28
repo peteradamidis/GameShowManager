@@ -417,15 +417,15 @@ export default function AvailabilityManagement() {
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="tracking" className="space-y-4">
+      <Tabs defaultValue="responses" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="tracking" className="gap-2">
-            <Mail className="h-4 w-4" />
-            Tracking
-          </TabsTrigger>
           <TabsTrigger value="responses" className="gap-2">
             <BarChart3 className="h-4 w-4" />
             Responses by Day
+          </TabsTrigger>
+          <TabsTrigger value="tracking" className="gap-2">
+            <Mail className="h-4 w-4" />
+            Tracking
           </TabsTrigger>
           <TabsTrigger value="preview" className="gap-2">
             <Eye className="h-4 w-4" />
@@ -433,8 +433,8 @@ export default function AvailabilityManagement() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Tracking Tab */}
-        <TabsContent value="tracking" className="space-y-4">
+        {/* Responses by Day Tab */}
+        <TabsContent value="responses" className="space-y-4">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between flex-wrap gap-4">
