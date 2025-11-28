@@ -1163,28 +1163,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const poolMaleCount = available.filter(c => c.gender === "Male").length;
       const poolTotal = poolFemaleCount + poolMaleCount;
       const poolFemaleRatio = poolTotal > 0 ? poolFemaleCount / poolTotal : 0;
-
-      // If pool itself doesn't meet requirements, be flexible
       const poolMeetsRequirements = poolFemaleRatio >= TARGET_FEMALE_MIN && poolFemaleRatio <= TARGET_FEMALE_MAX;
-      
-      if (!poolMeetsRequirements) {
-        console.log(`Warning: Available pool has ${(poolFemaleRatio * 100).toFixed(1)}% female, outside target range of 60-70%. Proceeding with assignment.`);
-      } else if (finalFemaleRatio < TARGET_FEMALE_MIN || finalFemaleRatio > TARGET_FEMALE_MAX) {
-        return res.status(400).json({
-          error: `Could not achieve 60-70% female ratio. Final ratio: ${(finalFemaleRatio * 100).toFixed(1)}%`,
-          availablePool: {
-            femaleCount: poolFemaleCount,
-            maleCount: poolMaleCount,
-            total: poolTotal,
-            femalePercentage: (poolFemaleRatio * 100).toFixed(1),
-          },
-          assigned: {
-            femaleCount: globalFemaleCount,
-            maleCount: globalMaleCount,
-            total: totalAssigned,
-            femalePercentage: (finalFemaleRatio * 100).toFixed(1),
-          },
-        });
+
+      // Log warning if ratio is outside target, but proceed anyway
+      if (finalFemaleRatio < TARGET_FEMALE_MIN || finalFemaleRatio > TARGET_FEMALE_MAX) {
+        console.log(`Warning: Final ratio ${(finalFemaleRatio * 100).toFixed(1)}% is outside target 60-70%. Proceeding anyway.`);
       }
 
       // PHASE 4: Generate seat assignments (groups get consecutive seats WITHIN THE SAME ROW)
