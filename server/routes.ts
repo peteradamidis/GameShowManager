@@ -1678,44 +1678,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
           responseUrl: `/availability/respond/${tokenRecord.token}`,
         });
 
-        // Send email for each record day
-        for (const recordDay of recordDays) {
-          if (!recordDay) continue;
-          
-          try {
-            const baseUrl = process.env.REPLIT_DEPLOYMENT_URL || 'http://localhost:5000';
-            if (!contestant.email) {
-              throw new Error(`Contestant ${contestant.name} has no email address`);
-            }
+        // Send ONE email per contestant with all record days
+        try {
+          const baseUrl = process.env.REPLIT_DEPLOYMENT_URL || 'http://localhost:5000';
+          if (!contestant.email) {
+            throw new Error(`Contestant ${contestant.name} has no email address`);
+          }
 
-            const responseUrl = `${baseUrl}/availability/respond/${tokenRecord.token}`;
-            const recordDayDate = new Date(recordDay.date).toLocaleDateString('en-US', {
+          const responseUrl = `${baseUrl}/availability/respond/${tokenRecord.token}`;
+          
+          // Format record day dates for the email
+          const recordDaysList = recordDays
+            .filter(rd => rd)
+            .map(rd => new Date(rd.date).toLocaleDateString('en-US', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
               day: 'numeric'
-            });
+            }))
+            .join('\n  • ');
 
-            await sendAvailabilityEmail(
-              contestant.email,
-              contestant.name,
-              recordDayDate,
-              responseUrl
-            );
+          // Create email with all record days listed
+          const gmail = await getUncachableGmailClient();
+          
+          const emailContent = `
+Hi ${contestant.name},
 
-            emailsSent.push({
-              contestantId,
-              email: contestant.email,
-              recordDayId: recordDay.id,
-            });
-          } catch (emailError: any) {
-            console.error(`Failed to send email to ${contestant.email}:`, emailError);
-            emailsFailed.push({
-              contestantId,
-              email: contestant.email,
-              error: emailError.message,
-            });
-          }
+We need to confirm your availability for our upcoming recording sessions. Please respond to let us know which dates you can attend.
+
+Recording Dates:
+  • ${recordDaysList}
+
+Please click the link below to select your availability for each date:
+${responseUrl}
+
+This link will expire in 14 days.
+
+Thank you!
+Deal or No Deal Production Team
+          `.trim();
+
+          const message = [
+            `To: ${contestant.email}`,
+            'Subject: Availability Confirmation Request - Multiple Dates',
+            'Content-Type: text/plain; charset="UTF-8"',
+            'MIME-Version: 1.0',
+            '',
+            emailContent
+          ].join('\n');
+
+          const encodedMessage = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+          await gmail.users.messages.send({
+            userId: 'me',
+            requestBody: {
+              raw: encodedMessage
+            }
+          });
+
+          emailsSent.push({
+            contestantId,
+            email: contestant.email,
+            recordDayId: null,
+          });
+        } catch (emailError: any) {
+          console.error(`Failed to send email to ${contestant.email}:`, emailError);
+          emailsFailed.push({
+            contestantId,
+            email: contestant.email,
+            error: emailError.message,
+          });
         }
       }
 
