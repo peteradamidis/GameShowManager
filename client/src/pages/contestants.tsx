@@ -2,11 +2,11 @@ import { ContestantTable, Contestant } from "@/components/contestant-table";
 import { ImportExcelDialog } from "@/components/import-excel-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, TestTube, Filter, X } from "lucide-react";
+import { UserPlus, TestTube, Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -100,6 +100,9 @@ export default function Contestants() {
   const [filterGender, setFilterGender] = useState<string>("all");
   const [filterRating, setFilterRating] = useState<string>("all");
   const [filterLocation, setFilterLocation] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  
+  const ITEMS_PER_PAGE = 50;
 
   // Fetch all contestants
   const { data: contestants = [], isLoading: loadingContestants, refetch: refetchContestants } = useQuery<Contestant[]>({
@@ -164,6 +167,18 @@ export default function Contestants() {
   }
 
   const isLoading = loadingContestants || (filterRecordDayId && loadingFiltered);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(displayedContestants.length / ITEMS_PER_PAGE);
+  const paginatedContestants = displayedContestants.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const generateFakeMutation = useMutation({
     mutationFn: async () => {
@@ -612,12 +627,65 @@ export default function Contestants() {
           Loading contestants...
         </div>
       ) : (
-        <ContestantTable 
-          contestants={displayedContestants}
-          selectedIds={selectedContestants}
-          onSelectionChange={setSelectedContestants}
-          seatAssignments={allSeatAssignments}
-        />
+        <>
+          <ContestantTable 
+            contestants={paginatedContestants}
+            selectedIds={selectedContestants}
+            onSelectionChange={setSelectedContestants}
+            seatAssignments={allSeatAssignments}
+          />
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t pt-4 mt-4">
+              <div className="text-sm text-muted-foreground">
+                Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, displayedContestants.length)} of {displayedContestants.length} contestants
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  data-testid="button-prev-page"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                    .map((page, idx, arr) => (
+                      <span key={page}>
+                        {idx > 0 && arr[idx - 1] !== page - 1 && (
+                          <span className="px-1 text-muted-foreground">...</span>
+                        )}
+                        <Button
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(page)}
+                          className="w-9"
+                          data-testid={`button-page-${page}`}
+                        >
+                          {page}
+                        </Button>
+                      </span>
+                    ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  data-testid="button-next-page"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Assign to Seat Dialog */}
