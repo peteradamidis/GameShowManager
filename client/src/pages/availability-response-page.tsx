@@ -7,6 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Calendar, Users, AlertCircle, CheckCircle } from "lucide-react";
@@ -194,52 +199,49 @@ export default function AvailabilityResponsePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              Available Record Days
+              Recording Session Availability Form
             </CardTitle>
             <CardDescription>
-              Select the days you can attend. You can choose "Yes", "No", or "Maybe" for each day.
+              For each recording date below, select your availability status.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             {tokenData.recordDays.map((day) => {
               const current = selectedDays.get(day.id);
+              const dateStr = new Date(day.date).toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              });
+              
               return (
-                <div key={day.id} className="border rounded-md p-4" data-testid={`record-day-${day.id}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <div className="font-medium">{new Date(day.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
-                      <div className="text-sm text-muted-foreground">{day.totalSeats} seats available</div>
+                <div key={day.id} className="space-y-3 pb-4 border-b last:border-b-0" data-testid={`record-day-${day.id}`}>
+                  <div>
+                    <div className="font-medium text-base">{dateStr}</div>
+                    <div className="text-sm text-muted-foreground">{day.totalSeats} seats available</div>
+                  </div>
+                  
+                  <RadioGroup value={current || ''} onValueChange={(value) => handleToggleDay(day.id, value)}>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <RadioGroupItem value="yes" id={`yes-${day.id}`} data-testid={`radio-yes-${day.id}`} />
+                      <Label htmlFor={`yes-${day.id}`} className="font-normal cursor-pointer">
+                        Yes, I can attend
+                      </Label>
                     </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={current === 'yes' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleToggleDay(day.id, 'yes')}
-                      data-testid={`button-yes-${day.id}`}
-                      className="flex-1"
-                    >
-                      Yes
-                    </Button>
-                    <Button
-                      variant={current === 'maybe' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleToggleDay(day.id, 'maybe')}
-                      data-testid={`button-maybe-${day.id}`}
-                      className="flex-1"
-                    >
-                      Maybe
-                    </Button>
-                    <Button
-                      variant={current === 'no' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleToggleDay(day.id, 'no')}
-                      data-testid={`button-no-${day.id}`}
-                      className="flex-1"
-                    >
-                      No
-                    </Button>
-                  </div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <RadioGroupItem value="maybe" id={`maybe-${day.id}`} data-testid={`radio-maybe-${day.id}`} />
+                      <Label htmlFor={`maybe-${day.id}`} className="font-normal cursor-pointer">
+                        Maybe (unsure, will confirm later)
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id={`no-${day.id}`} data-testid={`radio-no-${day.id}`} />
+                      <Label htmlFor={`no-${day.id}`} className="font-normal cursor-pointer">
+                        No, I cannot attend
+                      </Label>
+                    </div>
+                  </RadioGroup>
                 </div>
               );
             })}
