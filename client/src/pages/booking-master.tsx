@@ -246,29 +246,8 @@ export default function BookingMaster() {
     setConfirmSendOpen(false);
   };
 
-  const handleToggleFullscreen = async () => {
-    if (!tableContainerRef.current) return;
-
-    try {
-      if (!isFullscreen) {
-        if (tableContainerRef.current.requestFullscreen) {
-          await tableContainerRef.current.requestFullscreen();
-          setIsFullscreen(true);
-        }
-      } else {
-        if (document.fullscreenElement) {
-          await document.exitFullscreen();
-          setIsFullscreen(false);
-        }
-      }
-    } catch (err) {
-      console.error("Error toggling fullscreen:", err);
-      toast({
-        title: "Fullscreen error",
-        description: "Could not toggle fullscreen mode",
-        variant: "destructive",
-      });
-    }
+  const handleToggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
   };
 
   const exportToExcel = () => {
@@ -378,8 +357,8 @@ export default function BookingMaster() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className={isFullscreen ? "fixed inset-0 flex flex-col p-6 bg-background" : "p-6 space-y-6"}>
+      <div className="flex items-center justify-between flex-shrink-0">
         <div>
           <h1 className="text-3xl font-bold">Booking Master</h1>
           <p className="text-muted-foreground mt-1">
@@ -411,7 +390,7 @@ export default function BookingMaster() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-shrink-0">
         <Calendar className="h-5 w-5 text-muted-foreground" />
         <Select value={selectedRecordDay} onValueChange={setSelectedRecordDay}>
           <SelectTrigger className="w-80" data-testid="select-record-day">
@@ -435,8 +414,8 @@ export default function BookingMaster() {
       {selectedRecordDay && (
         <div 
           ref={tableContainerRef}
-          className="border rounded-md overflow-auto" 
-          style={isFullscreen ? { height: "100vh", width: "100vw" } : { maxHeight: "calc(100vh - 300px)" }}
+          className="border rounded-md overflow-auto flex-1" 
+          style={isFullscreen ? {} : { maxHeight: "calc(100vh - 300px)" }}
         >
           {loadingAssignments ? (
             <div className="p-8 text-center text-muted-foreground">
