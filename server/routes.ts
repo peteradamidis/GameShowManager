@@ -168,7 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate real photos for all contestants without uploaded photos
+  // Generate real photos for ALL contestants
   app.post("/api/contestants/generate-avatars", async (req, res) => {
     try {
       const contestants = await storage.getContestants();
@@ -177,12 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let maleIndex = 0;
       
       for (const contestant of contestants) {
-        // Skip contestants who have uploaded photos (local files)
-        if (contestant.photoUrl && contestant.photoUrl.startsWith('/uploads/')) {
-          continue;
-        }
-        
-        // Generate photo URL using randomuser.me portraits
+        // Generate photo URL using randomuser.me portraits for everyone
         let photoUrl: string;
         if (contestant.gender === 'Female') {
           photoUrl = `https://randomuser.me/api/portraits/women/${femaleIndex % 100}.jpg`;
