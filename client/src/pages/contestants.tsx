@@ -2,7 +2,7 @@ import { ContestantTable, Contestant } from "@/components/contestant-table";
 import { ImportExcelDialog } from "@/components/import-excel-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, TestTube, Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { UserPlus, TestTube, Filter, X, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -195,6 +195,26 @@ export default function Contestants() {
       toast({
         title: "Generation failed",
         description: "Could not generate fake contestants.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const generateAvatarsMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('POST', '/api/contestants/generate-avatars', {});
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      toast({
+        title: "Avatars generated",
+        description: data.message,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Avatar generation failed",
+        description: "Could not generate avatars.",
         variant: "destructive",
       });
     },
@@ -433,6 +453,15 @@ export default function Contestants() {
               Assign {selectedContestants.length} to Record Day
             </Button>
           )}
+          <Button 
+            variant="outline" 
+            onClick={() => generateAvatarsMutation.mutate()}
+            disabled={generateAvatarsMutation.isPending}
+            data-testid="button-generate-avatars"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            {generateAvatarsMutation.isPending ? "Generating..." : "Generate Avatars"}
+          </Button>
           <Button 
             variant="outline" 
             onClick={() => generateFakeMutation.mutate()}

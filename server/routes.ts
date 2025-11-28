@@ -168,6 +168,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate avatars for all contestants without photos
+  app.post("/api/contestants/generate-avatars", async (req, res) => {
+    try {
+      const contestants = await storage.getContestants();
+      let updatedCount = 0;
+      
+      for (const contestant of contestants) {
+        // Skip contestants who already have a photo URL (uploaded photos)
+        if (contestant.photoUrl && contestant.photoUrl.startsWith('/uploads/')) {
+          continue;
+        }
+        
+        // Generate avatar URL using UI Avatars API
+        const encodedName = encodeURIComponent(contestant.name);
+        // Use gender-based background colors
+        const bgColor = contestant.gender === 'Female' ? 'E91E63' : contestant.gender === 'Male' ? '2196F3' : '9E9E9E';
+        const avatarUrl = `https://ui-avatars.com/api/?name=${encodedName}&background=${bgColor}&color=fff&size=128&bold=true`;
+        
+        await storage.updateContestantPhoto(contestant.id, avatarUrl);
+        updatedCount++;
+      }
+      
+      res.json({ 
+        message: `Generated avatars for ${updatedCount} contestants`,
+        updatedCount 
+      });
+    } catch (error) {
+      console.error("Avatar generation error:", error);
+      res.status(500).json({ error: "Failed to generate avatars" });
+    }
+  });
+
   // Import contestants from Excel
   app.post("/api/contestants/import", upload.single("file"), async (req, res) => {
     try {
