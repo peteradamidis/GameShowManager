@@ -15,8 +15,11 @@ import {
 import { SeatCard, SeatData } from "./seat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import type { BlockType } from "@shared/schema";
 
 interface SeatingChartProps {
   recordDayId: string;
@@ -100,6 +103,8 @@ function SeatingBlock({
   onEmptySeatClick,
   onRemove,
   onCancel,
+  blockType,
+  onBlockTypeChange,
 }: { 
   block: SeatData[]; 
   blockIndex: number;
@@ -109,6 +114,8 @@ function SeatingBlock({
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
   onRemove?: (assignmentId: string) => void;
   onCancel?: (assignmentId: string) => void;
+  blockType?: 'PB' | 'NPB';
+  onBlockTypeChange?: (blockNumber: number, newType: 'PB' | 'NPB') => void;
 }) {
   const stats = calculateBlockStats(block);
 
@@ -123,10 +130,28 @@ function SeatingBlock({
   // Reverse rows if needed (for top blocks, A should be at bottom)
   const displayRows = reverseRows ? [...seatsByRow].reverse() : seatsByRow;
 
+  const handleBlockTypeToggle = () => {
+    if (onBlockTypeChange) {
+      const newType = blockType === 'PB' ? 'NPB' : 'PB';
+      onBlockTypeChange(blockIndex + 1, newType);
+    }
+  };
+
   return (
     <Card data-testid={`block-${blockIndex}`} className="w-full">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium">{blockLabel}</CardTitle>
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-sm font-medium">{blockLabel}</CardTitle>
+          <Button
+            size="sm"
+            variant={blockType === 'PB' ? 'default' : blockType === 'NPB' ? 'secondary' : 'outline'}
+            className="h-6 px-2 text-xs font-medium"
+            onClick={handleBlockTypeToggle}
+            data-testid={`block-type-toggle-${blockIndex}`}
+          >
+            {blockType || '—'}
+          </Button>
+        </div>
         <div className="flex flex-col gap-1 text-xs text-muted-foreground">
           <div>{stats.total}/22 filled</div>
           <Badge variant="secondary" className="text-xs w-fit">
@@ -201,6 +226,48 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Fetch block types for this record day
+  const { data: blockTypesData } = useQuery<BlockType[]>({
+    queryKey: ['/api/record-days', recordDayId, 'block-types'],
+  });
+
+  // Create a map of block number to block type
+  const blockTypeMap: Record<number, 'PB' | 'NPB'> = {};
+  if (blockTypesData) {
+    blockTypesData.forEach(bt => {
+      blockTypeMap[bt.blockNumber] = bt.blockType as 'PB' | 'NPB';
+    });
+  }
+
+  // Mutation to update block type
+  const updateBlockTypeMutation = useMutation({
+    mutationFn: async ({ blockNumber, blockType }: { blockNumber: number; blockType: 'PB' | 'NPB' }) => {
+      return apiRequest(`/api/record-days/${recordDayId}/block-types/${blockNumber}`, {
+        method: 'PUT',
+        body: JSON.stringify({ blockType }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/record-days', recordDayId, 'block-types'] });
+      toast({
+        title: "Block type updated",
+        description: "The block type has been saved.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error updating block type",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleBlockTypeChange = (blockNumber: number, newType: 'PB' | 'NPB') => {
+    updateBlockTypeMutation.mutate({ blockNumber, blockType: newType });
+  };
 
   // Update blocks when initialSeats changes (after data loads from API)
   useEffect(() => {
@@ -412,6 +479,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onEmptySeatClick={onEmptySeatClick}
                   onRemove={onRemove}
                   onCancel={onCancel}
+                  blockType={blockTypeMap[idx + 1]}
+                  onBlockTypeChange={handleBlockTypeChange}
                 />
               ))}
             </div>
@@ -439,6 +508,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     onEmptySeatClick={onEmptySeatClick}
                     onRemove={onRemove}
                     onCancel={onCancel}
+                    blockType={blockTypeMap[originalIdx + 1]}
+                    onBlockTypeChange={handleBlockTypeChange}
                   />
                 );
               })}
@@ -459,6 +530,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 onEmptySeatClick={onEmptySeatClick}
                 onRemove={onRemove}
                 onCancel={onCancel}
+                blockType={blockTypeMap[7]}
+                onBlockTypeChange={handleBlockTypeChange}
               />
             </div>
           </div>
