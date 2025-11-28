@@ -331,20 +331,28 @@ export default function SeatingChartPage() {
       <div className="bg-muted/30 rounded-lg p-4">
         <div className="flex items-center gap-6 text-sm flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded border-2 border-blue-500"></div>
-            <span>Group 1</span>
+            <div className="w-3 h-3 rounded bg-emerald-200 dark:bg-emerald-800 border border-emerald-500"></div>
+            <span className="font-medium text-emerald-600 dark:text-emerald-400">A+</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded border-2 border-green-500"></div>
-            <span>Group 2</span>
+            <div className="w-3 h-3 rounded bg-green-200 dark:bg-green-800 border border-green-500"></div>
+            <span className="font-medium text-green-600 dark:text-green-400">A</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded border-2 border-purple-500"></div>
-            <span>Group 3</span>
+            <div className="w-3 h-3 rounded bg-amber-200 dark:bg-amber-800 border border-amber-500"></div>
+            <span className="font-medium text-amber-600 dark:text-amber-400">B+</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded border-dashed"></div>
-            <span>Empty Seat</span>
+            <div className="w-3 h-3 rounded bg-orange-200 dark:bg-orange-800 border border-orange-500"></div>
+            <span className="font-medium text-orange-600 dark:text-orange-400">B</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-red-200 dark:bg-red-800 border border-red-400"></div>
+            <span className="font-medium text-red-500 dark:text-red-400">C</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded border-dashed border"></div>
+            <span>Empty</span>
           </div>
           <div className="ml-auto text-muted-foreground">
             Rows: A-E (5-5-4-4-4 seats)
