@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { format, isSameDay, parseISO } from "date-fns";
+import type { BlockType } from "@shared/schema";
 
 const BLOCKS = [1, 2, 3, 4, 5, 6, 7];
 const SEAT_ROWS = [
@@ -116,6 +117,18 @@ export default function Contestants() {
   // Fetch record days
   const { data: recordDays = [], refetch: refetchRecordDays } = useQuery<any[]>({
     queryKey: ['/api/record-days'],
+  });
+
+  // Fetch block types for the selected record day
+  const { data: blockTypesData = [] } = useQuery<BlockType[]>({
+    queryKey: ['/api/record-days', selectedRecordDay, 'block-types'],
+    enabled: Boolean(selectedRecordDay),
+  });
+
+  // Create a map of block number to block type
+  const blockTypeMap: Record<number, 'PB' | 'NPB'> = {};
+  blockTypesData.forEach(bt => {
+    blockTypeMap[bt.blockNumber] = bt.blockType as 'PB' | 'NPB';
   });
 
   // Fetch all seat assignments for rating/location filtering
@@ -723,6 +736,14 @@ export default function Contestants() {
                       {BLOCKS.map(block => (
                         <SelectItem key={block} value={block.toString()}>
                           Block {block}
+                          {blockTypeMap[block] && (
+                            <Badge 
+                              variant={blockTypeMap[block] === 'PB' ? 'default' : 'secondary'}
+                              className="ml-2 text-xs"
+                            >
+                              {blockTypeMap[block]}
+                            </Badge>
+                          )}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -243,11 +243,12 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   // Mutation to update block type
   const updateBlockTypeMutation = useMutation({
     mutationFn: async ({ blockNumber, blockType }: { blockNumber: number; blockType: 'PB' | 'NPB' }) => {
-      return apiRequest(`/api/record-days/${recordDayId}/block-types/${blockNumber}`, {
-        method: 'PUT',
-        body: JSON.stringify({ blockType }),
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const response = await apiRequest(
+        'PUT',
+        `/api/record-days/${recordDayId}/block-types/${blockNumber}`,
+        { blockType }
+      );
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/record-days', recordDayId, 'block-types'] });
