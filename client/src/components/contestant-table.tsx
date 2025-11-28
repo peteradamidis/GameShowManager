@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -11,17 +11,27 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export interface Contestant {
@@ -166,6 +176,82 @@ export function ContestantTable({
       });
     },
   });
+
+  // Edit mode state
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editFormData, setEditFormData] = useState<Partial<Contestant>>({});
+
+  // Reset edit form when contestant details change
+  useEffect(() => {
+    if (contestantDetails) {
+      setEditFormData({
+        name: contestantDetails.name,
+        age: contestantDetails.age,
+        gender: contestantDetails.gender,
+        email: contestantDetails.email || '',
+        phone: contestantDetails.phone || '',
+        address: contestantDetails.address || '',
+        attendingWith: contestantDetails.attendingWith || '',
+        medicalInfo: contestantDetails.medicalInfo || '',
+        mobilityNotes: contestantDetails.mobilityNotes || '',
+        criminalRecord: contestantDetails.criminalRecord || '',
+      });
+    }
+  }, [contestantDetails]);
+
+  // Reset edit mode when dialog closes
+  useEffect(() => {
+    if (!detailDialogOpen) {
+      setIsEditMode(false);
+    }
+  }, [detailDialogOpen]);
+
+  const updateContestantMutation = useMutation({
+    mutationFn: async (data: Partial<Contestant>) => {
+      return apiRequest('PATCH', `/api/contestants/${selectedContestantId}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      setIsEditMode(false);
+      toast({
+        title: "Contestant updated",
+        description: "Contestant information has been saved successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEditFormChange = (field: keyof Contestant, value: any) => {
+    setEditFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveEdit = () => {
+    updateContestantMutation.mutate(editFormData);
+  };
+
+  const handleCancelEdit = () => {
+    if (contestantDetails) {
+      setEditFormData({
+        name: contestantDetails.name,
+        age: contestantDetails.age,
+        gender: contestantDetails.gender,
+        email: contestantDetails.email || '',
+        phone: contestantDetails.phone || '',
+        address: contestantDetails.address || '',
+        attendingWith: contestantDetails.attendingWith || '',
+        medicalInfo: contestantDetails.medicalInfo || '',
+        mobilityNotes: contestantDetails.mobilityNotes || '',
+        criminalRecord: contestantDetails.criminalRecord || '',
+      });
+    }
+    setIsEditMode(false);
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -383,208 +469,439 @@ export function ContestantTable({
 
       {/* Contestant Detail Dialog */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-        <DialogContent className="max-w-2xl" data-testid="dialog-contestant-details">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-contestant-details">
           <DialogHeader>
-            <DialogTitle>Contestant Details</DialogTitle>
-            <DialogDescription>
-              Complete information for {contestantDetails?.name || "this contestant"}
-            </DialogDescription>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <DialogTitle>{isEditMode ? 'Edit Contestant' : 'Contestant Details'}</DialogTitle>
+                <DialogDescription>
+                  {isEditMode ? 'Update contestant information' : `Complete information for ${contestantDetails?.name || "this contestant"}`}
+                </DialogDescription>
+              </div>
+              {contestantDetails && !isEditMode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditMode(true)}
+                  data-testid="button-edit-contestant"
+                >
+                  <Pencil className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+              )}
+            </div>
           </DialogHeader>
 
           {contestantDetails ? (
-            <div className="space-y-6">
-              {/* Photo and Basic Info Header */}
-              <div className="flex gap-6">
+            isEditMode ? (
+              <div className="space-y-6">
                 {/* Photo Section */}
-                <div className="flex flex-col items-center gap-2">
-                  <div className="relative group">
-                    <Avatar className="h-24 w-24 border-2 border-border">
-                      {contestantDetails.photoUrl ? (
-                        <AvatarImage 
-                          src={contestantDetails.photoUrl} 
-                          alt={contestantDetails.name}
-                          className="object-cover"
-                        />
-                      ) : null}
-                      <AvatarFallback className="text-2xl bg-muted">
-                        <User className="h-10 w-10 text-muted-foreground" />
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    {/* Upload overlay on hover */}
-                    <div 
-                      className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Camera className="h-6 w-6 text-white" />
+                <div className="flex gap-6">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="relative group">
+                      <Avatar className="h-24 w-24 border-2 border-border">
+                        {contestantDetails.photoUrl ? (
+                          <AvatarImage 
+                            src={contestantDetails.photoUrl} 
+                            alt={contestantDetails.name}
+                            className="object-cover"
+                          />
+                        ) : null}
+                        <AvatarFallback className="text-2xl bg-muted">
+                          <User className="h-10 w-10 text-muted-foreground" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div 
+                        className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Camera className="h-6 w-6 text-white" />
+                      </div>
                     </div>
-                  </div>
-                  
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    data-testid="input-photo-upload"
-                  />
-                  
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploading || uploadPhotoMutation.isPending}
-                      data-testid="button-upload-photo"
-                    >
-                      {isUploading ? (
-                        <span className="flex items-center gap-1">
-                          <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                          Uploading...
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1">
-                          <Upload className="h-3 w-3" />
-                          Upload
-                        </span>
-                      )}
-                    </Button>
-                    
-                    {contestantDetails.photoUrl && (
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      data-testid="input-photo-upload"
+                    />
+                    <div className="flex gap-1">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => deletePhotoMutation.mutate()}
-                        disabled={deletePhotoMutation.isPending}
-                        data-testid="button-delete-photo"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading || uploadPhotoMutation.isPending}
                       >
-                        <Trash2 className="h-3 w-3" />
+                        {isUploading ? 'Uploading...' : 'Upload'}
                       </Button>
-                    )}
+                      {contestantDetails.photoUrl && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => deletePhotoMutation.mutate()}
+                          disabled={deletePhotoMutation.isPending}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Basic Info Edit */}
+                  <div className="flex-1 space-y-4">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Basic Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-name">Name</Label>
+                        <Input
+                          id="edit-name"
+                          value={editFormData.name || ''}
+                          onChange={(e) => handleEditFormChange('name', e.target.value)}
+                          data-testid="input-edit-name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-age">Age</Label>
+                        <Input
+                          id="edit-age"
+                          type="number"
+                          value={editFormData.age || ''}
+                          onChange={(e) => handleEditFormChange('age', parseInt(e.target.value) || 0)}
+                          data-testid="input-edit-age"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-gender">Gender</Label>
+                        <Select 
+                          value={editFormData.gender || ''} 
+                          onValueChange={(value) => handleEditFormChange('gender', value)}
+                        >
+                          <SelectTrigger data-testid="select-edit-gender">
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Male">Male</SelectItem>
+                            <SelectItem value="Female">Female</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-attending">Attending With</Label>
+                        <Input
+                          id="edit-attending"
+                          value={editFormData.attendingWith || ''}
+                          onChange={(e) => handleEditFormChange('attendingWith', e.target.value)}
+                          data-testid="input-edit-attending"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Basic Information */}
-                <div className="flex-1">
-                  <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Basic Information</h3>
+                {/* Contact Information Edit */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contact Information</h3>
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">Name</label>
-                      <p className="text-sm mt-1">{contestantDetails.name}</p>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-email">Email</Label>
+                      <Input
+                        id="edit-email"
+                        type="email"
+                        value={editFormData.email || ''}
+                        onChange={(e) => handleEditFormChange('email', e.target.value)}
+                        data-testid="input-edit-email"
+                      />
                     </div>
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">Age</label>
-                      <p className="text-sm mt-1">{contestantDetails.age}</p>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-phone">Phone</Label>
+                      <Input
+                        id="edit-phone"
+                        value={editFormData.phone || ''}
+                        onChange={(e) => handleEditFormChange('phone', e.target.value)}
+                        data-testid="input-edit-phone"
+                      />
                     </div>
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">Gender</label>
-                      <p className="text-sm mt-1">{contestantDetails.gender}</p>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">Status</label>
-                      <div className="mt-1">
-                        <StatusBadge status={contestantDetails.availabilityStatus} />
-                      </div>
-                    </div>
-                    {contestantDetails.groupId && (
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Group ID</label>
-                        <div className="mt-1">
-                          <Badge variant="outline" className="font-mono text-xs">
-                            {contestantDetails.groupId}
-                          </Badge>
-                        </div>
-                      </div>
-                    )}
-                    {contestantDetails.attendingWith && (
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Attending With</label>
-                        <p className="text-sm mt-1">{contestantDetails.attendingWith}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Contact Information */}
-              {(contestantDetails.email || contestantDetails.phone || contestantDetails.address) && (
-                <div>
-                  <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Contact Information</h3>
-                  <div className="space-y-3">
-                    {contestantDetails.email && (
-                      <div className="flex items-start gap-3">
-                        <Mail className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                        <div>
-                          <label className="text-xs font-medium text-muted-foreground">Email</label>
-                          <p className="text-sm mt-1">{contestantDetails.email}</p>
-                        </div>
-                      </div>
-                    )}
-                    {contestantDetails.phone && (
-                      <div className="flex items-start gap-3">
-                        <Phone className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                        <div>
-                          <label className="text-xs font-medium text-muted-foreground">Phone</label>
-                          <p className="text-sm mt-1">{contestantDetails.phone}</p>
-                        </div>
-                      </div>
-                    )}
-                    {contestantDetails.address && (
-                      <div className="flex items-start gap-3">
-                        <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                        <div>
-                          <label className="text-xs font-medium text-muted-foreground">Address</label>
-                          <p className="text-sm mt-1">{contestantDetails.address}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Medical Information */}
-              <div>
-                <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Medical Information</h3>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <Heart className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <div className="flex-1">
-                      <label className="text-xs font-medium text-muted-foreground">Medical Conditions</label>
-                      {contestantDetails.medicalInfo ? (
-                        <p className="text-sm whitespace-pre-wrap mt-1">{contestantDetails.medicalInfo}</p>
-                      ) : (
-                        <p className="text-sm text-muted-foreground italic mt-1">No medical information provided</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Heart className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <div className="flex-1">
-                      <label className="text-xs font-medium text-muted-foreground">Mobility/Access Notes</label>
-                      {contestantDetails.mobilityNotes ? (
-                        <p className="text-sm whitespace-pre-wrap mt-1">{contestantDetails.mobilityNotes}</p>
-                      ) : (
-                        <p className="text-sm text-muted-foreground italic mt-1">No mobility/access notes provided</p>
-                      )}
+                    <div className="space-y-2 col-span-2">
+                      <Label htmlFor="edit-address">Address</Label>
+                      <Input
+                        id="edit-address"
+                        value={editFormData.address || ''}
+                        onChange={(e) => handleEditFormChange('address', e.target.value)}
+                        data-testid="input-edit-address"
+                      />
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Criminal Record */}
-              <div>
-                <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Criminal Record</h3>
-                <div className="flex items-start gap-3">
-                  <div className="flex-1">
-                    {contestantDetails.criminalRecord ? (
-                      <p className="text-sm whitespace-pre-wrap">{contestantDetails.criminalRecord}</p>
+                {/* Medical Information Edit */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Medical Information</h3>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-medical">Medical Conditions</Label>
+                      <Textarea
+                        id="edit-medical"
+                        value={editFormData.medicalInfo || ''}
+                        onChange={(e) => handleEditFormChange('medicalInfo', e.target.value)}
+                        rows={3}
+                        data-testid="input-edit-medical"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-mobility">Mobility/Access Notes</Label>
+                      <Textarea
+                        id="edit-mobility"
+                        value={editFormData.mobilityNotes || ''}
+                        onChange={(e) => handleEditFormChange('mobilityNotes', e.target.value)}
+                        rows={3}
+                        data-testid="input-edit-mobility"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Criminal Record Edit */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Criminal Record</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-criminal">Criminal Record Information</Label>
+                    <Textarea
+                      id="edit-criminal"
+                      value={editFormData.criminalRecord || ''}
+                      onChange={(e) => handleEditFormChange('criminalRecord', e.target.value)}
+                      rows={3}
+                      data-testid="input-edit-criminal"
+                    />
+                  </div>
+                </div>
+
+                {/* Edit Mode Footer */}
+                <DialogFooter className="gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleCancelEdit}
+                    disabled={updateContestantMutation.isPending}
+                    data-testid="button-cancel-edit"
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSaveEdit}
+                    disabled={updateContestantMutation.isPending}
+                    data-testid="button-save-edit"
+                  >
+                    {updateContestantMutation.isPending ? (
+                      <span className="flex items-center gap-1">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        Saving...
+                      </span>
                     ) : (
-                      <p className="text-sm text-muted-foreground italic">No criminal record information provided</p>
+                      <>
+                        <Save className="h-4 w-4 mr-1" />
+                        Save Changes
+                      </>
                     )}
+                  </Button>
+                </DialogFooter>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Photo and Basic Info Header */}
+                <div className="flex gap-6">
+                  {/* Photo Section */}
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="relative group">
+                      <Avatar className="h-24 w-24 border-2 border-border">
+                        {contestantDetails.photoUrl ? (
+                          <AvatarImage 
+                            src={contestantDetails.photoUrl} 
+                            alt={contestantDetails.name}
+                            className="object-cover"
+                          />
+                        ) : null}
+                        <AvatarFallback className="text-2xl bg-muted">
+                          <User className="h-10 w-10 text-muted-foreground" />
+                        </AvatarFallback>
+                      </Avatar>
+                      
+                      {/* Upload overlay on hover */}
+                      <div 
+                        className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Camera className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                    
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      data-testid="input-photo-upload"
+                    />
+                    
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading || uploadPhotoMutation.isPending}
+                        data-testid="button-upload-photo"
+                      >
+                        {isUploading ? (
+                          <span className="flex items-center gap-1">
+                            <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                            Uploading...
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1">
+                            <Upload className="h-3 w-3" />
+                            Upload
+                          </span>
+                        )}
+                      </Button>
+                      
+                      {contestantDetails.photoUrl && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => deletePhotoMutation.mutate()}
+                          disabled={deletePhotoMutation.isPending}
+                          data-testid="button-delete-photo"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Basic Information */}
+                  <div className="flex-1">
+                    <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Basic Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Name</label>
+                        <p className="text-sm mt-1">{contestantDetails.name}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Age</label>
+                        <p className="text-sm mt-1">{contestantDetails.age}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Gender</label>
+                        <p className="text-sm mt-1">{contestantDetails.gender}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Status</label>
+                        <div className="mt-1">
+                          <StatusBadge status={contestantDetails.availabilityStatus} />
+                        </div>
+                      </div>
+                      {contestantDetails.groupId && (
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground">Group ID</label>
+                          <div className="mt-1">
+                            <Badge variant="outline" className="font-mono text-xs">
+                              {contestantDetails.groupId}
+                            </Badge>
+                          </div>
+                        </div>
+                      )}
+                      {contestantDetails.attendingWith && (
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground">Attending With</label>
+                          <p className="text-sm mt-1">{contestantDetails.attendingWith}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                {(contestantDetails.email || contestantDetails.phone || contestantDetails.address) && (
+                  <div>
+                    <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Contact Information</h3>
+                    <div className="space-y-3">
+                      {contestantDetails.email && (
+                        <div className="flex items-start gap-3">
+                          <Mail className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground">Email</label>
+                            <p className="text-sm mt-1">{contestantDetails.email}</p>
+                          </div>
+                        </div>
+                      )}
+                      {contestantDetails.phone && (
+                        <div className="flex items-start gap-3">
+                          <Phone className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground">Phone</label>
+                            <p className="text-sm mt-1">{contestantDetails.phone}</p>
+                          </div>
+                        </div>
+                      )}
+                      {contestantDetails.address && (
+                        <div className="flex items-start gap-3">
+                          <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground">Address</label>
+                            <p className="text-sm mt-1">{contestantDetails.address}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Medical Information */}
+                <div>
+                  <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Medical Information</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <Heart className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                      <div className="flex-1">
+                        <label className="text-xs font-medium text-muted-foreground">Medical Conditions</label>
+                        {contestantDetails.medicalInfo ? (
+                          <p className="text-sm whitespace-pre-wrap mt-1">{contestantDetails.medicalInfo}</p>
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic mt-1">No medical information provided</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Heart className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                      <div className="flex-1">
+                        <label className="text-xs font-medium text-muted-foreground">Mobility/Access Notes</label>
+                        {contestantDetails.mobilityNotes ? (
+                          <p className="text-sm whitespace-pre-wrap mt-1">{contestantDetails.mobilityNotes}</p>
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic mt-1">No mobility/access notes provided</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Criminal Record */}
+                <div>
+                  <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Criminal Record</h3>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1">
+                      {contestantDetails.criminalRecord ? (
+                        <p className="text-sm whitespace-pre-wrap">{contestantDetails.criminalRecord}</p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">No criminal record information provided</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               Loading contestant details...

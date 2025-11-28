@@ -380,6 +380,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update contestant
+  app.patch("/api/contestants/:id", async (req, res) => {
+    try {
+      const contestant = await storage.getContestantById(req.params.id);
+      if (!contestant) {
+        return res.status(404).json({ error: "Contestant not found" });
+      }
+      
+      const updated = await storage.updateContestant(req.params.id, req.body);
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Generate fake contestants for testing
   app.post("/api/contestants/generate-fake", async (req, res) => {
     try {

@@ -40,6 +40,7 @@ export interface IStorage {
   createContestant(contestant: InsertContestant): Promise<Contestant>;
   getContestants(): Promise<Contestant[]>;
   getContestantById(id: string): Promise<Contestant | undefined>;
+  updateContestant(id: string, data: Partial<Contestant>): Promise<Contestant | undefined>;
   updateContestantAvailability(id: string, status: string): Promise<Contestant | undefined>;
   updateContestantField(id: string, field: string, value: any): Promise<Contestant | undefined>;
   updateContestantPhoto(id: string, photoUrl: string | null): Promise<Contestant | undefined>;
@@ -126,6 +127,17 @@ export class DbStorage implements IStorage {
   async getContestantById(id: string): Promise<Contestant | undefined> {
     const [contestant] = await db.select().from(contestants).where(eq(contestants.id, id));
     return contestant;
+  }
+
+  async updateContestant(id: string, data: Partial<Contestant>): Promise<Contestant | undefined> {
+    // Remove id and createdAt from update data
+    const { id: _, createdAt, ...updateData } = data as any;
+    const [updated] = await db
+      .update(contestants)
+      .set(updateData)
+      .where(eq(contestants.id, id))
+      .returning();
+    return updated;
   }
 
   async updateContestantAvailability(id: string, status: string): Promise<Contestant | undefined> {
