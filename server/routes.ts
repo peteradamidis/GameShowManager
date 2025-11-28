@@ -776,7 +776,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Rating weights for balancing (higher = more desirable to spread)
       const RATING_ORDER = ['A', 'B+', 'B', 'C'];
 
-      // PHASE 1: Create Group Bundles (based on groupId from attendingWith matching)
+      // PHASE 1: Create Group Bundles based on attendingWith matching
+      // Build groups by matching contestants where Person A's attendingWith matches Person B's name
       type GroupBundle = {
         id: string;
         contestants: typeof available;
@@ -790,13 +791,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hasCRating: boolean; // Bundle contains C-rated contestant(s)
       };
 
+      // Build a name lookup map for matching attendingWith
+      const nameToContestant = new Map<string, typeof available[0]>();
+      available.forEach(c => {
+        // Use lowercase for case-insensitive matching
+        const key = c.name.toLowerCase().trim();
+        nameToContestant.set(key, c);
+      });
+
+      // Track which contestants have been grouped
+      const groupedContestantIds = new Set<string>();
       const groupMap = new Map<string, typeof available>();
+
+      // First pass: find all groups based on attendingWith matching
       available.forEach((contestant) => {
-        const key = contestant.groupId || `solo-${contestant.id}`;
-        if (!groupMap.has(key)) {
-          groupMap.set(key, []);
+        if (groupedContestantIds.has(contestant.id)) return;
+
+        // Check if this contestant has an attendingWith value
+        if (contestant.attendingWith && contestant.attendingWith.trim()) {
+          const attendingWithName = contestant.attendingWith.toLowerCase().trim();
+          const partner = nameToContestant.get(attendingWithName);
+          
+          if (partner && !groupedContestantIds.has(partner.id)) {
+            // Found a partner - create a group
+            const groupId = `group-${contestant.id}`;
+            groupMap.set(groupId, [contestant, partner]);
+            groupedContestantIds.add(contestant.id);
+            groupedContestantIds.add(partner.id);
+          }
         }
-        groupMap.get(key)!.push(contestant);
+      });
+
+      // Second pass: add solo contestants (those not in any group)
+      available.forEach((contestant) => {
+        if (!groupedContestantIds.has(contestant.id)) {
+          const soloId = `solo-${contestant.id}`;
+          groupMap.set(soloId, [contestant]);
+        }
       });
 
       const bundles: GroupBundle[] = Array.from(groupMap.entries()).map(([id, contestants]) => {
