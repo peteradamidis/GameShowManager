@@ -153,11 +153,8 @@ function SeatingBlock({
           </Button>
         </div>
         <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
-          <div className="flex items-center justify-between">
+          <div>
             <span>{stats.total}/22 filled</span>
-            <Badge variant="secondary" className="text-xs">
-              {stats.femalePercent}% F
-            </Badge>
           </div>
           {stats.total > 0 && (
             <>
@@ -193,6 +190,9 @@ function SeatingBlock({
                   Age: {stats.minAge}-{stats.maxAge} (avg {stats.avgAge})
                 </div>
               )}
+              <Badge variant="secondary" className="text-xs w-fit">
+                {stats.femalePercent}% F
+              </Badge>
             </>
           )}
         </div>
