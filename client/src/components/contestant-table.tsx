@@ -444,7 +444,7 @@ export function ContestantTable({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{seatAssignment?.rating || "-"}</TableCell>
+                  <TableCell>{contestant.auditionRating || "-"}</TableCell>
                   <TableCell>{contestant.age}</TableCell>
                   <TableCell className="font-medium">{contestant.name}</TableCell>
                   <TableCell>{contestant.phone || "-"}</TableCell>
