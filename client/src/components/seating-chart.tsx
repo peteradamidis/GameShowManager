@@ -517,10 +517,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         <div className="space-y-8">
           {/* Circular Seating Area */}
           <div className="space-y-6">
-            <div className="text-center">
-              <Badge variant="outline" className="text-sm">Circular Studio Seating</Badge>
-            </div>
-            
             {/* Top Row - 3 Blocks (rows reversed: A at bottom, E at top) */}
             <div className="grid grid-cols-3 gap-4">
               {topBlocks.map((block, idx) => (
