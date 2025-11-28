@@ -152,11 +152,49 @@ function SeatingBlock({
             {blockType || '—'}
           </Button>
         </div>
-        <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-          <div>{stats.total}/22 filled</div>
-          <Badge variant="secondary" className="text-xs w-fit">
-            {stats.femalePercent}% F
-          </Badge>
+        <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center justify-between">
+            <span>{stats.total}/22 filled</span>
+            <Badge variant="secondary" className="text-xs">
+              {stats.femalePercent}% F
+            </Badge>
+          </div>
+          {stats.total > 0 && (
+            <>
+              <div className="flex flex-wrap gap-1">
+                {stats.ratingCounts['A+'] > 0 && (
+                  <Badge className="text-[10px] px-1 py-0 h-4 bg-emerald-500 hover:bg-emerald-600 text-white">
+                    A+:{stats.ratingCounts['A+']}
+                  </Badge>
+                )}
+                {stats.ratingCounts['A'] > 0 && (
+                  <Badge className="text-[10px] px-1 py-0 h-4 bg-green-500 hover:bg-green-600 text-white">
+                    A:{stats.ratingCounts['A']}
+                  </Badge>
+                )}
+                {stats.ratingCounts['B+'] > 0 && (
+                  <Badge className="text-[10px] px-1 py-0 h-4 bg-amber-500 hover:bg-amber-600 text-white">
+                    B+:{stats.ratingCounts['B+']}
+                  </Badge>
+                )}
+                {stats.ratingCounts['B'] > 0 && (
+                  <Badge className="text-[10px] px-1 py-0 h-4 bg-orange-500 hover:bg-orange-600 text-white">
+                    B:{stats.ratingCounts['B']}
+                  </Badge>
+                )}
+                {stats.ratingCounts['C'] > 0 && (
+                  <Badge className="text-[10px] px-1 py-0 h-4 bg-red-500 hover:bg-red-600 text-white">
+                    C:{stats.ratingCounts['C']}
+                  </Badge>
+                )}
+              </div>
+              {stats.avgAge > 0 && (
+                <div className="text-[10px] text-muted-foreground">
+                  Age: {stats.minAge}-{stats.maxAge} (avg {stats.avgAge})
+                </div>
+              )}
+            </>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -201,7 +239,23 @@ function calculateBlockStats(block: SeatData[]) {
   const total = filled.length;
   const femalePercent = total > 0 ? Math.round((femaleCount / total) * 100) : 0;
 
-  return { total, femaleCount, maleCount, femalePercent };
+  // Audition rating breakdown
+  const ratingCounts: Record<string, number> = {
+    'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'C': 0
+  };
+  filled.forEach(s => {
+    if (s.auditionRating && ratingCounts.hasOwnProperty(s.auditionRating)) {
+      ratingCounts[s.auditionRating]++;
+    }
+  });
+
+  // Age stats
+  const ages = filled.filter(s => s.age).map(s => s.age as number);
+  const avgAge = ages.length > 0 ? Math.round(ages.reduce((sum, a) => sum + a, 0) / ages.length) : 0;
+  const minAge = ages.length > 0 ? Math.min(...ages) : 0;
+  const maxAge = ages.length > 0 ? Math.max(...ages) : 0;
+
+  return { total, femaleCount, maleCount, femalePercent, ratingCounts, avgAge, minAge, maxAge };
 }
 
 // Generate seat IDs based on the row structure
