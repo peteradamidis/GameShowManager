@@ -86,9 +86,13 @@ export default function AvailabilityManagement() {
       });
     },
     onSuccess: (data: any) => {
+      const tokensCreated = data.tokensCreated?.length || 0;
+      const emailsSent = data.emailsSent?.length || 0;
+      const emailsFailed = data.emailsFailed?.length || 0;
+      
       toast({
         title: "Availability checks sent!",
-        description: `Generated ${data.tokens.length} availability check tokens. ${data.emailsSent} email(s) sent${data.emailsFailed > 0 ? `, ${data.emailsFailed} failed` : ''}.`,
+        description: `Generated ${tokensCreated} availability check tokens. ${emailsSent} email(s) sent${emailsFailed > 0 ? `, ${emailsFailed} failed` : ''}.`,
       });
       setSendDialogOpen(false);
       setConfirmSendOpen(false);
