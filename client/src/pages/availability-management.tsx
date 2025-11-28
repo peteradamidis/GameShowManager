@@ -433,8 +433,8 @@ export default function AvailabilityManagement() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Responses by Day Tab */}
-        <TabsContent value="responses" className="space-y-4">
+        {/* Tracking Tab */}
+        <TabsContent value="tracking" className="space-y-4">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between flex-wrap gap-4">
