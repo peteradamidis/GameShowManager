@@ -51,4 +51,5 @@ Do not make changes to the file `Y`.
 - **PostgreSQL:** Primary database for all system data.
 - **Neon:** Cloud provider for PostgreSQL.
 - **Cast It Reach:** Source of contestant data via Excel exports.
-- **Resend API:** (Planned integration) For sending availability check and booking confirmation emails. Requires `RESEND_API_KEY` and `FROM_EMAIL` environment variables.
+- **Gmail Integration:** (Temporary) Currently used for sending availability check emails via the Google Gmail connector. Will be replaced with Outlook once approval is received.
+- **Outlook Integration:** (Planned) To replace Gmail for availability check and booking confirmation emails once user approval is obtained.
