@@ -253,39 +253,69 @@ export default function BookingMaster() {
     const dayName = selectedDay ? format(new Date(selectedDay.date), "MMMM-d-yyyy") : "booking-master";
     const dayDate = selectedDay ? format(new Date(selectedDay.date), "MMMM d, yyyy") : "";
 
-    const exportData = bookingRows.map(row => ({
-      "SEAT": row.seatId,
-      "FIRST NATIONS": row.assignment?.firstNations || "",
-      "RATING": row.assignment?.rating || "",
-      "AGE": row.contestant?.age?.toString() || "",
-      "NAME": row.contestant?.name || "",
-      "GENDER": row.contestant?.gender || "",
-      "MOBILE": row.contestant?.phone || "",
-      "EMAIL": row.contestant?.email || "",
-      "ADDRESS": row.contestant?.address || "",
-      "ATTENDING WITH": row.contestant?.attendingWith || "",
-      "LOCATION": row.assignment?.location || "",
-      "MEDICAL Q (Y/N)": row.assignment?.medicalQuestion || "",
-      "MEDICAL INFO": row.contestant?.medicalInfo || "",
-      "MOBILITY/ACCESS/MEDICAL NOTES": row.contestant?.mobilityNotes || "",
-      "CRIMINAL RECORD": row.contestant?.criminalRecord || "",
-      "CRIMINAL/BANKRUPTCY": row.assignment?.criminalBankruptcy || "",
-      "CASTING CATEGORY": row.assignment?.castingCategory || "",
-      "NOTES": row.assignment?.notes || "",
-      "BOOKING EMAIL SENT": row.assignment?.bookingEmailSent ? "✓" : "",
-      "CONFIRMED RSVP": row.assignment?.confirmedRsvp ? "✓" : "",
-      "PAPERWORK SENT": row.assignment?.paperworkSent ? "✓" : "",
-      "PAPERWORK RECEIVED": row.assignment?.paperworkReceived ? "✓" : "",
-      "SIGNED-IN": row.assignment?.signedIn ? "✓" : "",
-      "OTD NOTES": row.assignment?.otdNotes || "",
-      "STANDBY REPLACEMENT / SWAPS": row.assignment?.standbyReplacementSwaps || "",
-    }));
+    const headers = [
+      "SEAT", "FIRST NATIONS", "RATING", "AGE", "NAME", "GENDER", "MOBILE", "EMAIL", 
+      "ADDRESS", "ATTENDING WITH", "LOCATION", "MEDICAL Q (Y/N)", "MEDICAL INFO", 
+      "MOBILITY/ACCESS/MEDICAL NOTES", "CRIMINAL RECORD", "CRIMINAL/BANKRUPTCY", 
+      "CASTING CATEGORY", "NOTES", "BOOKING EMAIL SENT", "CONFIRMED RSVP", 
+      "PAPERWORK SENT", "PAPERWORK RECEIVED", "SIGNED-IN", "OTD NOTES", 
+      "STANDBY REPLACEMENT / SWAPS"
+    ];
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
+    const exportRows: (string | number)[][] = [];
     
-    XLSX.utils.sheet_add_aoa(ws, [[`Booking Master - ${dayDate}`]], { origin: "A1" });
-    XLSX.utils.sheet_add_json(ws, exportData, { origin: "A2", skipHeader: false });
+    exportRows.push([`Booking Master - ${dayDate}`]);
+    exportRows.push([]);
+    exportRows.push(headers);
+
+    let currentBlock = 0;
+    for (const row of bookingRows) {
+      if (row.blockNumber !== currentBlock) {
+        currentBlock = row.blockNumber;
+        const blockAssignments = bookingRows.filter(r => r.blockNumber === currentBlock && r.assignment);
+        const blockFemaleCount = blockAssignments.filter(r => r.contestant?.gender === 'Female').length;
+        const blockMaleCount = blockAssignments.filter(r => r.contestant?.gender === 'Male').length;
+        const blockTotal = blockAssignments.length;
+        const femalePercent = blockTotal > 0 ? Math.round((blockFemaleCount / blockTotal) * 100) : 0;
+        
+        exportRows.push([]);
+        const blockHeader = blockTotal > 0 
+          ? `BLOCK ${currentBlock} - ${blockTotal} assigned | ${blockFemaleCount}F / ${blockMaleCount}M (${femalePercent}% female)`
+          : `BLOCK ${currentBlock}`;
+        exportRows.push([blockHeader]);
+      }
+      
+      exportRows.push([
+        row.seatId,
+        row.assignment?.firstNations || "",
+        row.assignment?.rating || "",
+        row.contestant?.age?.toString() || "",
+        row.contestant?.name || "",
+        row.contestant?.gender || "",
+        row.contestant?.phone || "",
+        row.contestant?.email || "",
+        row.contestant?.address || "",
+        row.contestant?.attendingWith || "",
+        row.assignment?.location || "",
+        row.assignment?.medicalQuestion || "",
+        row.contestant?.medicalInfo || "",
+        row.contestant?.mobilityNotes || "",
+        row.contestant?.criminalRecord || "",
+        row.assignment?.criminalBankruptcy || "",
+        row.assignment?.castingCategory || "",
+        row.assignment?.notes || "",
+        row.assignment?.bookingEmailSent ? "✓" : "",
+        row.assignment?.confirmedRsvp ? "✓" : "",
+        row.assignment?.paperworkSent ? "✓" : "",
+        row.assignment?.paperworkReceived ? "✓" : "",
+        row.assignment?.signedIn ? "✓" : "",
+        row.assignment?.otdNotes || "",
+        row.assignment?.standbyReplacementSwaps || "",
+      ]);
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(exportRows);
+    const wb = XLSX.utils.book_new();
     
     XLSX.utils.book_append_sheet(wb, ws, "Booking Master");
 
