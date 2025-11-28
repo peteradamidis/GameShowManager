@@ -877,6 +877,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Configuration
       const BLOCKS = 7;
       const SEATS_PER_BLOCK = 22;
+      const MAX_AUTO_ASSIGN_SEATS = 20; // Never fill more than 20 seats per block in auto-assign
       const TARGET_FEMALE_RATIO = 0.65; // Midpoint of 60-70%
       const TARGET_FEMALE_MIN = 0.60;
       const TARGET_FEMALE_MAX = 0.70;
@@ -919,6 +920,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const groupMap = new Map<string, typeof available>();
 
       // First pass: find all groups based on attendingWith matching
+      // BUT: Don't group anyone with an A+ contestant (A+ must be manually assigned)
       available.forEach((contestant) => {
         if (groupedContestantIds.has(contestant.id)) return;
 
@@ -927,8 +929,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const attendingWithName = contestant.attendingWith.toLowerCase().trim();
           const partner = nameToContestant.get(attendingWithName);
           
-          if (partner && !groupedContestantIds.has(partner.id)) {
-            // Found a partner - create a group
+          if (partner && !groupedContestantIds.has(partner.id) && partner.auditionRating !== 'A+') {
+            // Found a partner (and they're not A+ rated) - create a group
             const groupId = `group-${contestant.id}`;
             groupMap.set(groupId, [contestant, partner]);
             groupedContestantIds.add(contestant.id);
@@ -1022,9 +1024,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const skippedBundles: { id: string; reason: string }[] = [];
 
       for (const bundle of bundles) {
-        // Find feasible blocks (enough capacity)
+        // Find feasible blocks (enough capacity, but never exceed MAX_AUTO_ASSIGN_SEATS)
         let feasibleBlocks = blocks.filter(
-          (block) => block.seatsUsed + bundle.size <= SEATS_PER_BLOCK
+          (block) => block.seatsUsed + bundle.size <= MAX_AUTO_ASSIGN_SEATS
         );
 
         // CRITICAL: C-rated contestants can ONLY go to NPB blocks
