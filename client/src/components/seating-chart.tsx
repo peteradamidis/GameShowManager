@@ -575,17 +575,19 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
             <div className="text-center mb-4">
               <Badge variant="outline" className="text-sm">Standing Side of Set</Badge>
             </div>
-            <SeatingBlock
-              block={standingBlock}
-              blockIndex={6}
-              blockLabel="Block 7 (Standing)"
-              overId={overId}
-              onEmptySeatClick={onEmptySeatClick}
-              onRemove={onRemove}
-              onCancel={onCancel}
-              blockType={blockTypeMap[7]}
-              onBlockTypeChange={handleBlockTypeChange}
-            />
+            <div className="max-w-sm mx-auto">
+              <SeatingBlock
+                block={standingBlock}
+                blockIndex={6}
+                blockLabel="Block 7 (Standing)"
+                overId={overId}
+                onEmptySeatClick={onEmptySeatClick}
+                onRemove={onRemove}
+                onCancel={onCancel}
+                blockType={blockTypeMap[7]}
+                onBlockTypeChange={handleBlockTypeChange}
+              />
+            </div>
           </div>
         </div>
         
