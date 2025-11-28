@@ -2,7 +2,7 @@ import { ContestantTable, Contestant } from "@/components/contestant-table";
 import { ImportExcelDialog } from "@/components/import-excel-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, TestTube, Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { UserPlus, Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -179,26 +179,6 @@ export default function Contestants() {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
-
-  const generateFakeMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest('POST', '/api/contestants/generate-fake', {});
-    },
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
-      toast({
-        title: "Fake contestants generated",
-        description: `Created ${data.count} contestants with ${data.groups} groups for testing.`,
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Generation failed",
-        description: "Could not generate fake contestants.",
-        variant: "destructive",
-      });
-    },
-  });
 
   const importMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -433,15 +413,6 @@ export default function Contestants() {
               Assign {selectedContestants.length} to Record Day
             </Button>
           )}
-          <Button 
-            variant="outline" 
-            onClick={() => generateFakeMutation.mutate()}
-            disabled={generateFakeMutation.isPending}
-            data-testid="button-generate-fake"
-          >
-            <TestTube className="h-4 w-4 mr-2" />
-            {generateFakeMutation.isPending ? "Generating..." : "Generate Test Data"}
-          </Button>
           <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
         </div>
       </div>
