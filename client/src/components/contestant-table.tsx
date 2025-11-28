@@ -387,6 +387,7 @@ export function ContestantTable({
                 </TableHead>
               )}
               <TableHead className="w-16">Photo</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Audition Rating</TableHead>
               <TableHead>Age</TableHead>
               <TableHead>Name</TableHead>
@@ -444,6 +445,9 @@ export function ContestantTable({
                         <Camera className="h-4 w-4 text-white" />
                       </div>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={contestant.availabilityStatus} />
                   </TableCell>
                   <TableCell>
                     {contestant.auditionRating ? (
