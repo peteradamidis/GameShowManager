@@ -700,6 +700,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           age: contestant?.age,
           gender: contestant?.gender,
           groupId: contestant?.groupId,
+          auditionRating: contestant?.auditionRating,
         };
       });
 

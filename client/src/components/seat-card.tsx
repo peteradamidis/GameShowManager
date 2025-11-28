@@ -16,6 +16,7 @@ export interface SeatData {
   contestantId?: string; // Backend contestant ID
   attendingWith?: string;
   availabilityStatus?: string;
+  auditionRating?: string; // A+, A, B+, B, C
 }
 
 interface SeatCardProps {
@@ -38,9 +39,21 @@ const groupColors = [
   "border-yellow-500",
 ];
 
+// Rating-based background colors
+const ratingColors: Record<string, string> = {
+  'A+': 'bg-emerald-100 dark:bg-emerald-900/40 border-emerald-500',
+  'A': 'bg-green-100 dark:bg-green-900/40 border-green-500',
+  'B+': 'bg-amber-100 dark:bg-amber-900/40 border-amber-500',
+  'B': 'bg-orange-100 dark:bg-orange-900/40 border-orange-500',
+  'C': 'bg-red-100 dark:bg-red-900/40 border-red-400',
+};
+
 export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEmptySeatClick, onRemove, onCancel }: SeatCardProps) {
   const isEmpty = !seat.contestantName;
-  const groupColorClass = seat.groupId
+  
+  // Use rating-based colors, fallback to group colors if no rating
+  const ratingColorClass = seat.auditionRating ? ratingColors[seat.auditionRating] : '';
+  const groupColorClass = !ratingColorClass && seat.groupId
     ? groupColors[parseInt(seat.groupId.replace(/\D/g, "")) % groupColors.length]
     : "";
 
@@ -73,7 +86,7 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
       className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity ${
         isEmpty
           ? "border-dashed bg-muted/30 cursor-pointer hover-elevate"
-          : `${groupColorClass} border-2 hover-elevate`
+          : `${ratingColorClass || groupColorClass} border-2 hover-elevate`
       } ${isDragging ? "opacity-50" : ""}`}
       data-testid={`seat-${blockIndex}-${seatIndex}`}
       onClick={handleClick}
@@ -123,8 +136,21 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
                       {contestantDetails.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <h4 className="text-sm font-semibold">{contestantDetails.name}</h4>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-semibold">{contestantDetails.name}</h4>
+                      {contestantDetails.auditionRating && (
+                        <span className={`text-sm font-bold ${
+                          contestantDetails.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
+                          contestantDetails.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
+                          contestantDetails.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
+                          contestantDetails.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
+                          contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' : ''
+                        }`}>
+                          {contestantDetails.auditionRating}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">{contestantDetails.age} years old • {contestantDetails.gender}</p>
                   </div>
                 </div>
