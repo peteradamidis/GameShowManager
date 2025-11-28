@@ -207,9 +207,26 @@ export default function SeatingChartPage() {
         ? "all blocks" 
         : `Block${selectedBlocks.length > 1 ? 's' : ''} ${selectedBlocks.join(', ')}`;
       
-      const description = demographics.warning 
-        ? `⚠️ ${demographics.warning}. Assigned ${demographics.femaleCount + demographics.maleCount} contestants to ${blocksText} (${demographics.femalePercentage}% female).`
-        : `Assigned ${demographics.femaleCount + demographics.maleCount} contestants to ${blocksText}. Gender ratio: ${demographics.femalePercentage}% female (target: ${demographics.targetRange})`;
+      const assignedCount = demographics.femaleCount + demographics.maleCount;
+      const skippedCount = result.skippedBundles?.length || 0;
+      const skippedAPlusCount = result.skippedAPlusCount || 0;
+      
+      let description = `Assigned ${assignedCount} contestants to ${blocksText}. Gender ratio: ${demographics.femalePercentage}% female (target: ${demographics.targetRange})`;
+      
+      if (demographics.warning) {
+        description = `⚠️ ${demographics.warning}. ${description}`;
+      }
+      
+      if (skippedCount > 0 || skippedAPlusCount > 0) {
+        const skippedParts = [];
+        if (skippedAPlusCount > 0) {
+          skippedParts.push(`${skippedAPlusCount} A+ contestants (manual only)`);
+        }
+        if (skippedCount > 0) {
+          skippedParts.push(`${skippedCount} group(s) couldn't fit`);
+        }
+        description += ` Skipped: ${skippedParts.join(', ')}.`;
+      }
       
       toast({
         title: demographics.meetsTarget ? "Auto-assign completed" : "Auto-assign completed with warning",

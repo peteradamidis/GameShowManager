@@ -718,12 +718,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 4. Balance ages across blocks
   // 5. Balance genders (target 60-70% female)
   // 6. Groups (from attendingWith) must sit together in consecutive seats
+  // 7. Optional: Only assign to selected blocks (if blocks array provided)
   app.post("/api/auto-assign/:recordDayId", async (req, res) => {
     try {
       const { recordDayId } = req.params;
+      const { blocks: selectedBlocks } = req.body as { blocks?: number[] };
 
       if (!recordDayId) {
         return res.status(400).json({ error: "recordDayId is required" });
+      }
+
+      // Validate selected blocks if provided
+      const validBlocks = selectedBlocks && Array.isArray(selectedBlocks) && selectedBlocks.length > 0
+        ? selectedBlocks.filter(b => b >= 1 && b <= 7)
+        : [1, 2, 3, 4, 5, 6, 7]; // Default to all blocks
+
+      if (validBlocks.length === 0) {
+        return res.status(400).json({ error: "No valid blocks selected" });
       }
 
       // Get block types (PB/NPB) for this record day
@@ -839,9 +850,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bundles: string[];
       };
 
-      const blocks: BlockState[] = Array.from({ length: BLOCKS }, (_, i) => ({
-        blockNumber: i + 1,
-        blockType: blockTypeMap[i + 1],
+      // Only initialize blocks that were selected
+      const blocks: BlockState[] = validBlocks.map(blockNum => ({
+        blockNumber: blockNum,
+        blockType: blockTypeMap[blockNum],
         seatsUsed: 0,
         femaleCount: 0,
         maleCount: 0,
