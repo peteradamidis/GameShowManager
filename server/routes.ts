@@ -168,35 +168,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate avatars for all contestants without photos
+  // Generate real photos for all contestants without uploaded photos
   app.post("/api/contestants/generate-avatars", async (req, res) => {
     try {
       const contestants = await storage.getContestants();
       let updatedCount = 0;
+      let femaleIndex = 0;
+      let maleIndex = 0;
       
       for (const contestant of contestants) {
-        // Skip contestants who already have a photo URL (uploaded photos)
+        // Skip contestants who have uploaded photos (local files)
         if (contestant.photoUrl && contestant.photoUrl.startsWith('/uploads/')) {
           continue;
         }
         
-        // Generate avatar URL using UI Avatars API
-        const encodedName = encodeURIComponent(contestant.name);
-        // Use gender-based background colors
-        const bgColor = contestant.gender === 'Female' ? 'E91E63' : contestant.gender === 'Male' ? '2196F3' : '9E9E9E';
-        const avatarUrl = `https://ui-avatars.com/api/?name=${encodedName}&background=${bgColor}&color=fff&size=128&bold=true`;
+        // Generate photo URL using randomuser.me portraits
+        let photoUrl: string;
+        if (contestant.gender === 'Female') {
+          photoUrl = `https://randomuser.me/api/portraits/women/${femaleIndex % 100}.jpg`;
+          femaleIndex++;
+        } else {
+          photoUrl = `https://randomuser.me/api/portraits/men/${maleIndex % 100}.jpg`;
+          maleIndex++;
+        }
         
-        await storage.updateContestantPhoto(contestant.id, avatarUrl);
+        await storage.updateContestantPhoto(contestant.id, photoUrl);
         updatedCount++;
       }
       
       res.json({ 
-        message: `Generated avatars for ${updatedCount} contestants`,
+        message: `Generated photos for ${updatedCount} contestants`,
         updatedCount 
       });
     } catch (error) {
-      console.error("Avatar generation error:", error);
-      res.status(500).json({ error: "Failed to generate avatars" });
+      console.error("Photo generation error:", error);
+      res.status(500).json({ error: "Failed to generate photos" });
     }
   });
 
@@ -486,11 +492,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return `${cleanName}${randomNum}@${domain}`;
       };
 
-      // Helper to generate photo URL using UI Avatars
+      // Helper to generate photo URL using randomuser.me portraits
+      let femalePhotoIndex = 0;
+      let malePhotoIndex = 0;
       const generatePhotoUrl = (name: string, gender: string): string => {
-        const encodedName = encodeURIComponent(name);
-        const bgColor = gender === "Female" ? "f472b6" : "60a5fa"; // Pink for female, blue for male
-        return `https://ui-avatars.com/api/?name=${encodedName}&background=${bgColor}&color=fff&size=200&bold=true`;
+        // randomuser.me has portraits numbered 0-99 for each gender
+        if (gender === "Female") {
+          const index = femalePhotoIndex % 100;
+          femalePhotoIndex++;
+          return `https://randomuser.me/api/portraits/women/${index}.jpg`;
+        } else {
+          const index = malePhotoIndex % 100;
+          malePhotoIndex++;
+          return `https://randomuser.me/api/portraits/men/${index}.jpg`;
+        }
       };
 
       // Helper to generate phone number
