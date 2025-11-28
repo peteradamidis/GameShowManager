@@ -481,9 +481,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         attendingWith?: string;
       }> = [];
 
-      // Generate 130 contestants - aim for ~65% female
+      // Generate 130 contestants - aim for ~60% female, 40% male
       const totalCount = 130;
-      const femaleCount = Math.floor(totalCount * 0.65);
+      const femaleCount = Math.floor(totalCount * 0.60);
       const maleCount = totalCount - femaleCount;
 
       // Track used names to avoid duplicates
