@@ -1458,6 +1458,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }
+      
+      // PHASE 4B: Cleanup - Place any remaining solo contestants into any available single seat
+      // This ensures all empty seats are filled (except reserved E3-E4 in PB blocks)
+      const placedContestantIds = new Set(plan.map(p => p.contestant.id));
+      const unplacedContestants = assignments
+        .filter(a => a.bundle.size === 1) // Only solos
+        .flatMap(a => a.bundle.contestants)
+        .filter(c => !placedContestantIds.has(c.id));
+      
+      // For each unplaced solo, find any available empty seat in its assigned block
+      for (const solo of unplacedContestants) {
+        const assignment = assignments.find(a => 
+          a.bundle.contestants.some(c => c.id === solo.id)
+        );
+        
+        if (!assignment) continue;
+        
+        const blockNumber = assignment.blockNumber;
+        
+        // Build set of all occupied seats in this block (from plan and existing)
+        const occupiedSeats = new Set<string>();
+        plan
+          .filter(p => p.blockNumber === blockNumber)
+          .forEach(p => occupiedSeats.add(p.seatLabel));
+        
+        existingAssignments
+          .filter(a => a.blockNumber === blockNumber)
+          .forEach(a => occupiedSeats.add(a.seatLabel));
+        
+        // Reserve E3-E4 for PB blocks
+        const block = blocks.find(b => b.blockNumber === blockNumber);
+        if (block?.blockType === 'PB') {
+          occupiedSeats.add('E3');
+          occupiedSeats.add('E4');
+        }
+        
+        // Find first available seat in this block
+        let placed = false;
+        for (const row of ROWS) {
+          if (placed) break;
+          for (let i = 1; i <= row.count; i++) {
+            const seatLabel = `${row.label}${i}`;
+            if (!occupiedSeats.has(seatLabel)) {
+              plan.push({
+                contestant: solo,
+                blockNumber,
+                seatLabel,
+              });
+              occupiedSeats.add(seatLabel);
+              placed = true;
+              break;
+            }
+          }
+        }
+        
+        if (!placed) {
+          console.log(`Warning: Could not place solo ${solo.name} in block ${blockNumber} - no available seats`);
+        }
+      }
 
       // PHASE 5: Persist the plan to database with transaction-like semantics
       const createdAssignments: any[] = [];
