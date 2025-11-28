@@ -557,7 +557,7 @@ export default function AvailabilityManagement() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm">
                     <span className="font-medium text-muted-foreground">From:</span>
-                    <span>TV Game Show Production &lt;casting@example.com&gt;</span>
+                    <span>Deal or No Deal Production &lt;casting@example.com&gt;</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <span className="font-medium text-muted-foreground">To:</span>

@@ -61,7 +61,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>TV Game Show Manager</SidebarGroupLabel>
+          <SidebarGroupLabel>Deal or No Deal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (

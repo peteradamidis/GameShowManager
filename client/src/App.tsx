@@ -59,7 +59,7 @@ export default function App() {
               <div className="flex flex-col flex-1 overflow-hidden">
                 <header className="flex items-center justify-between p-4 border-b">
                   <SidebarTrigger data-testid="button-sidebar-toggle" />
-                  <h2 className="text-lg font-semibold">TV Game Show Contestant Manager</h2>
+                  <h2 className="text-lg font-semibold">Deal or No Deal Contestant Manager</h2>
                   <div className="w-9"></div>
                 </header>
                 <main className="flex-1 overflow-auto p-6">
