@@ -159,6 +159,15 @@ export default function SeatingChartPage() {
       const demographics = result.demographics;
       const blockCount = result.blockStats?.length || 0;
       
+      // Handle case where demographics might not be returned (e.g., no contestants assigned)
+      if (!demographics) {
+        toast({
+          title: "Auto-assign completed",
+          description: result.message || "Seat assignment completed.",
+        });
+        return;
+      }
+      
       const description = demographics.warning 
         ? `⚠️ ${demographics.warning}. Assigned ${demographics.femaleCount + demographics.maleCount} contestants (${demographics.femalePercentage}% female).`
         : `Assigned ${demographics.femaleCount + demographics.maleCount} contestants across ${blockCount} blocks. Gender ratio: ${demographics.femalePercentage}% female (target: ${demographics.targetRange})`;
