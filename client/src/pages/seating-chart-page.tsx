@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
+import { format } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -65,14 +66,19 @@ export default function SeatingChartPage() {
   const searchParams = new URLSearchParams(window.location.search);
   const urlRecordDayId = searchParams.get('day');
 
-  // Fetch all record days to get a valid ID if none specified
+  // Fetch all record days
   const { data: recordDays } = useQuery<any[]>({
     queryKey: ['/api/record-days'],
-    enabled: !urlRecordDayId, // Only fetch if no ID in URL
   });
 
   // Use URL ID or first available record day
   const recordDayId = urlRecordDayId || recordDays?.[0]?.id || null;
+
+  // Find the current record day from the list
+  const currentRecordDay = useMemo(() => {
+    if (!recordDays || !recordDayId) return null;
+    return recordDays.find((rd: any) => rd.id === recordDayId);
+  }, [recordDays, recordDayId]);
 
   // Fetch seat assignments for this record day
   const { data: assignments, isLoading, refetch } = useQuery({
@@ -298,7 +304,12 @@ export default function SeatingChartPage() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold">Seating Chart</h1>
-            <Badge variant="secondary">December 15, 2025</Badge>
+            {currentRecordDay && (
+              <Badge variant="secondary">
+                {format(new Date(currentRecordDay.date), "MMMM d, yyyy")}
+                {currentRecordDay.showCode && ` - ${currentRecordDay.showCode}`}
+              </Badge>
+            )}
           </div>
           <p className="text-muted-foreground">
             Drag and drop contestants to arrange seating blocks
