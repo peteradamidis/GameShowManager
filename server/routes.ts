@@ -711,6 +711,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Auto-assign seats with demographic balancing
+  // Rules:
+  // 1. NEVER assign A+ rated contestants (they must be manually assigned)
+  // 2. C-rated contestants can ONLY go to NPB blocks
+  // 3. Balance audition ratings (A, B+, B) across blocks
+  // 4. Balance ages across blocks
+  // 5. Balance genders (target 60-70% female)
+  // 6. Groups (from attendingWith) must sit together in consecutive seats
   app.post("/api/auto-assign/:recordDayId", async (req, res) => {
     try {
       const { recordDayId } = req.params;
@@ -719,12 +726,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "recordDayId is required" });
       }
 
+      // Get block types (PB/NPB) for this record day
+      const blockTypesData = await storage.getBlockTypesByRecordDay(recordDayId);
+      const blockTypeMap: Record<number, 'PB' | 'NPB'> = {};
+      blockTypesData.forEach(bt => {
+        blockTypeMap[bt.blockNumber] = bt.blockType as 'PB' | 'NPB';
+      });
+
       // Get all available contestants (not yet assigned)
       const allContestants = await storage.getContestants();
-      const available = allContestants.filter((c) => c.availabilityStatus === "available");
+      
+      // Filter: exclude A+ rated contestants (they must be manually assigned)
+      const availableAll = allContestants.filter((c) => c.availabilityStatus === "available");
+      const aPlusContestants = availableAll.filter(c => c.auditionRating === 'A+');
+      const available = availableAll.filter(c => c.auditionRating !== 'A+');
 
       if (available.length === 0) {
-        return res.status(400).json({ error: "No available contestants to assign" });
+        return res.status(400).json({ 
+          error: "No available contestants to assign (A+ contestants must be manually assigned)",
+          skippedAPlusCount: aPlusContestants.length
+        });
       }
 
       // Configuration
@@ -741,7 +762,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { label: "E", count: 4 },
       ];
 
-      // PHASE 1: Create Group Bundles
+      // Rating weights for balancing (higher = more desirable to spread)
+      const RATING_ORDER = ['A', 'B+', 'B', 'C'];
+
+      // PHASE 1: Create Group Bundles (based on groupId from attendingWith matching)
       type GroupBundle = {
         id: string;
         contestants: typeof available;
@@ -751,6 +775,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         femaleRatio: number;
         totalAge: number;
         meanAge: number;
+        ratingCounts: Record<string, number>;
+        hasCRating: boolean; // Bundle contains C-rated contestant(s)
       };
 
       const groupMap = new Map<string, typeof available>();
@@ -766,6 +792,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const femaleCount = contestants.filter(c => c.gender === "Female").length;
         const maleCount = contestants.filter(c => c.gender === "Male").length;
         const totalAge = contestants.reduce((sum, c) => sum + c.age, 0);
+        
+        // Count ratings in this bundle
+        const ratingCounts: Record<string, number> = { 'A': 0, 'B+': 0, 'B': 0, 'C': 0 };
+        contestants.forEach(c => {
+          if (c.auditionRating && ratingCounts.hasOwnProperty(c.auditionRating)) {
+            ratingCounts[c.auditionRating]++;
+          }
+        });
+        
         return {
           id,
           contestants,
@@ -775,32 +810,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
           femaleRatio: femaleCount / contestants.length,
           totalAge,
           meanAge: totalAge / contestants.length,
+          ratingCounts,
+          hasCRating: ratingCounts['C'] > 0,
         };
       });
 
-      // Sort bundles: larger groups first (easier to place early)
-      bundles.sort((a, b) => b.size - a.size);
+      // Sort bundles: larger groups first (easier to place early), then by whether they have C-ratings
+      bundles.sort((a, b) => {
+        // First, prioritize bundles with C-ratings (they have fewer options)
+        if (a.hasCRating !== b.hasCRating) {
+          return a.hasCRating ? -1 : 1;
+        }
+        // Then by size (larger first)
+        return b.size - a.size;
+      });
 
-      // PHASE 2: Initialize Block States
+      // PHASE 2: Initialize Block States with rating tracking
       type BlockState = {
         blockNumber: number;
+        blockType: 'PB' | 'NPB' | undefined;
         seatsUsed: number;
         femaleCount: number;
         maleCount: number;
         totalAge: number;
         ageCount: number;
         meanAge: number;
+        ratingCounts: Record<string, number>;
         bundles: string[];
       };
 
       const blocks: BlockState[] = Array.from({ length: BLOCKS }, (_, i) => ({
         blockNumber: i + 1,
+        blockType: blockTypeMap[i + 1],
         seatsUsed: 0,
         femaleCount: 0,
         maleCount: 0,
         totalAge: 0,
         ageCount: 0,
         meanAge: 0,
+        ratingCounts: { 'A': 0, 'B+': 0, 'B': 0, 'C': 0 },
         bundles: [],
       }));
 
@@ -809,19 +857,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let globalMaleCount = 0;
       let globalTotalAge = 0;
       let globalAgeCount = 0;
+      const globalRatingCounts: Record<string, number> = { 'A': 0, 'B+': 0, 'B': 0, 'C': 0 };
 
-      // PHASE 3: Greedy Assignment with Scoring
+      // PHASE 3: Greedy Assignment with Enhanced Scoring
       const assignments: { bundle: GroupBundle; blockNumber: number }[] = [];
+      const skippedBundles: { id: string; reason: string }[] = [];
 
       for (const bundle of bundles) {
         // Find feasible blocks (enough capacity)
-        const feasibleBlocks = blocks.filter(
+        let feasibleBlocks = blocks.filter(
           (block) => block.seatsUsed + bundle.size <= SEATS_PER_BLOCK
         );
 
+        // CRITICAL: C-rated contestants can ONLY go to NPB blocks
+        if (bundle.hasCRating) {
+          feasibleBlocks = feasibleBlocks.filter(block => block.blockType === 'NPB');
+          
+          if (feasibleBlocks.length === 0) {
+            console.log(`Warning: Could not place group ${bundle.id} with C-rated contestants - no NPB blocks with capacity`);
+            skippedBundles.push({ id: bundle.id, reason: 'C-rated contestants require NPB block, none available with capacity' });
+            continue;
+          }
+        }
+
         if (feasibleBlocks.length === 0) {
           console.log(`Warning: Could not place group ${bundle.id} (size ${bundle.size}) - no block has capacity`);
-          continue; // Skip this bundle
+          skippedBundles.push({ id: bundle.id, reason: 'No block has capacity' });
+          continue;
         }
 
         // Score each feasible block
@@ -840,6 +902,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const newTotalAge = block.totalAge + bundle.totalAge;
           const newAgeCount = block.ageCount + bundle.size;
           const newMeanAge = newAgeCount > 0 ? newTotalAge / newAgeCount : 0;
+
+          // Simulate rating counts
+          const newRatingCounts = { ...block.ratingCounts };
+          Object.keys(bundle.ratingCounts).forEach(rating => {
+            newRatingCounts[rating] += bundle.ratingCounts[rating];
+          });
 
           // Simulate global state
           const simGlobalFemale = globalFemaleCount + bundle.femaleCount;
@@ -861,23 +929,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // 2. Global ratio constraint - heavy penalty if violating
           if (simGlobalRatio < TARGET_FEMALE_MIN || simGlobalRatio > TARGET_FEMALE_MAX) {
-            score += 10000; // Heavy penalty for violating global constraint
+            score += 10000;
           }
 
-          // 3. Age deviation penalty - prefer blocks with similar age
+          // 3. Age deviation penalty - prefer blocks close to global mean age
           const ageDeviation = Math.abs(newMeanAge - simGlobalMeanAge);
           score += ageDeviation * 2;
 
-          // 4. Capacity utilization bonus - prefer filling blocks
-          const utilizationRatio = newSeatsUsed / SEATS_PER_BLOCK;
-          score -= utilizationRatio * 50; // Negative = bonus
+          // 4. Rating balance penalty - prefer even distribution of ratings
+          const totalRatingsInBlock = Object.values(newRatingCounts).reduce((a, b) => a + b, 0);
+          if (totalRatingsInBlock > 0) {
+            // Calculate how uneven the rating distribution is (variance-like measure)
+            const avgRatingCount = totalRatingsInBlock / RATING_ORDER.length;
+            let ratingVariance = 0;
+            RATING_ORDER.forEach(rating => {
+              const deviation = newRatingCounts[rating] - avgRatingCount;
+              ratingVariance += deviation * deviation;
+            });
+            score += ratingVariance * 5; // Penalize uneven rating distribution
+          }
 
-          // 5. Balance penalty - avoid very skewed blocks
-          if (newTotal > 5) { // Only check if meaningful sample size
+          // 5. Capacity utilization bonus - prefer filling blocks evenly
+          const utilizationRatio = newSeatsUsed / SEATS_PER_BLOCK;
+          score -= utilizationRatio * 50;
+
+          // 6. Balance penalty - avoid very skewed gender blocks
+          if (newTotal > 5) {
             if (newFemaleRatio < 0.3 || newFemaleRatio > 0.9) {
-              score += 500; // Penalty for very skewed block
+              score += 500;
             }
           }
+
+          // 7. Prefer blocks that already have some variety in ratings
+          const uniqueRatings = Object.values(newRatingCounts).filter(c => c > 0).length;
+          score -= uniqueRatings * 10; // Bonus for diversity
 
           return { block, score };
         });
@@ -896,6 +981,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bestBlock.totalAge += bundle.totalAge;
         bestBlock.ageCount += bundle.size;
         bestBlock.meanAge = bestBlock.ageCount > 0 ? bestBlock.totalAge / bestBlock.ageCount : 0;
+        Object.keys(bundle.ratingCounts).forEach(rating => {
+          bestBlock.ratingCounts[rating] += bundle.ratingCounts[rating];
+        });
         bestBlock.bundles.push(bundle.id);
 
         // Update global state
@@ -903,6 +991,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         globalMaleCount += bundle.maleCount;
         globalTotalAge += bundle.totalAge;
         globalAgeCount += bundle.size;
+        Object.keys(bundle.ratingCounts).forEach(rating => {
+          globalRatingCounts[rating] += bundle.ratingCounts[rating];
+        });
       }
 
       // Check global ratio
@@ -919,10 +1010,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const poolMeetsRequirements = poolFemaleRatio >= TARGET_FEMALE_MIN && poolFemaleRatio <= TARGET_FEMALE_MAX;
       
       if (!poolMeetsRequirements) {
-        // Pool doesn't meet requirements - assign anyway but add warning
         console.log(`Warning: Available pool has ${(poolFemaleRatio * 100).toFixed(1)}% female, outside target range of 60-70%. Proceeding with assignment.`);
       } else if (finalFemaleRatio < TARGET_FEMALE_MIN || finalFemaleRatio > TARGET_FEMALE_MAX) {
-        // Pool meets requirements but assignment doesn't - this is an algorithm failure
         return res.status(400).json({
           error: `Could not achieve 60-70% female ratio. Final ratio: ${(finalFemaleRatio * 100).toFixed(1)}%`,
           availablePool: {
@@ -940,7 +1029,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // PHASE 4: Generate seat assignments
+      // PHASE 4: Generate seat assignments (groups get consecutive seats WITHIN THE SAME ROW)
       type PlanItem = {
         contestant: typeof available[0];
         blockNumber: number;
@@ -949,30 +1038,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const plan: PlanItem[] = [];
       
-      // For each block, assign seats to bundles
+      // Helper to get seat labels within a row, ensuring groups don't span rows
+      const assignSeatsToBundle = (
+        bundle: GroupBundle,
+        blockNumber: number,
+        rowState: { currentRow: number; positionInRow: number }
+      ): { seatLabels: string[]; newRowState: { currentRow: number; positionInRow: number } } => {
+        const seatLabels: string[] = [];
+        let { currentRow, positionInRow } = rowState;
+        const bundleSize = bundle.size;
+        
+        // Check if the entire bundle fits in the remaining space of the current row
+        const currentRowCapacity = ROWS[currentRow]?.count || 0;
+        const remainingInRow = currentRowCapacity - positionInRow;
+        
+        if (remainingInRow < bundleSize) {
+          // Bundle doesn't fit in current row - move to next row
+          currentRow++;
+          positionInRow = 0;
+          
+          // Find a row that can fit the entire bundle
+          while (currentRow < ROWS.length && ROWS[currentRow].count < bundleSize) {
+            currentRow++;
+          }
+        }
+        
+        // If we've run out of rows, just assign consecutively (fallback)
+        if (currentRow >= ROWS.length) {
+          currentRow = ROWS.length - 1; // Last row
+          positionInRow = 0;
+        }
+        
+        // Assign seats to all contestants in the bundle
+        for (let i = 0; i < bundleSize; i++) {
+          const row = ROWS[currentRow];
+          if (!row) break;
+          
+          const seatLabel = `${row.label}${positionInRow + 1}`;
+          seatLabels.push(seatLabel);
+          positionInRow++;
+          
+          // Move to next row if current row is full
+          if (positionInRow >= row.count) {
+            currentRow++;
+            positionInRow = 0;
+          }
+        }
+        
+        return {
+          seatLabels,
+          newRowState: { currentRow, positionInRow }
+        };
+      }
+      
+      // For each block, assign seats to bundles with row-aware logic
       for (const block of blocks) {
         const blockAssignments = assignments.filter(a => a.blockNumber === block.blockNumber);
-        let seatIndex = 0;
+        let rowState = { currentRow: 0, positionInRow: 0 };
 
         for (const { bundle } of blockAssignments) {
-          for (const contestant of bundle.contestants) {
-            const seatLabel = getSeatLabel(seatIndex, ROWS);
+          const { seatLabels, newRowState } = assignSeatsToBundle(bundle, block.blockNumber, rowState);
+          rowState = newRowState;
+          
+          // All contestants in a bundle get consecutive seats in the same row
+          bundle.contestants.forEach((contestant, idx) => {
             plan.push({
               contestant,
               blockNumber: block.blockNumber,
-              seatLabel,
+              seatLabel: seatLabels[idx] || `E${idx + 1}`, // Fallback
             });
-            seatIndex++;
-          }
+          });
         }
       }
 
-      // PHASE 2: Persist the plan to database with transaction-like semantics
+      // PHASE 5: Persist the plan to database with transaction-like semantics
       const createdAssignments: any[] = [];
       const contestantUpdates: string[] = [];
       
       try {
-        // Create all assignments
         for (const item of plan) {
           const assignment = await storage.createSeatAssignment({
             recordDayId,
@@ -984,7 +1127,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           contestantUpdates.push(item.contestant.id);
         }
 
-        // Update all contestant statuses
         for (const contestantId of contestantUpdates) {
           await storage.updateContestantAvailability(contestantId, "assigned");
         }
@@ -992,6 +1134,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({
           message: `Assigned ${totalAssigned} contestants to seats`,
           assignments: createdAssignments,
+          skippedAPlusCount: aPlusContestants.length,
+          skippedAPlusNames: aPlusContestants.map(c => c.name),
+          skippedBundles: skippedBundles.length > 0 ? skippedBundles : undefined,
           demographics: {
             femaleCount: globalFemaleCount,
             maleCount: globalMaleCount,
@@ -1000,17 +1145,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             meetsTarget: finalFemaleRatio >= TARGET_FEMALE_MIN && finalFemaleRatio <= TARGET_FEMALE_MAX,
             warning: !poolMeetsRequirements ? `Available pool has ${(poolFemaleRatio * 100).toFixed(1)}% female, outside target range` : undefined,
           },
+          ratingDistribution: globalRatingCounts,
           blockStats: blocks.map(b => ({
             block: b.blockNumber,
+            blockType: b.blockType || 'Not set',
             seats: b.seatsUsed,
             females: b.femaleCount,
             males: b.maleCount,
             femaleRatio: b.femaleCount + b.maleCount > 0 ? (b.femaleCount / (b.femaleCount + b.maleCount) * 100).toFixed(1) + '%' : 'N/A',
             meanAge: b.meanAge.toFixed(1),
+            ratings: b.ratingCounts,
           })).filter(b => b.seats > 0)
         });
       } catch (persistError: any) {
-        // If persistence fails, attempt cleanup (best effort)
         console.error("Persistence error, attempting cleanup:", persistError);
         for (const assignment of createdAssignments) {
           try {
