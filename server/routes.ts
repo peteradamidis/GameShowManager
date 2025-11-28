@@ -1184,112 +1184,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bundle: GroupBundle,
         blockNumber: number,
         rowState: { currentRow: number; positionInRow: number },
-        usedSeats: Set<string>,
-        rowAvailability: Map<number, number>  // Track available positions per row
+        usedSeats: Set<string>
       ): { seatLabels: string[]; newRowState: { currentRow: number; positionInRow: number }; success: boolean } => {
         const seatLabels: string[] = [];
         const bundleSize = bundle.size;
         let { currentRow, positionInRow } = rowState;
         
         // Try to fit group in current row first
-        const currentRowCapacity = ROWS[currentRow]?.count || 0;
-        const remainingInRow = currentRowCapacity - positionInRow;
-        
-        if (remainingInRow >= bundleSize) {
-          // Fits in current row - use it
-          for (let i = 0; i < bundleSize; i++) {
-            const row = ROWS[currentRow];
-            const seatLabel = `${row.label}${positionInRow + 1}`;
-            seatLabels.push(seatLabel);
-            usedSeats.add(seatLabel);
-            positionInRow++;
-          }
-          return {
-            seatLabels,
-            newRowState: { currentRow, positionInRow },
-            success: true
-          };
-        }
-        
-        // Doesn't fit in current row - find any row with enough space (first-fit for efficiency)
-        let foundRow = -1;
-        for (let r = 0; r < ROWS.length; r++) {
-          const available = rowAvailability.get(r) || 0;
-          if (available >= bundleSize) {
-            foundRow = r;
-            break;
-          }
-        }
-        
-        if (foundRow === -1) {
-          // No row has enough contiguous space, try filling what we can at end of current row
-          // Then find next available row
-          currentRow++;
-          positionInRow = 0;
+        if (currentRow < ROWS.length) {
+          const currentRowCapacity = ROWS[currentRow].count;
+          const remainingInRow = currentRowCapacity - positionInRow;
           
-          while (currentRow < ROWS.length) {
-            const rowCapacity = ROWS[currentRow]?.count || 0;
-            if (rowCapacity >= bundleSize) {
-              foundRow = currentRow;
-              break;
+          if (remainingInRow >= bundleSize) {
+            // Fits in current row - use it
+            for (let i = 0; i < bundleSize; i++) {
+              const row = ROWS[currentRow];
+              const seatLabel = `${row.label}${positionInRow + 1}`;
+              seatLabels.push(seatLabel);
+              usedSeats.add(seatLabel);
+              positionInRow++;
             }
-            currentRow++;
-          }
-        }
-        
-        if (foundRow === -1) {
-          return {
-            seatLabels: [],
-            newRowState: rowState,
-            success: false
-          };
-        }
-        
-        // Assign to the found row
-        currentRow = foundRow;
-        positionInRow = 0;
-        
-        // Count how many seats are already used in this row to find first available
-        const row = ROWS[currentRow];
-        let seatsInUse = 0;
-        for (let pos = 0; pos < row.count; pos++) {
-          const seat = `${row.label}${pos + 1}`;
-          if (usedSeats.has(seat)) seatsInUse++;
-        }
-        
-        // Place group starting from first unused position
-        positionInRow = 0;
-        for (let pos = 0; pos < row.count; pos++) {
-          const seat = `${row.label}${pos + 1}`;
-          if (!usedSeats.has(seat)) {
-            positionInRow = pos;
-            break;
-          }
-        }
-        
-        // Now assign the bundle
-        for (let i = 0; i < bundleSize; i++) {
-          const seatLabel = `${row.label}${positionInRow + 1}`;
-          
-          if (usedSeats.has(seatLabel)) {
-            // This shouldn't happen, but if it does, return failure
             return {
-              seatLabels: [],
-              newRowState: rowState,
-              success: false
+              seatLabels,
+              newRowState: { currentRow, positionInRow },
+              success: true
             };
           }
-          
-          seatLabels.push(seatLabel);
-          usedSeats.add(seatLabel);
-          rowAvailability.set(currentRow, (rowAvailability.get(currentRow) || 0) - 1);
-          positionInRow++;
         }
         
+        // Doesn't fit in current row - move to next row
+        currentRow++;
+        positionInRow = 0;
+        
+        // Find a row that can fit the entire bundle
+        while (currentRow < ROWS.length) {
+          const rowCapacity = ROWS[currentRow].count;
+          if (rowCapacity >= bundleSize) {
+            // Found a row - assign seats
+            for (let i = 0; i < bundleSize; i++) {
+              const row = ROWS[currentRow];
+              const seatLabel = `${row.label}${positionInRow + 1}`;
+              seatLabels.push(seatLabel);
+              usedSeats.add(seatLabel);
+              positionInRow++;
+            }
+            return {
+              seatLabels,
+              newRowState: { currentRow, positionInRow },
+              success: true
+            };
+          }
+          currentRow++;
+        }
+        
+        // No more rows available
         return {
-          seatLabels,
-          newRowState: { currentRow, positionInRow },
-          success: true
+          seatLabels: [],
+          newRowState: rowState,
+          success: false
         };
       }
       
@@ -1298,15 +1250,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const blockAssignments = assignments.filter(a => a.blockNumber === block.blockNumber);
         let rowState = { currentRow: 0, positionInRow: 0 };
         const usedSeats = new Set<string>(); // Track used seats per block
-        
-        // Initialize row availability (each row has ROWS[i].count total seats)
-        const rowAvailability = new Map<number, number>();
-        ROWS.forEach((row, idx) => {
-          rowAvailability.set(idx, row.count);
-        });
 
         for (const { bundle } of blockAssignments) {
-          const result = assignSeatsToBundle(bundle, block.blockNumber, rowState, usedSeats, rowAvailability);
+          const result = assignSeatsToBundle(bundle, block.blockNumber, rowState, usedSeats);
           
           if (!result.success) {
             // Skip this bundle - no capacity left in block
