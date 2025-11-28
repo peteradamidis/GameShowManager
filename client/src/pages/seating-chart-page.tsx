@@ -251,7 +251,7 @@ export default function SeatingChartPage() {
       if (assignments && Array.isArray(assignments)) {
         await Promise.all(
           assignments.map((a: any) => 
-            apiRequest('DELETE', `/api/seat-assignments/${a.assignmentId}`, {})
+            apiRequest('DELETE', `/api/seat-assignments/${a.id}`, {})
           )
         );
       }
