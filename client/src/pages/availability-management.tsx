@@ -305,8 +305,8 @@ export default function AvailabilityManagement() {
               <div>
                 <h3 className="font-semibold mb-2">Record Days</h3>
                 <div className="bg-muted p-3 rounded-md space-y-1">
-                  {Array.from(selectedRecordDays).map(dayId => {
-                    const day = recordDays.find(d => d.id === dayId);
+                  {recordDays && Array.from(selectedRecordDays).map(dayId => {
+                    const day = recordDays.find((d: any) => d.id === dayId);
                     return (
                       <div key={dayId} className="text-sm">
                         {day && format(new Date(day.date), 'EEE, MMM d, yyyy')}
@@ -318,10 +318,10 @@ export default function AvailabilityManagement() {
               </div>
 
               <div>
-                <h3 className="font-semibold mb-2">Recipients ({selectedContestants.size})</h3>
+                <h3 className="font-semibold mb-2">Recipients ({selectedContestants?.size || 0})</h3>
                 <div className="bg-muted p-3 rounded-md max-h-48 overflow-auto space-y-1">
-                  {Array.from(selectedContestants).map(contestantId => {
-                    const contestant = contestants.find(c => c.id === contestantId);
+                  {contestants && Array.from(selectedContestants).map(contestantId => {
+                    const contestant = contestants.find((c: any) => c.id === contestantId);
                     return (
                       <div key={contestantId} className="text-sm">
                         <div className="font-medium">{contestant?.name}</div>
@@ -336,7 +336,7 @@ export default function AvailabilityManagement() {
 
               <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-3 rounded-md">
                 <p className="text-sm text-amber-900 dark:text-amber-100">
-                  {selectedContestants.size} availability checks will be sent via Gmail to the recipients listed above.
+                  {selectedContestants?.size || 0} availability checks will be sent via Gmail to the recipients listed above.
                 </p>
               </div>
             </div>

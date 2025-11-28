@@ -1684,6 +1684,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           try {
             const baseUrl = process.env.REPLIT_DEPLOYMENT_URL || 'http://localhost:5000';
+            if (!contestant.email) {
+              throw new Error(`Contestant ${contestant.name} has no email address`);
+            }
+
             const responseUrl = `${baseUrl}/availability/respond/${tokenRecord.token}`;
             const recordDayDate = new Date(recordDay.date).toLocaleDateString('en-US', {
               weekday: 'long',
