@@ -76,7 +76,7 @@ export default function SeatingChartPage() {
   const urlRecordDayId = searchParams.get('day');
 
   // Fetch all record days
-  const { data: recordDays } = useQuery<any[]>({
+  const { data: recordDays, isLoading: recordDaysLoading } = useQuery<any[]>({
     queryKey: ['/api/record-days'],
   });
 
@@ -119,7 +119,18 @@ export default function SeatingChartPage() {
     return allContestants.filter((c: any) => !seatedIds.has(c.id));
   }, [assignments, allContestants]);
 
-  // Show loading or error if no record day
+  // Show loading state if record days are still loading
+  if (recordDaysLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if no record day and loading is complete
   if (!recordDayId) {
     return (
       <div className="flex items-center justify-center h-screen">
