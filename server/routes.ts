@@ -398,49 +398,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate fake contestants for testing
   app.post("/api/contestants/generate-fake", async (req, res) => {
     try {
-      const fakeContestants = [
-        // Group 1 - Friends
-        { name: "Sarah Johnson", age: 28, gender: "Female" as const, attendingWith: "Mike Chen" },
-        { name: "Mike Chen", age: 32, gender: "Male" as const, attendingWith: "Sarah Johnson" },
-        
-        // Group 2 - Couple
-        { name: "Emma Williams", age: 35, gender: "Female" as const, attendingWith: "David Williams" },
-        { name: "David Williams", age: 37, gender: "Male" as const, attendingWith: "Emma Williams" },
-        
-        // Group 3 - Family
-        { name: "Lisa Anderson", age: 42, gender: "Female" as const, attendingWith: "James Anderson, Amy Anderson" },
-        { name: "James Anderson", age: 45, gender: "Male" as const, attendingWith: "Lisa Anderson, Amy Anderson" },
-        { name: "Amy Anderson", age: 19, gender: "Female" as const, attendingWith: "Lisa Anderson, James Anderson" },
-        
-        // Solo contestants
-        { name: "Jennifer Martinez", age: 29, gender: "Female" as const },
-        { name: "Robert Taylor", age: 52, gender: "Male" as const },
-        { name: "Amanda White", age: 31, gender: "Female" as const },
-        { name: "Christopher Lee", age: 38, gender: "Male" as const },
-        { name: "Jessica Brown", age: 26, gender: "Female" as const },
-        { name: "Daniel Garcia", age: 41, gender: "Male" as const },
-        { name: "Michelle Davis", age: 33, gender: "Female" as const },
-        { name: "Kevin Miller", age: 29, gender: "Male" as const },
-        { name: "Ashley Wilson", age: 27, gender: "Female" as const },
-        { name: "Brandon Moore", age: 34, gender: "Male" as const },
-        { name: "Stephanie Taylor", age: 36, gender: "Female" as const },
-        { name: "Justin Thomas", age: 30, gender: "Male" as const },
-        { name: "Rachel Jackson", age: 28, gender: "Female" as const },
-        
-        // Group 4 - Friends group
-        { name: "Melissa Harris", age: 25, gender: "Female" as const, attendingWith: "Nicole Martin" },
-        { name: "Nicole Martin", age: 26, gender: "Female" as const, attendingWith: "Melissa Harris" },
-        
-        // More solo contestants
-        { name: "Andrew Thompson", age: 44, gender: "Male" as const },
-        { name: "Lauren Clark", age: 31, gender: "Female" as const },
-        { name: "Tyler Rodriguez", age: 27, gender: "Male" as const },
-        { name: "Samantha Lewis", age: 29, gender: "Female" as const },
-        { name: "Jacob Walker", age: 35, gender: "Male" as const },
-        { name: "Emily Hall", age: 32, gender: "Female" as const },
-        { name: "Ryan Allen", age: 39, gender: "Male" as const },
-        { name: "Olivia Young", age: 24, gender: "Female" as const },
+      // First names by gender
+      const femaleFirstNames = [
+        "Emma", "Olivia", "Ava", "Isabella", "Sophia", "Mia", "Charlotte", "Amelia", "Harper", "Evelyn",
+        "Abigail", "Emily", "Elizabeth", "Sofia", "Avery", "Ella", "Scarlett", "Grace", "Victoria", "Riley",
+        "Aria", "Lily", "Aubrey", "Zoey", "Penelope", "Chloe", "Layla", "Lillian", "Nora", "Hazel",
+        "Madison", "Ellie", "Hannah", "Paisley", "Natalie", "Addison", "Brooklyn", "Leah", "Savannah", "Audrey",
+        "Claire", "Eleanor", "Skylar", "Eliana", "Naomi", "Maya", "Elena", "Sarah", "Allison", "Gabriella",
+        "Alice", "Madelyn", "Cora", "Ruby", "Eva", "Serenity", "Autumn", "Adeline", "Hailey", "Gianna",
+        "Valentina", "Isla", "Eliza", "Quinn", "Nevaeh", "Ivy", "Sadie", "Piper", "Lydia", "Alexa"
       ];
+      const maleFirstNames = [
+        "Liam", "Noah", "Oliver", "Elijah", "James", "William", "Benjamin", "Lucas", "Henry", "Theodore",
+        "Jack", "Levi", "Alexander", "Mason", "Ethan", "Jacob", "Michael", "Daniel", "Logan", "Jackson",
+        "Sebastian", "Aiden", "Owen", "Samuel", "Ryan", "Nathan", "David", "Joseph", "John", "Luke",
+        "Anthony", "Isaac", "Dylan", "Wyatt", "Andrew", "Joshua", "Christopher", "Grayson", "Jayden", "Matthew",
+        "Leo", "Lincoln", "Mateo", "Adam", "Caleb", "Christian", "Jaxon", "Julian", "Cameron", "Aaron",
+        "Thomas", "Charles", "Josiah", "Ezra", "Isaiah", "Colton", "Hunter", "Adrian", "Nolan", "Connor"
+      ];
+      const lastNames = [
+        "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez",
+        "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin",
+        "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson",
+        "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores",
+        "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell", "Carter", "Roberts",
+        "Gomez", "Phillips", "Evans", "Turner", "Diaz", "Parker", "Cruz", "Edwards", "Collins", "Reyes",
+        "Stewart", "Morris", "Morales", "Murphy", "Cook", "Rogers", "Gutierrez", "Ortiz", "Morgan", "Cooper"
+      ];
+      const cities = [
+        "Los Angeles", "San Diego", "San Francisco", "Sacramento", "Fresno", "Oakland", "Long Beach",
+        "Bakersfield", "Anaheim", "Santa Ana", "Riverside", "Stockton", "Irvine", "Chula Vista", "Fremont",
+        "San Jose", "Pasadena", "Burbank", "Glendale", "Torrance", "Pomona", "Santa Monica", "Newport Beach"
+      ];
+      const ratings = ["A+", "A", "B+", "B", "C"];
+      const ratingWeights = [0.05, 0.15, 0.25, 0.35, 0.20]; // 5% A+, 15% A, 25% B+, 35% B, 20% C
+
+      // Helper to pick weighted random rating
+      function getWeightedRating(): string {
+        const rand = Math.random();
+        let cumulative = 0;
+        for (let i = 0; i < ratings.length; i++) {
+          cumulative += ratingWeights[i];
+          if (rand < cumulative) return ratings[i];
+        }
+        return ratings[ratings.length - 1];
+      }
+
+      // Helper to generate email from name
+      function generateEmail(name: string): string {
+        const domains = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com"];
+        const cleanName = name.toLowerCase().replace(/\s+/g, '.');
+        const randomNum = Math.floor(Math.random() * 99);
+        const domain = domains[Math.floor(Math.random() * domains.length)];
+        return `${cleanName}${randomNum}@${domain}`;
+      }
+
+      // Helper to generate photo URL using UI Avatars
+      function generatePhotoUrl(name: string, gender: string): string {
+        const encodedName = encodeURIComponent(name);
+        const bgColor = gender === "Female" ? "f472b6" : "60a5fa"; // Pink for female, blue for male
+        return `https://ui-avatars.com/api/?name=${encodedName}&background=${bgColor}&color=fff&size=200&bold=true`;
+      }
+
+      // Helper to generate phone number
+      function generatePhone(): string {
+        const areaCode = Math.floor(Math.random() * 900) + 100;
+        const prefix = Math.floor(Math.random() * 900) + 100;
+        const lineNum = Math.floor(Math.random() * 9000) + 1000;
+        return `(${areaCode}) ${prefix}-${lineNum}`;
+      }
+
+      const fakeContestants: Array<{
+        name: string;
+        age: number;
+        gender: "Male" | "Female";
+        email: string;
+        phone: string;
+        address: string;
+        auditionRating: string;
+        photoUrl: string;
+        attendingWith?: string;
+      }> = [];
+
+      // Generate 130 contestants - aim for ~65% female
+      const totalCount = 130;
+      const femaleCount = Math.floor(totalCount * 0.65);
+      const maleCount = totalCount - femaleCount;
+
+      // Track used names to avoid duplicates
+      const usedNames = new Set<string>();
+
+      function generateUniqueName(gender: "Male" | "Female"): string {
+        const firstNames = gender === "Female" ? femaleFirstNames : maleFirstNames;
+        let name = "";
+        let attempts = 0;
+        do {
+          const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+          const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+          name = `${firstName} ${lastName}`;
+          attempts++;
+        } while (usedNames.has(name) && attempts < 100);
+        usedNames.add(name);
+        return name;
+      }
+
+      // Generate females first
+      for (let i = 0; i < femaleCount; i++) {
+        const name = generateUniqueName("Female");
+        const age = Math.floor(Math.random() * 40) + 21; // 21-60
+        fakeContestants.push({
+          name,
+          age,
+          gender: "Female",
+          email: generateEmail(name),
+          phone: generatePhone(),
+          address: cities[Math.floor(Math.random() * cities.length)],
+          auditionRating: getWeightedRating(),
+          photoUrl: generatePhotoUrl(name, "Female"),
+        });
+      }
+
+      // Generate males
+      for (let i = 0; i < maleCount; i++) {
+        const name = generateUniqueName("Male");
+        const age = Math.floor(Math.random() * 40) + 21; // 21-60
+        fakeContestants.push({
+          name,
+          age,
+          gender: "Male",
+          email: generateEmail(name),
+          phone: generatePhone(),
+          address: cities[Math.floor(Math.random() * cities.length)],
+          auditionRating: getWeightedRating(),
+          photoUrl: generatePhotoUrl(name, "Male"),
+        });
+      }
+
+      // Create some groups (about 15 pairs)
+      const shuffled = [...fakeContestants].sort(() => Math.random() - 0.5);
+      for (let i = 0; i < 30; i += 2) {
+        if (shuffled[i] && shuffled[i + 1]) {
+          shuffled[i].attendingWith = shuffled[i + 1].name;
+          shuffled[i + 1].attendingWith = shuffled[i].name;
+          // Find and update in original array
+          const idx1 = fakeContestants.findIndex(c => c.name === shuffled[i].name);
+          const idx2 = fakeContestants.findIndex(c => c.name === shuffled[i + 1].name);
+          if (idx1 >= 0) fakeContestants[idx1].attendingWith = shuffled[i + 1].name;
+          if (idx2 >= 0) fakeContestants[idx2].attendingWith = shuffled[i].name;
+        }
+      }
 
       // Create contestants
       const createdContestants = [];
@@ -452,13 +558,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gender: data.gender,
           availabilityStatus: "available",
           attendingWith: data.attendingWith,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          auditionRating: data.auditionRating,
+          photoUrl: data.photoUrl,
         });
         createdContestants.push(contestant);
       }
 
+      // Count groups
+      const groupCount = fakeContestants.filter(c => c.attendingWith).length / 2;
+
       res.json({ 
         message: `Generated ${createdContestants.length} fake contestants`,
         count: createdContestants.length,
+        groups: Math.floor(groupCount),
       });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
