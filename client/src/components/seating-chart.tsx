@@ -186,11 +186,11 @@ function SeatingBlock({
                 )}
               </div>
               {stats.avgAge > 0 && (
-                <Badge variant="secondary" className="text-xs w-fit">
+                <Badge variant="secondary" className="text-[10px] w-fit">
                   Age: {stats.minAge}-{stats.maxAge} (avg {stats.avgAge})
                 </Badge>
               )}
-              <Badge variant="secondary" className="text-xs w-fit">
+              <Badge variant="secondary" className="text-[10px] w-fit">
                 {stats.femalePercent}% F
               </Badge>
             </>
