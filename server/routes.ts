@@ -1029,7 +1029,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // PB blocks: max 20 seats, NPB blocks: can fill entire 22 seats
         let feasibleBlocks = blocks.filter((block) => {
           const maxSeats = block.blockType === 'NPB' ? SEATS_PER_BLOCK : MAX_AUTO_ASSIGN_SEATS;
-          return block.seatsUsed + bundle.size <= maxSeats;
+          // Check capacity
+          if (block.seatsUsed + bundle.size > maxSeats) return false;
+          
+          // CONSTRAINT: No block should exceed 70% female
+          const newFemaleCount = block.femaleCount + bundle.femaleCount;
+          const newTotal = block.femaleCount + block.maleCount + bundle.femaleCount + bundle.maleCount;
+          const newFemaleRatio = newTotal > 0 ? newFemaleCount / newTotal : 0;
+          if (newFemaleRatio > 0.70) return false;
+          
+          return true;
         });
 
         // CRITICAL: C-rated contestants can ONLY go to NPB blocks (max 6 per NPB block)
