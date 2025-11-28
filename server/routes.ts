@@ -434,7 +434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const ratingWeights = [0.05, 0.15, 0.25, 0.35, 0.20]; // 5% A+, 15% A, 25% B+, 35% B, 20% C
 
       // Helper to pick weighted random rating
-      function getWeightedRating(): string {
+      const getWeightedRating = (): string => {
         const rand = Math.random();
         let cumulative = 0;
         for (let i = 0; i < ratings.length; i++) {
@@ -442,31 +442,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (rand < cumulative) return ratings[i];
         }
         return ratings[ratings.length - 1];
-      }
+      };
 
       // Helper to generate email from name
-      function generateEmail(name: string): string {
+      const generateEmail = (name: string): string => {
         const domains = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com"];
         const cleanName = name.toLowerCase().replace(/\s+/g, '.');
         const randomNum = Math.floor(Math.random() * 99);
         const domain = domains[Math.floor(Math.random() * domains.length)];
         return `${cleanName}${randomNum}@${domain}`;
-      }
+      };
 
       // Helper to generate photo URL using UI Avatars
-      function generatePhotoUrl(name: string, gender: string): string {
+      const generatePhotoUrl = (name: string, gender: string): string => {
         const encodedName = encodeURIComponent(name);
         const bgColor = gender === "Female" ? "f472b6" : "60a5fa"; // Pink for female, blue for male
         return `https://ui-avatars.com/api/?name=${encodedName}&background=${bgColor}&color=fff&size=200&bold=true`;
-      }
+      };
 
       // Helper to generate phone number
-      function generatePhone(): string {
+      const generatePhone = (): string => {
         const areaCode = Math.floor(Math.random() * 900) + 100;
         const prefix = Math.floor(Math.random() * 900) + 100;
         const lineNum = Math.floor(Math.random() * 9000) + 1000;
         return `(${areaCode}) ${prefix}-${lineNum}`;
-      }
+      };
 
       const fakeContestants: Array<{
         name: string;
@@ -488,7 +488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Track used names to avoid duplicates
       const usedNames = new Set<string>();
 
-      function generateUniqueName(gender: "Male" | "Female"): string {
+      const generateUniqueName = (gender: "Male" | "Female"): string => {
         const firstNames = gender === "Female" ? femaleFirstNames : maleFirstNames;
         let name = "";
         let attempts = 0;
@@ -500,7 +500,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } while (usedNames.has(name) && attempts < 100);
         usedNames.add(name);
         return name;
-      }
+      };
 
       // Generate females first
       for (let i = 0; i < femaleCount; i++) {
