@@ -880,7 +880,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auto-assign/:recordDayId", async (req, res) => {
     try {
       const { recordDayId } = req.params;
-      const { blocks: selectedBlocks } = req.body as { blocks?: number[] };
+      const { blocks: selectedBlocks, onlyConfirmedAvailability } = req.body as { 
+        blocks?: number[]; 
+        onlyConfirmedAvailability?: boolean;
+      };
 
       if (!recordDayId) {
         return res.status(400).json({ error: "recordDayId is required" });
@@ -906,7 +909,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allContestants = await storage.getContestants();
       
       // Filter: exclude A+ rated contestants (they must be manually assigned)
-      const availableAll = allContestants.filter((c) => c.availabilityStatus === "available");
+      let availableAll = allContestants.filter((c) => c.availabilityStatus === "available");
+      
+      // If onlyConfirmedAvailability is true, filter to only contestants who confirmed for this record day
+      if (onlyConfirmedAvailability) {
+        const availabilityResponses = await storage.getAvailabilityByRecordDay(recordDayId);
+        const confirmedContestantIds = new Set(
+          availabilityResponses
+            .filter(a => a.responseValue === 'yes')
+            .map(a => a.contestantId)
+        );
+        availableAll = availableAll.filter(c => confirmedContestantIds.has(c.id));
+      }
+      
       const aPlusContestants = availableAll.filter(c => c.auditionRating === 'A+');
       const available = availableAll.filter(c => c.auditionRating !== 'A+');
 

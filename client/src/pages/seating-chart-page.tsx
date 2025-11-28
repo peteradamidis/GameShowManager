@@ -70,6 +70,7 @@ export default function SeatingChartPage() {
   const [autoAssignDialogOpen, setAutoAssignDialogOpen] = useState(false);
   const [selectedBlocks, setSelectedBlocks] = useState<number[]>([1, 2, 3, 4, 5, 6, 7]);
   const [isAutoAssigning, setIsAutoAssigning] = useState(false);
+  const [onlyConfirmedAvailability, setOnlyConfirmedAvailability] = useState(false);
   
   // Get record day ID from query parameter or fetch first available
   const searchParams = new URLSearchParams(window.location.search);
@@ -197,7 +198,8 @@ export default function SeatingChartPage() {
     setIsAutoAssigning(true);
     try {
       const result: any = await apiRequest('POST', `/api/auto-assign/${recordDayId}`, {
-        blocks: selectedBlocks
+        blocks: selectedBlocks,
+        onlyConfirmedAvailability
       });
       await refetch();
       setAutoAssignDialogOpen(false);
@@ -591,6 +593,23 @@ export default function SeatingChartPage() {
                   : `${selectedBlocks.length} block${selectedBlocks.length > 1 ? 's' : ''} selected: ${selectedBlocks.join(', ')}`}
               </p>
             )}
+            
+            <div className="pt-4 border-t">
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="only-confirmed-availability"
+                  checked={onlyConfirmedAvailability}
+                  onCheckedChange={(checked) => setOnlyConfirmedAvailability(checked === true)}
+                  data-testid="checkbox-only-confirmed-availability"
+                />
+                <Label htmlFor="only-confirmed-availability" className="cursor-pointer">
+                  Only assign contestants who confirmed availability for this record day
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1 ml-6">
+                When checked, only contestants who responded "Yes" to availability for this specific date will be considered.
+              </p>
+            </div>
           </div>
 
           <DialogFooter>
