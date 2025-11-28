@@ -8,7 +8,7 @@ import crypto from "crypto";
 import path from "path";
 import express from "express";
 import fs from "fs";
-import { sendAvailabilityEmail } from "./gmail";
+import { getUncachableGmailClient } from "./gmail";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -1689,7 +1689,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Format record day dates for the email
           const recordDaysList = recordDays
-            .filter(rd => rd)
+            .filter((rd): rd is typeof recordDays[0] => rd !== null && rd !== undefined)
             .map(rd => new Date(rd.date).toLocaleDateString('en-US', {
               weekday: 'long',
               year: 'numeric',
