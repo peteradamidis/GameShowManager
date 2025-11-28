@@ -138,7 +138,7 @@ export default function Contestants() {
 
   // Get unique values for filter dropdowns
   const uniqueGenders = Array.from(new Set(contestants.map(c => c.gender).filter(Boolean)));
-  const uniqueLocations = Array.from(new Set(allSeatAssignments.map((a: any) => a.location).filter(Boolean)));
+  const uniqueCities = Array.from(new Set(contestants.map(c => c.address).filter(Boolean))).sort();
 
   // Determine which contestants to display
   let displayedContestants = filterRecordDayId
@@ -159,13 +159,8 @@ export default function Contestants() {
     displayedContestants = displayedContestants.filter(c => c.auditionRating === filterRating);
   }
   if (filterLocation !== "all") {
-    // Filter contestants who have a seat assignment with this location
-    const contestantIdsWithLocation = new Set(
-      allSeatAssignments
-        .filter((a: any) => a.location === filterLocation)
-        .map((a: any) => a.contestantId)
-    );
-    displayedContestants = displayedContestants.filter(c => contestantIdsWithLocation.has(c.id));
+    // Filter contestants by their city (address field)
+    displayedContestants = displayedContestants.filter(c => c.address === filterLocation);
   }
 
   const isLoading = loadingContestants || (filterRecordDayId && loadingFiltered);
@@ -496,29 +491,24 @@ export default function Contestants() {
           </div>
 
           <div className="flex-1 min-w-[200px] max-w-xs">
-            <label className="text-sm font-medium mb-2 block">Location</label>
+            <label className="text-sm font-medium mb-2 block">City</label>
             <Select 
               value={filterLocation} 
               onValueChange={setFilterLocation}
-              disabled={uniqueLocations.length === 0}
+              disabled={uniqueCities.length === 0}
             >
               <SelectTrigger data-testid="select-filter-location">
-                <SelectValue placeholder={uniqueLocations.length === 0 ? "No locations available" : "All locations"} />
+                <SelectValue placeholder={uniqueCities.length === 0 ? "No cities available" : "All cities"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All locations</SelectItem>
-                {uniqueLocations.map((location) => (
-                  <SelectItem key={location} value={location}>
-                    {location}
+                <SelectItem value="all">All cities</SelectItem>
+                {uniqueCities.map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {uniqueLocations.length === 0 && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Locations are assigned in Booking Master
-              </p>
-            )}
           </div>
         </div>
 
