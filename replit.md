@@ -53,3 +53,4 @@ Do not make changes to the file `Y`.
 - **Cast It Reach:** Source of contestant data via Excel exports.
 - **Gmail Integration:** (Temporary) Currently used for sending availability check emails via the Google Gmail connector. Will be replaced with Outlook once approval is received.
 - **Outlook Integration:** (Planned) To replace Gmail for availability check and booking confirmation emails once user approval is obtained.
+- **Booking Master to Server File Sync:** (Planned) Two-way sync between booking master and Excel file on user's server. User prefers local server solution over SharePoint for now. Awaiting server endpoint details (URL, format, authentication method).
