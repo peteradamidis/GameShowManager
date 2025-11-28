@@ -1258,11 +1258,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }
       
+      // Get existing seat assignments from database for this record day
+      const existingAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
+      
       // For each block, assign seats to bundles with row-aware logic
       for (const block of blocks) {
         const blockAssignments = assignments.filter(a => a.blockNumber === block.blockNumber);
         let rowState = { currentRow: 0, positionInRow: 0 };
         const usedSeats = new Set<string>(); // Track used seats per block
+        
+        // Pre-populate usedSeats with existing assignments in this block
+        existingAssignments
+          .filter(a => a.blockNumber === block.blockNumber)
+          .forEach(a => {
+            usedSeats.add(a.seatLabel);
+          });
 
         for (const { bundle } of blockAssignments) {
           const result = assignSeatsToBundle(bundle, block.blockNumber, rowState, usedSeats);
