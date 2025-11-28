@@ -3,7 +3,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { User, X, Ban } from "lucide-react";
+import { User, X, Ban, Users2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 export interface SeatData {
@@ -99,9 +99,14 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
       ) : (
         <div className="space-y-1">
           <div className="text-[10px] font-mono text-muted-foreground">{seatLabel}</div>
-          <p className="font-medium truncate text-xs" title={seat.contestantName}>
-            {seat.contestantName}
-          </p>
+          <div className="flex items-center gap-1">
+            <p className="font-medium truncate text-xs flex-1" title={seat.contestantName}>
+              {seat.contestantName}
+            </p>
+            {seat.attendingWith && (
+              <Users2 className="h-3 w-3 text-muted-foreground flex-shrink-0" title={`Group: ${seat.attendingWith}`} />
+            )}
+          </div>
           <div className="flex items-center gap-2 text-muted-foreground text-[10px]">
             <span>{seat.age}</span>
             <span>•</span>
