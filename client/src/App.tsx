@@ -60,8 +60,8 @@ export default function App() {
               <div className="flex flex-col flex-1 overflow-hidden">
                 <header className="flex items-center justify-between p-4 border-b">
                   <SidebarTrigger data-testid="button-sidebar-toggle" />
-                  <div className="flex items-center gap-3">
-                    <img src={logoImage} alt="Deal or No Deal" className="h-12" />
+                  <div className="flex flex-col items-center gap-2">
+                    <img src={logoImage} alt="Deal or No Deal" className="h-16" />
                     <h2 className="text-lg font-semibold">Deal or No Deal Contestant Manager</h2>
                   </div>
                   <div className="w-9"></div>
