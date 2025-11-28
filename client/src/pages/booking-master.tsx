@@ -401,134 +401,161 @@ export default function BookingMaster() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {bookingRows.map((row) => (
-                  <TableRow key={row.seatId} className={!row.assignment ? "bg-muted/20" : ""}>
-                    <TableCell>
-                      {row.assignment && (
-                        <Checkbox
-                          checked={selectedAssignments.has(row.assignment.id)}
-                          onCheckedChange={(checked) => handleSelectAssignment(row.assignment!.id, checked as boolean)}
-                          data-testid={`checkbox-select-${row.seatId}`}
-                        />
+                {bookingRows.map((row, index) => {
+                  const isFirstRowOfBlock = index === 0 || bookingRows[index - 1].blockNumber !== row.blockNumber;
+                  const blockAssignments = bookingRows.filter(r => r.blockNumber === row.blockNumber && r.assignment);
+                  const blockFemaleCount = blockAssignments.filter(r => r.contestant?.gender === 'Female').length;
+                  const blockMaleCount = blockAssignments.filter(r => r.contestant?.gender === 'Male').length;
+                  const blockTotal = blockAssignments.length;
+                  const femalePercent = blockTotal > 0 ? Math.round((blockFemaleCount / blockTotal) * 100) : 0;
+                  
+                  return (
+                    <>
+                      {isFirstRowOfBlock && (
+                        <TableRow key={`block-header-${row.blockNumber}`} className="bg-primary/10 hover:bg-primary/10">
+                          <TableCell colSpan={16} className="py-3">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-lg" data-testid={`block-header-${row.blockNumber}`}>
+                                Block {row.blockNumber}
+                              </span>
+                              {blockTotal > 0 && (
+                                <span className="text-sm text-muted-foreground">
+                                  {blockTotal} assigned | {blockFemaleCount}F / {blockMaleCount}M ({femalePercent}% female)
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
                       )}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{row.seatId}</TableCell>
-                    <TableCell className="font-medium">
-                      {row.contestant?.name || <span className="text-muted-foreground italic">Empty</span>}
-                    </TableCell>
-                    <TableCell>{row.contestant?.age || ""}</TableCell>
-                    <TableCell className="text-sm">{row.contestant?.phone || ""}</TableCell>
-                    <TableCell className="text-sm">{row.contestant?.email || ""}</TableCell>
-                    <TableCell>
-                      {row.assignment && (
-                        <Input
-                          value={row.assignment.location || ""}
-                          onChange={(e) => handleFieldUpdate(row.assignment!.id, "location", e.target.value)}
-                          placeholder="Location"
-                          className="h-8 text-sm"
-                          data-testid={`input-location-${row.seatId}`}
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {row.assignment && (
-                        <Input
-                          value={row.assignment.medicalQuestion || ""}
-                          onChange={(e) => handleFieldUpdate(row.assignment!.id, "medicalQuestion", e.target.value)}
-                          placeholder="Y/N"
-                          className="h-8 text-sm w-16"
-                          data-testid={`input-medical-${row.seatId}`}
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {row.assignment && (
-                        <Select
-                          value={row.assignment.rating || ""}
-                          onValueChange={(value) => handleFieldUpdate(row.assignment!.id, "rating", value)}
-                        >
-                          <SelectTrigger className="h-8 text-sm w-20" data-testid={`select-rating-${row.seatId}`}>
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="A+">A+</SelectItem>
-                            <SelectItem value="A">A</SelectItem>
-                            <SelectItem value="B+">B+</SelectItem>
-                            <SelectItem value="B">B</SelectItem>
-                            <SelectItem value="C">C</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {row.assignment && (
-                        <Input
-                          value={row.assignment.castingCategory || ""}
-                          onChange={(e) => handleFieldUpdate(row.assignment!.id, "castingCategory", e.target.value)}
-                          placeholder="Category"
-                          className="h-8 text-sm"
-                          data-testid={`input-category-${row.seatId}`}
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {row.assignment && (
-                        <Checkbox
-                          checked={!!row.assignment.bookingEmailSent}
-                          onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "bookingEmailSent", row.assignment!.bookingEmailSent)}
-                          data-testid={`checkbox-email-sent-${row.seatId}`}
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {row.assignment && (
-                        <Checkbox
-                          checked={!!row.assignment.confirmedRsvp}
-                          onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "confirmedRsvp", row.assignment!.confirmedRsvp)}
-                          data-testid={`checkbox-rsvp-${row.seatId}`}
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {row.assignment && (
-                        <Checkbox
-                          checked={!!row.assignment.paperworkSent}
-                          onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "paperworkSent", row.assignment!.paperworkSent)}
-                          data-testid={`checkbox-paperwork-sent-${row.seatId}`}
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {row.assignment && (
-                        <Checkbox
-                          checked={!!row.assignment.paperworkReceived}
-                          onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "paperworkReceived", row.assignment!.paperworkReceived)}
-                          data-testid={`checkbox-paperwork-received-${row.seatId}`}
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {row.assignment && (
-                        <Checkbox
-                          checked={!!row.assignment.signedIn}
-                          onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "signedIn", row.assignment!.signedIn)}
-                          data-testid={`checkbox-signed-in-${row.seatId}`}
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {row.assignment && (
-                        <Textarea
-                          value={row.assignment.notes || ""}
-                          onChange={(e) => handleFieldUpdate(row.assignment!.id, "notes", e.target.value)}
-                          placeholder="Notes"
-                          className="h-8 min-h-0 text-sm resize-none"
-                          data-testid={`textarea-notes-${row.seatId}`}
-                        />
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      <TableRow key={row.seatId} className={!row.assignment ? "bg-muted/20" : ""}>
+                        <TableCell>
+                          {row.assignment && (
+                            <Checkbox
+                              checked={selectedAssignments.has(row.assignment.id)}
+                              onCheckedChange={(checked) => handleSelectAssignment(row.assignment!.id, checked as boolean)}
+                              data-testid={`checkbox-select-${row.seatId}`}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">{row.seatId}</TableCell>
+                        <TableCell className="font-medium">
+                          {row.contestant?.name || <span className="text-muted-foreground italic">Empty</span>}
+                        </TableCell>
+                        <TableCell>{row.contestant?.age || ""}</TableCell>
+                        <TableCell className="text-sm">{row.contestant?.phone || ""}</TableCell>
+                        <TableCell className="text-sm">{row.contestant?.email || ""}</TableCell>
+                        <TableCell>
+                          {row.assignment && (
+                            <Input
+                              value={row.assignment.location || ""}
+                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "location", e.target.value)}
+                              placeholder="Location"
+                              className="h-8 text-sm"
+                              data-testid={`input-location-${row.seatId}`}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {row.assignment && (
+                            <Input
+                              value={row.assignment.medicalQuestion || ""}
+                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "medicalQuestion", e.target.value)}
+                              placeholder="Y/N"
+                              className="h-8 text-sm w-16"
+                              data-testid={`input-medical-${row.seatId}`}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {row.assignment && (
+                            <Select
+                              value={row.assignment.rating || ""}
+                              onValueChange={(value) => handleFieldUpdate(row.assignment!.id, "rating", value)}
+                            >
+                              <SelectTrigger className="h-8 text-sm w-20" data-testid={`select-rating-${row.seatId}`}>
+                                <SelectValue placeholder="-" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="A+">A+</SelectItem>
+                                <SelectItem value="A">A</SelectItem>
+                                <SelectItem value="B+">B+</SelectItem>
+                                <SelectItem value="B">B</SelectItem>
+                                <SelectItem value="C">C</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {row.assignment && (
+                            <Input
+                              value={row.assignment.castingCategory || ""}
+                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "castingCategory", e.target.value)}
+                              placeholder="Category"
+                              className="h-8 text-sm"
+                              data-testid={`input-category-${row.seatId}`}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {row.assignment && (
+                            <Checkbox
+                              checked={!!row.assignment.bookingEmailSent}
+                              onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "bookingEmailSent", row.assignment!.bookingEmailSent)}
+                              data-testid={`checkbox-email-sent-${row.seatId}`}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {row.assignment && (
+                            <Checkbox
+                              checked={!!row.assignment.confirmedRsvp}
+                              onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "confirmedRsvp", row.assignment!.confirmedRsvp)}
+                              data-testid={`checkbox-rsvp-${row.seatId}`}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {row.assignment && (
+                            <Checkbox
+                              checked={!!row.assignment.paperworkSent}
+                              onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "paperworkSent", row.assignment!.paperworkSent)}
+                              data-testid={`checkbox-paperwork-sent-${row.seatId}`}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {row.assignment && (
+                            <Checkbox
+                              checked={!!row.assignment.paperworkReceived}
+                              onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "paperworkReceived", row.assignment!.paperworkReceived)}
+                              data-testid={`checkbox-paperwork-received-${row.seatId}`}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {row.assignment && (
+                            <Checkbox
+                              checked={!!row.assignment.signedIn}
+                              onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "signedIn", row.assignment!.signedIn)}
+                              data-testid={`checkbox-signed-in-${row.seatId}`}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {row.assignment && (
+                            <Textarea
+                              value={row.assignment.notes || ""}
+                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "notes", e.target.value)}
+                              placeholder="Notes"
+                              className="h-8 min-h-0 text-sm resize-none"
+                              data-testid={`textarea-notes-${row.seatId}`}
+                            />
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    </>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
