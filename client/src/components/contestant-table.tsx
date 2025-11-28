@@ -444,7 +444,19 @@ export function ContestantTable({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{contestant.auditionRating || "-"}</TableCell>
+                  <TableCell>
+                    {contestant.auditionRating ? (
+                      <span className={`font-semibold ${
+                        contestant.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
+                        contestant.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
+                        contestant.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
+                        contestant.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
+                        contestant.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' : ''
+                      }`}>
+                        {contestant.auditionRating}
+                      </span>
+                    ) : "-"}
+                  </TableCell>
                   <TableCell>{contestant.age}</TableCell>
                   <TableCell className="font-medium">{contestant.name}</TableCell>
                   <TableCell>{contestant.phone || "-"}</TableCell>
