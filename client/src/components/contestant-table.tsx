@@ -50,6 +50,7 @@ export interface Contestant {
   mobilityNotes?: string;
   criminalRecord?: string;
   photoUrl?: string | null;
+  auditionRating?: string | null;
 }
 
 interface SeatAssignment {

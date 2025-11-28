@@ -155,13 +155,8 @@ export default function Contestants() {
     displayedContestants = displayedContestants.filter(c => c.gender === filterGender);
   }
   if (filterRating !== "all") {
-    // Filter contestants who have a seat assignment with this rating
-    const contestantIdsWithRating = new Set(
-      allSeatAssignments
-        .filter((a: any) => a.rating === filterRating)
-        .map((a: any) => a.contestantId)
-    );
-    displayedContestants = displayedContestants.filter(c => contestantIdsWithRating.has(c.id));
+    // Filter contestants by their audition rating
+    displayedContestants = displayedContestants.filter(c => c.auditionRating === filterRating);
   }
   if (filterLocation !== "all") {
     // Filter contestants who have a seat assignment with this location
