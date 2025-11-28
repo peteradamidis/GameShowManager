@@ -62,6 +62,9 @@ export default function SeatingChartPage() {
   const [cancelAssignmentId, setCancelAssignmentId] = useState<string>("");
   const [cancelReason, setCancelReason] = useState<string>("");
   
+  // Reset confirmation dialog state
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  
   // Get record day ID from query parameter or fetch first available
   const searchParams = new URLSearchParams(window.location.search);
   const urlRecordDayId = searchParams.get('day');
@@ -175,7 +178,7 @@ export default function SeatingChartPage() {
     }
   };
 
-  const handleReset = async () => {
+  const handleConfirmReset = async () => {
     try {
       // Delete all seat assignments for this record day
       if (assignments && Array.isArray(assignments)) {
@@ -186,6 +189,7 @@ export default function SeatingChartPage() {
         );
       }
       await refetch();
+      setResetDialogOpen(false);
       toast({
         title: "Seating reset",
         description: "All seat assignments have been cleared.",
@@ -317,7 +321,7 @@ export default function SeatingChartPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleReset} data-testid="button-reset-seating">
+          <Button variant="outline" onClick={() => setResetDialogOpen(true)} data-testid="button-reset-seating">
             <RotateCcw className="h-4 w-4 mr-2" />
             Reset
           </Button>
@@ -429,6 +433,35 @@ export default function SeatingChartPage() {
               data-testid="button-confirm-cancel"
             >
               Confirm Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Confirmation Dialog */}
+      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <DialogContent data-testid="dialog-reset-confirmation">
+          <DialogHeader>
+            <DialogTitle>Reset Seating Chart</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to reset all seat assignments? This will remove all contestants from their seats for this record day.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setResetDialogOpen(false)}
+              data-testid="button-reset-cancel"
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleConfirmReset}
+              data-testid="button-reset-confirm"
+            >
+              Yes, Reset All
             </Button>
           </DialogFooter>
         </DialogContent>
