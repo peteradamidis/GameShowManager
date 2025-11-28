@@ -9,6 +9,7 @@ export const recordDayStatusEnum = pgEnum('record_day_status', ['draft', 'ready'
 export const tokenStatusEnum = pgEnum('token_status', ['active', 'expired', 'used', 'revoked']);
 export const responseValueEnum = pgEnum('response_value', ['pending', 'yes', 'no', 'maybe']);
 export const confirmationStatusEnum = pgEnum('confirmation_status', ['pending', 'confirmed', 'declined']);
+export const blockTypeEnum = pgEnum('block_type', ['PB', 'NPB']);
 
 // Groups table
 export const groups = pgTable("groups", {
@@ -126,6 +127,18 @@ export const bookingConfirmationTokens = pgTable("booking_confirmation_tokens", 
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Block Types table - stores PB/NPB designation for each block per record day
+export const blockTypes = pgTable("block_types", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  recordDayId: varchar("record_day_id").references(() => recordDays.id).notNull(),
+  blockNumber: integer("block_number").notNull(), // 1-7
+  blockType: blockTypeEnum("block_type").notNull(), // PB or NPB
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  // Each block on a record day can only have one type
+  uniqueBlockPerDay: unique().on(table.recordDayId, table.blockNumber),
+}));
+
 // Insert schemas
 export const insertGroupSchema = createInsertSchema(groups).omit({
   id: true,
@@ -167,6 +180,11 @@ export const insertBookingConfirmationTokenSchema = createInsertSchema(bookingCo
   createdAt: true,
 });
 
+export const insertBlockTypeSchema = createInsertSchema(blockTypes).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertGroup = z.infer<typeof insertGroupSchema>;
 export type Group = typeof groups.$inferSelect;
@@ -191,6 +209,9 @@ export type ContestantAvailability = typeof contestantAvailability.$inferSelect;
 
 export type InsertBookingConfirmationToken = z.infer<typeof insertBookingConfirmationTokenSchema>;
 export type BookingConfirmationToken = typeof bookingConfirmationTokens.$inferSelect;
+
+export type InsertBlockType = z.infer<typeof insertBlockTypeSchema>;
+export type BlockType = typeof blockTypes.$inferSelect;
 
 // Legacy user table (can be removed if not needed for auth)
 export const users = pgTable("users", {
