@@ -10,6 +10,7 @@ import {
   availabilityTokens,
   contestantAvailability,
   bookingConfirmationTokens,
+  blockTypes,
   type Contestant,
   type InsertContestant,
   type Group,
@@ -26,6 +27,8 @@ import {
   type InsertContestantAvailability,
   type BookingConfirmationToken,
   type InsertBookingConfirmationToken,
+  type BlockType,
+  type InsertBlockType,
 } from "@shared/schema";
 import { eq, and, sql, inArray } from "drizzle-orm";
 
@@ -97,6 +100,10 @@ export interface IStorage {
   getBookingConfirmationBySeatAssignment(seatAssignmentId: string): Promise<BookingConfirmationToken | undefined>;
   updateBookingConfirmationResponse(id: string, confirmationStatus: string, attendingWith?: string, notes?: string): Promise<BookingConfirmationToken | undefined>;
   revokeBookingConfirmationToken(seatAssignmentId: string): Promise<void>;
+  
+  // Block Types (PB/NPB)
+  getBlockTypesByRecordDay(recordDayId: string): Promise<BlockType[]>;
+  upsertBlockType(recordDayId: string, blockNumber: number, blockType: 'PB' | 'NPB'): Promise<BlockType>;
 }
 
 export class DbStorage implements IStorage {
@@ -700,6 +707,44 @@ export class DbStorage implements IStorage {
       .update(bookingConfirmationTokens)
       .set({ status: 'revoked' })
       .where(eq(bookingConfirmationTokens.seatAssignmentId, seatAssignmentId));
+  }
+
+  // Block Types (PB/NPB)
+  async getBlockTypesByRecordDay(recordDayId: string): Promise<BlockType[]> {
+    return db
+      .select()
+      .from(blockTypes)
+      .where(eq(blockTypes.recordDayId, recordDayId));
+  }
+
+  async upsertBlockType(recordDayId: string, blockNumber: number, blockType: 'PB' | 'NPB'): Promise<BlockType> {
+    // Try to update existing record first
+    const existing = await db
+      .select()
+      .from(blockTypes)
+      .where(
+        and(
+          eq(blockTypes.recordDayId, recordDayId),
+          eq(blockTypes.blockNumber, blockNumber)
+        )
+      );
+
+    if (existing.length > 0) {
+      // Update existing
+      const [updated] = await db
+        .update(blockTypes)
+        .set({ blockType })
+        .where(eq(blockTypes.id, existing[0].id))
+        .returning();
+      return updated;
+    } else {
+      // Insert new
+      const [created] = await db
+        .insert(blockTypes)
+        .values({ recordDayId, blockNumber, blockType })
+        .returning();
+      return created;
+    }
   }
 }
 
