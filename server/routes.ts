@@ -1201,23 +1201,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Try to fit group in current row first (in remaining space)
         if (currentRow < ROWS.length) {
-          const currentRowCapacity = ROWS[currentRow].count;
-          const remainingInRow = currentRowCapacity - positionInRow;
+          const row = ROWS[currentRow];
           
-          if (remainingInRow >= bundleSize) {
-            // Fits in current row - use it
-            for (let i = 0; i < bundleSize; i++) {
-              const row = ROWS[currentRow];
-              const seatLabel = `${row.label}${positionInRow + 1}`;
-              seatLabels.push(seatLabel);
-              usedSeats.add(seatLabel);
-              positionInRow++;
+          // Find consecutive empty seats in current row starting from positionInRow
+          let consecutiveEmpty = 0;
+          let startPos = -1;
+          
+          for (let pos = positionInRow; pos < row.count; pos++) {
+            const seatLabel = `${row.label}${pos + 1}`;
+            if (usedSeats.has(seatLabel)) {
+              // Hit an occupied seat, reset count
+              consecutiveEmpty = 0;
+              startPos = -1;
+            } else {
+              if (startPos === -1) startPos = pos;
+              consecutiveEmpty++;
+              if (consecutiveEmpty >= bundleSize) {
+                // Found enough consecutive empty seats!
+                for (let i = 0; i < bundleSize; i++) {
+                  const assignedLabel = `${row.label}${startPos + i + 1}`;
+                  seatLabels.push(assignedLabel);
+                  usedSeats.add(assignedLabel);
+                }
+                return {
+                  seatLabels,
+                  newRowState: { currentRow, positionInRow: startPos + bundleSize },
+                  success: true
+                };
+              }
             }
-            return {
-              seatLabels,
-              newRowState: { currentRow, positionInRow },
-              success: true
-            };
           }
         }
         
