@@ -8,6 +8,7 @@ import crypto from "crypto";
 import path from "path";
 import express from "express";
 import fs from "fs";
+import { sendAvailabilityEmail } from "./gmail";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -1620,7 +1621,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Availability Management Routes
 
-  // Generate tokens and prepare to send availability check emails
+  // Generate tokens and send availability check emails via Gmail
   app.post("/api/availability/send", async (req, res) => {
     try {
       const { contestantIds, recordDayIds } = req.body;
@@ -1634,8 +1635,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const tokensCreated = [];
+      const emailsSent = [];
+      const emailsFailed = [];
+
+      // Get record day info for email
+      const recordDays = await Promise.all(
+        recordDayIds.map(id => storage.getRecordDayById(id))
+      );
 
       for (const contestantId of contestantIds) {
+        const contestant = await storage.getContestantById(contestantId);
+        if (!contestant) continue;
+
         // Revoke any existing active tokens for this contestant
         await storage.revokeContestantTokens(contestantId);
 
@@ -1666,14 +1677,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
           token: tokenRecord.token,
           responseUrl: `/availability/respond/${tokenRecord.token}`,
         });
+
+        // Send email for each record day
+        for (const recordDay of recordDays) {
+          if (!recordDay) continue;
+          
+          try {
+            const baseUrl = process.env.REPLIT_DEPLOYMENT_URL || 'http://localhost:5000';
+            const responseUrl = `${baseUrl}/availability/respond/${tokenRecord.token}`;
+            const recordDayDate = new Date(recordDay.date).toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+
+            await sendAvailabilityEmail(
+              contestant.email,
+              contestant.name,
+              recordDayDate,
+              responseUrl
+            );
+
+            emailsSent.push({
+              contestantId,
+              email: contestant.email,
+              recordDayId: recordDay.id,
+            });
+          } catch (emailError: any) {
+            console.error(`Failed to send email to ${contestant.email}:`, emailError);
+            emailsFailed.push({
+              contestantId,
+              email: contestant.email,
+              error: emailError.message,
+            });
+          }
+        }
       }
 
-      // TODO: When email integration is ready, send emails here
-      // For now, just return the tokens
       res.json({
-        message: `Tokens generated for ${tokensCreated.length} contestants`,
+        message: `Processed ${tokensCreated.length} contestants`,
+        emailsSent: emailsSent.length,
+        emailsFailed: emailsFailed.length,
         tokens: tokensCreated,
-        note: "Email sending is not yet configured. Add RESEND_API_KEY and FROM_EMAIL to enable."
+        failures: emailsFailed.length > 0 ? emailsFailed : undefined,
       });
     } catch (error: any) {
       console.error("Error sending availability checks:", error);
