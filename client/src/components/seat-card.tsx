@@ -3,7 +3,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { User, X, Ban, AlertCircle } from "lucide-react";
+import { User, X, Ban, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 export interface SeatData {
@@ -17,6 +17,7 @@ export interface SeatData {
   attendingWith?: string;
   availabilityStatus?: string;
   auditionRating?: string; // A+, A, B+, B, C
+  medicalQuestion?: string; // Y/N from booking master
 }
 
 interface SeatCardProps {
@@ -103,9 +104,9 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
             <p className="font-medium truncate text-xs flex-1" title={seat.contestantName}>
               {seat.contestantName}
             </p>
-            {contestantDetails?.medicalInfo && (
+            {seat.medicalQuestion === 'Y' && contestantDetails?.medicalInfo && (
               <div title="Medical information">
-                <AlertCircle className="h-3 w-3 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                <Plus className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0 font-bold" />
               </div>
             )}
           </div>
