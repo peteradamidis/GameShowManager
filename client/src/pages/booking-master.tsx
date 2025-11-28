@@ -94,6 +94,7 @@ const ROWS = [
 export default function BookingMaster() {
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
+  const [confirmSendOpen, setConfirmSendOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
@@ -235,7 +236,12 @@ export default function BookingMaster() {
       });
       return;
     }
+    setConfirmSendOpen(true);
+  };
+
+  const handleConfirmSend = () => {
     sendBookingEmailsMutation.mutate(Array.from(selectedAssignments));
+    setConfirmSendOpen(false);
   };
 
   const exportToExcel = () => {

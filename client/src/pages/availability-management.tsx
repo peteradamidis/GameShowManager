@@ -54,6 +54,7 @@ export default function AvailabilityManagement() {
   const [selectedContestants, setSelectedContestants] = useState<Set<string>>(new Set());
   const [selectedRecordDays, setSelectedRecordDays] = useState<Set<string>>(new Set());
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [confirmSendOpen, setConfirmSendOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
@@ -87,9 +88,10 @@ export default function AvailabilityManagement() {
     onSuccess: (data: any) => {
       toast({
         title: "Availability checks sent!",
-        description: `Generated ${data.tokens.length} availability check tokens.`,
+        description: `Generated ${data.tokens.length} availability check tokens. ${data.emailsSent} email(s) sent${data.emailsFailed > 0 ? `, ${data.emailsFailed} failed` : ''}.`,
       });
       setSendDialogOpen(false);
+      setConfirmSendOpen(false);
       setSelectedContestants(new Set());
       setSelectedRecordDays(new Set());
       queryClient.invalidateQueries({ queryKey: ["/api/availability/status"] });
@@ -279,11 +281,76 @@ export default function AvailabilityManagement() {
                 Cancel
               </Button>
               <Button
-                onClick={() => sendMutation.mutate()}
-                disabled={selectedContestants.size === 0 || selectedRecordDays.size === 0 || sendMutation.isPending}
+                onClick={() => setConfirmSendOpen(true)}
+                disabled={selectedContestants.size === 0 || selectedRecordDays.size === 0}
                 data-testid="button-confirm-send"
               >
-                {sendMutation.isPending ? "Sending..." : `Send to ${selectedContestants.size} Contestant${selectedContestants.size !== 1 ? 's' : ''}`}
+                {`Review & Send to ${selectedContestants.size} Contestant${selectedContestants.size !== 1 ? 's' : ''}`}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Confirmation Preview Dialog */}
+        <Dialog open={confirmSendOpen} onOpenChange={setConfirmSendOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Confirm Sending Availability Checks</DialogTitle>
+              <DialogDescription>
+                Please review the details below before sending
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-semibold mb-2">Record Days</h3>
+                <div className="bg-muted p-3 rounded-md space-y-1">
+                  {Array.from(selectedRecordDays).map(dayId => {
+                    const day = recordDays.find(d => d.id === dayId);
+                    return (
+                      <div key={dayId} className="text-sm">
+                        {day && format(new Date(day.date), 'EEE, MMM d, yyyy')}
+                        {day?.rxNumber && <span className="text-muted-foreground ml-2">({day.rxNumber})</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Recipients ({selectedContestants.size})</h3>
+                <div className="bg-muted p-3 rounded-md max-h-48 overflow-auto space-y-1">
+                  {Array.from(selectedContestants).map(contestantId => {
+                    const contestant = contestants.find(c => c.id === contestantId);
+                    return (
+                      <div key={contestantId} className="text-sm">
+                        <div className="font-medium">{contestant?.name}</div>
+                        <div className="text-muted-foreground text-xs">
+                          {contestant?.email || 'No email'} • {contestant?.age}, {contestant?.gender}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-3 rounded-md">
+                <p className="text-sm text-amber-900 dark:text-amber-100">
+                  {selectedContestants.size} availability checks will be sent via Gmail to the recipients listed above.
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setConfirmSendOpen(false)} data-testid="button-cancel-confirm">
+                Cancel
+              </Button>
+              <Button
+                onClick={() => sendMutation.mutate()}
+                disabled={sendMutation.isPending}
+                data-testid="button-final-send"
+              >
+                {sendMutation.isPending ? "Sending..." : "Yes, Send Availability Checks"}
               </Button>
             </DialogFooter>
           </DialogContent>
