@@ -1183,8 +1183,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const assignSeatsToBundle = (
         bundle: GroupBundle,
         blockNumber: number,
-        rowState: { currentRow: number; positionInRow: number }
-      ): { seatLabels: string[]; newRowState: { currentRow: number; positionInRow: number } } => {
+        rowState: { currentRow: number; positionInRow: number },
+        usedSeats: Set<string>
+      ): { seatLabels: string[]; newRowState: { currentRow: number; positionInRow: number }; success: boolean } => {
         const seatLabels: string[] = [];
         let { currentRow, positionInRow } = rowState;
         const bundleSize = bundle.size;
@@ -1204,19 +1205,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        // If we've run out of rows, just assign consecutively (fallback)
+        // If we've run out of rows, return failure
         if (currentRow >= ROWS.length) {
-          currentRow = ROWS.length - 1; // Last row
-          positionInRow = 0;
+          return {
+            seatLabels: [],
+            newRowState: rowState,
+            success: false
+          };
         }
         
         // Assign seats to all contestants in the bundle
         for (let i = 0; i < bundleSize; i++) {
           const row = ROWS[currentRow];
-          if (!row) break;
+          if (!row || currentRow >= ROWS.length) {
+            // No more rows available - return failure with partial results
+            return {
+              seatLabels: [],
+              newRowState: rowState,
+              success: false
+            };
+          }
           
           const seatLabel = `${row.label}${positionInRow + 1}`;
+          
+          // Check for duplicate seat (shouldn't happen, but safety check)
+          if (usedSeats.has(seatLabel)) {
+            console.error(`Duplicate seat detected: ${seatLabel} in block ${blockNumber}`);
+            return {
+              seatLabels: [],
+              newRowState: rowState,
+              success: false
+            };
+          }
+          
           seatLabels.push(seatLabel);
+          usedSeats.add(seatLabel);
           positionInRow++;
           
           // Move to next row if current row is full
@@ -1228,7 +1251,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         return {
           seatLabels,
-          newRowState: { currentRow, positionInRow }
+          newRowState: { currentRow, positionInRow },
+          success: true
         };
       }
       
@@ -1236,18 +1260,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const block of blocks) {
         const blockAssignments = assignments.filter(a => a.blockNumber === block.blockNumber);
         let rowState = { currentRow: 0, positionInRow: 0 };
+        const usedSeats = new Set<string>(); // Track used seats per block
 
         for (const { bundle } of blockAssignments) {
-          const { seatLabels, newRowState } = assignSeatsToBundle(bundle, block.blockNumber, rowState);
-          rowState = newRowState;
+          const result = assignSeatsToBundle(bundle, block.blockNumber, rowState, usedSeats);
+          
+          if (!result.success) {
+            // Skip this bundle - no capacity left in block
+            console.log(`Skipping bundle in block ${block.blockNumber} - no seat capacity`);
+            continue;
+          }
+          
+          rowState = result.newRowState;
           
           // All contestants in a bundle get consecutive seats in the same row
           bundle.contestants.forEach((contestant, idx) => {
-            plan.push({
-              contestant,
-              blockNumber: block.blockNumber,
-              seatLabel: seatLabels[idx] || `E${idx + 1}`, // Fallback
-            });
+            if (result.seatLabels[idx]) {
+              plan.push({
+                contestant,
+                blockNumber: block.blockNumber,
+                seatLabel: result.seatLabels[idx],
+              });
+            }
           });
         }
       }
