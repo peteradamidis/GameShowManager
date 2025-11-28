@@ -815,6 +815,18 @@ export function ContestantTable({
                           <StatusBadge status={contestantDetails.availabilityStatus} />
                         </div>
                       </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Audition Rating</label>
+                        <p className={`text-sm mt-1 font-semibold ${
+                          contestantDetails.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
+                          contestantDetails.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
+                          contestantDetails.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
+                          contestantDetails.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
+                          contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' : 'text-muted-foreground'
+                        }`}>
+                          {contestantDetails.auditionRating || 'Not rated'}
+                        </p>
+                      </div>
                       {contestantDetails.groupId && (
                         <div>
                           <label className="text-xs font-medium text-muted-foreground">Group ID</label>
