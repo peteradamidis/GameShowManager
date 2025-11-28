@@ -1024,18 +1024,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const skippedBundles: { id: string; reason: string }[] = [];
 
       for (const bundle of bundles) {
-        // Find feasible blocks (enough capacity, but never exceed MAX_AUTO_ASSIGN_SEATS)
-        let feasibleBlocks = blocks.filter(
-          (block) => block.seatsUsed + bundle.size <= MAX_AUTO_ASSIGN_SEATS
-        );
+        // Find feasible blocks (capacity depends on block type)
+        // PB blocks: max 20 seats, NPB blocks: can fill entire 22 seats
+        let feasibleBlocks = blocks.filter((block) => {
+          const maxSeats = block.blockType === 'NPB' ? SEATS_PER_BLOCK : MAX_AUTO_ASSIGN_SEATS;
+          return block.seatsUsed + bundle.size <= maxSeats;
+        });
 
-        // CRITICAL: C-rated contestants can ONLY go to NPB blocks
+        // CRITICAL: C-rated contestants can ONLY go to NPB blocks (max 6 per NPB block)
         if (bundle.hasCRating) {
-          feasibleBlocks = feasibleBlocks.filter(block => block.blockType === 'NPB');
+          feasibleBlocks = feasibleBlocks.filter(block => {
+            if (block.blockType !== 'NPB') return false;
+            // Check if adding this bundle would exceed 6 C-rated contestants
+            const cCount = block.ratingCounts['C'] + bundle.ratingCounts['C'];
+            return cCount <= 6;
+          });
           
           if (feasibleBlocks.length === 0) {
             console.log(`Warning: Could not place group ${bundle.id} with C-rated contestants - no NPB blocks with capacity`);
-            skippedBundles.push({ id: bundle.id, reason: 'C-rated contestants require NPB block, none available with capacity' });
+            skippedBundles.push({ id: bundle.id, reason: 'C-rated contestants require NPB block, none available with capacity (max 6 C-rated per NPB block)' });
             continue;
           }
         }
