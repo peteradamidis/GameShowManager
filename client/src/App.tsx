@@ -16,6 +16,7 @@ import Settings from "@/pages/settings";
 import AvailabilityResponsePage from "@/pages/availability-response-page";
 import BookingConfirmationPage from "@/pages/booking-confirmation-page";
 import NotFound from "@/pages/not-found";
+import logoImage from "@assets/6b13f568-ecb4-421a-8c1d-6edbe0b1a6c7_1764305481833.png";
 
 function Router() {
   return (
@@ -59,7 +60,10 @@ export default function App() {
               <div className="flex flex-col flex-1 overflow-hidden">
                 <header className="flex items-center justify-between p-4 border-b">
                   <SidebarTrigger data-testid="button-sidebar-toggle" />
-                  <h2 className="text-lg font-semibold">Deal or No Deal Contestant Manager</h2>
+                  <div className="flex items-center gap-3">
+                    <img src={logoImage} alt="Deal or No Deal" className="h-12" />
+                    <h2 className="text-lg font-semibold">Deal or No Deal Contestant Manager</h2>
+                  </div>
                   <div className="w-9"></div>
                 </header>
                 <main className="flex-1 overflow-auto p-6">
