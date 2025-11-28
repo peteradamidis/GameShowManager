@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Generate seats with the proper row structure
 const SEAT_ROWS = [
@@ -64,6 +65,11 @@ export default function SeatingChartPage() {
   
   // Reset confirmation dialog state
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  
+  // Auto-assign block selection dialog state
+  const [autoAssignDialogOpen, setAutoAssignDialogOpen] = useState(false);
+  const [selectedBlocks, setSelectedBlocks] = useState<number[]>([1, 2, 3, 4, 5, 6, 7]);
+  const [isAutoAssigning, setIsAutoAssigning] = useState(false);
   
   // Get record day ID from query parameter or fetch first available
   const searchParams = new URLSearchParams(window.location.search);
@@ -151,10 +157,39 @@ export default function SeatingChartPage() {
     });
   }
 
+  const handleBlockToggle = (blockNum: number) => {
+    setSelectedBlocks(prev => 
+      prev.includes(blockNum) 
+        ? prev.filter(b => b !== blockNum)
+        : [...prev, blockNum].sort((a, b) => a - b)
+    );
+  };
+
+  const handleSelectAllBlocks = () => {
+    if (selectedBlocks.length === 7) {
+      setSelectedBlocks([]);
+    } else {
+      setSelectedBlocks([1, 2, 3, 4, 5, 6, 7]);
+    }
+  };
+
   const handleAutoAssign = async () => {
+    if (selectedBlocks.length === 0) {
+      toast({
+        title: "No blocks selected",
+        description: "Please select at least one block to auto-assign.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAutoAssigning(true);
     try {
-      const result: any = await apiRequest('POST', `/api/auto-assign/${recordDayId}`, {});
+      const result: any = await apiRequest('POST', `/api/auto-assign/${recordDayId}`, {
+        blocks: selectedBlocks
+      });
       await refetch();
+      setAutoAssignDialogOpen(false);
       
       const demographics = result.demographics;
       const blockCount = result.blockStats?.length || 0;
@@ -168,9 +203,13 @@ export default function SeatingChartPage() {
         return;
       }
       
+      const blocksText = selectedBlocks.length === 7 
+        ? "all blocks" 
+        : `Block${selectedBlocks.length > 1 ? 's' : ''} ${selectedBlocks.join(', ')}`;
+      
       const description = demographics.warning 
-        ? `⚠️ ${demographics.warning}. Assigned ${demographics.femaleCount + demographics.maleCount} contestants (${demographics.femalePercentage}% female).`
-        : `Assigned ${demographics.femaleCount + demographics.maleCount} contestants across ${blockCount} blocks. Gender ratio: ${demographics.femalePercentage}% female (target: ${demographics.targetRange})`;
+        ? `⚠️ ${demographics.warning}. Assigned ${demographics.femaleCount + demographics.maleCount} contestants to ${blocksText} (${demographics.femalePercentage}% female).`
+        : `Assigned ${demographics.femaleCount + demographics.maleCount} contestants to ${blocksText}. Gender ratio: ${demographics.femalePercentage}% female (target: ${demographics.targetRange})`;
       
       toast({
         title: demographics.meetsTarget ? "Auto-assign completed" : "Auto-assign completed with warning",
@@ -184,6 +223,8 @@ export default function SeatingChartPage() {
         description: errorMsg,
         variant: "destructive",
       });
+    } finally {
+      setIsAutoAssigning(false);
     }
   };
 
@@ -334,7 +375,7 @@ export default function SeatingChartPage() {
             <RotateCcw className="h-4 w-4 mr-2" />
             Reset
           </Button>
-          <Button variant="outline" onClick={handleAutoAssign} data-testid="button-auto-assign">
+          <Button variant="outline" onClick={() => setAutoAssignDialogOpen(true)} data-testid="button-auto-assign">
             <Wand2 className="h-4 w-4 mr-2" />
             Auto-Assign Seats
           </Button>
@@ -471,6 +512,73 @@ export default function SeatingChartPage() {
               data-testid="button-reset-confirm"
             >
               Yes, Reset All
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Auto-Assign Block Selection Dialog */}
+      <Dialog open={autoAssignDialogOpen} onOpenChange={setAutoAssignDialogOpen}>
+        <DialogContent data-testid="dialog-auto-assign-blocks">
+          <DialogHeader>
+            <DialogTitle>Auto-Assign Seats</DialogTitle>
+            <DialogDescription>
+              Select which blocks to include in the auto-assignment. The system will assign available contestants while balancing demographics and ratings.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b">
+              <Checkbox 
+                id="select-all-blocks"
+                checked={selectedBlocks.length === 7}
+                onCheckedChange={handleSelectAllBlocks}
+                data-testid="checkbox-select-all-blocks"
+              />
+              <Label htmlFor="select-all-blocks" className="font-medium cursor-pointer">
+                Select All Blocks
+              </Label>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2, 3, 4, 5, 6, 7].map(blockNum => (
+                <div key={blockNum} className="flex items-center gap-2">
+                  <Checkbox 
+                    id={`block-${blockNum}`}
+                    checked={selectedBlocks.includes(blockNum)}
+                    onCheckedChange={() => handleBlockToggle(blockNum)}
+                    data-testid={`checkbox-block-${blockNum}`}
+                  />
+                  <Label htmlFor={`block-${blockNum}`} className="cursor-pointer">
+                    Block {blockNum}
+                  </Label>
+                </div>
+              ))}
+            </div>
+            
+            {selectedBlocks.length > 0 && (
+              <p className="text-sm text-muted-foreground">
+                {selectedBlocks.length === 7 
+                  ? "All 7 blocks selected" 
+                  : `${selectedBlocks.length} block${selectedBlocks.length > 1 ? 's' : ''} selected: ${selectedBlocks.join(', ')}`}
+              </p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setAutoAssignDialogOpen(false)}
+              data-testid="button-auto-assign-cancel"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAutoAssign}
+              disabled={selectedBlocks.length === 0 || isAutoAssigning}
+              data-testid="button-auto-assign-confirm"
+            >
+              {isAutoAssigning ? "Assigning..." : `Auto-Assign to ${selectedBlocks.length === 7 ? 'All Blocks' : `${selectedBlocks.length} Block${selectedBlocks.length > 1 ? 's' : ''}`}`}
             </Button>
           </DialogFooter>
         </DialogContent>
