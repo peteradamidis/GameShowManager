@@ -537,12 +537,12 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
             </div>
 
             {/* Center Stage Indicator with Podium */}
-            <div className="flex items-center justify-center py-6 gap-4">
+            <div className="relative flex items-center justify-center py-6">
               <div className="border-2 border-dashed border-primary rounded-lg px-12 py-8 text-center">
                 <p className="text-lg font-semibold text-primary">STAGE</p>
                 <p className="text-xs text-muted-foreground mt-1">Performance Area</p>
               </div>
-              <div className="border-2 border-dashed border-muted-foreground rounded-lg px-2 py-6 flex items-center justify-center">
+              <div className="absolute right-0 border-2 border-dashed border-muted-foreground rounded-lg px-2 py-6 flex items-center justify-center">
                 <p className="text-sm font-semibold text-muted-foreground tracking-widest" style={{ writingMode: 'vertical-rl' }}>PODIUM</p>
               </div>
             </div>
