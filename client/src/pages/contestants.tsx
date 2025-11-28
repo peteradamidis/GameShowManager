@@ -101,6 +101,7 @@ export default function Contestants() {
   const [filterGender, setFilterGender] = useState<string>("all");
   const [filterRating, setFilterRating] = useState<string>("all");
   const [filterLocation, setFilterLocation] = useState<string>("all");
+  const [filterStandbyStatus, setFilterStandbyStatus] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
   
   const ITEMS_PER_PAGE = 50;
@@ -140,6 +141,16 @@ export default function Contestants() {
     queryKey: ['/api/seat-assignments'],
   });
 
+  // Fetch all standbys for filtering
+  const { data: allStandbys = [] } = useQuery<any[]>({
+    queryKey: ['/api/standbys'],
+  });
+
+  // Create a set of contestant IDs who are standbys
+  const standbyContestantIds = useMemo(() => {
+    return new Set(allStandbys.map((s: any) => s.contestantId));
+  }, [allStandbys]);
+
   // Get unique values for filter dropdowns
   const uniqueGenders = Array.from(new Set(contestants.map(c => c.gender).filter(Boolean)));
   const uniqueCities = Array.from(new Set(contestants.map(c => c.address).filter((addr): addr is string => Boolean(addr)))).sort();
@@ -166,13 +177,21 @@ export default function Contestants() {
     // Filter contestants by their city (address field)
     displayedContestants = displayedContestants.filter(c => c.address === filterLocation);
   }
+  if (filterStandbyStatus !== "all") {
+    // Filter contestants by standby status
+    if (filterStandbyStatus === "is_standby") {
+      displayedContestants = displayedContestants.filter(c => standbyContestantIds.has(c.id));
+    } else if (filterStandbyStatus === "not_standby") {
+      displayedContestants = displayedContestants.filter(c => !standbyContestantIds.has(c.id));
+    }
+  }
 
   const isLoading = loadingContestants || (filterRecordDayId && loadingFiltered);
 
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue]);
+  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus]);
 
   // Pagination calculations
   const totalPages = Math.ceil(displayedContestants.length / ITEMS_PER_PAGE);
@@ -448,7 +467,7 @@ export default function Contestants() {
                 data-testid="button-add-standbys"
               >
                 <UserCheck className="h-4 w-4 mr-2" />
-                Add {selectedContestants.length} as Standby
+                Book {selectedContestants.length} as Standby
               </Button>
               <Button 
                 onClick={handleOpenAssignDialog} 
@@ -590,8 +609,22 @@ export default function Contestants() {
             </div>
           )}
 
+          <div className="flex-1 min-w-[200px] max-w-xs">
+            <label className="text-sm font-medium mb-2 block">Standby</label>
+            <Select value={filterStandbyStatus} onValueChange={setFilterStandbyStatus}>
+              <SelectTrigger data-testid="select-filter-standby">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="is_standby">Is Standby</SelectItem>
+                <SelectItem value="not_standby">Not Standby</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
-            filterLocation !== "all" || filterRecordDayId) && (
+            filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all") && (
             <Button 
               variant="outline" 
               onClick={() => {
@@ -601,6 +634,7 @@ export default function Contestants() {
                 setFilterLocation("all");
                 setFilterRecordDayId("");
                 setFilterResponseValue("all");
+                setFilterStandbyStatus("all");
               }}
               data-testid="button-clear-filters"
             >
@@ -613,7 +647,7 @@ export default function Contestants() {
 
       {/* Results Summary */}
       {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
-        filterLocation !== "all" || filterRecordDayId) && (
+        filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all") && (
         <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="secondary" data-testid="badge-filter-count">
             {displayedContestants.length} contestant{displayedContestants.length !== 1 ? 's' : ''}
@@ -634,6 +668,11 @@ export default function Contestants() {
           {filterRecordDayId && (
             <Badge variant="outline">
               Availability: {new Date(recordDays.find((d: any) => d.id === filterRecordDayId)?.date).toLocaleDateString()} ({filterResponseValue === "all" ? "all responses" : filterResponseValue})
+            </Badge>
+          )}
+          {filterStandbyStatus !== "all" && (
+            <Badge variant="outline">
+              Standby: {filterStandbyStatus === "is_standby" ? "Is Standby" : "Not Standby"}
             </Badge>
           )}
         </div>
@@ -892,13 +931,13 @@ export default function Contestants() {
         </DialogContent>
       </Dialog>
 
-      {/* Add as Standby Dialog */}
+      {/* Book as Standby Dialog */}
       <Dialog open={standbyDialogOpen} onOpenChange={setStandbyDialogOpen}>
         <DialogContent className="max-w-md" data-testid="dialog-add-standby">
           <DialogHeader>
-            <DialogTitle>Add as Standby</DialogTitle>
+            <DialogTitle>Book as Standby</DialogTitle>
             <DialogDescription>
-              Add {selectedContestants.length} contestant{selectedContestants.length !== 1 ? 's' : ''} as standby for a record day.
+              Book {selectedContestants.length} contestant{selectedContestants.length !== 1 ? 's' : ''} as standby for a record day.
               Standbys are backup contestants who receive separate booking emails.
             </DialogDescription>
           </DialogHeader>
@@ -938,7 +977,7 @@ export default function Contestants() {
               disabled={!selectedRecordDay || addStandbyMutation.isPending}
               data-testid="button-confirm-add-standby"
             >
-              {addStandbyMutation.isPending ? "Adding..." : `Add ${selectedContestants.length} as Standby`}
+              {addStandbyMutation.isPending ? "Booking..." : `Book ${selectedContestants.length} as Standby`}
             </Button>
           </DialogFooter>
         </DialogContent>
