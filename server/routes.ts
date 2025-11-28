@@ -1368,6 +1368,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .forEach(a => {
             usedSeats.add(a.seatLabel);
           });
+        
+        // For PB blocks, reserve the last 2 adjacent seats in row E (E3 and E4) to ensure 
+        // the 2 empty seats are next to each other in the same row.
+        // Since auto-assign bundles are max size 2 (pairs from attendingWith matching),
+        // E1-E2 still provides 2 consecutive seats for any pair, and rows A-D remain fully available.
+        if (block.blockType === 'PB') {
+          usedSeats.add('E3');
+          usedSeats.add('E4');
+        }
 
         for (const { bundle } of blockAssignments) {
           const result = assignSeatsToBundle(bundle, block.blockNumber, rowState, usedSeats);
