@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Calendar, Mail } from "lucide-react";
+import { Download, Calendar, Mail, Maximize2, Minimize2 } from "lucide-react";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 
@@ -95,6 +95,8 @@ export default function BookingMaster() {
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
   const [confirmSendOpen, setConfirmSendOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
@@ -244,6 +246,31 @@ export default function BookingMaster() {
     setConfirmSendOpen(false);
   };
 
+  const handleToggleFullscreen = async () => {
+    if (!tableContainerRef.current) return;
+
+    try {
+      if (!isFullscreen) {
+        if (tableContainerRef.current.requestFullscreen) {
+          await tableContainerRef.current.requestFullscreen();
+          setIsFullscreen(true);
+        }
+      } else {
+        if (document.fullscreenElement) {
+          await document.exitFullscreen();
+          setIsFullscreen(false);
+        }
+      }
+    } catch (err) {
+      console.error("Error toggling fullscreen:", err);
+      toast({
+        title: "Fullscreen error",
+        description: "Could not toggle fullscreen mode",
+        variant: "destructive",
+      });
+    }
+  };
+
   const exportToExcel = () => {
     if (!selectedRecordDay || bookingRows.length === 0) {
       return;
@@ -372,6 +399,15 @@ export default function BookingMaster() {
             <Download className="h-4 w-4 mr-2" />
             Export to Excel
           </Button>
+          <Button 
+            onClick={handleToggleFullscreen} 
+            variant="outline" 
+            size="icon"
+            title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            data-testid="button-toggle-fullscreen"
+          >
+            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </Button>
         </div>
       </div>
 
@@ -397,7 +433,11 @@ export default function BookingMaster() {
       </div>
 
       {selectedRecordDay && (
-        <div className="border rounded-md overflow-auto" style={{ maxHeight: "calc(100vh - 300px)" }}>
+        <div 
+          ref={tableContainerRef}
+          className="border rounded-md overflow-auto" 
+          style={isFullscreen ? { height: "100vh", width: "100vw" } : { maxHeight: "calc(100vh - 300px)" }}
+        >
           {loadingAssignments ? (
             <div className="p-8 text-center text-muted-foreground">
               Loading assignments...
