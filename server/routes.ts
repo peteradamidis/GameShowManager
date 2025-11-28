@@ -1356,6 +1356,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get existing seat assignments from database for this record day
       const existingAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
       
+      // Track PB blocks that couldn't achieve adjacent empty seats
+      const pbAdjacencyWarnings: { blockNumber: number; reason: string }[] = [];
+      
       // For each block, assign seats to bundles with row-aware logic
       for (const block of blocks) {
         const blockAssignments = assignments.filter(a => a.blockNumber === block.blockNumber);
@@ -1368,15 +1371,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .forEach(a => {
             usedSeats.add(a.seatLabel);
           });
-        
-        // For PB blocks, reserve the last 2 adjacent seats in row E (E3 and E4) to ensure 
-        // the 2 empty seats are next to each other in the same row.
-        // Since auto-assign bundles are max size 2 (pairs from attendingWith matching),
-        // E1-E2 still provides 2 consecutive seats for any pair, and rows A-D remain fully available.
-        if (block.blockType === 'PB') {
-          usedSeats.add('E3');
-          usedSeats.add('E4');
-        }
 
         for (const { bundle } of blockAssignments) {
           const result = assignSeatsToBundle(bundle, block.blockNumber, rowState, usedSeats);
@@ -1399,6 +1393,196 @@ export async function registerRoutes(app: Express): Promise<Server> {
               });
             }
           });
+        }
+        
+        // POST-ASSIGNMENT COMPACTION for PB blocks:
+        // Ensure 2 empty seats are adjacent in a randomized row
+        if (block.blockType === 'PB') {
+          // Mulberry32 seeded PRNG for robust randomization
+          const mulberry32 = (seed: number) => {
+            return () => {
+              let t = seed += 0x6D2B79F5;
+              t = Math.imul(t ^ t >>> 15, t | 1);
+              t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+              return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            };
+          };
+          
+          // Hash recordDayId + blockNumber for seed
+          let seedHash = 0;
+          for (let i = 0; i < recordDayId.length; i++) {
+            const c = recordDayId.charCodeAt(i);
+            seedHash = ((seedHash << 5) - seedHash) + c;
+            seedHash |= 0;
+          }
+          seedHash = Math.abs(seedHash * 7919 + block.blockNumber * 31);
+          const rng = mulberry32(seedHash);
+          
+          // Build seat map for this block
+          const allSeats: string[] = [];
+          ROWS.forEach(row => {
+            for (let i = 1; i <= row.count; i++) {
+              allSeats.push(`${row.label}${i}`);
+            }
+          });
+          
+          // Get assigned seats in plan for this block
+          const blockPlanItems = plan.filter(p => p.blockNumber === block.blockNumber);
+          const assignedSeats = new Set(blockPlanItems.map(p => p.seatLabel));
+          
+          // Get existing assignments from database
+          const existingSeatsInBlock = new Set(
+            existingAssignments
+              .filter(a => a.blockNumber === block.blockNumber)
+              .map(a => a.seatLabel)
+          );
+          
+          // Find empty seats
+          const emptySeats = allSeats.filter(s => 
+            !assignedSeats.has(s) && !existingSeatsInBlock.has(s)
+          );
+          
+          // PB blocks should have exactly 2 empty seats (fill 20 of 22)
+          if (emptySeats.length > 2) {
+            pbAdjacencyWarnings.push({ 
+              blockNumber: block.blockNumber, 
+              reason: `Block under-filled: ${emptySeats.length} empty seats instead of 2. Consider adding more contestants.`
+            });
+          } else if (emptySeats.length < 2) {
+            pbAdjacencyWarnings.push({ 
+              blockNumber: block.blockNumber, 
+              reason: `Block over-filled: Only ${emptySeats.length} empty seat(s) instead of 2.`
+            });
+          }
+          
+          // Only process compaction if exactly 2 empty seats
+          if (emptySeats.length === 2) {
+            const [seat1, seat2] = emptySeats;
+            const row1 = seat1.charAt(0);
+            const row2 = seat2.charAt(0);
+            const pos1 = parseInt(seat1.slice(1));
+            const pos2 = parseInt(seat2.slice(1));
+            const areAdjacent = row1 === row2 && Math.abs(pos1 - pos2) === 1;
+            
+            if (!areAdjacent) {
+              // Build bundle map (which contestants are in same bundle)
+              const seatToBundleInfo = new Map<string, {
+                contestantId: string;
+                bundleId: string;
+                bundleSize: number;
+                planIndex: number;
+              }>();
+              
+              for (let i = 0; i < plan.length; i++) {
+                const item = plan[i];
+                if (item.blockNumber !== block.blockNumber) continue;
+                
+                const bundleMatch = blockAssignments.find(a =>
+                  a.bundle.contestants.some(c => c.id === item.contestant.id)
+                );
+                if (bundleMatch) {
+                  seatToBundleInfo.set(item.seatLabel, {
+                    contestantId: item.contestant.id,
+                    bundleId: bundleMatch.bundle.id,
+                    bundleSize: bundleMatch.bundle.size,
+                    planIndex: i,
+                  });
+                }
+              }
+              
+              // Randomly choose which empty seat to preserve (determines which row gets empties)
+              const preserveFirst = rng() < 0.5;
+              const keepSeat = preserveFirst ? seat1 : seat2;
+              const fillSeat = preserveFirst ? seat2 : seat1;
+              const keepRow = keepSeat.charAt(0);
+              const keepPos = parseInt(keepSeat.slice(1));
+              
+              // Strategy: Find a solo adjacent to keepSeat and move it to fillSeat
+              // This creates 2 adjacent empties: keepSeat + the vacated position
+              const adjacentSeats: string[] = [];
+              const rowDef = ROWS.find(r => r.label === keepRow);
+              if (keepPos > 1) adjacentSeats.push(`${keepRow}${keepPos - 1}`);
+              if (rowDef && keepPos < rowDef.count) adjacentSeats.push(`${keepRow}${keepPos + 1}`);
+              
+              let moved = false;
+              for (const adjSeat of adjacentSeats) {
+                if (moved) break;
+                const info = seatToBundleInfo.get(adjSeat);
+                // Only move solos (size 1) - don't split pairs
+                if (info && info.bundleSize === 1) {
+                  plan[info.planIndex].seatLabel = fillSeat;
+                  moved = true;
+                }
+              }
+              
+              // Fallback: Try same strategy but with the other empty seat
+              if (!moved) {
+                const otherKeep = preserveFirst ? seat2 : seat1;
+                const otherFill = preserveFirst ? seat1 : seat2;
+                const otherRow = otherKeep.charAt(0);
+                const otherPos = parseInt(otherKeep.slice(1));
+                
+                const otherAdjacent: string[] = [];
+                const otherRowDef = ROWS.find(r => r.label === otherRow);
+                if (otherPos > 1) otherAdjacent.push(`${otherRow}${otherPos - 1}`);
+                if (otherRowDef && otherPos < otherRowDef.count) otherAdjacent.push(`${otherRow}${otherPos + 1}`);
+                
+                for (const adjSeat of otherAdjacent) {
+                  if (moved) break;
+                  const info = seatToBundleInfo.get(adjSeat);
+                  if (info && info.bundleSize === 1) {
+                    plan[info.planIndex].seatLabel = otherFill;
+                    moved = true;
+                  }
+                }
+              }
+              
+              // Last resort: Find ANY solo in the block that's in same row as one empty seat
+              if (!moved) {
+                const allSolos: { seat: string; row: string; pos: number; planIndex: number }[] = [];
+                seatToBundleInfo.forEach((info, seat) => {
+                  if (info.bundleSize === 1) {
+                    allSolos.push({
+                      seat,
+                      row: seat.charAt(0),
+                      pos: parseInt(seat.slice(1)),
+                      planIndex: info.planIndex,
+                    });
+                  }
+                });
+                
+                // Try to find a solo that when moved creates adjacency
+                for (const solo of allSolos) {
+                  if (moved) break;
+                  
+                  // Check if moving this solo to fillSeat would work
+                  // The solo must be adjacent to keepSeat (same row, diff by 1)
+                  if (solo.row === keepRow && Math.abs(solo.pos - keepPos) === 1) {
+                    plan[solo.planIndex].seatLabel = fillSeat;
+                    moved = true;
+                  }
+                  
+                  // Also try with the other empty seat as the "keep"
+                  const altKeep = preserveFirst ? seat2 : seat1;
+                  const altFill = preserveFirst ? seat1 : seat2;
+                  const altRow = altKeep.charAt(0);
+                  const altPos = parseInt(altKeep.slice(1));
+                  if (!moved && solo.row === altRow && Math.abs(solo.pos - altPos) === 1) {
+                    plan[solo.planIndex].seatLabel = altFill;
+                    moved = true;
+                  }
+                }
+                
+                if (!moved) {
+                  const reason = existingSeatsInBlock.size > 0 
+                    ? "Pre-existing manual assignments prevent adjacency. Consider using manual seat swaps to reorganize."
+                    : "No movable solo contestant found adjacent to empty seats (all pairs block).";
+                  pbAdjacencyWarnings.push({ blockNumber: block.blockNumber, reason });
+                  console.log(`PB block ${block.blockNumber}: Could not create adjacent empty seats - ${reason}`);
+                }
+              }
+            }
+          }
         }
       }
 
@@ -1446,7 +1630,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             femaleRatio: b.femaleCount + b.maleCount > 0 ? (b.femaleCount / (b.femaleCount + b.maleCount) * 100).toFixed(1) + '%' : 'N/A',
             meanAge: b.meanAge.toFixed(1),
             ratings: b.ratingCounts,
-          })).filter(b => b.seats > 0)
+          })).filter(b => b.seats > 0),
+          pbAdjacencyWarnings: pbAdjacencyWarnings.length > 0 ? pbAdjacencyWarnings : undefined
         });
       } catch (persistError: any) {
         console.error("Persistence error, attempting cleanup:", persistError);
