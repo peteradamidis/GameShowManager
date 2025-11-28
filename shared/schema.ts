@@ -10,6 +10,7 @@ export const tokenStatusEnum = pgEnum('token_status', ['active', 'expired', 'use
 export const responseValueEnum = pgEnum('response_value', ['pending', 'yes', 'no', 'maybe']);
 export const confirmationStatusEnum = pgEnum('confirmation_status', ['pending', 'confirmed', 'declined']);
 export const blockTypeEnum = pgEnum('block_type', ['PB', 'NPB']);
+export const standbyStatusEnum = pgEnum('standby_status', ['pending', 'email_sent', 'confirmed', 'declined']);
 
 // Groups table
 export const groups = pgTable("groups", {
@@ -140,6 +141,32 @@ export const blockTypes = pgTable("block_types", {
   uniqueBlockPerDay: unique().on(table.recordDayId, table.blockNumber),
 }));
 
+// Standby Assignments table - tracks backup contestants for each record day
+export const standbyAssignments = pgTable("standby_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contestantId: varchar("contestant_id").references(() => contestants.id).notNull(),
+  recordDayId: varchar("record_day_id").references(() => recordDays.id).notNull(),
+  status: standbyStatusEnum("status").default('pending').notNull(),
+  standbyEmailSent: timestamp("standby_email_sent"),
+  confirmedAt: timestamp("confirmed_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  // Ensure one standby entry per contestant per record day
+  uniqueStandbyPerDay: unique().on(table.recordDayId, table.contestantId),
+}));
+
+// Standby Confirmation Tokens table - stores tokens for standby booking confirmations
+export const standbyConfirmationTokens = pgTable("standby_confirmation_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  standbyAssignmentId: varchar("standby_assignment_id").references(() => standbyAssignments.id).notNull(),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  status: tokenStatusEnum("status").default('active').notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  lastSentAt: timestamp("last_sent_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertGroupSchema = createInsertSchema(groups).omit({
   id: true,
@@ -186,6 +213,16 @@ export const insertBlockTypeSchema = createInsertSchema(blockTypes).omit({
   createdAt: true,
 });
 
+export const insertStandbyAssignmentSchema = createInsertSchema(standbyAssignments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertStandbyConfirmationTokenSchema = createInsertSchema(standbyConfirmationTokens).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertGroup = z.infer<typeof insertGroupSchema>;
 export type Group = typeof groups.$inferSelect;
@@ -213,6 +250,12 @@ export type BookingConfirmationToken = typeof bookingConfirmationTokens.$inferSe
 
 export type InsertBlockType = z.infer<typeof insertBlockTypeSchema>;
 export type BlockType = typeof blockTypes.$inferSelect;
+
+export type InsertStandbyAssignment = z.infer<typeof insertStandbyAssignmentSchema>;
+export type StandbyAssignment = typeof standbyAssignments.$inferSelect;
+
+export type InsertStandbyConfirmationToken = z.infer<typeof insertStandbyConfirmationTokenSchema>;
+export type StandbyConfirmationToken = typeof standbyConfirmationTokens.$inferSelect;
 
 // Legacy user table (can be removed if not needed for auth)
 export const users = pgTable("users", {

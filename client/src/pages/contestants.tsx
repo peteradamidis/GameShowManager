@@ -2,7 +2,7 @@ import { ContestantTable, Contestant } from "@/components/contestant-table";
 import { ImportExcelDialog } from "@/components/import-excel-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { UserPlus, Filter, X, ChevronLeft, ChevronRight, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -91,6 +91,7 @@ export default function Contestants() {
   const { toast } = useToast();
   const [selectedContestants, setSelectedContestants] = useState<string[]>([]);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [standbyDialogOpen, setStandbyDialogOpen] = useState(false);
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
   const [selectedBlock, setSelectedBlock] = useState<string>("");
   const [selectedSeat, setSelectedSeat] = useState<string>("");
@@ -141,7 +142,7 @@ export default function Contestants() {
 
   // Get unique values for filter dropdowns
   const uniqueGenders = Array.from(new Set(contestants.map(c => c.gender).filter(Boolean)));
-  const uniqueCities = Array.from(new Set(contestants.map(c => c.address).filter(Boolean))).sort();
+  const uniqueCities = Array.from(new Set(contestants.map(c => c.address).filter((addr): addr is string => Boolean(addr)))).sort();
 
   // Determine which contestants to display
   let displayedContestants = filterRecordDayId
@@ -232,6 +233,38 @@ export default function Contestants() {
       toast({
         title: "Import failed",
         description: error.message || "Could not import the Excel file. Please check the file format.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Add as standby mutation
+  const addStandbyMutation = useMutation({
+    mutationFn: async ({ contestantIds, recordDayId }: { contestantIds: string[]; recordDayId: string }) => {
+      return apiRequest('POST', '/api/standbys', { contestantIds, recordDayId });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+      setStandbyDialogOpen(false);
+      setSelectedContestants([]);
+      setSelectedRecordDay("");
+      
+      let description = `Added ${data.count} contestant${data.count !== 1 ? 's' : ''} as standbys`;
+      if (data.skipped > 0) {
+        description += ` (${data.skipped} already existed)`;
+      }
+      description += '.';
+      
+      toast({
+        title: data.count > 0 ? "Standbys added" : "No new standbys",
+        description,
+        variant: data.count === 0 ? "default" : undefined,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to add standbys",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -405,13 +438,26 @@ export default function Contestants() {
         </div>
         <div className="flex gap-2">
           {selectedContestants.length > 0 && (
-            <Button 
-              onClick={handleOpenAssignDialog} 
-              data-testid="button-assign-contestants"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Assign {selectedContestants.length} to Record Day
-            </Button>
+            <>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  refetchRecordDays();
+                  setStandbyDialogOpen(true);
+                }} 
+                data-testid="button-add-standbys"
+              >
+                <UserCheck className="h-4 w-4 mr-2" />
+                Add {selectedContestants.length} as Standby
+              </Button>
+              <Button 
+                onClick={handleOpenAssignDialog} 
+                data-testid="button-assign-contestants"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Assign {selectedContestants.length} to Record Day
+              </Button>
+            </>
           )}
           <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
         </div>
@@ -841,6 +887,58 @@ export default function Contestants() {
                 : isGroupSeating 
                   ? "Assign Group Together"
                   : "Assign to Record Day"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add as Standby Dialog */}
+      <Dialog open={standbyDialogOpen} onOpenChange={setStandbyDialogOpen}>
+        <DialogContent className="max-w-md" data-testid="dialog-add-standby">
+          <DialogHeader>
+            <DialogTitle>Add as Standby</DialogTitle>
+            <DialogDescription>
+              Add {selectedContestants.length} contestant{selectedContestants.length !== 1 ? 's' : ''} as standby for a record day.
+              Standbys are backup contestants who receive separate booking emails.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Record Day</label>
+              <Select value={selectedRecordDay} onValueChange={setSelectedRecordDay}>
+                <SelectTrigger data-testid="select-standby-record-day">
+                  <SelectValue placeholder="Select a record day" />
+                </SelectTrigger>
+                <SelectContent>
+                  {recordDays.map((rd: any) => (
+                    <SelectItem key={rd.id} value={rd.id}>
+                      {format(parseISO(rd.date), 'EEE, MMM d, yyyy')}
+                      {rd.rxNumber && ` (${rd.rxNumber})`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStandbyDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (selectedRecordDay && selectedContestants.length > 0) {
+                  addStandbyMutation.mutate({
+                    contestantIds: selectedContestants,
+                    recordDayId: selectedRecordDay,
+                  });
+                }
+              }}
+              disabled={!selectedRecordDay || addStandbyMutation.isPending}
+              data-testid="button-confirm-add-standby"
+            >
+              {addStandbyMutation.isPending ? "Adding..." : `Add ${selectedContestants.length} as Standby`}
             </Button>
           </DialogFooter>
         </DialogContent>

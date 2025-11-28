@@ -11,6 +11,8 @@ import {
   contestantAvailability,
   bookingConfirmationTokens,
   blockTypes,
+  standbyAssignments,
+  standbyConfirmationTokens,
   type Contestant,
   type InsertContestant,
   type Group,
@@ -29,6 +31,10 @@ import {
   type InsertBookingConfirmationToken,
   type BlockType,
   type InsertBlockType,
+  type StandbyAssignment,
+  type InsertStandbyAssignment,
+  type StandbyConfirmationToken,
+  type InsertStandbyConfirmationToken,
 } from "@shared/schema";
 import { eq, and, sql, inArray } from "drizzle-orm";
 
@@ -104,6 +110,21 @@ export interface IStorage {
   // Block Types (PB/NPB)
   getBlockTypesByRecordDay(recordDayId: string): Promise<BlockType[]>;
   upsertBlockType(recordDayId: string, blockNumber: number, blockType: 'PB' | 'NPB'): Promise<BlockType>;
+  
+  // Standby Assignments
+  createStandbyAssignment(assignment: InsertStandbyAssignment): Promise<StandbyAssignment>;
+  createStandbyAssignments(assignments: InsertStandbyAssignment[]): Promise<StandbyAssignment[]>;
+  getStandbyAssignments(): Promise<Array<StandbyAssignment & { contestant: Contestant; recordDay: RecordDay }>>;
+  getStandbyAssignmentsByRecordDay(recordDayId: string): Promise<Array<StandbyAssignment & { contestant: Contestant }>>;
+  getStandbyAssignmentById(id: string): Promise<StandbyAssignment | undefined>;
+  updateStandbyAssignment(id: string, data: Partial<StandbyAssignment>): Promise<StandbyAssignment | undefined>;
+  deleteStandbyAssignment(id: string): Promise<void>;
+  
+  // Standby Confirmation Tokens
+  createStandbyConfirmationToken(token: InsertStandbyConfirmationToken): Promise<StandbyConfirmationToken>;
+  getStandbyConfirmationByToken(token: string): Promise<StandbyConfirmationToken | undefined>;
+  getStandbyConfirmationByAssignment(standbyAssignmentId: string): Promise<StandbyConfirmationToken | undefined>;
+  updateStandbyConfirmationToken(id: string, data: Partial<StandbyConfirmationToken>): Promise<StandbyConfirmationToken | undefined>;
 }
 
 export class DbStorage implements IStorage {
@@ -745,6 +766,115 @@ export class DbStorage implements IStorage {
         .returning();
       return created;
     }
+  }
+
+  // Standby Assignments
+  async createStandbyAssignment(assignment: InsertStandbyAssignment): Promise<StandbyAssignment> {
+    const [created] = await db
+      .insert(standbyAssignments)
+      .values(assignment)
+      .returning();
+    return created;
+  }
+
+  async createStandbyAssignments(assignments: InsertStandbyAssignment[]): Promise<StandbyAssignment[]> {
+    if (assignments.length === 0) return [];
+    return db
+      .insert(standbyAssignments)
+      .values(assignments)
+      .onConflictDoNothing()
+      .returning();
+  }
+
+  async getStandbyAssignments(): Promise<Array<StandbyAssignment & { contestant: Contestant; recordDay: RecordDay }>> {
+    const results = await db
+      .select({
+        standby: standbyAssignments,
+        contestant: contestants,
+        recordDay: recordDays,
+      })
+      .from(standbyAssignments)
+      .innerJoin(contestants, eq(standbyAssignments.contestantId, contestants.id))
+      .innerJoin(recordDays, eq(standbyAssignments.recordDayId, recordDays.id));
+    
+    return results.map(r => ({
+      ...r.standby,
+      contestant: r.contestant,
+      recordDay: r.recordDay,
+    }));
+  }
+
+  async getStandbyAssignmentsByRecordDay(recordDayId: string): Promise<Array<StandbyAssignment & { contestant: Contestant }>> {
+    const results = await db
+      .select({
+        standby: standbyAssignments,
+        contestant: contestants,
+      })
+      .from(standbyAssignments)
+      .innerJoin(contestants, eq(standbyAssignments.contestantId, contestants.id))
+      .where(eq(standbyAssignments.recordDayId, recordDayId));
+    
+    return results.map(r => ({
+      ...r.standby,
+      contestant: r.contestant,
+    }));
+  }
+
+  async getStandbyAssignmentById(id: string): Promise<StandbyAssignment | undefined> {
+    const [standby] = await db
+      .select()
+      .from(standbyAssignments)
+      .where(eq(standbyAssignments.id, id));
+    return standby;
+  }
+
+  async updateStandbyAssignment(id: string, data: Partial<StandbyAssignment>): Promise<StandbyAssignment | undefined> {
+    const [updated] = await db
+      .update(standbyAssignments)
+      .set(data)
+      .where(eq(standbyAssignments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteStandbyAssignment(id: string): Promise<void> {
+    await db
+      .delete(standbyAssignments)
+      .where(eq(standbyAssignments.id, id));
+  }
+
+  // Standby Confirmation Tokens
+  async createStandbyConfirmationToken(token: InsertStandbyConfirmationToken): Promise<StandbyConfirmationToken> {
+    const [created] = await db
+      .insert(standbyConfirmationTokens)
+      .values(token)
+      .returning();
+    return created;
+  }
+
+  async getStandbyConfirmationByToken(token: string): Promise<StandbyConfirmationToken | undefined> {
+    const [confirmation] = await db
+      .select()
+      .from(standbyConfirmationTokens)
+      .where(eq(standbyConfirmationTokens.token, token));
+    return confirmation;
+  }
+
+  async getStandbyConfirmationByAssignment(standbyAssignmentId: string): Promise<StandbyConfirmationToken | undefined> {
+    const [confirmation] = await db
+      .select()
+      .from(standbyConfirmationTokens)
+      .where(eq(standbyConfirmationTokens.standbyAssignmentId, standbyAssignmentId));
+    return confirmation;
+  }
+
+  async updateStandbyConfirmationToken(id: string, data: Partial<StandbyConfirmationToken>): Promise<StandbyConfirmationToken | undefined> {
+    const [updated] = await db
+      .update(standbyConfirmationTokens)
+      .set(data)
+      .where(eq(standbyConfirmationTokens.id, id))
+      .returning();
+    return updated;
   }
 }
 

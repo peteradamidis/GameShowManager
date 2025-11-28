@@ -2371,6 +2371,412 @@ Deal or No Deal Production Team
     }
   });
 
+  // ===== STANDBY ENDPOINTS =====
+  
+  // Get all standbys grouped by record day
+  app.get("/api/standbys", async (req, res) => {
+    try {
+      const standbys = await storage.getStandbyAssignments();
+      res.json(standbys);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get standbys for a specific record day
+  app.get("/api/standbys/record-day/:recordDayId", async (req, res) => {
+    try {
+      const { recordDayId } = req.params;
+      const standbys = await storage.getStandbyAssignmentsByRecordDay(recordDayId);
+      res.json(standbys);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create standby assignments (bulk)
+  app.post("/api/standbys", async (req, res) => {
+    try {
+      const { contestantIds, recordDayId } = req.body;
+
+      if (!contestantIds || !Array.isArray(contestantIds) || contestantIds.length === 0) {
+        return res.status(400).json({ error: "contestantIds array is required" });
+      }
+
+      if (!recordDayId) {
+        return res.status(400).json({ error: "recordDayId is required" });
+      }
+
+      // Verify record day exists
+      const recordDay = await storage.getRecordDayById(recordDayId);
+      if (!recordDay) {
+        return res.status(404).json({ error: "Record day not found" });
+      }
+
+      // Get existing standbys for this record day to identify duplicates
+      const existingStandbys = await storage.getStandbyAssignmentsByRecordDay(recordDayId);
+      const existingContestantIds = new Set(existingStandbys.map(s => s.contestantId));
+      
+      // Filter out contestants who are already standbys for this record day
+      const newContestantIds = contestantIds.filter((id: string) => !existingContestantIds.has(id));
+      const skippedCount = contestantIds.length - newContestantIds.length;
+
+      if (newContestantIds.length === 0) {
+        return res.json({
+          message: "All contestants are already standbys for this record day",
+          count: 0,
+          skipped: skippedCount,
+          standbys: [],
+        });
+      }
+
+      const assignments = newContestantIds.map((contestantId: string) => ({
+        contestantId,
+        recordDayId,
+        status: 'pending' as const,
+      }));
+
+      const created = await storage.createStandbyAssignments(assignments);
+      
+      res.json({
+        message: `Created ${created.length} standby assignments${skippedCount > 0 ? ` (${skippedCount} already existed)` : ''}`,
+        count: created.length,
+        skipped: skippedCount,
+        standbys: created,
+      });
+    } catch (error: any) {
+      console.error("Error creating standby assignments:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update standby assignment
+  app.patch("/api/standbys/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+
+      const updated = await storage.updateStandbyAssignment(id, updateData);
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Standby assignment not found" });
+      }
+
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete standby assignment
+  app.delete("/api/standbys/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteStandbyAssignment(id);
+      res.json({ message: "Standby assignment deleted" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Preview standby booking emails
+  app.post("/api/standbys/preview-emails", async (req, res) => {
+    try {
+      const { standbyIds } = req.body;
+
+      if (!standbyIds || !Array.isArray(standbyIds) || standbyIds.length === 0) {
+        return res.status(400).json({ error: "standbyIds array is required" });
+      }
+
+      // Get all standbys with contestant details
+      const allStandbys = await storage.getStandbyAssignments();
+      const selectedStandbys = allStandbys.filter(s => standbyIds.includes(s.id));
+
+      if (selectedStandbys.length === 0) {
+        return res.status(404).json({ error: "No standbys found" });
+      }
+
+      // Build recipient list with emails
+      const recipients = selectedStandbys
+        .filter(s => s.contestant.email)
+        .map(s => ({
+          standbyId: s.id,
+          contestantId: s.contestant.id,
+          name: s.contestant.name,
+          email: s.contestant.email,
+          recordDate: s.recordDay.date,
+          rxNumber: s.recordDay.rxNumber,
+        }));
+
+      const noEmail = selectedStandbys.filter(s => !s.contestant.email);
+
+      res.json({
+        recipients,
+        totalSelected: standbyIds.length,
+        withEmail: recipients.length,
+        withoutEmail: noEmail.length,
+        missingEmailNames: noEmail.map(s => s.contestant.name),
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Send standby booking emails
+  app.post("/api/standbys/send-emails", async (req, res) => {
+    try {
+      const { standbyIds } = req.body;
+
+      if (!standbyIds || !Array.isArray(standbyIds) || standbyIds.length === 0) {
+        return res.status(400).json({ error: "standbyIds array is required" });
+      }
+
+      // Get all standbys with contestant details
+      const allStandbys = await storage.getStandbyAssignments();
+      const selectedStandbys = allStandbys.filter(s => standbyIds.includes(s.id));
+
+      if (selectedStandbys.length === 0) {
+        return res.status(404).json({ error: "No standbys found" });
+      }
+
+      // Filter to only those with emails
+      const standbysWithEmail = selectedStandbys.filter(s => s.contestant.email);
+      
+      if (standbysWithEmail.length === 0) {
+        return res.status(400).json({ error: "No standbys have email addresses" });
+      }
+
+      const results = {
+        sent: 0,
+        failed: 0,
+        errors: [] as string[],
+      };
+
+      for (const standby of standbysWithEmail) {
+        try {
+          // Generate confirmation token
+          const tokenString = crypto.randomBytes(32).toString('hex');
+          const expiresAt = new Date();
+          expiresAt.setDate(expiresAt.getDate() + 7); // Expires in 7 days
+
+          const token = await storage.createStandbyConfirmationToken({
+            standbyAssignmentId: standby.id,
+            token: tokenString,
+            status: 'active',
+            expiresAt,
+          });
+
+          // Format date
+          const recordDate = new Date(standby.recordDay.date);
+          const formattedDate = recordDate.toLocaleDateString('en-AU', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          });
+
+          // Build confirmation URL
+          const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+            ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+            : 'http://localhost:5000';
+          const confirmationUrl = `${baseUrl}/standby-confirmation/${tokenString}`;
+
+          // Build email content
+          const subject = `Deal or No Deal - Standby Booking for ${formattedDate}`;
+          const htmlBody = `
+            <p>Dear ${standby.contestant.name},</p>
+            
+            <p>Thank you for your interest in being part of Deal or No Deal!</p>
+            
+            <p>You have been selected as a <strong>STANDBY</strong> for the recording on <strong>${formattedDate}</strong>${standby.recordDay.rxNumber ? ` (${standby.recordDay.rxNumber})` : ''}.</p>
+            
+            <p><strong>Important Information:</strong></p>
+            <ul>
+              <li>As a standby, you are not guaranteed a seat in the studio audience</li>
+              <li>You will only be seated if a spot becomes available on the day</li>
+              <li>If you are not seated, you will be given a fast-track invitation to another upcoming studio day</li>
+            </ul>
+            
+            <p>Please confirm your availability by clicking the link below:</p>
+            
+            <p><a href="${confirmationUrl}" style="display: inline-block; background-color: #E91E63; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Confirm Standby Booking</a></p>
+            
+            <p>If you are no longer available, please click the link above and select "Decline".</p>
+            
+            <p>This confirmation link will expire in 7 days.</p>
+            
+            <p>Thank you,<br>Deal or No Deal Production Team</p>
+          `;
+
+          // Send email via Gmail API
+          const gmail = await getUncachableGmailClient();
+          
+          const message = [
+            `To: ${standby.contestant.email}`,
+            `Subject: ${subject}`,
+            'Content-Type: text/html; charset="UTF-8"',
+            'MIME-Version: 1.0',
+            '',
+            htmlBody
+          ].join('\n');
+
+          const encodedMessage = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+          await gmail.users.messages.send({
+            userId: 'me',
+            requestBody: {
+              raw: encodedMessage
+            }
+          });
+
+          // Update standby assignment
+          await storage.updateStandbyAssignment(standby.id, {
+            status: 'email_sent',
+            standbyEmailSent: new Date(),
+          });
+
+          // Update token lastSentAt
+          await storage.updateStandbyConfirmationToken(token.id, {
+            lastSentAt: new Date(),
+          });
+
+          results.sent++;
+        } catch (error: any) {
+          results.failed++;
+          results.errors.push(`${standby.contestant.name}: ${error.message}`);
+        }
+      }
+
+      res.json({
+        message: `Sent ${results.sent} standby booking emails`,
+        ...results,
+      });
+    } catch (error: any) {
+      console.error("Error sending standby emails:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get standby confirmation by token (public endpoint)
+  app.get("/api/standby-confirmation/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+
+      const tokenRecord = await storage.getStandbyConfirmationByToken(token);
+      
+      if (!tokenRecord) {
+        return res.status(404).json({ error: "Invalid confirmation link" });
+      }
+
+      if (tokenRecord.status === 'used') {
+        return res.status(410).json({ 
+          error: "This confirmation link has already been used",
+          alreadyResponded: true,
+        });
+      }
+
+      if (tokenRecord.status === 'revoked') {
+        return res.status(403).json({ error: "This confirmation link has been revoked" });
+      }
+
+      if (tokenRecord.status !== 'active') {
+        return res.status(403).json({ error: "This confirmation link is no longer active" });
+      }
+
+      if (new Date(tokenRecord.expiresAt) < new Date()) {
+        return res.status(410).json({ error: "This confirmation link has expired" });
+      }
+
+      // Get standby assignment details
+      const standby = await storage.getStandbyAssignmentById(tokenRecord.standbyAssignmentId);
+      
+      if (!standby) {
+        return res.status(404).json({ error: "Standby booking not found" });
+      }
+
+      // Get contestant and record day details
+      const contestant = await storage.getContestantById(standby.contestantId);
+      const recordDay = await storage.getRecordDayById(standby.recordDayId);
+
+      if (!contestant || !recordDay) {
+        return res.status(404).json({ error: "Booking details not found" });
+      }
+
+      res.json({
+        standbyId: standby.id,
+        contestantName: contestant.name,
+        recordDate: recordDay.date,
+        rxNumber: recordDay.rxNumber,
+        status: standby.status,
+        isStandby: true,
+      });
+    } catch (error: any) {
+      console.error("Error fetching standby confirmation:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Submit standby confirmation response (public endpoint)
+  app.post("/api/standby-confirmation/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const { response } = req.body; // 'confirmed' or 'declined'
+
+      const tokenRecord = await storage.getStandbyConfirmationByToken(token);
+      
+      if (!tokenRecord) {
+        return res.status(404).json({ error: "Invalid confirmation link" });
+      }
+
+      if (tokenRecord.status === 'used') {
+        return res.status(410).json({ 
+          error: "This confirmation link has already been used",
+          alreadyResponded: true,
+        });
+      }
+
+      if (tokenRecord.status !== 'active') {
+        return res.status(403).json({ error: "This confirmation link is no longer active" });
+      }
+
+      if (new Date(tokenRecord.expiresAt) < new Date()) {
+        return res.status(410).json({ error: "This confirmation link has expired" });
+      }
+
+      if (!response || !['confirmed', 'declined'].includes(response)) {
+        return res.status(400).json({ error: "Valid response required (confirmed or declined)" });
+      }
+
+      // Get standby assignment
+      const standby = await storage.getStandbyAssignmentById(tokenRecord.standbyAssignmentId);
+      
+      if (!standby) {
+        return res.status(404).json({ error: "Standby booking not found" });
+      }
+
+      // Update standby assignment status
+      await storage.updateStandbyAssignment(standby.id, {
+        status: response,
+        confirmedAt: new Date(),
+      });
+
+      // Mark token as used
+      await storage.updateStandbyConfirmationToken(tokenRecord.id, {
+        status: 'used',
+      });
+
+      res.json({
+        message: response === 'confirmed' 
+          ? "Thank you for confirming! Remember, as a standby you'll only be seated if a spot becomes available. If not, you'll receive a fast-track invitation to another show date."
+          : "Your standby booking has been cancelled. Thank you for letting us know.",
+        response,
+      });
+    } catch (error: any) {
+      console.error("Error processing standby confirmation:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -1,4 +1,4 @@
-import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList } from "lucide-react";
+import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList, UserCheck } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -26,6 +26,11 @@ const menuItems = [
     title: "Availability",
     url: "/availability",
     icon: CheckSquare,
+  },
+  {
+    title: "Standbys",
+    url: "/standbys",
+    icon: UserCheck,
   },
   {
     title: "Record Days",
