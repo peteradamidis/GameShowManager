@@ -1034,9 +1034,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // CONSTRAINT: No block should exceed 70% female
           const newFemaleCount = block.femaleCount + bundle.femaleCount;
-          const newTotal = block.femaleCount + block.maleCount + bundle.femaleCount + bundle.maleCount;
+          const newMaleCount = block.maleCount + bundle.maleCount;
+          const newTotal = newFemaleCount + newMaleCount;
           const newFemaleRatio = newTotal > 0 ? newFemaleCount / newTotal : 0;
           if (newFemaleRatio > 0.70) return false;
+          
+          // CONSTRAINT: NPB blocks can ONLY have B and C ratings (no A or B+)
+          if (block.blockType === 'NPB') {
+            const hasAOrBPlus = bundle.ratingCounts['A'] > 0 || bundle.ratingCounts['B+'] > 0;
+            if (hasAOrBPlus) return false;
+          }
           
           return true;
         });
