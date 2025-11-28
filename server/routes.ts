@@ -1190,7 +1190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const bundleSize = bundle.size;
         let { currentRow, positionInRow } = rowState;
         
-        // Try to fit group in current row first
+        // Try to fit group in current row first (in remaining space)
         if (currentRow < ROWS.length) {
           const currentRowCapacity = ROWS[currentRow].count;
           const remainingInRow = currentRowCapacity - positionInRow;
@@ -1212,28 +1212,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        // Doesn't fit in current row - move to next row
+        // Doesn't fit in current row - find next row with enough consecutive empty seats
         currentRow++;
-        positionInRow = 0;
         
-        // Find a row that can fit the entire bundle
         while (currentRow < ROWS.length) {
-          const rowCapacity = ROWS[currentRow].count;
-          if (rowCapacity >= bundleSize) {
-            // Found a row - assign seats
-            for (let i = 0; i < bundleSize; i++) {
-              const row = ROWS[currentRow];
-              const seatLabel = `${row.label}${positionInRow + 1}`;
-              seatLabels.push(seatLabel);
-              usedSeats.add(seatLabel);
-              positionInRow++;
+          const row = ROWS[currentRow];
+          let consecutiveEmpty = 0;
+          let firstEmptyPos = -1;
+          
+          // Count consecutive empty seats in this row from the start
+          for (let pos = 0; pos < row.count; pos++) {
+            const seat = `${row.label}${pos + 1}`;
+            if (usedSeats.has(seat)) {
+              consecutiveEmpty = 0;
+              firstEmptyPos = -1;
+            } else {
+              if (firstEmptyPos === -1) firstEmptyPos = pos;
+              consecutiveEmpty++;
+              if (consecutiveEmpty >= bundleSize) {
+                // Found enough consecutive empty seats!
+                positionInRow = firstEmptyPos;
+                for (let i = 0; i < bundleSize; i++) {
+                  const seatLabel = `${row.label}${positionInRow + 1}`;
+                  seatLabels.push(seatLabel);
+                  usedSeats.add(seatLabel);
+                  positionInRow++;
+                }
+                return {
+                  seatLabels,
+                  newRowState: { currentRow, positionInRow },
+                  success: true
+                };
+              }
             }
-            return {
-              seatLabels,
-              newRowState: { currentRow, positionInRow },
-              success: true
-            };
           }
+          
           currentRow++;
         }
         
