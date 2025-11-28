@@ -37,22 +37,24 @@ export default function RecordDays() {
     enabled: apiRecordDays.length > 0,
   });
 
-  // Transform API data to RecordDay format
-  const recordDays: RecordDay[] = apiRecordDays.map((day) => {
-    const dayAssignments = allAssignments.find((a) => a.recordDayId === day.id)?.assignments || [];
-    const filledSeats = dayAssignments.length;
-    const femaleCount = dayAssignments.filter((a: any) => a.gender === 'Female').length;
-    const femalePercent = filledSeats > 0 ? Math.round((femaleCount / filledSeats) * 100) : 0;
+  // Transform API data to RecordDay format and sort by date
+  const recordDays: RecordDay[] = apiRecordDays
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .map((day) => {
+      const dayAssignments = allAssignments.find((a) => a.recordDayId === day.id)?.assignments || [];
+      const filledSeats = dayAssignments.length;
+      const femaleCount = dayAssignments.filter((a: any) => a.gender === 'Female').length;
+      const femalePercent = filledSeats > 0 ? Math.round((femaleCount / filledSeats) * 100) : 0;
 
-    return {
-      id: day.id,
-      date: new Date(day.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-      totalSeats: day.totalSeats || 154,
-      filledSeats,
-      femalePercent,
-      status: day.status === 'draft' ? 'Draft' : day.status === 'ready' ? 'Ready' : 'Invited',
-    };
-  });
+      return {
+        id: day.id,
+        date: new Date(day.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+        totalSeats: day.totalSeats || 154,
+        filledSeats,
+        femalePercent,
+        status: day.status === 'draft' ? 'Draft' : day.status === 'ready' ? 'Ready' : 'Invited',
+      };
+    });
 
   const handleCreateRecordDay = () => {
     toast({

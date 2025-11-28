@@ -75,12 +75,6 @@ export function RecordDayCard({ recordDay, onViewSeating, onSendInvitations }: R
             <Users className="h-4 w-4 mr-2" />
             View Seating
           </Button>
-          {recordDay.status === "Ready" && (
-            <Button size="sm" onClick={onSendInvitations} data-testid={`button-send-invitations-${recordDay.id}`}>
-              <Mail className="h-4 w-4 mr-2" />
-              Send Invitations
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>
