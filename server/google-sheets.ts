@@ -1,0 +1,173 @@
+// Google Sheets integration - connects to Replit's Google Sheets connector
+// Documentation: https://developers.google.com/sheets/api
+
+import { google } from 'googleapis';
+
+let connectionSettings: any;
+
+async function getAccessToken() {
+  if (connectionSettings && connectionSettings.settings.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
+    return connectionSettings.settings.access_token;
+  }
+  
+  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME
+  const xReplitToken = process.env.REPL_IDENTITY 
+    ? 'repl ' + process.env.REPL_IDENTITY 
+    : process.env.WEB_REPL_RENEWAL 
+    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
+    : null;
+
+  if (!xReplitToken) {
+    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+  }
+
+  connectionSettings = await fetch(
+    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=google-sheet',
+    {
+      headers: {
+        'Accept': 'application/json',
+        'X_REPLIT_TOKEN': xReplitToken
+      }
+    }
+  ).then(res => res.json()).then(data => data.items?.[0]);
+
+  const accessToken = connectionSettings?.settings?.access_token || connectionSettings.settings?.oauth?.credentials?.access_token;
+
+  if (!connectionSettings || !accessToken) {
+    throw new Error('Google Sheet not connected');
+  }
+  return accessToken;
+}
+
+// WARNING: Never cache this client.
+// Access tokens expire, so a new client must be created each time.
+// Always call this function again to get a fresh client.
+async function getUncachableGoogleSheetClient() {
+  const accessToken = await getAccessToken();
+
+  const oauth2Client = new google.auth.OAuth2();
+  oauth2Client.setCredentials({
+    access_token: accessToken
+  });
+
+  return google.sheets({ version: 'v4', auth: oauth2Client });
+}
+
+export async function appendBookingDataToSheet(spreadsheetId: string, bookingData: any[]) {
+  try {
+    const sheets = await getUncachableGoogleSheetClient();
+    
+    // Convert booking objects to rows
+    const rows = bookingData.map(booking => [
+      booking.contestantName || '',
+      booking.contestantId || '',
+      booking.auditionRating || '',
+      booking.gender || '',
+      booking.age || '',
+      booking.location || '',
+      booking.recordDayDate || '',
+      booking.seatLabel || '',
+      booking.workflow || '',
+      booking.availabilityRsvp || '',
+      booking.confirmedRsvp || '',
+      booking.declined || '',
+      booking.notes || ''
+    ]);
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: 'Sheet1!A:M',
+      valueInputOption: 'RAW',
+      requestBody: { values: rows },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error appending to Google Sheets:', error);
+    throw error;
+  }
+}
+
+export async function updateSheetRow(spreadsheetId: string, rowIndex: number, bookingData: any) {
+  try {
+    const sheets = await getUncachableGoogleSheetClient();
+    
+    const row = [
+      bookingData.contestantName || '',
+      bookingData.contestantId || '',
+      bookingData.auditionRating || '',
+      bookingData.gender || '',
+      bookingData.age || '',
+      bookingData.location || '',
+      bookingData.recordDayDate || '',
+      bookingData.seatLabel || '',
+      bookingData.workflow || '',
+      bookingData.availabilityRsvp || '',
+      bookingData.confirmedRsvp || '',
+      bookingData.declined || '',
+      bookingData.notes || ''
+    ];
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `Sheet1!A${rowIndex}:M${rowIndex}`,
+      valueInputOption: 'RAW',
+      requestBody: { values: [row] },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating Google Sheets:', error);
+    throw error;
+  }
+}
+
+export async function createSheetHeader(spreadsheetId: string) {
+  try {
+    const sheets = await getUncachableGoogleSheetClient();
+    
+    const headers = [[
+      'Contestant Name',
+      'Contestant ID',
+      'Audition Rating',
+      'Gender',
+      'Age',
+      'Location',
+      'Record Day Date',
+      'Seat Label',
+      'Workflow',
+      'Availability RSVP',
+      'Confirmed RSVP',
+      'Declined',
+      'Notes'
+    ]];
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: 'Sheet1!A1:M1',
+      valueInputOption: 'RAW',
+      requestBody: { values: headers },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error creating header in Google Sheets:', error);
+    throw error;
+  }
+}
+
+export async function getAllSheetData(spreadsheetId: string) {
+  try {
+    const sheets = await getUncachableGoogleSheetClient();
+    
+    const result = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'Sheet1!A:M',
+    });
+
+    return result.data.values || [];
+  } catch (error) {
+    console.error('Error reading from Google Sheets:', error);
+    throw error;
+  }
+}
