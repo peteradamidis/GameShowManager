@@ -9,6 +9,18 @@ import path from "path";
 import express from "express";
 import fs from "fs";
 import { getUncachableGmailClient } from "./gmail";
+import { appendBookingDataToSheet, updateSheetRow, createSheetHeader, getAllSheetData } from "./google-sheets";
+
+// Google Sheets sync configuration (stored in memory)
+let googleSheetsConfig: {
+  spreadsheetId: string | null;
+  lastSyncTime: Date | null;
+  autoSync: boolean;
+} = {
+  spreadsheetId: null,
+  lastSyncTime: null,
+  autoSync: true,
+};
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -1887,8 +1899,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Format record day dates for the email
           const recordDaysList = recordDays
-            .filter((rd): rd is typeof recordDays[0] => rd !== null && rd !== undefined)
-            .map(rd => new Date(rd.date).toLocaleDateString('en-US', {
+            .filter((rd): rd is NonNullable<typeof recordDays[0]> => rd !== null && rd !== undefined && rd.date !== undefined)
+            .map(rd => new Date(rd.date!).toLocaleDateString('en-US', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
@@ -2898,6 +2910,127 @@ Deal or No Deal Production Team
       });
     } catch (error: any) {
       console.error("Error processing standby confirmation:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==========================================
+  // Google Sheets Sync Endpoints
+  // ==========================================
+
+  // Get current Google Sheets sync configuration
+  app.get("/api/google-sheets/config", async (req, res) => {
+    res.json({
+      spreadsheetId: googleSheetsConfig.spreadsheetId,
+      lastSyncTime: googleSheetsConfig.lastSyncTime,
+      autoSync: googleSheetsConfig.autoSync,
+      isConfigured: !!googleSheetsConfig.spreadsheetId,
+    });
+  });
+
+  // Set Google Sheets spreadsheet ID
+  app.post("/api/google-sheets/config", async (req, res) => {
+    try {
+      const { spreadsheetId, autoSync } = req.body;
+      
+      if (!spreadsheetId) {
+        return res.status(400).json({ error: "Spreadsheet ID is required" });
+      }
+
+      googleSheetsConfig.spreadsheetId = spreadsheetId;
+      if (autoSync !== undefined) {
+        googleSheetsConfig.autoSync = autoSync;
+      }
+
+      // Try to create header row to verify connection
+      await createSheetHeader(spreadsheetId);
+      
+      res.json({ 
+        success: true, 
+        message: "Google Sheets configured successfully",
+        config: googleSheetsConfig
+      });
+    } catch (error: any) {
+      console.error("Error configuring Google Sheets:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Sync all booking master data to Google Sheets
+  app.post("/api/google-sheets/sync", async (req, res) => {
+    try {
+      if (!googleSheetsConfig.spreadsheetId) {
+        return res.status(400).json({ error: "Google Sheets not configured. Please set a spreadsheet ID first." });
+      }
+
+      // Get all seat assignments with contestant data
+      const allAssignments = await storage.getAllSeatAssignments();
+      const recordDays = await storage.getRecordDays();
+      
+      // Build booking data for the sheet
+      const bookingData = [];
+      
+      for (const assignment of allAssignments) {
+        // Get contestant details
+        const contestant = await storage.getContestantById(assignment.contestantId);
+        if (!contestant) continue;
+
+        // Find record day date
+        const recordDay = recordDays.find(rd => rd.id === assignment.recordDayId);
+        const recordDayDate = recordDay ? new Date(recordDay.date).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }) : '';
+
+        bookingData.push({
+          contestantName: contestant.name || '',
+          contestantId: contestant.id || '',
+          auditionRating: contestant.auditionRating || '',
+          gender: contestant.gender || '',
+          age: contestant.age || '',
+          location: assignment.location || contestant.address || '',
+          recordDayDate,
+          seatLabel: `Block ${assignment.blockNumber} - ${assignment.seatLabel}`,
+          workflow: assignment.castingCategory || '',
+          availabilityRsvp: assignment.confirmedRsvp ? 'Yes' : '',
+          confirmedRsvp: assignment.confirmedRsvp ? new Date(assignment.confirmedRsvp).toLocaleDateString() : '',
+          declined: '',
+          notes: assignment.notes || '',
+        });
+      }
+
+      // Create header and sync data
+      await createSheetHeader(googleSheetsConfig.spreadsheetId);
+      
+      if (bookingData.length > 0) {
+        await appendBookingDataToSheet(googleSheetsConfig.spreadsheetId, bookingData);
+      }
+
+      googleSheetsConfig.lastSyncTime = new Date();
+
+      res.json({
+        success: true,
+        message: `Synced ${bookingData.length} bookings to Google Sheets`,
+        lastSyncTime: googleSheetsConfig.lastSyncTime,
+      });
+    } catch (error: any) {
+      console.error("Error syncing to Google Sheets:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get data from Google Sheets (for two-way sync)
+  app.get("/api/google-sheets/data", async (req, res) => {
+    try {
+      if (!googleSheetsConfig.spreadsheetId) {
+        return res.status(400).json({ error: "Google Sheets not configured" });
+      }
+
+      const data = await getAllSheetData(googleSheetsConfig.spreadsheetId);
+      res.json({ data });
+    } catch (error: any) {
+      console.error("Error reading from Google Sheets:", error);
       res.status(500).json({ error: error.message });
     }
   });
