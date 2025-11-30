@@ -257,6 +257,22 @@ export type StandbyAssignment = typeof standbyAssignments.$inferSelect;
 export type InsertStandbyConfirmationToken = z.infer<typeof insertStandbyConfirmationTokenSchema>;
 export type StandbyConfirmationToken = typeof standbyConfirmationTokens.$inferSelect;
 
+// System Configuration table - stores app-wide settings like Google Sheets config
+export const systemConfig = pgTable("system_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertSystemConfigSchema = createInsertSchema(systemConfig).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertSystemConfig = z.infer<typeof insertSystemConfigSchema>;
+export type SystemConfig = typeof systemConfig.$inferSelect;
+
 // Legacy user table (can be removed if not needed for auth)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

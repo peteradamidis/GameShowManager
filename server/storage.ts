@@ -13,6 +13,7 @@ import {
   blockTypes,
   standbyAssignments,
   standbyConfirmationTokens,
+  systemConfig,
   type Contestant,
   type InsertContestant,
   type Group,
@@ -35,6 +36,7 @@ import {
   type InsertStandbyAssignment,
   type StandbyConfirmationToken,
   type InsertStandbyConfirmationToken,
+  type SystemConfig,
 } from "@shared/schema";
 import { eq, and, sql, inArray } from "drizzle-orm";
 
@@ -125,6 +127,10 @@ export interface IStorage {
   getStandbyConfirmationByToken(token: string): Promise<StandbyConfirmationToken | undefined>;
   getStandbyConfirmationByAssignment(standbyAssignmentId: string): Promise<StandbyConfirmationToken | undefined>;
   updateStandbyConfirmationToken(id: string, data: Partial<StandbyConfirmationToken>): Promise<StandbyConfirmationToken | undefined>;
+  
+  // System Configuration
+  getSystemConfig(key: string): Promise<string | null>;
+  setSystemConfig(key: string, value: string): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -875,6 +881,25 @@ export class DbStorage implements IStorage {
       .where(eq(standbyConfirmationTokens.id, id))
       .returning();
     return updated;
+  }
+
+  // System Configuration
+  async getSystemConfig(key: string): Promise<string | null> {
+    const [config] = await db
+      .select()
+      .from(systemConfig)
+      .where(eq(systemConfig.key, key));
+    return config?.value || null;
+  }
+
+  async setSystemConfig(key: string, value: string): Promise<void> {
+    await db
+      .insert(systemConfig)
+      .values({ key, value })
+      .onConflictDoUpdate({
+        target: systemConfig.key,
+        set: { value, updatedAt: new Date() }
+      });
   }
 }
 

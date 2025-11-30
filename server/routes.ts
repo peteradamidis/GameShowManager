@@ -9,18 +9,12 @@ import path from "path";
 import express from "express";
 import fs from "fs";
 import { getUncachableGmailClient } from "./gmail";
-import { appendBookingDataToSheet, updateSheetRow, createSheetHeader, getAllSheetData } from "./google-sheets";
+import { syncRecordDayToSheet, createSheetHeader } from "./google-sheets";
 
-// Google Sheets sync configuration (stored in memory)
-let googleSheetsConfig: {
-  spreadsheetId: string | null;
-  lastSyncTime: Date | null;
-  autoSync: boolean;
-} = {
-  spreadsheetId: null,
-  lastSyncTime: null,
-  autoSync: true,
-};
+// Google Sheets config keys for database storage
+const SHEETS_SPREADSHEET_ID_KEY = 'google_sheets_spreadsheet_id';
+const SHEETS_LAST_SYNC_KEY = 'google_sheets_last_sync';
+const SHEETS_AUTO_SYNC_KEY = 'google_sheets_auto_sync';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -2920,12 +2914,21 @@ Deal or No Deal Production Team
 
   // Get current Google Sheets sync configuration
   app.get("/api/google-sheets/config", async (req, res) => {
-    res.json({
-      spreadsheetId: googleSheetsConfig.spreadsheetId,
-      lastSyncTime: googleSheetsConfig.lastSyncTime,
-      autoSync: googleSheetsConfig.autoSync,
-      isConfigured: !!googleSheetsConfig.spreadsheetId,
-    });
+    try {
+      const spreadsheetId = await storage.getSystemConfig(SHEETS_SPREADSHEET_ID_KEY);
+      const lastSyncTime = await storage.getSystemConfig(SHEETS_LAST_SYNC_KEY);
+      const autoSync = await storage.getSystemConfig(SHEETS_AUTO_SYNC_KEY);
+      
+      res.json({
+        spreadsheetId,
+        lastSyncTime: lastSyncTime ? new Date(lastSyncTime) : null,
+        autoSync: autoSync !== 'false',
+        isConfigured: !!spreadsheetId,
+      });
+    } catch (error: any) {
+      console.error("Error getting Google Sheets config:", error);
+      res.status(500).json({ error: error.message });
+    }
   });
 
   // Set Google Sheets spreadsheet ID
@@ -2942,18 +2945,23 @@ Deal or No Deal Production Team
         return res.status(400).json({ error: "Invalid spreadsheet ID format. Get this from your Google Sheets URL." });
       }
 
-      googleSheetsConfig.spreadsheetId = spreadsheetId;
-      if (autoSync !== undefined) {
-        googleSheetsConfig.autoSync = autoSync;
-      }
-
       // Try to create header row to verify connection
       await createSheetHeader(spreadsheetId);
+
+      // Save config to database
+      await storage.setSystemConfig(SHEETS_SPREADSHEET_ID_KEY, spreadsheetId);
+      if (autoSync !== undefined) {
+        await storage.setSystemConfig(SHEETS_AUTO_SYNC_KEY, String(autoSync));
+      }
       
       res.json({ 
         success: true, 
-        message: "Google Sheets configured successfully. Headers have been created in your spreadsheet.",
-        config: googleSheetsConfig
+        message: "Google Sheets configured successfully. You can now sync your booking data.",
+        config: {
+          spreadsheetId,
+          autoSync: autoSync !== false,
+          isConfigured: true,
+        }
       });
     } catch (error: any) {
       console.error("Error configuring Google Sheets:", error);
@@ -2968,94 +2976,94 @@ Deal or No Deal Production Team
     }
   });
 
-  // Sync all booking master data to Google Sheets
+  // Sync all booking master data to Google Sheets (one tab per record day)
   app.post("/api/google-sheets/sync", async (req, res) => {
     try {
-      if (!googleSheetsConfig.spreadsheetId) {
+      const spreadsheetId = await storage.getSystemConfig(SHEETS_SPREADSHEET_ID_KEY);
+      
+      if (!spreadsheetId) {
         return res.status(400).json({ error: "Google Sheets not configured. Please set a spreadsheet ID first." });
       }
 
-      // Get all seat assignments with contestant data
-      const allAssignments = await storage.getAllSeatAssignments();
+      // Get all record days and their assignments
       const recordDays = await storage.getRecordDays();
+      const allAssignments = await storage.getAllSeatAssignments();
       
-      // Build booking data for the sheet
-      const bookingData = [];
+      // Sort record days chronologically
+      const sortedRecordDays = [...recordDays].sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
       
-      for (const assignment of allAssignments) {
-        // Get contestant details
-        const contestant = await storage.getContestantById(assignment.contestantId);
-        if (!contestant) continue;
+      const syncResults: { recordDay: string; count: number }[] = [];
+      
+      // Sync each record day to its own tab
+      for (const recordDay of sortedRecordDays) {
+        const dayAssignments = allAssignments.filter(a => a.recordDayId === recordDay.id);
+        
+        if (dayAssignments.length === 0) continue;
+        
+        // Build booking data for this record day
+        const bookingData = [];
+        
+        for (const assignment of dayAssignments) {
+          const contestant = await storage.getContestantById(assignment.contestantId);
+          if (!contestant) continue;
 
-        // Find record day date
-        const recordDay = recordDays.find(rd => rd.id === assignment.recordDayId);
-        const recordDayDate = recordDay ? new Date(recordDay.date).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        }) : '';
+          // Determine workflow status indicators
+          const hasBookingEmail = !!assignment.bookingEmailSent;
+          const hasConfirmedRsvp = !!assignment.confirmedRsvp;
+          const hasPaperworkSent = !!assignment.paperworkSent;
+          const hasPaperworkReceived = !!assignment.paperworkReceived;
+          const hasSignedIn = !!assignment.signedIn;
 
-        // Determine workflow status indicators
-        const hasBookingEmail = !!assignment.bookingEmailSent;
-        const hasConfirmedRsvp = !!assignment.confirmedRsvp;
-        const hasPaperworkSent = !!assignment.paperworkSent;
-        const hasPaperworkReceived = !!assignment.paperworkReceived;
-        const hasSignedIn = !!assignment.signedIn;
+          bookingData.push({
+            seatLabel: `Block ${assignment.blockNumber} - ${assignment.seatLabel}`,
+            contestantName: contestant.name || '',
+            contestantId: contestant.id || '',
+            auditionRating: contestant.auditionRating || '',
+            gender: contestant.gender || '',
+            age: contestant.age,
+            location: assignment.location || contestant.address || '',
+            workflow: [
+              hasBookingEmail ? 'Email Sent' : '',
+              hasConfirmedRsvp ? 'RSVP Confirmed' : '',
+              hasPaperworkSent ? 'Paperwork Sent' : '',
+              hasPaperworkReceived ? 'Paperwork Received' : '',
+              hasSignedIn ? 'Signed In' : '',
+            ].filter(Boolean).join(', ') || 'Pending',
+            availabilityRsvp: contestant.availabilityStatus === 'available' ? 'Yes' : contestant.availabilityStatus === 'pending' ? 'Pending' : 'No',
+            confirmedRsvp: assignment.confirmedRsvp ? new Date(assignment.confirmedRsvp).toLocaleDateString() : '',
+            declined: contestant.availabilityStatus === 'invited' ? 'Declined' : '',
+            notes: assignment.notes || assignment.otdNotes || '',
+          });
+        }
 
-        bookingData.push({
-          contestantName: contestant.name || '',
-          contestantId: contestant.id || '',
-          auditionRating: contestant.auditionRating || '',
-          gender: contestant.gender || '',
-          age: String(contestant.age || ''),
-          location: assignment.location || contestant.address || '',
-          recordDayDate,
-          seatLabel: `Block ${assignment.blockNumber} - ${assignment.seatLabel}`,
-          workflow: [
-            hasBookingEmail ? 'Email Sent' : '',
-            hasConfirmedRsvp ? 'RSVP Confirmed' : '',
-            hasPaperworkSent ? 'Paperwork Sent' : '',
-            hasPaperworkReceived ? 'Paperwork Received' : '',
-            hasSignedIn ? 'Signed In' : '',
-          ].filter(Boolean).join(', ') || 'Pending',
-          availabilityRsvp: contestant.availabilityStatus === 'available' ? 'Yes' : contestant.availabilityStatus === 'pending' ? 'Pending' : 'No',
-          confirmedRsvp: assignment.confirmedRsvp ? new Date(assignment.confirmedRsvp).toLocaleDateString() : '',
-          declined: contestant.availabilityStatus === 'invited' ? 'Declined' : '',
-          notes: assignment.notes || assignment.otdNotes || '',
-        });
+        if (bookingData.length > 0) {
+          // Format record day date for tab name (e.g., "Dec 15, 2024")
+          const tabName = new Date(recordDay.date).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          });
+          
+          await syncRecordDayToSheet(spreadsheetId, tabName, bookingData);
+          syncResults.push({ recordDay: tabName, count: bookingData.length });
+        }
       }
 
-      // Create header and sync data
-      await createSheetHeader(googleSheetsConfig.spreadsheetId);
+      // Update last sync time in database
+      await storage.setSystemConfig(SHEETS_LAST_SYNC_KEY, new Date().toISOString());
+
+      const totalBookings = syncResults.reduce((sum, r) => sum + r.count, 0);
       
-      if (bookingData.length > 0) {
-        await appendBookingDataToSheet(googleSheetsConfig.spreadsheetId, bookingData);
-      }
-
-      googleSheetsConfig.lastSyncTime = new Date();
-
       res.json({
         success: true,
-        message: `Synced ${bookingData.length} bookings to Google Sheets`,
-        lastSyncTime: googleSheetsConfig.lastSyncTime,
+        message: `Synced ${totalBookings} bookings across ${syncResults.length} record day tabs`,
+        tabs: syncResults,
+        lastSyncTime: new Date(),
       });
     } catch (error: any) {
       console.error("Error syncing to Google Sheets:", error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  // Get data from Google Sheets (for two-way sync)
-  app.get("/api/google-sheets/data", async (req, res) => {
-    try {
-      if (!googleSheetsConfig.spreadsheetId) {
-        return res.status(400).json({ error: "Google Sheets not configured" });
-      }
-
-      const data = await getAllSheetData(googleSheetsConfig.spreadsheetId);
-      res.json({ data });
-    } catch (error: any) {
-      console.error("Error reading from Google Sheets:", error);
       res.status(500).json({ error: error.message });
     }
   });

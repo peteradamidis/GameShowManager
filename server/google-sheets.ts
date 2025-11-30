@@ -53,11 +53,130 @@ async function getUncachableGoogleSheetClient() {
   return google.sheets({ version: 'v4', auth: oauth2Client });
 }
 
+// Get existing sheets in a spreadsheet
+async function getExistingSheets(spreadsheetId: string): Promise<{ sheetId: number; title: string }[]> {
+  const sheets = await getUncachableGoogleSheetClient();
+  const response = await sheets.spreadsheets.get({
+    spreadsheetId,
+    fields: 'sheets.properties'
+  });
+  
+  return (response.data.sheets || []).map(sheet => ({
+    sheetId: sheet.properties?.sheetId || 0,
+    title: sheet.properties?.title || ''
+  }));
+}
+
+// Create a new sheet (tab) in the spreadsheet
+async function createSheet(spreadsheetId: string, sheetTitle: string): Promise<number> {
+  const sheets = await getUncachableGoogleSheetClient();
+  
+  const response = await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [{
+        addSheet: {
+          properties: {
+            title: sheetTitle
+          }
+        }
+      }]
+    }
+  });
+  
+  return response.data.replies?.[0]?.addSheet?.properties?.sheetId || 0;
+}
+
+// Clear a sheet's content
+async function clearSheet(spreadsheetId: string, sheetTitle: string): Promise<void> {
+  const sheets = await getUncachableGoogleSheetClient();
+  
+  await sheets.spreadsheets.values.clear({
+    spreadsheetId,
+    range: `'${sheetTitle}'!A:Z`
+  });
+}
+
+// Write data to a specific sheet
+async function writeToSheet(spreadsheetId: string, sheetTitle: string, data: string[][]): Promise<void> {
+  const sheets = await getUncachableGoogleSheetClient();
+  
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: `'${sheetTitle}'!A1`,
+    valueInputOption: 'RAW',
+    requestBody: { values: data }
+  });
+}
+
+// Sync booking data for a specific record day to its own sheet
+export async function syncRecordDayToSheet(
+  spreadsheetId: string, 
+  recordDayDate: string, 
+  bookingData: any[]
+): Promise<{ success: boolean; sheetTitle: string }> {
+  try {
+    // Create sheet title from the record day date (e.g., "Dec 15, 2024")
+    const sheetTitle = recordDayDate;
+    
+    // Check if sheet already exists
+    const existingSheets = await getExistingSheets(spreadsheetId);
+    const sheetExists = existingSheets.some(s => s.title === sheetTitle);
+    
+    if (!sheetExists) {
+      await createSheet(spreadsheetId, sheetTitle);
+    } else {
+      // Clear existing data
+      await clearSheet(spreadsheetId, sheetTitle);
+    }
+    
+    // Create headers
+    const headers = [
+      'Seat',
+      'Contestant Name',
+      'Contestant ID',
+      'Audition Rating',
+      'Gender',
+      'Age',
+      'Location',
+      'Workflow Status',
+      'Availability RSVP',
+      'Confirmed RSVP',
+      'Declined',
+      'Notes'
+    ];
+    
+    // Convert booking data to rows
+    const rows = bookingData.map(booking => [
+      booking.seatLabel || '',
+      booking.contestantName || '',
+      booking.contestantId || '',
+      booking.auditionRating || '',
+      booking.gender || '',
+      String(booking.age || ''),
+      booking.location || '',
+      booking.workflow || '',
+      booking.availabilityRsvp || '',
+      booking.confirmedRsvp || '',
+      booking.declined || '',
+      booking.notes || ''
+    ]);
+    
+    // Write headers and data
+    await writeToSheet(spreadsheetId, sheetTitle, [headers, ...rows]);
+    
+    return { success: true, sheetTitle };
+  } catch (error) {
+    console.error('Error syncing record day to Google Sheets:', error);
+    throw error;
+  }
+}
+
+// Legacy functions for backward compatibility
 export async function appendBookingDataToSheet(spreadsheetId: string, bookingData: any[]) {
   try {
     const sheets = await getUncachableGoogleSheetClient();
     
-    // Convert booking objects to rows
     const rows = bookingData.map(booking => [
       booking.contestantName || '',
       booking.contestantId || '',
