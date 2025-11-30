@@ -1,7 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -136,7 +138,7 @@ export default function BookingMaster() {
 
   const configuresheetsMutation = useMutation({
     mutationFn: async (spreadsheetId: string) => {
-      return await apiRequest("POST", "/api/google-sheets/config", { spreadsheetId });
+      return await apiRequest("POST", "/api/google-sheets/config", { spreadsheetId, autoSync: false });
     },
     onSuccess: () => {
       toast({
@@ -150,6 +152,31 @@ export default function BookingMaster() {
       toast({
         title: "Connection Failed",
         description: error.message || "Could not connect to Google Sheets. Check the spreadsheet ID.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleAutoSyncMutation = useMutation({
+    mutationFn: async ({ autoSync, spreadsheetId }: { autoSync: boolean; spreadsheetId: string }) => {
+      return await apiRequest("POST", "/api/google-sheets/config", { 
+        spreadsheetId, 
+        autoSync 
+      });
+    },
+    onSuccess: (_, { autoSync }) => {
+      toast({
+        title: autoSync ? "Auto-Sync Enabled" : "Auto-Sync Disabled",
+        description: autoSync 
+          ? "Booking data will sync to Google Sheets every 5 minutes." 
+          : "Automatic syncing has been turned off.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/google-sheets/config"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Update",
+        description: error.message || "Could not update auto-sync setting.",
         variant: "destructive",
       });
     },
@@ -210,6 +237,31 @@ export default function BookingMaster() {
       });
     },
   });
+
+  // Auto-sync to Google Sheets every 5 minutes when enabled
+  useEffect(() => {
+    if (!sheetsConfig?.isConfigured || !sheetsConfig?.autoSync) {
+      return;
+    }
+
+    const doSync = async () => {
+      try {
+        console.log('[Auto-Sync] Syncing booking data to Google Sheets...');
+        await apiRequest("POST", "/api/google-sheets/sync", {});
+        queryClient.invalidateQueries({ queryKey: ["/api/google-sheets/config"] });
+      } catch (error) {
+        console.error('[Auto-Sync] Failed to sync:', error);
+      }
+    };
+
+    // Sync immediately when auto-sync is first enabled
+    doSync();
+
+    // Set up 5-minute interval
+    const intervalId = setInterval(doSync, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(intervalId);
+  }, [sheetsConfig?.isConfigured, sheetsConfig?.autoSync]);
 
   const generateAllSeats = (): BookingRow[] => {
     const rows: BookingRow[] = [];
@@ -479,7 +531,7 @@ export default function BookingMaster() {
               
               <div className="space-y-4 py-4">
                 {sheetsConfig?.isConfigured ? (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div className="flex items-center gap-2 text-green-600">
                       <CheckCircle className="h-5 w-5" />
                       <span className="font-medium">Connected to Google Sheets</span>
@@ -489,8 +541,36 @@ export default function BookingMaster() {
                         Last synced: {format(new Date(sheetsConfig.lastSyncTime), "MMM d, yyyy 'at' h:mm a")}
                       </p>
                     )}
+                    
+                    <div className="flex items-center justify-between p-3 bg-muted rounded-md">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="auto-sync" className="text-sm font-medium">
+                          Auto-sync every 5 minutes
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Automatically keep your spreadsheet up to date
+                        </p>
+                      </div>
+                      <Switch
+                        id="auto-sync"
+                        checked={sheetsConfig.autoSync}
+                        onCheckedChange={(checked) => {
+                          if (sheetsConfig.spreadsheetId) {
+                            toggleAutoSyncMutation.mutate({ 
+                              autoSync: checked, 
+                              spreadsheetId: sheetsConfig.spreadsheetId 
+                            });
+                          }
+                        }}
+                        disabled={toggleAutoSyncMutation.isPending || !sheetsConfig.spreadsheetId}
+                        data-testid="switch-auto-sync"
+                      />
+                    </div>
+                    
                     <p className="text-sm text-muted-foreground">
-                      Click "Sync to Sheets" to update your spreadsheet with the latest booking data.
+                      {sheetsConfig.autoSync 
+                        ? "Your spreadsheet will update automatically. You can also sync manually anytime."
+                        : "Click \"Sync Now\" to update your spreadsheet with the latest booking data."}
                     </p>
                   </div>
                 ) : (
