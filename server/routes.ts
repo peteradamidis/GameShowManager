@@ -2937,6 +2937,11 @@ Deal or No Deal Production Team
         return res.status(400).json({ error: "Spreadsheet ID is required" });
       }
 
+      // Validate spreadsheet ID format (basic validation)
+      if (typeof spreadsheetId !== 'string' || spreadsheetId.length < 10 || spreadsheetId.length > 100) {
+        return res.status(400).json({ error: "Invalid spreadsheet ID format. Get this from your Google Sheets URL." });
+      }
+
       googleSheetsConfig.spreadsheetId = spreadsheetId;
       if (autoSync !== undefined) {
         googleSheetsConfig.autoSync = autoSync;
@@ -2947,12 +2952,19 @@ Deal or No Deal Production Team
       
       res.json({ 
         success: true, 
-        message: "Google Sheets configured successfully",
+        message: "Google Sheets configured successfully. Headers have been created in your spreadsheet.",
         config: googleSheetsConfig
       });
     } catch (error: any) {
       console.error("Error configuring Google Sheets:", error);
-      res.status(500).json({ error: error.message });
+      // Provide more helpful error messages
+      if (error.message?.includes('not connected')) {
+        return res.status(401).json({ error: "Google Sheets not connected. Please authorize the integration first." });
+      }
+      if (error.message?.includes('not found') || error.code === 404) {
+        return res.status(404).json({ error: "Spreadsheet not found. Check the ID and ensure the sheet is shared with the integration." });
+      }
+      res.status(500).json({ error: `Failed to configure Google Sheets: ${error.message}` });
     }
   });
 
@@ -2983,20 +2995,33 @@ Deal or No Deal Production Team
           day: 'numeric'
         }) : '';
 
+        // Determine workflow status indicators
+        const hasBookingEmail = !!assignment.bookingEmailSent;
+        const hasConfirmedRsvp = !!assignment.confirmedRsvp;
+        const hasPaperworkSent = !!assignment.paperworkSent;
+        const hasPaperworkReceived = !!assignment.paperworkReceived;
+        const hasSignedIn = !!assignment.signedIn;
+
         bookingData.push({
           contestantName: contestant.name || '',
           contestantId: contestant.id || '',
           auditionRating: contestant.auditionRating || '',
           gender: contestant.gender || '',
-          age: contestant.age || '',
+          age: String(contestant.age || ''),
           location: assignment.location || contestant.address || '',
           recordDayDate,
           seatLabel: `Block ${assignment.blockNumber} - ${assignment.seatLabel}`,
-          workflow: assignment.castingCategory || '',
-          availabilityRsvp: assignment.confirmedRsvp ? 'Yes' : '',
+          workflow: [
+            hasBookingEmail ? 'Email Sent' : '',
+            hasConfirmedRsvp ? 'RSVP Confirmed' : '',
+            hasPaperworkSent ? 'Paperwork Sent' : '',
+            hasPaperworkReceived ? 'Paperwork Received' : '',
+            hasSignedIn ? 'Signed In' : '',
+          ].filter(Boolean).join(', ') || 'Pending',
+          availabilityRsvp: contestant.availabilityStatus === 'available' ? 'Yes' : contestant.availabilityStatus === 'pending' ? 'Pending' : 'No',
           confirmedRsvp: assignment.confirmedRsvp ? new Date(assignment.confirmedRsvp).toLocaleDateString() : '',
-          declined: '',
-          notes: assignment.notes || '',
+          declined: contestant.availabilityStatus === 'invited' ? 'Declined' : '',
+          notes: assignment.notes || assignment.otdNotes || '',
         });
       }
 

@@ -53,4 +53,12 @@ Do not make changes to the file `Y`.
 - **Cast It Reach:** Source of contestant data via Excel exports.
 - **Gmail Integration:** (Temporary) Currently used for sending availability check emails via the Google Gmail connector. Will be replaced with Outlook once approval is received.
 - **Outlook Integration:** (Planned) To replace Gmail for availability check and booking confirmation emails once user approval is obtained.
+- **Google Sheets Integration:** (Active) Syncs booking master data to Google Sheets for external reporting.
+    - API Endpoints:
+        - `GET /api/google-sheets/config` - Get current configuration
+        - `POST /api/google-sheets/config` - Set spreadsheet ID (body: `{ spreadsheetId: "..." }`)
+        - `POST /api/google-sheets/sync` - Sync all booking data to the configured spreadsheet
+        - `GET /api/google-sheets/data` - Read data from the configured spreadsheet
+    - To use: Create a Google Sheet, copy the spreadsheet ID from the URL (the long string between /d/ and /edit), then call the config endpoint.
+    - Data synced: Contestant name, ID, rating, gender, age, location, record day, seat, workflow status, RSVP status, and notes.
 - **Booking Master to Server File Sync:** (Planned) Two-way sync between booking master and Excel file on user's server. User prefers local server solution over SharePoint for now. Awaiting server endpoint details (URL, format, authentication method).
