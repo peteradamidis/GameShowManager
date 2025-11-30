@@ -17,14 +17,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Calendar, Mail, Maximize2, Minimize2 } from "lucide-react";
+import { Download, Calendar, Mail, Maximize2, Minimize2, Settings, RefreshCw, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
+
+interface GoogleSheetsConfig {
+  spreadsheetId: string | null;
+  lastSyncTime: string | null;
+  autoSync: boolean;
+  isConfigured: boolean;
+}
 
 interface RecordDay {
   id: string;
@@ -96,6 +112,8 @@ export default function BookingMaster() {
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
   const [confirmSendOpen, setConfirmSendOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [sheetsDialogOpen, setSheetsDialogOpen] = useState(false);
+  const [spreadsheetIdInput, setSpreadsheetIdInput] = useState("");
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -110,6 +128,51 @@ export default function BookingMaster() {
 
   const { data: contestants = [] } = useQuery<Contestant[]>({
     queryKey: ["/api/contestants"],
+  });
+
+  const { data: sheetsConfig } = useQuery<GoogleSheetsConfig>({
+    queryKey: ["/api/google-sheets/config"],
+  });
+
+  const configuresheetsMutation = useMutation({
+    mutationFn: async (spreadsheetId: string) => {
+      return await apiRequest("POST", "/api/google-sheets/config", { spreadsheetId });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Google Sheets Connected",
+        description: "Your spreadsheet is now linked. You can sync booking data anytime.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/google-sheets/config"] });
+      setSheetsDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Connection Failed",
+        description: error.message || "Could not connect to Google Sheets. Check the spreadsheet ID.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const syncSheetsMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/google-sheets/sync", {});
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Sync Complete",
+        description: data.message || "Booking data has been synced to Google Sheets.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/google-sheets/config"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Sync Failed",
+        description: error.message || "Could not sync to Google Sheets.",
+        variant: "destructive",
+      });
+    },
   });
 
   const updateWorkflowMutation = useMutation({
@@ -378,6 +441,117 @@ export default function BookingMaster() {
             <Download className="h-4 w-4 mr-2" />
             Export to Excel
           </Button>
+          
+          {sheetsConfig?.isConfigured ? (
+            <Button 
+              onClick={() => syncSheetsMutation.mutate()} 
+              variant="outline"
+              disabled={syncSheetsMutation.isPending}
+              data-testid="button-sync-sheets"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${syncSheetsMutation.isPending ? 'animate-spin' : ''}`} />
+              Sync to Sheets
+            </Button>
+          ) : null}
+          
+          <Dialog open={sheetsDialogOpen} onOpenChange={setSheetsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="icon"
+                title="Google Sheets Settings"
+                data-testid="button-sheets-settings"
+              >
+                {sheetsConfig?.isConfigured ? (
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Settings className="h-4 w-4" />
+                )}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Google Sheets Sync</DialogTitle>
+                <DialogDescription>
+                  Connect a Google Sheet to automatically sync booking data. This makes it easy to share with your team.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
+                {sheetsConfig?.isConfigured ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-green-600">
+                      <CheckCircle className="h-5 w-5" />
+                      <span className="font-medium">Connected to Google Sheets</span>
+                    </div>
+                    {sheetsConfig.lastSyncTime && (
+                      <p className="text-sm text-muted-foreground">
+                        Last synced: {format(new Date(sheetsConfig.lastSyncTime), "MMM d, yyyy 'at' h:mm a")}
+                      </p>
+                    )}
+                    <p className="text-sm text-muted-foreground">
+                      Click "Sync to Sheets" to update your spreadsheet with the latest booking data.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm">
+                      To connect:
+                    </p>
+                    <ol className="text-sm list-decimal list-inside space-y-2 text-muted-foreground">
+                      <li>Create a new Google Sheet (or use an existing one)</li>
+                      <li>Copy the spreadsheet ID from the URL</li>
+                      <li>Paste it below</li>
+                    </ol>
+                    <div className="bg-muted p-3 rounded-md text-xs">
+                      <p className="font-medium mb-1">Where to find the ID:</p>
+                      <p className="text-muted-foreground break-all">
+                        https://docs.google.com/spreadsheets/d/<span className="text-primary font-medium">THIS-IS-YOUR-ID</span>/edit
+                      </p>
+                    </div>
+                    <Input
+                      placeholder="Paste your spreadsheet ID here"
+                      value={spreadsheetIdInput}
+                      onChange={(e) => setSpreadsheetIdInput(e.target.value)}
+                      data-testid="input-spreadsheet-id"
+                    />
+                  </div>
+                )}
+              </div>
+              
+              <DialogFooter>
+                {sheetsConfig?.isConfigured ? (
+                  <div className="flex gap-2 w-full justify-between">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setSpreadsheetIdInput("");
+                        setSheetsDialogOpen(false);
+                      }}
+                    >
+                      Close
+                    </Button>
+                    <Button 
+                      onClick={() => syncSheetsMutation.mutate()}
+                      disabled={syncSheetsMutation.isPending}
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${syncSheetsMutation.isPending ? 'animate-spin' : ''}`} />
+                      Sync Now
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    onClick={() => configuresheetsMutation.mutate(spreadsheetIdInput)}
+                    disabled={!spreadsheetIdInput.trim() || configuresheetsMutation.isPending}
+                    data-testid="button-connect-sheets"
+                  >
+                    {configuresheetsMutation.isPending ? "Connecting..." : "Connect Sheet"}
+                  </Button>
+                )}
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          
           <Button 
             onClick={handleToggleFullscreen} 
             variant="outline" 
