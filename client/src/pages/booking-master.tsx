@@ -719,7 +719,7 @@ export default function BookingMaster() {
                   <TableHead className="sticky top-0 bg-background z-10">MOBILITY / MEDICAL NOTES</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10">CRIMINAL / BANKRUPTCY</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10">CASTING CATEGORY</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">NOTES</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 min-w-[300px]">NOTES</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10">BOOKING EMAIL SENT</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10">CONFIRMED RSVP</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10">PAPERWORK SENT</TableHead>
