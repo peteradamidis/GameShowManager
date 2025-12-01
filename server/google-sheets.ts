@@ -290,3 +290,80 @@ export async function getAllSheetData(spreadsheetId: string) {
     throw error;
   }
 }
+
+// Update a specific cell in a record day's sheet tab
+export async function updateCellInRecordDaySheet(
+  spreadsheetId: string,
+  sheetTitle: string,
+  rowIndex: number,
+  columnIndex: number,
+  value: string
+): Promise<{ success: boolean }> {
+  try {
+    const sheets = await getUncachableGoogleSheetClient();
+    
+    // Convert column index to letter (0=A, 1=B, etc.)
+    const columnLetter = String.fromCharCode(65 + columnIndex);
+    const range = `'${sheetTitle}'!${columnLetter}${rowIndex}`;
+    
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range,
+      valueInputOption: 'RAW',
+      requestBody: { values: [[value]] }
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating cell in Google Sheets:', error);
+    throw error;
+  }
+}
+
+// Update an entire row in a record day's sheet tab
+export async function updateRowInRecordDaySheet(
+  spreadsheetId: string,
+  sheetTitle: string,
+  rowIndex: number,
+  rowData: string[]
+): Promise<{ success: boolean }> {
+  try {
+    const sheets = await getUncachableGoogleSheetClient();
+    
+    // Calculate the end column letter based on data length
+    const endColumnLetter = String.fromCharCode(65 + rowData.length - 1);
+    const range = `'${sheetTitle}'!A${rowIndex}:${endColumnLetter}${rowIndex}`;
+    
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range,
+      valueInputOption: 'RAW',
+      requestBody: { values: [rowData] }
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating row in Google Sheets:', error);
+    throw error;
+  }
+}
+
+// Get data from a specific record day sheet tab
+export async function getRecordDaySheetData(
+  spreadsheetId: string,
+  sheetTitle: string
+): Promise<string[][]> {
+  try {
+    const sheets = await getUncachableGoogleSheetClient();
+    
+    const result = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `'${sheetTitle}'!A:Z`
+    });
+    
+    return result.data.values || [];
+  } catch (error) {
+    console.error('Error reading record day sheet from Google Sheets:', error);
+    throw error;
+  }
+}

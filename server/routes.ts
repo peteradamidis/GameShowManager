@@ -9,7 +9,7 @@ import path from "path";
 import express from "express";
 import fs from "fs";
 import { getUncachableGmailClient } from "./gmail";
-import { syncRecordDayToSheet, createSheetHeader } from "./google-sheets";
+import { syncRecordDayToSheet, createSheetHeader, updateCellInRecordDaySheet, updateRowInRecordDaySheet, getRecordDaySheetData } from "./google-sheets";
 
 // Google Sheets config keys for database storage
 const SHEETS_SPREADSHEET_ID_KEY = 'google_sheets_spreadsheet_id';
@@ -3064,6 +3064,74 @@ Deal or No Deal Production Team
       });
     } catch (error: any) {
       console.error("Error syncing to Google Sheets:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update a specific cell in a record day's Google Sheet tab (sheet-only, doesn't affect database)
+  app.patch("/api/google-sheets/cell", async (req, res) => {
+    try {
+      const spreadsheetId = await storage.getSystemConfig(SHEETS_SPREADSHEET_ID_KEY);
+      
+      if (!spreadsheetId) {
+        return res.status(400).json({ error: "Google Sheets not configured" });
+      }
+      
+      const { sheetTitle, rowIndex, columnIndex, value } = req.body;
+      
+      if (!sheetTitle || rowIndex === undefined || columnIndex === undefined) {
+        return res.status(400).json({ error: "Missing required fields: sheetTitle, rowIndex, columnIndex" });
+      }
+      
+      await updateCellInRecordDaySheet(spreadsheetId, sheetTitle, rowIndex, columnIndex, value || '');
+      
+      res.json({ success: true, message: "Cell updated in Google Sheet" });
+    } catch (error: any) {
+      console.error("Error updating Google Sheets cell:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update an entire row in a record day's Google Sheet tab (sheet-only, doesn't affect database)
+  app.patch("/api/google-sheets/row", async (req, res) => {
+    try {
+      const spreadsheetId = await storage.getSystemConfig(SHEETS_SPREADSHEET_ID_KEY);
+      
+      if (!spreadsheetId) {
+        return res.status(400).json({ error: "Google Sheets not configured" });
+      }
+      
+      const { sheetTitle, rowIndex, rowData } = req.body;
+      
+      if (!sheetTitle || rowIndex === undefined || !rowData) {
+        return res.status(400).json({ error: "Missing required fields: sheetTitle, rowIndex, rowData" });
+      }
+      
+      await updateRowInRecordDaySheet(spreadsheetId, sheetTitle, rowIndex, rowData);
+      
+      res.json({ success: true, message: "Row updated in Google Sheet" });
+    } catch (error: any) {
+      console.error("Error updating Google Sheets row:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get data from a specific record day's Google Sheet tab
+  app.get("/api/google-sheets/sheet/:sheetTitle", async (req, res) => {
+    try {
+      const spreadsheetId = await storage.getSystemConfig(SHEETS_SPREADSHEET_ID_KEY);
+      
+      if (!spreadsheetId) {
+        return res.status(400).json({ error: "Google Sheets not configured" });
+      }
+      
+      const { sheetTitle } = req.params;
+      
+      const data = await getRecordDaySheetData(spreadsheetId, decodeURIComponent(sheetTitle));
+      
+      res.json({ success: true, data });
+    } catch (error: any) {
+      console.error("Error reading Google Sheets data:", error);
       res.status(500).json({ error: error.message });
     }
   });
