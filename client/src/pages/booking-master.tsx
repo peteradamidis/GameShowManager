@@ -158,6 +158,26 @@ interface BookingRow {
   contestant?: Contestant;
 }
 
+interface StandbyAssignment {
+  id: string;
+  contestantId: string;
+  recordDayId: string;
+  status: string;
+  standbyEmailSent: string | null;
+  confirmedAt: string | null;
+  notes: string | null;
+  contestant: {
+    id: string;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    gender: string;
+    age: number;
+    photoUrl: string | null;
+    auditionRating: string | null;
+  };
+}
+
 const BLOCKS = 7;
 const ROWS = [
   { label: "A", count: 5 },
@@ -228,6 +248,14 @@ export default function BookingMaster() {
   const { data: sheetsConfig } = useQuery<GoogleSheetsConfig>({
     queryKey: ["/api/google-sheets/config"],
   });
+
+  // Fetch standbys for the selected record day (for the dropdown)
+  const { data: standbys = [] } = useQuery<StandbyAssignment[]>({
+    queryKey: ['/api/standbys'],
+  });
+
+  // Filter standbys to get ones for the current record day
+  const standbysForRecordDay = standbys.filter(s => s.recordDayId === selectedRecordDay);
 
   const configuresheetsMutation = useMutation({
     mutationFn: async (spreadsheetId: string) => {
@@ -1037,7 +1065,7 @@ export default function BookingMaster() {
                                 value={getTextValue(row.assignment.id, "otdNotes", row.assignment.otdNotes)}
                                 onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "otdNotes", e.target.value)}
                                 placeholder=""
-                                className="h-7 min-h-0 text-xs resize-none w-24"
+                                className="h-14 min-h-0 text-xs resize-none w-36"
                                 data-testid={`textarea-otd-notes-${row.seatId}`}
                               />
                             )}
@@ -1046,13 +1074,40 @@ export default function BookingMaster() {
                         {isColumnVisible("standby") && (
                           <TableCell className="px-2 py-1">
                             {row.assignment && (
-                              <Textarea
-                                value={getTextValue(row.assignment.id, "standbyReplacementSwaps", row.assignment.standbyReplacementSwaps)}
-                                onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "standbyReplacementSwaps", e.target.value)}
-                                placeholder=""
-                                className="h-7 min-h-0 text-xs resize-none w-24"
-                                data-testid={`textarea-standby-${row.seatId}`}
-                              />
+                              <Select
+                                value={getTextValue(row.assignment.id, "standbyReplacementSwaps", row.assignment.standbyReplacementSwaps) || "none"}
+                                onValueChange={(value) => {
+                                  const newValue = value === "none" ? "" : value;
+                                  handleDebouncedTextUpdate(row.assignment!.id, "standbyReplacementSwaps", newValue);
+                                }}
+                              >
+                                <SelectTrigger 
+                                  className="h-7 text-xs w-32"
+                                  data-testid={`select-standby-${row.seatId}`}
+                                >
+                                  <SelectValue placeholder="Select standby" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">
+                                    <span className="text-muted-foreground">None</span>
+                                  </SelectItem>
+                                  {standbysForRecordDay.map((standby) => (
+                                    <SelectItem key={standby.id} value={standby.contestant.name}>
+                                      <span className="flex items-center gap-2">
+                                        <span>{standby.contestant.name}</span>
+                                        <span className="text-muted-foreground text-xs">
+                                          ({standby.contestant.auditionRating || "?"} / {standby.contestant.gender === "female" ? "F" : "M"})
+                                        </span>
+                                      </span>
+                                    </SelectItem>
+                                  ))}
+                                  {standbysForRecordDay.length === 0 && (
+                                    <SelectItem value="no-standbys" disabled>
+                                      <span className="text-muted-foreground italic">No standbys for this day</span>
+                                    </SelectItem>
+                                  )}
+                                </SelectContent>
+                              </Select>
                             )}
                           </TableCell>
                         )}
