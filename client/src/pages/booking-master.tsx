@@ -452,7 +452,7 @@ export default function BookingMaster() {
         row.contestant?.location || "",
         row.assignment?.medicalQuestion || "",
         row.contestant?.mobilityNotes || "",
-        row.assignment?.criminalBankruptcy || "",
+        row.contestant?.criminalRecord || "",
         row.assignment?.castingCategory || "",
         row.assignment?.notes || "",
         row.assignment?.bookingEmailSent ? "✓" : "",
@@ -788,16 +788,8 @@ export default function BookingMaster() {
                         <TableCell className="text-sm">
                           {row.contestant?.mobilityNotes || ""}
                         </TableCell>
-                        <TableCell>
-                          {row.assignment && (
-                            <Input
-                              value={row.assignment.criminalBankruptcy || ""}
-                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "criminalBankruptcy", e.target.value)}
-                              placeholder=""
-                              className="h-8 text-sm"
-                              data-testid={`input-criminal-${row.seatId}`}
-                            />
-                          )}
+                        <TableCell className="text-sm">
+                          {row.contestant?.criminalRecord || ""}
                         </TableCell>
                         <TableCell>
                           {row.assignment && (
