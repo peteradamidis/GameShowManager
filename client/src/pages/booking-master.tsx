@@ -720,6 +720,7 @@ export default function BookingMaster() {
                   <TableHead className="sticky top-0 bg-background z-10">CRIMINAL / BANKRUPTCY</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10">CASTING CATEGORY</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 min-w-[300px]">NOTES</TableHead>
+                  <TableHead className="sticky top-0 bg-primary/20 z-10 w-2 p-0"></TableHead>
                   <TableHead className="sticky top-0 bg-background z-10">BOOKING EMAIL SENT</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10">CONFIRMED RSVP</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10">PAPERWORK SENT</TableHead>
@@ -742,7 +743,7 @@ export default function BookingMaster() {
                     <>
                       {isFirstRowOfBlock && (
                         <TableRow key={`block-header-${row.blockNumber}`} className="bg-primary/10 hover:bg-primary/10">
-                          <TableCell colSpan={20} className="py-3">
+                          <TableCell colSpan={21} className="py-3">
                             <div className="flex items-center justify-between">
                               <span className="font-bold text-lg" data-testid={`block-header-${row.blockNumber}`}>
                                 Block {row.blockNumber}
@@ -813,6 +814,7 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
+                        <TableCell className="bg-primary/20 p-0 w-2"></TableCell>
                         <TableCell className="text-center">
                           {row.assignment && (
                             <Checkbox
