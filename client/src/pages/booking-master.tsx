@@ -808,7 +808,7 @@ export default function BookingMaster() {
                               value={row.assignment.notes || ""}
                               onChange={(e) => handleFieldUpdate(row.assignment!.id, "notes", e.target.value)}
                               placeholder="Notes"
-                              className="h-8 min-h-0 text-sm resize-none"
+                              className="min-h-[60px] text-sm resize-y"
                               data-testid={`textarea-notes-${row.seatId}`}
                             />
                           )}
