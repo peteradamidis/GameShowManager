@@ -41,7 +41,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Calendar, Mail, Maximize2, Minimize2, Settings, RefreshCw, CheckCircle, XCircle, Columns, FileEdit } from "lucide-react";
+import { Download, Calendar, Mail, Maximize2, Minimize2, Settings, RefreshCw, CheckCircle, XCircle, Columns } from "lucide-react";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 
@@ -175,22 +175,6 @@ export default function BookingMaster() {
   const [sheetsDialogOpen, setSheetsDialogOpen] = useState(false);
   const [spreadsheetIdInput, setSpreadsheetIdInput] = useState("");
   const [pendingTextUpdates, setPendingTextUpdates] = useState<Record<string, string>>({});
-  const [sheetEditDialogOpen, setSheetEditDialogOpen] = useState(false);
-  const [editingSheetRow, setEditingSheetRow] = useState<{
-    rowIndex: number;
-    seatLabel: string;
-    contestantName: string;
-    contestantId: string;
-    auditionRating: string;
-    gender: string;
-    age: string;
-    location: string;
-    workflow: string;
-    availabilityRsvp: string;
-    confirmedRsvp: string;
-    declined: string;
-    notes: string;
-  } | null>(null);
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnId, boolean>>(() => {
     // Load from localStorage or use defaults
     try {
@@ -306,27 +290,6 @@ export default function BookingMaster() {
       toast({
         title: "Sync Failed",
         description: error.message || "Could not sync to Google Sheets.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateSheetRowMutation = useMutation({
-    mutationFn: async ({ sheetTitle, rowIndex, rowData }: { sheetTitle: string; rowIndex: number; rowData: string[] }) => {
-      return await apiRequest("PATCH", "/api/google-sheets/row", { sheetTitle, rowIndex, rowData });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Sheet Updated",
-        description: "Changes saved to Google Sheet only (database not affected).",
-      });
-      setSheetEditDialogOpen(false);
-      setEditingSheetRow(null);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Update Failed",
-        description: error.message || "Could not update Google Sheet.",
         variant: "destructive",
       });
     },
@@ -520,77 +483,6 @@ export default function BookingMaster() {
   const handleCheckboxToggle = (assignmentId: string, field: string, currentValue: any) => {
     const newValue = !currentValue;
     handleFieldUpdate(assignmentId, field, newValue);
-  };
-
-  // Open the sheet edit dialog for a specific row
-  const openSheetEditDialog = (row: BookingRow, rowIndex: number) => {
-    if (!row.assignment || !row.contestant) return;
-    
-    const hasBookingEmail = !!row.assignment.bookingEmailSent;
-    const hasConfirmedRsvp = !!row.assignment.confirmedRsvp;
-    const hasPaperworkSent = !!row.assignment.paperworkSent;
-    const hasPaperworkReceived = !!row.assignment.paperworkReceived;
-    const hasSignedIn = !!row.assignment.signedIn;
-    
-    const workflowStatus = [
-      hasBookingEmail ? 'Email Sent' : '',
-      hasConfirmedRsvp ? 'RSVP Confirmed' : '',
-      hasPaperworkSent ? 'Paperwork Sent' : '',
-      hasPaperworkReceived ? 'Paperwork Received' : '',
-      hasSignedIn ? 'Signed In' : '',
-    ].filter(Boolean).join(', ') || 'Pending';
-    
-    setEditingSheetRow({
-      rowIndex: rowIndex + 2, // +2 because row 1 is header, and array is 0-indexed
-      seatLabel: `Block ${row.blockNumber} - ${row.seatLabel}`,
-      contestantName: row.contestant.name || '',
-      contestantId: row.contestant.id || '',
-      auditionRating: (row.contestant as any).auditionRating || '',
-      gender: row.contestant.gender || '',
-      age: String(row.contestant.age || ''),
-      location: row.assignment.location || row.contestant.location || '',
-      workflow: workflowStatus,
-      availabilityRsvp: (row.contestant as any).availabilityStatus === 'available' ? 'Yes' : (row.contestant as any).availabilityStatus === 'pending' ? 'Pending' : 'No',
-      confirmedRsvp: row.assignment.confirmedRsvp ? new Date(row.assignment.confirmedRsvp).toLocaleDateString() : '',
-      declined: (row.contestant as any).availabilityStatus === 'invited' ? 'Declined' : '',
-      notes: row.assignment.notes || row.assignment.otdNotes || '',
-    });
-    setSheetEditDialogOpen(true);
-  };
-
-  // Save edited row to Google Sheet only
-  const handleSaveSheetRow = () => {
-    if (!editingSheetRow || !selectedRecordDay) return;
-    
-    const recordDay = recordDays.find(rd => rd.id === selectedRecordDay);
-    if (!recordDay) return;
-    
-    const sheetTitle = new Date(recordDay.date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-    
-    const rowData = [
-      editingSheetRow.seatLabel,
-      editingSheetRow.contestantName,
-      editingSheetRow.contestantId,
-      editingSheetRow.auditionRating,
-      editingSheetRow.gender,
-      editingSheetRow.age,
-      editingSheetRow.location,
-      editingSheetRow.workflow,
-      editingSheetRow.availabilityRsvp,
-      editingSheetRow.confirmedRsvp,
-      editingSheetRow.declined,
-      editingSheetRow.notes,
-    ];
-    
-    updateSheetRowMutation.mutate({
-      sheetTitle,
-      rowIndex: editingSheetRow.rowIndex,
-      rowData,
-    });
   };
 
   const handleSelectAssignment = (assignmentId: string, checked: boolean) => {
@@ -913,163 +805,6 @@ export default function BookingMaster() {
             </DialogContent>
           </Dialog>
           
-          {/* Sheet Edit Dialog - for editing rows directly in Google Sheet without affecting database */}
-          <Dialog open={sheetEditDialogOpen} onOpenChange={setSheetEditDialogOpen}>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Edit Sheet Row</DialogTitle>
-                <DialogDescription>
-                  Edit this row's data directly in Google Sheets. Changes will only affect the Sheet, not the database or other tabs.
-                </DialogDescription>
-              </DialogHeader>
-              
-              {editingSheetRow && (
-                <div className="space-y-3 py-2 max-h-[60vh] overflow-y-auto">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Seat</Label>
-                      <Input 
-                        value={editingSheetRow.seatLabel} 
-                        onChange={(e) => setEditingSheetRow({...editingSheetRow, seatLabel: e.target.value})}
-                        className="h-8"
-                        data-testid="input-sheet-seat"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Contestant ID</Label>
-                      <Input 
-                        value={editingSheetRow.contestantId} 
-                        onChange={(e) => setEditingSheetRow({...editingSheetRow, contestantId: e.target.value})}
-                        className="h-8"
-                        data-testid="input-sheet-contestant-id"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Contestant Name</Label>
-                    <Input 
-                      value={editingSheetRow.contestantName} 
-                      onChange={(e) => setEditingSheetRow({...editingSheetRow, contestantName: e.target.value})}
-                      className="h-8"
-                      data-testid="input-sheet-name"
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Rating</Label>
-                      <Input 
-                        value={editingSheetRow.auditionRating} 
-                        onChange={(e) => setEditingSheetRow({...editingSheetRow, auditionRating: e.target.value})}
-                        className="h-8"
-                        data-testid="input-sheet-rating"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Gender</Label>
-                      <Input 
-                        value={editingSheetRow.gender} 
-                        onChange={(e) => setEditingSheetRow({...editingSheetRow, gender: e.target.value})}
-                        className="h-8"
-                        data-testid="input-sheet-gender"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Age</Label>
-                      <Input 
-                        value={editingSheetRow.age} 
-                        onChange={(e) => setEditingSheetRow({...editingSheetRow, age: e.target.value})}
-                        className="h-8"
-                        data-testid="input-sheet-age"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Location</Label>
-                    <Input 
-                      value={editingSheetRow.location} 
-                      onChange={(e) => setEditingSheetRow({...editingSheetRow, location: e.target.value})}
-                      className="h-8"
-                      data-testid="input-sheet-location"
-                    />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Workflow Status</Label>
-                    <Input 
-                      value={editingSheetRow.workflow} 
-                      onChange={(e) => setEditingSheetRow({...editingSheetRow, workflow: e.target.value})}
-                      className="h-8"
-                      data-testid="input-sheet-workflow"
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Availability RSVP</Label>
-                      <Input 
-                        value={editingSheetRow.availabilityRsvp} 
-                        onChange={(e) => setEditingSheetRow({...editingSheetRow, availabilityRsvp: e.target.value})}
-                        className="h-8"
-                        data-testid="input-sheet-availability"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Confirmed RSVP</Label>
-                      <Input 
-                        value={editingSheetRow.confirmedRsvp} 
-                        onChange={(e) => setEditingSheetRow({...editingSheetRow, confirmedRsvp: e.target.value})}
-                        className="h-8"
-                        data-testid="input-sheet-confirmed"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Declined</Label>
-                    <Input 
-                      value={editingSheetRow.declined} 
-                      onChange={(e) => setEditingSheetRow({...editingSheetRow, declined: e.target.value})}
-                      className="h-8"
-                      data-testid="input-sheet-declined"
-                    />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Notes</Label>
-                    <Input 
-                      value={editingSheetRow.notes} 
-                      onChange={(e) => setEditingSheetRow({...editingSheetRow, notes: e.target.value})}
-                      className="h-8"
-                      data-testid="input-sheet-notes"
-                    />
-                  </div>
-                </div>
-              )}
-              
-              <DialogFooter className="gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setSheetEditDialogOpen(false);
-                    setEditingSheetRow(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleSaveSheetRow}
-                  disabled={updateSheetRowMutation.isPending || !sheetsConfig?.isConfigured}
-                  data-testid="button-save-sheet-row"
-                >
-                  {updateSheetRowMutation.isPending ? "Saving..." : "Save to Sheet"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          
           <Button 
             onClick={handleToggleFullscreen} 
             variant="outline" 
@@ -1142,7 +877,6 @@ export default function BookingMaster() {
                   {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">SIGNED<br/>IN</TableHead>}
                   {isColumnVisible("otdNotes") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 text-center">OTD NOTES</TableHead>}
                   {isColumnVisible("standby") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 text-center">STANDBY / SWAPS</TableHead>}
-                  {sheetsConfig?.isConfigured && <TableHead className="sticky top-0 bg-background z-10 text-xs px-1 text-center w-8"></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1319,22 +1053,6 @@ export default function BookingMaster() {
                                 className="h-7 min-h-0 text-xs resize-none w-24"
                                 data-testid={`textarea-standby-${row.seatId}`}
                               />
-                            )}
-                          </TableCell>
-                        )}
-                        {sheetsConfig?.isConfigured && (
-                          <TableCell className="px-1 py-1 w-8">
-                            {row.assignment && row.contestant && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={() => openSheetEditDialog(row, index)}
-                                title="Edit for Google Sheet only"
-                                data-testid={`button-sheet-edit-${row.seatId}`}
-                              >
-                                <FileEdit className="h-3 w-3" />
-                              </Button>
                             )}
                           </TableCell>
                         )}
