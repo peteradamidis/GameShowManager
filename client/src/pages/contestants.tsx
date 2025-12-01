@@ -154,7 +154,7 @@ export default function Contestants() {
 
   // Get unique values for filter dropdowns
   const uniqueGenders = Array.from(new Set(contestants.map(c => c.gender).filter(Boolean)));
-  const uniqueCities = Array.from(new Set(contestants.map(c => c.address).filter((addr): addr is string => Boolean(addr)))).sort();
+  const uniqueCities = Array.from(new Set(contestants.map(c => c.location).filter((loc): loc is string => Boolean(loc)))).sort();
 
   // Determine which contestants to display
   let displayedContestants = filterRecordDayId
@@ -175,8 +175,8 @@ export default function Contestants() {
     displayedContestants = displayedContestants.filter(c => c.auditionRating === filterRating);
   }
   if (filterLocation !== "all") {
-    // Filter contestants by their city (address field)
-    displayedContestants = displayedContestants.filter(c => c.address === filterLocation);
+    // Filter contestants by their location
+    displayedContestants = displayedContestants.filter(c => c.location === filterLocation);
   }
   if (filterStandbyStatus !== "all") {
     // Filter contestants by standby status

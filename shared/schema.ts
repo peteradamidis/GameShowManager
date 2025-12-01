@@ -30,7 +30,7 @@ export const contestants = pgTable("contestants", {
   attendingWith: text("attending_with"), // Raw data from Excel
   email: text("email"),
   phone: text("phone"),
-  address: text("address"),
+  location: text("location"), // City/suburb location
   medicalInfo: text("medical_info"),
   mobilityNotes: text("mobility_notes"), // Mobility/Access/Medical notes
   criminalRecord: text("criminal_record"), // Criminal record information

@@ -53,7 +53,7 @@ export default function ReschedulePage() {
       gender: contestant.gender || '',
       email: contestant.email || '',
       phone: contestant.phone || '',
-      address: contestant.address || '',
+      location: contestant.location || '',
       attendingWith: contestant.attendingWith || '',
       medicalInfo: contestant.medicalInfo || '',
       mobilityNotes: contestant.mobilityNotes || '',
@@ -109,7 +109,7 @@ export default function ReschedulePage() {
         gender: selectedContestant.gender || '',
         email: selectedContestant.email || '',
         phone: selectedContestant.phone || '',
-        address: selectedContestant.address || '',
+        location: selectedContestant.location || '',
         attendingWith: selectedContestant.attendingWith || '',
         medicalInfo: selectedContestant.medicalInfo || '',
         mobilityNotes: selectedContestant.mobilityNotes || '',
@@ -513,12 +513,12 @@ export default function ReschedulePage() {
                       />
                     </div>
                     <div className="space-y-2 col-span-2">
-                      <Label htmlFor="edit-address">Address</Label>
+                      <Label htmlFor="edit-location">Location</Label>
                       <Input
-                        id="edit-address"
-                        value={editFormData.address || ''}
-                        onChange={(e) => handleEditFormChange('address', e.target.value)}
-                        data-testid="input-edit-address"
+                        id="edit-location"
+                        value={editFormData.location || ''}
+                        onChange={(e) => handleEditFormChange('location', e.target.value)}
+                        data-testid="input-edit-location"
                       />
                     </div>
                   </div>
@@ -636,10 +636,10 @@ export default function ReschedulePage() {
                       <span>{selectedContestant.phone}</span>
                     </div>
                   )}
-                  {selectedContestant.address && (
+                  {selectedContestant.location && (
                     <div className="flex items-center gap-2 text-sm col-span-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>{selectedContestant.address}</span>
+                      <span>{selectedContestant.location}</span>
                     </div>
                   )}
                 </div>

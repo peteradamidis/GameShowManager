@@ -290,7 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                  row["Phone Number"] || row["PHONE NUMBER"] ||
                  row["Mobile Number"] || row["MOBILE NUMBER"] ||
                  row["Contact"] || row["CONTACT"] || null,
-          address: row.ADDRESS || row.Address || row.address || 
+          location: row.ADDRESS || row.Address || row.address || 
                    row.CITY || row.City || row.city ||
                    row["Location"] || row["LOCATION"] || null,
           medicalInfo: row["MEDICAL INFO"] || row["Medical Info"] || row["medical_info"] || row.medicalInfo ||
@@ -375,7 +375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           attendingWith: row.attendingWith,
           email: row.email,
           phone: row.phone,
-          address: row.address,
+          location: row.location,
           medicalInfo: row.medicalInfo,
           mobilityNotes: row.mobilityNotes,
           criminalRecord: row.criminalRecord,
@@ -523,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         gender: "Male" | "Female";
         email: string;
         phone: string;
-        address: string;
+        location: string;
         auditionRating: string;
         photoUrl: string;
         attendingWith?: string;
@@ -561,7 +561,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gender: "Female",
           email: generateEmail(name),
           phone: generatePhone(),
-          address: cities[Math.floor(Math.random() * cities.length)],
+          location: cities[Math.floor(Math.random() * cities.length)],
           auditionRating: getWeightedRating(),
           photoUrl: generatePhotoUrl(name, "Female"),
         });
@@ -577,7 +577,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gender: "Male",
           email: generateEmail(name),
           phone: generatePhone(),
-          address: cities[Math.floor(Math.random() * cities.length)],
+          location: cities[Math.floor(Math.random() * cities.length)],
           auditionRating: getWeightedRating(),
           photoUrl: generatePhotoUrl(name, "Male"),
         });
@@ -609,7 +609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           attendingWith: data.attendingWith,
           email: data.email,
           phone: data.phone,
-          address: data.address,
+          location: data.location,
           auditionRating: data.auditionRating,
           photoUrl: data.photoUrl,
         });
@@ -3023,7 +3023,7 @@ Deal or No Deal Production Team
             auditionRating: contestant.auditionRating || '',
             gender: contestant.gender || '',
             age: contestant.age,
-            location: assignment.location || contestant.address || '',
+            location: assignment.location || contestant.location || '',
             workflow: [
               hasBookingEmail ? 'Email Sent' : '',
               hasConfirmedRsvp ? 'RSVP Confirmed' : '',

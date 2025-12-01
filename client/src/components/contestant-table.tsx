@@ -45,7 +45,7 @@ export interface Contestant {
   attendingWith?: string;
   email?: string;
   phone?: string;
-  address?: string;
+  location?: string;
   medicalInfo?: string;
   mobilityNotes?: string;
   criminalRecord?: string;
@@ -199,7 +199,7 @@ export function ContestantTable({
         gender: contestantDetails.gender,
         email: contestantDetails.email || '',
         phone: contestantDetails.phone || '',
-        address: contestantDetails.address || '',
+        location: contestantDetails.location || '',
         attendingWith: contestantDetails.attendingWith || '',
         medicalInfo: contestantDetails.medicalInfo || '',
         mobilityNotes: contestantDetails.mobilityNotes || '',
@@ -252,7 +252,7 @@ export function ContestantTable({
         gender: contestantDetails.gender,
         email: contestantDetails.email || '',
         phone: contestantDetails.phone || '',
-        address: contestantDetails.address || '',
+        location: contestantDetails.location || '',
         attendingWith: contestantDetails.attendingWith || '',
         medicalInfo: contestantDetails.medicalInfo || '',
         mobilityNotes: contestantDetails.mobilityNotes || '',
@@ -479,7 +479,7 @@ export function ContestantTable({
                   <TableCell>{contestant.phone || "-"}</TableCell>
                   <TableCell>{contestant.email || "-"}</TableCell>
                   <TableCell>{contestant.attendingWith || "-"}</TableCell>
-                  <TableCell>{contestant.address || "-"}</TableCell>
+                  <TableCell>{contestant.location || "-"}</TableCell>
                   <TableCell className="max-w-[200px] truncate" title={contestant.medicalInfo || ""}>
                     {contestant.medicalInfo || "-"}
                   </TableCell>
@@ -653,12 +653,12 @@ export function ContestantTable({
                       />
                     </div>
                     <div className="space-y-2 col-span-2">
-                      <Label htmlFor="edit-address">Address</Label>
+                      <Label htmlFor="edit-location">Location</Label>
                       <Input
-                        id="edit-address"
-                        value={editFormData.address || ''}
-                        onChange={(e) => handleEditFormChange('address', e.target.value)}
-                        data-testid="input-edit-address"
+                        id="edit-location"
+                        value={editFormData.location || ''}
+                        onChange={(e) => handleEditFormChange('location', e.target.value)}
+                        data-testid="input-edit-location"
                       />
                     </div>
                   </div>
@@ -864,7 +864,7 @@ export function ContestantTable({
                 </div>
 
                 {/* Contact Information */}
-                {(contestantDetails.email || contestantDetails.phone || contestantDetails.address) && (
+                {(contestantDetails.email || contestantDetails.phone || contestantDetails.location) && (
                   <div>
                     <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Contact Information</h3>
                     <div className="space-y-3">
@@ -886,12 +886,12 @@ export function ContestantTable({
                           </div>
                         </div>
                       )}
-                      {contestantDetails.address && (
+                      {contestantDetails.location && (
                         <div className="flex items-start gap-3">
                           <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
                           <div>
-                            <label className="text-xs font-medium text-muted-foreground">Address</label>
-                            <p className="text-sm mt-1">{contestantDetails.address}</p>
+                            <label className="text-xs font-medium text-muted-foreground">Location</label>
+                            <p className="text-sm mt-1">{contestantDetails.location}</p>
                           </div>
                         </div>
                       )}
