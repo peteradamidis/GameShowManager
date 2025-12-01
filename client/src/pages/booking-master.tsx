@@ -46,6 +46,7 @@ import { format } from "date-fns";
 import * as XLSX from "xlsx";
 
 // Column configuration for the booking master table
+// Columns to the right of the bar (after NOTES) are always visible and cannot be hidden
 const COLUMN_CONFIG = [
   { id: "seat", label: "SEAT", alwaysVisible: true },
   { id: "name", label: "NAME", alwaysVisible: true },
@@ -58,13 +59,13 @@ const COLUMN_CONFIG = [
   { id: "criminal", label: "CRIM / BANK", alwaysVisible: false },
   { id: "castingCategory", label: "CASTING CATEGORY", alwaysVisible: false },
   { id: "notes", label: "NOTES", alwaysVisible: false },
-  { id: "emailSent", label: "EMAIL SENT", alwaysVisible: false },
-  { id: "rsvp", label: "RSVP", alwaysVisible: false },
-  { id: "paperSent", label: "PAPER SENT", alwaysVisible: false },
-  { id: "paperReceived", label: "PAPER ✓", alwaysVisible: false },
-  { id: "signedIn", label: "SIGNED IN", alwaysVisible: false },
-  { id: "otdNotes", label: "OTD NOTES", alwaysVisible: false },
-  { id: "standby", label: "STANDBY / SWAPS", alwaysVisible: false },
+  { id: "emailSent", label: "EMAIL SENT", alwaysVisible: true },
+  { id: "rsvp", label: "RSVP", alwaysVisible: true },
+  { id: "paperSent", label: "PAPER SENT", alwaysVisible: true },
+  { id: "paperReceived", label: "PAPER ✓", alwaysVisible: true },
+  { id: "signedIn", label: "SIGNED IN", alwaysVisible: true },
+  { id: "otdNotes", label: "OTD NOTES", alwaysVisible: true },
+  { id: "standby", label: "STANDBY / SWAPS", alwaysVisible: true },
 ] as const;
 
 type ColumnId = typeof COLUMN_CONFIG[number]["id"];
@@ -665,16 +666,14 @@ export default function BookingMaster() {
             <DropdownMenuContent align="end" className="w-56 max-h-80 overflow-y-auto">
               <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {COLUMN_CONFIG.map((column) => (
+              {COLUMN_CONFIG.filter(col => !col.alwaysVisible).map((column) => (
                 <DropdownMenuCheckboxItem
                   key={column.id}
                   checked={visibleColumns[column.id]}
-                  disabled={column.alwaysVisible}
                   onCheckedChange={() => toggleColumnVisibility(column.id)}
                   data-testid={`toggle-column-${column.id}`}
                 >
                   {column.label}
-                  {column.alwaysVisible && <span className="ml-2 text-xs text-muted-foreground">(required)</span>}
                 </DropdownMenuCheckboxItem>
               ))}
             </DropdownMenuContent>
