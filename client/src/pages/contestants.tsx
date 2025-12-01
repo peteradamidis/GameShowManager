@@ -152,6 +152,16 @@ export default function Contestants() {
     return new Set(allStandbys.map((s: any) => s.contestantId));
   }, [allStandbys]);
 
+  // Create a set of contestant IDs who are standbys for the specific record day
+  const standbyForRecordDayIds = useMemo(() => {
+    if (!filterRecordDayId) return new Set<string>();
+    return new Set(
+      allStandbys
+        .filter((s: any) => s.recordDayId === filterRecordDayId)
+        .map((s: any) => s.contestantId)
+    );
+  }, [allStandbys, filterRecordDayId]);
+
   // Get unique values for filter dropdowns
   const uniqueGenders = Array.from(new Set(contestants.map(c => c.gender).filter(Boolean)));
   const uniqueCities = Array.from(new Set(contestants.map(c => c.location).filter((loc): loc is string => Boolean(loc)))).sort();
@@ -160,6 +170,7 @@ export default function Contestants() {
   let displayedContestants = filterRecordDayId
     ? filteredAvailability
         .filter(item => !filterResponseValue || filterResponseValue === "all" || item.responseValue === filterResponseValue)
+        .filter(item => !standbyForRecordDayIds.has(item.contestant.id))
         .map(item => item.contestant)
     : contestants;
 
