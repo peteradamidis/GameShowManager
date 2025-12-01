@@ -495,13 +495,15 @@ export default function BookingMaster() {
   };
 
   return (
-    <div className={isFullscreen ? "fixed inset-0 flex flex-col p-6 bg-background" : "p-6 space-y-6"}>
-      <div className="flex items-center justify-between flex-shrink-0">
+    <div className={isFullscreen ? "fixed inset-0 flex flex-col p-2 bg-background gap-1" : "p-6 space-y-6"}>
+      <div className={`flex items-center justify-between flex-shrink-0 ${isFullscreen ? 'gap-2' : ''}`}>
         <div>
-          <h1 className="text-3xl font-bold">Booking Master</h1>
-          <p className="text-muted-foreground mt-1">
-            Complete booking workflow tracking for each record day
-          </p>
+          <h1 className={isFullscreen ? "text-lg font-bold" : "text-3xl font-bold"}>Booking Master</h1>
+          {!isFullscreen && (
+            <p className="text-muted-foreground mt-1">
+              Complete booking workflow tracking for each record day
+            </p>
+          )}
         </div>
         <div className="flex gap-2">
           <Button 
@@ -667,10 +669,10 @@ export default function BookingMaster() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 flex-shrink-0">
-        <Calendar className="h-5 w-5 text-muted-foreground" />
+      <div className={`flex items-center flex-shrink-0 ${isFullscreen ? 'gap-1' : 'gap-4'}`}>
+        <Calendar className={isFullscreen ? "h-4 w-4 text-muted-foreground" : "h-5 w-5 text-muted-foreground"} />
         <Select value={selectedRecordDay} onValueChange={setSelectedRecordDay}>
-          <SelectTrigger className="w-80" data-testid="select-record-day">
+          <SelectTrigger className={isFullscreen ? "w-48" : "w-80"} data-testid="select-record-day">
             <SelectValue placeholder="Select a record day" />
           </SelectTrigger>
           <SelectContent>
@@ -692,7 +694,7 @@ export default function BookingMaster() {
         <div 
           ref={tableContainerRef}
           className="border rounded-md overflow-auto flex-1" 
-          style={isFullscreen ? {} : { maxHeight: "calc(100vh - 300px)" }}
+          style={isFullscreen ? { minHeight: 0 } : { maxHeight: "calc(100vh - 300px)" }}
         >
           {loadingAssignments ? (
             <div className="p-8 text-center text-muted-foreground">
@@ -719,7 +721,7 @@ export default function BookingMaster() {
                   <TableHead className="sticky top-0 bg-background z-10 text-xs">MOBILITY / MEDICAL NOTES</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 text-xs">CRIMINAL / BANKRUPTCY</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 text-xs">CASTING CATEGORY</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 min-w-[300px] border-r-4 border-r-primary/30">NOTES</TableHead>
+                  <TableHead className={`sticky top-0 bg-background z-10 border-r-4 border-r-primary/30 ${isFullscreen ? 'min-w-[200px]' : 'min-w-[300px]'}`}>NOTES</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">EMAIL<br/>SENT</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">RSVP</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">PAPER<br/>SENT</TableHead>
