@@ -117,7 +117,9 @@ export default function BookingMaster() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sheetsDialogOpen, setSheetsDialogOpen] = useState(false);
   const [spreadsheetIdInput, setSpreadsheetIdInput] = useState("");
+  const [pendingTextUpdates, setPendingTextUpdates] = useState<Record<string, string>>({});
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
   const { toast } = useToast();
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
@@ -352,6 +354,40 @@ export default function BookingMaster() {
       assignmentId,
       fields: { [field]: value },
     });
+  };
+
+  // Debounced handler for text fields - waits 500ms after user stops typing before saving
+  const handleDebouncedTextUpdate = (assignmentId: string, field: string, value: string) => {
+    const key = `${assignmentId}-${field}`;
+    
+    // Update local state immediately for responsive UI
+    setPendingTextUpdates(prev => ({ ...prev, [key]: value }));
+    
+    // Clear any existing timer for this field
+    if (debounceTimersRef.current[key]) {
+      clearTimeout(debounceTimersRef.current[key]);
+    }
+    
+    // Set new timer to save after 500ms of no typing
+    debounceTimersRef.current[key] = setTimeout(() => {
+      updateWorkflowMutation.mutate({
+        assignmentId,
+        fields: { [field]: value },
+      });
+      // Clear the pending update after saving
+      setPendingTextUpdates(prev => {
+        const newState = { ...prev };
+        delete newState[key];
+        return newState;
+      });
+      delete debounceTimersRef.current[key];
+    }, 500);
+  };
+
+  // Helper to get current text value (pending update takes priority)
+  const getTextValue = (assignmentId: string, field: string, originalValue: string | undefined) => {
+    const key = `${assignmentId}-${field}`;
+    return key in pendingTextUpdates ? pendingTextUpdates[key] : (originalValue || "");
   };
 
   const handleCheckboxToggle = (assignmentId: string, field: string, currentValue: any) => {
@@ -779,8 +815,8 @@ export default function BookingMaster() {
                         <TableCell className="py-1">
                           {row.assignment && (
                             <Input
-                              value={row.assignment.medicalQuestion || ""}
-                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "medicalQuestion", e.target.value)}
+                              value={getTextValue(row.assignment.id, "medicalQuestion", row.assignment.medicalQuestion)}
+                              onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "medicalQuestion", e.target.value)}
                               placeholder="Y/N"
                               className="h-7 text-xs w-16"
                               data-testid={`input-medical-${row.seatId}`}
@@ -796,8 +832,8 @@ export default function BookingMaster() {
                         <TableCell className="py-1">
                           {row.assignment && (
                             <Input
-                              value={row.assignment.castingCategory || ""}
-                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "castingCategory", e.target.value)}
+                              value={getTextValue(row.assignment.id, "castingCategory", row.assignment.castingCategory)}
+                              onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "castingCategory", e.target.value)}
                               placeholder="Category"
                               className="h-7 text-xs"
                               data-testid={`input-category-${row.seatId}`}
@@ -807,8 +843,8 @@ export default function BookingMaster() {
                         <TableCell className="border-r-4 border-r-primary/30 py-1">
                           {row.assignment && (
                             <Textarea
-                              value={row.assignment.notes || ""}
-                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "notes", e.target.value)}
+                              value={getTextValue(row.assignment.id, "notes", row.assignment.notes)}
+                              onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "notes", e.target.value)}
                               placeholder="Notes"
                               className="min-h-[50px] text-sm resize-y"
                               data-testid={`textarea-notes-${row.seatId}`}
@@ -863,8 +899,8 @@ export default function BookingMaster() {
                         <TableCell className="px-2 py-1">
                           {row.assignment && (
                             <Textarea
-                              value={row.assignment.otdNotes || ""}
-                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "otdNotes", e.target.value)}
+                              value={getTextValue(row.assignment.id, "otdNotes", row.assignment.otdNotes)}
+                              onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "otdNotes", e.target.value)}
                               placeholder=""
                               className="h-7 min-h-0 text-xs resize-none w-24"
                               data-testid={`textarea-otd-notes-${row.seatId}`}
@@ -874,8 +910,8 @@ export default function BookingMaster() {
                         <TableCell className="px-2 py-1">
                           {row.assignment && (
                             <Textarea
-                              value={row.assignment.standbyReplacementSwaps || ""}
-                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "standbyReplacementSwaps", e.target.value)}
+                              value={getTextValue(row.assignment.id, "standbyReplacementSwaps", row.assignment.standbyReplacementSwaps)}
+                              onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "standbyReplacementSwaps", e.target.value)}
                               placeholder=""
                               className="h-7 min-h-0 text-xs resize-none w-24"
                               data-testid={`textarea-standby-${row.seatId}`}
