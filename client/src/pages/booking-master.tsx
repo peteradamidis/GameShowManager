@@ -206,8 +206,45 @@ export default function BookingMaster() {
     mutationFn: async ({ assignmentId, fields }: { assignmentId: string; fields: Partial<SeatAssignment> }) => {
       return await apiRequest("PATCH", `/api/seat-assignments/${assignmentId}/workflow`, fields);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+    onMutate: async ({ assignmentId, fields }) => {
+      // Cancel any outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: ['/api/seat-assignments', selectedRecordDay] });
+      
+      // Snapshot the previous value
+      const previousAssignments = queryClient.getQueryData<SeatAssignment[]>(['/api/seat-assignments', selectedRecordDay]);
+      
+      // Optimistically update the cache
+      if (previousAssignments) {
+        queryClient.setQueryData<SeatAssignment[]>(
+          ['/api/seat-assignments', selectedRecordDay],
+          previousAssignments.map(assignment => 
+            assignment.id === assignmentId 
+              ? { ...assignment, ...fields }
+              : assignment
+          )
+        );
+      }
+      
+      // Return context with the previous value for rollback
+      return { previousAssignments };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousAssignments) {
+        queryClient.setQueryData(
+          ['/api/seat-assignments', selectedRecordDay],
+          context.previousAssignments
+        );
+      }
+      toast({
+        title: "Update failed",
+        description: "Could not save changes. Please try again.",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      // Refetch after mutation settles to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', selectedRecordDay] });
     },
   });
 
