@@ -59,6 +59,7 @@ interface Contestant {
   email?: string;
   phone?: string;
   address?: string;
+  location?: string;
   medicalInfo?: string;
   mobilityNotes?: string;
   criminalRecord?: string;
@@ -448,7 +449,7 @@ export default function BookingMaster() {
         row.contestant?.phone || "",
         row.contestant?.email || "",
         row.contestant?.attendingWith || "",
-        row.assignment?.location || "",
+        row.contestant?.location || "",
         row.assignment?.medicalQuestion || "",
         row.contestant?.mobilityNotes || "",
         row.assignment?.criminalBankruptcy || "",
@@ -772,17 +773,7 @@ export default function BookingMaster() {
                         <TableCell className="text-sm">{row.contestant?.phone || ""}</TableCell>
                         <TableCell className="text-sm">{row.contestant?.email || ""}</TableCell>
                         <TableCell className="text-sm">{row.contestant?.attendingWith || ""}</TableCell>
-                        <TableCell>
-                          {row.assignment && (
-                            <Input
-                              value={row.assignment.location || ""}
-                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "location", e.target.value)}
-                              placeholder="Location"
-                              className="h-8 text-sm"
-                              data-testid={`input-location-${row.seatId}`}
-                            />
-                          )}
-                        </TableCell>
+                        <TableCell className="text-sm">{row.contestant?.location || ""}</TableCell>
                         <TableCell>
                           {row.assignment && (
                             <Input
