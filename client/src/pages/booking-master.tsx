@@ -747,15 +747,15 @@ export default function BookingMaster() {
                       data-testid="checkbox-select-all"
                     />
                   </TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs">SEAT</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs w-12">SEAT</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 text-xs min-w-[150px]">NAME</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 text-xs min-w-[120px]">MOBILE</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs">EMAIL</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs w-32 max-w-[130px]">EMAIL</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 text-xs">ATTENDING WITH</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 text-xs">LOCATION</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs">MEDICAL Q (Y/N)</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs w-14 text-center">MED<br/>Q</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 text-xs">MOBILITY / MEDICAL NOTES</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs">CRIMINAL / BANKRUPTCY</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs w-20 text-center">CRIM/<br/>BANK</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 text-xs">CASTING CATEGORY</TableHead>
                   <TableHead className={`sticky top-0 bg-background z-10 border-r-4 border-r-primary/30 ${isFullscreen ? 'min-w-[200px]' : 'min-w-[300px]'}`}>NOTES</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">EMAIL<br/>SENT</TableHead>
@@ -804,21 +804,21 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        <TableCell className="font-mono text-xs py-1">{row.seatLabel}</TableCell>
+                        <TableCell className="font-mono text-xs py-1 w-12">{row.seatLabel}</TableCell>
                         <TableCell className="font-medium text-xs min-w-[150px] py-1">
                           {row.contestant?.name || <span className="text-muted-foreground italic">Empty</span>}
                         </TableCell>
                         <TableCell className="text-xs min-w-[120px] py-1">{row.contestant?.phone || ""}</TableCell>
-                        <TableCell className="text-xs py-1">{row.contestant?.email || ""}</TableCell>
+                        <TableCell className="text-xs py-1 w-32 max-w-[130px] truncate">{row.contestant?.email || ""}</TableCell>
                         <TableCell className="text-xs py-1">{row.contestant?.attendingWith || ""}</TableCell>
                         <TableCell className="text-xs py-1">{row.contestant?.location || ""}</TableCell>
-                        <TableCell className="py-1">
+                        <TableCell className="py-1 w-14">
                           {row.assignment && (
                             <Input
                               value={getTextValue(row.assignment.id, "medicalQuestion", row.assignment.medicalQuestion)}
                               onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "medicalQuestion", e.target.value)}
                               placeholder="Y/N"
-                              className="h-7 text-xs w-16"
+                              className="h-7 text-xs w-10"
                               data-testid={`input-medical-${row.seatId}`}
                             />
                           )}
@@ -826,7 +826,7 @@ export default function BookingMaster() {
                         <TableCell className="text-xs py-1">
                           {row.contestant?.mobilityNotes || ""}
                         </TableCell>
-                        <TableCell className="text-xs py-1">
+                        <TableCell className="text-xs py-1 w-20 text-center">
                           {row.contestant?.criminalRecord || ""}
                         </TableCell>
                         <TableCell className="py-1">
