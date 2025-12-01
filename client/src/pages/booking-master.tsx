@@ -412,11 +412,10 @@ export default function BookingMaster() {
     const dayDate = selectedDay ? format(new Date(selectedDay.date), "MMMM d, yyyy") : "";
 
     const headers = [
-      "SEAT", "FIRST NATIONS", "RATING", "AGE", "NAME", "GENDER", "MOBILE", "EMAIL", 
-      "ADDRESS", "ATTENDING WITH", "LOCATION", "MEDICAL Q (Y/N)", "MEDICAL INFO", 
-      "MOBILITY/ACCESS/MEDICAL NOTES", "CRIMINAL RECORD", "CRIMINAL/BANKRUPTCY", 
+      "SEAT", "NAME", "MOBILE", "EMAIL", "ATTENDING WITH", "LOCATION", 
+      "MEDICAL Q (Y/N)", "MOBILITY / MEDICAL NOTES", "CRIMINAL / BANKRUPTCY", 
       "CASTING CATEGORY", "NOTES", "BOOKING EMAIL SENT", "CONFIRMED RSVP", 
-      "PAPERWORK SENT", "PAPERWORK RECEIVED", "SIGNED-IN", "OTD NOTES", 
+      "PAPERWORK SENT", "PAPERWORK ✓", "SIGNED-IN", "OTD NOTES", 
       "STANDBY REPLACEMENT / SWAPS"
     ];
 
@@ -445,20 +444,13 @@ export default function BookingMaster() {
       
       exportRows.push([
         row.seatId,
-        row.assignment?.firstNations || "",
-        row.assignment?.rating || "",
-        row.contestant?.age?.toString() || "",
         row.contestant?.name || "",
-        row.contestant?.gender || "",
         row.contestant?.phone || "",
         row.contestant?.email || "",
-        row.contestant?.address || "",
         row.contestant?.attendingWith || "",
         row.assignment?.location || "",
         row.assignment?.medicalQuestion || "",
-        row.contestant?.medicalInfo || "",
         row.contestant?.mobilityNotes || "",
-        row.contestant?.criminalRecord || "",
         row.assignment?.criminalBankruptcy || "",
         row.assignment?.castingCategory || "",
         row.assignment?.notes || "",
@@ -479,30 +471,23 @@ export default function BookingMaster() {
 
     ws['!cols'] = [
       { wch: 10 },  // SEAT
-      { wch: 12 },  // FIRST NATIONS
-      { wch: 8 },   // RATING
-      { wch: 6 },   // AGE
       { wch: 20 },  // NAME
-      { wch: 10 },  // GENDER
       { wch: 15 },  // MOBILE
       { wch: 25 },  // EMAIL
-      { wch: 25 },  // ADDRESS
       { wch: 15 },  // ATTENDING WITH
       { wch: 15 },  // LOCATION
       { wch: 12 },  // MEDICAL Q (Y/N)
-      { wch: 25 },  // MEDICAL INFO
-      { wch: 30 },  // MOBILITY/ACCESS/MEDICAL NOTES
-      { wch: 20 },  // CRIMINAL RECORD
-      { wch: 15 },  // CRIMINAL/BANKRUPTCY
+      { wch: 30 },  // MOBILITY / MEDICAL NOTES
+      { wch: 18 },  // CRIMINAL / BANKRUPTCY
       { wch: 15 },  // CASTING CATEGORY
       { wch: 25 },  // NOTES
-      { wch: 12 },  // BOOKING EMAIL SENT
+      { wch: 15 },  // BOOKING EMAIL SENT
       { wch: 12 },  // CONFIRMED RSVP
-      { wch: 12 },  // PAPERWORK SENT
-      { wch: 12 },  // PAPERWORK RECEIVED
+      { wch: 14 },  // PAPERWORK SENT
+      { wch: 12 },  // PAPERWORK ✓
       { wch: 10 },  // SIGNED-IN
       { wch: 20 },  // OTD NOTES
-      { wch: 20 },  // STANDBY REPLACEMENT / SWAPS
+      { wch: 25 },  // STANDBY REPLACEMENT / SWAPS
     ];
 
     XLSX.writeFile(wb, `Booking-Master-${dayName}.xlsx`);
@@ -723,21 +708,24 @@ export default function BookingMaster() {
                       data-testid="checkbox-select-all"
                     />
                   </TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">Seat</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">Name</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">Age</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">Mobile</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">Email</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">Location</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">Medical</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">Rating</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">Category</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">Email Sent</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">RSVP</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">Paperwork Sent</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">Paperwork ✓</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">Signed In</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">Notes</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">SEAT</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">NAME</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">MOBILE</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">EMAIL</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">ATTENDING WITH</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">LOCATION</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">MEDICAL Q (Y/N)</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">MOBILITY / MEDICAL NOTES</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">CRIMINAL / BANKRUPTCY</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">CASTING CATEGORY</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">NOTES</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">BOOKING EMAIL SENT</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">CONFIRMED RSVP</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">PAPERWORK SENT</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">PAPERWORK ✓</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">SIGNED-IN</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">OTD NOTES</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10">STANDBY REPLACEMENT / SWAPS</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -753,7 +741,7 @@ export default function BookingMaster() {
                     <>
                       {isFirstRowOfBlock && (
                         <TableRow key={`block-header-${row.blockNumber}`} className="bg-primary/10 hover:bg-primary/10">
-                          <TableCell colSpan={16} className="py-3">
+                          <TableCell colSpan={20} className="py-3">
                             <div className="flex items-center justify-between">
                               <span className="font-bold text-lg" data-testid={`block-header-${row.blockNumber}`}>
                                 Block {row.blockNumber}
@@ -781,9 +769,9 @@ export default function BookingMaster() {
                         <TableCell className="font-medium">
                           {row.contestant?.name || <span className="text-muted-foreground italic">Empty</span>}
                         </TableCell>
-                        <TableCell>{row.contestant?.age || ""}</TableCell>
                         <TableCell className="text-sm">{row.contestant?.phone || ""}</TableCell>
                         <TableCell className="text-sm">{row.contestant?.email || ""}</TableCell>
+                        <TableCell className="text-sm">{row.contestant?.attendingWith || ""}</TableCell>
                         <TableCell>
                           {row.assignment && (
                             <Input
@@ -806,23 +794,18 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
+                        <TableCell className="text-sm">
+                          {row.contestant?.mobilityNotes || ""}
+                        </TableCell>
                         <TableCell>
                           {row.assignment && (
-                            <Select
-                              value={row.assignment.rating || ""}
-                              onValueChange={(value) => handleFieldUpdate(row.assignment!.id, "rating", value)}
-                            >
-                              <SelectTrigger className="h-8 text-sm w-20" data-testid={`select-rating-${row.seatId}`}>
-                                <SelectValue placeholder="-" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="A+">A+</SelectItem>
-                                <SelectItem value="A">A</SelectItem>
-                                <SelectItem value="B+">B+</SelectItem>
-                                <SelectItem value="B">B</SelectItem>
-                                <SelectItem value="C">C</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <Input
+                              value={row.assignment.criminalBankruptcy || ""}
+                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "criminalBankruptcy", e.target.value)}
+                              placeholder=""
+                              className="h-8 text-sm"
+                              data-testid={`input-criminal-${row.seatId}`}
+                            />
                           )}
                         </TableCell>
                         <TableCell>
@@ -833,6 +816,17 @@ export default function BookingMaster() {
                               placeholder="Category"
                               className="h-8 text-sm"
                               data-testid={`input-category-${row.seatId}`}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {row.assignment && (
+                            <Textarea
+                              value={row.assignment.notes || ""}
+                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "notes", e.target.value)}
+                              placeholder="Notes"
+                              className="h-8 min-h-0 text-sm resize-none"
+                              data-testid={`textarea-notes-${row.seatId}`}
                             />
                           )}
                         </TableCell>
@@ -884,11 +878,22 @@ export default function BookingMaster() {
                         <TableCell>
                           {row.assignment && (
                             <Textarea
-                              value={row.assignment.notes || ""}
-                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "notes", e.target.value)}
-                              placeholder="Notes"
+                              value={row.assignment.otdNotes || ""}
+                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "otdNotes", e.target.value)}
+                              placeholder=""
                               className="h-8 min-h-0 text-sm resize-none"
-                              data-testid={`textarea-notes-${row.seatId}`}
+                              data-testid={`textarea-otd-notes-${row.seatId}`}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {row.assignment && (
+                            <Textarea
+                              value={row.assignment.standbyReplacementSwaps || ""}
+                              onChange={(e) => handleFieldUpdate(row.assignment!.id, "standbyReplacementSwaps", e.target.value)}
+                              placeholder=""
+                              className="h-8 min-h-0 text-sm resize-none"
+                              data-testid={`textarea-standby-${row.seatId}`}
                             />
                           )}
                         </TableCell>
