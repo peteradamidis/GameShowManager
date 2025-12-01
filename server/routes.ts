@@ -1827,11 +1827,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete canceled assignment (when rebooking or permanently removing)
+  // Delete canceled assignment and return contestant to available pool
   app.delete("/api/canceled-assignments/:id", async (req, res) => {
     try {
+      // First get the canceled assignment to find the contestant
+      const canceledAssignments = await storage.getCanceledAssignments();
+      const canceled = canceledAssignments.find(c => c.id === req.params.id);
+      
+      if (canceled) {
+        // Update contestant status back to 'available' so they appear in contestants tab
+        await storage.updateContestantAvailability(canceled.contestantId, 'available');
+      }
+      
       await storage.deleteCanceledAssignment(req.params.id);
-      res.json({ message: "Canceled assignment removed" });
+      res.json({ message: "Contestant returned to available pool" });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

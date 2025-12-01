@@ -206,22 +206,23 @@ export default function ReschedulePage() {
     }
   };
 
-  const handleRemovePermanently = async (cancellationId: string) => {
-    if (!confirm("Are you sure you want to permanently remove this canceled assignment?")) {
+  const handleReturnToContestants = async (cancellationId: string, contestantName: string) => {
+    if (!confirm(`Return ${contestantName} to the contestants tab? They will be marked as available for booking.`)) {
       return;
     }
 
     try {
       await apiRequest('DELETE', `/api/canceled-assignments/${cancellationId}`, {});
       await refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
       toast({
-        title: "Removed",
-        description: "Canceled assignment has been permanently removed.",
+        title: "Returned to Contestants",
+        description: `${contestantName} is now available in the contestants tab.`,
       });
     } catch (error: any) {
       toast({
-        title: "Remove failed",
-        description: error?.message || "Could not remove canceled assignment.",
+        title: "Action failed",
+        description: error?.message || "Could not return contestant.",
         variant: "destructive",
       });
     }
@@ -352,11 +353,11 @@ export default function ReschedulePage() {
                           variant="outline"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleRemovePermanently(cancellation.id);
+                            handleReturnToContestants(cancellation.id, cancellation.contestant.name);
                           }}
-                          data-testid={`button-remove-${cancellation.id}`}
+                          data-testid={`button-return-${cancellation.id}`}
                         >
-                          Remove
+                          Return to Contestants
                         </Button>
                       </div>
                     </TableCell>
