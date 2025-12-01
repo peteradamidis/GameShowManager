@@ -2631,10 +2631,11 @@ Deal or No Deal Production Team
       }
 
       // Update the standby with the seat assignment
+      // When clearing (seatLabel is null/empty), reset status to 'pending'
       const updated = await storage.updateStandbyAssignment(matchingStandby.id, {
         assignedToSeat: seatLabel || null,
         assignedAt: seatLabel ? new Date() : null,
-        status: seatLabel ? 'seated' : matchingStandby.status === 'seated' ? 'confirmed' : matchingStandby.status,
+        status: seatLabel ? 'seated' : 'pending',
       });
 
       res.json(updated);

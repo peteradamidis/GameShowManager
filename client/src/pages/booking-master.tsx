@@ -1084,8 +1084,20 @@ export default function BookingMaster() {
                                 defaultValue={row.assignment.standbyReplacementSwaps || "none"}
                                 onValueChange={(value) => {
                                   const newValue = value === "none" ? "" : value;
+                                  const previousValue = row.assignment!.standbyReplacementSwaps;
+                                  
                                   handleDebouncedTextUpdate(row.assignment!.id, "standbyReplacementSwaps", newValue);
-                                  // Also update the standby assignment to record which seat they're assigned to
+                                  
+                                  // Clear the previous standby's seat assignment if there was one
+                                  if (previousValue && previousValue !== newValue) {
+                                    assignStandbyMutation.mutate({
+                                      recordDayId: selectedRecordDay,
+                                      contestantName: previousValue,
+                                      seatLabel: null, // Clear the assignment
+                                    });
+                                  }
+                                  
+                                  // Set the new standby's seat assignment if one was selected
                                   if (newValue) {
                                     assignStandbyMutation.mutate({
                                       recordDayId: selectedRecordDay,
