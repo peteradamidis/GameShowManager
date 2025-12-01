@@ -259,6 +259,7 @@ export default function ReschedulePage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-16">Photo</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Age</TableHead>
@@ -278,11 +279,18 @@ export default function ReschedulePage() {
                     onClick={() => handleRowClick(cancellation.contestant)}
                     className="cursor-pointer hover-elevate"
                   >
+                    <TableCell>
+                      <Avatar className="h-10 w-10">
+                        {cancellation.contestant.photoUrl && (
+                          <AvatarImage src={cancellation.contestant.photoUrl} alt={cancellation.contestant.name} />
+                        )}
+                        <AvatarFallback>
+                          {cancellation.contestant.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </TableCell>
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        {cancellation.contestant.name}
-                      </div>
+                      {cancellation.contestant.name}
                     </TableCell>
                     <TableCell>
                       {cancellation.isFromStandby ? (
