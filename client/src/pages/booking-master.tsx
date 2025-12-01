@@ -756,8 +756,8 @@ export default function BookingMaster() {
                           </TableCell>
                         </TableRow>
                       )}
-                      <TableRow key={row.seatId} className={!row.assignment ? "bg-muted/20" : ""}>
-                        <TableCell>
+                      <TableRow key={row.seatId} className={`${!row.assignment ? "bg-muted/20" : ""} h-12`}>
+                        <TableCell className="py-1">
                           {row.assignment && (
                             <Checkbox
                               checked={selectedAssignments.has(row.assignment.id)}
@@ -766,54 +766,54 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        <TableCell className="font-mono text-xs">{row.seatId}</TableCell>
-                        <TableCell className="font-medium text-xs min-w-[150px]">
+                        <TableCell className="font-mono text-xs py-1">{row.seatLabel}</TableCell>
+                        <TableCell className="font-medium text-xs min-w-[150px] py-1">
                           {row.contestant?.name || <span className="text-muted-foreground italic">Empty</span>}
                         </TableCell>
-                        <TableCell className="text-xs min-w-[120px]">{row.contestant?.phone || ""}</TableCell>
-                        <TableCell className="text-xs">{row.contestant?.email || ""}</TableCell>
-                        <TableCell className="text-xs">{row.contestant?.attendingWith || ""}</TableCell>
-                        <TableCell className="text-xs">{row.contestant?.location || ""}</TableCell>
-                        <TableCell>
+                        <TableCell className="text-xs min-w-[120px] py-1">{row.contestant?.phone || ""}</TableCell>
+                        <TableCell className="text-xs py-1">{row.contestant?.email || ""}</TableCell>
+                        <TableCell className="text-xs py-1">{row.contestant?.attendingWith || ""}</TableCell>
+                        <TableCell className="text-xs py-1">{row.contestant?.location || ""}</TableCell>
+                        <TableCell className="py-1">
                           {row.assignment && (
                             <Input
                               value={row.assignment.medicalQuestion || ""}
                               onChange={(e) => handleFieldUpdate(row.assignment!.id, "medicalQuestion", e.target.value)}
                               placeholder="Y/N"
-                              className="h-8 text-xs w-16"
+                              className="h-7 text-xs w-16"
                               data-testid={`input-medical-${row.seatId}`}
                             />
                           )}
                         </TableCell>
-                        <TableCell className="text-xs">
+                        <TableCell className="text-xs py-1">
                           {row.contestant?.mobilityNotes || ""}
                         </TableCell>
-                        <TableCell className="text-xs">
+                        <TableCell className="text-xs py-1">
                           {row.contestant?.criminalRecord || ""}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="py-1">
                           {row.assignment && (
                             <Input
                               value={row.assignment.castingCategory || ""}
                               onChange={(e) => handleFieldUpdate(row.assignment!.id, "castingCategory", e.target.value)}
                               placeholder="Category"
-                              className="h-8 text-xs"
+                              className="h-7 text-xs"
                               data-testid={`input-category-${row.seatId}`}
                             />
                           )}
                         </TableCell>
-                        <TableCell className="border-r-4 border-r-primary/30">
+                        <TableCell className="border-r-4 border-r-primary/30 py-1">
                           {row.assignment && (
                             <Textarea
                               value={row.assignment.notes || ""}
                               onChange={(e) => handleFieldUpdate(row.assignment!.id, "notes", e.target.value)}
                               placeholder="Notes"
-                              className="min-h-[60px] text-sm resize-y"
+                              className="min-h-[50px] text-sm resize-y"
                               data-testid={`textarea-notes-${row.seatId}`}
                             />
                           )}
                         </TableCell>
-                        <TableCell className="text-center px-3 w-16">
+                        <TableCell className="text-center px-3 w-16 py-1">
                           {row.assignment && (
                             <Checkbox
                               checked={!!row.assignment.bookingEmailSent}
@@ -822,7 +822,7 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        <TableCell className="text-center px-3 w-16">
+                        <TableCell className="text-center px-3 w-16 py-1">
                           {row.assignment && (
                             <Checkbox
                               checked={!!row.assignment.confirmedRsvp}
@@ -831,7 +831,7 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        <TableCell className="text-center px-3 w-16">
+                        <TableCell className="text-center px-3 w-16 py-1">
                           {row.assignment && (
                             <Checkbox
                               checked={!!row.assignment.paperworkSent}
@@ -840,7 +840,7 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        <TableCell className="text-center px-3 w-16">
+                        <TableCell className="text-center px-3 w-16 py-1">
                           {row.assignment && (
                             <Checkbox
                               checked={!!row.assignment.paperworkReceived}
@@ -849,7 +849,7 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        <TableCell className="text-center px-3 w-16">
+                        <TableCell className="text-center px-3 w-16 py-1">
                           {row.assignment && (
                             <Checkbox
                               checked={!!row.assignment.signedIn}
@@ -858,24 +858,24 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        <TableCell className="px-2">
+                        <TableCell className="px-2 py-1">
                           {row.assignment && (
                             <Textarea
                               value={row.assignment.otdNotes || ""}
                               onChange={(e) => handleFieldUpdate(row.assignment!.id, "otdNotes", e.target.value)}
                               placeholder=""
-                              className="h-8 min-h-0 text-xs resize-none w-24"
+                              className="h-7 min-h-0 text-xs resize-none w-24"
                               data-testid={`textarea-otd-notes-${row.seatId}`}
                             />
                           )}
                         </TableCell>
-                        <TableCell className="px-2">
+                        <TableCell className="px-2 py-1">
                           {row.assignment && (
                             <Textarea
                               value={row.assignment.standbyReplacementSwaps || ""}
                               onChange={(e) => handleFieldUpdate(row.assignment!.id, "standbyReplacementSwaps", e.target.value)}
                               placeholder=""
-                              className="h-8 min-h-0 text-xs resize-none w-24"
+                              className="h-7 min-h-0 text-xs resize-none w-24"
                               data-testid={`textarea-standby-${row.seatId}`}
                             />
                           )}
