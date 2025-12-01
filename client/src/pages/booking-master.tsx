@@ -709,16 +709,16 @@ export default function BookingMaster() {
                       data-testid="checkbox-select-all"
                     />
                   </TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">SEAT</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">NAME</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">MOBILE</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">EMAIL</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">ATTENDING WITH</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">LOCATION</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">MEDICAL Q (Y/N)</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">MOBILITY / MEDICAL NOTES</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">CRIMINAL / BANKRUPTCY</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10">CASTING CATEGORY</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs">SEAT</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs min-w-[150px]">NAME</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs min-w-[120px]">MOBILE</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs">EMAIL</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs">ATTENDING WITH</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs">LOCATION</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs">MEDICAL Q (Y/N)</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs">MOBILITY / MEDICAL NOTES</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs">CRIMINAL / BANKRUPTCY</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs">CASTING CATEGORY</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 min-w-[300px] border-r-4 border-r-primary/30">NOTES</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">EMAIL<br/>SENT</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">RSVP</TableHead>
@@ -766,29 +766,29 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        <TableCell className="font-mono text-sm">{row.seatId}</TableCell>
-                        <TableCell className="font-medium">
+                        <TableCell className="font-mono text-xs">{row.seatId}</TableCell>
+                        <TableCell className="font-medium text-xs min-w-[150px]">
                           {row.contestant?.name || <span className="text-muted-foreground italic">Empty</span>}
                         </TableCell>
-                        <TableCell className="text-sm">{row.contestant?.phone || ""}</TableCell>
-                        <TableCell className="text-sm">{row.contestant?.email || ""}</TableCell>
-                        <TableCell className="text-sm">{row.contestant?.attendingWith || ""}</TableCell>
-                        <TableCell className="text-sm">{row.contestant?.location || ""}</TableCell>
+                        <TableCell className="text-xs min-w-[120px]">{row.contestant?.phone || ""}</TableCell>
+                        <TableCell className="text-xs">{row.contestant?.email || ""}</TableCell>
+                        <TableCell className="text-xs">{row.contestant?.attendingWith || ""}</TableCell>
+                        <TableCell className="text-xs">{row.contestant?.location || ""}</TableCell>
                         <TableCell>
                           {row.assignment && (
                             <Input
                               value={row.assignment.medicalQuestion || ""}
                               onChange={(e) => handleFieldUpdate(row.assignment!.id, "medicalQuestion", e.target.value)}
                               placeholder="Y/N"
-                              className="h-8 text-sm w-16"
+                              className="h-8 text-xs w-16"
                               data-testid={`input-medical-${row.seatId}`}
                             />
                           )}
                         </TableCell>
-                        <TableCell className="text-sm">
+                        <TableCell className="text-xs">
                           {row.contestant?.mobilityNotes || ""}
                         </TableCell>
-                        <TableCell className="text-sm">
+                        <TableCell className="text-xs">
                           {row.contestant?.criminalRecord || ""}
                         </TableCell>
                         <TableCell>
@@ -797,7 +797,7 @@ export default function BookingMaster() {
                               value={row.assignment.castingCategory || ""}
                               onChange={(e) => handleFieldUpdate(row.assignment!.id, "castingCategory", e.target.value)}
                               placeholder="Category"
-                              className="h-8 text-sm"
+                              className="h-8 text-xs"
                               data-testid={`input-category-${row.seatId}`}
                             />
                           )}
