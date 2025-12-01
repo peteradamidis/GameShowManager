@@ -344,30 +344,17 @@ export default function ReschedulePage() {
                       {cancellation.reason || '—'}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex gap-2 justify-end">
-                        <Button
-                          size="sm"
-                          variant="default"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRebook(cancellation);
-                          }}
-                          data-testid={`button-rebook-${cancellation.id}`}
-                        >
-                          Rebook
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReturnToContestants(cancellation.id, cancellation.contestant.name);
-                          }}
-                          data-testid={`button-return-${cancellation.id}`}
-                        >
-                          Return to Contestants
-                        </Button>
-                      </div>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRebook(cancellation);
+                        }}
+                        data-testid={`button-rebook-${cancellation.id}`}
+                      >
+                        Rebook
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
