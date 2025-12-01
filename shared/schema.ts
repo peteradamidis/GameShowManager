@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, pgEnum, date, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, pgEnum, date, unique, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -90,6 +90,8 @@ export const canceledAssignments = pgTable("canceled_assignments", {
   seatLabel: text("seat_label"),
   canceledAt: timestamp("canceled_at").defaultNow().notNull(),
   reason: text("reason"),
+  isFromStandby: boolean("is_from_standby").default(false), // True if this came from standby tab
+  originalAttendanceDate: timestamp("original_attendance_date"), // Date standby originally attended
 });
 
 // Availability Tokens table - stores unique tokens for availability check responses
@@ -152,6 +154,8 @@ export const standbyAssignments = pgTable("standby_assignments", {
   notes: text("notes"),
   assignedToSeat: varchar("assigned_to_seat", { length: 10 }), // Seat label when standby is used (e.g., "1A3")
   assignedAt: timestamp("assigned_at"), // When they were assigned to a seat
+  movedToReschedule: boolean("moved_to_reschedule").default(false), // True when moved to reschedule tab
+  movedToRescheduleAt: timestamp("moved_to_reschedule_at"), // When they were moved
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   // Ensure one standby entry per contestant per record day

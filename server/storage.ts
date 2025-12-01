@@ -85,6 +85,7 @@ export interface IStorage {
   
   // Canceled Assignments
   getCanceledAssignments(): Promise<Array<CanceledAssignment & { contestant: Contestant; recordDay: RecordDay }>>;
+  createCanceledAssignment(data: Partial<InsertCanceledAssignment> & { contestantId: string; recordDayId: string }): Promise<CanceledAssignment>;
   deleteCanceledAssignment(id: string): Promise<void>;
   
   // Availability Tokens
@@ -513,6 +514,8 @@ export class DbStorage implements IStorage {
         seatLabel: canceledAssignments.seatLabel,
         canceledAt: canceledAssignments.canceledAt,
         reason: canceledAssignments.reason,
+        isFromStandby: canceledAssignments.isFromStandby,
+        originalAttendanceDate: canceledAssignments.originalAttendanceDate,
         contestant: contestants,
         recordDay: recordDays,
       })
@@ -521,6 +524,22 @@ export class DbStorage implements IStorage {
       .innerJoin(recordDays, eq(canceledAssignments.recordDayId, recordDays.id));
 
     return results as any;
+  }
+
+  async createCanceledAssignment(data: Partial<InsertCanceledAssignment> & { contestantId: string; recordDayId: string }): Promise<CanceledAssignment> {
+    const [created] = await db
+      .insert(canceledAssignments)
+      .values({
+        contestantId: data.contestantId,
+        recordDayId: data.recordDayId,
+        blockNumber: data.blockNumber ?? null,
+        seatLabel: data.seatLabel ?? null,
+        reason: data.reason ?? null,
+        isFromStandby: data.isFromStandby ?? false,
+        originalAttendanceDate: data.originalAttendanceDate ?? null,
+      })
+      .returning();
+    return created;
   }
 
   async deleteCanceledAssignment(id: string): Promise<void> {

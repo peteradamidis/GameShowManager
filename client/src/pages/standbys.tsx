@@ -31,7 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send } from "lucide-react";
+import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface RecordDay {
   id: string;
@@ -62,6 +63,8 @@ interface StandbyAssignment {
   notes: string | null;
   assignedToSeat: string | null;
   assignedAt: string | null;
+  movedToReschedule: boolean;
+  movedToRescheduleAt: string | null;
   contestant: Contestant;
   recordDay?: RecordDay;
 }
@@ -185,6 +188,24 @@ export default function StandbysPage() {
     },
     onError: (error: Error) => {
       toast({ title: "Error sending emails", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Move to reschedule mutation
+  const moveToRescheduleMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest('POST', `/api/standbys/${id}/move-to-reschedule`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'] });
+      toast({ 
+        title: "Moved to Reschedule", 
+        description: "Standby has been moved to the reschedule tab for future booking.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -362,6 +383,7 @@ export default function StandbysPage() {
                       <TableHead>Status</TableHead>
                       <TableHead>Assigned Seat</TableHead>
                       <TableHead>Email Sent</TableHead>
+                      <TableHead>Reschedule</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -420,6 +442,38 @@ export default function StandbysPage() {
                             ? new Date(standby.standbyEmailSent).toLocaleDateString('en-AU')
                             : "-"
                           }
+                        </TableCell>
+                        <TableCell>
+                          {standby.movedToReschedule ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge 
+                                  variant="outline" 
+                                  className="bg-green-500/10 text-green-700 border-green-200 cursor-help"
+                                >
+                                  Moved to Reschedule
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Added to reschedule tab on {standby.movedToRescheduleAt 
+                                  ? new Date(standby.movedToRescheduleAt).toLocaleDateString('en-AU')
+                                  : 'N/A'}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => moveToRescheduleMutation.mutate(standby.id)}
+                              disabled={moveToRescheduleMutation.isPending}
+                              className="h-7 text-xs"
+                              data-testid={`button-move-reschedule-${standby.id}`}
+                            >
+                              <ArrowRightLeft className="h-3 w-3 mr-1" />
+                              Move to Reschedule
+                            </Button>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Button

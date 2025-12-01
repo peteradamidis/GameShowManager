@@ -240,13 +240,13 @@ export default function ReschedulePage() {
       <div>
         <h1 className="text-2xl font-semibold">Reschedule</h1>
         <p className="text-muted-foreground">
-          Contestants who canceled their original booking
+          Canceled contestants and standbys eligible for rebooking
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Canceled Contestants</CardTitle>
+          <CardTitle>Contestants for Rebooking</CardTitle>
         </CardHeader>
         <CardContent>
           {canceledAssignments.length === 0 ? (
@@ -259,11 +259,12 @@ export default function ReschedulePage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Age</TableHead>
                   <TableHead>Gender</TableHead>
-                  <TableHead>Original Date</TableHead>
+                  <TableHead>Original Attendance</TableHead>
                   <TableHead>Original Seat</TableHead>
-                  <TableHead>Canceled At</TableHead>
+                  <TableHead>Added At</TableHead>
                   <TableHead>Reason</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -282,6 +283,17 @@ export default function ReschedulePage() {
                         {cancellation.contestant.name}
                       </div>
                     </TableCell>
+                    <TableCell>
+                      {cancellation.isFromStandby ? (
+                        <Badge className="bg-yellow-500 text-yellow-950 hover:bg-yellow-500">
+                          Standby
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">
+                          Canceled
+                        </Badge>
+                      )}
+                    </TableCell>
                     <TableCell>{cancellation.contestant.age}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">
@@ -289,7 +301,12 @@ export default function ReschedulePage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {cancellation.recordDay?.date ? (
+                      {cancellation.isFromStandby && cancellation.originalAttendanceDate ? (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-3 w-3 text-muted-foreground" />
+                          {format(new Date(cancellation.originalAttendanceDate), 'MMM dd, yyyy')}
+                        </div>
+                      ) : cancellation.recordDay?.date ? (
                         <div className="flex items-center gap-2">
                           <Calendar className="h-3 w-3 text-muted-foreground" />
                           {format(new Date(cancellation.recordDay.date), 'MMM dd, yyyy')}
@@ -302,6 +319,10 @@ export default function ReschedulePage() {
                       {cancellation.blockNumber && cancellation.seatLabel ? (
                         <Badge variant="outline">
                           Block {cancellation.blockNumber}, {cancellation.seatLabel}
+                        </Badge>
+                      ) : cancellation.seatLabel ? (
+                        <Badge variant="outline">
+                          {cancellation.seatLabel}
                         </Badge>
                       ) : (
                         <span className="text-muted-foreground">—</span>

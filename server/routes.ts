@@ -2642,6 +2642,52 @@ Deal or No Deal Production Team
     }
   });
 
+  // Move a standby to the reschedule tab
+  app.post("/api/standbys/:id/move-to-reschedule", async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      // Get the standby assignment with contestant and record day info
+      const allStandbys = await storage.getStandbyAssignments();
+      const standby = allStandbys.find(s => s.id === id);
+
+      if (!standby) {
+        return res.status(404).json({ error: "Standby assignment not found" });
+      }
+
+      // Check if already moved to reschedule
+      if (standby.movedToReschedule) {
+        return res.status(400).json({ error: "This standby has already been moved to reschedule" });
+      }
+
+      // Create a canceled assignment entry for the reschedule tab
+      const canceledAssignment = await storage.createCanceledAssignment({
+        contestantId: standby.contestantId,
+        recordDayId: standby.recordDayId,
+        blockNumber: null,
+        seatLabel: standby.assignedToSeat || null,
+        reason: 'Standby - eligible for reschedule',
+        isFromStandby: true,
+        originalAttendanceDate: new Date(standby.recordDay.date),
+      });
+
+      // Update the standby to mark it as moved to reschedule
+      const updatedStandby = await storage.updateStandbyAssignment(id, {
+        movedToReschedule: true,
+        movedToRescheduleAt: new Date(),
+      });
+
+      res.json({
+        message: "Standby moved to reschedule tab",
+        standby: updatedStandby,
+        canceledAssignment,
+      });
+    } catch (error: any) {
+      console.error("Error moving standby to reschedule:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Assign a standby to a seat (called from booking master when standby is selected)
   app.post("/api/standbys/assign-seat", async (req, res) => {
     try {
