@@ -33,9 +33,65 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Calendar, Mail, Maximize2, Minimize2, Settings, RefreshCw, CheckCircle, XCircle } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Download, Calendar, Mail, Maximize2, Minimize2, Settings, RefreshCw, CheckCircle, XCircle, Columns } from "lucide-react";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
+
+// Column configuration for the booking master table
+const COLUMN_CONFIG = [
+  { id: "seat", label: "SEAT", alwaysVisible: true },
+  { id: "name", label: "NAME", alwaysVisible: true },
+  { id: "mobile", label: "MOBILE", alwaysVisible: false },
+  { id: "email", label: "EMAIL", alwaysVisible: false },
+  { id: "attendingWith", label: "ATTENDING WITH", alwaysVisible: false },
+  { id: "location", label: "LOCATION", alwaysVisible: false },
+  { id: "medicalQ", label: "MED Q", alwaysVisible: false },
+  { id: "mobilityNotes", label: "MOBILITY / MEDICAL NOTES", alwaysVisible: false },
+  { id: "criminal", label: "CRIM / BANK", alwaysVisible: false },
+  { id: "castingCategory", label: "CASTING CATEGORY", alwaysVisible: false },
+  { id: "notes", label: "NOTES", alwaysVisible: false },
+  { id: "emailSent", label: "EMAIL SENT", alwaysVisible: false },
+  { id: "rsvp", label: "RSVP", alwaysVisible: false },
+  { id: "paperSent", label: "PAPER SENT", alwaysVisible: false },
+  { id: "paperReceived", label: "PAPER ✓", alwaysVisible: false },
+  { id: "signedIn", label: "SIGNED IN", alwaysVisible: false },
+  { id: "otdNotes", label: "OTD NOTES", alwaysVisible: false },
+  { id: "standby", label: "STANDBY / SWAPS", alwaysVisible: false },
+] as const;
+
+type ColumnId = typeof COLUMN_CONFIG[number]["id"];
+
+// Default visible columns
+const DEFAULT_VISIBLE_COLUMNS: Record<ColumnId, boolean> = {
+  seat: true,
+  name: true,
+  mobile: true,
+  email: true,
+  attendingWith: true,
+  location: true,
+  medicalQ: true,
+  mobilityNotes: true,
+  criminal: true,
+  castingCategory: true,
+  notes: true,
+  emailSent: true,
+  rsvp: true,
+  paperSent: true,
+  paperReceived: true,
+  signedIn: true,
+  otdNotes: true,
+  standby: true,
+};
+
+const STORAGE_KEY = "booking-master-visible-columns";
 
 interface GoogleSheetsConfig {
   spreadsheetId: string | null;
@@ -118,9 +174,42 @@ export default function BookingMaster() {
   const [sheetsDialogOpen, setSheetsDialogOpen] = useState(false);
   const [spreadsheetIdInput, setSpreadsheetIdInput] = useState("");
   const [pendingTextUpdates, setPendingTextUpdates] = useState<Record<string, string>>({});
+  const [visibleColumns, setVisibleColumns] = useState<Record<ColumnId, boolean>>(() => {
+    // Load from localStorage or use defaults
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        return { ...DEFAULT_VISIBLE_COLUMNS, ...JSON.parse(saved) };
+      }
+    } catch (e) {
+      console.error("Failed to load column visibility settings:", e);
+    }
+    return DEFAULT_VISIBLE_COLUMNS;
+  });
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
   const { toast } = useToast();
+
+  // Save column visibility to localStorage when it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(visibleColumns));
+    } catch (e) {
+      console.error("Failed to save column visibility settings:", e);
+    }
+  }, [visibleColumns]);
+
+  const toggleColumnVisibility = (columnId: ColumnId) => {
+    const column = COLUMN_CONFIG.find(c => c.id === columnId);
+    if (column?.alwaysVisible) return; // Can't hide always-visible columns
+    
+    setVisibleColumns(prev => ({
+      ...prev,
+      [columnId]: !prev[columnId],
+    }));
+  };
+
+  const isColumnVisible = (columnId: ColumnId) => visibleColumns[columnId];
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
     queryKey: ["/api/record-days"],
@@ -567,6 +656,30 @@ export default function BookingMaster() {
             </Button>
           ) : null}
           
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" title="Toggle Columns" data-testid="button-toggle-columns">
+                <Columns className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 max-h-80 overflow-y-auto">
+              <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {COLUMN_CONFIG.map((column) => (
+                <DropdownMenuCheckboxItem
+                  key={column.id}
+                  checked={visibleColumns[column.id]}
+                  disabled={column.alwaysVisible}
+                  onCheckedChange={() => toggleColumnVisibility(column.id)}
+                  data-testid={`toggle-column-${column.id}`}
+                >
+                  {column.label}
+                  {column.alwaysVisible && <span className="ml-2 text-xs text-muted-foreground">(required)</span>}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
           <Dialog open={sheetsDialogOpen} onOpenChange={setSheetsDialogOpen}>
             <DialogTrigger asChild>
               <Button 
@@ -747,24 +860,24 @@ export default function BookingMaster() {
                       data-testid="checkbox-select-all"
                     />
                   </TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs w-12">SEAT</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs min-w-[150px]">NAME</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs min-w-[120px]">MOBILE</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs w-32 max-w-[130px]">EMAIL</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs">ATTENDING WITH</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs">LOCATION</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs w-14 text-center">MED<br/>Q</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs">MOBILITY / MEDICAL NOTES</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs w-20 text-center">CRIM/<br/>BANK</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs">CASTING CATEGORY</TableHead>
-                  <TableHead className={`sticky top-0 bg-background z-10 border-r-4 border-r-primary/30 ${isFullscreen ? 'min-w-[200px]' : 'min-w-[300px]'}`}>NOTES</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">EMAIL<br/>SENT</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">RSVP</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">PAPER<br/>SENT</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">PAPER<br/>✓</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">SIGNED<br/>IN</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 text-center">OTD NOTES</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 text-center">STANDBY / SWAPS</TableHead>
+                  {isColumnVisible("seat") && <TableHead className="sticky top-0 bg-background z-10 text-xs w-12">SEAT</TableHead>}
+                  {isColumnVisible("name") && <TableHead className="sticky top-0 bg-background z-10 text-xs min-w-[150px]">NAME</TableHead>}
+                  {isColumnVisible("mobile") && <TableHead className="sticky top-0 bg-background z-10 text-xs min-w-[120px]">MOBILE</TableHead>}
+                  {isColumnVisible("email") && <TableHead className="sticky top-0 bg-background z-10 text-xs w-32 max-w-[130px]">EMAIL</TableHead>}
+                  {isColumnVisible("attendingWith") && <TableHead className="sticky top-0 bg-background z-10 text-xs">ATTENDING WITH</TableHead>}
+                  {isColumnVisible("location") && <TableHead className="sticky top-0 bg-background z-10 text-xs">LOCATION</TableHead>}
+                  {isColumnVisible("medicalQ") && <TableHead className="sticky top-0 bg-background z-10 text-xs w-14 text-center">MED<br/>Q</TableHead>}
+                  {isColumnVisible("mobilityNotes") && <TableHead className="sticky top-0 bg-background z-10 text-xs">MOBILITY / MEDICAL NOTES</TableHead>}
+                  {isColumnVisible("criminal") && <TableHead className="sticky top-0 bg-background z-10 text-xs w-20 text-center">CRIM/<br/>BANK</TableHead>}
+                  {isColumnVisible("castingCategory") && <TableHead className="sticky top-0 bg-background z-10 text-xs">CASTING CATEGORY</TableHead>}
+                  {isColumnVisible("notes") && <TableHead className={`sticky top-0 bg-background z-10 border-r-4 border-r-primary/30 ${isFullscreen ? 'min-w-[200px]' : 'min-w-[300px]'}`}>NOTES</TableHead>}
+                  {isColumnVisible("emailSent") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">EMAIL<br/>SENT</TableHead>}
+                  {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">RSVP</TableHead>}
+                  {isColumnVisible("paperSent") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">PAPER<br/>SENT</TableHead>}
+                  {isColumnVisible("paperReceived") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">PAPER<br/>✓</TableHead>}
+                  {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">SIGNED<br/>IN</TableHead>}
+                  {isColumnVisible("otdNotes") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 text-center">OTD NOTES</TableHead>}
+                  {isColumnVisible("standby") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 text-center">STANDBY / SWAPS</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -804,120 +917,146 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        <TableCell className="font-mono text-xs py-1 w-12">{row.seatLabel}</TableCell>
-                        <TableCell className="font-medium text-xs min-w-[150px] py-1">
-                          {row.contestant?.name || <span className="text-muted-foreground italic">Empty</span>}
-                        </TableCell>
-                        <TableCell className="text-xs min-w-[120px] py-1">{row.contestant?.phone || ""}</TableCell>
-                        <TableCell className="text-xs py-1 w-32 max-w-[130px] truncate">{row.contestant?.email || ""}</TableCell>
-                        <TableCell className="text-xs py-1">{row.contestant?.attendingWith || ""}</TableCell>
-                        <TableCell className="text-xs py-1">{row.contestant?.location || ""}</TableCell>
-                        <TableCell className="py-1 w-14">
-                          {row.assignment && (
-                            <Input
-                              value={getTextValue(row.assignment.id, "medicalQuestion", row.assignment.medicalQuestion)}
-                              onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "medicalQuestion", e.target.value)}
-                              placeholder="Y/N"
-                              className="h-7 text-xs w-10"
-                              data-testid={`input-medical-${row.seatId}`}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="text-xs py-1">
-                          {row.contestant?.mobilityNotes || ""}
-                        </TableCell>
-                        <TableCell className="text-xs py-1 w-20 text-center">
-                          {row.contestant?.criminalRecord || ""}
-                        </TableCell>
-                        <TableCell className="py-1">
-                          {row.assignment && (
-                            <Input
-                              value={getTextValue(row.assignment.id, "castingCategory", row.assignment.castingCategory)}
-                              onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "castingCategory", e.target.value)}
-                              placeholder="Category"
-                              className="h-7 text-xs"
-                              data-testid={`input-category-${row.seatId}`}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="border-r-4 border-r-primary/30 py-1">
-                          {row.assignment && (
-                            <Textarea
-                              value={getTextValue(row.assignment.id, "notes", row.assignment.notes)}
-                              onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "notes", e.target.value)}
-                              placeholder="Notes"
-                              className="min-h-[50px] text-sm resize-y"
-                              data-testid={`textarea-notes-${row.seatId}`}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center px-3 w-16 py-1">
-                          {row.assignment && (
-                            <Checkbox
-                              checked={!!row.assignment.bookingEmailSent}
-                              onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "bookingEmailSent", row.assignment!.bookingEmailSent)}
-                              data-testid={`checkbox-email-sent-${row.seatId}`}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center px-3 w-16 py-1">
-                          {row.assignment && (
-                            <Checkbox
-                              checked={!!row.assignment.confirmedRsvp}
-                              onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "confirmedRsvp", row.assignment!.confirmedRsvp)}
-                              data-testid={`checkbox-rsvp-${row.seatId}`}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center px-3 w-16 py-1">
-                          {row.assignment && (
-                            <Checkbox
-                              checked={!!row.assignment.paperworkSent}
-                              onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "paperworkSent", row.assignment!.paperworkSent)}
-                              data-testid={`checkbox-paperwork-sent-${row.seatId}`}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center px-3 w-16 py-1">
-                          {row.assignment && (
-                            <Checkbox
-                              checked={!!row.assignment.paperworkReceived}
-                              onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "paperworkReceived", row.assignment!.paperworkReceived)}
-                              data-testid={`checkbox-paperwork-received-${row.seatId}`}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center px-3 w-16 py-1">
-                          {row.assignment && (
-                            <Checkbox
-                              checked={!!row.assignment.signedIn}
-                              onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "signedIn", row.assignment!.signedIn)}
-                              data-testid={`checkbox-signed-in-${row.seatId}`}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="px-2 py-1">
-                          {row.assignment && (
-                            <Textarea
-                              value={getTextValue(row.assignment.id, "otdNotes", row.assignment.otdNotes)}
-                              onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "otdNotes", e.target.value)}
-                              placeholder=""
-                              className="h-7 min-h-0 text-xs resize-none w-24"
-                              data-testid={`textarea-otd-notes-${row.seatId}`}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="px-2 py-1">
-                          {row.assignment && (
-                            <Textarea
-                              value={getTextValue(row.assignment.id, "standbyReplacementSwaps", row.assignment.standbyReplacementSwaps)}
-                              onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "standbyReplacementSwaps", e.target.value)}
-                              placeholder=""
-                              className="h-7 min-h-0 text-xs resize-none w-24"
-                              data-testid={`textarea-standby-${row.seatId}`}
-                            />
-                          )}
-                        </TableCell>
+                        {isColumnVisible("seat") && <TableCell className="font-mono text-xs py-1 w-12">{row.seatLabel}</TableCell>}
+                        {isColumnVisible("name") && (
+                          <TableCell className="font-medium text-xs min-w-[150px] py-1">
+                            {row.contestant?.name || <span className="text-muted-foreground italic">Empty</span>}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("mobile") && <TableCell className="text-xs min-w-[120px] py-1">{row.contestant?.phone || ""}</TableCell>}
+                        {isColumnVisible("email") && <TableCell className="text-xs py-1 w-32 max-w-[130px] truncate">{row.contestant?.email || ""}</TableCell>}
+                        {isColumnVisible("attendingWith") && <TableCell className="text-xs py-1">{row.contestant?.attendingWith || ""}</TableCell>}
+                        {isColumnVisible("location") && <TableCell className="text-xs py-1">{row.contestant?.location || ""}</TableCell>}
+                        {isColumnVisible("medicalQ") && (
+                          <TableCell className="py-1 w-14">
+                            {row.assignment && (
+                              <Input
+                                value={getTextValue(row.assignment.id, "medicalQuestion", row.assignment.medicalQuestion)}
+                                onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "medicalQuestion", e.target.value)}
+                                placeholder="Y/N"
+                                className="h-7 text-xs w-10"
+                                data-testid={`input-medical-${row.seatId}`}
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("mobilityNotes") && (
+                          <TableCell className="text-xs py-1">
+                            {row.contestant?.mobilityNotes || ""}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("criminal") && (
+                          <TableCell className="text-xs py-1 w-20 text-center">
+                            {row.contestant?.criminalRecord || ""}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("castingCategory") && (
+                          <TableCell className="py-1">
+                            {row.assignment && (
+                              <Input
+                                value={getTextValue(row.assignment.id, "castingCategory", row.assignment.castingCategory)}
+                                onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "castingCategory", e.target.value)}
+                                placeholder="Category"
+                                className="h-7 text-xs"
+                                data-testid={`input-category-${row.seatId}`}
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("notes") && (
+                          <TableCell className="border-r-4 border-r-primary/30 py-1">
+                            {row.assignment && (
+                              <Textarea
+                                value={getTextValue(row.assignment.id, "notes", row.assignment.notes)}
+                                onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "notes", e.target.value)}
+                                placeholder="Notes"
+                                className="min-h-[50px] text-sm resize-y"
+                                data-testid={`textarea-notes-${row.seatId}`}
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("emailSent") && (
+                          <TableCell className="text-center px-3 w-16 py-1">
+                            {row.assignment && (
+                              <Checkbox
+                                checked={!!row.assignment.bookingEmailSent}
+                                onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "bookingEmailSent", row.assignment!.bookingEmailSent)}
+                                data-testid={`checkbox-email-sent-${row.seatId}`}
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("rsvp") && (
+                          <TableCell className="text-center px-3 w-16 py-1">
+                            {row.assignment && (
+                              <Checkbox
+                                checked={!!row.assignment.confirmedRsvp}
+                                onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "confirmedRsvp", row.assignment!.confirmedRsvp)}
+                                data-testid={`checkbox-rsvp-${row.seatId}`}
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("paperSent") && (
+                          <TableCell className="text-center px-3 w-16 py-1">
+                            {row.assignment && (
+                              <Checkbox
+                                checked={!!row.assignment.paperworkSent}
+                                onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "paperworkSent", row.assignment!.paperworkSent)}
+                                data-testid={`checkbox-paperwork-sent-${row.seatId}`}
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("paperReceived") && (
+                          <TableCell className="text-center px-3 w-16 py-1">
+                            {row.assignment && (
+                              <Checkbox
+                                checked={!!row.assignment.paperworkReceived}
+                                onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "paperworkReceived", row.assignment!.paperworkReceived)}
+                                data-testid={`checkbox-paperwork-received-${row.seatId}`}
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("signedIn") && (
+                          <TableCell className="text-center px-3 w-16 py-1">
+                            {row.assignment && (
+                              <Checkbox
+                                checked={!!row.assignment.signedIn}
+                                onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "signedIn", row.assignment!.signedIn)}
+                                data-testid={`checkbox-signed-in-${row.seatId}`}
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("otdNotes") && (
+                          <TableCell className="px-2 py-1">
+                            {row.assignment && (
+                              <Textarea
+                                value={getTextValue(row.assignment.id, "otdNotes", row.assignment.otdNotes)}
+                                onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "otdNotes", e.target.value)}
+                                placeholder=""
+                                className="h-7 min-h-0 text-xs resize-none w-24"
+                                data-testid={`textarea-otd-notes-${row.seatId}`}
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("standby") && (
+                          <TableCell className="px-2 py-1">
+                            {row.assignment && (
+                              <Textarea
+                                value={getTextValue(row.assignment.id, "standbyReplacementSwaps", row.assignment.standbyReplacementSwaps)}
+                                onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "standbyReplacementSwaps", e.target.value)}
+                                placeholder=""
+                                className="h-7 min-h-0 text-xs resize-none w-24"
+                                data-testid={`textarea-standby-${row.seatId}`}
+                              />
+                            )}
+                          </TableCell>
+                        )}
                       </TableRow>
                     </>
                   );
