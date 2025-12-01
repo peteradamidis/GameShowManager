@@ -699,6 +699,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ error: "Contestant is already seated in this record day" });
       }
       
+      // Check if contestant is already a standby for this record day
+      const existingStandbys = await storage.getStandbyAssignmentsByRecordDay(recordDayId);
+      const isContestantStandby = existingStandbys.some((s: any) => s.contestantId === contestantId);
+      if (isContestantStandby) {
+        return res.status(409).json({ error: "Contestant is already a standby for this record day. Remove them from standbys first." });
+      }
+      
       // Check if seat is already occupied
       const isSeatOccupied = existingAssignments.some((a: any) => 
         a.blockNumber === parseInt(blockNumber) && a.seatLabel === seatLabel
@@ -775,13 +782,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check for duplicate assignments
       const existingAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
+      const existingStandbys = await storage.getStandbyAssignmentsByRecordDay(recordDayId);
       
-      // Check if any contestant is already seated in this record day
+      // Check if any contestant is already seated or a standby in this record day
       for (const contestantId of contestantIds) {
         const isContestantSeated = existingAssignments.some((a: any) => a.contestantId === contestantId);
         if (isContestantSeated) {
           const contestant = await storage.getContestantById(contestantId);
           return res.status(409).json({ error: `${contestant?.name || 'A contestant'} is already seated in this record day` });
+        }
+        
+        const isContestantStandby = existingStandbys.some((s: any) => s.contestantId === contestantId);
+        if (isContestantStandby) {
+          const contestant = await storage.getContestantById(contestantId);
+          return res.status(409).json({ error: `${contestant?.name || 'A contestant'} is already a standby for this record day. Remove them from standbys first.` });
         }
       }
       
@@ -2546,10 +2560,28 @@ Deal or No Deal Production Team
 
       // Get existing standbys for this record day to identify duplicates
       const existingStandbys = await storage.getStandbyAssignmentsByRecordDay(recordDayId);
-      const existingContestantIds = new Set(existingStandbys.map(s => s.contestantId));
+      const existingStandbyContestantIds = new Set(existingStandbys.map(s => s.contestantId));
+      
+      // Get existing seat assignments to check if contestants are already seated
+      const existingAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
+      const seatedContestantIds = new Set(existingAssignments.map((a: any) => a.contestantId));
+      
+      // Check if any contestant is already seated - if so, reject the request
+      const alreadySeatedIds = contestantIds.filter((id: string) => seatedContestantIds.has(id));
+      if (alreadySeatedIds.length > 0) {
+        // Get names of already seated contestants
+        const seatedContestants = await Promise.all(
+          alreadySeatedIds.slice(0, 3).map((id: string) => storage.getContestantById(id))
+        );
+        const names = seatedContestants.map(c => c?.name).filter(Boolean).join(', ');
+        const moreCount = alreadySeatedIds.length > 3 ? ` and ${alreadySeatedIds.length - 3} more` : '';
+        return res.status(409).json({ 
+          error: `Cannot add as standby: ${names}${moreCount} already seated for this record day` 
+        });
+      }
       
       // Filter out contestants who are already standbys for this record day
-      const newContestantIds = contestantIds.filter((id: string) => !existingContestantIds.has(id));
+      const newContestantIds = contestantIds.filter((id: string) => !existingStandbyContestantIds.has(id));
       const skippedCount = contestantIds.length - newContestantIds.length;
 
       if (newContestantIds.length === 0) {
