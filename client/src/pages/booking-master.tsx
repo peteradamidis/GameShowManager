@@ -194,7 +194,8 @@ export default function BookingMaster() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sheetsDialogOpen, setSheetsDialogOpen] = useState(false);
   const [spreadsheetIdInput, setSpreadsheetIdInput] = useState("");
-  const [pendingTextUpdates, setPendingTextUpdates] = useState<Record<string, string>>({});
+  // Use refs instead of state for pending text updates to avoid re-renders
+  const pendingTextUpdatesRef = useRef<Record<string, string>>({});
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnId, boolean>>(() => {
     // Load from localStorage or use defaults
     try {
@@ -475,11 +476,12 @@ export default function BookingMaster() {
   };
 
   // Debounced handler for text fields - waits 500ms after user stops typing before saving
+  // Uses refs to avoid re-rendering the entire table on each keystroke
   const handleDebouncedTextUpdate = (assignmentId: string, field: string, value: string) => {
     const key = `${assignmentId}-${field}`;
     
-    // Update local state immediately for responsive UI
-    setPendingTextUpdates(prev => ({ ...prev, [key]: value }));
+    // Store in ref (no re-render)
+    pendingTextUpdatesRef.current[key] = value;
     
     // Clear any existing timer for this field
     if (debounceTimersRef.current[key]) {
@@ -492,20 +494,9 @@ export default function BookingMaster() {
         assignmentId,
         fields: { [field]: value },
       });
-      // Clear the pending update after saving
-      setPendingTextUpdates(prev => {
-        const newState = { ...prev };
-        delete newState[key];
-        return newState;
-      });
+      delete pendingTextUpdatesRef.current[key];
       delete debounceTimersRef.current[key];
     }, 500);
-  };
-
-  // Helper to get current text value (pending update takes priority)
-  const getTextValue = (assignmentId: string, field: string, originalValue: string | undefined) => {
-    const key = `${assignmentId}-${field}`;
-    return key in pendingTextUpdates ? pendingTextUpdates[key] : (originalValue || "");
   };
 
   const handleCheckboxToggle = (assignmentId: string, field: string, currentValue: any) => {
@@ -958,7 +949,8 @@ export default function BookingMaster() {
                           <TableCell className="py-1 w-14">
                             {row.assignment && (
                               <Input
-                                value={getTextValue(row.assignment.id, "medicalQuestion", row.assignment.medicalQuestion)}
+                                key={`med-${row.assignment.id}`}
+                                defaultValue={row.assignment.medicalQuestion || ""}
                                 onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "medicalQuestion", e.target.value)}
                                 placeholder="Y/N"
                                 className="h-7 text-xs w-10"
@@ -981,7 +973,8 @@ export default function BookingMaster() {
                           <TableCell className="py-1">
                             {row.assignment && (
                               <Input
-                                value={getTextValue(row.assignment.id, "castingCategory", row.assignment.castingCategory)}
+                                key={`cat-${row.assignment.id}`}
+                                defaultValue={row.assignment.castingCategory || ""}
                                 onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "castingCategory", e.target.value)}
                                 placeholder="Category"
                                 className="h-7 text-xs"
@@ -994,7 +987,8 @@ export default function BookingMaster() {
                           <TableCell className="border-r-4 border-r-primary/30 py-1">
                             {row.assignment && (
                               <Textarea
-                                value={getTextValue(row.assignment.id, "notes", row.assignment.notes)}
+                                key={`notes-${row.assignment.id}`}
+                                defaultValue={row.assignment.notes || ""}
                                 onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "notes", e.target.value)}
                                 placeholder="Notes"
                                 className="min-h-[50px] text-sm resize-y"
@@ -1062,7 +1056,8 @@ export default function BookingMaster() {
                           <TableCell className="px-2 py-1">
                             {row.assignment && (
                               <Textarea
-                                value={getTextValue(row.assignment.id, "otdNotes", row.assignment.otdNotes)}
+                                key={`otd-${row.assignment.id}`}
+                                defaultValue={row.assignment.otdNotes || ""}
                                 onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "otdNotes", e.target.value)}
                                 placeholder=""
                                 className="h-14 min-h-0 text-xs resize-none w-36"
@@ -1075,7 +1070,8 @@ export default function BookingMaster() {
                           <TableCell className="px-2 py-1">
                             {row.assignment && (
                               <Select
-                                value={getTextValue(row.assignment.id, "standbyReplacementSwaps", row.assignment.standbyReplacementSwaps) || "none"}
+                                key={`standby-${row.assignment.id}`}
+                                defaultValue={row.assignment.standbyReplacementSwaps || "none"}
                                 onValueChange={(value) => {
                                   const newValue = value === "none" ? "" : value;
                                   handleDebouncedTextUpdate(row.assignment!.id, "standbyReplacementSwaps", newValue);
