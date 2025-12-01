@@ -60,6 +60,8 @@ interface StandbyAssignment {
   standbyEmailSent: string | null;
   confirmedAt: string | null;
   notes: string | null;
+  assignedToSeat: string | null;
+  assignedAt: string | null;
   contestant: Contestant;
   recordDay?: RecordDay;
 }
@@ -81,6 +83,10 @@ const StatusBadge = ({ status }: { status: string }) => {
     declined: { 
       label: "Declined", 
       className: "border-red-200 bg-red-500/10 text-red-700 dark:border-red-800 dark:text-red-400" 
+    },
+    seated: { 
+      label: "Seated", 
+      className: "border-purple-200 bg-purple-500/10 text-purple-700 dark:border-purple-800 dark:text-purple-400" 
     },
   };
 
@@ -354,6 +360,7 @@ export default function StandbysPage() {
                       <TableHead>Gender</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Assigned Seat</TableHead>
                       <TableHead>Email Sent</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
@@ -398,6 +405,15 @@ export default function StandbysPage() {
                         </TableCell>
                         <TableCell>
                           <StatusBadge status={standby.status} />
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {standby.assignedToSeat ? (
+                            <Badge variant="outline" className="bg-purple-500/10 text-purple-700 border-purple-200">
+                              {standby.assignedToSeat}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {standby.standbyEmailSent 

@@ -10,7 +10,7 @@ export const tokenStatusEnum = pgEnum('token_status', ['active', 'expired', 'use
 export const responseValueEnum = pgEnum('response_value', ['pending', 'yes', 'no', 'maybe']);
 export const confirmationStatusEnum = pgEnum('confirmation_status', ['pending', 'confirmed', 'declined']);
 export const blockTypeEnum = pgEnum('block_type', ['PB', 'NPB']);
-export const standbyStatusEnum = pgEnum('standby_status', ['pending', 'email_sent', 'confirmed', 'declined']);
+export const standbyStatusEnum = pgEnum('standby_status', ['pending', 'email_sent', 'confirmed', 'declined', 'seated']);
 
 // Groups table
 export const groups = pgTable("groups", {
@@ -150,6 +150,8 @@ export const standbyAssignments = pgTable("standby_assignments", {
   standbyEmailSent: timestamp("standby_email_sent"),
   confirmedAt: timestamp("confirmed_at"),
   notes: text("notes"),
+  assignedToSeat: varchar("assigned_to_seat", { length: 10 }), // Seat label when standby is used (e.g., "1A3")
+  assignedAt: timestamp("assigned_at"), // When they were assigned to a seat
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   // Ensure one standby entry per contestant per record day

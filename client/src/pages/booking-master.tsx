@@ -324,6 +324,16 @@ export default function BookingMaster() {
     },
   });
 
+  // Mutation to update standby assignment when a standby is assigned to a seat
+  const assignStandbyMutation = useMutation({
+    mutationFn: async ({ recordDayId, contestantName, seatLabel }: { recordDayId: string; contestantName: string; seatLabel: string | null }) => {
+      return await apiRequest("POST", "/api/standbys/assign-seat", { recordDayId, contestantName, seatLabel });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+    },
+  });
+
   const updateWorkflowMutation = useMutation({
     mutationFn: async ({ assignmentId, fields }: { assignmentId: string; fields: Partial<SeatAssignment> }) => {
       return await apiRequest("PATCH", `/api/seat-assignments/${assignmentId}/workflow`, fields);
@@ -1075,6 +1085,14 @@ export default function BookingMaster() {
                                 onValueChange={(value) => {
                                   const newValue = value === "none" ? "" : value;
                                   handleDebouncedTextUpdate(row.assignment!.id, "standbyReplacementSwaps", newValue);
+                                  // Also update the standby assignment to record which seat they're assigned to
+                                  if (newValue) {
+                                    assignStandbyMutation.mutate({
+                                      recordDayId: selectedRecordDay,
+                                      contestantName: newValue,
+                                      seatLabel: row.seatLabel,
+                                    });
+                                  }
                                 }}
                               >
                                 <SelectTrigger 

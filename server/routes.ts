@@ -2610,6 +2610,40 @@ Deal or No Deal Production Team
     }
   });
 
+  // Assign a standby to a seat (called from booking master when standby is selected)
+  app.post("/api/standbys/assign-seat", async (req, res) => {
+    try {
+      const { recordDayId, contestantName, seatLabel } = req.body;
+
+      if (!recordDayId || !contestantName) {
+        return res.status(400).json({ error: "recordDayId and contestantName are required" });
+      }
+
+      // Get all standbys for this record day
+      const allStandbys = await storage.getStandbyAssignments();
+      const standbyForDay = allStandbys.filter(s => s.recordDayId === recordDayId);
+      
+      // Find the standby that matches the contestant name
+      const matchingStandby = standbyForDay.find(s => s.contestant.name === contestantName);
+      
+      if (!matchingStandby) {
+        return res.status(404).json({ error: "Standby not found for this contestant and record day" });
+      }
+
+      // Update the standby with the seat assignment
+      const updated = await storage.updateStandbyAssignment(matchingStandby.id, {
+        assignedToSeat: seatLabel || null,
+        assignedAt: seatLabel ? new Date() : null,
+        status: seatLabel ? 'seated' : matchingStandby.status === 'seated' ? 'confirmed' : matchingStandby.status,
+      });
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error assigning standby to seat:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Preview standby booking emails
   app.post("/api/standbys/preview-emails", async (req, res) => {
     try {
