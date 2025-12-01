@@ -337,10 +337,10 @@ export default function ReschedulePage() {
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-muted-foreground text-xs">
                       {format(new Date(cancellation.canceledAt), 'MMM dd, yyyy HH:mm')}
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
+                    <TableCell className="text-muted-foreground text-xs">
                       {cancellation.reason || '—'}
                     </TableCell>
                     <TableCell className="text-right">
