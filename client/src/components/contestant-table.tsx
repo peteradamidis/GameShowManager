@@ -67,6 +67,8 @@ interface ContestantTableProps {
   selectedIds?: string[];
   onSelectionChange?: (ids: string[]) => void;
   seatAssignments?: SeatAssignment[];
+  searchTerm?: string;
+  onSearchChange?: (term: string) => void;
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -90,7 +92,9 @@ export function ContestantTable({
   contestants, 
   selectedIds = [], 
   onSelectionChange,
-  seatAssignments = []
+  seatAssignments = [],
+  searchTerm: externalSearchTerm,
+  onSearchChange
 }: ContestantTableProps) {
   // Create a map for quick lookup of seat assignments by contestant ID
   // Use the most recent assignment if multiple exist
@@ -98,7 +102,11 @@ export function ContestantTable({
   seatAssignments.forEach(sa => {
     seatAssignmentMap.set(sa.contestantId, sa);
   });
-  const [searchTerm, setSearchTerm] = useState("");
+  
+  // Use external search state if provided, otherwise use local state
+  const [localSearchTerm, setLocalSearchTerm] = useState("");
+  const searchTerm = externalSearchTerm !== undefined ? externalSearchTerm : localSearchTerm;
+  const setSearchTerm = onSearchChange || setLocalSearchTerm;
   const [selectedContestantId, setSelectedContestantId] = useState<string | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -318,13 +326,17 @@ export function ContestantTable({
     }
   };
 
-  const filteredContestants = contestants.filter((contestant) => {
-    const search = searchTerm.toLowerCase();
-    return (
-      contestant.name.toLowerCase().includes(search) ||
-      (contestant.attendingWith?.toLowerCase().includes(search) ?? false)
-    );
-  });
+  // When search is controlled externally, parent already filters contestants
+  // Only apply local filtering when using internal search state
+  const filteredContestants = externalSearchTerm !== undefined
+    ? contestants  // Parent already filtered
+    : contestants.filter((contestant) => {
+        const search = localSearchTerm.toLowerCase();
+        return (
+          contestant.name.toLowerCase().includes(search) ||
+          (contestant.attendingWith?.toLowerCase().includes(search) ?? false)
+        );
+      });
 
   const handleToggleAll = () => {
     if (!onSelectionChange) return;

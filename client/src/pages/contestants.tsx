@@ -103,6 +103,7 @@ export default function Contestants() {
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [filterStandbyStatus, setFilterStandbyStatus] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   
   const ITEMS_PER_PAGE = 50;
 
@@ -186,12 +187,21 @@ export default function Contestants() {
     }
   }
 
+  // Apply search filter (searches across ALL pages before pagination)
+  if (searchTerm.trim()) {
+    const search = searchTerm.toLowerCase();
+    displayedContestants = displayedContestants.filter(c => 
+      c.name.toLowerCase().includes(search) ||
+      (c.attendingWith?.toLowerCase().includes(search) ?? false)
+    );
+  }
+
   const isLoading = loadingContestants || (filterRecordDayId && loadingFiltered);
 
-  // Reset page when filters change
+  // Reset page when filters or search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus]);
+  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus, searchTerm]);
 
   // Pagination calculations
   const totalPages = Math.ceil(displayedContestants.length / ITEMS_PER_PAGE);
@@ -689,6 +699,8 @@ export default function Contestants() {
             selectedIds={selectedContestants}
             onSelectionChange={setSelectedContestants}
             seatAssignments={allSeatAssignments}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
           />
           
           {/* Pagination Controls */}
