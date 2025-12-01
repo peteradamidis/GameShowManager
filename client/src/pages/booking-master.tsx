@@ -720,13 +720,13 @@ export default function BookingMaster() {
                   <TableHead className="sticky top-0 bg-background z-10">CRIMINAL / BANKRUPTCY</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10">CASTING CATEGORY</TableHead>
                   <TableHead className="sticky top-0 bg-background z-10 min-w-[300px] border-r-4 border-r-primary/30">NOTES</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 whitespace-nowrap">EMAIL SENT</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 whitespace-nowrap">RSVP</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 whitespace-nowrap">PAPERWORK SENT</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 whitespace-nowrap">PAPERWORK ✓</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 whitespace-nowrap">SIGNED-IN</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 whitespace-nowrap">OTD NOTES</TableHead>
-                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 whitespace-nowrap">STANDBY / SWAPS</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">EMAIL<br/>SENT</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">RSVP</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">PAPER<br/>SENT</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">PAPER<br/>✓</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">SIGNED<br/>IN</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 text-center">OTD NOTES</TableHead>
+                  <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 text-center">STANDBY / SWAPS</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -813,7 +813,7 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        <TableCell className="text-center px-2">
+                        <TableCell className="text-center px-3 w-16">
                           {row.assignment && (
                             <Checkbox
                               checked={!!row.assignment.bookingEmailSent}
@@ -822,7 +822,7 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        <TableCell className="text-center px-2">
+                        <TableCell className="text-center px-3 w-16">
                           {row.assignment && (
                             <Checkbox
                               checked={!!row.assignment.confirmedRsvp}
@@ -831,7 +831,7 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        <TableCell className="text-center px-2">
+                        <TableCell className="text-center px-3 w-16">
                           {row.assignment && (
                             <Checkbox
                               checked={!!row.assignment.paperworkSent}
@@ -840,7 +840,7 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        <TableCell className="text-center px-2">
+                        <TableCell className="text-center px-3 w-16">
                           {row.assignment && (
                             <Checkbox
                               checked={!!row.assignment.paperworkReceived}
@@ -849,7 +849,7 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        <TableCell className="text-center px-2">
+                        <TableCell className="text-center px-3 w-16">
                           {row.assignment && (
                             <Checkbox
                               checked={!!row.assignment.signedIn}
