@@ -17,7 +17,6 @@ import ReschedulePage from "@/pages/reschedule";
 import Settings from "@/pages/settings";
 import AvailabilityResponsePage from "@/pages/availability-response-page";
 import BookingConfirmationPage from "@/pages/booking-confirmation-page";
-import EmailAssetsPage from "@/pages/email-assets";
 import NotFound from "@/pages/not-found";
 import logoImage from "@assets/6b13f568-ecb4-421a-8c1d-6edbe0b1a6c7_1764305481833.png";
 
@@ -34,7 +33,6 @@ function Router() {
       <Route path="/standbys" component={StandbysPage} />
       <Route path="/reschedule" component={ReschedulePage} />
       <Route path="/settings" component={Settings} />
-      <Route path="/email-assets" component={EmailAssetsPage} />
       <Route path="/availability/respond/:token" component={AvailabilityResponsePage} />
       <Route path="/booking-confirmation/:token" component={BookingConfirmationPage} />
       <Route component={NotFound} />

@@ -3,8 +3,70 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Trash2, Image, FileText, Loader2, Copy, Check } from "lucide-react";
+import { useState } from "react";
+
+interface EmailAsset {
+  path: string;
+  name: string;
+  contentType: string;
+  size: number;
+  url: string;
+}
 
 export default function Settings() {
+  const { toast } = useToast();
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+
+  const { data: assets = [], isLoading: assetsLoading } = useQuery<EmailAsset[]>({
+    queryKey: ['/api/email-assets'],
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (path: string) => {
+      const cleanPath = path.replace('/objects/', '');
+      await apiRequest("DELETE", `/api/email-assets/${cleanPath}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/email-assets'] });
+      toast({ title: "File deleted successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Delete failed", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleUploadComplete = () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/email-assets'] });
+    toast({ title: "File uploaded successfully" });
+  };
+
+  const handleUploadError = (error: string) => {
+    toast({ title: "Upload failed", description: error, variant: "destructive" });
+  };
+
+  const copyToClipboard = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedUrl(url);
+    setTimeout(() => setCopiedUrl(null), 2000);
+    toast({ title: "URL copied to clipboard" });
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "Unknown size";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  };
+
+  const isImage = (contentType: string) => contentType.startsWith('image/');
+  const isPdf = (contentType: string) => contentType === 'application/pdf';
+
   return (
     <div className="space-y-6">
       <div>
@@ -78,6 +140,106 @@ export default function Settings() {
                 </p>
               </div>
               <Switch data-testid="switch-reminders" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Email Assets</CardTitle>
+            <CardDescription>
+              Upload images and PDFs to use in your booking emails
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2 flex-wrap">
+              <ObjectUploader
+                accept="image/*"
+                onComplete={handleUploadComplete}
+                onError={handleUploadError}
+                buttonVariant="outline"
+              >
+                <Image className="w-4 h-4 mr-2" />
+                Upload Image
+              </ObjectUploader>
+              <ObjectUploader
+                accept="application/pdf"
+                onComplete={handleUploadComplete}
+                onError={handleUploadError}
+                buttonVariant="outline"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Upload PDF
+              </ObjectUploader>
+            </div>
+
+            <div className="text-sm text-muted-foreground space-y-2">
+              <p><strong>For Images:</strong> Copy the URL and paste it into your email template like:</p>
+              <code className="block bg-muted p-2 rounded text-xs">
+                {`<img src="YOUR_IMAGE_URL" alt="Description" style="max-width: 100%;">`}
+              </code>
+              <p className="mt-2"><strong>For PDFs:</strong> Select as attachments when sending booking emails.</p>
+            </div>
+
+            <div className="border-t pt-4">
+              <h4 className="font-medium mb-3">Uploaded Files ({assets.length})</h4>
+              {assetsLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : assets.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No files uploaded yet</p>
+              ) : (
+                <div className="space-y-2">
+                  {assets.map((asset) => (
+                    <div
+                      key={asset.path}
+                      className="flex items-center justify-between p-2 border rounded-md"
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        {isImage(asset.contentType) ? (
+                          <Image className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        ) : isPdf(asset.contentType) ? (
+                          <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        ) : (
+                          <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        )}
+                        <span className="text-sm truncate" title={asset.name}>
+                          {asset.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground flex-shrink-0">
+                          ({formatFileSize(asset.size)})
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => copyToClipboard(asset.url)}
+                          title="Copy URL"
+                          data-testid={`button-copy-${asset.name}`}
+                        >
+                          {copiedUrl === asset.url ? (
+                            <Check className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => deleteMutation.mutate(asset.path)}
+                          disabled={deleteMutation.isPending}
+                          title="Delete file"
+                          data-testid={`button-delete-${asset.name}`}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
