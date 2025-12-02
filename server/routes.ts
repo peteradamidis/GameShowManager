@@ -2353,6 +2353,76 @@ Deal or No Deal Production Team
     }
   });
 
+  // Get booking confirmation responses for a record day (for viewing dietary requirements, questions, etc.)
+  app.get("/api/booking-confirmations/record-day/:recordDayId", async (req, res) => {
+    try {
+      const { recordDayId } = req.params;
+
+      const confirmations = await storage.getBookingConfirmationsByRecordDay(recordDayId);
+
+      res.json(confirmations);
+    } catch (error: any) {
+      console.error("Error getting booking confirmations:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Send follow-up email to a contestant (reply to their questions)
+  app.post("/api/booking-confirmations/:id/follow-up", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { message, subject } = req.body;
+
+      if (!message) {
+        return res.status(400).json({ error: "Message is required" });
+      }
+
+      // Get the booking confirmation to find the contestant
+      const confirmations = await storage.getContestants();
+      
+      // Find the seat assignment first
+      const allAssignments = await storage.getAllSeatAssignments();
+      const allRecordDays = await storage.getRecordDays();
+      
+      // Get all booking confirmations to find this one
+      let targetConfirmation = null;
+      for (const recordDay of allRecordDays) {
+        const dayConfirmations = await storage.getBookingConfirmationsByRecordDay(recordDay.id);
+        const found = dayConfirmations.find(c => c.id === id);
+        if (found) {
+          targetConfirmation = found;
+          break;
+        }
+      }
+
+      if (!targetConfirmation) {
+        return res.status(404).json({ error: "Confirmation not found" });
+      }
+
+      const contestant = targetConfirmation.contestant;
+      const recordDay = allRecordDays.find(rd => rd.id === targetConfirmation!.seatAssignment.recordDayId);
+
+      // TODO: Send actual email via Gmail/Outlook
+      // For now, stub the email sending
+      console.log(`📧 [STUBBED] Follow-up email to ${contestant.name} (${contestant.email})`);
+      console.log(`   Subject: ${subject || 'Re: Your Deal or No Deal Booking'}`);
+      console.log(`   Message: ${message}`);
+
+      res.json({
+        success: true,
+        message: "Follow-up email sent",
+        emailStubbed: true,
+        sentTo: {
+          name: contestant.name,
+          email: contestant.email,
+        },
+      });
+    } catch (error: any) {
+      console.error("Error sending follow-up email:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get booking confirmation details by token (public endpoint - no auth)
   app.get("/api/booking-confirmations/token/:token", async (req, res) => {
     try {

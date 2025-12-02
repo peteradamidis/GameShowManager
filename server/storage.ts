@@ -107,6 +107,7 @@ export interface IStorage {
   createBookingConfirmationToken(token: InsertBookingConfirmationToken): Promise<BookingConfirmationToken>;
   getBookingConfirmationByToken(token: string): Promise<BookingConfirmationToken | undefined>;
   getBookingConfirmationBySeatAssignment(seatAssignmentId: string): Promise<BookingConfirmationToken | undefined>;
+  getBookingConfirmationsByRecordDay(recordDayId: string): Promise<Array<BookingConfirmationToken & { seatAssignment: SeatAssignment; contestant: Contestant }>>;
   updateBookingConfirmationResponse(id: string, confirmationStatus: string, attendingWith?: string, notes?: string): Promise<BookingConfirmationToken | undefined>;
   revokeBookingConfirmationToken(seatAssignmentId: string): Promise<void>;
   
@@ -711,6 +712,25 @@ export class DbStorage implements IStorage {
       .from(bookingConfirmationTokens)
       .where(eq(bookingConfirmationTokens.seatAssignmentId, seatAssignmentId));
     return confirmation;
+  }
+
+  async getBookingConfirmationsByRecordDay(recordDayId: string): Promise<Array<BookingConfirmationToken & { seatAssignment: SeatAssignment; contestant: Contestant }>> {
+    const results = await db
+      .select({
+        bookingConfirmation: bookingConfirmationTokens,
+        seatAssignment: seatAssignments,
+        contestant: contestants,
+      })
+      .from(bookingConfirmationTokens)
+      .innerJoin(seatAssignments, eq(bookingConfirmationTokens.seatAssignmentId, seatAssignments.id))
+      .innerJoin(contestants, eq(seatAssignments.contestantId, contestants.id))
+      .where(eq(seatAssignments.recordDayId, recordDayId));
+
+    return results.map(row => ({
+      ...row.bookingConfirmation,
+      seatAssignment: row.seatAssignment,
+      contestant: row.contestant,
+    }));
   }
 
   async updateBookingConfirmationResponse(
