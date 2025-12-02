@@ -37,7 +37,12 @@ Do not make changes to the file `Y`.
 - **Booking Confirmation System:**
     - Generates unique, expiring tokens for contestants to confirm or decline bookings via a public form.
     - Automatically updates workflow statuses and handles declines by moving assignments to a reschedule list.
+    - **Send Booking Emails:** Bulk email feature in Booking Master - select contestants and send booking confirmation emails with unique links.
+    - **Public Confirmation Form:** Contestants receive emails with links to confirm/decline attendance, add dietary requirements, and ask questions.
 - **Contestant Photo Management:** Supports uploading and deleting contestant photos, storing them on disk.
+- **Reschedule Status Tracking:**
+    - Contestants moved to reschedule (from standby) show "Reschedule" status badge in the contestant tab.
+    - Yellow-colored badge distinguishes reschedule status from other statuses (Pending, Available, Assigned, Invited).
 
 ### Feature Specifications
 - **Contestant Management:** Comprehensive contestant profiles, search, selection, and filtering capabilities (by status, gender, rating, location, record day, availability response).

@@ -324,27 +324,6 @@ export default function BookingMaster() {
     },
   });
 
-  const sendBookingEmailsMutation = useMutation({
-    mutationFn: async (seatAssignmentIds: string[]) => {
-      return await apiRequest("POST", "/api/booking-confirmations/send", { seatAssignmentIds });
-    },
-    onSuccess: (data: any) => {
-      setSelectedAssignments(new Set());
-      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', selectedRecordDay] });
-      toast({
-        title: "Booking Emails Sent",
-        description: `Successfully sent ${data.results?.filter((r: any) => r.success).length || 0} emails. Contestants can now confirm their attendance.`,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to Send Emails",
-        description: error.message || "Could not send booking emails. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
   // Mutation to update standby assignment when a standby is assigned to a seat
   const assignStandbyMutation = useMutation({
     mutationFn: async ({ recordDayId, contestantName, seatLabel }: { recordDayId: string; contestantName: string; seatLabel: string | null }) => {

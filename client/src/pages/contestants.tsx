@@ -726,6 +726,7 @@ export default function Contestants() {
             seatAssignments={allSeatAssignments}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
+            rescheduleContestantIds={rescheduleContestantIds}
           />
           
           {/* Pagination Controls */}

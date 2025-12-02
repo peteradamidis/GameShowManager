@@ -69,6 +69,7 @@ interface ContestantTableProps {
   seatAssignments?: SeatAssignment[];
   searchTerm?: string;
   onSearchChange?: (term: string) => void;
+  rescheduleContestantIds?: Set<string>;
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -77,6 +78,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     available: "border-green-200 bg-green-500/10 text-green-700 dark:border-green-800 dark:text-green-400",
     assigned: "border-blue-200 bg-blue-500/10 text-blue-700 dark:border-blue-800 dark:text-blue-400",
     invited: "border-purple-200 bg-purple-500/10 text-purple-700 dark:border-purple-800 dark:text-purple-400",
+    reschedule: "border-yellow-300 bg-yellow-500/20 text-yellow-800 dark:border-yellow-700 dark:text-yellow-400",
   };
   
   const colorClasses = colors[status.toLowerCase()] || colors.available;
@@ -94,7 +96,8 @@ export function ContestantTable({
   onSelectionChange,
   seatAssignments = [],
   searchTerm: externalSearchTerm,
-  onSearchChange
+  onSearchChange,
+  rescheduleContestantIds = new Set()
 }: ContestantTableProps) {
   // Create a map for quick lookup of seat assignments by contestant ID
   // Use the most recent assignment if multiple exist
@@ -459,7 +462,7 @@ export function ContestantTable({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <StatusBadge status={contestant.availabilityStatus} />
+                    <StatusBadge status={rescheduleContestantIds.has(contestant.id) ? "Reschedule" : contestant.availabilityStatus} />
                   </TableCell>
                   <TableCell>
                     {contestant.auditionRating ? (
@@ -828,7 +831,7 @@ export function ContestantTable({
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Status</label>
                         <div className="mt-1">
-                          <StatusBadge status={contestantDetails.availabilityStatus} />
+                          <StatusBadge status={rescheduleContestantIds.has(contestantDetails.id) ? "Reschedule" : contestantDetails.availabilityStatus} />
                         </div>
                       </div>
                       <div>
