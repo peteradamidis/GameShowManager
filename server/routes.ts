@@ -380,7 +380,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           mobilityNotes: row.mobilityNotes,
           criminalRecord: row.criminalRecord,
           groupId: nameToGroupId.get(row.name) || null,
-          availabilityStatus: "pending",
+          availabilityStatus: "available",
         });
         createdContestants.push(contestant);
       }
