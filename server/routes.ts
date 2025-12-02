@@ -2271,6 +2271,11 @@ Deal or No Deal Production Team
         return res.status(400).json({ error: "seatAssignmentIds array is required" });
       }
 
+      // Get base URL from request headers
+      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
+      const host = req.get('x-forwarded-host') || req.get('host') || 'localhost:5000';
+      const baseUrl = `${protocol}://${host}`;
+
       const results = [];
 
       for (const seatAssignmentId of seatAssignmentIds) {
@@ -2331,11 +2336,11 @@ Deal or No Deal Production Team
         });
 
         // Generate response URL
-        const responseUrl = `${process.env.REPLIT_DEPLOYMENT_URL || 'http://localhost:5000'}/booking-confirmation/${token}`;
+        const responseUrl = `${baseUrl}/booking-confirmation/${token}`;
 
         // Send booking confirmation email via Gmail
         try {
-          const confirmationLink = `${process.env.REPLIT_DEPLOYMENT_URL || 'http://localhost:5000'}/booking-confirmation/${token}`;
+          const confirmationLink = `${baseUrl}/booking-confirmation/${token}`;
           const emailBody = `Hi ${contestant.name},\n\nYou have been booked for Deal or No Deal on ${recordDay.date}.\n\nSeat: Block ${assignment.blockNumber}, ${assignment.seatLabel}\n\nPlease confirm your attendance:\n${confirmationLink}\n\nThank you!`;
           
           await sendEmail(
