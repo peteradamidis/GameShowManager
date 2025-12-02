@@ -33,19 +33,14 @@ export function RecordDayCard({ recordDay, onViewSeating, onSendInvitations }: R
   return (
     <Card data-testid={`card-record-day-${recordDay.id}`}>
       <CardHeader>
-        <div className="flex items-start justify-between gap-2">
-          <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              {recordDay.date}
-            </CardTitle>
-            <CardDescription>
-              {recordDay.rxNumber || "Record Day"}
-            </CardDescription>
-          </div>
-          <Badge variant="secondary" className={statusColors[recordDay.status]}>
-            {recordDay.status}
-          </Badge>
+        <div className="space-y-1">
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            {recordDay.date}
+          </CardTitle>
+          <CardDescription>
+            {recordDay.rxNumber || "Record Day"}
+          </CardDescription>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
