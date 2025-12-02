@@ -8,8 +8,9 @@ import crypto from "crypto";
 import path from "path";
 import express from "express";
 import fs from "fs";
-import { getUncachableGmailClient, sendEmail, getInboxMessages, ParsedEmail } from "./gmail";
+import { getUncachableGmailClient, sendEmail, sendEmailWithAttachment, getInboxMessages, ParsedEmail } from "./gmail";
 import { syncRecordDayToSheet, createSheetHeader, updateCellInRecordDaySheet, updateRowInRecordDaySheet, getRecordDaySheetData } from "./google-sheets";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 // Google Sheets config keys for database storage
 const SHEETS_SPREADSHEET_ID_KEY = 'google_sheets_spreadsheet_id';
@@ -2265,7 +2266,7 @@ Deal or No Deal Production Team
   // Send booking confirmation emails for selected seat assignments
   app.post("/api/booking-confirmations/send", async (req, res) => {
     try {
-      const { seatAssignmentIds, emailSubject, emailBody: customEmailBody } = req.body;
+      const { seatAssignmentIds, emailSubject, emailBody: customEmailBody, attachmentPaths } = req.body;
 
       if (!seatAssignmentIds || !Array.isArray(seatAssignmentIds)) {
         return res.status(400).json({ error: "seatAssignmentIds array is required" });
@@ -2359,11 +2360,28 @@ Deal or No Deal Production Team
           
           const subject = emailSubject || 'Deal or No Deal - Booking Confirmation Required';
           
-          await sendEmail(
-            contestant.email,
-            subject,
-            emailBody
-          );
+          // Check if there are attachments to include
+          if (attachmentPaths && Array.isArray(attachmentPaths) && attachmentPaths.length > 0) {
+            const objectStorageService = new ObjectStorageService();
+            const attachments = [];
+            
+            for (const attachmentPath of attachmentPaths) {
+              try {
+                const { buffer, contentType, filename } = await objectStorageService.getObjectAsBuffer(attachmentPath);
+                attachments.push({ content: buffer, contentType, filename });
+              } catch (attachErr: any) {
+                console.error(`Failed to load attachment ${attachmentPath}:`, attachErr.message);
+              }
+            }
+            
+            if (attachments.length > 0) {
+              await sendEmailWithAttachment(contestant.email, subject, emailBody, attachments);
+            } else {
+              await sendEmail(contestant.email, subject, emailBody);
+            }
+          } else {
+            await sendEmail(contestant.email, subject, emailBody);
+          }
         } catch (error: any) {
           console.error(`Failed to send booking confirmation email to ${contestant.email}:`, error.message);
         }
@@ -3534,6 +3552,65 @@ Deal or No Deal Production Team
       res.json({ success: true, data });
     } catch (error: any) {
       console.error("Error reading Google Sheets data:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // =============================================
+  // Object Storage Routes for Email Assets
+  // =============================================
+
+  // Get upload URL for a file
+  app.post("/api/objects/upload", async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const { filename } = req.body;
+      const { url, objectPath } = await objectStorageService.getObjectEntityUploadURL(filename);
+      res.json({ uploadURL: url, objectPath });
+    } catch (error: any) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Serve uploaded objects
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectFile = await objectStorageService.getObjectEntityFile(`/objects/${req.params.objectPath}`);
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error: any) {
+      console.error("Error serving object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // List all email assets
+  app.get("/api/email-assets", async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const assets = await objectStorageService.listEmailAssets();
+      res.json(assets);
+    } catch (error: any) {
+      console.error("Error listing email assets:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete an email asset
+  app.delete("/api/email-assets/:path(*)", async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      await objectStorageService.deleteObject(`/objects/${req.params.path}`);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting email asset:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.status(404).json({ error: "File not found" });
+      }
       res.status(500).json({ error: error.message });
     }
   });

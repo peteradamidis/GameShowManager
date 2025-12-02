@@ -1,4 +1,4 @@
-import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList, UserCheck, MessageSquareText } from "lucide-react";
+import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList, UserCheck, MessageSquareText, Image } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -56,6 +56,11 @@ const menuItems = [
     title: "Reschedule",
     url: "/reschedule",
     icon: RefreshCcw,
+  },
+  {
+    title: "Email Assets",
+    url: "/email-assets",
+    icon: Image,
   },
   {
     title: "Settings",

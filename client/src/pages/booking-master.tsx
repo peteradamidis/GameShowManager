@@ -41,7 +41,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Calendar, Mail, Maximize2, Minimize2, Settings, RefreshCw, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle } from "lucide-react";
+import { Download, Calendar, Mail, Maximize2, Minimize2, Settings, RefreshCw, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import * as XLSX from "xlsx";
@@ -199,6 +199,7 @@ export default function BookingMaster() {
   const [spreadsheetIdInput, setSpreadsheetIdInput] = useState("");
   const [emailPreviewOpen, setEmailPreviewOpen] = useState(false);
   const [emailSubject, setEmailSubject] = useState("Deal or No Deal - Booking Confirmation");
+  const [selectedAttachments, setSelectedAttachments] = useState<string[]>([]);
   const [emailBody, setEmailBody] = useState(`<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
 
 <!-- Add your logo/image here by replacing the URL below -->
@@ -318,6 +319,21 @@ Palmerston Cres, South Melbourne, VIC, 3205<br>
 
   // Filter standbys to get ones for the current record day
   const standbysForRecordDay = standbys.filter(s => s.recordDayId === selectedRecordDay);
+
+  // Fetch email assets (images and PDFs) for attachments
+  interface EmailAsset {
+    path: string;
+    name: string;
+    contentType: string;
+    size: number;
+    url: string;
+  }
+  const { data: emailAssets = [] } = useQuery<EmailAsset[]>({
+    queryKey: ["/api/email-assets"],
+  });
+  
+  // Filter to only PDF assets for attachments
+  const pdfAssets = emailAssets.filter(a => a.contentType === 'application/pdf');
 
   const configuresheetsMutation = useMutation({
     mutationFn: async (spreadsheetId: string) => {
@@ -442,11 +458,12 @@ Palmerston Cres, South Melbourne, VIC, 3205<br>
   });
 
   const sendBookingEmailsMutation = useMutation({
-    mutationFn: async ({ seatAssignmentIds, emailSubject, emailBody }: { seatAssignmentIds: string[]; emailSubject: string; emailBody: string }) => {
+    mutationFn: async ({ seatAssignmentIds, emailSubject, emailBody, attachmentPaths }: { seatAssignmentIds: string[]; emailSubject: string; emailBody: string; attachmentPaths?: string[] }) => {
       return await apiRequest("POST", "/api/booking-confirmations/send", { 
         seatAssignmentIds,
         emailSubject,
-        emailBody
+        emailBody,
+        attachmentPaths
       });
     },
     onSuccess: (data: any) => {
@@ -1287,6 +1304,44 @@ Palmerston Cres, South Melbourne, VIC, 3205<br>
               />
             </div>
             
+            {pdfAssets.length > 0 && (
+              <div className="space-y-2">
+                <Label>PDF Attachments</Label>
+                <div className="border rounded-md p-3 space-y-2">
+                  {pdfAssets.map((asset) => (
+                    <label 
+                      key={asset.path} 
+                      className="flex items-center gap-3 p-2 rounded-md hover:bg-muted cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedAttachments.includes(asset.path)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedAttachments([...selectedAttachments, asset.path]);
+                          } else {
+                            setSelectedAttachments(selectedAttachments.filter(p => p !== asset.path));
+                          }
+                        }}
+                        className="h-4 w-4"
+                        data-testid={`checkbox-attachment-${asset.name}`}
+                      />
+                      <FileText className="h-4 w-4 text-red-500" />
+                      <span className="text-sm">{asset.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        ({(asset.size / 1024).toFixed(1)} KB)
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                {selectedAttachments.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {selectedAttachments.length} attachment{selectedAttachments.length !== 1 ? 's' : ''} will be included
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="text-xs text-muted-foreground bg-muted p-3 rounded-md space-y-3">
               <div>
                 <p className="font-medium mb-1">Available placeholders:</p>
@@ -1300,8 +1355,8 @@ Palmerston Cres, South Melbourne, VIC, 3205<br>
               </div>
               <div>
                 <p className="font-medium mb-1">Adding images:</p>
-                <p>This email supports HTML. To add an image, use:</p>
-                <code className="bg-background px-1 rounded block mt-1">{'<img src="https://your-image-url.com/image.png" alt="Description" style="max-width: 100%;">'}</code>
+                <p>This email supports HTML. To add an image, upload at Email Assets page, then use:</p>
+                <code className="bg-background px-1 rounded block mt-1">{'<img src="YOUR_IMAGE_URL" alt="Description" style="max-width: 100%;">'}</code>
               </div>
             </div>
           </div>
@@ -1315,7 +1370,8 @@ Palmerston Cres, South Melbourne, VIC, 3205<br>
                 sendBookingEmailsMutation.mutate({
                   seatAssignmentIds: Array.from(selectedAssignments),
                   emailSubject,
-                  emailBody
+                  emailBody,
+                  attachmentPaths: selectedAttachments.length > 0 ? selectedAttachments : undefined
                 });
               }}
               disabled={sendBookingEmailsMutation.isPending}

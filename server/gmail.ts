@@ -86,6 +86,71 @@ export async function sendEmail(to: string, subject: string, body: string, htmlB
   }
 }
 
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer;
+  contentType: string;
+}
+
+export async function sendEmailWithAttachment(
+  to: string, 
+  subject: string, 
+  htmlBody: string,
+  attachments: EmailAttachment[] = []
+) {
+  try {
+    const gmail = await getUncachableGmailClient();
+    
+    const boundary = `boundary_${Date.now()}`;
+    
+    let message = [
+      `From: me`,
+      `To: ${to}`,
+      `Subject: ${subject}`,
+      `MIME-Version: 1.0`,
+      `Content-Type: multipart/mixed; boundary="${boundary}"`,
+      '',
+      `--${boundary}`,
+      'Content-Type: text/html; charset=utf-8',
+      'Content-Transfer-Encoding: base64',
+      '',
+      Buffer.from(htmlBody).toString('base64'),
+    ];
+
+    for (const attachment of attachments) {
+      message = message.concat([
+        `--${boundary}`,
+        `Content-Type: ${attachment.contentType}; name="${attachment.filename}"`,
+        'Content-Transfer-Encoding: base64',
+        `Content-Disposition: attachment; filename="${attachment.filename}"`,
+        '',
+        attachment.content.toString('base64'),
+      ]);
+    }
+
+    message.push(`--${boundary}--`);
+
+    const rawMessage = message.join('\r\n');
+    const encodedMessage = Buffer.from(rawMessage).toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+
+    await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: {
+        raw: encodedMessage,
+      },
+    });
+
+    console.log(`📧 Email with ${attachments.length} attachment(s) sent successfully to ${to}`);
+    return true;
+  } catch (error: any) {
+    console.error(`Error sending email with attachment to ${to}:`, error);
+    throw error;
+  }
+}
+
 // Type for parsed email message
 export interface ParsedEmail {
   id: string;
