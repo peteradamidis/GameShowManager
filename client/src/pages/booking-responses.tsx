@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -9,21 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Calendar, 
@@ -31,14 +20,13 @@ import {
   XCircle, 
   Clock, 
   Send, 
-  MessageSquare,
+  Mail,
   UtensilsCrossed, 
   HelpCircle, 
   Users,
-  Mail,
-  Phone,
-  MapPin,
-  RefreshCw
+  RefreshCw,
+  ChevronRight,
+  MailOpen
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -60,6 +48,7 @@ interface BookingConfirmation {
   notes: string | null;
   expiresAt: string;
   createdAt: string;
+  lastSentAt: string | null;
   contestant: {
     id: string;
     name: string;
@@ -75,16 +64,26 @@ interface BookingConfirmation {
   };
 }
 
+interface BookingMessage {
+  id: string;
+  confirmationId: string;
+  direction: "outbound" | "inbound";
+  messageType: string;
+  subject: string | null;
+  body: string;
+  sentAt: string;
+  readAt: string | null;
+}
+
 type StatusFilter = "all" | "pending" | "confirmed" | "declined";
 
 export default function BookingResponses() {
   const { toast } = useToast();
   const [selectedRecordDay, setSelectedRecordDay] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [followUpDialogOpen, setFollowUpDialogOpen] = useState(false);
   const [selectedConfirmation, setSelectedConfirmation] = useState<BookingConfirmation | null>(null);
-  const [followUpSubject, setFollowUpSubject] = useState("");
-  const [followUpMessage, setFollowUpMessage] = useState("");
+  const [replyMessage, setReplyMessage] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
     queryKey: ["/api/record-days"],
@@ -95,29 +94,39 @@ export default function BookingResponses() {
     enabled: !!selectedRecordDay,
   });
 
-  const sendFollowUpMutation = useMutation({
-    mutationFn: async (data: { confirmationId: string; subject: string; message: string }) => {
+  const { data: messages = [], refetch: refetchMessages } = useQuery<BookingMessage[]>({
+    queryKey: [`/api/booking-confirmations/${selectedConfirmation?.id}/messages`],
+    enabled: !!selectedConfirmation,
+  });
+
+  const sendReplyMutation = useMutation({
+    mutationFn: async (data: { confirmationId: string; message: string }) => {
       return apiRequest(
         "POST",
         `/api/booking-confirmations/${data.confirmationId}/follow-up`,
-        { subject: data.subject, message: data.message }
+        { subject: "Re: Your Deal or No Deal Booking", message: data.message }
       );
     },
     onSuccess: () => {
-      toast({ title: "Follow-up email sent successfully" });
-      setFollowUpDialogOpen(false);
-      setFollowUpMessage("");
-      setFollowUpSubject("");
-      setSelectedConfirmation(null);
+      toast({ title: "Reply sent successfully" });
+      setReplyMessage("");
+      refetchMessages();
+      queryClient.invalidateQueries({ queryKey: ["/api/booking-confirmations/record-day", selectedRecordDay] });
     },
     onError: () => {
       toast({ 
-        title: "Failed to send email", 
+        title: "Failed to send reply", 
         description: "Please try again",
         variant: "destructive" 
       });
     },
   });
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   const counts = {
     all: confirmations.length,
@@ -136,19 +145,22 @@ export default function BookingResponses() {
         return { 
           icon: CheckCircle, 
           label: "Confirmed", 
-          className: "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700" 
+          color: "text-green-600 dark:text-green-400",
+          bgColor: "bg-green-100 dark:bg-green-900/30"
         };
       case "declined":
         return { 
           icon: XCircle, 
           label: "Declined", 
-          className: "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700" 
+          color: "text-red-600 dark:text-red-400",
+          bgColor: "bg-red-100 dark:bg-red-900/30"
         };
       default:
         return { 
           icon: Clock, 
-          label: "Pending", 
-          className: "" 
+          label: "Awaiting Reply", 
+          color: "text-amber-600 dark:text-amber-400",
+          bgColor: "bg-amber-100 dark:bg-amber-900/30"
         };
     }
   };
@@ -158,44 +170,37 @@ export default function BookingResponses() {
     return dietaryKeywords.some(keyword => notes.toLowerCase().includes(keyword));
   };
 
-  const handleReply = (confirmation: BookingConfirmation) => {
-    setSelectedConfirmation(confirmation);
-    setFollowUpSubject(`Re: Your Deal or No Deal Booking`);
-    setFollowUpDialogOpen(true);
+  const hasUnreadMessages = (confirmation: BookingConfirmation) => {
+    return confirmation.confirmationStatus !== "pending" && confirmation.notes;
   };
 
-  const selectedRecordDayData = recordDays.find(rd => rd.id === selectedRecordDay);
+  const handleSendReply = () => {
+    if (!selectedConfirmation || !replyMessage.trim()) return;
+    sendReplyMutation.mutate({
+      confirmationId: selectedConfirmation.id,
+      message: replyMessage.trim(),
+    });
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="h-[calc(100vh-8rem)] flex flex-col">
+      <div className="flex items-center justify-between pb-4 border-b">
         <div>
           <h1 className="text-2xl font-bold" data-testid="page-title">Booking Responses</h1>
-          <p className="text-muted-foreground">
-            View and manage contestant booking confirmations
+          <p className="text-sm text-muted-foreground">
+            Manage contestant booking confirmations
           </p>
         </div>
-        {selectedRecordDay && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/booking-confirmations/record-day", selectedRecordDay] })}
-            data-testid="button-refresh"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        )}
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Calendar className="h-5 w-5 text-muted-foreground" />
           <Select
             value={selectedRecordDay || ""}
-            onValueChange={(value) => setSelectedRecordDay(value || null)}
+            onValueChange={(value) => {
+              setSelectedRecordDay(value || null);
+              setSelectedConfirmation(null);
+            }}
           >
-            <SelectTrigger className="w-[220px]" data-testid="select-record-day">
+            <SelectTrigger className="w-[240px]" data-testid="select-record-day">
               <SelectValue placeholder="Select record day..." />
             </SelectTrigger>
             <SelectContent>
@@ -206,280 +211,280 @@ export default function BookingResponses() {
               ))}
             </SelectContent>
           </Select>
-        </div>
-
-        {selectedRecordDay && (
-          <div className="flex gap-2 flex-wrap">
-            <Badge 
-              variant={statusFilter === "all" ? "default" : "outline"} 
-              className="cursor-pointer"
-              onClick={() => setStatusFilter("all")}
-              data-testid="filter-all"
-            >
-              All ({counts.all})
-            </Badge>
-            <Badge 
-              variant={statusFilter === "pending" ? "default" : "outline"} 
-              className="cursor-pointer"
-              onClick={() => setStatusFilter("pending")}
-              data-testid="filter-pending"
-            >
-              <Clock className="h-3 w-3 mr-1" />
-              Pending ({counts.pending})
-            </Badge>
-            <Badge 
-              variant={statusFilter === "confirmed" ? "default" : "outline"} 
-              className={`cursor-pointer ${statusFilter === "confirmed" ? "bg-green-600 hover:bg-green-700" : ""}`}
-              onClick={() => setStatusFilter("confirmed")}
-              data-testid="filter-confirmed"
-            >
-              <CheckCircle className="h-3 w-3 mr-1" />
-              Confirmed ({counts.confirmed})
-            </Badge>
-            <Badge 
-              variant={statusFilter === "declined" ? "default" : "outline"} 
-              className={`cursor-pointer ${statusFilter === "declined" ? "bg-red-600 hover:bg-red-700" : ""}`}
-              onClick={() => setStatusFilter("declined")}
-              data-testid="filter-declined"
-            >
-              <XCircle className="h-3 w-3 mr-1" />
-              Declined ({counts.declined})
-            </Badge>
-          </div>
-        )}
-      </div>
-
-      {!selectedRecordDay && (
-        <Card className="p-12 text-center">
-          <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No Record Day Selected</h3>
-          <p className="text-muted-foreground">
-            Select a record day above to view booking responses
-          </p>
-        </Card>
-      )}
-
-      {selectedRecordDay && isLoading && (
-        <div className="flex items-center justify-center p-12">
-          <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      )}
-
-      {selectedRecordDay && !isLoading && confirmations.length === 0 && (
-        <Card className="p-12 text-center">
-          <Mail className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No Booking Emails Sent</h3>
-          <p className="text-muted-foreground">
-            Send booking emails from the Booking Master page to start collecting responses
-          </p>
-        </Card>
-      )}
-
-      {selectedRecordDay && !isLoading && filteredConfirmations.length === 0 && confirmations.length > 0 && (
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground">
-            No {statusFilter} responses found
-          </p>
-        </Card>
-      )}
-
-      {selectedRecordDay && !isLoading && filteredConfirmations.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredConfirmations.map((confirmation) => {
-            const statusInfo = getStatusInfo(confirmation.confirmationStatus);
-            const StatusIcon = statusInfo.icon;
-            
-            return (
-              <Card 
-                key={confirmation.id} 
-                className="overflow-hidden"
-                data-testid={`response-card-${confirmation.id}`}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={confirmation.contestant.photoUrl} />
-                        <AvatarFallback>
-                          {confirmation.contestant.name?.charAt(0) || "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold" data-testid={`contestant-name-${confirmation.id}`}>
-                          {confirmation.contestant.name}
-                        </h3>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">
-                            {confirmation.seatAssignment.blockNumber}{confirmation.seatAssignment.seatLabel}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <Badge className={statusInfo.className} data-testid={`status-${confirmation.id}`}>
-                      <StatusIcon className="h-3 w-3 mr-1" />
-                      {statusInfo.label}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="space-y-3">
-                  <div className="space-y-1.5 text-sm">
-                    {confirmation.contestant.email && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Mail className="h-3.5 w-3.5" />
-                        <span className="truncate">{confirmation.contestant.email}</span>
-                      </div>
-                    )}
-                    {confirmation.contestant.phone && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Phone className="h-3.5 w-3.5" />
-                        <span>{confirmation.contestant.phone}</span>
-                      </div>
-                    )}
-                    {confirmation.contestant.location && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <MapPin className="h-3.5 w-3.5" />
-                        <span>{confirmation.contestant.location}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {(confirmation.attendingWith || confirmation.contestant.attendingWith) && (
-                    <>
-                      <Separator />
-                      <div className="flex items-start gap-2">
-                        <Users className="h-4 w-4 text-muted-foreground mt-0.5" />
-                        <div>
-                          <div className="text-xs text-muted-foreground mb-0.5">Attending with</div>
-                          <div className="text-sm">
-                            {confirmation.attendingWith || confirmation.contestant.attendingWith}
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {confirmation.notes && (
-                    <>
-                      <Separator />
-                      <div className="flex items-start gap-2">
-                        {isDietaryNote(confirmation.notes) ? (
-                          <UtensilsCrossed className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                        ) : (
-                          <HelpCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs text-muted-foreground mb-0.5">
-                            {isDietaryNote(confirmation.notes) ? "Dietary Requirements" : "Question / Note"}
-                          </div>
-                          <div className="text-sm" data-testid={`notes-${confirmation.id}`}>
-                            {confirmation.notes}
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  <Separator />
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs text-muted-foreground">
-                      {confirmation.confirmedAt ? (
-                        <>Responded {format(new Date(confirmation.confirmedAt), "MMM d 'at' h:mm a")}</>
-                      ) : (
-                        <>Sent {format(new Date(confirmation.createdAt), "MMM d 'at' h:mm a")}</>
-                      )}
-                    </div>
-                    {confirmation.notes && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleReply(confirmation)}
-                        data-testid={`button-reply-${confirmation.id}`}
-                      >
-                        <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
-                        Reply
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      <Dialog open={followUpDialogOpen} onOpenChange={setFollowUpDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Send Follow-up Email</DialogTitle>
-            <DialogDescription>
-              Reply to {selectedConfirmation?.contestant.name}'s message
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedConfirmation?.notes && (
-            <div className="bg-muted p-3 rounded-md text-sm">
-              <div className="font-medium mb-1 text-xs text-muted-foreground">Their message:</div>
-              <p>{selectedConfirmation.notes}</p>
-            </div>
-          )}
-          
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="followup-subject">Subject</Label>
-              <Input
-                id="followup-subject"
-                value={followUpSubject}
-                onChange={(e) => setFollowUpSubject(e.target.value)}
-                placeholder="Re: Your Deal or No Deal Booking"
-                data-testid="input-followup-subject"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="followup-message">Your Reply</Label>
-              <Textarea
-                id="followup-message"
-                value={followUpMessage}
-                onChange={(e) => setFollowUpMessage(e.target.value)}
-                placeholder="Type your reply here..."
-                rows={5}
-                data-testid="input-followup-message"
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button
-              variant="outline"
+          {selectedRecordDay && (
+            <Button 
+              variant="outline" 
+              size="icon"
               onClick={() => {
-                setFollowUpDialogOpen(false);
-                setFollowUpMessage("");
-                setFollowUpSubject("");
-                setSelectedConfirmation(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (selectedConfirmation && followUpMessage.trim()) {
-                  sendFollowUpMutation.mutate({
-                    confirmationId: selectedConfirmation.id,
-                    message: followUpMessage,
-                    subject: followUpSubject,
-                  });
+                queryClient.invalidateQueries({ queryKey: ["/api/booking-confirmations/record-day", selectedRecordDay] });
+                if (selectedConfirmation) {
+                  refetchMessages();
                 }
               }}
-              disabled={!followUpMessage.trim() || sendFollowUpMutation.isPending}
-              data-testid="button-send-followup"
+              data-testid="button-refresh"
             >
-              <Send className="h-4 w-4 mr-2" />
-              {sendFollowUpMutation.isPending ? "Sending..." : "Send Reply"}
+              <RefreshCw className="h-4 w-4" />
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          )}
+        </div>
+      </div>
+
+      {!selectedRecordDay ? (
+        <div className="flex-1 flex items-center justify-center text-muted-foreground">
+          <div className="text-center">
+            <Mail className="h-16 w-16 mx-auto mb-4 opacity-50" />
+            <p className="text-lg">Select a record day to view responses</p>
+          </div>
+        </div>
+      ) : isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : confirmations.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center text-muted-foreground">
+          <div className="text-center">
+            <MailOpen className="h-16 w-16 mx-auto mb-4 opacity-50" />
+            <p className="text-lg">No booking emails sent for this day</p>
+            <p className="text-sm">Send booking emails from the Booking Master page</p>
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 flex overflow-hidden mt-4">
+          <div className="w-80 border-r flex flex-col">
+            <div className="p-3 border-b flex gap-1 flex-wrap">
+              <Badge 
+                variant={statusFilter === "all" ? "default" : "outline"} 
+                className="cursor-pointer text-xs"
+                onClick={() => setStatusFilter("all")}
+                data-testid="filter-all"
+              >
+                All ({counts.all})
+              </Badge>
+              <Badge 
+                variant={statusFilter === "pending" ? "default" : "outline"} 
+                className="cursor-pointer text-xs"
+                onClick={() => setStatusFilter("pending")}
+                data-testid="filter-pending"
+              >
+                Pending ({counts.pending})
+              </Badge>
+              <Badge 
+                variant={statusFilter === "confirmed" ? "default" : "outline"} 
+                className="cursor-pointer text-xs"
+                onClick={() => setStatusFilter("confirmed")}
+                data-testid="filter-confirmed"
+              >
+                Confirmed ({counts.confirmed})
+              </Badge>
+              <Badge 
+                variant={statusFilter === "declined" ? "default" : "outline"} 
+                className="cursor-pointer text-xs"
+                onClick={() => setStatusFilter("declined")}
+                data-testid="filter-declined"
+              >
+                Declined ({counts.declined})
+              </Badge>
+            </div>
+            
+            <ScrollArea className="flex-1">
+              {filteredConfirmations.map((confirmation) => {
+                const statusInfo = getStatusInfo(confirmation.confirmationStatus);
+                const StatusIcon = statusInfo.icon;
+                const isSelected = selectedConfirmation?.id === confirmation.id;
+                const hasNotes = !!confirmation.notes;
+                
+                return (
+                  <div
+                    key={confirmation.id}
+                    onClick={() => setSelectedConfirmation(confirmation)}
+                    className={`p-3 border-b cursor-pointer transition-colors hover-elevate ${
+                      isSelected 
+                        ? "bg-accent border-l-2 border-l-primary" 
+                        : "hover:bg-muted/50"
+                    }`}
+                    data-testid={`inbox-item-${confirmation.id}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-10 w-10 flex-shrink-0">
+                        {confirmation.contestant.photoUrl ? (
+                          <AvatarImage src={confirmation.contestant.photoUrl} alt={confirmation.contestant.name} />
+                        ) : null}
+                        <AvatarFallback className="text-xs">
+                          {confirmation.contestant.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`font-medium truncate ${hasNotes ? "text-foreground" : "text-muted-foreground"}`}>
+                            {confirmation.contestant.name}
+                          </span>
+                          <StatusIcon className={`h-4 w-4 flex-shrink-0 ${statusInfo.color}`} />
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-xs text-muted-foreground">
+                            Block {confirmation.seatAssignment.blockNumber} • {confirmation.seatAssignment.seatLabel}
+                          </span>
+                          {hasNotes && (
+                            <>
+                              {isDietaryNote(confirmation.notes!) ? (
+                                <UtensilsCrossed className="h-3 w-3 text-amber-500" />
+                              ) : (
+                                <HelpCircle className="h-3 w-3 text-blue-500" />
+                              )}
+                            </>
+                          )}
+                        </div>
+                        {confirmation.confirmationStatus !== "pending" && (
+                          <p className="text-xs text-muted-foreground mt-1 truncate">
+                            {confirmation.confirmationStatus === "confirmed" ? "Confirmed attendance" : "Declined booking"}
+                          </p>
+                        )}
+                      </div>
+                      {isSelected && (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </ScrollArea>
+          </div>
+
+          <div className="flex-1 flex flex-col">
+            {!selectedConfirmation ? (
+              <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                <div className="text-center">
+                  <Mail className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>Select a contestant to view conversation</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="p-4 border-b bg-muted/30">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-12 w-12">
+                      {selectedConfirmation.contestant.photoUrl ? (
+                        <AvatarImage src={selectedConfirmation.contestant.photoUrl} alt={selectedConfirmation.contestant.name} />
+                      ) : null}
+                      <AvatarFallback>
+                        {selectedConfirmation.contestant.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h2 className="font-semibold text-lg">{selectedConfirmation.contestant.name}</h2>
+                        {(() => {
+                          const statusInfo = getStatusInfo(selectedConfirmation.confirmationStatus);
+                          return (
+                            <Badge className={statusInfo.bgColor + " " + statusInfo.color + " border-0"}>
+                              {statusInfo.label}
+                            </Badge>
+                          );
+                        })()}
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                        <span>Block {selectedConfirmation.seatAssignment.blockNumber} • Seat {selectedConfirmation.seatAssignment.seatLabel}</span>
+                        {selectedConfirmation.contestant.email && (
+                          <span className="flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            {selectedConfirmation.contestant.email}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {(selectedConfirmation.attendingWith || selectedConfirmation.notes) && (
+                    <div className="mt-3 p-3 rounded-md bg-background border">
+                      {selectedConfirmation.attendingWith && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">Attending with:</span>
+                          <span>{selectedConfirmation.attendingWith}</span>
+                        </div>
+                      )}
+                      {selectedConfirmation.notes && (
+                        <div className="flex items-start gap-2 text-sm mt-2">
+                          {isDietaryNote(selectedConfirmation.notes) ? (
+                            <UtensilsCrossed className="h-4 w-4 text-amber-500 mt-0.5" />
+                          ) : (
+                            <HelpCircle className="h-4 w-4 text-blue-500 mt-0.5" />
+                          )}
+                          <span>{selectedConfirmation.notes}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <ScrollArea className="flex-1 p-4">
+                  <div className="space-y-4 max-w-2xl mx-auto">
+                    {messages.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-8">
+                        <p>No messages yet</p>
+                      </div>
+                    ) : (
+                      messages.map((message) => (
+                        <div
+                          key={message.id}
+                          className={`flex ${message.direction === "outbound" ? "justify-end" : "justify-start"}`}
+                        >
+                          <div
+                            className={`max-w-[80%] rounded-lg p-3 ${
+                              message.direction === "outbound"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted"
+                            }`}
+                          >
+                            <div className="text-xs opacity-70 mb-1">
+                              {message.direction === "outbound" ? "You" : selectedConfirmation.contestant.name}
+                              {" • "}
+                              {format(new Date(message.sentAt), "MMM d, h:mm a")}
+                            </div>
+                            <div className="text-sm whitespace-pre-wrap">
+                              {message.body}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </ScrollArea>
+
+                <div className="p-4 border-t bg-muted/30">
+                  <div className="flex gap-2 max-w-2xl mx-auto">
+                    <Textarea
+                      placeholder="Type your reply..."
+                      value={replyMessage}
+                      onChange={(e) => setReplyMessage(e.target.value)}
+                      className="min-h-[60px] resize-none"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendReply();
+                        }
+                      }}
+                      data-testid="input-reply"
+                    />
+                    <Button
+                      onClick={handleSendReply}
+                      disabled={!replyMessage.trim() || sendReplyMutation.isPending}
+                      className="self-end"
+                      data-testid="button-send-reply"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    Press Enter to send, Shift+Enter for new line
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

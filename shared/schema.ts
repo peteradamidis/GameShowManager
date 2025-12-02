@@ -11,6 +11,7 @@ export const responseValueEnum = pgEnum('response_value', ['pending', 'yes', 'no
 export const confirmationStatusEnum = pgEnum('confirmation_status', ['pending', 'confirmed', 'declined']);
 export const blockTypeEnum = pgEnum('block_type', ['PB', 'NPB']);
 export const standbyStatusEnum = pgEnum('standby_status', ['pending', 'email_sent', 'confirmed', 'declined', 'seated']);
+export const messageDirectionEnum = pgEnum('message_direction', ['outbound', 'inbound']); // outbound = system to contestant, inbound = contestant to system
 
 // Groups table
 export const groups = pgTable("groups", {
@@ -131,6 +132,18 @@ export const bookingConfirmationTokens = pgTable("booking_confirmation_tokens", 
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Booking Messages table - tracks conversation history between system and contestants
+export const bookingMessages = pgTable("booking_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  confirmationId: varchar("confirmation_id").references(() => bookingConfirmationTokens.id).notNull(),
+  direction: messageDirectionEnum("direction").notNull(), // outbound = we sent, inbound = contestant replied
+  messageType: text("message_type").notNull(), // 'booking_email', 'follow_up', 'confirmation_response', 'reply'
+  subject: text("subject"),
+  body: text("body").notNull(),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+  readAt: timestamp("read_at"), // When admin read the message (for inbound)
+});
+
 // Block Types table - stores PB/NPB designation for each block per record day
 export const blockTypes = pgTable("block_types", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -214,6 +227,10 @@ export const insertBookingConfirmationTokenSchema = createInsertSchema(bookingCo
   createdAt: true,
 });
 
+export const insertBookingMessageSchema = createInsertSchema(bookingMessages).omit({
+  id: true,
+});
+
 export const insertBlockTypeSchema = createInsertSchema(blockTypes).omit({
   id: true,
   createdAt: true,
@@ -253,6 +270,9 @@ export type ContestantAvailability = typeof contestantAvailability.$inferSelect;
 
 export type InsertBookingConfirmationToken = z.infer<typeof insertBookingConfirmationTokenSchema>;
 export type BookingConfirmationToken = typeof bookingConfirmationTokens.$inferSelect;
+
+export type InsertBookingMessage = z.infer<typeof insertBookingMessageSchema>;
+export type BookingMessage = typeof bookingMessages.$inferSelect;
 
 export type InsertBlockType = z.infer<typeof insertBlockTypeSchema>;
 export type BlockType = typeof blockTypes.$inferSelect;

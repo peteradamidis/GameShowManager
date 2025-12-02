@@ -2328,6 +2328,16 @@ Deal or No Deal Production Team
         console.log(`   Seat: Block ${assignment.blockNumber}, ${assignment.seatLabel}`);
         console.log(`   Confirmation URL: ${responseUrl}`);
 
+        // Create a booking message record for this initial email
+        await storage.createBookingMessage({
+          confirmationId: tokenRecord.id,
+          direction: 'outbound',
+          messageType: 'booking_email',
+          subject: 'Deal or No Deal - Booking Confirmation Required',
+          body: `Hi ${contestant.name},\n\nYou have been booked for Deal or No Deal on ${recordDay.date}.\nSeat: Block ${assignment.blockNumber}, ${assignment.seatLabel}\n\nPlease confirm your attendance using the link provided.`,
+          sentAt: new Date(),
+        });
+
         // Update bookingEmailSent timestamp
         await storage.updateSeatAssignmentWorkflow(seatAssignmentId, {
           bookingEmailSent: new Date(),
@@ -2408,6 +2418,16 @@ Deal or No Deal Production Team
       console.log(`   Subject: ${subject || 'Re: Your Deal or No Deal Booking'}`);
       console.log(`   Message: ${message}`);
 
+      // Create a booking message record for this reply
+      await storage.createBookingMessage({
+        confirmationId: id,
+        direction: 'outbound',
+        messageType: 'follow_up',
+        subject: subject || 'Re: Your Deal or No Deal Booking',
+        body: message,
+        sentAt: new Date(),
+      });
+
       res.json({
         success: true,
         message: "Follow-up email sent",
@@ -2419,6 +2439,33 @@ Deal or No Deal Production Team
       });
     } catch (error: any) {
       console.error("Error sending follow-up email:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get messages for a booking confirmation (conversation thread)
+  app.get("/api/booking-confirmations/:id/messages", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const messages = await storage.getBookingMessagesByConfirmation(id);
+      res.json(messages);
+    } catch (error: any) {
+      console.error("Error getting booking messages:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Mark a message as read
+  app.post("/api/booking-messages/:messageId/read", async (req, res) => {
+    try {
+      const { messageId } = req.params;
+      const updated = await storage.markMessageAsRead(messageId);
+      if (!updated) {
+        return res.status(404).json({ error: "Message not found" });
+      }
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error marking message as read:", error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -2563,6 +2610,25 @@ Deal or No Deal Production Team
           alreadyResponded: true
         });
       }
+
+      // Create a booking message record for this contestant response
+      const responseBody = [];
+      responseBody.push(`Status: ${confirmationStatus === 'confirmed' ? 'CONFIRMED' : 'DECLINED'}`);
+      if (attendingWith) {
+        responseBody.push(`Attending with: ${attendingWith}`);
+      }
+      if (notes) {
+        responseBody.push(`Notes/Questions: ${notes}`);
+      }
+      
+      await storage.createBookingMessage({
+        confirmationId: tokenRecord.id,
+        direction: 'inbound',
+        messageType: 'confirmation_response',
+        subject: confirmationStatus === 'confirmed' ? 'Booking Confirmed' : 'Booking Declined',
+        body: responseBody.join('\n'),
+        sentAt: new Date(),
+      });
 
       // Update seat assignment workflow based on response
       if (confirmationStatus === 'confirmed') {

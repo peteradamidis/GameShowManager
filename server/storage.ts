@@ -10,6 +10,7 @@ import {
   availabilityTokens,
   contestantAvailability,
   bookingConfirmationTokens,
+  bookingMessages,
   blockTypes,
   standbyAssignments,
   standbyConfirmationTokens,
@@ -30,6 +31,8 @@ import {
   type InsertContestantAvailability,
   type BookingConfirmationToken,
   type InsertBookingConfirmationToken,
+  type BookingMessage,
+  type InsertBookingMessage,
   type BlockType,
   type InsertBlockType,
   type StandbyAssignment,
@@ -110,6 +113,11 @@ export interface IStorage {
   getBookingConfirmationsByRecordDay(recordDayId: string): Promise<Array<BookingConfirmationToken & { seatAssignment: SeatAssignment; contestant: Contestant }>>;
   updateBookingConfirmationResponse(id: string, confirmationStatus: string, attendingWith?: string, notes?: string): Promise<BookingConfirmationToken | undefined>;
   revokeBookingConfirmationToken(seatAssignmentId: string): Promise<void>;
+  
+  // Booking Messages
+  createBookingMessage(message: InsertBookingMessage): Promise<BookingMessage>;
+  getBookingMessagesByConfirmation(confirmationId: string): Promise<BookingMessage[]>;
+  markMessageAsRead(messageId: string): Promise<BookingMessage | undefined>;
   
   // Block Types (PB/NPB)
   getBlockTypesByRecordDay(recordDayId: string): Promise<BlockType[]>;
@@ -773,6 +781,32 @@ export class DbStorage implements IStorage {
       .update(bookingConfirmationTokens)
       .set({ status: 'revoked' })
       .where(eq(bookingConfirmationTokens.seatAssignmentId, seatAssignmentId));
+  }
+
+  // Booking Messages
+  async createBookingMessage(message: InsertBookingMessage): Promise<BookingMessage> {
+    const [created] = await db
+      .insert(bookingMessages)
+      .values(message)
+      .returning();
+    return created;
+  }
+
+  async getBookingMessagesByConfirmation(confirmationId: string): Promise<BookingMessage[]> {
+    return db
+      .select()
+      .from(bookingMessages)
+      .where(eq(bookingMessages.confirmationId, confirmationId))
+      .orderBy(bookingMessages.sentAt);
+  }
+
+  async markMessageAsRead(messageId: string): Promise<BookingMessage | undefined> {
+    const [updated] = await db
+      .update(bookingMessages)
+      .set({ readAt: new Date() })
+      .where(eq(bookingMessages.id, messageId))
+      .returning();
+    return updated;
   }
 
   // Block Types (PB/NPB)
