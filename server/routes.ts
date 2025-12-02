@@ -3560,15 +3560,23 @@ Deal or No Deal Production Team
   // Object Storage Routes for Email Assets
   // =============================================
 
-  // Get upload URL for a file
-  app.post("/api/objects/upload", async (req, res) => {
+  // Upload file directly (server-side upload to Object Storage)
+  const emailAssetUpload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  });
+
+  app.post("/api/objects/upload", emailAssetUpload.single('file'), async (req, res) => {
     try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file provided" });
+      }
+      
       const objectStorageService = new ObjectStorageService();
-      const { filename } = req.body;
-      const { url, objectPath } = await objectStorageService.getObjectEntityUploadURL(filename);
-      res.json({ uploadURL: url, objectPath });
+      const { objectPath, url } = await objectStorageService.uploadFile(req.file.buffer, req.file.originalname);
+      res.json({ objectPath, url });
     } catch (error: any) {
-      console.error("Error getting upload URL:", error);
+      console.error("Error uploading file:", error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -3577,8 +3585,7 @@ Deal or No Deal Production Team
   app.get("/objects/:objectPath(*)", async (req, res) => {
     try {
       const objectStorageService = new ObjectStorageService();
-      const objectFile = await objectStorageService.getObjectEntityFile(`/objects/${req.params.objectPath}`);
-      objectStorageService.downloadObject(objectFile, res);
+      await objectStorageService.downloadObject(`/objects/${req.params.objectPath}`, res);
     } catch (error: any) {
       console.error("Error serving object:", error);
       if (error instanceof ObjectNotFoundError) {

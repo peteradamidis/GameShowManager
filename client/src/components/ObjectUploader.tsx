@@ -1,14 +1,13 @@
 import { useState, useRef } from "react";
 import type { ReactNode, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { apiRequest } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
 
 interface ObjectUploaderProps {
   maxFileSize?: number;
   allowedFileTypes?: string[];
   accept?: string;
-  onComplete?: (result: { objectPath: string; filename: string }) => void;
+  onComplete?: (result: { objectPath: string; url: string; filename: string }) => void;
   onError?: (error: string) => void;
   buttonClassName?: string;
   buttonVariant?: "default" | "outline" | "secondary" | "ghost" | "destructive";
@@ -45,25 +44,24 @@ export function ObjectUploader({
     setIsUploading(true);
 
     try {
-      const response = await apiRequest("POST", "/api/objects/upload", {
-        filename: file.name,
-      });
-      const data = await response.json();
+      const formData = new FormData();
+      formData.append('file', file);
 
-      const uploadResponse = await fetch(data.uploadURL, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type || "application/octet-stream",
-        },
+      const response = await fetch("/api/objects/upload", {
+        method: "POST",
+        body: formData,
       });
 
-      if (!uploadResponse.ok) {
-        throw new Error("Upload failed");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Upload failed");
       }
+
+      const data = await response.json();
 
       onComplete?.({
         objectPath: data.objectPath,
+        url: data.url,
         filename: file.name,
       });
     } catch (error: any) {
@@ -85,6 +83,7 @@ export function ObjectUploader({
         onChange={handleFileChange}
         accept={accept}
         style={{ display: "none" }}
+        data-testid="input-file-upload"
       />
       <Button 
         onClick={handleClick} 
@@ -92,6 +91,7 @@ export function ObjectUploader({
         variant={buttonVariant}
         size={buttonSize}
         disabled={isUploading}
+        data-testid="button-upload"
       >
         {isUploading ? (
           <>
