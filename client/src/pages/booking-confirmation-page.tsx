@@ -144,6 +144,9 @@ export default function BookingConfirmationPage() {
     } else if (errorData?.message?.includes("no longer active")) {
       errorTitle = "Link Inactive";
       errorMessage = "This confirmation link is no longer active. Please contact the show producers for assistance.";
+    } else if (errorData?.message?.includes("revoked")) {
+      errorTitle = "Link Revoked";
+      errorMessage = "This confirmation link has been replaced by a newer one. Please check your email for the latest booking confirmation link.";
     }
     
     return (
