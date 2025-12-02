@@ -100,3 +100,11 @@ waitForPort = 5000
 
 [agent]
 integrations = ["javascript_log_in_with_replit:1.0.0", "javascript_database:1.0.0", "google-mail:1.0.0", "google-sheet:1.0.0"]
+
+[objectStorage]
+defaultBucketID = "replit-objstore-e6e71261-b50b-4b7a-8f8b-86447062a21d"
+
+[userenv]
+
+[userenv.shared]
+PRIVATE_OBJECT_DIR = "/EmailAssets"
