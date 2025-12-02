@@ -633,7 +633,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/record-days", async (req, res) => {
     try {
       const allRecordDays = await storage.getRecordDays();
-      res.json(allRecordDays);
+      // Sort by date ascending (earliest first)
+      const sorted = allRecordDays.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      res.json(sorted);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
