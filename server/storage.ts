@@ -15,6 +15,7 @@ import {
   standbyAssignments,
   standbyConfirmationTokens,
   systemConfig,
+  formConfigurations,
   type Contestant,
   type InsertContestant,
   type Group,
@@ -145,6 +146,11 @@ export interface IStorage {
   // System Configuration
   getSystemConfig(key: string): Promise<string | null>;
   setSystemConfig(key: string, value: string): Promise<void>;
+  
+  // Form Configurations
+  getFormConfigurations(formType: string): Promise<Record<string, string>>;
+  setFormConfiguration(formType: string, fieldKey: string, value: string): Promise<void>;
+  setFormConfigurations(formType: string, configs: Record<string, string>): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -1072,6 +1078,36 @@ export class DbStorage implements IStorage {
         target: systemConfig.key,
         set: { value, updatedAt: new Date() }
       });
+  }
+
+  // Form Configurations
+  async getFormConfigurations(formType: string): Promise<Record<string, string>> {
+    const configs = await db
+      .select()
+      .from(formConfigurations)
+      .where(eq(formConfigurations.formType, formType));
+    
+    const result: Record<string, string> = {};
+    for (const config of configs) {
+      result[config.fieldKey] = config.value;
+    }
+    return result;
+  }
+
+  async setFormConfiguration(formType: string, fieldKey: string, value: string): Promise<void> {
+    await db
+      .insert(formConfigurations)
+      .values({ formType, fieldKey, value })
+      .onConflictDoUpdate({
+        target: [formConfigurations.formType, formConfigurations.fieldKey],
+        set: { value, updatedAt: new Date() }
+      });
+  }
+
+  async setFormConfigurations(formType: string, configs: Record<string, string>): Promise<void> {
+    for (const [fieldKey, value] of Object.entries(configs)) {
+      await this.setFormConfiguration(formType, fieldKey, value);
+    }
   }
 }
 

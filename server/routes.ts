@@ -3622,6 +3622,44 @@ Deal or No Deal Production Team
     }
   });
 
+  // =============================================
+  // Form Configuration Routes
+  // =============================================
+
+  // Get form configurations for a specific form type
+  app.get("/api/form-configs/:formType", async (req, res) => {
+    try {
+      const { formType } = req.params;
+      if (!['availability', 'booking'].includes(formType)) {
+        return res.status(400).json({ error: "Invalid form type. Must be 'availability' or 'booking'." });
+      }
+      const configs = await storage.getFormConfigurations(formType);
+      res.json(configs);
+    } catch (error: any) {
+      console.error("Error getting form configurations:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update form configurations for a specific form type
+  app.put("/api/form-configs/:formType", async (req, res) => {
+    try {
+      const { formType } = req.params;
+      if (!['availability', 'booking'].includes(formType)) {
+        return res.status(400).json({ error: "Invalid form type. Must be 'availability' or 'booking'." });
+      }
+      const configs = req.body;
+      if (typeof configs !== 'object' || configs === null) {
+        return res.status(400).json({ error: "Request body must be an object with field key-value pairs." });
+      }
+      await storage.setFormConfigurations(formType, configs);
+      res.json({ success: true, message: `${formType} form configurations updated successfully.` });
+    } catch (error: any) {
+      console.error("Error updating form configurations:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
