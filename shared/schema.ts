@@ -140,6 +140,8 @@ export const bookingMessages = pgTable("booking_messages", {
   messageType: text("message_type").notNull(), // 'booking_email', 'follow_up', 'confirmation_response', 'reply'
   subject: text("subject"),
   body: text("body").notNull(),
+  senderEmail: text("sender_email"), // Email address of sender (for inbound messages)
+  gmailMessageId: text("gmail_message_id"), // Gmail message ID to prevent duplicate ingestion
   sentAt: timestamp("sent_at").defaultNow().notNull(),
   readAt: timestamp("read_at"), // When admin read the message (for inbound)
 });

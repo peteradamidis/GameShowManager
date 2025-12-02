@@ -118,6 +118,8 @@ export interface IStorage {
   createBookingMessage(message: InsertBookingMessage): Promise<BookingMessage>;
   getBookingMessagesByConfirmation(confirmationId: string): Promise<BookingMessage[]>;
   markMessageAsRead(messageId: string): Promise<BookingMessage | undefined>;
+  getBookingConfirmationsByContestantEmail(email: string): Promise<Array<BookingConfirmationToken & { contestant: Contestant; seatAssignment: SeatAssignment }>>;
+  isGmailMessageProcessed(gmailMessageId: string): Promise<boolean>;
   
   // Block Types (PB/NPB)
   getBlockTypesByRecordDay(recordDayId: string): Promise<BlockType[]>;
@@ -807,6 +809,35 @@ export class DbStorage implements IStorage {
       .where(eq(bookingMessages.id, messageId))
       .returning();
     return updated;
+  }
+
+  async getBookingConfirmationsByContestantEmail(email: string): Promise<Array<BookingConfirmationToken & { contestant: Contestant; seatAssignment: SeatAssignment }>> {
+    const normalizedEmail = email.toLowerCase().trim();
+    const results = await db
+      .select({
+        bookingConfirmation: bookingConfirmationTokens,
+        seatAssignment: seatAssignments,
+        contestant: contestants,
+      })
+      .from(bookingConfirmationTokens)
+      .innerJoin(seatAssignments, eq(bookingConfirmationTokens.seatAssignmentId, seatAssignments.id))
+      .innerJoin(contestants, eq(seatAssignments.contestantId, contestants.id))
+      .where(sql`LOWER(${contestants.email}) = ${normalizedEmail}`);
+
+    return results.map(row => ({
+      ...row.bookingConfirmation,
+      seatAssignment: row.seatAssignment,
+      contestant: row.contestant,
+    }));
+  }
+
+  async isGmailMessageProcessed(gmailMessageId: string): Promise<boolean> {
+    const [existing] = await db
+      .select()
+      .from(bookingMessages)
+      .where(eq(bookingMessages.gmailMessageId, gmailMessageId))
+      .limit(1);
+    return !!existing;
   }
 
   // Block Types (PB/NPB)
