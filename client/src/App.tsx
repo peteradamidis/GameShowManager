@@ -14,6 +14,7 @@ import BookingResponses from "@/pages/booking-responses";
 import AvailabilityManagement from "@/pages/availability-management";
 import StandbysPage from "@/pages/standbys";
 import ReschedulePage from "@/pages/reschedule";
+import FormsPage from "@/pages/forms";
 import Settings from "@/pages/settings";
 import AvailabilityResponsePage from "@/pages/availability-response-page";
 import BookingConfirmationPage from "@/pages/booking-confirmation-page";
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/availability" component={AvailabilityManagement} />
       <Route path="/standbys" component={StandbysPage} />
       <Route path="/reschedule" component={ReschedulePage} />
+      <Route path="/forms" component={FormsPage} />
       <Route path="/settings" component={Settings} />
       <Route path="/availability/respond/:token" component={AvailabilityResponsePage} />
       <Route path="/booking-confirmation/:token" component={BookingConfirmationPage} />
