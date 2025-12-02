@@ -405,7 +405,7 @@ export function ContestantTable({
               <TableHead>Status</TableHead>
               <TableHead>Audition Rating</TableHead>
               <TableHead>Age</TableHead>
-              <TableHead>Name</TableHead>
+              <TableHead className="min-w-[150px]">Name</TableHead>
               <TableHead>Mobile</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Attending With</TableHead>
@@ -461,10 +461,10 @@ export function ContestantTable({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm">
+                  <TableCell>
                     <StatusBadge status={rescheduleContestantIds.has(contestant.id) ? "Reschedule" : contestant.availabilityStatus} />
                   </TableCell>
-                  <TableCell className="text-sm">
+                  <TableCell>
                     {contestant.auditionRating ? (
                       <span className={`font-semibold ${
                         contestant.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
@@ -477,19 +477,19 @@ export function ContestantTable({
                       </span>
                     ) : "-"}
                   </TableCell>
-                  <TableCell className="text-sm">{contestant.age}</TableCell>
-                  <TableCell className="text-sm font-medium">{contestant.name}</TableCell>
-                  <TableCell className="text-sm">{contestant.phone || "-"}</TableCell>
-                  <TableCell className="text-sm">{contestant.email || "-"}</TableCell>
-                  <TableCell className="text-sm">{contestant.attendingWith || "-"}</TableCell>
-                  <TableCell className="text-sm">{contestant.location || "-"}</TableCell>
-                  <TableCell className="text-sm max-w-[200px] truncate" title={contestant.medicalInfo || ""}>
+                  <TableCell>{contestant.age}</TableCell>
+                  <TableCell className="font-medium">{contestant.name}</TableCell>
+                  <TableCell>{contestant.phone || "-"}</TableCell>
+                  <TableCell>{contestant.email || "-"}</TableCell>
+                  <TableCell>{contestant.attendingWith || "-"}</TableCell>
+                  <TableCell>{contestant.location || "-"}</TableCell>
+                  <TableCell className="max-w-[200px] truncate" title={contestant.medicalInfo || ""}>
                     {contestant.medicalInfo || "-"}
                   </TableCell>
-                  <TableCell className="text-sm max-w-[200px] truncate" title={contestant.mobilityNotes || ""}>
+                  <TableCell className="max-w-[200px] truncate" title={contestant.mobilityNotes || ""}>
                     {contestant.mobilityNotes || "-"}
                   </TableCell>
-                  <TableCell className="text-sm max-w-[200px] truncate" title={contestant.criminalRecord || ""}>
+                  <TableCell className="max-w-[200px] truncate" title={contestant.criminalRecord || ""}>
                     {contestant.criminalRecord || "-"}
                   </TableCell>
                 </TableRow>
