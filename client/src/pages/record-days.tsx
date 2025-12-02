@@ -37,9 +37,15 @@ export default function RecordDays() {
     enabled: apiRecordDays.length > 0,
   });
 
-  // Transform API data to RecordDay format and sort by date
+  // Transform API data to RecordDay format and sort by status (read first), then by date
   const recordDays: RecordDay[] = apiRecordDays
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .sort((a, b) => {
+      // Prioritize 'read' status first, then sort by date
+      if (a.status === 'read' && b.status !== 'read') return -1;
+      if (a.status !== 'read' && b.status === 'read') return 1;
+      // If same status, sort by date (ascending)
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    })
     .map((day) => {
       const dayAssignments = allAssignments.find((a) => a.recordDayId === day.id)?.assignments || [];
       const filledSeats = dayAssignments.length;
