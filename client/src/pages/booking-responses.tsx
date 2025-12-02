@@ -124,46 +124,6 @@ export default function BookingResponses() {
     },
   });
 
-  const pollInboxMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest("POST", "/api/booking-confirmations/poll-inbox", {});
-    },
-    onSuccess: async (response) => {
-      const data = await response.json();
-      if (data.processed > 0) {
-        toast({ 
-          title: "Inbox Updated", 
-          description: `${data.processed} new email(s) received` 
-        });
-        queryClient.invalidateQueries({ queryKey: ["/api/booking-confirmations/record-day", selectedRecordDay] });
-        if (selectedConfirmation) {
-          refetchMessages();
-        }
-      } else {
-        toast({ 
-          title: "No New Emails", 
-          description: "No new contestant replies found" 
-        });
-      }
-    },
-    onError: (error: any) => {
-      const errorMessage = error.message || "Failed to poll inbox";
-      if (errorMessage.includes("Insufficient Permission")) {
-        toast({ 
-          title: "Gmail Permission Required", 
-          description: "Please reconnect Gmail with read permissions in Replit Integrations",
-          variant: "destructive" 
-        });
-      } else {
-        toast({ 
-          title: "Failed to check inbox", 
-          description: errorMessage,
-          variant: "destructive" 
-        });
-      }
-    },
-  });
-
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -253,19 +213,6 @@ export default function BookingResponses() {
               ))}
             </SelectContent>
           </Select>
-          <Button 
-            variant="outline" 
-            onClick={() => pollInboxMutation.mutate()}
-            disabled={pollInboxMutation.isPending}
-            data-testid="button-poll-inbox"
-          >
-            {pollInboxMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Mail className="h-4 w-4 mr-2" />
-            )}
-            Check Inbox
-          </Button>
           {selectedRecordDay && (
             <Button 
               variant="outline" 
