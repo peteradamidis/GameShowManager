@@ -1255,7 +1255,14 @@ export default function BookingMaster() {
 
       {/* Responses Panel */}
       {showResponsesPanel && selectedRecordDay && (
-        <div className="border rounded-md bg-card mt-4" data-testid="responses-panel">
+        <div 
+          className={`border rounded-md bg-card transition-all duration-300 flex flex-col ${
+            responsesPanelExpanded 
+              ? "fixed inset-x-4 top-20 bottom-4 z-50 shadow-2xl" 
+              : "mt-4"
+          }`} 
+          data-testid="responses-panel"
+        >
           <div className="p-4 border-b flex items-center justify-between">
             <div className="flex items-center gap-4">
               <h2 className="font-semibold text-lg">Booking Responses</h2>
@@ -1333,7 +1340,7 @@ export default function BookingMaster() {
                 : `No ${confirmationStatusFilter} responses`}
             </div>
           ) : (
-            <div className={`overflow-auto transition-all duration-200 ${responsesPanelExpanded ? "max-h-[70vh]" : "max-h-64"}`}>
+            <div className={`overflow-auto ${responsesPanelExpanded ? "flex-1" : "max-h-48"}`}>
               <Table>
                 <TableHeader>
                   <TableRow>
