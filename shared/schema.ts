@@ -315,3 +315,22 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// Form Configurations table - stores customizable text for public forms
+export const formConfigurations = pgTable("form_configurations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  formType: text("form_type").notNull(), // 'availability' or 'booking'
+  fieldKey: text("field_key").notNull(), // e.g., 'title', 'description', 'yesLabel'
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  uniqueFormField: unique().on(table.formType, table.fieldKey),
+}));
+
+export const insertFormConfigurationSchema = createInsertSchema(formConfigurations).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertFormConfiguration = z.infer<typeof insertFormConfigurationSchema>;
+export type FormConfiguration = typeof formConfigurations.$inferSelect;
