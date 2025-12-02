@@ -467,12 +467,15 @@ Palmerston Cres, South Melbourne, VIC, 3205<br>
       });
     },
     onSuccess: (data: any) => {
-      const successCount = data.results.filter((r: any) => r.success).length;
-      const failCount = data.results.filter((r: any) => !r.success).length;
+      const results = data?.results || [];
+      const successCount = results.filter((r: any) => r.success).length;
+      const failCount = results.filter((r: any) => !r.success).length;
       
       toast({
         title: "Booking Emails Sent",
-        description: `${successCount} email(s) sent successfully${failCount > 0 ? `, ${failCount} failed` : ''}.`,
+        description: successCount > 0 
+          ? `${successCount} email(s) sent successfully${failCount > 0 ? `, ${failCount} failed` : ''}.`
+          : "Email processing completed.",
       });
       
       setSelectedAssignments(new Set());
