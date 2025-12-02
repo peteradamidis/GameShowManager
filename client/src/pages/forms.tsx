@@ -40,6 +40,10 @@ const BOOKING_DEFAULTS: Record<string, string> = {
   confirmedMessage: "Thank you for confirming your attendance! We look forward to seeing you at the recording.",
   declinedTitle: "Booking Cancelled",
   declinedMessage: "Your booking has been cancelled. If your circumstances change, please contact us.",
+  toastConfirmedTitle: "Booking Confirmed!",
+  toastConfirmedMessage: "Thank you for confirming your attendance!",
+  toastDeclinedTitle: "Booking Cancelled",
+  toastDeclinedMessage: "Your booking has been cancelled and you've been moved to the reschedule list.",
 };
 
 type FormConfigEditorProps = {
@@ -192,6 +196,10 @@ const BOOKING_FIELD_LABELS: Record<string, string> = {
   confirmedMessage: "Confirmation Success Message",
   declinedTitle: "Decline Success Title",
   declinedMessage: "Decline Success Message",
+  toastConfirmedTitle: "Toast Notification: Confirmed Title",
+  toastConfirmedMessage: "Toast Notification: Confirmed Message",
+  toastDeclinedTitle: "Toast Notification: Declined Title",
+  toastDeclinedMessage: "Toast Notification: Declined Message",
 };
 
 export default function FormsPage() {

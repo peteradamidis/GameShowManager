@@ -3,14 +3,33 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { Calendar, MapPin, Users, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+const DEFAULT_CONFIG: Record<string, string> = {
+  title: "TV Show Booking Confirmation",
+  description: "Please confirm your attendance for the upcoming recording.",
+  attendingWithLabel: "Update \"Attending With\" Information (optional)",
+  attendingWithPlaceholder: "Enter names of people you're attending with",
+  attendingWithHelp: "If your group has changed, please update it here",
+  notesLabel: "Dietary Requirements / Questions (Optional)",
+  notesPlaceholder: "Any dietary requirements, special requests, or questions you have?",
+  confirmButtonText: "Confirm Attendance",
+  declineButtonText: "Cannot Attend",
+  declineReasonRequired: "Please provide a reason for declining the booking",
+  confirmedTitle: "Booking Confirmed!",
+  confirmedMessage: "Thank you for confirming your attendance! We look forward to seeing you at the recording.",
+  declinedTitle: "Booking Cancelled",
+  declinedMessage: "Your booking has been cancelled. If your circumstances change, please contact us.",
+  toastConfirmedTitle: "Booking Confirmed!",
+  toastConfirmedMessage: "Thank you for confirming your attendance!",
+  toastDeclinedTitle: "Booking Cancelled",
+  toastDeclinedMessage: "Your booking has been cancelled and you've been moved to the reschedule list.",
+};
 
 type Contestant = {
   id: string;
@@ -53,6 +72,14 @@ export default function BookingConfirmationPage() {
     retry: false,
   });
 
+  const { data: formConfig } = useQuery<Record<string, string>>({
+    queryKey: ["/api/form-configs", "booking"],
+  });
+
+  const getConfig = (key: string): string => {
+    return formConfig?.[key] || DEFAULT_CONFIG[key] || "";
+  };
+
   const submitMutation = useMutation({
     mutationFn: async (confirmationStatus: "confirmed" | "declined") => {
       const response = await fetch(`/api/booking-confirmations/respond/${token}`, {
@@ -73,10 +100,10 @@ export default function BookingConfirmationPage() {
       setSubmitted(true);
       setConfirmationResult(confirmationStatus);
       toast({
-        title: confirmationStatus === "confirmed" ? "Booking Confirmed!" : "Booking Cancelled",
+        title: confirmationStatus === "confirmed" ? getConfig("toastConfirmedTitle") : getConfig("toastDeclinedTitle"),
         description: confirmationStatus === "confirmed" 
-          ? "Thank you for confirming your attendance!" 
-          : "Your booking has been cancelled and you've been moved to the reschedule list.",
+          ? getConfig("toastConfirmedMessage")
+          : getConfig("toastDeclinedMessage"),
         variant: confirmationStatus === "confirmed" ? "default" : "destructive",
       });
     },
@@ -110,7 +137,7 @@ export default function BookingConfirmationPage() {
     if (!notes.trim()) {
       toast({
         title: "Reason required",
-        description: "Please provide a reason for declining the booking",
+        description: getConfig("declineReasonRequired"),
         variant: "destructive",
       });
       return;
@@ -176,31 +203,29 @@ export default function BookingConfirmationPage() {
             {confirmationResult === "confirmed" ? (
               <>
                 <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500" />
-                <h2 className="text-2xl font-semibold mb-2">Booking Confirmed!</h2>
+                <h2 className="text-2xl font-semibold mb-2">{getConfig("confirmedTitle")}</h2>
                 <p className="text-muted-foreground mb-4">
-                  Thank you for confirming your attendance, {tokenData.contestant.name}!
+                  {getConfig("confirmedMessage")}
                 </p>
-                <div className="bg-muted p-4 rounded-lg text-sm space-y-1">
-                  <div className="flex items-center justify-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span className="font-medium">{new Date(tokenData.booking.recordDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                {tokenData && (
+                  <div className="bg-muted p-4 rounded-lg text-sm space-y-1">
+                    <div className="flex items-center justify-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      <span className="font-medium">{new Date(tokenData.booking.recordDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      <span>{tokenData.booking.seatLocation}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-center gap-2">
-                    <MapPin className="w-4 h-4" />
-                    <span>{tokenData.booking.seatLocation}</span>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground mt-4">
-                  You'll receive additional information about paperwork and arrival details closer to the recording date.
-                </p>
+                )}
               </>
             ) : (
               <>
                 <XCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
-                <h2 className="text-2xl font-semibold mb-2">Booking Cancelled</h2>
+                <h2 className="text-2xl font-semibold mb-2">{getConfig("declinedTitle")}</h2>
                 <p className="text-muted-foreground">
-                  Your booking has been cancelled and you've been moved to the reschedule list. 
-                  We'll reach out if an alternative date becomes available.
+                  {getConfig("declinedMessage")}
                 </p>
               </>
             )}
@@ -234,9 +259,9 @@ export default function BookingConfirmationPage() {
       <div className="max-w-3xl mx-auto py-8">
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-2xl">TV Show Booking Confirmation</CardTitle>
+            <CardTitle className="text-2xl">{getConfig("title")}</CardTitle>
             <CardDescription>
-              Hello {tokenData.contestant.name}! Please confirm your attendance for the upcoming recording.
+              Hello {tokenData.contestant.name}! {getConfig("description")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -287,28 +312,28 @@ export default function BookingConfirmationPage() {
 
             <div className="space-y-2">
               <Label htmlFor="attending-with" data-testid="label-attending-with">
-                Update "Attending With" Information (optional)
+                {getConfig("attendingWithLabel")}
               </Label>
               <Input
                 id="attending-with"
                 data-testid="input-attending-with"
-                placeholder={tokenData.currentAttendingWith || "Enter names of people you're attending with"}
+                placeholder={tokenData.currentAttendingWith || getConfig("attendingWithPlaceholder")}
                 value={attendingWith}
                 onChange={(e) => setAttendingWith(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                If your group has changed, please update it here
+                {getConfig("attendingWithHelp")}
               </p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="notes" data-testid="label-notes">
-                Special Requests or Dietary Requirements (optional)
+                {getConfig("notesLabel")}
               </Label>
               <Textarea
                 id="notes"
                 data-testid="textarea-notes"
-                placeholder="Any special requirements, dietary restrictions, or notes for the production team..."
+                placeholder={getConfig("notesPlaceholder")}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={4}
@@ -323,7 +348,7 @@ export default function BookingConfirmationPage() {
                 className="flex-1"
                 size="lg"
               >
-                {submitMutation.isPending ? "Confirming..." : "Confirm Attendance"}
+                {submitMutation.isPending ? "Confirming..." : getConfig("confirmButtonText")}
               </Button>
               <Button
                 data-testid="button-decline"
@@ -333,7 +358,7 @@ export default function BookingConfirmationPage() {
                 className="flex-1"
                 size="lg"
               >
-                {submitMutation.isPending ? "Cancelling..." : "Cannot Attend"}
+                {submitMutation.isPending ? "Cancelling..." : getConfig("declineButtonText")}
               </Button>
             </div>
 

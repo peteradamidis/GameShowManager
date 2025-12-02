@@ -7,15 +7,28 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   RadioGroup,
   RadioGroupItem,
 } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { Calendar, Users, AlertCircle, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+const DEFAULT_CONFIG: Record<string, string> = {
+  title: "Availability Check",
+  description: "Please let us know which recording days you're available to attend.",
+  yesLabel: "Yes, I can attend",
+  maybeLabel: "Maybe (unsure, will confirm later)",
+  noLabel: "No, I cannot attend",
+  notesLabel: "Additional Notes (Optional)",
+  notesPlaceholder: "Any comments or special circumstances we should know about?",
+  groupSwitchLabel: "Apply my selections to all group members",
+  submitButtonText: "Submit Availability",
+  successTitle: "Thank You!",
+  successMessage: "Your availability has been recorded successfully. We'll be in touch with more details soon.",
+};
 
 type RecordDay = {
   id: string;
@@ -61,6 +74,14 @@ export default function AvailabilityResponsePage() {
     enabled: !!token && !submitted,
   });
 
+  const { data: formConfig } = useQuery<Record<string, string>>({
+    queryKey: ["/api/form-configs", "availability"],
+  });
+
+  const getConfig = (key: string): string => {
+    return formConfig?.[key] || DEFAULT_CONFIG[key] || "";
+  };
+
   const submitMutation = useMutation({
     mutationFn: async () => {
       const responses = Array.from(selectedDays.entries()).map(([recordDayId, responseValue]) => ({
@@ -68,10 +89,7 @@ export default function AvailabilityResponsePage() {
         responseValue,
       }));
 
-      return apiRequest(`/api/availability/respond/${token}`, {
-        method: "POST",
-        body: JSON.stringify({ responses, applyToGroup, notes }),
-      });
+      return apiRequest("POST", `/api/availability/respond/${token}`, { responses, applyToGroup, notes });
     },
     onSuccess: () => {
       setSubmitted(true);
@@ -146,10 +164,10 @@ export default function AvailabilityResponsePage() {
         <Card className="w-full max-w-2xl">
           <CardContent className="p-12 text-center">
             <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500" />
-            <h2 className="text-2xl font-semibold mb-2">Thank You!</h2>
+            <h2 className="text-2xl font-semibold mb-2">{getConfig("successTitle")}</h2>
             <p className="text-muted-foreground">
-              Your availability has been recorded successfully.
-              {applyToGroup && tokenData.groupMembers.length > 0 && 
+              {getConfig("successMessage")}
+              {applyToGroup && tokenData?.groupMembers && tokenData.groupMembers.length > 0 && 
                 ` Your selection has been applied to your group members as well.`
               }
             </p>
@@ -164,9 +182,9 @@ export default function AvailabilityResponsePage() {
       <div className="max-w-3xl mx-auto py-8">
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-2xl">TV Show Availability Check</CardTitle>
+            <CardTitle className="text-2xl">{getConfig("title")}</CardTitle>
             <CardDescription>
-              Hello {tokenData.contestant.name}! Please let us know which recording days you're available to attend.
+              Hello {tokenData.contestant.name}! {getConfig("description")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -226,19 +244,19 @@ export default function AvailabilityResponsePage() {
                     <div className="flex items-center space-x-2 mb-2">
                       <RadioGroupItem value="yes" id={`yes-${day.id}`} data-testid={`radio-yes-${day.id}`} />
                       <Label htmlFor={`yes-${day.id}`} className="font-normal cursor-pointer">
-                        Yes, I can attend
+                        {getConfig("yesLabel")}
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2 mb-2">
                       <RadioGroupItem value="maybe" id={`maybe-${day.id}`} data-testid={`radio-maybe-${day.id}`} />
                       <Label htmlFor={`maybe-${day.id}`} className="font-normal cursor-pointer">
-                        Maybe (unsure, will confirm later)
+                        {getConfig("maybeLabel")}
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="no" id={`no-${day.id}`} data-testid={`radio-no-${day.id}`} />
                       <Label htmlFor={`no-${day.id}`} className="font-normal cursor-pointer">
-                        No, I cannot attend
+                        {getConfig("noLabel")}
                       </Label>
                     </div>
                   </RadioGroup>
@@ -251,11 +269,11 @@ export default function AvailabilityResponsePage() {
         <Card className="mb-6">
           <CardContent className="pt-6 space-y-4">
             <div>
-              <Label htmlFor="notes">Additional Notes (Optional)</Label>
+              <Label htmlFor="notes">{getConfig("notesLabel")}</Label>
               <Textarea
                 id="notes"
                 data-testid="textarea-notes"
-                placeholder="Any comments or special circumstances we should know about?"
+                placeholder={getConfig("notesPlaceholder")}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="mt-2"
@@ -271,7 +289,7 @@ export default function AvailabilityResponsePage() {
                   onCheckedChange={setApplyToGroup}
                 />
                 <Label htmlFor="apply-group" className="cursor-pointer">
-                  Apply my selections to all group members ({tokenData.groupMembers.length} {tokenData.groupMembers.length === 1 ? 'person' : 'people'})
+                  {getConfig("groupSwitchLabel")} ({tokenData.groupMembers.length} {tokenData.groupMembers.length === 1 ? 'person' : 'people'})
                 </Label>
               </div>
             )}
@@ -286,7 +304,7 @@ export default function AvailabilityResponsePage() {
             size="lg"
             data-testid="button-submit"
           >
-            {submitMutation.isPending ? "Submitting..." : "Submit Availability"}
+            {submitMutation.isPending ? "Submitting..." : getConfig("submitButtonText")}
           </Button>
         </div>
       </div>
