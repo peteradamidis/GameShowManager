@@ -147,10 +147,24 @@ export default function Contestants() {
     queryKey: ['/api/standbys'],
   });
 
+  // Fetch canceled assignments (for reschedule status)
+  const { data: canceledAssignments = [] } = useQuery<any[]>({
+    queryKey: ['/api/canceled-assignments'],
+  });
+
   // Create a set of contestant IDs who are standbys
   const standbyContestantIds = useMemo(() => {
     return new Set(allStandbys.map((s: any) => s.contestantId));
   }, [allStandbys]);
+
+  // Create a set of contestant IDs who have been moved to reschedule (from standby)
+  const rescheduleContestantIds = useMemo(() => {
+    return new Set(
+      canceledAssignments
+        .filter((ca: any) => ca.isFromStandby)
+        .map((ca: any) => ca.contestantId)
+    );
+  }, [canceledAssignments]);
 
   // Create a set of contestant IDs who are standbys for the specific record day
   const standbyForRecordDayIds = useMemo(() => {
