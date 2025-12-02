@@ -395,28 +395,6 @@ export default function BookingResponses() {
                       </div>
                     </div>
                   </div>
-                  
-                  {(selectedConfirmation.attendingWith || selectedConfirmation.notes) && (
-                    <div className="mt-3 p-3 rounded-md bg-background border">
-                      {selectedConfirmation.attendingWith && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">Attending with:</span>
-                          <span>{selectedConfirmation.attendingWith}</span>
-                        </div>
-                      )}
-                      {selectedConfirmation.notes && (
-                        <div className="flex items-start gap-2 text-sm mt-2">
-                          {isDietaryNote(selectedConfirmation.notes) ? (
-                            <UtensilsCrossed className="h-4 w-4 text-amber-500 mt-0.5" />
-                          ) : (
-                            <HelpCircle className="h-4 w-4 text-blue-500 mt-0.5" />
-                          )}
-                          <span>{selectedConfirmation.notes}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
 
                 <ScrollArea className="flex-1 p-4">
