@@ -1004,15 +1004,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Check if this contestant has an attendingWith value
         if (contestant.attendingWith && contestant.attendingWith.trim()) {
-          const attendingWithName = contestant.attendingWith.toLowerCase().trim();
-          const partner = nameToContestant.get(attendingWithName);
-          
-          if (partner && !groupedContestantIds.has(partner.id) && partner.auditionRating !== 'A+') {
-            // Found a partner (and they're not A+ rated) - create a group
+          // Split by comma or ampersand to handle multiple people (e.g., "John, Jane, Bob")
+          const attendingWithNames = contestant.attendingWith
+            .split(/[,&]/)
+            .map((name: string) => name.toLowerCase().trim())
+            .filter((name: string) => name.length > 0);
+
+          // Find all matching people for this contestant
+          const groupMembers: typeof available = [contestant];
+          let hasNonAPlusPartners = false;
+
+          for (const name of attendingWithNames) {
+            const partner = nameToContestant.get(name);
+            if (partner && !groupedContestantIds.has(partner.id)) {
+              // Only add if not A+ rated (A+ must be manually assigned)
+              if (partner.auditionRating !== 'A+') {
+                groupMembers.push(partner);
+                hasNonAPlusPartners = true;
+              }
+            }
+          }
+
+          // Create a group if we found at least one valid partner
+          if (hasNonAPlusPartners && groupMembers.length > 1) {
             const groupId = `group-${contestant.id}`;
-            groupMap.set(groupId, [contestant, partner]);
-            groupedContestantIds.add(contestant.id);
-            groupedContestantIds.add(partner.id);
+            groupMap.set(groupId, groupMembers);
+            groupMembers.forEach(member => groupedContestantIds.add(member.id));
           }
         }
       });
