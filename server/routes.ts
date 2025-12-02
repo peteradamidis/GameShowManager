@@ -2438,6 +2438,9 @@ Deal or No Deal Production Team
 
       // Send follow-up email via Gmail
       try {
+        if (!contestant.email) {
+          return res.status(400).json({ error: "Contestant has no email address" });
+        }
         await sendEmail(
           contestant.email,
           subject || 'Re: Your Deal or No Deal Booking',
