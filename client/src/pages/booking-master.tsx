@@ -324,6 +324,27 @@ export default function BookingMaster() {
     },
   });
 
+  const sendBookingEmailsMutation = useMutation({
+    mutationFn: async (seatAssignmentIds: string[]) => {
+      return await apiRequest("POST", "/api/booking-confirmations/send", { seatAssignmentIds });
+    },
+    onSuccess: (data: any) => {
+      setSelectedAssignments(new Set());
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', selectedRecordDay] });
+      toast({
+        title: "Booking Emails Sent",
+        description: `Successfully sent ${data.results?.filter((r: any) => r.success).length || 0} emails. Contestants can now confirm their attendance.`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Send Emails",
+        description: error.message || "Could not send booking emails. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Mutation to update standby assignment when a standby is assigned to a seat
   const assignStandbyMutation = useMutation({
     mutationFn: async ({ recordDayId, contestantName, seatLabel }: { recordDayId: string; contestantName: string; seatLabel: string | null }) => {
@@ -673,6 +694,20 @@ export default function BookingMaster() {
             <Download className="h-4 w-4 mr-2" />
             Export to Excel
           </Button>
+          
+          {selectedAssignments.size > 0 && (
+            <Button 
+              onClick={() => {
+                const ids = Array.from(selectedAssignments);
+                sendBookingEmailsMutation.mutate(ids);
+              }}
+              disabled={sendBookingEmailsMutation.isPending}
+              data-testid="button-send-booking-emails"
+            >
+              <Mail className={`h-4 w-4 mr-2 ${sendBookingEmailsMutation.isPending ? 'animate-pulse' : ''}`} />
+              Send Booking Emails ({selectedAssignments.size})
+            </Button>
+          )}
           
           {sheetsConfig?.isConfigured ? (
             <Button 
