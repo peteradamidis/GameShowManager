@@ -8,7 +8,7 @@ import crypto from "crypto";
 import path from "path";
 import express from "express";
 import fs from "fs";
-import { getUncachableGmailClient, sendEmail } from "./gmail";
+import { getUncachableGmailClient, sendEmail, getInboxMessages, ParsedEmail } from "./gmail";
 import { syncRecordDayToSheet, createSheetHeader, updateCellInRecordDaySheet, updateRowInRecordDaySheet, getRecordDaySheetData } from "./google-sheets";
 
 // Google Sheets config keys for database storage
@@ -2689,6 +2689,97 @@ Deal or No Deal Production Team
       });
     } catch (error: any) {
       console.error("Error processing confirmation response:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Poll Gmail inbox for contestant email replies and store them in booking_messages
+  app.post("/api/booking-confirmations/poll-inbox", async (req, res) => {
+    try {
+      console.log("📥 Starting inbox polling for contestant replies...");
+      
+      // Fetch recent inbox messages (last 24 hours by default)
+      const oneDayAgo = new Date();
+      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+      
+      const inboxMessages = await getInboxMessages(50, oneDayAgo);
+      console.log(`📥 Retrieved ${inboxMessages.length} inbox messages`);
+      
+      const processedMessages: any[] = [];
+      const skippedMessages: any[] = [];
+      
+      for (const email of inboxMessages) {
+        // Check if this Gmail message has already been processed
+        const alreadyProcessed = await storage.isGmailMessageProcessed(email.id);
+        if (alreadyProcessed) {
+          skippedMessages.push({
+            gmailId: email.id,
+            from: email.fromEmail,
+            subject: email.subject,
+            reason: 'Already processed'
+          });
+          continue;
+        }
+        
+        // Find booking confirmations for this sender's email
+        const confirmations = await storage.getBookingConfirmationsByContestantEmail(email.fromEmail);
+        
+        if (confirmations.length === 0) {
+          skippedMessages.push({
+            gmailId: email.id,
+            from: email.fromEmail,
+            subject: email.subject,
+            reason: 'No matching booking confirmation found'
+          });
+          continue;
+        }
+        
+        // Find the most recent/relevant confirmation for this contestant
+        // Sort by createdAt desc to get the most recent first
+        const sortedConfirmations = confirmations.sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        
+        // Use the most recent active or used confirmation
+        const relevantConfirmation = sortedConfirmations.find(c => 
+          c.status === 'active' || c.status === 'used'
+        ) || sortedConfirmations[0];
+        
+        // Store the inbound message
+        const message = await storage.createBookingMessage({
+          confirmationId: relevantConfirmation.id,
+          direction: 'inbound',
+          messageType: 'reply',
+          subject: email.subject || 'Email Reply',
+          body: email.body || '[No content]',
+          senderEmail: email.fromEmail,
+          gmailMessageId: email.id,
+          sentAt: email.date,
+        });
+        
+        processedMessages.push({
+          gmailId: email.id,
+          messageId: message.id,
+          from: email.fromEmail,
+          subject: email.subject,
+          contestant: relevantConfirmation.contestant.name,
+          confirmationId: relevantConfirmation.id,
+        });
+        
+        console.log(`📨 Stored reply from ${email.fromEmail} (${relevantConfirmation.contestant.name})`);
+      }
+      
+      console.log(`📥 Inbox polling complete: ${processedMessages.length} processed, ${skippedMessages.length} skipped`);
+      
+      res.json({
+        success: true,
+        processed: processedMessages.length,
+        skipped: skippedMessages.length,
+        processedMessages,
+        skippedMessages,
+      });
+    } catch (error: any) {
+      console.error("Error polling inbox:", error);
       res.status(500).json({ error: error.message });
     }
   });
