@@ -1,4 +1,4 @@
-import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList, UserCheck } from "lucide-react";
+import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList, UserCheck, MessageSquareText } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -46,6 +46,11 @@ const menuItems = [
     title: "Booking Master",
     url: "/booking-master",
     icon: ClipboardList,
+  },
+  {
+    title: "Booking Responses",
+    url: "/booking-responses",
+    icon: MessageSquareText,
   },
   {
     title: "Reschedule",

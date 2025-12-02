@@ -10,6 +10,7 @@ import Contestants from "@/pages/contestants";
 import RecordDays from "@/pages/record-days";
 import SeatingChartPage from "@/pages/seating-chart-page";
 import BookingMaster from "@/pages/booking-master";
+import BookingResponses from "@/pages/booking-responses";
 import AvailabilityManagement from "@/pages/availability-management";
 import StandbysPage from "@/pages/standbys";
 import ReschedulePage from "@/pages/reschedule";
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/record-days" component={RecordDays} />
       <Route path="/seating-chart" component={SeatingChartPage} />
       <Route path="/booking-master" component={BookingMaster} />
+      <Route path="/booking-responses" component={BookingResponses} />
       <Route path="/availability" component={AvailabilityManagement} />
       <Route path="/standbys" component={StandbysPage} />
       <Route path="/reschedule" component={ReschedulePage} />

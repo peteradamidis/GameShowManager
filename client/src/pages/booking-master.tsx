@@ -41,7 +41,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Calendar, Mail, Maximize2, Minimize2, Settings, RefreshCw, CheckCircle, XCircle, Columns, MessageSquare, Clock, Reply, ChevronDown, ChevronUp, ChevronsUpDown, ChevronsDownUp, UtensilsCrossed, HelpCircle, Send } from "lucide-react";
+import { Download, Calendar, Mail, Maximize2, Minimize2, Settings, RefreshCw, CheckCircle, XCircle, Columns, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 
@@ -178,22 +178,6 @@ interface StandbyAssignment {
   };
 }
 
-interface BookingConfirmation {
-  id: string;
-  seatAssignmentId: string;
-  token: string;
-  status: string;
-  confirmationStatus: string;
-  attendingWith: string | null;
-  notes: string | null;
-  confirmedAt: string | null;
-  expiresAt: string;
-  lastSentAt: string | null;
-  createdAt: string;
-  seatAssignment: SeatAssignment;
-  contestant: Contestant;
-}
-
 const BLOCKS = 7;
 const ROWS = [
   { label: "A", count: 5 },
@@ -210,13 +194,6 @@ export default function BookingMaster() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sheetsDialogOpen, setSheetsDialogOpen] = useState(false);
   const [spreadsheetIdInput, setSpreadsheetIdInput] = useState("");
-  const [showResponsesPanel, setShowResponsesPanel] = useState(false);
-  const [responsesPanelExpanded, setResponsesPanelExpanded] = useState(false);
-  const [confirmationStatusFilter, setConfirmationStatusFilter] = useState<string>("all");
-  const [followUpDialogOpen, setFollowUpDialogOpen] = useState(false);
-  const [selectedConfirmationForFollowUp, setSelectedConfirmationForFollowUp] = useState<BookingConfirmation | null>(null);
-  const [followUpMessage, setFollowUpMessage] = useState("");
-  const [followUpSubject, setFollowUpSubject] = useState("");
   // Use refs instead of state for pending text updates to avoid re-renders
   const pendingTextUpdatesRef = useRef<Record<string, string>>({});
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnId, boolean>>(() => {
@@ -280,27 +257,6 @@ export default function BookingMaster() {
 
   // Filter standbys to get ones for the current record day
   const standbysForRecordDay = standbys.filter(s => s.recordDayId === selectedRecordDay);
-
-  // Fetch booking confirmations for the selected record day
-  const { data: bookingConfirmations = [], isLoading: loadingConfirmations } = useQuery<BookingConfirmation[]>({
-    queryKey: ['/api/booking-confirmations/record-day', selectedRecordDay],
-    enabled: !!selectedRecordDay,
-  });
-
-  // Filter confirmations by status
-  const filteredConfirmations = confirmationStatusFilter === "all" 
-    ? bookingConfirmations 
-    : bookingConfirmations.filter(c => c.confirmationStatus === confirmationStatusFilter);
-
-  // Count confirmations by status
-  const confirmationCounts = {
-    pending: bookingConfirmations.filter(c => c.confirmationStatus === "pending").length,
-    confirmed: bookingConfirmations.filter(c => c.confirmationStatus === "confirmed").length,
-    declined: bookingConfirmations.filter(c => c.confirmationStatus === "declined").length,
-  };
-
-  // Filter confirmations with notes (dietary requirements/questions)
-  const confirmationsWithNotes = bookingConfirmations.filter(c => c.notes && c.notes.trim() !== "");
 
   const configuresheetsMutation = useMutation({
     mutationFn: async (spreadsheetId: string) => {
@@ -447,32 +403,6 @@ export default function BookingMaster() {
       toast({
         title: "Error",
         description: error.message || "Failed to send booking emails",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const sendFollowUpEmailMutation = useMutation({
-    mutationFn: async ({ confirmationId, message, subject }: { confirmationId: string; message: string; subject?: string }) => {
-      return await apiRequest("POST", `/api/booking-confirmations/${confirmationId}/follow-up`, { 
-        message,
-        subject
-      });
-    },
-    onSuccess: (data: any) => {
-      toast({
-        title: "Follow-up Email Sent",
-        description: `Email sent to ${data.sentTo?.name || 'contestant'}. ${data.emailStubbed ? '(Email is currently stubbed - check console for details)' : ''}`,
-      });
-      setFollowUpDialogOpen(false);
-      setFollowUpMessage("");
-      setFollowUpSubject("");
-      setSelectedConfirmationForFollowUp(null);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send follow-up email",
         variant: "destructive",
       });
     },
@@ -745,25 +675,6 @@ export default function BookingMaster() {
               Send Booking Emails ({selectedAssignments.size})
             </Button>
           )}
-          
-          <Button 
-            onClick={() => setShowResponsesPanel(!showResponsesPanel)} 
-            variant={showResponsesPanel ? "default" : "outline"}
-            data-testid="button-toggle-responses"
-          >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Responses
-            {bookingConfirmations.length > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {confirmationCounts.confirmed}/{bookingConfirmations.length}
-              </Badge>
-            )}
-            {confirmationsWithNotes.length > 0 && (
-              <Badge variant="outline" className="ml-1 bg-amber-100 text-amber-800 border-amber-300">
-                {confirmationsWithNotes.length}
-              </Badge>
-            )}
-          </Button>
           
           <Button onClick={exportToExcel} variant="outline" data-testid="button-export-excel">
             <Download className="h-4 w-4 mr-2" />
@@ -1253,276 +1164,6 @@ export default function BookingMaster() {
         </div>
       )}
 
-      {/* Responses Panel */}
-      {showResponsesPanel && selectedRecordDay && (
-        <div 
-          className={`border rounded-md bg-card transition-all duration-300 flex flex-col ${
-            responsesPanelExpanded 
-              ? "fixed inset-x-4 top-20 bottom-4 z-50 shadow-2xl" 
-              : "mt-4"
-          }`} 
-          data-testid="responses-panel"
-        >
-          <div className="p-4 border-b flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h2 className="font-semibold text-lg">Booking Responses</h2>
-              <div className="flex gap-2">
-                <Badge 
-                  variant={confirmationStatusFilter === "all" ? "default" : "outline"} 
-                  className="cursor-pointer"
-                  onClick={() => setConfirmationStatusFilter("all")}
-                  data-testid="filter-all"
-                >
-                  All ({bookingConfirmations.length})
-                </Badge>
-                <Badge 
-                  variant={confirmationStatusFilter === "pending" ? "default" : "outline"} 
-                  className="cursor-pointer"
-                  onClick={() => setConfirmationStatusFilter("pending")}
-                  data-testid="filter-pending"
-                >
-                  <Clock className="h-3 w-3 mr-1" />
-                  Pending ({confirmationCounts.pending})
-                </Badge>
-                <Badge 
-                  variant={confirmationStatusFilter === "confirmed" ? "default" : "outline"} 
-                  className="cursor-pointer bg-green-100 text-green-800 border-green-300 hover:bg-green-200"
-                  onClick={() => setConfirmationStatusFilter("confirmed")}
-                  data-testid="filter-confirmed"
-                >
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Confirmed ({confirmationCounts.confirmed})
-                </Badge>
-                <Badge 
-                  variant={confirmationStatusFilter === "declined" ? "default" : "outline"} 
-                  className="cursor-pointer bg-red-100 text-red-800 border-red-300 hover:bg-red-200"
-                  onClick={() => setConfirmationStatusFilter("declined")}
-                  data-testid="filter-declined"
-                >
-                  <XCircle className="h-3 w-3 mr-1" />
-                  Declined ({confirmationCounts.declined})
-                </Badge>
-              </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setResponsesPanelExpanded(!responsesPanelExpanded)}
-                data-testid="button-expand-responses"
-                title={responsesPanelExpanded ? "Collapse panel" : "Expand panel"}
-              >
-                {responsesPanelExpanded ? (
-                  <ChevronsDownUp className="h-4 w-4" />
-                ) : (
-                  <ChevronsUpDown className="h-4 w-4" />
-                )}
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setShowResponsesPanel(false)}
-                data-testid="button-close-responses"
-              >
-                <ChevronUp className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          {loadingConfirmations ? (
-            <div className="p-8 text-center text-muted-foreground">
-              Loading responses...
-            </div>
-          ) : filteredConfirmations.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">
-              {bookingConfirmations.length === 0 
-                ? "No booking emails have been sent yet"
-                : `No ${confirmationStatusFilter} responses`}
-            </div>
-          ) : (
-            <div className={`overflow-auto ${responsesPanelExpanded ? "flex-1" : "max-h-48"}`}>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="sticky top-0 bg-card z-10 w-10">Seat</TableHead>
-                    <TableHead className="sticky top-0 bg-card z-10">Contestant</TableHead>
-                    <TableHead className="sticky top-0 bg-card z-10 w-24">Status</TableHead>
-                    <TableHead className="sticky top-0 bg-card z-10">Attending With</TableHead>
-                    <TableHead className="sticky top-0 bg-card z-10">Dietary / Questions</TableHead>
-                    <TableHead className="sticky top-0 bg-card z-10 w-28">Responded</TableHead>
-                    <TableHead className="sticky top-0 bg-card z-10 w-20">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredConfirmations.map((confirmation) => (
-                    <TableRow key={confirmation.id} data-testid={`response-row-${confirmation.id}`}>
-                      <TableCell className="font-mono text-xs">
-                        {confirmation.seatAssignment.blockNumber}{confirmation.seatAssignment.seatLabel}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {confirmation.contestant.photoUrl ? (
-                            <img 
-                              src={confirmation.contestant.photoUrl} 
-                              alt="" 
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs">
-                              {confirmation.contestant.name?.charAt(0) || "?"}
-                            </div>
-                          )}
-                          <div>
-                            <div className="font-medium text-sm">{confirmation.contestant.name}</div>
-                            <div className="text-xs text-muted-foreground">{confirmation.contestant.email}</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {confirmation.confirmationStatus === "confirmed" && (
-                          <Badge className="bg-green-100 text-green-800 border-green-300">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Confirmed
-                          </Badge>
-                        )}
-                        {confirmation.confirmationStatus === "pending" && (
-                          <Badge variant="outline">
-                            <Clock className="h-3 w-3 mr-1" />
-                            Pending
-                          </Badge>
-                        )}
-                        {confirmation.confirmationStatus === "declined" && (
-                          <Badge className="bg-red-100 text-red-800 border-red-300">
-                            <XCircle className="h-3 w-3 mr-1" />
-                            Declined
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {confirmation.attendingWith || confirmation.contestant.attendingWith || "-"}
-                      </TableCell>
-                      <TableCell>
-                        {confirmation.notes ? (
-                          <div className="flex items-start gap-2 max-w-xs">
-                            {confirmation.notes.toLowerCase().includes("diet") || 
-                             confirmation.notes.toLowerCase().includes("allerg") ||
-                             confirmation.notes.toLowerCase().includes("vegetarian") ||
-                             confirmation.notes.toLowerCase().includes("vegan") ||
-                             confirmation.notes.toLowerCase().includes("halal") ||
-                             confirmation.notes.toLowerCase().includes("kosher") ||
-                             confirmation.notes.toLowerCase().includes("gluten") ? (
-                              <UtensilsCrossed className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                            ) : (
-                              <HelpCircle className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                            )}
-                            <span className="text-sm">{confirmation.notes}</span>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {confirmation.confirmedAt 
-                          ? format(new Date(confirmation.confirmedAt), "MMM d, h:mm a")
-                          : "-"}
-                      </TableCell>
-                      <TableCell>
-                        {confirmation.notes && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedConfirmationForFollowUp(confirmation);
-                              setFollowUpSubject(`Re: Your Deal or No Deal Booking`);
-                              setFollowUpDialogOpen(true);
-                            }}
-                            data-testid={`button-reply-${confirmation.id}`}
-                          >
-                            <Reply className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Follow-up Email Dialog */}
-      <Dialog open={followUpDialogOpen} onOpenChange={setFollowUpDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Send Follow-up Email</DialogTitle>
-            <DialogDescription>
-              Reply to {selectedConfirmationForFollowUp?.contestant.name}'s message
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedConfirmationForFollowUp?.notes && (
-            <div className="bg-muted p-3 rounded-md text-sm">
-              <div className="font-medium mb-1 text-xs text-muted-foreground">Their message:</div>
-              <p>{selectedConfirmationForFollowUp.notes}</p>
-            </div>
-          )}
-          
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="followup-subject">Subject</Label>
-              <Input
-                id="followup-subject"
-                value={followUpSubject}
-                onChange={(e) => setFollowUpSubject(e.target.value)}
-                placeholder="Re: Your Deal or No Deal Booking"
-                data-testid="input-followup-subject"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="followup-message">Your Reply</Label>
-              <Textarea
-                id="followup-message"
-                value={followUpMessage}
-                onChange={(e) => setFollowUpMessage(e.target.value)}
-                placeholder="Type your reply here..."
-                rows={5}
-                data-testid="input-followup-message"
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setFollowUpDialogOpen(false);
-                setFollowUpMessage("");
-                setFollowUpSubject("");
-                setSelectedConfirmationForFollowUp(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (selectedConfirmationForFollowUp && followUpMessage.trim()) {
-                  sendFollowUpEmailMutation.mutate({
-                    confirmationId: selectedConfirmationForFollowUp.id,
-                    message: followUpMessage,
-                    subject: followUpSubject,
-                  });
-                }
-              }}
-              disabled={!followUpMessage.trim() || sendFollowUpEmailMutation.isPending}
-              data-testid="button-send-followup"
-            >
-              <Send className="h-4 w-4 mr-2" />
-              {sendFollowUpEmailMutation.isPending ? "Sending..." : "Send Reply"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
