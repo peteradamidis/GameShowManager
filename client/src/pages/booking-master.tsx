@@ -41,7 +41,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Calendar, Mail, Maximize2, Minimize2, Settings, RefreshCw, CheckCircle, XCircle, Columns, MessageSquare, Clock, Reply, ChevronDown, ChevronUp, UtensilsCrossed, HelpCircle, Send } from "lucide-react";
+import { Download, Calendar, Mail, Maximize2, Minimize2, Settings, RefreshCw, CheckCircle, XCircle, Columns, MessageSquare, Clock, Reply, ChevronDown, ChevronUp, ChevronsUpDown, ChevronsDownUp, UtensilsCrossed, HelpCircle, Send } from "lucide-react";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 
@@ -211,6 +211,7 @@ export default function BookingMaster() {
   const [sheetsDialogOpen, setSheetsDialogOpen] = useState(false);
   const [spreadsheetIdInput, setSpreadsheetIdInput] = useState("");
   const [showResponsesPanel, setShowResponsesPanel] = useState(false);
+  const [responsesPanelExpanded, setResponsesPanelExpanded] = useState(false);
   const [confirmationStatusFilter, setConfirmationStatusFilter] = useState<string>("all");
   const [followUpDialogOpen, setFollowUpDialogOpen] = useState(false);
   const [selectedConfirmationForFollowUp, setSelectedConfirmationForFollowUp] = useState<BookingConfirmation | null>(null);
@@ -1296,14 +1297,29 @@ export default function BookingMaster() {
                 </Badge>
               </div>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setShowResponsesPanel(false)}
-              data-testid="button-close-responses"
-            >
-              <ChevronUp className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setResponsesPanelExpanded(!responsesPanelExpanded)}
+                data-testid="button-expand-responses"
+                title={responsesPanelExpanded ? "Collapse panel" : "Expand panel"}
+              >
+                {responsesPanelExpanded ? (
+                  <ChevronsDownUp className="h-4 w-4" />
+                ) : (
+                  <ChevronsUpDown className="h-4 w-4" />
+                )}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowResponsesPanel(false)}
+                data-testid="button-close-responses"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {loadingConfirmations ? (
@@ -1317,7 +1333,7 @@ export default function BookingMaster() {
                 : `No ${confirmationStatusFilter} responses`}
             </div>
           ) : (
-            <div className="max-h-96 overflow-auto">
+            <div className={`overflow-auto transition-all duration-200 ${responsesPanelExpanded ? "max-h-[70vh]" : "max-h-64"}`}>
               <Table>
                 <TableHeader>
                   <TableRow>
