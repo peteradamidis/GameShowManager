@@ -112,10 +112,12 @@ export interface IStorage {
   getBookingConfirmationBySeatAssignment(seatAssignmentId: string): Promise<BookingConfirmationToken | undefined>;
   getBookingConfirmationsByRecordDay(recordDayId: string): Promise<Array<BookingConfirmationToken & { seatAssignment: SeatAssignment; contestant: Contestant }>>;
   updateBookingConfirmationResponse(id: string, confirmationStatus: string, attendingWith?: string, notes?: string): Promise<BookingConfirmationToken | undefined>;
+  updateBookingConfirmationResponseAllowResubmit(id: string, confirmationStatus: string, attendingWith?: string, notes?: string): Promise<BookingConfirmationToken | undefined>;
   revokeBookingConfirmationToken(seatAssignmentId: string): Promise<void>;
   
   // Booking Messages
   createBookingMessage(message: InsertBookingMessage): Promise<BookingMessage>;
+  upsertInboundBookingMessage(message: InsertBookingMessage): Promise<BookingMessage>;
   getBookingMessagesByConfirmation(confirmationId: string): Promise<BookingMessage[]>;
   markMessageAsRead(messageId: string): Promise<BookingMessage | undefined>;
   getBookingConfirmationsByContestantEmail(email: string): Promise<Array<BookingConfirmationToken & { contestant: Contestant; seatAssignment: SeatAssignment }>>;
@@ -785,6 +787,35 @@ export class DbStorage implements IStorage {
       .where(eq(bookingConfirmationTokens.seatAssignmentId, seatAssignmentId));
   }
 
+  async updateBookingConfirmationResponseAllowResubmit(
+    id: string,
+    confirmationStatus: string,
+    attendingWith?: string,
+    notes?: string
+  ): Promise<BookingConfirmationToken | undefined> {
+    const updateData: any = {
+      confirmationStatus,
+      confirmedAt: new Date(),
+      status: 'used',
+    };
+    
+    if (attendingWith !== undefined) {
+      updateData.attendingWith = attendingWith;
+    }
+    
+    if (notes !== undefined) {
+      updateData.notes = notes;
+    }
+
+    // Update regardless of current confirmation status (allows resubmissions)
+    const [updated] = await db
+      .update(bookingConfirmationTokens)
+      .set(updateData)
+      .where(eq(bookingConfirmationTokens.id, id))
+      .returning();
+    return updated;
+  }
+
   // Booking Messages
   async createBookingMessage(message: InsertBookingMessage): Promise<BookingMessage> {
     const [created] = await db
@@ -792,6 +823,43 @@ export class DbStorage implements IStorage {
       .values(message)
       .returning();
     return created;
+  }
+
+  async upsertInboundBookingMessage(message: InsertBookingMessage): Promise<BookingMessage> {
+    // Check if an inbound confirmation_response message already exists for this confirmation
+    const [existing] = await db
+      .select()
+      .from(bookingMessages)
+      .where(
+        and(
+          eq(bookingMessages.confirmationId, message.confirmationId),
+          eq(bookingMessages.direction, 'inbound'),
+          eq(bookingMessages.messageType, 'confirmation_response')
+        )
+      )
+      .limit(1);
+
+    if (existing) {
+      // Update the existing message
+      const [updated] = await db
+        .update(bookingMessages)
+        .set({
+          subject: message.subject,
+          body: message.body,
+          sentAt: message.sentAt,
+          readAt: null, // Mark as unread since it's been updated
+        })
+        .where(eq(bookingMessages.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      // Create new message
+      const [created] = await db
+        .insert(bookingMessages)
+        .values(message)
+        .returning();
+      return created;
+    }
   }
 
   async getBookingMessagesByConfirmation(confirmationId: string): Promise<BookingMessage[]> {

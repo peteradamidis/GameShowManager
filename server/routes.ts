@@ -2594,20 +2594,13 @@ Deal or No Deal Production Team
         return res.status(404).json({ error: "Invalid confirmation link" });
       }
 
-      // Check if token has already been used
-      if (tokenRecord.confirmationStatus !== 'pending') {
-        return res.status(410).json({ 
-          error: "This confirmation link has already been used",
-          alreadyResponded: true,
-          previousResponse: tokenRecord.confirmationStatus
-        });
-      }
-
       if (tokenRecord.status === 'revoked') {
         return res.status(403).json({ error: "This confirmation link has been revoked" });
       }
 
-      if (tokenRecord.status !== 'active') {
+      // For 'used' tokens, allow resubmissions (updating their response)
+      // Only block if the token was revoked
+      if (tokenRecord.status !== 'active' && tokenRecord.status !== 'used') {
         return res.status(403).json({ error: "This confirmation link is no longer active" });
       }
 
@@ -2626,24 +2619,22 @@ Deal or No Deal Production Team
         return res.status(404).json({ error: "Booking not found" });
       }
 
-      // Update confirmation response (this also marks token as 'used')
-      // This uses a transactional WHERE clause to prevent race conditions
-      const updatedToken = await storage.updateBookingConfirmationResponse(
+      // Check if this is a resubmission
+      const isResubmission = tokenRecord.confirmationStatus !== 'pending';
+
+      // Update confirmation response (allows resubmissions to update existing response)
+      const updatedToken = await storage.updateBookingConfirmationResponseAllowResubmit(
         tokenRecord.id,
         confirmationStatus,
         attendingWith,
         notes
       );
 
-      // If update failed, token was already used (race condition)
       if (!updatedToken) {
-        return res.status(409).json({ 
-          error: "This confirmation link has already been used",
-          alreadyResponded: true
-        });
+        return res.status(500).json({ error: "Failed to update confirmation" });
       }
 
-      // Create a booking message record for this contestant response
+      // Upsert the booking message record - updates existing if present, creates if not
       const responseBody = [];
       responseBody.push(`Status: ${confirmationStatus === 'confirmed' ? 'CONFIRMED' : 'DECLINED'}`);
       if (attendingWith) {
@@ -2653,7 +2644,7 @@ Deal or No Deal Production Team
         responseBody.push(`Notes/Questions: ${notes}`);
       }
       
-      await storage.createBookingMessage({
+      await storage.upsertInboundBookingMessage({
         confirmationId: tokenRecord.id,
         direction: 'inbound',
         messageType: 'confirmation_response',
