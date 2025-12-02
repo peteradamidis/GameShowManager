@@ -197,6 +197,49 @@ export default function BookingMaster() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sheetsDialogOpen, setSheetsDialogOpen] = useState(false);
   const [spreadsheetIdInput, setSpreadsheetIdInput] = useState("");
+  const [emailPreviewOpen, setEmailPreviewOpen] = useState(false);
+  const [emailSubject, setEmailSubject] = useState("Deal or No Deal - Booking Confirmation");
+  const [emailBody, setEmailBody] = useState(`CONGRATULATIONS!
+
+Australia's favourite game show is back for season 2, and we want you to be a part of it!
+
+We enjoyed meeting you at our auditions and would love to invite you along to a recording of DEAL or NO DEAL.
+
+This invitation does not guarantee a place on the podium, but we wish you the very best of luck and sincerely hope you win some big money!
+
+We look forward to seeing you on:
+
+DATE: {{date}}
+ARRIVAL TIME: 7:30AM
+Location: Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008.
+
+We will be recording multiple episodes on the day. The recording of these shows will take approximately 10 hours. Please be prepared to make yourself available for the full length of time.
+
+Please find attached important information relating to your attendance at the Deal or No Deal recording. Please read this attachment thoroughly and get in touch ASAP should there be any issues.
+
+You will receive another email closer to your record date with additional paperwork.
+
+Please click the link below to confirm your attendance:
+{{confirmationLink}}
+
+Can you attend? Please respond YES or NO and confirm the members of your group who will be attending.
+
+If you will be attending, the below information is required:
+- Do you have any medical conditions?
+- Do you have any mobility requirements? (i.e. issues climbing stairs or standing for a considerable amount of time.)
+- Please provide your emergency contact name/phone number.
+
+We look forward to seeing you on the day!
+
+Kind regards,
+Deal or No Deal Casting Team
+
+Peter Adamidis
+Casting Producer – Deal or No Deal
+M: 0435 421 272
+Palmerston Cres
+South Melbourne, VIC, 3205
+www.endemolshine.com.au`);
   // Use refs instead of state for pending text updates to avoid re-renders
   const pendingTextUpdatesRef = useRef<Record<string, string>>({});
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnId, boolean>>(() => {
@@ -384,9 +427,11 @@ export default function BookingMaster() {
   });
 
   const sendBookingEmailsMutation = useMutation({
-    mutationFn: async (seatAssignmentIds: string[]) => {
+    mutationFn: async ({ seatAssignmentIds, emailSubject, emailBody }: { seatAssignmentIds: string[]; emailSubject: string; emailBody: string }) => {
       return await apiRequest("POST", "/api/booking-confirmations/send", { 
-        seatAssignmentIds 
+        seatAssignmentIds,
+        emailSubject,
+        emailBody
       });
     },
     onSuccess: (data: any) => {
@@ -395,10 +440,11 @@ export default function BookingMaster() {
       
       toast({
         title: "Booking Emails Sent",
-        description: `${successCount} email(s) sent successfully${failCount > 0 ? `, ${failCount} failed` : ''}. ${data.emailsStubbed ? '(Emails are currently stubbed - check console for details)' : ''}`,
+        description: `${successCount} email(s) sent successfully${failCount > 0 ? `, ${failCount} failed` : ''}.`,
       });
       
       setSelectedAssignments(new Set());
+      setEmailPreviewOpen(false);
       queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
       queryClient.invalidateQueries({ queryKey: ['/api/booking-confirmations/record-day', selectedRecordDay] });
     },
@@ -559,7 +605,11 @@ export default function BookingMaster() {
   };
 
   const handleConfirmSend = () => {
-    sendBookingEmailsMutation.mutate(Array.from(selectedAssignments));
+    sendBookingEmailsMutation.mutate({
+      seatAssignmentIds: Array.from(selectedAssignments),
+      emailSubject,
+      emailBody
+    });
     setConfirmSendOpen(false);
   };
 
@@ -672,10 +722,7 @@ export default function BookingMaster() {
         <div className="flex gap-2">
           {selectedAssignments.size > 0 && (
             <Button 
-              onClick={() => {
-                const ids = Array.from(selectedAssignments);
-                sendBookingEmailsMutation.mutate(ids);
-              }}
+              onClick={() => setEmailPreviewOpen(true)}
               disabled={sendBookingEmailsMutation.isPending}
               data-testid="button-send-booking-emails"
             >
@@ -1190,6 +1237,83 @@ export default function BookingMaster() {
           </p>
         </div>
       )}
+
+      <Dialog open={emailPreviewOpen} onOpenChange={setEmailPreviewOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Preview Booking Email</DialogTitle>
+            <DialogDescription>
+              Review and edit the email before sending to {selectedAssignments.size} contestant{selectedAssignments.size !== 1 ? 's' : ''}. 
+              Use placeholders: {"{{name}}"}, {"{{date}}"}, {"{{confirmationLink}}"}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="email-subject">Subject</Label>
+              <Input
+                id="email-subject"
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                placeholder="Email subject"
+                data-testid="input-email-subject"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email-body">Email Body</Label>
+              <Textarea
+                id="email-body"
+                value={emailBody}
+                onChange={(e) => setEmailBody(e.target.value)}
+                placeholder="Email body"
+                className="min-h-[400px] font-mono text-sm"
+                data-testid="input-email-body"
+              />
+            </div>
+            
+            <div className="text-xs text-muted-foreground bg-muted p-3 rounded-md">
+              <p className="font-medium mb-1">Available placeholders:</p>
+              <ul className="space-y-1">
+                <li><code className="bg-background px-1 rounded">{"{{name}}"}</code> - Contestant's name</li>
+                <li><code className="bg-background px-1 rounded">{"{{date}}"}</code> - Recording date</li>
+                <li><code className="bg-background px-1 rounded">{"{{confirmationLink}}"}</code> - Unique confirmation link</li>
+                <li><code className="bg-background px-1 rounded">{"{{block}}"}</code> - Block number</li>
+                <li><code className="bg-background px-1 rounded">{"{{seat}}"}</code> - Seat label</li>
+              </ul>
+            </div>
+          </div>
+          
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEmailPreviewOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                sendBookingEmailsMutation.mutate({
+                  seatAssignmentIds: Array.from(selectedAssignments),
+                  emailSubject,
+                  emailBody
+                });
+              }}
+              disabled={sendBookingEmailsMutation.isPending}
+              data-testid="button-confirm-send-emails"
+            >
+              {sendBookingEmailsMutation.isPending ? (
+                <>
+                  <Mail className="h-4 w-4 mr-2 animate-pulse" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Mail className="h-4 w-4 mr-2" />
+                  Send to {selectedAssignments.size} Contestant{selectedAssignments.size !== 1 ? 's' : ''}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

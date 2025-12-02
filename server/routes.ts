@@ -2265,7 +2265,7 @@ Deal or No Deal Production Team
   // Send booking confirmation emails for selected seat assignments
   app.post("/api/booking-confirmations/send", async (req, res) => {
     try {
-      const { seatAssignmentIds } = req.body;
+      const { seatAssignmentIds, emailSubject, emailBody: customEmailBody } = req.body;
 
       if (!seatAssignmentIds || !Array.isArray(seatAssignmentIds)) {
         return res.status(400).json({ error: "seatAssignmentIds array is required" });
@@ -2341,11 +2341,27 @@ Deal or No Deal Production Team
         // Send booking confirmation email via Gmail
         try {
           const confirmationLink = `${baseUrl}/booking-confirmation/${token}`;
-          const emailBody = `Hi ${contestant.name},\n\nYou have been booked for Deal or No Deal on ${recordDay.date}.\n\nSeat: Block ${assignment.blockNumber}, ${assignment.seatLabel}\n\nPlease confirm your attendance:\n${confirmationLink}\n\nThank you!`;
+          const recordDate = new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+          
+          // Use custom email body if provided, otherwise use default
+          let emailBody: string;
+          if (customEmailBody) {
+            // Replace placeholders in custom email body
+            emailBody = customEmailBody
+              .replace(/\{\{name\}\}/g, contestant.name)
+              .replace(/\{\{date\}\}/g, recordDate)
+              .replace(/\{\{block\}\}/g, String(assignment.blockNumber))
+              .replace(/\{\{seat\}\}/g, assignment.seatLabel)
+              .replace(/\{\{confirmationLink\}\}/g, confirmationLink);
+          } else {
+            emailBody = `Hi ${contestant.name},\n\nYou have been booked for Deal or No Deal on ${recordDate}.\n\nSeat: Block ${assignment.blockNumber}, ${assignment.seatLabel}\n\nPlease confirm your attendance:\n${confirmationLink}\n\nThank you!`;
+          }
+          
+          const subject = emailSubject || 'Deal or No Deal - Booking Confirmation Required';
           
           await sendEmail(
             contestant.email,
-            'Deal or No Deal - Booking Confirmation Required',
+            subject,
             emailBody
           );
         } catch (error: any) {
@@ -2353,12 +2369,26 @@ Deal or No Deal Production Team
         }
 
         // Create a booking message record for this initial email
+        const recordDateForLog = new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const confirmationLinkForLog = `${baseUrl}/booking-confirmation/${token}`;
+        let storedBody: string;
+        if (customEmailBody) {
+          storedBody = customEmailBody
+            .replace(/\{\{name\}\}/g, contestant.name)
+            .replace(/\{\{date\}\}/g, recordDateForLog)
+            .replace(/\{\{block\}\}/g, String(assignment.blockNumber))
+            .replace(/\{\{seat\}\}/g, assignment.seatLabel)
+            .replace(/\{\{confirmationLink\}\}/g, confirmationLinkForLog);
+        } else {
+          storedBody = `Hi ${contestant.name},\n\nYou have been booked for Deal or No Deal on ${recordDateForLog}.\nSeat: Block ${assignment.blockNumber}, ${assignment.seatLabel}\n\nPlease confirm your attendance using the link provided.`;
+        }
+        
         await storage.createBookingMessage({
           confirmationId: tokenRecord.id,
           direction: 'outbound',
           messageType: 'booking_email',
-          subject: 'Deal or No Deal - Booking Confirmation Required',
-          body: `Hi ${contestant.name},\n\nYou have been booked for Deal or No Deal on ${recordDay.date}.\nSeat: Block ${assignment.blockNumber}, ${assignment.seatLabel}\n\nPlease confirm your attendance using the link provided.`,
+          subject: emailSubject || 'Deal or No Deal - Booking Confirmation Required',
+          body: storedBody,
           sentAt: new Date(),
         });
 
