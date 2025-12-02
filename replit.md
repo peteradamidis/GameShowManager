@@ -50,6 +50,11 @@ Do not make changes to the file `Y`.
 - **Seating Chart:** Interactive drag-and-drop interface for assigning, swapping, and removing contestants from seats. Includes functionality to assign any available contestant to an empty seat.
 - **Reschedule Page:** Manages canceled assignments, allowing them to be made available or permanently removed.
 - **Booking Master Page:** A complete workflow tracking system for bookings, including inline editing of workflow fields, checkbox tracking for stages (e.g., `bookingEmailSent`, `confirmedRsvp`), and bulk email sending for booking confirmations.
+    - **Responses Panel:** Toggle panel showing all booking confirmation responses for the selected record day.
+        - Filter by status: All, Pending, Confirmed, Declined
+        - Shows contestant photo, seat, status, attending with info, dietary requirements/questions
+        - Reply button to send follow-up emails to contestants with questions
+        - Amber icon for dietary-related notes, blue icon for general questions
 - **API Endpoints:** A comprehensive set of RESTful APIs for all system functionalities, including import, contestant management, record day management, seat assignments (manual, auto, group, swap), availability, booking confirmations, and photo management.
 
 ## External Dependencies
