@@ -37,13 +37,10 @@ export default function RecordDays() {
     enabled: apiRecordDays.length > 0,
   });
 
-  // Transform API data to RecordDay format and sort by status (read first), then by date
+  // Transform API data to RecordDay format and sort by date (earliest first)
   const recordDays: RecordDay[] = apiRecordDays
     .sort((a, b) => {
-      // Prioritize 'read' status first, then sort by date
-      if (a.status === 'read' && b.status !== 'read') return -1;
-      if (a.status !== 'read' && b.status === 'read') return 1;
-      // If same status, sort by date (ascending)
+      // Sort by date ascending (earliest first)
       return new Date(a.date).getTime() - new Date(b.date).getTime();
     })
     .map((day) => {
