@@ -199,47 +199,62 @@ export default function BookingMaster() {
   const [spreadsheetIdInput, setSpreadsheetIdInput] = useState("");
   const [emailPreviewOpen, setEmailPreviewOpen] = useState(false);
   const [emailSubject, setEmailSubject] = useState("Deal or No Deal - Booking Confirmation");
-  const [emailBody, setEmailBody] = useState(`CONGRATULATIONS!
+  const [emailBody, setEmailBody] = useState(`<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
 
-Australia's favourite game show is back for season 2, and we want you to be a part of it!
+<!-- Add your logo/image here by replacing the URL below -->
+<!-- <img src="https://your-image-url.com/logo.png" alt="Deal or No Deal" style="max-width: 100%; height: auto; margin-bottom: 20px;"> -->
 
-We enjoyed meeting you at our auditions and would love to invite you along to a recording of DEAL or NO DEAL.
+<h2 style="color: #c41e3a;">CONGRATULATIONS!</h2>
 
-This invitation does not guarantee a place on the podium, but we wish you the very best of luck and sincerely hope you win some big money!
+<p>Australia's favourite game show is back for season 2, and we want you to be a part of it!</p>
 
-We look forward to seeing you on:
+<p>We enjoyed meeting you at our auditions and would love to invite you along to a recording of <strong>DEAL or NO DEAL</strong>.</p>
 
-DATE: {{date}}
-ARRIVAL TIME: 7:30AM
-Location: Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008.
+<p>This invitation does not guarantee a place on the podium, but we wish you the very best of luck and sincerely hope you win some big money!</p>
 
-We will be recording multiple episodes on the day. The recording of these shows will take approximately 10 hours. Please be prepared to make yourself available for the full length of time.
+<p>We look forward to seeing you on:</p>
 
-Please find attached important information relating to your attendance at the Deal or No Deal recording. Please read this attachment thoroughly and get in touch ASAP should there be any issues.
+<div style="background-color: #f5f5f5; padding: 15px; border-left: 4px solid #c41e3a; margin: 20px 0;">
+  <strong>DATE:</strong> {{date}}<br>
+  <strong>ARRIVAL TIME:</strong> 7:30AM<br>
+  <strong>Location:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008.
+</div>
 
-You will receive another email closer to your record date with additional paperwork.
+<p>We will be recording multiple episodes on the day. The recording of these shows will take approximately 10 hours. Please be prepared to make yourself available for the full length of time.</p>
 
-Please click the link below to confirm your attendance:
-{{confirmationLink}}
+<p>Please find attached important information relating to your attendance at the Deal or No Deal recording. Please read this attachment thoroughly and get in touch ASAP should there be any issues.</p>
 
-Can you attend? Please respond YES or NO and confirm the members of your group who will be attending.
+<p>You will receive another email closer to your record date with additional paperwork.</p>
 
-If you will be attending, the below information is required:
-- Do you have any medical conditions?
-- Do you have any mobility requirements? (i.e. issues climbing stairs or standing for a considerable amount of time.)
-- Please provide your emergency contact name/phone number.
+<div style="text-align: center; margin: 30px 0;">
+  <a href="{{confirmationLink}}" style="background-color: #c41e3a; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">CONFIRM YOUR ATTENDANCE</a>
+</div>
 
-We look forward to seeing you on the day!
+<p><strong>Can you attend?</strong> Please click the button above to confirm or decline.</p>
 
-Kind regards,
-Deal or No Deal Casting Team
+<p>If you will be attending, please also provide:</p>
+<ul>
+  <li>Do you have any medical conditions?</li>
+  <li>Do you have any mobility requirements? (i.e. issues climbing stairs or standing for a considerable amount of time.)</li>
+  <li>Please provide your emergency contact name/phone number.</li>
+</ul>
 
-Peter Adamidis
-Casting Producer – Deal or No Deal
-M: 0435 421 272
-Palmerston Cres
-South Melbourne, VIC, 3205
-www.endemolshine.com.au`);
+<p>We look forward to seeing you on the day!</p>
+
+<p>Kind regards,<br>
+<strong>Deal or No Deal Casting Team</strong></p>
+
+<hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+
+<p style="font-size: 12px; color: #666;">
+Peter Adamidis<br>
+Casting Producer – Deal or No Deal<br>
+M: 0435 421 272<br>
+Palmerston Cres, South Melbourne, VIC, 3205<br>
+<a href="http://www.endemolshine.com.au">www.endemolshine.com.au</a>
+</p>
+
+</div>`);
   // Use refs instead of state for pending text updates to avoid re-renders
   const pendingTextUpdatesRef = useRef<Record<string, string>>({});
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnId, boolean>>(() => {
@@ -1272,15 +1287,22 @@ www.endemolshine.com.au`);
               />
             </div>
             
-            <div className="text-xs text-muted-foreground bg-muted p-3 rounded-md">
-              <p className="font-medium mb-1">Available placeholders:</p>
-              <ul className="space-y-1">
-                <li><code className="bg-background px-1 rounded">{"{{name}}"}</code> - Contestant's name</li>
-                <li><code className="bg-background px-1 rounded">{"{{date}}"}</code> - Recording date</li>
-                <li><code className="bg-background px-1 rounded">{"{{confirmationLink}}"}</code> - Unique confirmation link</li>
-                <li><code className="bg-background px-1 rounded">{"{{block}}"}</code> - Block number</li>
-                <li><code className="bg-background px-1 rounded">{"{{seat}}"}</code> - Seat label</li>
-              </ul>
+            <div className="text-xs text-muted-foreground bg-muted p-3 rounded-md space-y-3">
+              <div>
+                <p className="font-medium mb-1">Available placeholders:</p>
+                <ul className="space-y-1">
+                  <li><code className="bg-background px-1 rounded">{"{{name}}"}</code> - Contestant's name</li>
+                  <li><code className="bg-background px-1 rounded">{"{{date}}"}</code> - Recording date</li>
+                  <li><code className="bg-background px-1 rounded">{"{{confirmationLink}}"}</code> - Unique confirmation link</li>
+                  <li><code className="bg-background px-1 rounded">{"{{block}}"}</code> - Block number</li>
+                  <li><code className="bg-background px-1 rounded">{"{{seat}}"}</code> - Seat label</li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-medium mb-1">Adding images:</p>
+                <p>This email supports HTML. To add an image, use:</p>
+                <code className="bg-background px-1 rounded block mt-1">{'<img src="https://your-image-url.com/image.png" alt="Description" style="max-width: 100%;">'}</code>
+              </div>
             </div>
           </div>
           
