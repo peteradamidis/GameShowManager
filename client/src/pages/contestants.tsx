@@ -2,7 +2,7 @@ import { ContestantTable, Contestant } from "@/components/contestant-table";
 import { ImportExcelDialog } from "@/components/import-excel-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, Filter, X, ChevronLeft, ChevronRight, UserCheck } from "lucide-react";
+import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -176,6 +176,13 @@ export default function Contestants() {
     );
   }, [allStandbys, filterRecordDayId]);
 
+  // Check if a single selected contestant has a seat assignment
+  const selectedContestantAssignment = useMemo(() => {
+    if (selectedContestants.length !== 1) return null;
+    const contestantId = selectedContestants[0];
+    return allSeatAssignments.find((sa: any) => sa.contestantId === contestantId) || null;
+  }, [selectedContestants, allSeatAssignments]);
+
   // Get unique values for filter dropdowns
   const uniqueGenders = Array.from(new Set(contestants.map(c => c.gender).filter(Boolean)));
   const uniqueCities = Array.from(new Set(contestants.map(c => c.location).filter((loc): loc is string => Boolean(loc)))).sort();
@@ -318,6 +325,29 @@ export default function Contestants() {
     onError: (error: Error) => {
       toast({
         title: "Failed to add standbys",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Remove from seat mutation
+  const removeSeatMutation = useMutation({
+    mutationFn: async (assignmentId: string) => {
+      return apiRequest('DELETE', `/api/seat-assignments/${assignmentId}`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      setSelectedContestants([]);
+      toast({
+        title: "Removed from seat",
+        description: "Contestant has been removed and set back to available status.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to remove from seat",
         description: error.message,
         variant: "destructive",
       });
@@ -493,24 +523,38 @@ export default function Contestants() {
         <div className="flex gap-2">
           {selectedContestants.length > 0 && (
             <>
-              <Button 
-                variant="outline"
-                onClick={() => {
-                  refetchRecordDays();
-                  setStandbyDialogOpen(true);
-                }} 
-                data-testid="button-add-standbys"
-              >
-                <UserCheck className="h-4 w-4 mr-2" />
-                Book {selectedContestants.length} as Standby
-              </Button>
-              <Button 
-                onClick={handleOpenAssignDialog} 
-                data-testid="button-assign-contestants"
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Assign {selectedContestants.length} to Record Day
-              </Button>
+              {selectedContestantAssignment ? (
+                <Button 
+                  variant="destructive"
+                  onClick={() => removeSeatMutation.mutate(selectedContestantAssignment.id)}
+                  disabled={removeSeatMutation.isPending}
+                  data-testid="button-remove-from-seat"
+                >
+                  <UserMinus className="h-4 w-4 mr-2" />
+                  {removeSeatMutation.isPending ? "Removing..." : "Remove from Seat"}
+                </Button>
+              ) : (
+                <>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      refetchRecordDays();
+                      setStandbyDialogOpen(true);
+                    }} 
+                    data-testid="button-add-standbys"
+                  >
+                    <UserCheck className="h-4 w-4 mr-2" />
+                    Book {selectedContestants.length} as Standby
+                  </Button>
+                  <Button 
+                    onClick={handleOpenAssignDialog} 
+                    data-testid="button-assign-contestants"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Assign {selectedContestants.length} to Record Day
+                  </Button>
+                </>
+              )}
             </>
           )}
           <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
