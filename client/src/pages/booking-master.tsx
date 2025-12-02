@@ -189,6 +189,7 @@ const ROWS = [
 
 export default function BookingMaster() {
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
+  const [searchName, setSearchName] = useState<string>("");
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
   const [confirmSendOpen, setConfirmSendOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -477,7 +478,12 @@ export default function BookingMaster() {
     return rows;
   };
 
-  const bookingRows = selectedRecordDay ? generateAllSeats() : [];
+  const allBookingRows = selectedRecordDay ? generateAllSeats() : [];
+  const bookingRows = searchName.trim() 
+    ? allBookingRows.filter(row => 
+        row.contestant?.name.toLowerCase().includes(searchName.toLowerCase())
+      )
+    : allBookingRows;
 
   const handleFieldUpdate = (assignmentId: string, field: string, value: any) => {
     updateWorkflowMutation.mutate({
@@ -853,7 +859,7 @@ export default function BookingMaster() {
         </div>
       </div>
 
-      <div className={`flex items-center flex-shrink-0 ${isFullscreen ? 'gap-1' : 'gap-4'}`}>
+      <div className={`flex items-center flex-shrink-0 gap-2 ${isFullscreen ? 'flex-wrap' : 'gap-4'}`}>
         <Calendar className={isFullscreen ? "h-4 w-4 text-muted-foreground" : "h-5 w-5 text-muted-foreground"} />
         <Select value={selectedRecordDay} onValueChange={setSelectedRecordDay}>
           <SelectTrigger className={isFullscreen ? "w-48" : "w-80"} data-testid="select-record-day">
@@ -867,6 +873,15 @@ export default function BookingMaster() {
             ))}
           </SelectContent>
         </Select>
+        {selectedRecordDay && (
+          <Input
+            placeholder="Search by name..."
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+            className={isFullscreen ? "w-32" : "w-48"}
+            data-testid="input-search-name"
+          />
+        )}
         {selectedAssignments.size > 0 && (
           <Badge variant="secondary" data-testid="badge-selected-count">
             {selectedAssignments.size} selected
