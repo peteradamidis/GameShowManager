@@ -742,7 +742,12 @@ export class DbStorage implements IStorage {
       .from(bookingConfirmationTokens)
       .innerJoin(seatAssignments, eq(bookingConfirmationTokens.seatAssignmentId, seatAssignments.id))
       .innerJoin(contestants, eq(seatAssignments.contestantId, contestants.id))
-      .where(eq(seatAssignments.recordDayId, recordDayId));
+      .where(
+        and(
+          eq(seatAssignments.recordDayId, recordDayId),
+          inArray(bookingConfirmationTokens.status, ['active', 'used'])
+        )
+      );
 
     return results.map(row => ({
       ...row.bookingConfirmation,
