@@ -41,8 +41,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Calendar, Mail, Maximize2, Minimize2, Settings, RefreshCw, CheckCircle, XCircle, Columns, ChevronDown } from "lucide-react";
+import { Download, Calendar, Mail, Maximize2, Minimize2, Settings, RefreshCw, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
+import { useLocation } from "wouter";
 import * as XLSX from "xlsx";
 
 // Column configuration for the booking master table
@@ -188,6 +189,7 @@ const ROWS = [
 ];
 
 export default function BookingMaster() {
+  const [, setLocation] = useLocation();
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
   const [searchName, setSearchName] = useState<string>("");
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
@@ -847,6 +849,16 @@ export default function BookingMaster() {
             </DialogContent>
           </Dialog>
           
+          <Button 
+            onClick={() => setLocation('/booking-responses')}
+            variant="outline" 
+            size="icon"
+            title="View booking responses"
+            data-testid="button-booking-responses"
+          >
+            <MessageCircle className="h-4 w-4" />
+          </Button>
+
           <Button 
             onClick={handleToggleFullscreen} 
             variant="outline" 

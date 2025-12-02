@@ -26,9 +26,11 @@ import {
   Users,
   RefreshCw,
   ChevronRight,
-  MailOpen
+  MailOpen,
+  FileText
 } from "lucide-react";
 import { format } from "date-fns";
+import { useLocation } from "wouter";
 
 interface RecordDay {
   id: string;

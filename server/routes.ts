@@ -8,7 +8,7 @@ import crypto from "crypto";
 import path from "path";
 import express from "express";
 import fs from "fs";
-import { getUncachableGmailClient } from "./gmail";
+import { getUncachableGmailClient, sendEmail } from "./gmail";
 import { syncRecordDayToSheet, createSheetHeader, updateCellInRecordDaySheet, updateRowInRecordDaySheet, getRecordDaySheetData } from "./google-sheets";
 
 // Google Sheets config keys for database storage
@@ -2331,21 +2331,21 @@ Deal or No Deal Production Team
         });
 
         // Generate response URL
-        const responseUrl = `/booking-confirmation/${token}`;
+        const responseUrl = `${process.env.REPLIT_DEPLOYMENT_URL || 'http://localhost:5000'}/booking-confirmation/${token}`;
 
-        // EMAIL SENDING STUBBED (like availability system)
-        // When Outlook integration is set up, send email here:
-        // await sendBookingConfirmationEmail(contestant.email, {
-        //   name: contestant.name,
-        //   recordDate: recordDay.date,
-        //   seatLocation: `Block ${assignment.blockNumber}, Seat ${assignment.seatLabel}`,
-        //   confirmationUrl: responseUrl,
-        // });
-
-        console.log(`📧 [STUBBED] Booking confirmation email for ${contestant.name} (${contestant.email})`);
-        console.log(`   Record Date: ${recordDay.date}`);
-        console.log(`   Seat: Block ${assignment.blockNumber}, ${assignment.seatLabel}`);
-        console.log(`   Confirmation URL: ${responseUrl}`);
+        // Send booking confirmation email via Gmail
+        try {
+          const confirmationLink = `${process.env.REPLIT_DEPLOYMENT_URL || 'http://localhost:5000'}/booking-confirmation/${token}`;
+          const emailBody = `Hi ${contestant.name},\n\nYou have been booked for Deal or No Deal on ${recordDay.date}.\n\nSeat: Block ${assignment.blockNumber}, ${assignment.seatLabel}\n\nPlease confirm your attendance:\n${confirmationLink}\n\nThank you!`;
+          
+          await sendEmail(
+            contestant.email,
+            'Deal or No Deal - Booking Confirmation Required',
+            emailBody
+          );
+        } catch (error: any) {
+          console.error(`Failed to send booking confirmation email to ${contestant.email}:`, error.message);
+        }
 
         // Create a booking message record for this initial email
         await storage.createBookingMessage({
@@ -2431,11 +2431,16 @@ Deal or No Deal Production Team
       const contestant = targetConfirmation.contestant;
       const recordDay = allRecordDays.find(rd => rd.id === targetConfirmation!.seatAssignment.recordDayId);
 
-      // TODO: Send actual email via Gmail/Outlook
-      // For now, stub the email sending
-      console.log(`📧 [STUBBED] Follow-up email to ${contestant.name} (${contestant.email})`);
-      console.log(`   Subject: ${subject || 'Re: Your Deal or No Deal Booking'}`);
-      console.log(`   Message: ${message}`);
+      // Send follow-up email via Gmail
+      try {
+        await sendEmail(
+          contestant.email,
+          subject || 'Re: Your Deal or No Deal Booking',
+          message
+        );
+      } catch (error: any) {
+        console.error(`Failed to send follow-up email to ${contestant.email}:`, error.message);
+      }
 
       // Create a booking message record for this reply
       await storage.createBookingMessage({

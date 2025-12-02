@@ -47,3 +47,32 @@ export async function getUncachableGmailClient() {
   return google.gmail({ version: 'v1', auth: oauth2Client });
 }
 
+export async function sendEmail(to: string, subject: string, body: string, htmlBody?: string) {
+  try {
+    const gmail = await getUncachableGmailClient();
+    
+    const message = [
+      `From: me`,
+      `To: ${to}`,
+      `Subject: ${subject}`,
+      'Content-Type: text/html; charset=utf-8',
+      '',
+      htmlBody || body
+    ].join('\n');
+
+    const encodedMessage = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+    await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: {
+        raw: encodedMessage,
+      },
+    });
+
+    console.log(`📧 Email sent successfully to ${to}`);
+    return true;
+  } catch (error: any) {
+    console.error(`Error sending email to ${to}:`, error);
+    throw error;
+  }
+}
