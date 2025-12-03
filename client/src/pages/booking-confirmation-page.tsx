@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, MapPin, Users, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { Calendar, MapPin, Clock, Users, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const DEFAULT_CONFIG: Record<string, string> = {
@@ -208,14 +208,18 @@ export default function BookingConfirmationPage() {
                   {getConfig("confirmedMessage")}
                 </p>
                 {tokenData && (
-                  <div className="bg-muted p-4 rounded-lg text-sm space-y-1">
+                  <div className="bg-muted p-4 rounded-lg text-sm space-y-2">
                     <div className="flex items-center justify-center gap-2">
                       <Calendar className="w-4 h-4" />
                       <span className="font-medium">{new Date(tokenData.booking.recordDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                     </div>
                     <div className="flex items-center justify-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      <span>7:30AM</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
                       <MapPin className="w-4 h-4" />
-                      <span>{tokenData.booking.seatLocation}</span>
+                      <span>Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008</span>
                     </div>
                   </div>
                 )}
@@ -282,10 +286,19 @@ export default function BookingConfirmationPage() {
               </div>
               
               <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Time</p>
+                  <p className="font-semibold">7:30AM</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-primary" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Assigned Seat</p>
-                  <p className="font-semibold">{tokenData.booking.seatLocation}</p>
+                  <p className="text-sm text-muted-foreground">Location</p>
+                  <p className="font-semibold">Docklands Studios Melbourne</p>
+                  <p className="text-sm text-muted-foreground">476 Docklands Drive, Docklands, VIC, 3008</p>
                 </div>
               </div>
 
