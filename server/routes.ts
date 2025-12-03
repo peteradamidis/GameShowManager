@@ -2398,7 +2398,7 @@ Deal or No Deal Production Team
           <tr>
             <td style="padding: 35px 30px;">
               <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
-                Hi ${contestant.name},
+                Hi ${contestant.name.split(' ')[0]},
               </p>
               
               <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
@@ -2883,7 +2883,7 @@ Deal or No Deal Production Team
     <tr>
       <td style="background-color: #ffffff; padding: 35px 30px;">
         <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-          Hi ${contestant.name},
+          Hi ${contestant.name.split(' ')[0]},
         </p>
         
         <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
