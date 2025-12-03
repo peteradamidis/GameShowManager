@@ -25,6 +25,7 @@ const EMAIL_TEMPLATE_DEFAULTS = {
   booking_email_intro: 'Congratulations! You\'ve secured your spot in the <strong style="color: #8B0000;">Deal or No Deal</strong> studio audience.',
   booking_email_instructions: 'Please confirm your attendance by clicking the button below. You can also let us know about dietary requirements or ask any questions.',
   booking_email_button_text: 'Confirm Attendance',
+  booking_email_additional_instructions: 'We will be recording multiple episodes on the day. The recording of these shows will take approximately 10 hours. Please be prepared to make yourself available for the full length of time.\n\nPlease find attached important information relating to your attendance at the Deal or No Deal recording. Please read this attachment thoroughly and get in touch ASAP should there be any issues.\n\nYou will receive another email closer to your record date with additional paperwork.',
   booking_email_footer: 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.',
 };
 
@@ -39,6 +40,7 @@ export default function Settings() {
   const [emailIntro, setEmailIntro] = useState(EMAIL_TEMPLATE_DEFAULTS.booking_email_intro);
   const [emailInstructions, setEmailInstructions] = useState(EMAIL_TEMPLATE_DEFAULTS.booking_email_instructions);
   const [emailButtonText, setEmailButtonText] = useState(EMAIL_TEMPLATE_DEFAULTS.booking_email_button_text);
+  const [emailAdditionalInstructions, setEmailAdditionalInstructions] = useState(EMAIL_TEMPLATE_DEFAULTS.booking_email_additional_instructions);
   const [emailFooter, setEmailFooter] = useState(EMAIL_TEMPLATE_DEFAULTS.booking_email_footer);
   const [emailTemplateChanged, setEmailTemplateChanged] = useState(false);
 
@@ -51,6 +53,7 @@ export default function Settings() {
   const { data: savedIntro } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_intro"] });
   const { data: savedInstructions } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_instructions"] });
   const { data: savedButtonText } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_button_text"] });
+  const { data: savedAdditionalInstructions } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_additional_instructions"] });
   const { data: savedFooter } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_footer"] });
 
   useEffect(() => {
@@ -72,6 +75,9 @@ export default function Settings() {
   useEffect(() => {
     if (savedButtonText) setEmailButtonText(savedButtonText);
   }, [savedButtonText]);
+  useEffect(() => {
+    if (savedAdditionalInstructions) setEmailAdditionalInstructions(savedAdditionalInstructions);
+  }, [savedAdditionalInstructions]);
   useEffect(() => {
     if (savedFooter) setEmailFooter(savedFooter);
   }, [savedFooter]);
@@ -97,6 +103,7 @@ export default function Settings() {
         apiRequest("PUT", "/api/system-config/booking_email_intro", { value: emailIntro }),
         apiRequest("PUT", "/api/system-config/booking_email_instructions", { value: emailInstructions }),
         apiRequest("PUT", "/api/system-config/booking_email_button_text", { value: emailButtonText }),
+        apiRequest("PUT", "/api/system-config/booking_email_additional_instructions", { value: emailAdditionalInstructions }),
         apiRequest("PUT", "/api/system-config/booking_email_footer", { value: emailFooter }),
       ]);
     },
@@ -107,6 +114,7 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_email_intro"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_email_instructions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_email_button_text"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_email_additional_instructions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_email_footer"] });
     },
     onError: (error: any) => {
@@ -348,6 +356,22 @@ export default function Settings() {
                 }}
                 placeholder="Confirm Attendance"
                 data-testid="input-email-button-text"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email-additional-instructions">Additional Instructions</Label>
+              <p className="text-xs text-muted-foreground">Text shown below the button - appears in a bordered box. Use blank lines to separate paragraphs.</p>
+              <Textarea
+                id="email-additional-instructions"
+                value={emailAdditionalInstructions}
+                onChange={(e) => {
+                  setEmailAdditionalInstructions(e.target.value);
+                  setEmailTemplateChanged(true);
+                }}
+                placeholder="We will be recording multiple episodes on the day..."
+                className="min-h-[120px]"
+                data-testid="input-email-additional-instructions"
               />
             </div>
             

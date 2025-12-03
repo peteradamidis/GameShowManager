@@ -2363,6 +2363,7 @@ Deal or No Deal Production Team
             const emailIntro = await storage.getSystemConfig('booking_email_intro') || 'Congratulations! You\'ve secured your spot in the <strong style="color: #8B0000;">Deal or No Deal</strong> studio audience.';
             const emailInstructions = await storage.getSystemConfig('booking_email_instructions') || 'Please confirm your attendance by clicking the button below. You can also let us know about dietary requirements or ask any questions.';
             const emailButtonText = await storage.getSystemConfig('booking_email_button_text') || 'Confirm Attendance';
+            const emailAdditionalInstructions = await storage.getSystemConfig('booking_email_additional_instructions') || '';
             const emailFooter = await storage.getSystemConfig('booking_email_footer') || 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.';
             
             // Professional HTML email template with configurable content
@@ -2440,6 +2441,19 @@ Deal or No Deal Production Team
               <p style="color: #B8860B; font-size: 12px; word-break: break-all; margin: 0; text-align: center;">
                 ${confirmationLink}
               </p>
+              
+              ${emailAdditionalInstructions ? `
+              <!-- Additional Instructions Box -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 25px 0 0 0; border: 1px solid #e0d6c8; border-radius: 6px;">
+                <tr>
+                  <td style="padding: 18px 20px;">
+                    ${emailAdditionalInstructions.split('\n\n').map((paragraph: string) => 
+                      `<p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                    ).join('')}
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
             </td>
           </tr>
         </table>
