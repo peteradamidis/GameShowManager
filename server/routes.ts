@@ -2356,7 +2356,7 @@ Deal or No Deal Production Team
               .replace(/\{\{confirmationLink\}\}/g, confirmationLink);
           } else {
             // Get banner URL from system config or use default
-            const bannerUrl = await storage.getSystemConfig('email_banner_url') || `${baseUrl}/uploads/branding/dond_banner.webp`;
+            const bannerUrl = await storage.getSystemConfig('email_banner_url') || `${baseUrl}/uploads/branding/dond_banner.png`;
             
             // Get configurable text from system config with defaults
             const emailHeadline = await storage.getSystemConfig('booking_email_headline') || 'Your Booking is Confirmed!';
