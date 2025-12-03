@@ -2417,8 +2417,11 @@ Deal or No Deal Production Team
                     <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
                       <strong>Date:</strong> ${recordDate}
                     </p>
+                    <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
+                      <strong>Time:</strong> 7:30AM
+                    </p>
                     <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0;">
-                      <strong>Seat:</strong> Block ${assignment.blockNumber}, Seat ${assignment.seatLabel}
+                      <strong>Location:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008
                     </p>
                   </td>
                 </tr>
@@ -2894,7 +2897,10 @@ Deal or No Deal Production Team
                 <strong>Date:</strong> ${recordDate}
               </p>
               <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
-                <strong>Seat:</strong> Block ${assignment.blockNumber}, Seat ${assignment.seatLabel}
+                <strong>Time:</strong> 7:30AM
+              </p>
+              <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
+                <strong>Location:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008
               </p>
               ${attendingWith ? `<p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0;">
                 <strong>Attending with:</strong> ${attendingWith}
