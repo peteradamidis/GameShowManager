@@ -2435,24 +2435,13 @@ Deal or No Deal Production Team
                 </tr>
               </table>
               
-              <p style="color: #888888; font-size: 12px; line-height: 1.5; margin: 0 0 6px 0; text-align: center;">
-                Button not working? Copy this link:
-              </p>
-              <p style="color: #B8860B; font-size: 12px; word-break: break-all; margin: 0; text-align: center;">
-                ${confirmationLink}
-              </p>
-              
               ${emailAdditionalInstructions ? `
-              <!-- Additional Instructions Box -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 25px 0 0 0; border: 1px solid #e0d6c8; border-radius: 6px;">
-                <tr>
-                  <td style="padding: 18px 20px;">
-                    ${emailAdditionalInstructions.split('\n\n').map((paragraph: string) => 
-                      `<p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
-                    ).join('')}
-                  </td>
-                </tr>
-              </table>
+              <!-- Additional Instructions -->
+              <div style="margin: 25px 0 0 0;">
+                ${emailAdditionalInstructions.split('\n\n').map((paragraph: string) => 
+                  `<p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
               ` : ''}
             </td>
           </tr>
