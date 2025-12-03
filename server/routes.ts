@@ -2365,64 +2365,69 @@ Deal or No Deal Production Team
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #1a1a1a;">
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #0d1b2a;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
-    <!-- Dark Header with Logo -->
+    <!-- Deep Navy Header with Logo -->
     <tr>
-      <td style="background-color: #1a1a1a; padding: 30px 30px 20px 30px; text-align: center;">
-        <img src="${logoUrl}" alt="Deal or No Deal" style="max-width: 280px; height: auto;" />
+      <td style="background: linear-gradient(180deg, #1b263b 0%, #0d1b2a 100%); padding: 35px 30px 25px 30px; text-align: center;">
+        <img src="${logoUrl}" alt="Deal or No Deal" style="max-width: 300px; height: auto;" />
       </td>
     </tr>
     
-    <!-- Gold Title Bar -->
+    <!-- Gold Title Bar with subtle gradient -->
     <tr>
-      <td style="background-color: #1a1a1a; padding: 0 30px 30px 30px; text-align: center;">
-        <h1 style="color: #D4AF37; font-size: 22px; font-weight: bold; margin: 0; letter-spacing: 2px; text-transform: uppercase;">
+      <td style="background: linear-gradient(180deg, #0d1b2a 0%, #1b263b 100%); padding: 5px 30px 35px 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
           YOUR BOOKING<br/>IS CONFIRMED
         </h1>
       </td>
     </tr>
     
-    <!-- White Content Card -->
+    <!-- Cream/White Content Card -->
     <tr>
-      <td style="background-color: #1a1a1a; padding: 0 20px 30px 20px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px;">
+      <td style="background-color: #0d1b2a; padding: 0 20px 30px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fdfbf7; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
           <tr>
-            <td style="padding: 35px 30px;">
-              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+            <td style="padding: 40px 35px;">
+              <p style="color: #2d3748; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                 Hi ${contestant.name},
               </p>
               
-              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+              <p style="color: #2d3748; font-size: 16px; line-height: 1.6; margin: 0 0 28px 0;">
                 Thank you for <span style="color: #B8860B; font-weight: bold;">booking</span> your spot in the Deal or No Deal studio audience.
               </p>
               
-              <!-- Booking Details Section -->
-              <h2 style="color: #B8860B; font-size: 16px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">
-                Your Booking Details
-              </h2>
-              
-              <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 8px 0;">
-                <strong>Date:</strong> ${recordDate}
-              </p>
-              <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 25px 0;">
-                <strong>Seat:</strong> Block ${assignment.blockNumber}, Seat ${assignment.seatLabel}
-              </p>
-              
-              <p style="color: #333333; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
-                Please confirm your attendance by clicking the button below. You'll also be able to let us know about any dietary requirements or ask questions.
-              </p>
-              
-              <!-- Gold CTA Button -->
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 25px auto;">
+              <!-- Booking Details Section with gold accent border -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 0 0 28px 0;">
                 <tr>
-                  <td style="background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                    <a href="${confirmationLink}" target="_blank" style="display: inline-block; padding: 16px 40px; color: #1a1a1a; text-decoration: none; font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Confirm Attendance</a>
+                  <td style="border-left: 4px solid #D4AF37; padding-left: 16px;">
+                    <h2 style="color: #1b263b; font-size: 15px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                      Your Booking Details
+                    </h2>
+                    <p style="color: #4a5568; font-size: 15px; line-height: 1.8; margin: 0 0 4px 0;">
+                      <strong style="color: #2d3748;">Date:</strong> ${recordDate}
+                    </p>
+                    <p style="color: #4a5568; font-size: 15px; line-height: 1.8; margin: 0;">
+                      <strong style="color: #2d3748;">Seat:</strong> Block ${assignment.blockNumber}, Seat ${assignment.seatLabel}
+                    </p>
                   </td>
                 </tr>
               </table>
               
-              <p style="color: #888888; font-size: 13px; line-height: 1.5; margin: 0 0 8px 0; text-align: center;">
+              <p style="color: #4a5568; font-size: 15px; line-height: 1.6; margin: 0 0 28px 0;">
+                Please confirm your attendance by clicking the button below. You'll also be able to let us know about any dietary requirements or ask questions.
+              </p>
+              
+              <!-- Gold CTA Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 28px auto;">
+                <tr>
+                  <td style="background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); border-radius: 8px; box-shadow: 0 4px 8px rgba(184,134,11,0.3);">
+                    <a href="${confirmationLink}" target="_blank" style="display: inline-block; padding: 16px 44px; color: #1b263b; text-decoration: none; font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px;">Confirm Attendance</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #718096; font-size: 13px; line-height: 1.5; margin: 0 0 8px 0; text-align: center;">
                 If the button doesn't work, copy and paste this link:
               </p>
               <p style="color: #B8860B; font-size: 13px; word-break: break-all; margin: 0; text-align: center;">
@@ -2436,8 +2441,8 @@ Deal or No Deal Production Team
     
     <!-- Footer -->
     <tr>
-      <td style="background-color: #1a1a1a; padding: 0 30px 30px 30px; text-align: center;">
-        <p style="color: #666666; font-size: 12px; line-height: 1.5; margin: 0;">
+      <td style="background-color: #0d1b2a; padding: 10px 30px 35px 30px; text-align: center;">
+        <p style="color: #778da9; font-size: 12px; line-height: 1.6; margin: 0;">
           This is an automated message from the Deal or No Deal production team.<br/>
           If you have questions, please use the confirmation form to submit them.
         </p>
