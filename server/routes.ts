@@ -2410,7 +2410,7 @@ Deal or No Deal Production Team
                 <tr>
                   <td style="padding: 20px;">
                     <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
-                      Your Booking Details
+                      Your Record Day Details
                     </h2>
                     <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
                       <strong>Date:</strong> ${recordDate}
@@ -2895,7 +2895,7 @@ Deal or No Deal Production Team
           <tr>
             <td style="padding: 20px;">
               <h2 style="color: #1b5e20; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
-                Your Confirmed Booking
+                Your Record Day Details
               </h2>
               <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
                 <strong>Date:</strong> ${recordDate}
