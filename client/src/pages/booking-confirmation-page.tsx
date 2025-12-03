@@ -307,7 +307,7 @@ export default function BookingConfirmationPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Contestant</p>
                   <p className="font-semibold">
-                    {tokenData.contestant.name} • {tokenData.contestant.age} years • {tokenData.contestant.gender}
+                    {tokenData.contestant.name}
                   </p>
                 </div>
               </div>
