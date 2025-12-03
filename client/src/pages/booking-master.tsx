@@ -200,37 +200,6 @@ export default function BookingMaster() {
   const [emailPreviewOpen, setEmailPreviewOpen] = useState(false);
   const [emailSubject, setEmailSubject] = useState("Deal or No Deal - Booking Confirmation");
   const [selectedAttachments, setSelectedAttachments] = useState<string[]>([]);
-  const [useProfessionalTemplate, setUseProfessionalTemplate] = useState(true);
-  const [emailBody, setEmailBody] = useState(`<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-
-<h2 style="color: #c41e3a;">CONGRATULATIONS!</h2>
-
-<p>Australia's favourite game show is back for season 2, and we want you to be a part of it!</p>
-
-<p>We enjoyed meeting you at our auditions and would love to invite you along to a recording of <strong>DEAL or NO DEAL</strong>.</p>
-
-<p>This invitation does not guarantee a place on the podium, but we wish you the very best of luck and sincerely hope you win some big money!</p>
-
-<p>We look forward to seeing you on:</p>
-
-<div style="background-color: #f5f5f5; padding: 15px; border-left: 4px solid #c41e3a; margin: 20px 0;">
-  <strong>DATE:</strong> {{date}}<br>
-  <strong>ARRIVAL TIME:</strong> 7:30AM<br>
-  <strong>Location:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008.
-</div>
-
-<p>We will be recording multiple episodes on the day. The recording of these shows will take approximately 10 hours. Please be prepared to make yourself available for the full length of time.</p>
-
-<p>Please find attached important information relating to your attendance at the Deal or No Deal recording. Please read this attachment thoroughly and get in touch ASAP should there be any issues.</p>
-
-<div style="text-align: center; margin: 30px 0;">
-  <a href="{{confirmationLink}}" style="background-color: #c41e3a; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">CONFIRM YOUR ATTENDANCE</a>
-</div>
-
-<p>Kind regards,<br>
-<strong>Deal or No Deal Casting Team</strong></p>
-
-</div>`);
   // Use refs instead of state for pending text updates to avoid re-renders
   const pendingTextUpdatesRef = useRef<Record<string, string>>({});
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnId, boolean>>(() => {
@@ -433,7 +402,7 @@ export default function BookingMaster() {
   });
 
   const sendBookingEmailsMutation = useMutation({
-    mutationFn: async ({ seatAssignmentIds, emailSubject, emailBody, attachmentPaths }: { seatAssignmentIds: string[]; emailSubject: string; emailBody: string; attachmentPaths?: string[] }) => {
+    mutationFn: async ({ seatAssignmentIds, emailSubject, emailBody, attachmentPaths }: { seatAssignmentIds: string[]; emailSubject: string; emailBody?: string; attachmentPaths?: string[] }) => {
       return await apiRequest("POST", "/api/booking-confirmations/send", { 
         seatAssignmentIds,
         emailSubject,
@@ -618,7 +587,7 @@ export default function BookingMaster() {
     sendBookingEmailsMutation.mutate({
       seatAssignmentIds: Array.from(selectedAssignments),
       emailSubject,
-      emailBody
+      emailBody: undefined
     });
     setConfirmSendOpen(false);
   };
@@ -1270,47 +1239,19 @@ export default function BookingMaster() {
               />
             </div>
             
-            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/50">
-              <div className="space-y-0.5">
-                <Label htmlFor="use-professional-template" className="text-sm font-medium">
-                  Use Professional Template
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Uses the branded email with banner image and gold styling
-                </p>
+            <div className="border rounded-lg p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="h-4 w-4 text-amber-600" />
+                <span className="font-medium text-amber-800 dark:text-amber-200">Professional Template</span>
               </div>
-              <Switch
-                id="use-professional-template"
-                checked={useProfessionalTemplate}
-                onCheckedChange={setUseProfessionalTemplate}
-                data-testid="switch-professional-template"
-              />
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                Emails will include the Deal or No Deal banner, burgundy background, gold accents, 
+                and automatically show contestant name, recording date, and seat details.
+              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                To edit the email wording, go to Settings &gt; Booking Email Template
+              </p>
             </div>
-            
-            {useProfessionalTemplate ? (
-              <div className="border rounded-lg p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="h-4 w-4 text-amber-600" />
-                  <span className="font-medium text-amber-800 dark:text-amber-200">Professional Template Active</span>
-                </div>
-                <p className="text-sm text-amber-700 dark:text-amber-300">
-                  Emails will include the Deal or No Deal banner, burgundy background, gold accents, 
-                  and automatically show contestant name, recording date, and seat details.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label htmlFor="email-body">Email Body (Custom HTML)</Label>
-                <Textarea
-                  id="email-body"
-                  value={emailBody}
-                  onChange={(e) => setEmailBody(e.target.value)}
-                  placeholder="Email body"
-                  className="min-h-[300px] font-mono text-sm"
-                  data-testid="input-email-body"
-                />
-              </div>
-            )}
             
             {pdfAssets.length > 0 && (
               <div className="space-y-2">
@@ -1350,25 +1291,6 @@ export default function BookingMaster() {
               </div>
             )}
 
-            {!useProfessionalTemplate && (
-              <div className="text-xs text-muted-foreground bg-muted p-3 rounded-md space-y-3">
-                <div>
-                  <p className="font-medium mb-1">Available placeholders:</p>
-                  <ul className="space-y-1">
-                    <li><code className="bg-background px-1 rounded">{"{{name}}"}</code> - Contestant's name</li>
-                    <li><code className="bg-background px-1 rounded">{"{{date}}"}</code> - Recording date</li>
-                    <li><code className="bg-background px-1 rounded">{"{{confirmationLink}}"}</code> - Unique confirmation link</li>
-                    <li><code className="bg-background px-1 rounded">{"{{block}}"}</code> - Block number</li>
-                    <li><code className="bg-background px-1 rounded">{"{{seat}}"}</code> - Seat label</li>
-                  </ul>
-                </div>
-                <div>
-                  <p className="font-medium mb-1">Adding images:</p>
-                  <p>This email supports HTML. To add an image, upload at Email Assets page, then use:</p>
-                  <code className="bg-background px-1 rounded block mt-1">{'<img src="YOUR_IMAGE_URL" alt="Description" style="max-width: 100%;">'}</code>
-                </div>
-              </div>
-            )}
           </div>
           
           <DialogFooter className="gap-2">
@@ -1380,7 +1302,7 @@ export default function BookingMaster() {
                 sendBookingEmailsMutation.mutate({
                   seatAssignmentIds: Array.from(selectedAssignments),
                   emailSubject,
-                  emailBody: useProfessionalTemplate ? undefined : emailBody,
+                  emailBody: undefined,
                   attachmentPaths: selectedAttachments.length > 0 ? selectedAttachments : undefined
                 });
               }}

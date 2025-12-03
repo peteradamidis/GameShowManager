@@ -2355,13 +2355,17 @@ Deal or No Deal Production Team
               .replace(/\{\{seat\}\}/g, assignment.seatLabel)
               .replace(/\{\{confirmationLink\}\}/g, confirmationLink);
           } else {
-            // Get logo URL from system config or use default
-            const logoUrl = await storage.getSystemConfig('email_logo_url') || `${baseUrl}/uploads/branding/dond_logo.png`;
-            
             // Get banner URL from system config or use default
             const bannerUrl = await storage.getSystemConfig('email_banner_url') || `${baseUrl}/uploads/branding/dond_banner.webp`;
             
-            // Default professional HTML email template with Deal or No Deal branding
+            // Get configurable text from system config with defaults
+            const emailHeadline = await storage.getSystemConfig('booking_email_headline') || 'Your Booking is Confirmed!';
+            const emailIntro = await storage.getSystemConfig('booking_email_intro') || 'Congratulations! You\'ve secured your spot in the <strong style="color: #8B0000;">Deal or No Deal</strong> studio audience.';
+            const emailInstructions = await storage.getSystemConfig('booking_email_instructions') || 'Please confirm your attendance by clicking the button below. You can also let us know about dietary requirements or ask any questions.';
+            const emailButtonText = await storage.getSystemConfig('booking_email_button_text') || 'Confirm Attendance';
+            const emailFooter = await storage.getSystemConfig('booking_email_footer') || 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.';
+            
+            // Professional HTML email template with configurable content
             emailBody = `<!DOCTYPE html>
 <html>
 <head>
@@ -2381,7 +2385,7 @@ Deal or No Deal Production Team
     <tr>
       <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
         <h1 style="color: #D4AF37; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-          Your Booking is Confirmed!
+          ${emailHeadline}
         </h1>
       </td>
     </tr>
@@ -2397,7 +2401,7 @@ Deal or No Deal Production Team
               </p>
               
               <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
-                Congratulations! You've secured your spot in the <strong style="color: #8B0000;">Deal or No Deal</strong> studio audience.
+                ${emailIntro}
               </p>
               
               <!-- Booking Details Box -->
@@ -2418,14 +2422,14 @@ Deal or No Deal Production Team
               </table>
               
               <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
-                Please confirm your attendance by clicking the button below. You can also let us know about dietary requirements or ask any questions.
+                ${emailInstructions}
               </p>
               
               <!-- Gold/Red CTA Button -->
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 25px auto;">
                 <tr>
                   <td style="background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); border-radius: 8px; box-shadow: 0 4px 10px rgba(139,0,0,0.3);">
-                    <a href="${confirmationLink}" target="_blank" style="display: inline-block; padding: 16px 40px; color: #2a0a0a; text-decoration: none; font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px;">Confirm Attendance</a>
+                    <a href="${confirmationLink}" target="_blank" style="display: inline-block; padding: 16px 40px; color: #2a0a0a; text-decoration: none; font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px;">${emailButtonText}</a>
                   </td>
                 </tr>
               </table>
@@ -2446,8 +2450,7 @@ Deal or No Deal Production Team
     <tr>
       <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
         <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
-          This is an automated message from the Deal or No Deal production team.<br/>
-          If you have questions, please use the confirmation form to submit them.
+          ${emailFooter}
         </p>
       </td>
     </tr>
