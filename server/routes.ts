@@ -2401,9 +2401,11 @@ Deal or No Deal Production Team
                 Hi ${contestant.name.split(' ')[0]},
               </p>
               
-              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
-                ${emailIntro}
-              </p>
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+                ${emailIntro.split('\n\n').map((paragraph: string) => 
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
               
               <!-- Booking Details Box -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
@@ -2422,9 +2424,11 @@ Deal or No Deal Production Team
                 </tr>
               </table>
               
-              <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
-                ${emailInstructions}
-              </p>
+              <div style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                ${emailInstructions.split('\n\n').map((paragraph: string) => 
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
               
               <!-- Gold/Red CTA Button -->
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 25px auto;">
