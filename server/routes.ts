@@ -2850,13 +2850,21 @@ Deal or No Deal Production Team
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
               });
               
+              // Get base URL for email links/images
+              const protocol = req.headers['x-forwarded-proto'] || 'https';
+              const host = req.headers.host || 'localhost:5000';
+              const confirmEmailBaseUrl = `${protocol}://${host}`;
+              
               // Get email config
               const senderNameConfig = await storage.getSystemConfig('email_sender_name');
               const emailConfig: EmailConfig = {
                 senderName: senderNameConfig || 'Deal or No Deal',
               };
               
-              // Build confirmation receipt email
+              // Get banner URL from system config or use default
+              const bannerUrl = await storage.getSystemConfig('email_banner_url') || `${confirmEmailBaseUrl}/uploads/branding/dond_banner.png`;
+              
+              // Build confirmation receipt email matching booking email style
               const confirmationEmailSubject = `Deal or No Deal - Attendance Confirmed for ${recordDate}`;
               const confirmationEmailBody = `<!DOCTYPE html>
 <html>
@@ -2864,65 +2872,78 @@ Deal or No Deal Production Team
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5;">
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
-    <!-- Header -->
+    <!-- Full-width Banner Image -->
     <tr>
-      <td style="background: linear-gradient(135deg, #1a5f1a 0%, #0d3d0d 100%); padding: 30px; text-align: center;">
-        <h1 style="color: #ffffff; font-size: 24px; font-weight: bold; margin: 0; letter-spacing: 2px;">
-          ATTENDANCE CONFIRMED
+      <td style="padding: 0; line-height: 0;">
+        <img src="${bannerUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />
+      </td>
+    </tr>
+    
+    <!-- Gold Title Bar -->
+    <tr>
+      <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          Attendance Confirmed!
         </h1>
       </td>
     </tr>
     
-    <!-- Content -->
+    <!-- Content Card -->
     <tr>
-      <td style="background-color: #ffffff; padding: 35px 30px;">
-        <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-          Hi ${contestant.name.split(' ')[0]},
-        </p>
-        
-        <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
-          Thank you for confirming your attendance! We're excited to have you join us for the <strong style="color: #8B0000;">Deal or No Deal</strong> recording.
-        </p>
-        
-        <!-- Booking Details Box -->
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-radius: 8px; border-left: 5px solid #2e7d32; margin: 0 0 25px 0;">
+      <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
           <tr>
-            <td style="padding: 20px;">
-              <h2 style="color: #1b5e20; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
-                Your Record Day Details
-              </h2>
-              <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
-                <strong>Date:</strong> ${recordDate}
+            <td style="padding: 35px 30px;">
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
+                Hi ${contestant.name.split(' ')[0]},
               </p>
-              <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
-                <strong>Time:</strong> 7:30AM
+              
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+                Thank you for confirming your attendance! We're excited to have you join us for the <strong style="color: #8B0000;">Deal or No Deal</strong> recording.
               </p>
-              <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
-                <strong>Location:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008
+              
+              <!-- Booking Details Box -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                      Your Record Day Details
+                    </h2>
+                    <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
+                      <strong>Date:</strong> ${recordDate}
+                    </p>
+                    <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
+                      <strong>Time:</strong> 7:30AM
+                    </p>
+                    <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
+                      <strong>Location:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008
+                    </p>
+                    ${attendingWith ? `<p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0;">
+                      <strong>Attending with:</strong> ${attendingWith}
+                    </p>` : ''}
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
+                Please keep this email for your records. If you have any attached documents, please read them carefully before your recording date.
               </p>
-              ${attendingWith ? `<p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0;">
-                <strong>Attending with:</strong> ${attendingWith}
-              </p>` : ''}
+              
+              <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0;">
+                If you need to make any changes to your booking or have questions, please contact us as soon as possible.
+              </p>
             </td>
           </tr>
         </table>
-        
-        <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
-          Please keep this email for your records. If you have any attached documents, please read them carefully before your recording date.
-        </p>
-        
-        <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0;">
-          If you need to make any changes to your booking or have questions, please contact us as soon as possible.
-        </p>
       </td>
     </tr>
     
     <!-- Footer -->
     <tr>
-      <td style="background-color: #f5f5f5; padding: 20px 30px; text-align: center;">
-        <p style="color: #888888; font-size: 12px; line-height: 1.5; margin: 0;">
+      <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
+        <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
           This is an automated confirmation from the Deal or No Deal production team.
         </p>
       </td>

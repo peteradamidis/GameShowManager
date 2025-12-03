@@ -1,17 +1,15 @@
 import { useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, MapPin, Clock, Users, AlertCircle, CheckCircle, XCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const DEFAULT_CONFIG: Record<string, string> = {
-  title: "TV Show Booking Confirmation",
+  title: "Deal or No Deal",
   description: "Please confirm your attendance for the upcoming recording.",
   attendingWithLabel: "Update \"Attending With\" Information (optional)",
   attendingWithPlaceholder: "Enter names of people you're attending with",
@@ -21,7 +19,7 @@ const DEFAULT_CONFIG: Record<string, string> = {
   confirmButtonText: "Confirm Attendance",
   declineButtonText: "Cannot Attend",
   declineReasonRequired: "Please provide a reason for declining the booking",
-  confirmedTitle: "Booking Confirmed!",
+  confirmedTitle: "Attendance Confirmed!",
   confirmedMessage: "Thank you for confirming your attendance! We look forward to seeing you at the recording.",
   declinedTitle: "Booking Cancelled",
   declinedMessage: "Your booking has been cancelled. If your circumstances change, please contact us.",
@@ -116,7 +114,6 @@ export default function BookingConfirmationPage() {
         errorMessage = error.message;
       }
       
-      // Handle already responded case
       if (error.alreadyResponded) {
         errorMessage = `This link has already been used. You previously ${error.previousResponse === 'confirmed' ? 'confirmed' : 'declined'} this booking.`;
       }
@@ -145,18 +142,20 @@ export default function BookingConfirmationPage() {
     submitMutation.mutate("declined");
   };
 
+  // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-        <Card className="w-full max-w-2xl">
-          <CardContent className="p-12 text-center">
-            <p className="text-muted-foreground">Loading your booking details...</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#2a0a0a' }}>
+        <div className="w-full max-w-2xl mx-4">
+          <div className="bg-white rounded-xl p-12 text-center shadow-2xl">
+            <p className="text-gray-500">Loading your booking details...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
+  // Error state
   if (error || !tokenData) {
     const errorData = error as any;
     let errorTitle = "Invalid Confirmation Link";
@@ -177,154 +176,238 @@ export default function BookingConfirmationPage() {
     }
     
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-        <Card className="w-full max-w-2xl">
-          <CardContent className="p-12">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                <div className="space-y-2">
-                  <p className="font-semibold">{errorTitle}</p>
-                  <p>{errorMessage}</p>
-                </div>
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#2a0a0a' }}>
+        <div className="w-full max-w-2xl">
+          <div className="bg-white rounded-xl p-8 shadow-2xl">
+            <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-red-800">{errorTitle}</p>
+                <p className="text-red-700 mt-1">{errorMessage}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
+  // Success/submitted state
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-        <Card className="w-full max-w-2xl">
-          <CardContent className="p-12 text-center">
-            {confirmationResult === "confirmed" ? (
-              <>
-                <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500" />
-                <h2 className="text-2xl font-semibold mb-2">{getConfig("confirmedTitle")}</h2>
-                <p className="text-muted-foreground mb-4">
-                  {getConfig("confirmedMessage")}
-                </p>
-                {tokenData && (
-                  <div className="bg-muted p-4 rounded-lg text-sm space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      <span className="font-medium">{new Date(tokenData.booking.recordDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                    </div>
-                    <div className="flex items-center justify-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      <span>7:30AM</span>
-                    </div>
-                    <div className="flex items-center justify-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      <span>Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008</span>
+      <div className="min-h-screen p-4" style={{ backgroundColor: '#2a0a0a' }}>
+        <div className="max-w-2xl mx-auto py-8">
+          {/* Banner */}
+          <img 
+            src="/uploads/branding/dond_banner.png" 
+            alt="Deal or No Deal" 
+            className="w-full rounded-t-xl"
+          />
+          
+          {/* Gold Title Bar */}
+          <div 
+            className="py-6 px-8 text-center"
+            style={{ background: 'linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%)' }}
+          >
+            <h1 
+              className="text-2xl md:text-3xl font-bold tracking-widest uppercase"
+              style={{ color: '#D4AF37', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+            >
+              {confirmationResult === "confirmed" ? getConfig("confirmedTitle") : getConfig("declinedTitle")}
+            </h1>
+          </div>
+          
+          {/* White Content Card */}
+          <div className="mx-5 mb-6 -mt-0" style={{ marginTop: '-1px' }}>
+            <div className="bg-white rounded-b-xl shadow-2xl p-8 text-center">
+              {confirmationResult === "confirmed" ? (
+                <>
+                  <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: '#D4AF37' }} />
+                  <p className="text-gray-600 mb-6">
+                    {getConfig("confirmedMessage")}
+                  </p>
+                  
+                  {/* Details Box */}
+                  <div 
+                    className="rounded-lg p-5 text-left"
+                    style={{ 
+                      background: 'linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%)',
+                      borderLeft: '5px solid #D4AF37'
+                    }}
+                  >
+                    <h2 
+                      className="text-sm font-bold uppercase tracking-wide mb-3"
+                      style={{ color: '#8B0000' }}
+                    >
+                      Your Record Day Details
+                    </h2>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4" style={{ color: '#D4AF37' }} />
+                        <span className="font-medium">
+                          {new Date(tokenData.booking.recordDate).toLocaleDateString('en-US', { 
+                            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4" style={{ color: '#D4AF37' }} />
+                        <span>7:30AM</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <MapPin className="w-4 h-4 mt-0.5" style={{ color: '#D4AF37' }} />
+                        <span>Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008</span>
+                      </div>
                     </div>
                   </div>
-                )}
-              </>
-            ) : (
-              <>
-                <XCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
-                <h2 className="text-2xl font-semibold mb-2">{getConfig("declinedTitle")}</h2>
-                <p className="text-muted-foreground">
-                  {getConfig("declinedMessage")}
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
+                </>
+              ) : (
+                <>
+                  <XCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
+                  <p className="text-gray-600">
+                    {getConfig("declinedMessage")}
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+          
+          {/* Footer */}
+          <div className="text-center py-4">
+            <p className="text-xs" style={{ color: '#aa8888' }}>
+              This is an automated message from the Deal or No Deal production team.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
+  // Already responded state
   if (tokenData.confirmationStatus !== "pending") {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-        <Card className="w-full max-w-2xl">
-          <CardContent className="p-12 text-center">
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                You've already responded to this booking confirmation.
-                {tokenData.confirmationStatus === "confirmed" && " Your attendance is confirmed."}
-                {tokenData.confirmationStatus === "declined" && " This booking has been cancelled."}
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#2a0a0a' }}>
+        <div className="w-full max-w-2xl">
+          <div className="bg-white rounded-xl p-8 shadow-2xl">
+            <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-amber-800">
+                  You've already responded to this booking confirmation.
+                  {tokenData.confirmationStatus === "confirmed" && " Your attendance is confirmed."}
+                  {tokenData.confirmationStatus === "declined" && " This booking has been cancelled."}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
+  // Main form
   return (
-    <div className="min-h-screen p-4 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-3xl mx-auto py-8">
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-2xl">{getConfig("title")}</CardTitle>
-            <CardDescription>
-              Hello {tokenData.contestant.name}! {getConfig("description")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="bg-muted p-4 rounded-lg space-y-3">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Recording Date</p>
-                  <p className="font-semibold">
-                    {new Date(tokenData.booking.recordDate).toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
-                  </p>
+    <div className="min-h-screen p-4" style={{ backgroundColor: '#2a0a0a' }}>
+      <div className="max-w-2xl mx-auto py-8">
+        {/* Banner */}
+        <img 
+          src="/uploads/branding/dond_banner.png" 
+          alt="Deal or No Deal" 
+          className="w-full rounded-t-xl"
+        />
+        
+        {/* Gold Title Bar */}
+        <div 
+          className="py-6 px-8 text-center"
+          style={{ background: 'linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%)' }}
+        >
+          <h1 
+            className="text-2xl md:text-3xl font-bold tracking-widest uppercase"
+            style={{ color: '#D4AF37', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+          >
+            Booking Confirmation
+          </h1>
+        </div>
+        
+        {/* White Content Card */}
+        <div className="mx-5 mb-6" style={{ marginTop: '-1px' }}>
+          <div className="bg-white rounded-b-xl shadow-2xl p-8">
+            {/* Greeting */}
+            <p className="text-gray-700 text-lg mb-2">
+              Hi {tokenData.contestant.name.split(' ')[0]},
+            </p>
+            <p className="text-gray-600 mb-6">
+              {getConfig("description")}
+            </p>
+            
+            {/* Details Box */}
+            <div 
+              className="rounded-lg p-5 mb-6"
+              style={{ 
+                background: 'linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%)',
+                borderLeft: '5px solid #D4AF37'
+              }}
+            >
+              <h2 
+                className="text-sm font-bold uppercase tracking-wide mb-3"
+                style={{ color: '#8B0000' }}
+              >
+                Your Record Day Details
+              </h2>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Calendar className="w-5 h-5" style={{ color: '#D4AF37' }} />
+                  <div>
+                    <p className="text-xs text-gray-500">Recording Date</p>
+                    <p className="font-semibold text-gray-800">
+                      {new Date(tokenData.booking.recordDate).toLocaleDateString('en-US', { 
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                      })}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Time</p>
-                  <p className="font-semibold">7:30AM</p>
+                
+                <div className="flex items-center gap-3">
+                  <Clock className="w-5 h-5" style={{ color: '#D4AF37' }} />
+                  <div>
+                    <p className="text-xs text-gray-500">Time</p>
+                    <p className="font-semibold text-gray-800">7:30AM</p>
+                  </div>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Location</p>
-                  <p className="font-semibold">Docklands Studios Melbourne</p>
-                  <p className="text-sm text-muted-foreground">476 Docklands Drive, Docklands, VIC, 3008</p>
+                
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 mt-0.5" style={{ color: '#D4AF37' }} />
+                  <div>
+                    <p className="text-xs text-gray-500">Location</p>
+                    <p className="font-semibold text-gray-800">Docklands Studios Melbourne</p>
+                    <p className="text-sm text-gray-600">476 Docklands Drive, Docklands, VIC, 3008</p>
+                  </div>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Contestant</p>
-                  <p className="font-semibold">
-                    {tokenData.contestant.name}
-                  </p>
+                
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5" style={{ color: '#D4AF37' }} />
+                  <div>
+                    <p className="text-xs text-gray-500">Contestant</p>
+                    <p className="font-semibold text-gray-800">{tokenData.contestant.name}</p>
+                  </div>
                 </div>
               </div>
             </div>
 
+            {/* Group members alert */}
             {tokenData.groupMembers.length > 0 && (
-              <Alert>
-                <Users className="h-4 w-4" />
-                <AlertDescription>
-                  <span className="font-medium">Attending with: </span>
-                  {tokenData.groupMembers.map(m => m.name).join(", ")}
-                </AlertDescription>
-              </Alert>
+              <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6">
+                <Users className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-medium text-blue-800">Attending with: </span>
+                  <span className="text-blue-700">{tokenData.groupMembers.map(m => m.name).join(", ")}</span>
+                </div>
+              </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="attending-with" data-testid="label-attending-with">
+            {/* Attending with input */}
+            <div className="space-y-2 mb-6">
+              <Label htmlFor="attending-with" data-testid="label-attending-with" className="text-gray-700">
                 {getConfig("attendingWithLabel")}
               </Label>
               <Input
@@ -333,14 +416,16 @@ export default function BookingConfirmationPage() {
                 placeholder={tokenData.currentAttendingWith || getConfig("attendingWithPlaceholder")}
                 value={attendingWith}
                 onChange={(e) => setAttendingWith(e.target.value)}
+                className="border-gray-300"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-500">
                 {getConfig("attendingWithHelp")}
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="notes" data-testid="label-notes">
+            {/* Notes/dietary input */}
+            <div className="space-y-2 mb-6">
+              <Label htmlFor="notes" data-testid="label-notes" className="text-gray-700">
                 {getConfig("notesLabel")}
               </Label>
               <Textarea
@@ -350,16 +435,22 @@ export default function BookingConfirmationPage() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={4}
+                className="border-gray-300"
               />
             </div>
 
+            {/* Action buttons */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <Button
                 data-testid="button-confirm"
                 onClick={handleConfirm}
                 disabled={submitMutation.isPending}
-                className="flex-1"
-                size="lg"
+                className="flex-1 text-base py-6 font-bold uppercase tracking-wide"
+                style={{ 
+                  background: 'linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)',
+                  color: '#2a0a0a',
+                  boxShadow: '0 4px 10px rgba(139,0,0,0.3)'
+                }}
               >
                 {submitMutation.isPending ? "Confirming..." : getConfig("confirmButtonText")}
               </Button>
@@ -368,19 +459,25 @@ export default function BookingConfirmationPage() {
                 variant="destructive"
                 onClick={handleDecline}
                 disabled={submitMutation.isPending}
-                className="flex-1"
-                size="lg"
+                className="flex-1 text-base py-6"
               >
                 {submitMutation.isPending ? "Cancelling..." : getConfig("declineButtonText")}
               </Button>
             </div>
 
-            <p className="text-xs text-center text-muted-foreground">
+            <p className="text-xs text-center text-gray-500 mt-6">
               If you confirm, you'll receive additional paperwork and arrival instructions closer to the recording date.
               If you cannot attend, we'll move you to our reschedule list for future opportunities.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div className="text-center py-4">
+          <p className="text-xs" style={{ color: '#aa8888' }}>
+            This is an automated message from the Deal or No Deal production team.
+          </p>
+        </div>
       </div>
     </div>
   );
