@@ -8,7 +8,7 @@ import crypto from "crypto";
 import path from "path";
 import express from "express";
 import fs from "fs";
-import { getUncachableGmailClient, sendEmail, sendEmailWithAttachment, getInboxMessages, ParsedEmail } from "./gmail";
+import { getUncachableGmailClient, sendEmail, sendEmailWithAttachment, getInboxMessages, ParsedEmail, EmailConfig } from "./gmail";
 import { syncRecordDayToSheet, createSheetHeader, updateCellInRecordDaySheet, updateRowInRecordDaySheet, getRecordDaySheetData } from "./google-sheets";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
@@ -2344,7 +2344,7 @@ Deal or No Deal Production Team
           const confirmationLink = `${baseUrl}/booking-confirmation/${token}`;
           const recordDate = new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
           
-          // Use custom email body if provided, otherwise use default
+          // Use custom email body if provided, otherwise use default HTML template
           let emailBody: string;
           if (customEmailBody) {
             // Replace placeholders in custom email body
@@ -2355,10 +2355,74 @@ Deal or No Deal Production Team
               .replace(/\{\{seat\}\}/g, assignment.seatLabel)
               .replace(/\{\{confirmationLink\}\}/g, confirmationLink);
           } else {
-            emailBody = `Hi ${contestant.name},\n\nYou have been booked for Deal or No Deal on ${recordDate}.\n\nSeat: Block ${assignment.blockNumber}, ${assignment.seatLabel}\n\nPlease confirm your attendance:\n${confirmationLink}\n\nThank you!`;
+            // Default professional HTML email template
+            emailBody = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+    <tr>
+      <td style="padding: 40px 30px;">
+        <h1 style="color: #333333; font-size: 24px; margin: 0 0 20px 0;">Booking Confirmation Required</h1>
+        
+        <p style="color: #555555; font-size: 16px; line-height: 1.5; margin: 0 0 20px 0;">
+          Hi ${contestant.name},
+        </p>
+        
+        <p style="color: #555555; font-size: 16px; line-height: 1.5; margin: 0 0 20px 0;">
+          Great news! You have been booked for <strong>Deal or No Deal</strong> on <strong>${recordDate}</strong>.
+        </p>
+        
+        <table role="presentation" cellspacing="0" cellpadding="0" style="background-color: #f8f9fa; border-radius: 8px; margin: 0 0 25px 0; width: 100%;">
+          <tr>
+            <td style="padding: 20px;">
+              <p style="color: #333333; font-size: 14px; margin: 0 0 8px 0;"><strong>Your Seat Details:</strong></p>
+              <p style="color: #555555; font-size: 16px; margin: 0;">Block ${assignment.blockNumber}, Seat ${assignment.seatLabel}</p>
+            </td>
+          </tr>
+        </table>
+        
+        <p style="color: #555555; font-size: 16px; line-height: 1.5; margin: 0 0 25px 0;">
+          Please confirm your attendance by clicking the button below:
+        </p>
+        
+        <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 0 25px 0;">
+          <tr>
+            <td style="background-color: #2563eb; border-radius: 6px;">
+              <a href="${confirmationLink}" target="_blank" style="display: inline-block; padding: 14px 30px; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: bold;">Confirm My Attendance</a>
+            </td>
+          </tr>
+        </table>
+        
+        <p style="color: #888888; font-size: 14px; line-height: 1.5; margin: 0 0 10px 0;">
+          If the button doesn't work, copy and paste this link into your browser:
+        </p>
+        <p style="color: #2563eb; font-size: 14px; word-break: break-all; margin: 0 0 25px 0;">
+          ${confirmationLink}
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #eeeeee; margin: 25px 0;">
+        
+        <p style="color: #888888; font-size: 12px; line-height: 1.5; margin: 0;">
+          This is an automated message from the Deal or No Deal production team. Please do not reply directly to this email. If you have questions, use the confirmation form to submit them.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
           }
           
           const subject = emailSubject || 'Deal or No Deal - Booking Confirmation Required';
+          
+          // Get sender name from system config
+          const senderNameConfig = await storage.getSystemConfig('email_sender_name');
+          const emailConfig: EmailConfig = {
+            senderName: senderNameConfig || 'Deal or No Deal',
+          };
           
           // Check if there are attachments to include
           if (attachmentPaths && Array.isArray(attachmentPaths) && attachmentPaths.length > 0) {
@@ -2375,12 +2439,12 @@ Deal or No Deal Production Team
             }
             
             if (attachments.length > 0) {
-              await sendEmailWithAttachment(contestant.email, subject, emailBody, attachments);
+              await sendEmailWithAttachment(contestant.email, subject, emailBody, attachments, emailConfig);
             } else {
-              await sendEmail(contestant.email, subject, emailBody);
+              await sendEmail(contestant.email, subject, emailBody, undefined, emailConfig);
             }
           } else {
-            await sendEmail(contestant.email, subject, emailBody);
+            await sendEmail(contestant.email, subject, emailBody, undefined, emailConfig);
           }
         } catch (error: any) {
           console.error(`Failed to send booking confirmation email to ${contestant.email}:`, error.message);
@@ -2489,10 +2553,19 @@ Deal or No Deal Production Team
         if (!contestant.email) {
           return res.status(400).json({ error: "Contestant has no email address" });
         }
+        
+        // Get sender name from system config
+        const senderNameConfig = await storage.getSystemConfig('email_sender_name');
+        const emailConfig: EmailConfig = {
+          senderName: senderNameConfig || 'Deal or No Deal',
+        };
+        
         await sendEmail(
           contestant.email,
           subject || 'Re: Your Deal or No Deal Booking',
-          message
+          message,
+          undefined,
+          emailConfig
         );
       } catch (error: any) {
         console.error(`Failed to send follow-up email to ${contestant.email}:`, error.message);
@@ -3324,6 +3397,40 @@ Deal or No Deal Production Team
       });
     } catch (error: any) {
       console.error("Error processing standby confirmation:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==========================================
+  // System Config Endpoints
+  // ==========================================
+
+  // Get a system config value
+  app.get("/api/system-config/:key", async (req, res) => {
+    try {
+      const { key } = req.params;
+      const value = await storage.getSystemConfig(key);
+      res.json(value);
+    } catch (error: any) {
+      console.error("Error getting system config:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Set a system config value
+  app.put("/api/system-config/:key", async (req, res) => {
+    try {
+      const { key } = req.params;
+      const { value } = req.body;
+      
+      if (value === undefined) {
+        return res.status(400).json({ error: "Value is required" });
+      }
+      
+      await storage.setSystemConfig(key, value);
+      res.json({ success: true, key, value });
+    } catch (error: any) {
+      console.error("Error setting system config:", error);
       res.status(500).json({ error: error.message });
     }
   });

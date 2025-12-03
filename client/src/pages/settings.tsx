@@ -7,8 +7,8 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Image, FileText, Loader2, Copy, Check } from "lucide-react";
-import { useState } from "react";
+import { Trash2, Image, FileText, Loader2, Copy, Check, Save } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface EmailAsset {
   path: string;
@@ -21,6 +21,32 @@ interface EmailAsset {
 export default function Settings() {
   const { toast } = useToast();
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [senderName, setSenderName] = useState("Deal or No Deal");
+  const [senderNameChanged, setSenderNameChanged] = useState(false);
+
+  const { data: savedSenderName } = useQuery<string | null>({
+    queryKey: ["/api/system-config/email_sender_name"],
+  });
+
+  useEffect(() => {
+    if (savedSenderName) {
+      setSenderName(savedSenderName);
+    }
+  }, [savedSenderName]);
+
+  const saveSenderNameMutation = useMutation({
+    mutationFn: async (name: string) => {
+      return await apiRequest("PUT", "/api/system-config/email_sender_name", { value: name });
+    },
+    onSuccess: () => {
+      toast({ title: "Sender name saved" });
+      setSenderNameChanged(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/email_sender_name"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
 
   const { data: assets = [], isLoading: assetsLoading } = useQuery<EmailAsset[]>({
     queryKey: ['/api/email-assets'],
@@ -119,27 +145,69 @@ export default function Settings() {
           <CardHeader>
             <CardTitle>Email Settings</CardTitle>
             <CardDescription>
-              Configuration for availability forms and invitations
+              Configuration for email sending and deliverability
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Auto-send availability forms</Label>
-                <p className="text-sm text-muted-foreground">
-                  Automatically send forms after importing contestants
-                </p>
+            <div className="space-y-2">
+              <Label htmlFor="sender-name">Email Sender Name</Label>
+              <p className="text-sm text-muted-foreground">
+                This name appears in the "From" field of emails sent to contestants
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  id="sender-name"
+                  value={senderName}
+                  onChange={(e) => {
+                    setSenderName(e.target.value);
+                    setSenderNameChanged(true);
+                  }}
+                  placeholder="e.g., Deal or No Deal"
+                  data-testid="input-sender-name"
+                />
+                <Button
+                  onClick={() => saveSenderNameMutation.mutate(senderName)}
+                  disabled={!senderNameChanged || saveSenderNameMutation.isPending}
+                  data-testid="button-save-sender-name"
+                >
+                  {saveSenderNameMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                </Button>
               </div>
-              <Switch data-testid="switch-auto-send" />
             </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Send reminder emails</Label>
-                <p className="text-sm text-muted-foreground">
-                  Send reminders to contestants who haven't responded
-                </p>
+            
+            <div className="border-t pt-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Auto-send availability forms</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically send forms after importing contestants
+                  </p>
+                </div>
+                <Switch data-testid="switch-auto-send" />
               </div>
-              <Switch data-testid="switch-reminders" />
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Send reminder emails</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Send reminders to contestants who haven't responded
+                  </p>
+                </div>
+                <Switch data-testid="switch-reminders" />
+              </div>
+            </div>
+            
+            <div className="border-t pt-4">
+              <h4 className="font-medium mb-2">Email Deliverability Tips</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 list-disc pl-4">
+                <li>Ask recipients to add your email address to their contacts</li>
+                <li>Avoid using too many images or ALL CAPS in emails</li>
+                <li>Keep subject lines clear and descriptive</li>
+                <li>Test emails at mail-tester.com before sending to large groups</li>
+              </ul>
             </div>
           </CardContent>
         </Card>

@@ -1,6 +1,46 @@
 import { google } from 'googleapis';
+import crypto from 'crypto';
 
 let connectionSettings: any;
+let cachedSenderEmail: string | null = null;
+
+// Email configuration interface
+export interface EmailConfig {
+  senderName?: string;
+  replyTo?: string;
+}
+
+// Generate a unique Message-ID for email tracking
+function generateMessageId(domain: string): string {
+  const uniqueId = crypto.randomBytes(16).toString('hex');
+  const timestamp = Date.now();
+  return `<${uniqueId}.${timestamp}@${domain}>`;
+}
+
+// Extract domain from email address
+function extractDomain(email: string): string {
+  const match = email.match(/@([^>]+)/);
+  return match ? match[1] : 'mail.local';
+}
+
+// Strip HTML tags for plain text version
+function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<li>/gi, '• ')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 
 async function getAccessToken() {
   if (connectionSettings && connectionSettings.settings?.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
@@ -56,20 +96,86 @@ export async function getUncachableGmailClient() {
   return google.gmail({ version: 'v1', auth: oauth2Client });
 }
 
-export async function sendEmail(to: string, subject: string, body: string, htmlBody?: string) {
+// Get the authenticated sender's email address
+export async function getSenderEmail(): Promise<string> {
+  if (cachedSenderEmail) {
+    return cachedSenderEmail;
+  }
+  
   try {
     const gmail = await getUncachableGmailClient();
+    const profile = await gmail.users.getProfile({ userId: 'me' });
+    cachedSenderEmail = profile.data.emailAddress || 'noreply@example.com';
+    return cachedSenderEmail;
+  } catch (error) {
+    console.error('Error getting sender email:', error);
+    return 'noreply@example.com';
+  }
+}
+
+// Wrap base64 content at 76 characters per line (RFC 2045 compliance)
+function wrapBase64(base64: string, lineLength: number = 76): string {
+  const lines = [];
+  for (let i = 0; i < base64.length; i += lineLength) {
+    lines.push(base64.substring(i, i + lineLength));
+  }
+  return lines.join('\r\n');
+}
+
+export async function sendEmail(
+  to: string, 
+  subject: string, 
+  body: string, 
+  htmlBody?: string,
+  config?: EmailConfig
+) {
+  try {
+    const gmail = await getUncachableGmailClient();
+    const senderEmail = await getSenderEmail();
+    const senderName = config?.senderName || 'Deal or No Deal';
+    const replyTo = config?.replyTo || senderEmail;
+    const domain = extractDomain(senderEmail);
+    const messageId = generateMessageId(domain);
+    
+    // Create multipart message with both text and HTML
+    const boundary = `boundary_${crypto.randomBytes(8).toString('hex')}`;
+    const htmlContent = htmlBody || body;
+    const textContent = htmlToPlainText(htmlContent);
+    
+    // Encode content as base64 with proper line wrapping
+    const textBase64 = wrapBase64(Buffer.from(textContent, 'utf-8').toString('base64'));
+    const htmlBase64 = wrapBase64(Buffer.from(htmlContent, 'utf-8').toString('base64'));
     
     const message = [
-      `From: me`,
+      `From: ${senderName} <${senderEmail}>`,
       `To: ${to}`,
+      `Reply-To: ${replyTo}`,
       `Subject: ${subject}`,
-      'Content-Type: text/html; charset=utf-8',
+      `Message-ID: ${messageId}`,
+      `MIME-Version: 1.0`,
+      `X-Priority: 3`,
+      `X-Mailer: Deal-or-No-Deal-Booking-System`,
+      `Content-Type: multipart/alternative; boundary="${boundary}"`,
       '',
-      htmlBody || body
-    ].join('\n');
+      `--${boundary}`,
+      'Content-Type: text/plain; charset=utf-8',
+      'Content-Transfer-Encoding: base64',
+      '',
+      textBase64,
+      '',
+      `--${boundary}`,
+      'Content-Type: text/html; charset=utf-8',
+      'Content-Transfer-Encoding: base64',
+      '',
+      htmlBase64,
+      '',
+      `--${boundary}--`
+    ].join('\r\n');
 
-    const encodedMessage = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    const encodedMessage = Buffer.from(message).toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
 
     await gmail.users.messages.send({
       userId: 'me',
@@ -78,7 +184,7 @@ export async function sendEmail(to: string, subject: string, body: string, htmlB
       },
     });
 
-    console.log(`📧 Email sent successfully to ${to}`);
+    console.log(`📧 Email sent successfully to ${to} (from: ${senderName} <${senderEmail}>)`);
     return true;
   } catch (error: any) {
     console.error(`Error sending email to ${to}:`, error);
@@ -96,35 +202,64 @@ export async function sendEmailWithAttachment(
   to: string, 
   subject: string, 
   htmlBody: string,
-  attachments: EmailAttachment[] = []
+  attachments: EmailAttachment[] = [],
+  config?: EmailConfig
 ) {
   try {
     const gmail = await getUncachableGmailClient();
+    const senderEmail = await getSenderEmail();
+    const senderName = config?.senderName || 'Deal or No Deal';
+    const replyTo = config?.replyTo || senderEmail;
+    const domain = extractDomain(senderEmail);
+    const messageId = generateMessageId(domain);
     
-    const boundary = `boundary_${Date.now()}`;
+    const boundary = `boundary_${crypto.randomBytes(8).toString('hex')}`;
+    const altBoundary = `alt_${crypto.randomBytes(8).toString('hex')}`;
+    const textContent = htmlToPlainText(htmlBody);
+    
+    // Encode content as base64 with proper line wrapping (RFC 2045)
+    const textBase64 = wrapBase64(Buffer.from(textContent, 'utf-8').toString('base64'));
+    const htmlBase64 = wrapBase64(Buffer.from(htmlBody, 'utf-8').toString('base64'));
     
     let message = [
-      `From: me`,
+      `From: ${senderName} <${senderEmail}>`,
       `To: ${to}`,
+      `Reply-To: ${replyTo}`,
       `Subject: ${subject}`,
+      `Message-ID: ${messageId}`,
       `MIME-Version: 1.0`,
+      `X-Priority: 3`,
+      `X-Mailer: Deal-or-No-Deal-Booking-System`,
       `Content-Type: multipart/mixed; boundary="${boundary}"`,
       '',
       `--${boundary}`,
+      `Content-Type: multipart/alternative; boundary="${altBoundary}"`,
+      '',
+      `--${altBoundary}`,
+      'Content-Type: text/plain; charset=utf-8',
+      'Content-Transfer-Encoding: base64',
+      '',
+      textBase64,
+      '',
+      `--${altBoundary}`,
       'Content-Type: text/html; charset=utf-8',
       'Content-Transfer-Encoding: base64',
       '',
-      Buffer.from(htmlBody).toString('base64'),
+      htmlBase64,
+      '',
+      `--${altBoundary}--`,
     ];
 
     for (const attachment of attachments) {
+      // Wrap attachment base64 at 76 characters per line
+      const attachmentBase64 = wrapBase64(attachment.content.toString('base64'));
       message = message.concat([
         `--${boundary}`,
         `Content-Type: ${attachment.contentType}; name="${attachment.filename}"`,
         'Content-Transfer-Encoding: base64',
         `Content-Disposition: attachment; filename="${attachment.filename}"`,
         '',
-        attachment.content.toString('base64'),
+        attachmentBase64,
       ]);
     }
 
@@ -143,7 +278,7 @@ export async function sendEmailWithAttachment(
       },
     });
 
-    console.log(`📧 Email with ${attachments.length} attachment(s) sent successfully to ${to}`);
+    console.log(`📧 Email with ${attachments.length} attachment(s) sent successfully to ${to} (from: ${senderName} <${senderEmail}>)`);
     return true;
   } catch (error: any) {
     console.error(`Error sending email with attachment to ${to}:`, error);
