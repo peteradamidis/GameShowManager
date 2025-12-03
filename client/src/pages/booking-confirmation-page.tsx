@@ -14,8 +14,10 @@ const DEFAULT_CONFIG: Record<string, string> = {
   attendingWithLabel: "Update \"Attending With\" Information (optional)",
   attendingWithPlaceholder: "Enter names of people you're attending with",
   attendingWithHelp: "If your group has changed, please update it here",
-  notesLabel: "Dietary Requirements / Questions (Optional)",
-  notesPlaceholder: "Any dietary requirements, special requests, or questions you have?",
+  dietaryLabel: "Dietary Requirements (Optional)",
+  dietaryPlaceholder: "Please list any dietary requirements or allergies",
+  questionsLabel: "Questions (Optional)",
+  questionsPlaceholder: "Any questions you have for the production team?",
   confirmButtonText: "Confirm Attendance",
   declineButtonText: "Cannot Attend",
   declineReasonRequired: "Please provide a reason for declining the booking",
@@ -60,7 +62,8 @@ export default function BookingConfirmationPage() {
   const { token } = useParams<{ token: string }>();
   const { toast } = useToast();
   const [attendingWith, setAttendingWith] = useState("");
-  const [notes, setNotes] = useState("");
+  const [dietary, setDietary] = useState("");
+  const [questions, setQuestions] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState<"confirmed" | "declined" | null>(null);
 
@@ -80,6 +83,12 @@ export default function BookingConfirmationPage() {
 
   const submitMutation = useMutation({
     mutationFn: async (confirmationStatus: "confirmed" | "declined") => {
+      // Combine dietary and questions into notes field for backend
+      const notesParts = [];
+      if (dietary.trim()) notesParts.push(`Dietary Requirements: ${dietary.trim()}`);
+      if (questions.trim()) notesParts.push(`Questions: ${questions.trim()}`);
+      const notes = notesParts.join('\n\n');
+      
       const response = await fetch(`/api/booking-confirmations/respond/${token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -131,7 +140,7 @@ export default function BookingConfirmationPage() {
   };
 
   const handleDecline = () => {
-    if (!notes.trim()) {
+    if (!questions.trim()) {
       toast({
         title: "Reason required",
         description: getConfig("declineReasonRequired"),
@@ -423,18 +432,34 @@ export default function BookingConfirmationPage() {
               </p>
             </div>
 
-            {/* Notes/dietary input */}
+            {/* Dietary requirements input */}
             <div className="space-y-2 mb-6">
-              <Label htmlFor="notes" data-testid="label-notes" className="text-gray-700">
-                {getConfig("notesLabel")}
+              <Label htmlFor="dietary" data-testid="label-dietary" className="text-gray-700">
+                {getConfig("dietaryLabel")}
               </Label>
               <Textarea
-                id="notes"
-                data-testid="textarea-notes"
-                placeholder={getConfig("notesPlaceholder")}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={4}
+                id="dietary"
+                data-testid="textarea-dietary"
+                placeholder={getConfig("dietaryPlaceholder")}
+                value={dietary}
+                onChange={(e) => setDietary(e.target.value)}
+                rows={3}
+                className="border-gray-300"
+              />
+            </div>
+
+            {/* Questions input */}
+            <div className="space-y-2 mb-6">
+              <Label htmlFor="questions" data-testid="label-questions" className="text-gray-700">
+                {getConfig("questionsLabel")}
+              </Label>
+              <Textarea
+                id="questions"
+                data-testid="textarea-questions"
+                placeholder={getConfig("questionsPlaceholder")}
+                value={questions}
+                onChange={(e) => setQuestions(e.target.value)}
+                rows={3}
                 className="border-gray-300"
               />
             </div>
