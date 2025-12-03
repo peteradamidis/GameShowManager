@@ -2842,6 +2842,125 @@ Deal or No Deal Production Team
         if (attendingWith) {
           await storage.updateContestantAttendingWith(assignment.contestantId, attendingWith);
         }
+
+        // Send auto-confirmation email with PDF attachments (only on first confirmation, not resubmissions)
+        if (!isResubmission) {
+          try {
+            const contestant = await storage.getContestantById(assignment.contestantId);
+            const recordDay = await storage.getRecordDayById(assignment.recordDayId);
+            
+            if (contestant && recordDay && contestant.email) {
+              const recordDate = new Date(recordDay.date).toLocaleDateString('en-AU', { 
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+              });
+              
+              // Get email config
+              const senderNameConfig = await storage.getSystemConfig('email_sender_name');
+              const emailConfig: EmailConfig = {
+                senderName: senderNameConfig || 'Deal or No Deal',
+              };
+              
+              // Build confirmation receipt email
+              const confirmationEmailSubject = `Deal or No Deal - Attendance Confirmed for ${recordDate}`;
+              const confirmationEmailBody = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    <!-- Header -->
+    <tr>
+      <td style="background: linear-gradient(135deg, #1a5f1a 0%, #0d3d0d 100%); padding: 30px; text-align: center;">
+        <h1 style="color: #ffffff; font-size: 24px; font-weight: bold; margin: 0; letter-spacing: 2px;">
+          ATTENDANCE CONFIRMED
+        </h1>
+      </td>
+    </tr>
+    
+    <!-- Content -->
+    <tr>
+      <td style="background-color: #ffffff; padding: 35px 30px;">
+        <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+          Hi ${contestant.name},
+        </p>
+        
+        <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+          Thank you for confirming your attendance! We're excited to have you join us for the <strong style="color: #8B0000;">Deal or No Deal</strong> recording.
+        </p>
+        
+        <!-- Booking Details Box -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-radius: 8px; border-left: 5px solid #2e7d32; margin: 0 0 25px 0;">
+          <tr>
+            <td style="padding: 20px;">
+              <h2 style="color: #1b5e20; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                Your Confirmed Booking
+              </h2>
+              <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
+                <strong>Date:</strong> ${recordDate}
+              </p>
+              <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
+                <strong>Seat:</strong> Block ${assignment.blockNumber}, Seat ${assignment.seatLabel}
+              </p>
+              ${attendingWith ? `<p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0;">
+                <strong>Attending with:</strong> ${attendingWith}
+              </p>` : ''}
+            </td>
+          </tr>
+        </table>
+        
+        <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
+          Please keep this email for your records. If you have any attached documents, please read them carefully before your recording date.
+        </p>
+        
+        <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0;">
+          If you need to make any changes to your booking or have questions, please contact us as soon as possible.
+        </p>
+      </td>
+    </tr>
+    
+    <!-- Footer -->
+    <tr>
+      <td style="background-color: #f5f5f5; padding: 20px 30px; text-align: center;">
+        <p style="color: #888888; font-size: 12px; line-height: 1.5; margin: 0;">
+          This is an automated confirmation from the Deal or No Deal production team.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+              
+              // Get PDF attachments from email assets
+              const objectStorageService = new ObjectStorageService();
+              const allAssets = await objectStorageService.listEmailAssets();
+              const pdfAssets = allAssets.filter(asset => asset.contentType === 'application/pdf');
+              
+              const attachments = [];
+              for (const pdfAsset of pdfAssets) {
+                try {
+                  const { buffer, contentType, filename } = await objectStorageService.getObjectAsBuffer(pdfAsset.path);
+                  attachments.push({ content: buffer, contentType, filename });
+                } catch (attachErr: any) {
+                  console.error(`Failed to load PDF attachment ${pdfAsset.path}:`, attachErr.message);
+                }
+              }
+              
+              // Send the confirmation email
+              if (attachments.length > 0) {
+                await sendEmailWithAttachment(contestant.email, confirmationEmailSubject, confirmationEmailBody, attachments, emailConfig);
+                console.log(`📧 Auto-confirmation email sent to ${contestant.email} with ${attachments.length} PDF attachment(s)`);
+              } else {
+                await sendEmail(contestant.email, confirmationEmailSubject, confirmationEmailBody, undefined, emailConfig);
+                console.log(`📧 Auto-confirmation email sent to ${contestant.email} (no attachments)`);
+              }
+            }
+          } catch (emailErr: any) {
+            console.error(`Failed to send auto-confirmation email:`, emailErr.message);
+            // Don't fail the response - confirmation was still successful
+          }
+        }
       } else if (confirmationStatus === 'declined') {
         // Cancel the booking and move to reschedule list
         await storage.cancelSeatAssignment(
