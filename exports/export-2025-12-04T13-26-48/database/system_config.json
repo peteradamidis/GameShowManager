@@ -1,0 +1,50 @@
+[
+  {
+    "id": "1237ef75-8635-4340-a6a5-d46bffcf1081",
+    "key": "google_sheets_spreadsheet_id",
+    "value": "1oPsdQ8nfUFwsE0TgPNSJDiEcDQHKpM3E5uxqY-nQVHY",
+    "updated_at": "2025-11-30T13:00:44.949Z"
+  },
+  {
+    "id": "b12f036f-a4ff-4d7e-b8ec-3419f5ebd596",
+    "key": "booking_email_instructions",
+    "value": "Please confirm or decline your attendance by clicking the button below. \nIf you have any questions, please use the confirmation form to submit them - do not respond to this email.",
+    "updated_at": "2025-12-03T06:10:29.237Z"
+  },
+  {
+    "id": "16f7c6f6-82dc-49b5-8336-c8add5248509",
+    "key": "booking_email_footer",
+    "value": "This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.",
+    "updated_at": "2025-12-03T06:10:29.242Z"
+  },
+  {
+    "id": "63ceec1d-09fc-4a0b-846f-6dbca1536335",
+    "key": "booking_email_intro",
+    "value": "We enjoyed meeting you at our auditions and would love to invite you along to a recording of <strong style=\"color: #8B0000;\">Deal or No Deal</strong>.\n\n\nThis invitation does not guarantee a place on the podium, but we wish you the very best of luck and sincerely hope you win some big money!\n",
+    "updated_at": "2025-12-03T06:10:29.240Z"
+  },
+  {
+    "id": "d0c04a10-0222-4ebe-be7f-fd04b63fc682",
+    "key": "booking_email_additional_instructions",
+    "value": "We will be recording multiple episodes on the day. The recording of these shows will take approximately 10 hours. Please be prepared to make yourself available for the full length of time.\n\nYou will receive another email closer to your record date with additional paperwork.\n\nKind regards,\nThe Deal or No Deal Casting Team",
+    "updated_at": "2025-12-03T06:10:29.244Z"
+  },
+  {
+    "id": "ea979e94-3adb-4778-94fe-9f4f45739fc0",
+    "key": "booking_email_button_text",
+    "value": "Confirm Attendance",
+    "updated_at": "2025-12-03T06:10:29.246Z"
+  },
+  {
+    "id": "e6435312-abef-4438-a7c9-b55970128a94",
+    "key": "booking_email_headline",
+    "value": "You are invited to a Recording!",
+    "updated_at": "2025-12-03T06:10:29.252Z"
+  },
+  {
+    "id": "6d44ce61-c0e7-44e4-bf84-c71183d4eb9c",
+    "key": "google_sheets_last_sync",
+    "value": "2025-12-03T13:00:04.624Z",
+    "updated_at": "2025-12-03T13:00:04.624Z"
+  }
+]

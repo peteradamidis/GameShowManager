@@ -1,0 +1,29 @@
+{
+  "exportedAt": "2025-12-04T13:26:51.446Z",
+  "version": "1.0",
+  "tables": {
+    "groups": 1,
+    "contestants": 3,
+    "record_days": 17,
+    "seat_assignments": 3,
+    "canceled_assignments": 0,
+    "availability_tokens": 0,
+    "contestant_availability": 0,
+    "booking_confirmation_tokens": 47,
+    "booking_messages": 53,
+    "block_types": 26,
+    "standby_assignments": 0,
+    "standby_confirmation_tokens": 0,
+    "system_config": 8,
+    "form_configurations": 18
+  },
+  "files": {
+    "uploads": 5,
+    "storage": 0
+  },
+  "notes": [
+    "Import using: npx tsx scripts/import-data.ts <path-to-export-dir>",
+    "Database tables are in ./database/*.json",
+    "Uploaded files are in ./uploads/ and ./storage/"
+  ]
+}
