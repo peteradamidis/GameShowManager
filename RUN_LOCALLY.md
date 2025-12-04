@@ -313,7 +313,67 @@ npx tsx scripts/import-data.ts ./exports/export-2024-01-15T10-30-00
 
 ---
 
-## 14. Additional Notes
+## 14. Deploying to Digital Ocean (or Other Cloud Providers)
+
+### Build and Run Commands
+
+**Build command:**
+```bash
+npm run build
+```
+
+**Run command:**
+```bash
+npm run start
+```
+
+### Required Environment Variables
+
+Set these in your Digital Ocean App Platform settings:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `PGHOST` | Yes | Database host |
+| `PGPORT` | Yes | Database port (usually 5432) |
+| `PGUSER` | Yes | Database username |
+| `PGPASSWORD` | Yes | Database password |
+| `PGDATABASE` | Yes | Database name |
+| `SESSION_SECRET` | Yes | Random string for sessions |
+| `NODE_ENV` | Yes | Set to `production` |
+| `PORT` | No | Server port (Digital Ocean provides this) |
+
+### Important Notes
+
+1. **HTTPS Required**: The app should be served over HTTPS for cookies to work properly in production.
+
+2. **Build Artifacts**: The build process creates `dist/public/` containing the frontend. The server serves these files in production mode.
+
+3. **Database Migration**: After deploying, run the schema push:
+   ```bash
+   npm run db:push
+   ```
+
+4. **File Uploads**: Uploaded files are stored in `uploads/` and `storage/` directories. On Digital Ocean App Platform, these are ephemeral - consider using a persistent volume or external storage for production.
+
+5. **API Calls**: The frontend automatically uses `window.location.origin` for API calls, so it works correctly regardless of your domain.
+
+### Troubleshooting
+
+**Seating chart or tabs not loading?**
+- Check browser console for network errors
+- Verify all environment variables are set
+- Ensure `npm run build` completed successfully before `npm run start`
+- Confirm the app is served over HTTPS
+
+**API requests failing?**
+- Check that `NODE_ENV=production` is set
+- Verify database connection is working
+- Check server logs for errors
+
+---
+
+## 15. Additional Notes
 
 - The application uses TypeScript ES Modules (`"type": "module"` in package.json)
 - Path aliases are configured: `@/` for client source, `@shared/` for shared code
