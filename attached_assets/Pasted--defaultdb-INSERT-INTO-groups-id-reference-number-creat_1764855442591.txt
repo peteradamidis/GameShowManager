@@ -1,0 +1,29 @@
+
+defaultdb=> INSERT INTO groups (id, reference_number, created_at) VALUES ('5fe641da-4067-49a7-bae7-e63413b3e404', 'GRP001', '2025-12-02T05:59:07.196Z');
+ERROR:  relation "groups" does not exist
+LINE 1: INSERT INTO groups (id, reference_number, created_at) VALUES...
+                    ^
+defaultdb=> INSERT INTO record_days (id, date, total_seats, status, created_at, rx_number) VALUES ('e432f0fe-1383-44a2-990c-5f787da5008a', '2026-02-04', 154, 'ready', '2025-11-27T11:34:23.272Z', 'RX1 - 1-5'), ('8de562bb-e594-47dd-a50f-ee78c14c0dde', '2026-02-05', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 6 - 10'), ('4ca4a7ea-c1ac-44e5-9533-fdd34522899d', '2026-02-06', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 11 - 15'), ('abce05e1-0917-4949-a374-ef5f941df712', '2026-02-09', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 16 - 20'), ('2ee609d2-1a2d-440c-801d-0eb0bfc47a2f', '2026-02-10', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 21 - 25'), ('59f9cd94-162d-413c-9797-5a881676a706', '2026-02-11', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 26 - 30'), ('c68366bd-1541-45fc-a22f-47ef139f16ec', '2026-02-17', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 31 - 35'), ('eec54567-3e21-424c-8d62-28772c0a6c25', '2026-02-18', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 36 - 40'), ('04617609-04e6-4fa6-8023-ff7dede3c93a', '2026-02-19', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 41 - 45'), ('80991c27-1587-4869-be9c-dc2a96950499', '2026-02-20', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 46 - 50'), ('274e9d90-48a5-404b-af78-739e1457158d', '2026-02-24', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 51 - 55'), ('dcf33543-4096-425f-a8a1-2015851bd687', '2026-02-25', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 56 - 60'), ('d3473fc2-fb62-4612-ae98-bf4765ba61e4', '2026-02-26', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 61 - 65'), ('48bf0bd2-280f-44ac-806d-f1ae9f44712a', '2026-03-02', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 66 - 70'), ('d06d32c7-51a5-4efd-9234-75c79c7c72d6', '2026-03-03', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 71 - 75'), ('1da0c632-a3e1-46c0-8e8a-37753630608a', '2026-03-04', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 76 - 80'), ('f159ca53-ea3d-4568-9403-7f15cd73dac8', '2026-03-05', 154, 'draft', '2025-11-27T11:34:23.272Z', 'RX EP 81 - 85');
+ERROR:  relation "record_days" does not exist
+LINE 1: INSERT INTO record_days (id, date, total_seats, status, crea...
+                    ^
+defaultdb=> \dt
+Did not find any relations.
+defaultdb=> \q
+apps@gameshowmanager-6cb5bb47d4-dd7fj:~$ npm run db:push
+
+> rest-express@1.0.0 db:push
+> drizzle-kit push
+
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/workspace/drizzle.config.ts'
+Using 'pg' driver for database querying
+[⣷] Pulling schema from database...
+Error: self-signed certificate in certificate chain
+    at /workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Object.query (/workspace/node_modules/drizzle-kit/bin.cjs:80601:26)
+    at async fromDatabase2 (/workspace/node_modules/drizzle-kit/bin.cjs:19253:25) {
+  code: 'SELF_SIGNED_CERT_IN_CHAIN'
+}
+apps@gameshowmanager-6cb5bb47d4-dd7fj:~$ 
