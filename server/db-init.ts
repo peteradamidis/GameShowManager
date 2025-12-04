@@ -57,7 +57,9 @@ export async function initializeDatabase() {
         timeoutPromise
       ]) as any;
 
-      const existingTables = new Set(result.map((row: any) => row.table_name));
+      // Handle both array format and { rows } format from Neon
+      const rows = Array.isArray(result) ? result : (result.rows || []);
+      const existingTables = new Set(rows.map((row: any) => row.table_name));
       const missingTables = tablesToCheck.filter(t => !existingTables.has(t));
 
       if (missingTables.length > 0) {

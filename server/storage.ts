@@ -52,9 +52,14 @@ if (!process.env.DATABASE_URL) {
   console.error("⚠ DATABASE_URL is not set. Database operations will fail.");
 }
 
-// Create pool and db - will be null if DATABASE_URL is not set
+// Create pool with production-ready settings
 const pool = process.env.DATABASE_URL 
-  ? new Pool({ connectionString: process.env.DATABASE_URL })
+  ? new Pool({ 
+      connectionString: process.env.DATABASE_URL,
+      connectionTimeoutMillis: 10000,  // 10s connection timeout
+      idleTimeoutMillis: 30000,        // 30s idle timeout
+      max: 10,                          // Max connections
+    })
   : null;
 
 const db = pool ? drizzle(pool) : null;
@@ -65,6 +70,37 @@ function getDb() {
     throw new Error("DATABASE_URL is not configured. Please set the DATABASE_URL environment variable.");
   }
   return db;
+}
+
+// Warm up the database connection (call after server starts)
+export async function warmupDatabaseConnection(): Promise<boolean> {
+  if (!pool) {
+    console.log('  DB Warmup: No pool available');
+    return false;
+  }
+  
+  const maxRetries = 3;
+  const baseDelay = 1000;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`  DB Warmup: Attempt ${attempt}/${maxRetries}...`);
+      const client = await pool.connect();
+      await client.query('SELECT 1');
+      client.release();
+      console.log('  DB Warmup: Connection established successfully');
+      return true;
+    } catch (error) {
+      const delay = baseDelay * Math.pow(2, attempt - 1);
+      console.log(`  DB Warmup: Attempt ${attempt} failed, retrying in ${delay}ms...`);
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  console.error('  DB Warmup: Failed to establish connection after all retries');
+  return false;
 }
 
 export interface IStorage {

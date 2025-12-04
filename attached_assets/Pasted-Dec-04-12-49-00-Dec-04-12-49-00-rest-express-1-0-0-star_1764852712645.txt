@@ -1,0 +1,182 @@
+Dec 04 12:49:00  
+Dec 04 12:49:00  > rest-express@1.0.0 start
+Dec 04 12:49:00  > NODE_ENV=production node dist/index.js
+Dec 04 12:49:00  
+Dec 04 12:49:06  === Server Starting ===
+Dec 04 12:49:06  NODE_ENV: production
+Dec 04 12:49:06  PORT: 8080
+Dec 04 12:49:06  DATABASE_URL set: true
+Dec 04 12:49:06  Step 1: Initializing database...
+Dec 04 12:49:06    DB: Creating connection pool...
+Dec 04 12:49:06    DB: Checking tables (10s timeout)...
+Dec 04 12:49:06    DB: Check started (non-blocking)
+Dec 04 12:49:06  Step 1: Database initialized
+Dec 04 12:49:06  Step 2: Registering routes...
+Dec 04 12:49:06  Step 2: Routes registered
+Dec 04 12:49:06  Step 3: Setting up static serving...
+Dec 04 12:49:06  Step 3: Static serving ready
+Dec 04 12:49:06  Starting server on port 8080...
+Dec 04 12:49:06  12:49:06 PM [express] serving on port 8080
+Dec 04 12:49:16  ⚠ Database initialization check failed: Database check timed out after 10s 
+Dec 04 12:49:16    Make sure to run: npm run db:push
+Dec 04 12:48:15  
+Dec 04 12:48:15  > rest-express@1.0.0 start
+Dec 04 12:48:15  > NODE_ENV=production node dist/index.js
+Dec 04 12:48:15  
+Dec 04 12:48:20  === Server Starting ===
+Dec 04 12:48:20  NODE_ENV: production
+Dec 04 12:48:20  PORT: 8080
+Dec 04 12:48:20  DATABASE_URL set: true
+Dec 04 12:48:20  Step 1: Initializing database...
+Dec 04 12:48:20    DB: Creating connection pool...
+Dec 04 12:48:20    DB: Checking tables (10s timeout)...
+Dec 04 12:48:20    DB: Check started (non-blocking)
+Dec 04 12:48:20  Step 1: Database initialized
+Dec 04 12:48:20  Step 2: Registering routes...
+Dec 04 12:48:20  Step 2: Routes registered
+Dec 04 12:48:20  Step 3: Setting up static serving...
+Dec 04 12:48:20  Step 3: Static serving ready
+Dec 04 12:48:20  Starting server on port 8080...
+Dec 04 12:48:20  12:48:20 PM [express] serving on port 8080
+Dec 04 12:48:30  ⚠ Database initialization check failed: Database check timed out after 10s 
+Dec 04 12:48:30    Make sure to run: npm run db:push
+Dec 04 12:50:01  12:50:01 PM [express] GET /api/email-assets 304 in 2ms :: []
+Dec 04 12:51:00  12:51:00 PM [express] GET /api/contestants 500 in 127018ms :: {"error":"connect ETIMEDOUT 209.38.90.1…
+Dec 04 12:51:00  Error fetching all seat assignments: ErrorEvent {
+Dec 04 12:51:00    [Symbol(kTarget)]: WebSocket {
+Dec 04 12:51:00      _events: [Object: null prototype] {
+Dec 04 12:51:00        error: [Function],
+Dec 04 12:51:00        message: [Function],
+Dec 04 12:51:00        close: [Function],
+Dec 04 12:51:00        open: [Function]
+Dec 04 12:51:00      },
+Dec 04 12:51:00      _eventsCount: 4,
+Dec 04 12:51:00      _maxListeners: undefined,
+Dec 04 12:51:00      _binaryType: 'arraybuffer',
+Dec 04 12:51:00      _closeCode: 1006,
+Dec 04 12:51:00      _closeFrameReceived: false,
+Dec 04 12:51:00      _closeFrameSent: false,
+Dec 04 12:51:00      _closeMessage: <Buffer >,
+Dec 04 12:51:00      _closeTimer: null,
+Dec 04 12:51:00      _errorEmitted: true,
+Dec 04 12:51:00      _extensions: {},
+Dec 04 12:51:00      _paused: false,
+Dec 04 12:51:00      _protocol: '',
+Dec 04 12:51:00      _readyState: 3,
+Dec 04 12:51:00      _receiver: null,
+Dec 04 12:51:00      _sender: null,
+Dec 04 12:51:00      _socket: null,
+Dec 04 12:51:00      _bufferedAmount: 0,
+Dec 04 12:51:00      _isServer: false,
+Dec 04 12:51:00      _redirects: 0,
+Dec 04 12:51:00      _autoPong: true,
+Dec 04 12:51:00      _url: 'wss://db-postgresql-syd1-52662-do-user-30041020-0.k.db.ondigitalocean.com/v2',
+Dec 04 12:51:00      _req: null,
+Dec 04 12:51:00      [Symbol(shapeMode)]: false,
+Dec 04 12:51:00      [Symbol(kCapture)]: false
+Dec 04 12:51:00    },
+Dec 04 12:51:00    [Symbol(kType)]: 'error',
+Dec 04 12:51:00    [Symbol(kError)]: Error: connect ETIMEDOUT 209.38.90.10:443
+Dec 04 12:51:00        at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+Dec 04 12:51:00      errno: -110,
+Dec 04 12:51:00      code: 'ETIMEDOUT',
+Dec 04 12:51:00      syscall: 'connect',
+Dec 04 12:51:00      address: '209.38.90.10',
+Dec 04 12:51:00      port: 443
+Dec 04 12:51:00    },
+Dec 04 12:51:00    [Symbol(kMessage)]: 'connect ETIMEDOUT 209.38.90.10:443'
+Dec 04 12:51:00  }
+Dec 04 12:51:00  12:51:00 PM [express] GET /api/seat-assignments 500 in 127019ms :: {"error":"connect ETIMEDOUT 209.38…
+Dec 04 12:51:05  Error fetching availability status: ErrorEvent {
+Dec 04 12:51:05    [Symbol(kTarget)]: WebSocket {
+Dec 04 12:51:05      _events: [Object: null prototype] {
+Dec 04 12:51:05        error: [Function],
+Dec 04 12:51:05        message: [Function],
+Dec 04 12:51:05        close: [Function],
+Dec 04 12:51:05        open: [Function]
+Dec 04 12:51:05      },
+Dec 04 12:51:05      _eventsCount: 4,
+Dec 04 12:51:05      _maxListeners: undefined,
+Dec 04 12:51:05      _binaryType: 'arraybuffer',
+Dec 04 12:51:05      _closeCode: 1006,
+Dec 04 12:51:05      _closeFrameReceived: false,
+Dec 04 12:51:05      _closeFrameSent: false,
+Dec 04 12:51:05      _closeMessage: <Buffer >,
+Dec 04 12:51:05      _closeTimer: null,
+Dec 04 12:51:05      _errorEmitted: true,
+Dec 04 12:51:05      _extensions: {},
+Dec 04 12:51:05      _paused: false,
+Dec 04 12:51:05      _protocol: '',
+Dec 04 12:51:05      _readyState: 3,
+Dec 04 12:51:05      _receiver: null,
+Dec 04 12:51:05      _sender: null,
+Dec 04 12:51:05      _socket: null,
+Dec 04 12:51:05      _bufferedAmount: 0,
+Dec 04 12:51:05      _isServer: false,
+Dec 04 12:51:05      _redirects: 0,
+Dec 04 12:51:05      _autoPong: true,
+Dec 04 12:51:05      _url: 'wss://db-postgresql-syd1-52662-do-user-30041020-0.k.db.ondigitalocean.com/v2',
+Dec 04 12:51:05      _req: null,
+Dec 04 12:51:05      [Symbol(shapeMode)]: false,
+Dec 04 12:51:05      [Symbol(kCapture)]: false
+Dec 04 12:51:05    },
+Dec 04 12:51:05    [Symbol(kType)]: 'error',
+Dec 04 12:51:05    [Symbol(kError)]: Error: connect ETIMEDOUT 209.38.90.10:443
+Dec 04 12:51:05        at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+Dec 04 12:51:05      errno: -110,
+Dec 04 12:51:05      code: 'ETIMEDOUT',
+Dec 04 12:51:05      syscall: 'connect',
+Dec 04 12:51:05      address: '209.38.90.10',
+Dec 04 12:51:05      port: 443
+Dec 04 12:51:05    },
+Dec 04 12:51:05    [Symbol(kMessage)]: 'connect ETIMEDOUT 209.38.90.10:443'
+Dec 04 12:51:05  }
+Dec 04 12:51:05  12:51:05 PM [express] GET /api/availability/status 500 in 127017ms :: {"error":"connect ETIMEDOUT 209…
+Dec 04 12:51:05  Error fetching availability tokens: ErrorEvent {
+Dec 04 12:51:05    [Symbol(kTarget)]: WebSocket {
+Dec 04 12:51:05      _events: [Object: null prototype] {
+Dec 04 12:51:05        error: [Function],
+Dec 04 12:51:05        message: [Function],
+Dec 04 12:51:05        close: [Function],
+Dec 04 12:51:05        open: [Function]
+Dec 04 12:51:05      },
+Dec 04 12:51:05      _eventsCount: 4,
+Dec 04 12:51:05      _maxListeners: undefined,
+Dec 04 12:51:05      _binaryType: 'arraybuffer',
+Dec 04 12:51:05      _closeCode: 1006,
+Dec 04 12:51:05      _closeFrameReceived: false,
+Dec 04 12:51:05      _closeFrameSent: false,
+Dec 04 12:51:05      _closeMessage: <Buffer >,
+Dec 04 12:51:05      _closeTimer: null,
+Dec 04 12:51:05      _errorEmitted: true,
+Dec 04 12:51:05      _extensions: {},
+Dec 04 12:51:05      _paused: false,
+Dec 04 12:51:05      _protocol: '',
+Dec 04 12:51:05      _readyState: 3,
+Dec 04 12:51:05      _receiver: null,
+Dec 04 12:51:05      _sender: null,
+Dec 04 12:51:05      _socket: null,
+Dec 04 12:51:05      _bufferedAmount: 0,
+Dec 04 12:51:05      _isServer: false,
+Dec 04 12:51:05      _redirects: 0,
+Dec 04 12:51:05      _autoPong: true,
+Dec 04 12:51:05      _url: 'wss://db-postgresql-syd1-52662-do-user-30041020-0.k.db.ondigitalocean.com/v2',
+Dec 04 12:51:05      _req: null,
+Dec 04 12:51:05      [Symbol(shapeMode)]: false,
+Dec 04 12:51:05      [Symbol(kCapture)]: false
+Dec 04 12:51:05    },
+Dec 04 12:51:05    [Symbol(kType)]: 'error',
+Dec 04 12:51:05    [Symbol(kError)]: Error: connect ETIMEDOUT 209.38.90.10:443
+Dec 04 12:51:05        at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+Dec 04 12:51:05      errno: -110,
+Dec 04 12:51:05      code: 'ETIMEDOUT',
+Dec 04 12:51:05      syscall: 'connect',
+Dec 04 12:51:05      address: '209.38.90.10',
+Dec 04 12:51:05      port: 443
+Dec 04 12:51:05    },
+Dec 04 12:51:05    [Symbol(kMessage)]: 'connect ETIMEDOUT 209.38.90.10:443'
+Dec 04 12:51:05  }
+Dec 04 12:51:05  12:51:05 PM [express] GET /api/availability/tokens 500 in 127017ms :: {"error":"connect ETIMEDOUT 209…
+Dec 04 12:51:06  12:51:06 PM [express] GET /api/canceled-assignments 500 in 127015ms :: {"error":"connect ETIMEDOUT 20…
+Dec 04 12:51:13  12:51:13 PM [express] GET /api/contestants 500 in 127011ms :: {"error":"connect ETIMEDOUT 209.38.90.1…
+Dec 04 12:51:26  12:51:26 PM [express] GET /api/canceled-assignments 500 in 127015ms :: {"error":"connect ETIMEDOUT 20…

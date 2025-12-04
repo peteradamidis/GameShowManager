@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./db-init";
+import { warmupDatabaseConnection } from "./storage";
 
 // Log startup info immediately for debugging
 console.log('=== Server Starting ===');
@@ -114,6 +115,16 @@ app.use((req, res, next) => {
       reusePort: true,
     }, () => {
       log(`serving on port ${port}`);
+      
+      // Warm up database connection in background after server is ready
+      console.log('Step 5: Warming up database connection...');
+      warmupDatabaseConnection().then(success => {
+        if (success) {
+          console.log('Step 5: Database warmed up and ready');
+        } else {
+          console.warn('Step 5: Database warmup failed - first requests may be slow');
+        }
+      });
     });
   } catch (error) {
     console.error('=== FATAL STARTUP ERROR ===');
