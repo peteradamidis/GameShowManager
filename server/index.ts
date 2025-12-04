@@ -1,3 +1,9 @@
+// For cloud databases with self-signed certificates (Digital Ocean, etc.)
+// This MUST be set before any database modules are imported
+if (process.env.NODE_ENV === 'production') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
