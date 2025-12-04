@@ -3,6 +3,12 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./db-init";
 
+// Log startup info immediately for debugging
+console.log('=== Server Starting ===');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', process.env.PORT || '(not set, will use default)');
+console.log('DATABASE_URL set:', !!process.env.DATABASE_URL);
+
 const app = express();
 
 // Health check endpoint for Digital Ocean / load balancers
@@ -17,7 +23,7 @@ app.get('/startup-status', (_req, res) => {
     nodeEnv: process.env.NODE_ENV,
     hasDbUrl: !!process.env.DATABASE_URL,
     hasSessionSecret: !!process.env.SESSION_SECRET,
-    port: process.env.PORT || '5000',
+    port: process.env.PORT || '(default)',
   });
 });
 
@@ -64,40 +70,48 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize database schema on startup
-  await initializeDatabase();
+  try {
+    // Initialize database schema on startup
+    await initializeDatabase();
 
-  const server = await registerRoutes(app);
+    const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
-  });
+      res.status(status).json({ message });
+      throw err;
+    });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+    // importantly only setup vite in development and after
+    // setting up all the other routes so the catch-all route
+    // doesn't interfere with the other routes
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
+    // ALWAYS serve the app on the port specified in the environment variable PORT
+    // Digital Ocean sets PORT=8080, local development defaults to 5000
+    // this serves both the API and the client.
+    const isProduction = process.env.NODE_ENV === 'production';
+    const defaultPort = isProduction ? '8080' : '5000';
+    const port = parseInt(process.env.PORT || defaultPort, 10);
+    
+    console.log(`Starting server on port ${port}...`);
+    
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`serving on port ${port}`);
+    });
+  } catch (error) {
+    console.error('=== FATAL STARTUP ERROR ===');
+    console.error(error);
+    process.exit(1);
   }
-
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Digital Ocean sets PORT=8080, local development defaults to 5000
-  // this serves both the API and the client.
-  const isProduction = process.env.NODE_ENV === 'production';
-  const defaultPort = isProduction ? '8080' : '5000';
-  const port = parseInt(process.env.PORT || defaultPort, 10);
-  
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
 })();
