@@ -1,0 +1,97 @@
+Dec 04 11:08:06  [34m│[0m -----> Restoring cache
+Dec 04 11:08:06  [34m│[0m        - npm cache
+Dec 04 11:08:06  [34m│[0m        
+Dec 04 11:08:06  [34m│[0m -----> Installing dependencies
+Dec 04 11:08:06  [34m│[0m        Installing node modules
+Dec 04 11:08:20  [34m│[0m        
+Dec 04 11:08:20  [34m│[0m        added 617 packages, and audited 618 packages in 14s
+Dec 04 11:08:20  [34m│[0m        
+Dec 04 11:08:20  [34m│[0m        83 packages are looking for funding
+Dec 04 11:08:20  [34m│[0m          run `npm fund` for details
+Dec 04 11:08:20  [34m│[0m        
+Dec 04 11:08:20  [34m│[0m        10 vulnerabilities (3 low, 5 moderate, 2 high)
+Dec 04 11:08:20  [34m│[0m        
+Dec 04 11:08:20  [34m│[0m        To address issues that do not require attention, run:
+Dec 04 11:08:20  [34m│[0m          npm audit fix
+Dec 04 11:08:20  [34m│[0m        
+Dec 04 11:08:20  [34m│[0m        To address all issues possible (including breaking changes), run:
+Dec 04 11:08:20  [34m│[0m          npm audit fix --force
+Dec 04 11:08:20  [34m│[0m        
+Dec 04 11:08:20  [34m│[0m        Some issues need review, and may require choosing
+Dec 04 11:08:20  [34m│[0m        a different dependency.
+Dec 04 11:08:20  [34m│[0m        
+Dec 04 11:08:20  [34m│[0m        Run `npm audit` for details.
+Dec 04 11:08:20  [34m│[0m        
+Dec 04 11:08:20  [34m│[0m -----> Build
+Dec 04 11:08:20  [34m│[0m        
+Dec 04 11:08:20  [34m│[0m -----> Caching build
+Dec 04 11:08:20  [34m│[0m        - npm cache
+Dec 04 11:08:21  [34m│[0m        
+Dec 04 11:08:21  [34m│[0m -----> Pruning devDependencies
+Dec 04 11:08:22  [34m│[0m        
+Dec 04 11:08:22  [34m│[0m        up to date, audited 571 packages in 1s
+Dec 04 11:08:22  [34m│[0m        
+Dec 04 11:08:22  [34m│[0m        77 packages are looking for funding
+Dec 04 11:08:22  [34m│[0m          run `npm fund` for details
+Dec 04 11:08:22  [34m│[0m        
+Dec 04 11:08:22  [34m│[0m        7 vulnerabilities (3 low, 2 moderate, 2 high)
+Dec 04 11:08:22  [34m│[0m        
+Dec 04 11:08:22  [34m│[0m        To address issues that do not require attention, run:
+Dec 04 11:08:22  [34m│[0m          npm audit fix
+Dec 04 11:08:22  [34m│[0m        
+Dec 04 11:08:22  [34m│[0m        To address all issues possible (including breaking changes), run:
+Dec 04 11:08:22  [34m│[0m          npm audit fix --force
+Dec 04 11:08:22  [34m│[0m        
+Dec 04 11:08:22  [34m│[0m        Some issues need review, and may require choosing
+Dec 04 11:08:22  [34m│[0m        a different dependency.
+Dec 04 11:08:22  [34m│[0m        
+Dec 04 11:08:22  [34m│[0m        Run `npm audit` for details.
+Dec 04 11:08:22  [34m│[0m        npm notice
+Dec 04 11:08:22  [34m│[0m        npm notice New major version of npm available! 10.9.2 -> 11.6.4
+Dec 04 11:08:22  [34m│[0m        npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.4
+Dec 04 11:08:22  [34m│[0m        npm notice To update run: npm install -g npm@11.6.4
+Dec 04 11:08:22  [34m│[0m        npm notice
+Dec 04 11:08:22  [34m│[0m        
+Dec 04 11:08:22  [34m│[0m -----> Build succeeded!
+Dec 04 11:08:23  [34m│[0m Running custom build command: npm ci && NODE_ENV=production node build.js
+Dec 04 11:08:35  [34m│[0m 
+Dec 04 11:08:35  [34m│[0m added 570 packages, and audited 571 packages in 12s
+Dec 04 11:08:35  [34m│[0m 
+Dec 04 11:08:35  [34m│[0m 77 packages are looking for funding
+Dec 04 11:08:35  [34m│[0m   run `npm fund` for details
+Dec 04 11:08:35  [34m│[0m 
+Dec 04 11:08:35  [34m│[0m 7 vulnerabilities (3 low, 2 moderate, 2 high)
+Dec 04 11:08:35  [34m│[0m 
+Dec 04 11:08:35  [34m│[0m To address issues that do not require attention, run:
+Dec 04 11:08:35  [34m│[0m   npm audit fix
+Dec 04 11:08:35  [34m│[0m 
+Dec 04 11:08:35  [34m│[0m To address all issues possible (including breaking changes), run:
+Dec 04 11:08:35  [34m│[0m   npm audit fix --force
+Dec 04 11:08:35  [34m│[0m 
+Dec 04 11:08:35  [34m│[0m Some issues need review, and may require choosing
+Dec 04 11:08:35  [34m│[0m a different dependency.
+Dec 04 11:08:35  [34m│[0m 
+Dec 04 11:08:35  [34m│[0m Run `npm audit` for details.
+Dec 04 11:08:35  [34m│[0m npm notice
+Dec 04 11:08:35  [34m│[0m npm notice New major version of npm available! 10.9.2 -> 11.6.4
+Dec 04 11:08:35  [34m│[0m npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.4
+Dec 04 11:08:35  [34m│[0m npm notice To update run: npm install -g npm@11.6.4
+Dec 04 11:08:35  [34m│[0m npm notice
+Dec 04 11:08:35  [34m│[0m file:///workspace/build.js:2
+Dec 04 11:08:35  [34m│[0m const { execSync } = require('child_process');
+Dec 04 11:08:35  [34m│[0m                      ^
+Dec 04 11:08:35  [34m│[0m 
+Dec 04 11:08:35  [34m│[0m ReferenceError: require is not defined in ES module scope, you can use import instead
+Dec 04 11:08:35  [34m│[0m This file is being treated as an ES module because it has a '.js' file extension and '/workspace/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+Dec 04 11:08:35  [34m│[0m     at file:///workspace/build.js:2:22
+Dec 04 11:08:35  [34m│[0m     at ModuleJob.run (node:internal/modules/esm/module_job:274:25)
+Dec 04 11:08:35  [34m│[0m     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+Dec 04 11:08:35  [34m│[0m     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+Dec 04 11:08:35  [34m│[0m 
+Dec 04 11:08:35  [34m│[0m Node.js v22.16.0
+Dec 04 11:08:35  [34m│[0m building: exit status 1
+Dec 04 11:08:35  [34m│[0m Timer: Builder ran for 39.591919715s and ended at 2025-12-04T11:08:35Z
+Dec 04 11:08:35  [34m│[0m [31;1mERROR: [0mfailed to build: exit status 1
+Dec 04 11:08:35  [34m│[0m 
+Dec 04 11:08:35  [34m│[0m 
+Dec 04 11:08:35  [34m│[0m [31m ✘ build failed[0m
