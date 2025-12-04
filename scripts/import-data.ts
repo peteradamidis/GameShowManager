@@ -4,18 +4,20 @@
  * 
  * Imports database tables and uploaded files from an export directory.
  * 
- * Usage: npm run import:data <path-to-export-dir>
+ * Usage: npx tsx scripts/import-data.ts <path-to-export-dir>
  * 
  * WARNING: This will REPLACE existing data in the database!
  */
 
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { Pool } from "@neondatabase/serverless";
-import { sql } from "drizzle-orm";
+import { neonConfig, Pool } from "@neondatabase/serverless";
+import ws from "ws";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import readline from "readline";
+
+// Configure WebSocket for Neon serverless (needed for standalone scripts)
+neonConfig.webSocketConstructor = ws;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,7 +25,6 @@ const projectRoot = path.resolve(__dirname, "..");
 
 // Database connection
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const db = drizzle(pool);
 
 // Tables to import (in order to respect foreign key dependencies)
 // Order matters: parents before children
@@ -69,7 +70,7 @@ function prompt(question: string): Promise<string> {
 
 async function clearTable(tableName: string) {
   try {
-    await db.execute(sql.raw(`DELETE FROM ${tableName}`));
+    await pool.query(`DELETE FROM ${tableName}`);
     console.log(`    ✓ Cleared ${tableName}`);
   } catch (error: any) {
     if (error.message?.includes("does not exist")) {
@@ -113,7 +114,7 @@ async function importTable(tableName: string, exportDir: string) {
     const insertSql = `INSERT INTO ${tableName} (${columns.map(c => `"${c}"`).join(", ")}) VALUES (${values.join(", ")}) ON CONFLICT DO NOTHING`;
     
     try {
-      await db.execute(sql.raw(insertSql));
+      await pool.query(insertSql);
       imported++;
     } catch (error: any) {
       console.error(`    ✗ Error inserting row: ${error.message}`);

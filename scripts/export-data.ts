@@ -9,15 +9,17 @@
  * - storage/ - Copy of object storage files (email assets, etc.)
  * - manifest.json - Export metadata
  * 
- * Usage: npm run export:data
+ * Usage: npx tsx scripts/export-data.ts
  */
 
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { Pool } from "@neondatabase/serverless";
-import { sql } from "drizzle-orm";
+import { neonConfig, Pool } from "@neondatabase/serverless";
+import ws from "ws";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+
+// Configure WebSocket for Neon serverless (needed for standalone scripts)
+neonConfig.webSocketConstructor = ws;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +27,6 @@ const projectRoot = path.resolve(__dirname, "..");
 
 // Database connection
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const db = drizzle(pool);
 
 // Tables to export (in order to respect foreign key dependencies)
 const TABLES = [
@@ -55,7 +56,7 @@ async function exportTable(tableName: string, exportDir: string) {
   console.log(`  Exporting ${tableName}...`);
   
   try {
-    const result = await db.execute(sql.raw(`SELECT * FROM ${tableName}`));
+    const result = await pool.query(`SELECT * FROM ${tableName}`);
     const rows = result.rows || [];
     
     const outputPath = path.join(exportDir, "database", `${tableName}.json`);
@@ -148,7 +149,7 @@ async function main() {
     tables: tableStats,
     files: fileStats,
     notes: [
-      "Import using: npm run import:data <path-to-export-dir>",
+      "Import using: npx tsx scripts/import-data.ts <path-to-export-dir>",
       "Database tables are in ./database/*.json",
       "Uploaded files are in ./uploads/ and ./storage/",
     ],

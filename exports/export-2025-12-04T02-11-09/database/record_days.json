@@ -1,0 +1,138 @@
+[
+  {
+    "id": "8de562bb-e594-47dd-a50f-ee78c14c0dde",
+    "date": "2026-02-05T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 6 - 10"
+  },
+  {
+    "id": "4ca4a7ea-c1ac-44e5-9533-fdd34522899d",
+    "date": "2026-02-06T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 11 - 15"
+  },
+  {
+    "id": "abce05e1-0917-4949-a374-ef5f941df712",
+    "date": "2026-02-09T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 16 - 20"
+  },
+  {
+    "id": "2ee609d2-1a2d-440c-801d-0eb0bfc47a2f",
+    "date": "2026-02-10T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 21 - 25"
+  },
+  {
+    "id": "59f9cd94-162d-413c-9797-5a881676a706",
+    "date": "2026-02-11T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 26 - 30"
+  },
+  {
+    "id": "c68366bd-1541-45fc-a22f-47ef139f16ec",
+    "date": "2026-02-17T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 31 - 35"
+  },
+  {
+    "id": "eec54567-3e21-424c-8d62-28772c0a6c25",
+    "date": "2026-02-18T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 36 - 40"
+  },
+  {
+    "id": "04617609-04e6-4fa6-8023-ff7dede3c93a",
+    "date": "2026-02-19T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 41 - 45"
+  },
+  {
+    "id": "80991c27-1587-4869-be9c-dc2a96950499",
+    "date": "2026-02-20T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 46 - 50"
+  },
+  {
+    "id": "274e9d90-48a5-404b-af78-739e1457158d",
+    "date": "2026-02-24T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 51 - 55"
+  },
+  {
+    "id": "dcf33543-4096-425f-a8a1-2015851bd687",
+    "date": "2026-02-25T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 56 - 60"
+  },
+  {
+    "id": "d3473fc2-fb62-4612-ae98-bf4765ba61e4",
+    "date": "2026-02-26T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 61 - 65"
+  },
+  {
+    "id": "48bf0bd2-280f-44ac-806d-f1ae9f44712a",
+    "date": "2026-03-02T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 66 - 70"
+  },
+  {
+    "id": "d06d32c7-51a5-4efd-9234-75c79c7c72d6",
+    "date": "2026-03-03T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 71 - 75"
+  },
+  {
+    "id": "1da0c632-a3e1-46c0-8e8a-37753630608a",
+    "date": "2026-03-04T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 76 - 80"
+  },
+  {
+    "id": "f159ca53-ea3d-4568-9403-7f15cd73dac8",
+    "date": "2026-03-05T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "draft",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX EP 81 - 85"
+  },
+  {
+    "id": "e432f0fe-1383-44a2-990c-5f787da5008a",
+    "date": "2026-02-04T00:00:00.000Z",
+    "total_seats": 154,
+    "status": "ready",
+    "created_at": "2025-11-27T11:34:23.272Z",
+    "rx_number": "RX1 - 1-5"
+  }
+]

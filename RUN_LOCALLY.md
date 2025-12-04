@@ -259,7 +259,61 @@ The database schema is defined in `shared/schema.ts` and includes tables for:
 
 ---
 
-## 13. Additional Notes
+## 13. Data Migration (Export/Import)
+
+To transfer your data (contestants, seating charts, record days, groups, etc.) between systems:
+
+### Exporting Data
+
+Run the export script to create a portable backup:
+
+```bash
+npx tsx scripts/export-data.ts
+```
+
+This creates an `exports/export-YYYY-MM-DDTHH-MM-SS/` folder containing:
+- `database/` - JSON files for each database table
+- `uploads/` - Copy of uploaded files (contestant photos, branding)
+- `storage/` - Copy of object storage (email assets, PDFs)
+- `manifest.json` - Export metadata
+
+### Importing Data
+
+To restore data on a new system:
+
+```bash
+npx tsx scripts/import-data.ts ./exports/export-2024-01-15T10-30-00
+```
+
+**⚠️ Warning**: Import will REPLACE all existing data. Make a backup first!
+
+### What Gets Transferred
+
+| Data Type | Included |
+|-----------|----------|
+| Contestants | ✓ All profiles, ratings, groups |
+| Record Days | ✓ All recording days and settings |
+| Seat Assignments | ✓ All seating charts and bookings |
+| Groups | ✓ All group definitions |
+| Availability Data | ✓ Availability responses |
+| Booking Confirmations | ✓ Confirmation tokens and responses |
+| Block Types | ✓ PB/NPB designations |
+| Standby Assignments | ✓ Standby lists |
+| System Config | ✓ Email templates, form text |
+| Contestant Photos | ✓ All uploaded photos |
+| Email Assets | ✓ Banners, PDF attachments |
+
+### Migration Steps
+
+1. **On source system**: Run export script
+2. **Copy export folder** to destination (USB, cloud, etc.)
+3. **On destination**: Set up PostgreSQL and run `npm run db:push`
+4. **On destination**: Run import script with path to export folder
+5. **Restart application** to see imported data
+
+---
+
+## 14. Additional Notes
 
 - The application uses TypeScript ES Modules (`"type": "module"` in package.json)
 - Path aliases are configured: `@/` for client source, `@shared/` for shared code
