@@ -46,11 +46,11 @@ In your app settings:
 
 ### Build Command
 ```bash
-npm ci && NODE_ENV=production node build.js
+npm ci --include=dev && NODE_ENV=production node build.js
 ```
 
 **How it works:**
-- `npm ci` - Installs dependencies cleanly from package-lock.json
+- `npm ci --include=dev` - Installs ALL dependencies including devDependencies (required for build tools like autoprefixer, tailwindcss, etc.)
 - `NODE_ENV=production` - Sets the environment to production mode
 - `node build.js` - Runs the smart build script that:
   - Detects production environment (no REPL_ID and NODE_ENV=production)
@@ -58,6 +58,8 @@ npm ci && NODE_ENV=production node build.js
   - Builds client with Vite
   - Bundles server with esbuild
   - Outputs to `dist/`
+
+**IMPORTANT:** The `--include=dev` flag is critical because build tools (autoprefixer, postcss, tailwindcss, esbuild) are in devDependencies. Without this flag, Digital Ocean prunes devDependencies before the build runs.
 
 ### Run Command
 ```bash
