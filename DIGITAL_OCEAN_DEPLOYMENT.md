@@ -46,8 +46,15 @@ In your app settings:
 
 ### Build Command
 ```bash
+npm ci && node build-prod.js
+```
+
+**Alternative (if you prefer npm scripts):**
+```bash
 npm ci && npm run build
 ```
+
+Note: The `build-prod.js` script uses `vite.config.prod.ts` which excludes Replit-specific plugins that aren't available in Digital Ocean. If using the standard build, make sure your environment has all required packages.
 
 ### Run Command
 ```bash
