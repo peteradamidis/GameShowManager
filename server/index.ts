@@ -8,7 +8,17 @@ const app = express();
 // Health check endpoint for Digital Ocean / load balancers
 // This must respond immediately before any async operations
 app.get('/health', (_req, res) => {
-  res.status(200).send('OK');
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Startup status endpoint for debugging
+app.get('/startup-status', (_req, res) => {
+  res.status(200).json({
+    nodeEnv: process.env.NODE_ENV,
+    hasDbUrl: !!process.env.DATABASE_URL,
+    hasSessionSecret: !!process.env.SESSION_SECRET,
+    port: process.env.PORT || '5000',
+  });
 });
 
 declare module 'http' {
