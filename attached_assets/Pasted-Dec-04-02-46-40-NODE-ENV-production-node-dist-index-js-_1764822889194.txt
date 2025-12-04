@@ -1,0 +1,75 @@
+Dec 04 02:46:40  > NODE_ENV=production node dist/index.js
+Dec 04 02:46:40  
+Dec 04 02:46:44  2:46:44 AM [express] serving on port 8080
+Dec 04 03:05:34  3:05:34 AM [express] GET /api/contestants 500 in 12ms :: {"error":"No database host or connection st…
+Dec 04 03:05:36  3:05:36 AM [express] GET /api/standbys 500 in 4ms :: {"error":"No database host or connection string…
+Dec 04 03:05:38  3:05:38 AM [express] GET /api/record-days 500 in 2ms :: {"error":"No database host or connection str…
+Dec 04 03:05:38  Error getting Google Sheets config: Error: No database host or connection string was set, and key parameters have default values (host: localhost, user: undefined, db: undefined, password: null). Is an environment variable missing? Alternatively, if you intended to connect with these parameters, please set the host to 'localhost' explicitly.
+Dec 04 03:05:38      at An.connect (file:///workspace/node_modules/@neondatabase/serverless/index.mjs:1579:62)
+Dec 04 03:05:38      at Cn.newClient (file:///workspace/node_modules/@neondatabase/serverless/index.mjs:1383:3)
+Dec 04 03:05:38      at Cn.connect (file:///workspace/node_modules/@neondatabase/serverless/index.mjs:1378:23)
+Dec 04 03:05:38      at Cn.query (file:///workspace/node_modules/@neondatabase/serverless/index.mjs:1407:63)
+Dec 04 03:05:38      at Cn.query (file:///workspace/node_modules/@neondatabase/serverless/index.mjs:1623:14)
+Dec 04 03:05:38      at NeonPreparedQuery.execute (file:///workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:33)
+Dec 04 03:05:38      at file:///workspace/node_modules/drizzle-orm/pg-core/query-builders/select.js:708:30
+Dec 04 03:05:38      at Object.startActiveSpan (file:///workspace/node_modules/drizzle-orm/tracing.js:8:14)
+Dec 04 03:05:38      at PgSelectBase.execute (file:///workspace/node_modules/drizzle-orm/pg-core/query-builders/select.js:707:19)
+Dec 04 03:05:38      at PgSelectBase.then (file:///workspace/node_modules/drizzle-orm/query-promise.js:21:17)
+Dec 04 03:05:38  3:05:38 AM [express] GET /api/google-sheets/config 500 in 4ms :: {"error":"No database host or conne…
+Dec 04 03:05:38  3:05:38 AM [express] GET /api/standbys 500 in 2ms :: {"error":"No database host or connection string…
+Dec 04 03:05:40  3:05:40 AM [express] GET /api/record-days 500 in 2ms :: {"error":"No database host or connection str…
+Dec 04 03:05:40  Error getting Google Sheets config: Error: No database host or connection string was set, and key parameters have default values (host: localhost, user: undefined, db: undefined, password: null). Is an environment variable missing? Alternatively, if you intended to connect with these parameters, please set the host to 'localhost' explicitly.
+Dec 04 03:05:40      at An.connect (file:///workspace/node_modules/@neondatabase/serverless/index.mjs:1579:62)
+Dec 04 03:05:40      at Cn.newClient (file:///workspace/node_modules/@neondatabase/serverless/index.mjs:1383:3)
+Dec 04 03:05:40      at Cn.connect (file:///workspace/node_modules/@neondatabase/serverless/index.mjs:1378:23)
+Dec 04 03:05:40      at Cn.query (file:///workspace/node_modules/@neondatabase/serverless/index.mjs:1407:63)
+Dec 04 03:05:40      at Cn.query (file:///workspace/node_modules/@neondatabase/serverless/index.mjs:1623:14)
+Dec 04 03:05:40      at NeonPreparedQuery.execute (file:///workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:33)
+Dec 04 03:05:40      at file:///workspace/node_modules/drizzle-orm/pg-core/query-builders/select.js:708:30
+Dec 04 03:05:40      at Object.startActiveSpan (file:///workspace/node_modules/drizzle-orm/tracing.js:8:14)
+Dec 04 03:05:40      at PgSelectBase.execute (file:///workspace/node_modules/drizzle-orm/pg-core/query-builders/select.js:707:19)
+Dec 04 03:05:40      at PgSelectBase.then (file:///workspace/node_modules/drizzle-orm/query-promise.js:21:17)
+Dec 04 03:05:40  3:05:40 AM [express] GET /api/google-sheets/config 500 in 2ms :: {"error":"No database host or conne…
+Dec 04 03:05:40  3:05:40 AM [express] GET /api/standbys 500 in 2ms :: {"error":"No database host or connection string…
+Dec 04 03:06:06  3:06:06 AM [express] GET /api/record-days 500 in 3ms :: {"error":"No database host or connection str…
+Dec 04 03:06:07  3:06:07 AM [express] GET /api/contestants 500 in 1ms :: {"error":"No database host or connection str…
+Dec 04 03:08:48  Excel columns found: [
+Dec 04 03:08:48    'Audition Rating',
+Dec 04 03:08:48    'Age',
+Dec 04 03:08:48    'Name',
+Dec 04 03:08:48    'Mobile',
+Dec 04 03:08:48    'Email',
+Dec 04 03:08:48    'Attending With',
+Dec 04 03:08:48    'City',
+Dec 04 03:08:48    'Medical Conditions',
+Dec 04 03:08:48    'Mobility/Access Notes',
+Dec 04 03:08:48    'Criminal Record'
+Dec 04 03:08:48  ]
+Dec 04 03:08:48  Found 3 valid contestant rows (filtered from 3 total rows)
+Dec 04 02:46:00  
+Dec 04 02:46:00  > rest-express@1.0.0 start
+Dec 04 02:46:00  > NODE_ENV=production node dist/index.js
+Dec 04 02:46:00  
+Dec 04 02:46:04  2:46:04 AM [express] serving on port 8080
+Dec 04 03:05:34  3:05:34 AM [express] GET /api/record-days 500 in 8ms :: {"error":"No database host or connection str…
+Dec 04 03:05:34  Error fetching all seat assignments: Error: No database host or connection string was set, and key parameters have default values (host: localhost, user: undefined, db: undefined, password: null). Is an environment variable missing? Alternatively, if you intended to connect with these parameters, please set the host to 'localhost' explicitly.
+Dec 04 03:05:34      at An.connect (file:///workspace/node_modules/@neondatabase/serverless/index.mjs:1579:62)
+Dec 04 03:05:34      at Cn.newClient (file:///workspace/node_modules/@neondatabase/serverless/index.mjs:1383:3)
+Dec 04 03:05:34      at Cn.connect (file:///workspace/node_modules/@neondatabase/serverless/index.mjs:1378:23)
+Dec 04 03:05:34      at Cn.query (file:///workspace/node_modules/@neondatabase/serverless/index.mjs:1407:63)
+Dec 04 03:05:34      at Cn.query (file:///workspace/node_modules/@neondatabase/serverless/index.mjs:1623:14)
+Dec 04 03:05:34      at NeonPreparedQuery.execute (file:///workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:33)
+Dec 04 03:05:34      at file:///workspace/node_modules/drizzle-orm/pg-core/query-builders/select.js:708:30
+Dec 04 03:05:34      at Object.startActiveSpan (file:///workspace/node_modules/drizzle-orm/tracing.js:8:14)
+Dec 04 03:05:34      at PgSelectBase.execute (file:///workspace/node_modules/drizzle-orm/pg-core/query-builders/select.js:707:19)
+Dec 04 03:05:34      at PgSelectBase.then (file:///workspace/node_modules/drizzle-orm/query-promise.js:21:17)
+Dec 04 03:05:34  3:05:34 AM [express] GET /api/seat-assignments 500 in 5ms :: {"error":"No database host or connectio…
+Dec 04 03:05:35  3:05:35 AM [express] GET /api/record-days 500 in 2ms :: {"error":"No database host or connection str…
+Dec 04 03:05:36  3:05:36 AM [express] GET /api/record-days 500 in 2ms :: {"error":"No database host or connection str…
+Dec 04 03:05:37  3:05:37 AM [express] GET /api/record-days 500 in 1ms :: {"error":"No database host or connection str…
+Dec 04 03:05:37  3:05:37 AM [express] GET /api/contestants 500 in 2ms :: {"error":"No database host or connection str…
+Dec 04 03:05:38  3:05:38 AM [express] GET /api/contestants 500 in 2ms :: {"error":"No database host or connection str…
+Dec 04 03:05:38  3:05:38 AM [express] GET /api/email-assets 304 in 3ms :: []
+Dec 04 03:05:39  3:05:39 AM [express] GET /api/record-days 500 in 3ms :: {"error":"No database host or connection str…
+Dec 04 03:05:40  3:05:40 AM [express] GET /api/contestants 500 in 2ms :: {"error":"No database host or connection str…
+Dec 04 03:05:41  3:05:41 AM [express] GET /api/record-days 500 in 2ms :: {"error":"No database host or connection str…
