@@ -1,0 +1,203 @@
+Dec 04 12:58:32  
+Dec 04 12:58:32  > rest-express@1.0.0 start
+Dec 04 12:58:32  > NODE_ENV=production node dist/index.js
+Dec 04 12:58:07  
+Dec 04 12:58:07  > rest-express@1.0.0 start
+Dec 04 12:58:32  
+Dec 04 12:58:36  === Server Starting ===
+Dec 04 12:58:36  NODE_ENV: production
+Dec 04 12:58:36  PORT: 8080
+Dec 04 12:58:36  DATABASE_URL set: true
+Dec 04 12:58:36  Step 1: Initializing database...
+Dec 04 12:58:36    DB: Creating connection pool...
+Dec 04 12:58:36    DB: Checking tables (10s timeout)...
+Dec 04 12:58:36    DB: Check started (non-blocking)
+Dec 04 12:58:36  Step 1: Database initialized
+Dec 04 12:58:36  Step 2: Registering routes...
+Dec 04 12:58:36  Step 2: Routes registered
+Dec 04 12:58:36  Step 3: Setting up static serving...
+Dec 04 12:58:36  Step 3: Static serving ready
+Dec 04 12:58:36  Starting server on port 8080...
+Dec 04 12:58:36  12:58:36 PM [express] serving on port 8080
+Dec 04 12:58:36  Step 5: Warming up database connection...
+Dec 04 12:58:36    DB Warmup: Attempt 1/3...
+Dec 04 12:58:36  ⚠ Database initialization check failed: self-signed certificate in certificate chain 
+Dec 04 12:58:07  > NODE_ENV=production node dist/index.js
+Dec 04 12:58:07  
+Dec 04 12:58:12  === Server Starting ===
+Dec 04 12:58:12  NODE_ENV: production
+Dec 04 12:58:12  PORT: 8080
+Dec 04 12:58:12  DATABASE_URL set: true
+Dec 04 12:58:12  Step 1: Initializing database...
+Dec 04 12:58:12    DB: Creating connection pool...
+Dec 04 12:58:12    DB: Checking tables (10s timeout)...
+Dec 04 12:58:12    DB: Check started (non-blocking)
+Dec 04 12:58:12  Step 1: Database initialized
+Dec 04 12:58:12  Step 2: Registering routes...
+Dec 04 12:58:12  Step 2: Routes registered
+Dec 04 12:58:12  Step 3: Setting up static serving...
+Dec 04 12:58:12  Step 3: Static serving ready
+Dec 04 12:58:12  Starting server on port 8080...
+Dec 04 12:58:12  12:58:12 PM [express] serving on port 8080
+Dec 04 12:58:12  Step 5: Warming up database connection...
+Dec 04 12:58:12    DB Warmup: Attempt 1/3...
+Dec 04 12:58:12    DB Warmup: Attempt 1 failed, retrying in 1000ms...
+Dec 04 12:58:12  ⚠ Database initialization check failed: self-signed certificate in certificate chain 
+Dec 04 12:58:12    Make sure to run: npm run db:push
+Dec 04 12:58:13    DB Warmup: Attempt 2/3...
+Dec 04 12:58:13    DB Warmup: Attempt 2 failed, retrying in 2000ms...
+Dec 04 12:58:15    DB Warmup: Attempt 3/3...
+Dec 04 12:58:15    DB Warmup: Attempt 3 failed, retrying in 4000ms...
+Dec 04 12:58:15    DB Warmup: Failed to establish connection after all retries
+Dec 04 12:58:15  Step 5: Database warmup failed - first requests may be slow
+Dec 04 12:58:36    Make sure to run: npm run db:push
+Dec 04 12:58:36    DB Warmup: Attempt 1 failed, retrying in 1000ms...
+Dec 04 12:58:37    DB Warmup: Attempt 2/3...
+Dec 04 12:58:37    DB Warmup: Attempt 2 failed, retrying in 2000ms...
+Dec 04 12:58:39    DB Warmup: Attempt 3/3...
+Dec 04 12:58:39    DB Warmup: Attempt 3 failed, retrying in 4000ms...
+Dec 04 12:58:39    DB Warmup: Failed to establish connection after all retries
+Dec 04 12:58:39  Step 5: Database warmup failed - first requests may be slow
+Dec 04 12:59:35  12:59:35 PM [express] GET /api/contestants 500 in 22ms :: {"error":"self-signed certificate in certif…
+Dec 04 12:59:35  12:59:35 PM [express] GET /api/record-days 500 in 26ms :: {"error":"self-signed certificate in certif…
+Dec 04 12:59:35  Error fetching all seat assignments: Error: self-signed certificate in certificate chain
+Dec 04 12:59:35      at /workspace/node_modules/pg-pool/index.js:45:11
+Dec 04 12:59:35      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Dec 04 12:59:35      at async file:///workspace/node_modules/drizzle-orm/node-postgres/session.js:83:22
+Dec 04 12:59:35      at async file:///workspace/dist/index.js:2336:30 {
+Dec 04 12:59:35    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+Dec 04 12:59:35  }
+Dec 04 12:59:35  12:59:35 PM [express] GET /api/seat-assignments 500 in 25ms :: {"error":"self-signed certificate in c…
+Dec 04 12:59:37  12:59:37 PM [express] GET /api/contestants 500 in 27ms :: {"error":"self-signed certificate in certif…
+Dec 04 12:59:37  12:59:37 PM [express] GET /api/record-days 500 in 31ms :: {"error":"self-signed certificate in certif…
+Dec 04 12:59:37  Error fetching all seat assignments: Error: self-signed certificate in certificate chain
+Dec 04 12:59:37      at /workspace/node_modules/pg-pool/index.js:45:11
+Dec 04 12:59:37      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Dec 04 12:59:37      at async file:///workspace/node_modules/drizzle-orm/node-postgres/session.js:83:22
+Dec 04 12:59:37      at async file:///workspace/dist/index.js:2336:30 {
+Dec 04 12:59:37    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+Dec 04 12:59:37  }
+Dec 04 12:59:37  12:59:37 PM [express] GET /api/seat-assignments 500 in 33ms :: {"error":"self-signed certificate in c…
+Dec 04 12:59:37  12:59:37 PM [express] GET /api/canceled-assignments 500 in 34ms :: {"error":"self-signed certificate …
+Dec 04 12:59:37  12:59:37 PM [express] GET /api/standbys 500 in 18ms :: {"error":"self-signed certificate in certifica…
+Dec 04 12:59:38  Error fetching availability status: Error: self-signed certificate in certificate chain
+Dec 04 12:59:38      at /workspace/node_modules/pg-pool/index.js:45:11
+Dec 04 12:59:38      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Dec 04 12:59:38      at async file:///workspace/node_modules/drizzle-orm/node-postgres/session.js:83:22
+Dec 04 12:59:38      at async file:///workspace/dist/index.js:3276:28 {
+Dec 04 12:59:38    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+Dec 04 12:59:38  }
+Dec 04 12:59:38  12:59:38 PM [express] GET /api/availability/status 500 in 14ms :: {"error":"self-signed certificate i…
+Dec 04 12:59:38  12:59:38 PM [express] GET /api/record-days 500 in 35ms :: {"error":"self-signed certificate in certif…
+Dec 04 12:59:38  12:59:38 PM [express] GET /api/contestants 500 in 43ms :: {"error":"self-signed certificate in certif…
+Dec 04 12:59:38  Error fetching availability stats by day: Error: self-signed certificate in certificate chain
+Dec 04 12:59:38      at /workspace/node_modules/pg-pool/index.js:45:11
+Dec 04 12:59:38      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Dec 04 12:59:38      at async file:///workspace/node_modules/drizzle-orm/node-postgres/session.js:83:22
+Dec 04 12:59:38      at async file:///workspace/dist/index.js:3321:27 {
+Dec 04 12:59:38    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+Dec 04 12:59:38  }
+Dec 04 12:59:38  Error fetching availability tokens: Error: self-signed certificate in certificate chain
+Dec 04 12:59:38      at /workspace/node_modules/pg-pool/index.js:45:11
+Dec 04 12:59:38      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Dec 04 12:59:38      at async file:///workspace/node_modules/drizzle-orm/node-postgres/session.js:83:22
+Dec 04 12:59:38      at async file:///workspace/dist/index.js:3294:28 {
+Dec 04 12:59:38    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+Dec 04 12:59:38  }
+Dec 04 12:59:38  12:59:38 PM [express] GET /api/availability/tokens 500 in 44ms :: {"error":"self-signed certificate i…
+Dec 04 12:59:38  12:59:38 PM [express] GET /api/availability/stats-by-day 500 in 41ms :: {"error":"self-signed certifi…
+Dec 04 12:59:39  12:59:39 PM [express] GET /api/record-days 500 in 14ms :: {"error":"self-signed certificate in certif…
+Dec 04 12:59:39  12:59:39 PM [express] GET /api/standbys 500 in 16ms :: {"error":"self-signed certificate in certifica…
+Dec 04 12:59:42  12:59:42 PM [express] GET /api/record-days 500 in 15ms :: {"error":"self-signed certificate in certif…
+Dec 04 12:59:43  12:59:43 PM [express] GET /api/record-days 500 in 25ms :: {"error":"self-signed certificate in certif…
+Dec 04 12:59:43  12:59:43 PM [express] GET /api/contestants 500 in 27ms :: {"error":"self-signed certificate in certif…
+Dec 04 12:59:44  12:59:44 PM [express] GET /api/email-assets 304 in 3ms :: []
+Dec 04 12:59:44  12:59:44 PM [express] GET /api/record-days 500 in 15ms :: {"error":"self-signed certificate in certif…
+Dec 04 12:59:44  Error getting Google Sheets config: Error: self-signed certificate in certificate chain
+Dec 04 12:59:44      at /workspace/node_modules/pg-pool/index.js:45:11
+Dec 04 12:59:44      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Dec 04 12:59:44      at async file:///workspace/node_modules/drizzle-orm/node-postgres/session.js:83:22
+Dec 04 12:59:44      at async DbStorage.getSystemConfig (file:///workspace/dist/index.js:834:22)
+Dec 04 12:59:44      at async file:///workspace/dist/index.js:4460:29 {
+Dec 04 12:59:44    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+Dec 04 12:59:44  }
+Dec 04 12:59:44  12:59:44 PM [express] GET /api/google-sheets/config 500 in 23ms :: {"error":"self-signed certificate …
+Dec 04 12:59:44  12:59:44 PM [express] GET /api/contestants 500 in 20ms :: {"error":"self-signed certificate in certif…
+Dec 04 12:59:44  12:59:44 PM [express] GET /api/standbys 500 in 17ms :: {"error":"self-signed certificate in certifica…
+Dec 04 12:59:45  12:59:45 PM [express] GET /api/record-days 500 in 17ms :: {"error":"self-signed certificate in certif…
+Dec 04 12:59:46  12:59:46 PM [express] GET /api/canceled-assignments 500 in 20ms :: {"error":"self-signed certificate …
+Dec 04 12:59:46  12:59:46 PM [express] GET /api/record-days 500 in 18ms :: {"error":"self-signed certificate in certif…
+Dec 04 12:59:47  Error getting form configurations: Error: self-signed certificate in certificate chain
+Dec 04 12:59:47      at /workspace/node_modules/pg-pool/index.js:45:11
+Dec 04 12:59:47      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Dec 04 12:59:47      at async file:///workspace/node_modules/drizzle-orm/node-postgres/session.js:83:22
+Dec 04 12:59:47      at async DbStorage.getFormConfigurations (file:///workspace/dist/index.js:845:21)
+Dec 04 12:59:47      at async file:///workspace/dist/index.js:4698:23 {
+Dec 04 12:59:47    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+Dec 04 12:59:47  }
+Dec 04 12:59:47  12:59:47 PM [express] GET /api/form-configs/availability 500 in 17ms :: {"error":"self-signed certifi…
+Dec 04 12:59:49  Error getting system config: Error: self-signed certificate in certificate chain
+Dec 04 12:59:49      at /workspace/node_modules/pg-pool/index.js:45:11
+Dec 04 12:59:49      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Dec 04 12:59:49      at async file:///workspace/node_modules/drizzle-orm/node-postgres/session.js:83:22
+Dec 04 12:59:49      at async DbStorage.getSystemConfig (file:///workspace/dist/index.js:834:22)
+Dec 04 12:59:49      at async file:///workspace/dist/index.js:4437:21 {
+Dec 04 12:59:49    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+Dec 04 12:59:49  }
+Dec 04 12:59:49  12:59:49 PM [express] GET /api/system-config/email_sender_name 500 in 115ms :: {"error":"self-signed …
+Dec 04 12:59:49  Error getting system config: Error: self-signed certificate in certificate chain
+Dec 04 12:59:49      at /workspace/node_modules/pg-pool/index.js:45:11
+Dec 04 12:59:49      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Dec 04 12:59:49      at async file:///workspace/node_modules/drizzle-orm/node-postgres/session.js:83:22
+Dec 04 12:59:49      at async DbStorage.getSystemConfig (file:///workspace/dist/index.js:834:22)
+Dec 04 12:59:49      at async file:///workspace/dist/index.js:4437:21 {
+Dec 04 12:59:49    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+Dec 04 12:59:49  }
+Dec 04 12:59:49  12:59:49 PM [express] GET /api/system-config/booking_email_headline 500 in 123ms :: {"error":"self-si…
+Dec 04 12:59:49  Error getting system config: Error: self-signed certificate in certificate chain
+Dec 04 12:59:49      at /workspace/node_modules/pg-pool/index.js:45:11
+Dec 04 12:59:49      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Dec 04 12:59:49      at async file:///workspace/node_modules/drizzle-orm/node-postgres/session.js:83:22
+Dec 04 12:59:49      at async DbStorage.getSystemConfig (file:///workspace/dist/index.js:834:22)
+Dec 04 12:59:49      at async file:///workspace/dist/index.js:4437:21 {
+Dec 04 12:59:49    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+Dec 04 12:59:49  }
+Dec 04 12:59:49  12:59:49 PM [express] GET /api/system-config/booking_email_footer 500 in 125ms :: {"error":"self-sign…
+Dec 04 12:59:49  Error getting system config: Error: self-signed certificate in certificate chain
+Dec 04 12:59:49      at /workspace/node_modules/pg-pool/index.js:45:11
+Dec 04 12:59:49      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Dec 04 12:59:49      at async file:///workspace/node_modules/drizzle-orm/node-postgres/session.js:83:22
+Dec 04 12:59:49      at async DbStorage.getSystemConfig (file:///workspace/dist/index.js:834:22)
+Dec 04 12:59:49      at async file:///workspace/dist/index.js:4437:21 {
+Dec 04 12:59:49    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+Dec 04 12:59:49  }
+Dec 04 12:59:49  12:59:49 PM [express] GET /api/system-config/booking_email_instructions 500 in 128ms :: {"error":"sel…
+Dec 04 12:59:49  Error getting system config: Error: self-signed certificate in certificate chain
+Dec 04 12:59:49      at /workspace/node_modules/pg-pool/index.js:45:11
+Dec 04 12:59:49      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Dec 04 12:59:49      at async file:///workspace/node_modules/drizzle-orm/node-postgres/session.js:83:22
+Dec 04 12:59:49      at async DbStorage.getSystemConfig (file:///workspace/dist/index.js:834:22)
+Dec 04 12:59:49      at async file:///workspace/dist/index.js:4437:21 {
+Dec 04 12:59:49    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+Dec 04 12:59:49  }
+Dec 04 12:59:49  12:59:49 PM [express] GET /api/system-config/booking_email_button_text 500 in 137ms :: {"error":"self…
+Dec 04 12:59:49  Error getting system config: Error: self-signed certificate in certificate chain
+Dec 04 12:59:49      at /workspace/node_modules/pg-pool/index.js:45:11
+Dec 04 12:59:49      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Dec 04 12:59:49      at async file:///workspace/node_modules/drizzle-orm/node-postgres/session.js:83:22
+Dec 04 12:59:49      at async DbStorage.getSystemConfig (file:///workspace/dist/index.js:834:22)
+Dec 04 12:59:49      at async file:///workspace/dist/index.js:4437:21 {
+Dec 04 12:59:49    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+Dec 04 12:59:49  }
+Dec 04 12:59:49  12:59:49 PM [express] GET /api/system-config/booking_email_additional_instructions 500 in 149ms :: {"…
+Dec 04 12:59:49  Error getting system config: Error: self-signed certificate in certificate chain
+Dec 04 12:59:49      at /workspace/node_modules/pg-pool/index.js:45:11
+Dec 04 12:59:49      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Dec 04 12:59:49      at async file:///workspace/node_modules/drizzle-orm/node-postgres/session.js:83:22
+Dec 04 12:59:49      at async DbStorage.getSystemConfig (file:///workspace/dist/index.js:834:22)
+Dec 04 12:59:49      at async file:///workspace/dist/index.js:4437:21 {
+Dec 04 12:59:49    code: 'SELF_SIGNED_CERT_IN_CHAIN'
+Dec 04 12:59:49  }
+Dec 04 12:59:49  12:59:49 PM [express] GET /api/system-config/booking_email_intro 500 in 128ms :: {"error":"self-signe…
+Dec 04 12:59:50  12:59:50 PM [express] GET /api/canceled-assignments 500 in 34ms :: {"error":"self-signed certificate …
+Dec 04 12:59:50  12:59:50 PM [express] GET /api/record-days 500 in 36ms :: {"error":"self-signed certificate in certif…

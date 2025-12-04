@@ -8,15 +8,20 @@ if (!process.env.DATABASE_URL) {
   console.error("  Set DATABASE_URL environment variable to your PostgreSQL connection string.");
 }
 
-// Create pool with SSL support for cloud databases (Digital Ocean, Neon, etc.)
+// Enable SSL for all cloud databases in production
+const needsSsl = process.env.NODE_ENV === 'production' || 
+                 (process.env.DATABASE_URL && (
+                   process.env.DATABASE_URL.includes('sslmode=require') ||
+                   process.env.DATABASE_URL.includes('.ondigitalocean.com') ||
+                   process.env.DATABASE_URL.includes('.neon.tech') ||
+                   process.env.DATABASE_URL.includes('.supabase.') ||
+                   process.env.DATABASE_URL.includes('.render.com')
+                 ));
+
 export const pool = process.env.DATABASE_URL 
   ? new Pool({ 
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.DATABASE_URL.includes('sslmode=require') || 
-           process.env.DATABASE_URL.includes('.db.ondigitalocean.com') ||
-           process.env.DATABASE_URL.includes('.neon.tech')
-        ? { rejectUnauthorized: false }
-        : undefined,
+      ssl: needsSsl ? { rejectUnauthorized: false } : undefined,
     })
   : null;
 

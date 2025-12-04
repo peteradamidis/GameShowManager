@@ -49,17 +49,23 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Create pool with production-ready settings (works with any PostgreSQL: Neon, Digital Ocean, etc.)
+// Enable SSL for all cloud databases in production
+const needsSsl = process.env.NODE_ENV === 'production' || 
+                 (process.env.DATABASE_URL && (
+                   process.env.DATABASE_URL.includes('sslmode=require') ||
+                   process.env.DATABASE_URL.includes('.ondigitalocean.com') ||
+                   process.env.DATABASE_URL.includes('.neon.tech') ||
+                   process.env.DATABASE_URL.includes('.supabase.') ||
+                   process.env.DATABASE_URL.includes('.render.com')
+                 ));
+
 const pool = process.env.DATABASE_URL 
   ? new Pool({ 
       connectionString: process.env.DATABASE_URL,
       connectionTimeoutMillis: 10000,  // 10s connection timeout
       idleTimeoutMillis: 30000,        // 30s idle timeout
       max: 10,                          // Max connections
-      ssl: process.env.DATABASE_URL.includes('sslmode=require') || 
-           process.env.DATABASE_URL.includes('.db.ondigitalocean.com') ||
-           process.env.DATABASE_URL.includes('.neon.tech')
-        ? { rejectUnauthorized: false }
-        : undefined,
+      ssl: needsSsl ? { rejectUnauthorized: false } : undefined,
     })
   : null;
 

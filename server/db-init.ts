@@ -18,13 +18,18 @@ export async function initializeDatabase() {
     try {
       console.log('  DB: Creating connection pool...');
       const dbUrl = process.env.DATABASE_URL!;
+      
+      // Enable SSL for all cloud databases in production
+      const needsSsl = process.env.NODE_ENV === 'production' || 
+                       dbUrl.includes('sslmode=require') ||
+                       dbUrl.includes('.ondigitalocean.com') ||
+                       dbUrl.includes('.neon.tech') ||
+                       dbUrl.includes('.supabase.') ||
+                       dbUrl.includes('.render.com');
+      
       const pool = new Pool({ 
         connectionString: dbUrl,
-        ssl: dbUrl.includes('sslmode=require') || 
-             dbUrl.includes('.db.ondigitalocean.com') ||
-             dbUrl.includes('.neon.tech')
-          ? { rejectUnauthorized: false }
-          : undefined,
+        ssl: needsSsl ? { rejectUnauthorized: false } : undefined,
       });
       const db = drizzle(pool);
       console.log('  DB: Checking tables (10s timeout)...');
