@@ -1,0 +1,78 @@
+Create a new file called custom-build.js in your project root:
+javascript
+const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+
+console.log('Starting custom build process...');
+
+// Create dist directories
+if (!fs.existsSync('dist')) {
+  fs.mkdirSync('dist');
+}
+if (!fs.existsSync('dist/client')) {
+  fs.mkdirSync('dist/client');
+}
+
+try {
+  // Build client directly with Vite API instead of using config file
+  console.log('Building client...');
+  const viteCommand = `
+    node -e "
+      const { build } = require('vite');
+      build({
+        root: './client',
+        build: {
+          outDir: '../dist/client',
+          emptyOutDir: true
+        },
+        plugins: [require('@vitejs/plugin-react')()],
+        resolve: {
+          alias: {
+            '@': '${path.resolve('./client/src').replace(/\\/g, '\\\\')}',
+            '@assets': '${path.resolve('./client/assets').replace(/\\/g, '\\\\')}'
+          }
+        }
+      });
+    "
+  `;
+  execSync(viteCommand, { stdio: 'inherit' });
+  
+  // Build server with esbuild
+  console.log('Building server...');
+  execSync('npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist', { stdio: 'inherit' });
+  
+  // Create a simple index.html if it doesn't exist in the output
+  const indexPath = path.join('dist', 'client', 'index.html');
+  if (!fs.existsSync(indexPath)) {
+    console.log('Creating fallback index.html...');
+    fs.writeFileSync(indexPath, `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Game Show Manager</title>
+        <link rel="stylesheet" href="/assets/index.css">
+      </head>
+      <body>
+        <div id="root"></div>
+        <script type="module" src="/assets/index.js"></script>
+      </body>
+      </html>
+    `);
+  }
+  
+  console.log('Build completed successfully!');
+} catch (error) {
+  console.error('Build failed:', error);
+  process.exit(1);
+}
+Update your package.json with the new build script:
+json
+"scripts": {
+  "build": "node custom-build.js"
+}
+Install necessary dependencies:
+bash
+npm install --save-dev vite @vitejs/plugin-react esbuild
