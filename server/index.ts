@@ -71,10 +71,12 @@ app.use((req, res, next) => {
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
+  // Digital Ocean sets PORT=8080, local development defaults to 5000
   // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
+  const isProduction = process.env.NODE_ENV === 'production';
+  const defaultPort = isProduction ? '8080' : '5000';
+  const port = parseInt(process.env.PORT || defaultPort, 10);
+  
   server.listen({
     port,
     host: "0.0.0.0",
