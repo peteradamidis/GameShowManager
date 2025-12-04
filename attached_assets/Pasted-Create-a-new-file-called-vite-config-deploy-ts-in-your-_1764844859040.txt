@@ -1,0 +1,75 @@
+Create a new file called vite.config.deploy.ts in your project root:
+typescript
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './client/src'),
+      '@assets': path.resolve(__dirname, './client/assets'),
+    },
+  },
+  root: './client',
+  build: {
+    outDir: '../dist/client',
+    emptyOutDir: true,
+  },
+  server: {
+    port: 3000,
+    host: '0.0.0.0',
+  },
+});
+```__
+Create a deployment-specific build script called build-deploy.js:
+javascript
+// build-deploy.js
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+
+// Temporarily rename the original vite.config.ts
+console.log('Backing up original vite.config.ts...');
+if (fs.existsSync('vite.config.ts')) {
+  fs.renameSync('vite.config.ts', 'vite.config.ts.original');
+}
+
+// Copy our deployment config to vite.config.ts
+console.log('Creating deployment vite config...');
+if (fs.existsSync('vite.config.deploy.ts')) {
+  fs.copyFileSync('vite.config.deploy.ts', 'vite.config.ts');
+}
+
+try {
+  // Run the build
+  console.log('Building client...');
+  execSync('vite build', { stdio: 'inherit' });
+  
+  console.log('Building server...');
+  execSync('esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist', { stdio: 'inherit' });
+  
+  console.log('Build completed successfully!');
+} catch (error) {
+  console.error('Build failed:', error);
+  process.exit(1);
+} finally {
+  // Restore the original vite.config.ts
+  console.log('Restoring original vite.config.ts...');
+  if (fs.existsSync('vite.config.ts.original')) {
+    if (fs.existsSync('vite.config.ts')) {
+      fs.unlinkSync('vite.config.ts');
+    }
+    fs.renameSync('vite.config.ts.original', 'vite.config.ts');
+  }
+}
+Update your package.json with a new build script:
+json
+"scripts": {
+  "build:deploy": "node build-deploy.js"
+}
