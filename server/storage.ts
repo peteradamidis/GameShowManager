@@ -47,8 +47,25 @@ import { eq, and, sql, inArray } from "drizzle-orm";
 // Configure WebSocket for server-side Neon connection
 neonConfig.webSocketConstructor = ws as any;
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const db = drizzle(pool);
+// Log database configuration status (don't crash - let app start for health checks)
+if (!process.env.DATABASE_URL) {
+  console.error("⚠ DATABASE_URL is not set. Database operations will fail.");
+}
+
+// Create pool and db - will be null if DATABASE_URL is not set
+const pool = process.env.DATABASE_URL 
+  ? new Pool({ connectionString: process.env.DATABASE_URL })
+  : null;
+
+const db = pool ? drizzle(pool) : null;
+
+// Helper to ensure db is available before operations
+function getDb() {
+  if (!db) {
+    throw new Error("DATABASE_URL is not configured. Please set the DATABASE_URL environment variable.");
+  }
+  return db;
+}
 
 export interface IStorage {
   // Contestants

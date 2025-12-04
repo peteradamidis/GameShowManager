@@ -11,6 +11,11 @@ import { sql } from "drizzle-orm";
 neonConfig.webSocketConstructor = ws as any;
 
 export async function initializeDatabase() {
+  if (!process.env.DATABASE_URL) {
+    console.warn("⚠ DATABASE_URL is not set. Skipping database initialization.");
+    return;
+  }
+  
   try {
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const db = drizzle(pool);
