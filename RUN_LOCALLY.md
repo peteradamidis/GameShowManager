@@ -59,10 +59,9 @@ These features use Replit's infrastructure and would need replacement for local 
 - Same Replit Connectors OAuth system
 - **Local Alternative**: Set up Google OAuth 2.0 with a service account or user credentials
 
-### Object Storage (`server/objectStorage.ts`) - **WORKS LOCALLY**
-- Automatically detects environment and uses appropriate storage:
-  - **On Replit**: Uses `@replit/object-storage` package
-  - **Locally**: Falls back to local file system storage in the `LOCAL_STORAGE_DIR` directory (defaults to `./storage`)
+### Object Storage (`server/objectStorage.ts`) - **WORKS EVERYWHERE**
+- Uses local file system storage in the `LOCAL_STORAGE_DIR` directory (defaults to `./storage`)
+- Works identically on Replit and locally - no Replit-specific dependencies
 - No modification needed - works out of the box!
 
 ---
@@ -101,13 +100,17 @@ npm run db:push
 
 ## 7. Folder Structure
 
-Ensure these folders exist for file uploads:
+The following folders are used for file storage:
 
 ```
 ├── uploads/
 │   ├── branding/     # Banner images, logos (e.g., dond_banner.png)
 │   └── photos/       # Contestant photos
+├── storage/          # Created automatically by object storage
+│   └── uploads/      # Email assets and uploaded files
 ```
+
+Note: The `storage/` directory is created automatically when files are uploaded through the application.
 
 ---
 
@@ -147,7 +150,7 @@ To change the port, set the `PORT` environment variable.
 ## 10. Summary: Required Modifications for Local Use
 
 1. **Gmail/Sheets OAuth**: Replace Replit OAuth with standard Google OAuth 2.0 credentials
-2. **Object Storage**: Works automatically! Falls back to local file system when not on Replit
+2. **Object Storage**: Works automatically! Uses local file system storage (no changes needed)
 3. **PostgreSQL**: Set up a local PostgreSQL database
 4. **Environment Variables**: Create `.env` file with all required variables
 
