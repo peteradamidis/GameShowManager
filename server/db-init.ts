@@ -17,8 +17,10 @@ export async function initializeDatabase() {
   }
   
   try {
+    console.log('  DB: Creating connection pool...');
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const db = drizzle(pool);
+    console.log('  DB: Checking tables...');
 
     // List of tables to check - they'll be created if missing
     const tablesToCheck = [

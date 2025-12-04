@@ -71,10 +71,14 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
+    console.log('Step 1: Initializing database...');
     // Initialize database schema on startup
     await initializeDatabase();
+    console.log('Step 1: Database initialized');
 
+    console.log('Step 2: Registering routes...');
     const server = await registerRoutes(app);
+    console.log('Step 2: Routes registered');
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
@@ -87,11 +91,13 @@ app.use((req, res, next) => {
     // importantly only setup vite in development and after
     // setting up all the other routes so the catch-all route
     // doesn't interfere with the other routes
+    console.log('Step 3: Setting up static serving...');
     if (app.get("env") === "development") {
       await setupVite(app, server);
     } else {
       serveStatic(app);
     }
+    console.log('Step 3: Static serving ready');
 
     // ALWAYS serve the app on the port specified in the environment variable PORT
     // Digital Ocean sets PORT=8080, local development defaults to 5000
