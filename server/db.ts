@@ -18,6 +18,8 @@ const needsSsl = process.env.NODE_ENV === 'production' ||
                    process.env.DATABASE_URL.includes('.render.com')
                  ));
 
+console.log(`  DB Module: SSL enabled=${needsSsl}`);
+
 export const pool = process.env.DATABASE_URL 
   ? new Pool({ 
       connectionString: process.env.DATABASE_URL,

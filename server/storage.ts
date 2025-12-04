@@ -59,6 +59,9 @@ const needsSsl = process.env.NODE_ENV === 'production' ||
                    process.env.DATABASE_URL.includes('.render.com')
                  ));
 
+// Log SSL configuration for debugging
+console.log(`  DB Config: NODE_ENV=${process.env.NODE_ENV}, SSL enabled=${needsSsl}`);
+
 const pool = process.env.DATABASE_URL 
   ? new Pool({ 
       connectionString: process.env.DATABASE_URL,

@@ -27,6 +27,8 @@ export async function initializeDatabase() {
                        dbUrl.includes('.supabase.') ||
                        dbUrl.includes('.render.com');
       
+      console.log(`  DB Init: SSL enabled=${needsSsl}`);
+      
       const pool = new Pool({ 
         connectionString: dbUrl,
         ssl: needsSsl ? { rejectUnauthorized: false } : undefined,
