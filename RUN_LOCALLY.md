@@ -28,6 +28,7 @@ Create a `.env` file in the project root with the following variables:
 | `PORT` | Server port (defaults to 5000) | No |
 | `NODE_ENV` | Set to `development` or `production` | No |
 | `PRIVATE_OBJECT_DIR` | Directory for uploaded assets (currently `/EmailAssets`) | No |
+| `LOCAL_STORAGE_DIR` | Directory for local file storage (defaults to `./storage`) | No |
 
 ### Example `.env` file:
 
@@ -41,6 +42,7 @@ PGDATABASE=contestant_db
 SESSION_SECRET=your-random-secret-string-here
 PORT=5000
 NODE_ENV=development
+LOCAL_STORAGE_DIR=./storage
 ```
 
 ---
@@ -57,9 +59,11 @@ These features use Replit's infrastructure and would need replacement for local 
 - Same Replit Connectors OAuth system
 - **Local Alternative**: Set up Google OAuth 2.0 with a service account or user credentials
 
-### Object Storage (`server/objectStorage.ts`)
-- Uses `@replit/object-storage` package for file uploads
-- **Local Alternative**: Modify to use local file system storage (e.g., saving to `uploads/` folder) or use an S3-compatible service
+### Object Storage (`server/objectStorage.ts`) - **WORKS LOCALLY**
+- Automatically detects environment and uses appropriate storage:
+  - **On Replit**: Uses `@replit/object-storage` package
+  - **Locally**: Falls back to local file system storage in the `LOCAL_STORAGE_DIR` directory (defaults to `./storage`)
+- No modification needed - works out of the box!
 
 ---
 
@@ -143,7 +147,7 @@ To change the port, set the `PORT` environment variable.
 ## 10. Summary: Required Modifications for Local Use
 
 1. **Gmail/Sheets OAuth**: Replace Replit OAuth with standard Google OAuth 2.0 credentials
-2. **Object Storage**: Replace `@replit/object-storage` with local file system storage or S3
+2. **Object Storage**: Works automatically! Falls back to local file system when not on Replit
 3. **PostgreSQL**: Set up a local PostgreSQL database
 4. **Environment Variables**: Create `.env` file with all required variables
 
