@@ -1,0 +1,99 @@
+Dec 04 10:52:57  [34m│[0m        
+Dec 04 10:52:57  [34m│[0m -----> Installing dependencies
+Dec 04 10:52:57  [34m│[0m        Installing node modules
+Dec 04 10:53:04  [34m│[0m        
+Dec 04 10:53:04  [34m│[0m        added 617 packages, and audited 618 packages in 7s
+Dec 04 10:53:04  [34m│[0m        
+Dec 04 10:53:04  [34m│[0m        83 packages are looking for funding
+Dec 04 10:53:04  [34m│[0m          run `npm fund` for details
+Dec 04 10:53:04  [34m│[0m        
+Dec 04 10:53:04  [34m│[0m        10 vulnerabilities (3 low, 5 moderate, 2 high)
+Dec 04 10:53:04  [34m│[0m        
+Dec 04 10:53:04  [34m│[0m        To address issues that do not require attention, run:
+Dec 04 10:53:04  [34m│[0m          npm audit fix
+Dec 04 10:53:04  [34m│[0m        
+Dec 04 10:53:04  [34m│[0m        To address all issues possible (including breaking changes), run:
+Dec 04 10:53:04  [34m│[0m          npm audit fix --force
+Dec 04 10:53:04  [34m│[0m        
+Dec 04 10:53:04  [34m│[0m        Some issues need review, and may require choosing
+Dec 04 10:53:04  [34m│[0m        a different dependency.
+Dec 04 10:53:04  [34m│[0m        
+Dec 04 10:53:04  [34m│[0m        Run `npm audit` for details.
+Dec 04 10:53:04  [34m│[0m        
+Dec 04 10:53:04  [34m│[0m -----> Build
+Dec 04 10:53:04  [34m│[0m        
+Dec 04 10:53:04  [34m│[0m -----> Caching build
+Dec 04 10:53:04  [34m│[0m        - npm cache
+Dec 04 10:53:04  [34m│[0m        
+Dec 04 10:53:04  [34m│[0m -----> Pruning devDependencies
+Dec 04 10:53:06  [34m│[0m        
+Dec 04 10:53:06  [34m│[0m        up to date, audited 571 packages in 1s
+Dec 04 10:53:06  [34m│[0m        
+Dec 04 10:53:06  [34m│[0m        77 packages are looking for funding
+Dec 04 10:53:06  [34m│[0m          run `npm fund` for details
+Dec 04 10:53:06  [34m│[0m        
+Dec 04 10:53:06  [34m│[0m        7 vulnerabilities (3 low, 2 moderate, 2 high)
+Dec 04 10:53:06  [34m│[0m        
+Dec 04 10:53:06  [34m│[0m        To address issues that do not require attention, run:
+Dec 04 10:53:06  [34m│[0m          npm audit fix
+Dec 04 10:53:06  [34m│[0m        
+Dec 04 10:53:06  [34m│[0m        To address all issues possible (including breaking changes), run:
+Dec 04 10:53:06  [34m│[0m          npm audit fix --force
+Dec 04 10:53:06  [34m│[0m        
+Dec 04 10:53:06  [34m│[0m        Some issues need review, and may require choosing
+Dec 04 10:53:06  [34m│[0m        a different dependency.
+Dec 04 10:53:06  [34m│[0m        
+Dec 04 10:53:06  [34m│[0m        Run `npm audit` for details.
+Dec 04 10:53:06  [34m│[0m        npm notice
+Dec 04 10:53:06  [34m│[0m        npm notice New major version of npm available! 10.9.2 -> 11.6.4
+Dec 04 10:53:06  [34m│[0m        npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.4
+Dec 04 10:53:06  [34m│[0m        npm notice To update run: npm install -g npm@11.6.4
+Dec 04 10:53:06  [34m│[0m        npm notice
+Dec 04 10:53:06  [34m│[0m        
+Dec 04 10:53:06  [34m│[0m -----> Build succeeded!
+Dec 04 10:53:06  [34m│[0m Running custom build command: npm ci && npm run build
+Dec 04 10:53:13  [34m│[0m 
+Dec 04 10:53:13  [34m│[0m added 570 packages, and audited 571 packages in 7s
+Dec 04 10:53:13  [34m│[0m 
+Dec 04 10:53:13  [34m│[0m 77 packages are looking for funding
+Dec 04 10:53:13  [34m│[0m   run `npm fund` for details
+Dec 04 10:53:13  [34m│[0m 
+Dec 04 10:53:13  [34m│[0m 7 vulnerabilities (3 low, 2 moderate, 2 high)
+Dec 04 10:53:13  [34m│[0m 
+Dec 04 10:53:13  [34m│[0m To address issues that do not require attention, run:
+Dec 04 10:53:13  [34m│[0m   npm audit fix
+Dec 04 10:53:13  [34m│[0m 
+Dec 04 10:53:13  [34m│[0m To address all issues possible (including breaking changes), run:
+Dec 04 10:53:13  [34m│[0m   npm audit fix --force
+Dec 04 10:53:13  [34m│[0m 
+Dec 04 10:53:13  [34m│[0m Some issues need review, and may require choosing
+Dec 04 10:53:13  [34m│[0m a different dependency.
+Dec 04 10:53:13  [34m│[0m 
+Dec 04 10:53:13  [34m│[0m Run `npm audit` for details.
+Dec 04 10:53:13  [34m│[0m npm notice
+Dec 04 10:53:13  [34m│[0m npm notice New major version of npm available! 10.9.2 -> 11.6.4
+Dec 04 10:53:13  [34m│[0m npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.4
+Dec 04 10:53:13  [34m│[0m npm notice To update run: npm install -g npm@11.6.4
+Dec 04 10:53:13  [34m│[0m npm notice
+Dec 04 10:53:14  [34m│[0m 
+Dec 04 10:53:14  [34m│[0m > rest-express@1.0.0 build
+Dec 04 10:53:14  [34m│[0m > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+Dec 04 10:53:14  [34m│[0m 
+Dec 04 10:53:14  [34m│[0m failed to load config from /workspace/vite.config.ts
+Dec 04 10:53:14  [34m│[0m error during build:
+Dec 04 10:53:14  [34m│[0m Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@replit/vite-plugin-runtime-error-modal' imported from /workspace/vite.config.ts.timestamp-1764845594176-85d24cc4e1dff.mjs
+Dec 04 10:53:14  [34m│[0m     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:256:9)
+Dec 04 10:53:14  [34m│[0m     at packageResolve (node:internal/modules/esm/resolve:768:81)
+Dec 04 10:53:14  [34m│[0m     at moduleResolve (node:internal/modules/esm/resolve:854:18)
+Dec 04 10:53:14  [34m│[0m     at defaultResolve (node:internal/modules/esm/resolve:984:11)
+Dec 04 10:53:14  [34m│[0m     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:780:12)
+Dec 04 10:53:14  [34m│[0m     at #cachedDefaultResolve (node:internal/modules/esm/loader:704:25)
+Dec 04 10:53:14  [34m│[0m     at ModuleLoader.resolve (node:internal/modules/esm/loader:687:38)
+Dec 04 10:53:14  [34m│[0m     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:305:38)
+Dec 04 10:53:14  [34m│[0m     at ModuleJob._link (node:internal/modules/esm/module_job:137:49)
+Dec 04 10:53:14  [34m│[0m building: exit status 1
+Dec 04 10:53:14  [34m│[0m Timer: Builder ran for 25.824136205s and ended at 2025-12-04T10:53:14Z
+Dec 04 10:53:14  [34m│[0m [31;1mERROR: [0mfailed to build: exit status 1
+Dec 04 10:53:14  [34m│[0m 
+Dec 04 10:53:14  [34m│[0m 
+Dec 04 10:53:14  [34m│[0m [31m ✘ build failed[0m

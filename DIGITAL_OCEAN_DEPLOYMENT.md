@@ -46,15 +46,18 @@ In your app settings:
 
 ### Build Command
 ```bash
-npm ci && node build-prod.js
+npm ci && NODE_ENV=production node build.js
 ```
 
-**Alternative (if you prefer npm scripts):**
-```bash
-npm ci && npm run build
-```
-
-Note: The `build-prod.js` script uses `vite.config.prod.ts` which excludes Replit-specific plugins that aren't available in Digital Ocean. If using the standard build, make sure your environment has all required packages.
+**How it works:**
+- `npm ci` - Installs dependencies cleanly from package-lock.json
+- `NODE_ENV=production` - Sets the environment to production mode
+- `node build.js` - Runs the smart build script that:
+  - Detects production environment (no REPL_ID and NODE_ENV=production)
+  - Uses `vite.config.prod.ts` (without Replit plugins)
+  - Builds client with Vite
+  - Bundles server with esbuild
+  - Outputs to `dist/`
 
 ### Run Command
 ```bash
