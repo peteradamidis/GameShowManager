@@ -23,6 +23,73 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..");
 
+// Environment variable validation
+function validateEnvironment(): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  const requiredVars = ["DATABASE_URL", "PGHOST", "PGPORT", "PGUSER", "PGPASSWORD", "PGDATABASE"];
+  
+  for (const varName of requiredVars) {
+    if (!process.env[varName]) {
+      errors.push(varName);
+    }
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+}
+
+function printEnvironmentError(missingVars: string[]): void {
+  console.error("\n" + "=".repeat(80));
+  console.error("❌ DATABASE CONFIGURATION ERROR");
+  console.error("=".repeat(80) + "\n");
+  
+  console.error("The following environment variables are MISSING:\n");
+  missingVars.forEach(v => console.error(`  • ${v}`));
+  
+  console.error("\n" + "-".repeat(80));
+  console.error("HOW TO FIX ON DIGITAL OCEAN:");
+  console.error("-".repeat(80) + "\n");
+  
+  console.error("1. Go to your Digital Ocean App Platform dashboard");
+  console.error("2. Click on your application");
+  console.error("3. Go to \"Settings\" → \"Environment\" or \"App Spec\"");
+  console.error("4. Add these environment variables:\n");
+  
+  console.error("   DATABASE_URL=postgresql://user:password@host:5432/database");
+  console.error("   PGHOST=your-database-host");
+  console.error("   PGPORT=5432");
+  console.error("   PGUSER=your-database-user");
+  console.error("   PGPASSWORD=your-database-password");
+  console.error("   PGDATABASE=your-database-name");
+  console.error("   SESSION_SECRET=random-secret-string");
+  console.error("   NODE_ENV=production\n");
+  
+  console.error("5. Click \"Save\" and wait for deployment to complete");
+  console.error("6. Run this import script again\n");
+  
+  console.error("-".repeat(80));
+  console.error("HOW TO FIX LOCALLY:");
+  console.error("-".repeat(80) + "\n");
+  
+  console.error("Create a .env file in the project root with these values:");
+  console.error("(Use .env.example as a template)\n");
+  console.error("   DATABASE_URL=postgresql://localhost:5432/...");
+  console.error("   PGHOST=localhost");
+  console.error("   etc.\n");
+  
+  console.error("Then run: npm run import scripts/import-data.ts <export-path>\n");
+  console.error("=".repeat(80) + "\n");
+}
+
+// Validate environment before doing anything
+const envCheck = validateEnvironment();
+if (!envCheck.valid) {
+  printEnvironmentError(envCheck.errors);
+  process.exit(1);
+}
+
 // Database connection
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
