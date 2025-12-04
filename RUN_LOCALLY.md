@@ -47,17 +47,46 @@ LOCAL_STORAGE_DIR=./storage
 
 ---
 
-## 3. Replit-Specific Features (Require Modification for Local)
+## 3. Feature Availability (Local vs Replit)
 
-These features use Replit's infrastructure and would need replacement for local use:
+The application has been designed to work locally with graceful degradation. Here's what works where:
 
-### Gmail Integration (`server/gmail.ts`)
-- Currently uses Replit Connectors OAuth (`REPLIT_CONNECTORS_HOSTNAME`, `REPL_IDENTITY`)
-- **Local Alternative**: Set up Google OAuth 2.0 credentials via Google Cloud Console and modify the authentication flow to use standard OAuth
+### Features That Work Everywhere (No Setup Required)
+- **Contestant Management** - Import, view, edit, search contestants
+- **Record Day Management** - Create and manage recording days
+- **Seating Chart** - Manual seat assignments (drag & drop)
+- **Auto-Assignment Algorithm** - Automatic seat assignment with demographic balancing
+- **Group Management** - Manage contestant groups
+- **Photo Upload** - Upload contestant photos
+- **Email Asset Upload** - Upload banners and PDF attachments
+- **Booking Confirmation Forms** - Public forms for contestants to confirm/decline
+- **Object Storage** - Uses local file system (`./storage` directory)
 
-### Google Sheets Integration (`server/google-sheets.ts`)
-- Same Replit Connectors OAuth system
-- **Local Alternative**: Set up Google OAuth 2.0 with a service account or user credentials
+### Features Requiring Google Integration
+These features require either Replit Connectors (on Replit) or local OAuth setup:
+
+| Feature | Without Integration |
+|---------|---------------------|
+| Send Booking Emails | Shows "Integration Disabled" error |
+| Send Availability Emails | Shows "Integration Disabled" error |
+| Poll Gmail Inbox | Shows "Integration Disabled" error |
+| Google Sheets Sync | Shows "Integration Disabled" error |
+
+**Note**: The app will NOT crash when these features are unavailable. It gracefully returns a 503 error with a helpful message.
+
+### Checking Integration Status
+You can check integration availability via the API:
+```
+GET /api/system/integrations
+```
+Returns:
+```json
+{
+  "gmail": { "available": true/false, "message": "..." },
+  "googleSheets": { "available": true/false, "message": "..." },
+  "allAvailable": true/false
+}
+```
 
 ### Object Storage (`server/objectStorage.ts`) - **WORKS EVERYWHERE**
 - Uses local file system storage in the `LOCAL_STORAGE_DIR` directory (defaults to `./storage`)
@@ -147,16 +176,71 @@ To change the port, set the `PORT` environment variable.
 
 ---
 
-## 10. Summary: Required Modifications for Local Use
+## 10. Setting Up Local Google OAuth (Optional)
 
-1. **Gmail/Sheets OAuth**: Replace Replit OAuth with standard Google OAuth 2.0 credentials
-2. **Object Storage**: Works automatically! Uses local file system storage (no changes needed)
-3. **PostgreSQL**: Set up a local PostgreSQL database
-4. **Environment Variables**: Create `.env` file with all required variables
+To enable Gmail and Google Sheets features locally, you need to set up Google OAuth 2.0:
+
+### Step 1: Create Google Cloud Project
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable the Gmail API and Google Sheets API
+
+### Step 2: Configure OAuth Consent Screen
+1. Go to "APIs & Services" > "OAuth consent screen"
+2. Choose "External" user type
+3. Fill in app name and contact details
+4. Add scopes: `gmail.send`, `gmail.readonly`, `spreadsheets`
+
+### Step 3: Create OAuth Credentials
+1. Go to "APIs & Services" > "Credentials"
+2. Click "Create Credentials" > "OAuth client ID"
+3. Choose "Web application"
+4. Add authorized redirect URIs (e.g., `http://localhost:5000/auth/callback`)
+5. Download the JSON credentials
+
+### Step 4: Get Refresh Token
+Use the OAuth Playground or a script to get a refresh token with your credentials.
+
+### Step 5: Add Environment Variables
+```env
+GMAIL_CLIENT_ID=your-client-id
+GMAIL_CLIENT_SECRET=your-client-secret
+GMAIL_REFRESH_TOKEN=your-refresh-token
+GOOGLE_CLIENT_ID=your-client-id
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_REFRESH_TOKEN=your-refresh-token
+```
+
+### Step 6: Modify Code (Future Enhancement)
+The code in `server/gmail.ts` and `server/google-sheets.ts` would need modification to check for these environment variables and use standard OAuth instead of Replit Connectors. The `isGmailAvailable()` and `isGoogleSheetsAvailable()` functions have placeholder comments for this.
 
 ---
 
-## 11. Database Schema
+## 11. Summary: Running Locally
+
+| Component | Status |
+|-----------|--------|
+| Core Application | Works fully |
+| Contestant Management | Works fully |
+| Seating Chart | Works fully |
+| File Uploads | Works fully (local storage) |
+| Booking Forms | Works fully |
+| Send Emails | Requires Google OAuth setup |
+| Google Sheets Sync | Requires Google OAuth setup |
+
+**Quick Start (No Google Integration):**
+1. Clone repo to your machine
+2. Set up PostgreSQL database
+3. Create `.env` file with database credentials
+4. Run `npm install`
+5. Run `npm run db:push`
+6. Run `npm run dev`
+
+The app will work for all core features. Email and Sheets features will show helpful error messages.
+
+---
+
+## 12. Database Schema
 
 The database schema is defined in `shared/schema.ts` and includes tables for:
 
@@ -175,7 +259,7 @@ The database schema is defined in `shared/schema.ts` and includes tables for:
 
 ---
 
-## 12. Additional Notes
+## 13. Additional Notes
 
 - The application uses TypeScript ES Modules (`"type": "module"` in package.json)
 - Path aliases are configured: `@/` for client source, `@shared/` for shared code

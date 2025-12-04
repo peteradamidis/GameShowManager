@@ -8,8 +8,8 @@ import crypto from "crypto";
 import path from "path";
 import express from "express";
 import fs from "fs";
-import { getUncachableGmailClient, sendEmail, sendEmailWithAttachment, getInboxMessages, ParsedEmail, EmailConfig } from "./gmail";
-import { syncRecordDayToSheet, createSheetHeader, updateCellInRecordDaySheet, updateRowInRecordDaySheet, getRecordDaySheetData } from "./google-sheets";
+import { getUncachableGmailClient, sendEmail, sendEmailWithAttachment, getInboxMessages, ParsedEmail, EmailConfig, isGmailAvailable } from "./gmail";
+import { syncRecordDayToSheet, createSheetHeader, updateCellInRecordDaySheet, updateRowInRecordDaySheet, getRecordDaySheetData, isGoogleSheetsAvailable } from "./google-sheets";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 // Google Sheets config keys for database storage
@@ -1871,6 +1871,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate tokens and send availability check emails via Gmail
   app.post("/api/availability/send", async (req, res) => {
     try {
+      // Check if Gmail integration is available
+      if (!isGmailAvailable()) {
+        return res.status(503).json({ 
+          code: 'INTEGRATION_DISABLED',
+          error: "Email sending is not available. Gmail integration requires Replit Connectors or local OAuth setup." 
+        });
+      }
+
       const { contestantIds, recordDayIds } = req.body;
 
       if (!contestantIds || !Array.isArray(contestantIds) || contestantIds.length === 0) {
@@ -2266,6 +2274,14 @@ Deal or No Deal Production Team
   // Send booking confirmation emails for selected seat assignments
   app.post("/api/booking-confirmations/send", async (req, res) => {
     try {
+      // Check if Gmail integration is available
+      if (!isGmailAvailable()) {
+        return res.status(503).json({ 
+          code: 'INTEGRATION_DISABLED',
+          error: "Email sending is not available. Gmail integration requires Replit Connectors or local OAuth setup." 
+        });
+      }
+
       const { seatAssignmentIds, emailSubject, emailBody: customEmailBody, attachmentPaths } = req.body;
 
       if (!seatAssignmentIds || !Array.isArray(seatAssignmentIds)) {
@@ -2569,6 +2585,14 @@ Deal or No Deal Production Team
   // Send follow-up email to a contestant (reply to their questions)
   app.post("/api/booking-confirmations/:id/follow-up", async (req, res) => {
     try {
+      // Check if Gmail integration is available
+      if (!isGmailAvailable()) {
+        return res.status(503).json({ 
+          code: 'INTEGRATION_DISABLED',
+          error: "Email sending is not available. Gmail integration requires Replit Connectors or local OAuth setup." 
+        });
+      }
+
       const { id } = req.params;
       const { message, subject } = req.body;
 
@@ -3004,6 +3028,14 @@ Deal or No Deal Production Team
   // Poll Gmail inbox for contestant email replies and store them in booking_messages
   app.post("/api/booking-confirmations/poll-inbox", async (req, res) => {
     try {
+      // Check if Gmail integration is available
+      if (!isGmailAvailable()) {
+        return res.status(503).json({ 
+          code: 'INTEGRATION_DISABLED',
+          error: "Inbox polling is not available. Gmail integration requires Replit Connectors or local OAuth setup." 
+        });
+      }
+
       console.log("📥 Starting inbox polling for contestant replies...");
       
       // Fetch recent inbox messages (last 24 hours by default)
@@ -3598,6 +3630,37 @@ Deal or No Deal Production Team
   });
 
   // ==========================================
+  // System Integrations Status Endpoint
+  // ==========================================
+
+  // Get status of all external integrations (Gmail, Google Sheets, etc.)
+  app.get("/api/system/integrations", async (req, res) => {
+    try {
+      const gmailAvailable = isGmailAvailable();
+      const googleSheetsAvailable = isGoogleSheetsAvailable();
+      
+      res.json({
+        gmail: {
+          available: gmailAvailable,
+          message: gmailAvailable 
+            ? 'Gmail integration is connected' 
+            : 'Gmail integration requires Replit Connectors or local OAuth setup'
+        },
+        googleSheets: {
+          available: googleSheetsAvailable,
+          message: googleSheetsAvailable 
+            ? 'Google Sheets integration is connected' 
+            : 'Google Sheets integration requires Replit Connectors or local OAuth setup'
+        },
+        allAvailable: gmailAvailable && googleSheetsAvailable
+      });
+    } catch (error: any) {
+      console.error("Error checking integrations:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==========================================
   // System Config Endpoints
   // ==========================================
 
@@ -3641,12 +3704,17 @@ Deal or No Deal Production Team
       const spreadsheetId = await storage.getSystemConfig(SHEETS_SPREADSHEET_ID_KEY);
       const lastSyncTime = await storage.getSystemConfig(SHEETS_LAST_SYNC_KEY);
       const autoSync = await storage.getSystemConfig(SHEETS_AUTO_SYNC_KEY);
+      const integrationAvailable = isGoogleSheetsAvailable();
       
       res.json({
         spreadsheetId,
         lastSyncTime: lastSyncTime ? new Date(lastSyncTime) : null,
         autoSync: autoSync !== 'false',
         isConfigured: !!spreadsheetId,
+        integrationAvailable,
+        integrationMessage: integrationAvailable 
+          ? null 
+          : 'Google Sheets integration requires Replit Connectors or local OAuth setup'
       });
     } catch (error: any) {
       console.error("Error getting Google Sheets config:", error);
@@ -3657,6 +3725,14 @@ Deal or No Deal Production Team
   // Set Google Sheets spreadsheet ID
   app.post("/api/google-sheets/config", async (req, res) => {
     try {
+      // Check if integration is available
+      if (!isGoogleSheetsAvailable()) {
+        return res.status(503).json({ 
+          code: 'INTEGRATION_DISABLED',
+          error: "Google Sheets integration is not available. This feature requires Replit Connectors or local OAuth setup." 
+        });
+      }
+
       const { spreadsheetId, autoSync } = req.body;
       
       if (!spreadsheetId) {
@@ -3702,6 +3778,14 @@ Deal or No Deal Production Team
   // Sync all booking master data to Google Sheets (one tab per record day)
   app.post("/api/google-sheets/sync", async (req, res) => {
     try {
+      // Check if integration is available
+      if (!isGoogleSheetsAvailable()) {
+        return res.status(503).json({ 
+          code: 'INTEGRATION_DISABLED',
+          error: "Google Sheets integration is not available. This feature requires Replit Connectors or local OAuth setup." 
+        });
+      }
+
       const spreadsheetId = await storage.getSystemConfig(SHEETS_SPREADSHEET_ID_KEY);
       
       if (!spreadsheetId) {

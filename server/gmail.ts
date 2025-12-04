@@ -4,6 +4,17 @@ import crypto from 'crypto';
 let connectionSettings: any;
 let cachedSenderEmail: string | null = null;
 
+// Check if Gmail integration is available (Replit Connectors or local OAuth)
+export function isGmailAvailable(): boolean {
+  const hasReplitConnectors = !!(
+    process.env.REPLIT_CONNECTORS_HOSTNAME &&
+    (process.env.REPL_IDENTITY || process.env.WEB_REPL_RENEWAL)
+  );
+  // Future: Add check for local OAuth credentials here
+  // const hasLocalOAuth = !!(process.env.GMAIL_CLIENT_ID && process.env.GMAIL_CLIENT_SECRET && process.env.GMAIL_REFRESH_TOKEN);
+  return hasReplitConnectors;
+}
+
 // Email configuration interface
 export interface EmailConfig {
   senderName?: string;

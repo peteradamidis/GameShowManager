@@ -5,6 +5,17 @@ import { google } from 'googleapis';
 
 let connectionSettings: any;
 
+// Check if Google Sheets integration is available (Replit Connectors or local OAuth)
+export function isGoogleSheetsAvailable(): boolean {
+  const hasReplitConnectors = !!(
+    process.env.REPLIT_CONNECTORS_HOSTNAME &&
+    (process.env.REPL_IDENTITY || process.env.WEB_REPL_RENEWAL)
+  );
+  // Future: Add check for local OAuth credentials here
+  // const hasLocalOAuth = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_REFRESH_TOKEN);
+  return hasReplitConnectors;
+}
+
 async function getAccessToken() {
   if (connectionSettings && connectionSettings.settings.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
     return connectionSettings.settings.access_token;
