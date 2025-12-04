@@ -1,6 +1,5 @@
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import ws from "ws";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { 
   contestants, 
   groups, 
@@ -44,21 +43,23 @@ import {
 } from "@shared/schema";
 import { eq, and, sql, inArray } from "drizzle-orm";
 
-// Configure WebSocket for server-side Neon connection
-neonConfig.webSocketConstructor = ws as any;
-
 // Log database configuration status (don't crash - let app start for health checks)
 if (!process.env.DATABASE_URL) {
   console.error("⚠ DATABASE_URL is not set. Database operations will fail.");
 }
 
-// Create pool with production-ready settings
+// Create pool with production-ready settings (works with any PostgreSQL: Neon, Digital Ocean, etc.)
 const pool = process.env.DATABASE_URL 
   ? new Pool({ 
       connectionString: process.env.DATABASE_URL,
       connectionTimeoutMillis: 10000,  // 10s connection timeout
       idleTimeoutMillis: 30000,        // 30s idle timeout
       max: 10,                          // Max connections
+      ssl: process.env.DATABASE_URL.includes('sslmode=require') || 
+           process.env.DATABASE_URL.includes('.db.ondigitalocean.com') ||
+           process.env.DATABASE_URL.includes('.neon.tech')
+        ? { rejectUnauthorized: false }
+        : undefined,
     })
   : null;
 

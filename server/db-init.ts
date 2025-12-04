@@ -3,12 +3,9 @@
  * Ensures database schema exists on startup by creating tables if they don't exist.
  */
 
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import ws from "ws";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { sql } from "drizzle-orm";
-
-neonConfig.webSocketConstructor = ws as any;
 
 export async function initializeDatabase() {
   if (!process.env.DATABASE_URL) {
@@ -20,7 +17,15 @@ export async function initializeDatabase() {
   const checkDatabase = async () => {
     try {
       console.log('  DB: Creating connection pool...');
-      const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+      const dbUrl = process.env.DATABASE_URL!;
+      const pool = new Pool({ 
+        connectionString: dbUrl,
+        ssl: dbUrl.includes('sslmode=require') || 
+             dbUrl.includes('.db.ondigitalocean.com') ||
+             dbUrl.includes('.neon.tech')
+          ? { rejectUnauthorized: false }
+          : undefined,
+      });
       const db = drizzle(pool);
       console.log('  DB: Checking tables (10s timeout)...');
 
