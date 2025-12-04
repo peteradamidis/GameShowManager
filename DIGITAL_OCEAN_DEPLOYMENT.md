@@ -70,6 +70,11 @@ NODE_ENV=production node dist/index.js
 - Should be automatically detected as `8080`
 - If not, set it to `8080`
 
+### Health Check Path
+- Set the health check path to `/health`
+- This endpoint responds immediately with 200 OK
+- In Digital Ocean: App Settings → Health Checks → HTTP Path → `/health`
+
 ---
 
 ## Step 4: Set Environment Variables

@@ -5,6 +5,12 @@ import { initializeDatabase } from "./db-init";
 
 const app = express();
 
+// Health check endpoint for Digital Ocean / load balancers
+// This must respond immediately before any async operations
+app.get('/health', (_req, res) => {
+  res.status(200).send('OK');
+});
+
 declare module 'http' {
   interface IncomingMessage {
     rawBody: unknown
