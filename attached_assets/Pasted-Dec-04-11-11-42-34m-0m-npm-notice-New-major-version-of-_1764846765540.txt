@@ -1,0 +1,64 @@
+Dec 04 11:11:42  [34m│[0m        npm notice New major version of npm available! 10.9.2 -> 11.6.4
+Dec 04 11:11:42  [34m│[0m        npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.4
+Dec 04 11:11:42  [34m│[0m        npm notice To update run: npm install -g npm@11.6.4
+Dec 04 11:11:42  [34m│[0m        npm notice
+Dec 04 11:11:42  [34m│[0m        
+Dec 04 11:11:42  [34m│[0m -----> Build succeeded!
+Dec 04 11:11:43  [34m│[0m Running custom build command: npm ci && NODE_ENV=production node build.js
+Dec 04 11:11:51  [34m│[0m 
+Dec 04 11:11:51  [34m│[0m added 570 packages, and audited 571 packages in 8s
+Dec 04 11:11:51  [34m│[0m 
+Dec 04 11:11:51  [34m│[0m 77 packages are looking for funding
+Dec 04 11:11:51  [34m│[0m   run `npm fund` for details
+Dec 04 11:11:51  [34m│[0m 
+Dec 04 11:11:51  [34m│[0m 7 vulnerabilities (3 low, 2 moderate, 2 high)
+Dec 04 11:11:51  [34m│[0m 
+Dec 04 11:11:51  [34m│[0m To address issues that do not require attention, run:
+Dec 04 11:11:51  [34m│[0m   npm audit fix
+Dec 04 11:11:51  [34m│[0m 
+Dec 04 11:11:51  [34m│[0m To address all issues possible (including breaking changes), run:
+Dec 04 11:11:51  [34m│[0m   npm audit fix --force
+Dec 04 11:11:51  [34m│[0m 
+Dec 04 11:11:51  [34m│[0m Some issues need review, and may require choosing
+Dec 04 11:11:51  [34m│[0m a different dependency.
+Dec 04 11:11:51  [34m│[0m 
+Dec 04 11:11:51  [34m│[0m Run `npm audit` for details.
+Dec 04 11:11:51  [34m│[0m npm notice
+Dec 04 11:11:51  [34m│[0m npm notice New major version of npm available! 10.9.2 -> 11.6.4
+Dec 04 11:11:51  [34m│[0m npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.4
+Dec 04 11:11:51  [34m│[0m npm notice To update run: npm install -g npm@11.6.4
+Dec 04 11:11:51  [34m│[0m npm notice
+Dec 04 11:11:51  [34m│[0m 🔨 Building application...
+Dec 04 11:11:51  [34m│[0m 📍 Production build detected - using clean Vite config
+Dec 04 11:11:51  [34m│[0m 📦 Building client...
+Dec 04 11:11:51  [34m│[0m vite v5.4.21 building for production...
+Dec 04 11:11:51  [34m│[0m transforming...
+Dec 04 11:11:51  [34m│[0m node:internal/process/promises:394
+Dec 04 11:11:51  [34m│[0m     triggerUncaughtException(err, true /* fromPromise */);
+Dec 04 11:11:51  [34m│[0m     ^
+Dec 04 11:11:51  [34m│[0m 
+Dec 04 11:11:51  [34m│[0m [Failed to load PostCSS config: Failed to load PostCSS config (searchPath: /workspace/client): [Error] Loading PostCSS Plugin failed: Cannot find module 'autoprefixer'
+Dec 04 11:11:51  [34m│[0m Require stack:
+Dec 04 11:11:51  [34m│[0m - /workspace/postcss.config.js
+Dec 04 11:11:51  [34m│[0m 
+Dec 04 11:11:51  [34m│[0m (@/workspace/postcss.config.js)
+Dec 04 11:11:51  [34m│[0m Error: Loading PostCSS Plugin failed: Cannot find module 'autoprefixer'
+Dec 04 11:11:51  [34m│[0m Require stack:
+Dec 04 11:11:51  [34m│[0m - /workspace/postcss.config.js
+Dec 04 11:11:51  [34m│[0m 
+Dec 04 11:11:51  [34m│[0m (@/workspace/postcss.config.js)
+Dec 04 11:11:51  [34m│[0m     at load (file:///workspace/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:33632:11)
+Dec 04 11:11:51  [34m│[0m     at file:///workspace/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:33657:16
+Dec 04 11:11:51  [34m│[0m     at Array.map (<anonymous>)
+Dec 04 11:11:51  [34m│[0m     at plugins (file:///workspace/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:33656:8)
+Dec 04 11:11:51  [34m│[0m     at processResult (file:///workspace/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:33726:14)
+Dec 04 11:11:51  [34m│[0m     at file:///workspace/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:33856:14]
+Dec 04 11:11:51  [34m│[0m 
+Dec 04 11:11:51  [34m│[0m Node.js v22.16.0
+Dec 04 11:11:51  [34m│[0m ❌ Build failed: Command failed: npx vite build --config vite.config.prod.ts
+Dec 04 11:11:51  [34m│[0m building: exit status 1
+Dec 04 11:11:51  [34m│[0m Timer: Builder ran for 27.722718855s and ended at 2025-12-04T11:11:51Z
+Dec 04 11:11:51  [34m│[0m [31;1mERROR: [0mfailed to build: exit status 1
+Dec 04 11:11:51  [34m│[0m 
+Dec 04 11:11:51  [34m│[0m 
+Dec 04 11:11:51  [34m│[0m [31m ✘ build failed[0m
