@@ -315,6 +315,33 @@ npx tsx scripts/import-data.ts ./exports/export-2024-01-15T10-30-00
 
 ## 14. Deploying to Digital Ocean (or Other Cloud Providers)
 
+### Critical: Database Schema Setup
+
+**The app requires database schema to be initialized. This MUST happen before the app starts:**
+
+**Option A: During Deployment (Recommended)**
+1. In Digital Ocean App Platform settings, add a **pre-deploy task** that runs BEFORE your app starts:
+   ```bash
+   npm run db:push
+   ```
+2. Set Run Command to: `npm run start`
+
+**Option B: Manual Setup After Deployment**
+If you can't add a pre-deploy task, SSH into your Digital Ocean app and run:
+```bash
+npm run db:push
+```
+
+**Option C: Import Existing Data**
+If you're migrating from another system:
+```bash
+# First ensure schema exists
+npm run db:push
+
+# Then import your data
+npx tsx scripts/import-data.ts /path/to/export-folder
+```
+
 ### Build and Run Commands
 
 **Build command:**
@@ -326,6 +353,8 @@ npm run build
 ```bash
 npm run start
 ```
+
+The app will automatically check if database tables exist on startup. If they're missing, it will log a warning telling you to run `npm run db:push`.
 
 ### Required Environment Variables
 
