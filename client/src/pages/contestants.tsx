@@ -354,6 +354,30 @@ export default function Contestants() {
     },
   });
 
+  // Delete contestant mutation
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const deleteContestantMutation = useMutation({
+    mutationFn: async (contestantId: string) => {
+      return apiRequest('DELETE', `/api/contestants/${contestantId}`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      setSelectedContestants([]);
+      setDeleteConfirmOpen(false);
+      toast({
+        title: "Contestant deleted",
+        description: "The contestant has been permanently removed.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Fetch occupied seats for the selected record day
   const { data: occupiedSeats = [] } = useQuery({
     queryKey: ['/api/seat-assignments', selectedRecordDay],
@@ -513,6 +537,31 @@ export default function Contestants() {
 
   return (
     <div className="space-y-6">
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Contestant</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to permanently delete {selectedContestants.length} contestant{selectedContestants.length !== 1 ? 's' : ''}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                selectedContestants.forEach(id => {
+                  deleteContestantMutation.mutate(id);
+                });
+              }}
+              disabled={deleteContestantMutation.isPending}
+            >
+              {deleteContestantMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Contestants</h1>
@@ -555,6 +604,15 @@ export default function Contestants() {
                   </Button>
                 </>
               )}
+              <Button 
+                variant="destructive"
+                onClick={() => setDeleteConfirmOpen(true)}
+                disabled={deleteContestantMutation.isPending}
+                data-testid="button-delete-contestant"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
             </>
           )}
           <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />

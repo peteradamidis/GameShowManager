@@ -436,6 +436,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete contestant
+  app.delete("/api/contestants/:id", async (req, res) => {
+    try {
+      const contestant = await storage.getContestantById(req.params.id);
+      if (!contestant) {
+        return res.status(404).json({ error: "Contestant not found" });
+      }
+      
+      // Check if contestant has any seat assignments
+      const assignments = await storage.getAllSeatAssignments();
+      const hasAssignments = assignments.some((a: any) => a.contestantId === req.params.id);
+      if (hasAssignments) {
+        return res.status(400).json({ error: "Cannot delete contestant with active seat assignments" });
+      }
+
+      await storage.deleteContestant(req.params.id);
+      res.json({ message: "Contestant deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Generate fake contestants for testing
   app.post("/api/contestants/generate-fake", async (req, res) => {
     try {
