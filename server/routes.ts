@@ -653,6 +653,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update record day
+  app.patch("/api/record-days/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      
+      // Validate using partial schema
+      const partialSchema = insertRecordDaySchema.partial();
+      const validated = partialSchema.parse(req.body);
+      
+      const recordDay = await storage.updateRecordDay(id, validated);
+      if (!recordDay) {
+        return res.status(404).json({ error: "Record day not found" });
+      }
+      res.json(recordDay);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Delete record day (with safety checks)
+  app.delete("/api/record-days/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      
+      // Verify record day exists
+      const recordDay = await storage.getRecordDayById(id);
+      if (!recordDay) {
+        return res.status(404).json({ error: "Record day not found" });
+      }
+      
+      const result = await storage.deleteRecordDay(id);
+      
+      if (!result.success) {
+        return res.status(400).json({ error: result.error });
+      }
+      
+      res.json({ success: true, message: "Record day deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Assign contestants to a record day
   app.post("/api/record-days/:id/contestants", async (req, res) => {
     try {
@@ -4005,6 +4047,103 @@ Deal or No Deal Production Team
       if (error instanceof ObjectNotFoundError) {
         return res.status(404).json({ error: "File not found" });
       }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // =============================================
+  // Backup / Export Routes
+  // =============================================
+
+  // Export all data as JSON backup
+  app.get("/api/backup/export", async (req, res) => {
+    try {
+      // Gather all data from all tables
+      const [
+        allRecordDays,
+        allContestants,
+        allGroups,
+        allSeatAssignments,
+        allBlockTypes,
+        allStandbys,
+        allCanceled,
+      ] = await Promise.all([
+        storage.getRecordDays(),
+        storage.getContestants(),
+        storage.getGroups(),
+        storage.getAllSeatAssignments(),
+        Promise.all((await storage.getRecordDays()).map(rd => storage.getBlockTypesByRecordDay(rd.id))),
+        storage.getStandbyAssignments(),
+        storage.getCanceledAssignments(),
+      ]);
+      
+      // Flatten block types
+      const flatBlockTypes = allBlockTypes.flat();
+      
+      const backupData = {
+        version: "1.0",
+        exportedAt: new Date().toISOString(),
+        data: {
+          recordDays: allRecordDays,
+          contestants: allContestants,
+          groups: allGroups,
+          seatAssignments: allSeatAssignments,
+          blockTypes: flatBlockTypes,
+          standbys: allStandbys,
+          canceledAssignments: allCanceled,
+        },
+        counts: {
+          recordDays: allRecordDays.length,
+          contestants: allContestants.length,
+          groups: allGroups.length,
+          seatAssignments: allSeatAssignments.length,
+          blockTypes: flatBlockTypes.length,
+          standbys: allStandbys.length,
+          canceledAssignments: allCanceled.length,
+        },
+      };
+      
+      // Set headers for file download
+      const filename = `backup_${new Date().toISOString().split('T')[0]}_${Date.now()}.json`;
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.json(backupData);
+    } catch (error: any) {
+      console.error("Error exporting backup:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get backup summary (counts only, for display)
+  app.get("/api/backup/summary", async (req, res) => {
+    try {
+      const [
+        allRecordDays,
+        allContestants,
+        allGroups,
+        allSeatAssignments,
+        allStandbys,
+        allCanceled,
+      ] = await Promise.all([
+        storage.getRecordDays(),
+        storage.getContestants(),
+        storage.getGroups(),
+        storage.getAllSeatAssignments(),
+        storage.getStandbyAssignments(),
+        storage.getCanceledAssignments(),
+      ]);
+      
+      res.json({
+        recordDays: allRecordDays.length,
+        contestants: allContestants.length,
+        groups: allGroups.length,
+        seatAssignments: allSeatAssignments.length,
+        standbys: allStandbys.length,
+        canceledAssignments: allCanceled.length,
+        lastBackup: null, // Could store this in system config if needed
+      });
+    } catch (error: any) {
+      console.error("Error getting backup summary:", error);
       res.status(500).json({ error: error.message });
     }
   });

@@ -132,7 +132,9 @@ export interface IStorage {
   createRecordDay(recordDay: InsertRecordDay): Promise<RecordDay>;
   getRecordDays(): Promise<RecordDay[]>;
   getRecordDayById(id: string): Promise<RecordDay | undefined>;
+  updateRecordDay(id: string, data: Partial<InsertRecordDay>): Promise<RecordDay | undefined>;
   updateRecordDayStatus(id: string, status: string): Promise<RecordDay | undefined>;
+  deleteRecordDay(id: string): Promise<{ success: boolean; error?: string }>;
   
   // Seat Assignments
   createSeatAssignment(assignment: InsertSeatAssignment): Promise<SeatAssignment>;
@@ -331,6 +333,56 @@ export class DbStorage implements IStorage {
       .where(eq(recordDays.id, id))
       .returning();
     return updated;
+  }
+
+  async updateRecordDay(id: string, data: Partial<InsertRecordDay>): Promise<RecordDay | undefined> {
+    const db = getDb();
+    const [updated] = await db
+      .update(recordDays)
+      .set(data as any)
+      .where(eq(recordDays.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteRecordDay(id: string): Promise<{ success: boolean; error?: string }> {
+    const db = getDb();
+    
+    // Check if record day has any seat assignments
+    const assignments = await db
+      .select()
+      .from(seatAssignments)
+      .where(eq(seatAssignments.recordDayId, id));
+    
+    if (assignments.length > 0) {
+      return { 
+        success: false, 
+        error: `Cannot delete: This record day has ${assignments.length} seat assignment(s). Remove all contestants first.` 
+      };
+    }
+    
+    // Check for standby assignments
+    const standbys = await db
+      .select()
+      .from(standbyAssignments)
+      .where(eq(standbyAssignments.recordDayId, id));
+    
+    if (standbys.length > 0) {
+      return { 
+        success: false, 
+        error: `Cannot delete: This record day has ${standbys.length} standby assignment(s). Remove all standbys first.` 
+      };
+    }
+    
+    // Delete related data first (block types, availability records, canceled assignments)
+    await db.delete(blockTypes).where(eq(blockTypes.recordDayId, id));
+    await db.delete(contestantAvailability).where(eq(contestantAvailability.recordDayId, id));
+    await db.delete(canceledAssignments).where(eq(canceledAssignments.recordDayId, id));
+    
+    // Now delete the record day
+    await db.delete(recordDays).where(eq(recordDays.id, id));
+    
+    return { success: true };
   }
 
   // Seat Assignments

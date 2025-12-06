@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, Mail } from "lucide-react";
+import { Calendar, Users, Edit, Trash2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 export interface RecordDay {
@@ -17,6 +17,8 @@ export interface RecordDay {
 interface RecordDayCardProps {
   recordDay: RecordDay;
   onViewSeating?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   onSendInvitations?: () => void;
 }
 
@@ -27,20 +29,48 @@ const statusColors = {
   Completed: "bg-purple-500/10 text-purple-700 dark:text-purple-400",
 };
 
-export function RecordDayCard({ recordDay, onViewSeating, onSendInvitations }: RecordDayCardProps) {
+export function RecordDayCard({ recordDay, onViewSeating, onEdit, onDelete, onSendInvitations }: RecordDayCardProps) {
   const fillPercent = Math.round((recordDay.filledSeats / recordDay.totalSeats) * 100);
 
   return (
     <Card data-testid={`card-record-day-${recordDay.id}`}>
       <CardHeader>
-        <div className="space-y-1">
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            {recordDay.date}
-          </CardTitle>
-          <CardDescription>
-            {recordDay.rxNumber || "Record Day"}
-          </CardDescription>
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-1 min-w-0 flex-1">
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 flex-shrink-0" />
+              <span className="truncate">{recordDay.date}</span>
+            </CardTitle>
+            <CardDescription className="flex items-center gap-2 flex-wrap">
+              <span>{recordDay.rxNumber || "Record Day"}</span>
+              <Badge className={statusColors[recordDay.status]} variant="secondary">
+                {recordDay.status}
+              </Badge>
+            </CardDescription>
+          </div>
+          <div className="flex gap-1 flex-shrink-0">
+            {onEdit && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={onEdit}
+                data-testid={`button-edit-record-day-${recordDay.id}`}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={onDelete}
+                className="text-destructive hover:text-destructive"
+                data-testid={`button-delete-record-day-${recordDay.id}`}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
