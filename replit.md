@@ -44,12 +44,18 @@ Do not make changes to the file `Y`.
     - Contestants moved to reschedule (from standby) show "Reschedule" status badge in the contestant tab.
     - Yellow-colored badge distinguishes reschedule status from other statuses (Pending, Available, Assigned, Invited).
 - **Automatic Backup System:**
-    - Runs every 1 hour, overwrites the same file (`storage/backups/automatic-backup.json`)
+    - Runs every 1 hour, creates both JSON and Excel backups simultaneously
+    - JSON backup: `storage/backups/automatic-backup.json`
+    - Excel backup: `storage/backups/automatic-backup.xlsx` (with separate worksheets for each data type)
     - Backs up ALL data: record days, contestants, groups, seat assignments, standbys, block types, canceled assignments
     - Includes error tracking with consecutive failure detection
     - Automatically stops after 5 consecutive failures to prevent log saturation
     - Manual backup available from Settings page
-    - Download backup file from Settings page
+    - Download JSON or Excel backup files from Settings page
+- **Contestant Deletion:**
+    - Delete individual contestants from the Contestants tab
+    - Confirmation dialog required before deletion
+    - Cascades deletion to related seat assignments and standbys
 - **Record Day Self-Service:**
     - Create, edit, and delete record days from the Record Days page
     - Delete operations protected by safety checks (prevents deletion if seat assignments exist)
@@ -89,14 +95,26 @@ Do not make changes to the file `Y`.
 ### Automatic Backups
 - Scheduler runs every hour after server startup
 - First backup runs 1 minute after startup
-- Backups are saved to `storage/backups/automatic-backup.json`
+- JSON backups are saved to `storage/backups/automatic-backup.json`
+- Excel backups are saved to `storage/backups/automatic-backup.xlsx`
 - Each backup overwrites the previous one
+
+### Excel Backup Format
+The Excel backup contains separate worksheets for:
+- **Record Days:** ID, Date, RxNumber, Status, Notes
+- **Contestants:** ID, Name, Age, Gender, Email, Phone, Location, Rating, Status, AttendingWith, GroupID, MedicalInfo, MobilityNotes
+- **Seat Assignments:** ID, RecordDayID, ContestantID, Block, Seat, BookingEmailSent, ConfirmedRSVP, Notes
+- **Standbys:** ID, RecordDayID, ContestantID, Status, Notes
+- **Groups:** ID, ReferenceNumber
+- **Block Types:** ID, RecordDayID, BlockNumber, BlockType
+- **Canceled Assignments:** ID, RecordDayID, ContestantID, Reason, CanceledAt
 
 ### API Endpoints
 - `GET /api/backup/status` - Returns scheduler status, last backup time, error info, consecutive failures count
 - `GET /api/backup/summary` - Returns counts of all data (record days, contestants, etc.)
-- `POST /api/backup/manual` - Triggers an immediate manual backup
-- `GET /api/backup/download` - Downloads the backup file
+- `POST /api/backup/manual` - Triggers an immediate manual backup (creates both JSON and Excel)
+- `GET /api/backup/download` - Downloads the JSON backup file
+- `GET /api/backup/download-excel` - Downloads the Excel backup file
 - `GET /api/backup/export` - Direct JSON export of all data (legacy endpoint)
 
 ### Settings Page
@@ -106,6 +124,7 @@ The Settings tab includes a "Data Backup" section with:
 - Error display if backups are failing
 - Summary of data counts
 - "Run Backup Now" button for manual backups
-- "Download Backup" button to save a copy locally
+- "Download JSON" button to save JSON copy locally
+- "Download Excel" button to save Excel copy locally
 
 **Full documentation:** See `docs/backup-system.md` for complete backup system details including configuration options, API endpoints, and troubleshooting.
