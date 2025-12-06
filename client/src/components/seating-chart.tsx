@@ -403,6 +403,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         groupId: targetData.groupId,
         assignmentId: targetData.assignmentId,
         contestantId: targetData.contestantId,
+        auditionRating: targetData.auditionRating,
       };
       
       newBlocks[targetSeat.blockIdx][targetSeat.seatIdx] = {
@@ -413,6 +414,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         groupId: sourceData.groupId,
         assignmentId: sourceData.assignmentId,
         contestantId: sourceData.contestantId,
+        auditionRating: sourceData.auditionRating,
       };
       
       return newBlocks;
