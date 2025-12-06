@@ -3279,6 +3279,11 @@ Deal or No Deal Production Team
 
       const created = await storage.createStandbyAssignments(assignments);
       
+      // Update contestant status to assigned for new standbys
+      for (const contestantId of newContestantIds) {
+        await storage.updateContestantAvailability(contestantId, 'assigned');
+      }
+      
       res.json({
         message: `Created ${created.length} standby assignments${skippedCount > 0 ? ` (${skippedCount} already existed)` : ''}`,
         count: created.length,
@@ -3313,7 +3318,18 @@ Deal or No Deal Production Team
   app.delete("/api/standbys/:id", async (req, res) => {
     try {
       const { id } = req.params;
+      
+      // Get the standby to find the contestant
+      const allStandbys = await storage.getStandbyAssignments();
+      const standby = allStandbys.find(s => s.id === id);
+      
       await storage.deleteStandbyAssignment(id);
+      
+      // Update contestant status back to available if they're not seated/assigned elsewhere
+      if (standby) {
+        await storage.updateContestantAvailability(standby.contestantId, 'available');
+      }
+      
       res.json({ message: "Standby assignment deleted" });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
