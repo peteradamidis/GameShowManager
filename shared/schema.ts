@@ -120,7 +120,7 @@ export const contestantAvailability = pgTable("contestant_availability", {
 // Booking Confirmation Tokens table - stores unique tokens for booking confirmations
 export const bookingConfirmationTokens = pgTable("booking_confirmation_tokens", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  seatAssignmentId: varchar("seat_assignment_id").references(() => seatAssignments.id).notNull(),
+  seatAssignmentId: varchar("seat_assignment_id").references(() => seatAssignments.id, { onDelete: "cascade" }).notNull(),
   token: varchar("token", { length: 64 }).notNull().unique(),
   status: tokenStatusEnum("status").default('active').notNull(),
   confirmationStatus: confirmationStatusEnum("confirmation_status").default('pending').notNull(),
@@ -135,7 +135,7 @@ export const bookingConfirmationTokens = pgTable("booking_confirmation_tokens", 
 // Booking Messages table - tracks conversation history between system and contestants
 export const bookingMessages = pgTable("booking_messages", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  confirmationId: varchar("confirmation_id").references(() => bookingConfirmationTokens.id).notNull(),
+  confirmationId: varchar("confirmation_id").references(() => bookingConfirmationTokens.id, { onDelete: "cascade" }).notNull(),
   direction: messageDirectionEnum("direction").notNull(), // outbound = we sent, inbound = contestant replied
   messageType: text("message_type").notNull(), // 'booking_email', 'follow_up', 'confirmation_response', 'reply'
   subject: text("subject"),
