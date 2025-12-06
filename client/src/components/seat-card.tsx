@@ -40,21 +40,55 @@ const groupColors = [
   "border-yellow-500",
 ];
 
-// Rating-based background colors
-const ratingColors: Record<string, string> = {
-  'A+': 'bg-emerald-100 dark:bg-emerald-900/40 border-emerald-500',
-  'A': 'bg-green-100 dark:bg-green-900/40 border-green-500',
-  'B+': 'bg-amber-100 dark:bg-amber-900/40 border-amber-500',
-  'B': 'bg-orange-100 dark:bg-orange-900/40 border-orange-500',
-  'C': 'bg-red-100 dark:bg-red-900/40 border-red-400',
+// Rating-based background colors - use inline styles for better portability
+const ratingColors: Record<string, { light: string; dark: string; borderLight: string; borderDark: string }> = {
+  'A+': {
+    light: 'hsl(134 61% 88%)',
+    dark: 'hsl(134 61% 25%)',
+    borderLight: 'hsl(134 65% 31%)',
+    borderDark: 'hsl(134 65% 50%)',
+  },
+  'A': {
+    light: 'hsl(134 57% 90%)',
+    dark: 'hsl(134 57% 25%)',
+    borderLight: 'hsl(134 60% 34%)',
+    borderDark: 'hsl(134 60% 52%)',
+  },
+  'B+': {
+    light: 'hsl(38 92% 92%)',
+    dark: 'hsl(38 92% 25%)',
+    borderLight: 'hsl(38 97% 40%)',
+    borderDark: 'hsl(38 97% 60%)',
+  },
+  'B': {
+    light: 'hsl(30 84% 90%)',
+    dark: 'hsl(30 84% 25%)',
+    borderLight: 'hsl(30 89% 40%)',
+    borderDark: 'hsl(30 89% 60%)',
+  },
+  'C': {
+    light: 'hsl(0 84% 88%)',
+    dark: 'hsl(0 84% 25%)',
+    borderLight: 'hsl(0 74% 42%)',
+    borderDark: 'hsl(0 74% 58%)',
+  },
 };
 
 export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEmptySeatClick, onRemove, onCancel }: SeatCardProps) {
   const isEmpty = !seat.contestantName;
   
-  // Use rating-based colors, fallback to group colors if no rating
-  const ratingColorClass = seat.auditionRating ? ratingColors[seat.auditionRating] : '';
-  const groupColorClass = !ratingColorClass && seat.groupId
+  // Determine colors
+  const ratingColorObj = seat.auditionRating ? ratingColors[seat.auditionRating] : null;
+  const isDarkMode = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
+  
+  const bgColor = ratingColorObj 
+    ? (isDarkMode ? ratingColorObj.dark : ratingColorObj.light)
+    : 'transparent';
+  const borderColor = ratingColorObj
+    ? (isDarkMode ? ratingColorObj.borderDark : ratingColorObj.borderLight)
+    : 'transparent';
+  
+  const groupColorClass = !ratingColorObj && seat.groupId
     ? groupColors[parseInt(seat.groupId.replace(/\D/g, "")) % groupColors.length]
     : "";
 
@@ -84,11 +118,16 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
 
   const seatContent = (
     <Card
-      className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity ${
+      className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity border-2 ${
         isEmpty
           ? "border-dashed bg-muted/30 cursor-pointer hover-elevate"
-          : `${ratingColorClass || groupColorClass} border-2 hover-elevate`
+          : `${groupColorClass} hover-elevate`
       } ${isDragging ? "opacity-50" : ""}`}
+      style={ratingColorObj ? {
+        backgroundColor: bgColor,
+        borderColor: borderColor,
+        color: isDarkMode ? '#e0e0e0' : '#1a1a1a',
+      } : undefined}
       data-testid={`seat-${blockIndex}-${seatIndex}`}
       onClick={handleClick}
     >
