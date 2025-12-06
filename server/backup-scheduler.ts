@@ -1,9 +1,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import xlsx from 'xlsx';
 import { storage } from './storage';
 
 const BACKUP_DIR = './storage/backups';
 const BACKUP_FILE = 'automatic-backup.json';
+const EXCEL_BACKUP_FILE = 'automatic-backup.xlsx';
 const BACKUP_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 
 let backupIntervalId: NodeJS.Timeout | null = null;
@@ -75,6 +77,10 @@ export async function performBackup(): Promise<{ success: boolean; message: stri
     const backupPath = path.join(BACKUP_DIR, BACKUP_FILE);
     fs.writeFileSync(backupPath, JSON.stringify(backupData, null, 2));
 
+    // Also create Excel backup
+    const excelPath = path.join(BACKUP_DIR, EXCEL_BACKUP_FILE);
+    await createExcelBackup(backupData.data, excelPath);
+
     lastBackupTime = new Date();
     lastBackupStatus = 'success';
     lastBackupError = null;
@@ -82,6 +88,7 @@ export async function performBackup(): Promise<{ success: boolean; message: stri
 
     console.log(`[Backup] Automatic backup completed at ${lastBackupTime.toISOString()}`);
     console.log(`[Backup] Data: ${recordDays.length} record days, ${contestants.length} contestants, ${seatAssignments.length} assignments`);
+    console.log(`[Backup] Excel backup saved to ${excelPath}`);
 
     return { 
       success: true, 
@@ -182,4 +189,113 @@ export function readBackupFile(): string | null {
     console.error('[Backup] Error reading backup file:', error);
   }
   return null;
+}
+
+// Create Excel backup with multiple sheets
+async function createExcelBackup(data: any, filePath: string): Promise<void> {
+  const workbook = xlsx.utils.book_new();
+  
+  // Record Days sheet
+  if (data.recordDays && data.recordDays.length > 0) {
+    const rdSheet = xlsx.utils.json_to_sheet(data.recordDays.map((rd: any) => ({
+      ID: rd.id,
+      Date: rd.date,
+      RxNumber: rd.rxNumber,
+      Status: rd.status,
+      Notes: rd.notes,
+    })));
+    xlsx.utils.book_append_sheet(workbook, rdSheet, 'Record Days');
+  }
+  
+  // Contestants sheet
+  if (data.contestants && data.contestants.length > 0) {
+    const cSheet = xlsx.utils.json_to_sheet(data.contestants.map((c: any) => ({
+      ID: c.id,
+      Name: c.name,
+      Age: c.age,
+      Gender: c.gender,
+      Email: c.email,
+      Phone: c.phone,
+      Location: c.location,
+      Rating: c.auditionRating,
+      Status: c.availabilityStatus,
+      AttendingWith: c.attendingWith,
+      GroupID: c.groupId,
+      MedicalInfo: c.medicalInfo,
+      MobilityNotes: c.mobilityNotes,
+    })));
+    xlsx.utils.book_append_sheet(workbook, cSheet, 'Contestants');
+  }
+  
+  // Seat Assignments sheet
+  if (data.seatAssignments && data.seatAssignments.length > 0) {
+    const saSheet = xlsx.utils.json_to_sheet(data.seatAssignments.map((sa: any) => ({
+      ID: sa.id,
+      RecordDayID: sa.recordDayId,
+      ContestantID: sa.contestantId,
+      Block: sa.blockNumber,
+      Seat: sa.seatLabel,
+      BookingEmailSent: sa.bookingEmailSent,
+      ConfirmedRSVP: sa.confirmedRsvp,
+      Notes: sa.notes,
+    })));
+    xlsx.utils.book_append_sheet(workbook, saSheet, 'Seat Assignments');
+  }
+  
+  // Standbys sheet
+  if (data.standbys && data.standbys.length > 0) {
+    const stSheet = xlsx.utils.json_to_sheet(data.standbys.map((st: any) => ({
+      ID: st.id,
+      RecordDayID: st.recordDayId,
+      ContestantID: st.contestantId,
+      Status: st.status,
+      Notes: st.notes,
+    })));
+    xlsx.utils.book_append_sheet(workbook, stSheet, 'Standbys');
+  }
+  
+  // Groups sheet
+  if (data.groups && data.groups.length > 0) {
+    const gSheet = xlsx.utils.json_to_sheet(data.groups.map((g: any) => ({
+      ID: g.id,
+      ReferenceNumber: g.referenceNumber,
+    })));
+    xlsx.utils.book_append_sheet(workbook, gSheet, 'Groups');
+  }
+  
+  // Block Types sheet
+  if (data.blockTypes && data.blockTypes.length > 0) {
+    const btSheet = xlsx.utils.json_to_sheet(data.blockTypes.map((bt: any) => ({
+      ID: bt.id,
+      RecordDayID: bt.recordDayId,
+      BlockNumber: bt.blockNumber,
+      BlockType: bt.blockType,
+    })));
+    xlsx.utils.book_append_sheet(workbook, btSheet, 'Block Types');
+  }
+  
+  // Canceled Assignments sheet
+  if (data.canceledAssignments && data.canceledAssignments.length > 0) {
+    const caSheet = xlsx.utils.json_to_sheet(data.canceledAssignments.map((ca: any) => ({
+      ID: ca.id,
+      RecordDayID: ca.recordDayId,
+      ContestantID: ca.contestantId,
+      Reason: ca.reason,
+      CanceledAt: ca.canceledAt,
+    })));
+    xlsx.utils.book_append_sheet(workbook, caSheet, 'Canceled Assignments');
+  }
+  
+  // Write the file
+  xlsx.writeFile(workbook, filePath);
+}
+
+// Get Excel backup file path
+export function getExcelBackupPath(): string {
+  return path.join(BACKUP_DIR, EXCEL_BACKUP_FILE);
+}
+
+// Check if Excel backup exists
+export function excelBackupExists(): boolean {
+  return fs.existsSync(getExcelBackupPath());
 }

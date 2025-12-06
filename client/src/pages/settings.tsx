@@ -616,6 +616,38 @@ function BackupSection() {
     }
   };
 
+  const handleDownloadExcel = async () => {
+    try {
+      const response = await fetch("/api/backup/download-excel");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Download failed");
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const timestamp = new Date().toISOString().split('T')[0];
+      a.download = `contestant-backup-${timestamp}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Download started",
+        description: "Your Excel backup file is being downloaded.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Download failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return "Unknown";
     const k = 1024;
@@ -719,7 +751,16 @@ function BackupSection() {
             data-testid="button-download-backup"
           >
             <Download className="w-4 h-4 mr-2" />
-            Download Backup
+            Download JSON
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleDownloadExcel}
+            disabled={!backupStatus?.fileInfo?.exists}
+            data-testid="button-download-excel"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download Excel
           </Button>
         </div>
 

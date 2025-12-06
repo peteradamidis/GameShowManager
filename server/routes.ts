@@ -4224,6 +4224,26 @@ Deal or No Deal Production Team
     }
   });
 
+  // Download the Excel backup file
+  app.get("/api/backup/download-excel", async (req, res) => {
+    try {
+      const { getExcelBackupPath, excelBackupExists } = await import('./backup-scheduler');
+      
+      if (!excelBackupExists()) {
+        return res.status(404).json({ error: "No Excel backup file exists. Run a manual backup first." });
+      }
+      
+      const filePath = getExcelBackupPath();
+      const timestamp = new Date().toISOString().split('T')[0];
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="contestant-backup-${timestamp}.xlsx"`);
+      res.sendFile(path.resolve(filePath));
+    } catch (error: any) {
+      console.error("Error downloading Excel backup:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // =============================================
   // Form Configuration Routes
   // =============================================

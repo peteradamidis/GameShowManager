@@ -122,6 +122,7 @@ export interface IStorage {
   updateContestantAvailability(id: string, status: string): Promise<Contestant | undefined>;
   updateContestantField(id: string, field: string, value: any): Promise<Contestant | undefined>;
   updateContestantPhoto(id: string, photoUrl: string | null): Promise<Contestant | undefined>;
+  deleteContestant(id: string): Promise<void>;
   
   // Groups
   createGroup(group: InsertGroup): Promise<Group>;
@@ -284,6 +285,10 @@ export class DbStorage implements IStorage {
       .where(eq(contestants.id, id))
       .returning();
     return updated;
+  }
+
+  async deleteContestant(id: string): Promise<void> {
+    await db.delete(contestants).where(eq(contestants.id, id));
   }
 
   // Dedicated method to update contestant's "Attending With" field
