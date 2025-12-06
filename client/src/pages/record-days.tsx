@@ -1,6 +1,6 @@
 import { RecordDayCard, RecordDay } from "@/components/record-day-card";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Edit, AlertTriangle, Download } from "lucide-react";
+import { Plus, Trash2, Edit, AlertTriangle } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -247,16 +247,10 @@ export default function RecordDays() {
             Manage recording schedules and contestant assignments
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setLocation('/backup')} data-testid="button-backup">
-            <Download className="h-4 w-4 mr-2" />
-            Backup
-          </Button>
-          <Button onClick={handleOpenCreate} data-testid="button-create-record-day">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Record Day
-          </Button>
-        </div>
+        <Button onClick={handleOpenCreate} data-testid="button-create-record-day">
+          <Plus className="h-4 w-4 mr-2" />
+          Create Record Day
+        </Button>
       </div>
 
       {isLoading ? (

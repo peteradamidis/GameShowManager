@@ -9,6 +9,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./db-init";
 import { warmupDatabaseConnection } from "./storage";
+import { startBackupScheduler } from "./backup-scheduler";
 
 // Log startup info immediately for debugging
 console.log('=== Server Starting ===');
@@ -127,8 +128,14 @@ app.use((req, res, next) => {
       warmupDatabaseConnection().then(success => {
         if (success) {
           console.log('Step 5: Database warmed up and ready');
+          // Start automatic backup scheduler after database is ready
+          console.log('Step 6: Starting automatic backup scheduler...');
+          startBackupScheduler();
+          console.log('Step 6: Backup scheduler started (runs every hour)');
         } else {
           console.warn('Step 5: Database warmup failed - first requests may be slow');
+          // Still start backup scheduler, but warn that backups may fail
+          startBackupScheduler();
         }
       });
     });

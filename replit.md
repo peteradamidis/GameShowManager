@@ -43,6 +43,17 @@ Do not make changes to the file `Y`.
 - **Reschedule Status Tracking:**
     - Contestants moved to reschedule (from standby) show "Reschedule" status badge in the contestant tab.
     - Yellow-colored badge distinguishes reschedule status from other statuses (Pending, Available, Assigned, Invited).
+- **Automatic Backup System:**
+    - Runs every 1 hour, overwrites the same file (`storage/backups/automatic-backup.json`)
+    - Backs up ALL data: record days, contestants, groups, seat assignments, standbys, block types, canceled assignments
+    - Includes error tracking with consecutive failure detection
+    - Automatically stops after 5 consecutive failures to prevent log saturation
+    - Manual backup available from Settings page
+    - Download backup file from Settings page
+- **Record Day Self-Service:**
+    - Create, edit, and delete record days from the Record Days page
+    - Delete operations protected by safety checks (prevents deletion if seat assignments exist)
+    - Confirmation dialog required before deletion
 
 ### Feature Specifications
 - **Contestant Management:** Comprehensive contestant profiles, search, selection, and filtering capabilities (by status, gender, rating, location, record day, availability response).
@@ -72,3 +83,27 @@ Do not make changes to the file `Y`.
     - To use: Create a Google Sheet, copy the spreadsheet ID from the URL (the long string between /d/ and /edit), then call the config endpoint.
     - Data synced: Contestant name, ID, rating, gender, age, location, record day, seat, workflow status, RSVP status, and notes.
 - **Booking Master to Server File Sync:** (Planned) Two-way sync between booking master and Excel file on user's server. User prefers local server solution over SharePoint for now. Awaiting server endpoint details (URL, format, authentication method).
+
+## Backup System
+
+### Automatic Backups
+- Scheduler runs every hour after server startup
+- First backup runs 1 minute after startup
+- Backups are saved to `storage/backups/automatic-backup.json`
+- Each backup overwrites the previous one
+
+### API Endpoints
+- `GET /api/backup/status` - Returns scheduler status, last backup time, error info, consecutive failures count
+- `GET /api/backup/summary` - Returns counts of all data (record days, contestants, etc.)
+- `POST /api/backup/manual` - Triggers an immediate manual backup
+- `GET /api/backup/download` - Downloads the backup file
+- `GET /api/backup/export` - Direct JSON export of all data (legacy endpoint)
+
+### Settings Page
+The Settings tab includes a "Data Backup" section with:
+- Auto-backup status indicator (running/stopped)
+- Last backup timestamp
+- Error display if backups are failing
+- Summary of data counts
+- "Run Backup Now" button for manual backups
+- "Download Backup" button to save a copy locally

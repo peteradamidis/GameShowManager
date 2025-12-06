@@ -8,7 +8,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail } from "lucide-react";
+import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail, Download, Database, Clock, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface EmailAsset {
@@ -513,10 +513,221 @@ export default function Settings() {
           </CardContent>
         </Card>
 
+        <BackupSection />
+
         <div className="flex justify-end">
           <Button data-testid="button-save-settings">Save Settings</Button>
         </div>
       </div>
     </div>
+  );
+}
+
+interface BackupStatus {
+  schedulerRunning: boolean;
+  schedulerInitialized: boolean;
+  lastBackupTime: string | null;
+  lastBackupStatus: 'success' | 'error' | null;
+  lastBackupError: string | null;
+  consecutiveFailures: number;
+  backupInterval: string;
+  backupPath: string;
+  fileInfo: {
+    exists: boolean;
+    size?: number;
+    modifiedAt?: string;
+  };
+}
+
+function BackupSection() {
+  const { toast } = useToast();
+  const [isRunningBackup, setIsRunningBackup] = useState(false);
+
+  const { data: backupStatus, isLoading: statusLoading, refetch: refetchStatus } = useQuery<BackupStatus>({
+    queryKey: ['/api/backup/status'],
+    refetchInterval: 60000, // Refresh every minute
+  });
+
+  const { data: summary } = useQuery<{
+    recordDays: number;
+    contestants: number;
+    groups: number;
+    seatAssignments: number;
+    standbys: number;
+    canceledAssignments: number;
+  }>({
+    queryKey: ['/api/backup/summary'],
+  });
+
+  const handleManualBackup = async () => {
+    setIsRunningBackup(true);
+    try {
+      const response = await apiRequest("POST", "/api/backup/manual");
+      const data = await response.json();
+      if (data.success) {
+        toast({
+          title: "Backup completed",
+          description: "All data has been backed up successfully.",
+        });
+        refetchStatus();
+      } else {
+        throw new Error(data.error || "Backup failed");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Backup failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsRunningBackup(false);
+    }
+  };
+
+  const handleDownloadBackup = async () => {
+    try {
+      const response = await fetch("/api/backup/download");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Download failed");
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const timestamp = new Date().toISOString().split('T')[0];
+      a.download = `contestant-backup-${timestamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Download started",
+        description: "Your backup file is being downloaded.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Download failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return "Unknown";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  };
+
+  const formatTime = (isoString?: string | null) => {
+    if (!isoString) return "Never";
+    return new Date(isoString).toLocaleString();
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Database className="w-5 h-5" />
+          Data Backup
+        </CardTitle>
+        <CardDescription>
+          Automatic backups run every hour. You can also trigger a manual backup anytime.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="p-3 rounded-lg bg-muted/50">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <Clock className="h-4 w-4" />
+              <span className="text-sm">Auto-Backup Status</span>
+            </div>
+            <p className="text-sm font-medium">
+              {statusLoading ? "Loading..." : backupStatus?.schedulerRunning ? "Running (every hour)" : 
+                backupStatus?.schedulerInitialized ? "Stopped (too many failures)" : "Not started"}
+            </p>
+          </div>
+          <div className="p-3 rounded-lg bg-muted/50">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <RefreshCw className="h-4 w-4" />
+              <span className="text-sm">Last Backup</span>
+            </div>
+            <p className="text-sm font-medium">
+              {statusLoading ? "Loading..." : formatTime(backupStatus?.fileInfo?.modifiedAt || backupStatus?.lastBackupTime)}
+            </p>
+          </div>
+        </div>
+
+        {backupStatus?.lastBackupStatus === 'error' && backupStatus?.lastBackupError && (
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+            <p className="text-sm text-destructive font-medium">Last backup failed</p>
+            <p className="text-sm text-destructive/80">{backupStatus.lastBackupError}</p>
+            {backupStatus.consecutiveFailures > 1 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {backupStatus.consecutiveFailures} consecutive failures
+              </p>
+            )}
+          </div>
+        )}
+
+        {summary && (
+          <div className="p-3 rounded-lg border">
+            <p className="text-sm text-muted-foreground mb-2">Data included in backup:</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              <span>{summary.recordDays} record days</span>
+              <span>{summary.contestants} contestants</span>
+              <span>{summary.seatAssignments} seat assignments</span>
+              <span>{summary.standbys} standbys</span>
+              <span>{summary.groups} groups</span>
+            </div>
+          </div>
+        )}
+
+        {backupStatus?.fileInfo?.exists && (
+          <div className="text-sm text-muted-foreground">
+            Backup file size: {formatFileSize(backupStatus.fileInfo.size)}
+          </div>
+        )}
+
+        <div className="flex gap-2 flex-wrap">
+          <Button 
+            onClick={handleManualBackup} 
+            disabled={isRunningBackup}
+            data-testid="button-manual-backup"
+          >
+            {isRunningBackup ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Backing up...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Run Backup Now
+              </>
+            )}
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleDownloadBackup}
+            disabled={!backupStatus?.fileInfo?.exists}
+            data-testid="button-download-backup"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download Backup
+          </Button>
+        </div>
+
+        <div className="text-xs text-muted-foreground space-y-1 pt-2 border-t">
+          <p><strong>What's included:</strong> Record days, contestants, groups, seat assignments, standbys, and canceled assignments.</p>
+          <p><strong>Storage:</strong> Backups are saved to the server and overwrite the previous backup each hour.</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

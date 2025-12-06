@@ -4148,6 +4148,60 @@ Deal or No Deal Production Team
     }
   });
 
+  // Get automatic backup status
+  app.get("/api/backup/status", async (req, res) => {
+    try {
+      const { getBackupStatus, getBackupFileInfo } = await import('./backup-scheduler');
+      const status = getBackupStatus();
+      const fileInfo = getBackupFileInfo();
+      res.json({ ...status, fileInfo });
+    } catch (error: any) {
+      console.error("Error getting backup status:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Trigger manual backup (overwrites automatic backup file)
+  app.post("/api/backup/manual", async (req, res) => {
+    try {
+      const { performBackup } = await import('./backup-scheduler');
+      const result = await performBackup();
+      if (result.success) {
+        res.json({ success: true, message: result.message, path: result.path });
+      } else {
+        res.status(500).json({ success: false, error: result.message });
+      }
+    } catch (error: any) {
+      console.error("Error performing manual backup:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Download the automatic backup file
+  app.get("/api/backup/download", async (req, res) => {
+    try {
+      const { readBackupFile, getBackupFileInfo } = await import('./backup-scheduler');
+      const fileInfo = getBackupFileInfo();
+      
+      if (!fileInfo.exists) {
+        return res.status(404).json({ error: "No backup file exists. Run a manual backup first." });
+      }
+      
+      const content = readBackupFile();
+      if (!content) {
+        return res.status(500).json({ error: "Failed to read backup file" });
+      }
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="contestant-backup-${timestamp}.json"`);
+      res.send(content);
+    } catch (error: any) {
+      console.error("Error downloading backup:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // =============================================
   // Form Configuration Routes
   // =============================================
