@@ -58,6 +58,7 @@ export default function ReschedulePage() {
       medicalInfo: contestant.medicalInfo || '',
       mobilityNotes: contestant.mobilityNotes || '',
       criminalRecord: contestant.criminalRecord || '',
+      auditionRating: contestant.auditionRating || '',
     });
     setDetailDialogOpen(true);
   };
@@ -114,6 +115,7 @@ export default function ReschedulePage() {
         medicalInfo: selectedContestant.medicalInfo || '',
         mobilityNotes: selectedContestant.mobilityNotes || '',
         criminalRecord: selectedContestant.criminalRecord || '',
+        auditionRating: selectedContestant.auditionRating || '',
       });
     }
     setIsEditMode(false);
@@ -501,6 +503,24 @@ export default function ReschedulePage() {
                           onChange={(e) => handleEditFormChange('attendingWith', e.target.value)}
                           data-testid="input-edit-attending"
                         />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-rating">Audition Score</Label>
+                        <Select 
+                          value={editFormData.auditionRating || ''} 
+                          onValueChange={(value) => handleEditFormChange('auditionRating', value)}
+                        >
+                          <SelectTrigger data-testid="select-edit-rating">
+                            <SelectValue placeholder="Select rating" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="A+">A+</SelectItem>
+                            <SelectItem value="A">A</SelectItem>
+                            <SelectItem value="B+">B+</SelectItem>
+                            <SelectItem value="B">B</SelectItem>
+                            <SelectItem value="C">C</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>

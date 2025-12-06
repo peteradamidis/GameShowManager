@@ -207,6 +207,7 @@ export function ContestantTable({
         medicalInfo: contestantDetails.medicalInfo || '',
         mobilityNotes: contestantDetails.mobilityNotes || '',
         criminalRecord: contestantDetails.criminalRecord || '',
+        auditionRating: contestantDetails.auditionRating || '',
       });
     }
   }, [contestantDetails]);
@@ -627,6 +628,24 @@ export function ContestantTable({
                           onChange={(e) => handleEditFormChange('attendingWith', e.target.value)}
                           data-testid="input-edit-attending"
                         />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-rating">Audition Score</Label>
+                        <Select 
+                          value={editFormData.auditionRating || ''} 
+                          onValueChange={(value) => handleEditFormChange('auditionRating', value)}
+                        >
+                          <SelectTrigger data-testid="select-edit-rating">
+                            <SelectValue placeholder="Select rating" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="A+">A+</SelectItem>
+                            <SelectItem value="A">A</SelectItem>
+                            <SelectItem value="B+">B+</SelectItem>
+                            <SelectItem value="B">B</SelectItem>
+                            <SelectItem value="C">C</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
