@@ -107,3 +107,5 @@ The Settings tab includes a "Data Backup" section with:
 - Summary of data counts
 - "Run Backup Now" button for manual backups
 - "Download Backup" button to save a copy locally
+
+**Full documentation:** See `docs/backup-system.md` for complete backup system details including configuration options, API endpoints, and troubleshooting.
