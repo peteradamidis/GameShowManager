@@ -40,28 +40,13 @@ const groupColors = [
   "border-yellow-500",
 ];
 
-// Rating-based colors with Tailwind classes + fallback inline styles
-const ratingColors: Record<string, { classes: string; inline: { bg: string; border: string; bgDark: string; borderDark: string } }> = {
-  'A+': {
-    classes: 'bg-emerald-100 dark:bg-emerald-900/40 border-emerald-500',
-    inline: { bg: 'hsl(134 61% 88%)', border: 'hsl(134 65% 31%)', bgDark: 'hsl(134 61% 25%)', borderDark: 'hsl(134 65% 50%)' }
-  },
-  'A': {
-    classes: 'bg-green-100 dark:bg-green-900/40 border-green-500',
-    inline: { bg: 'hsl(134 57% 90%)', border: 'hsl(134 60% 34%)', bgDark: 'hsl(134 57% 25%)', borderDark: 'hsl(134 60% 52%)' }
-  },
-  'B+': {
-    classes: 'bg-amber-100 dark:bg-amber-900/40 border-amber-500',
-    inline: { bg: 'hsl(38 92% 92%)', border: 'hsl(38 97% 40%)', bgDark: 'hsl(38 92% 25%)', borderDark: 'hsl(38 97% 60%)' }
-  },
-  'B': {
-    classes: 'bg-orange-100 dark:bg-orange-900/40 border-orange-500',
-    inline: { bg: 'hsl(30 84% 90%)', border: 'hsl(30 89% 40%)', bgDark: 'hsl(30 84% 25%)', borderDark: 'hsl(30 89% 60%)' }
-  },
-  'C': {
-    classes: 'bg-red-100 dark:bg-red-900/40 border-red-400',
-    inline: { bg: 'hsl(0 84% 88%)', border: 'hsl(0 74% 42%)', bgDark: 'hsl(0 84% 25%)', borderDark: 'hsl(0 74% 58%)' }
-  },
+// Rating-based colors - pure inline styles (no Tailwind dependency)
+const ratingColors: Record<string, { bg: string; border: string }> = {
+  'A+': { bg: '#dcfce7', border: '#16a34a' },
+  'A': { bg: '#dcfce7', border: '#22c55e' },
+  'B+': { bg: '#fef3c7', border: '#f59e0b' },
+  'B': { bg: '#fed7aa', border: '#f97316' },
+  'C': { bg: '#fee2e2', border: '#ef4444' },
 };
 
 export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEmptySeatClick, onRemove, onCancel }: SeatCardProps) {
@@ -69,7 +54,6 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
   
   // Use rating-based colors, fallback to group colors if no rating
   const ratingColorInfo = seat.auditionRating ? ratingColors[seat.auditionRating] : null;
-  const ratingColorClass = ratingColorInfo?.classes || '';
   
   const groupColorClass = !ratingColorInfo && seat.groupId
     ? groupColors[parseInt(seat.groupId.replace(/\D/g, "")) % groupColors.length]
@@ -104,11 +88,11 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
       className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity border-2 ${
         isEmpty
           ? "border-dashed bg-muted/30 cursor-pointer hover-elevate"
-          : `${ratingColorClass || groupColorClass} hover-elevate`
+          : `${groupColorClass} hover-elevate`
       } ${isDragging ? "opacity-50" : ""}`}
       style={ratingColorInfo ? {
-        backgroundColor: ratingColorInfo.inline.bg,
-        borderColor: ratingColorInfo.inline.border,
+        backgroundColor: ratingColorInfo.bg,
+        borderColor: ratingColorInfo.border,
       } : undefined}
       data-testid={`seat-${blockIndex}-${seatIndex}`}
       onClick={handleClick}
