@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-06T13:11:20.758Z",
+  "exportedAt": "2025-12-06T13:35:57.053Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -218,7 +218,7 @@
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
         "contestantId": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
         "blockNumber": 1,
-        "seatLabel": "B3",
+        "seatLabel": "B4",
         "firstNations": null,
         "rating": null,
         "location": null,

@@ -788,6 +788,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         seatLabel,
       });
 
+      // Update contestant status to assigned
+      await storage.updateContestantAvailability(contestantId, 'assigned');
+
       res.json(assignment);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -886,6 +889,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           seatLabel: seatLabels[i],
         });
         assignments.push(assignment);
+        
+        // Update contestant status to assigned
+        await storage.updateContestantAvailability(contestantIds[i], 'assigned');
       }
 
       res.json({
@@ -3387,6 +3393,11 @@ Deal or No Deal Production Team
         assignedAt: seatLabel ? new Date() : null,
         status: seatLabel ? 'seated' : 'pending',
       });
+
+      // Update contestant status to assigned when standby is seated
+      if (seatLabel) {
+        await storage.updateContestantAvailability(matchingStandby.contestantId, 'assigned');
+      }
 
       res.json(updated);
     } catch (error: any) {
