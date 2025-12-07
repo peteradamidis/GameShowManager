@@ -194,11 +194,12 @@ export function ContestantTable({
 
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editFormData, setEditFormData] = useState<Partial<Contestant>>({});
+  const [editFormData, setEditFormData] = useState<Partial<Contestant> & { playerType?: string }>({});
 
   // Reset edit form when contestant details change
   useEffect(() => {
-    if (contestantDetails) {
+    if (contestantDetails && selectedContestantId) {
+      const assignment = seatAssignmentMap.get(selectedContestantId);
       setEditFormData({
         name: contestantDetails.name,
         age: contestantDetails.age,
@@ -211,9 +212,10 @@ export function ContestantTable({
         mobilityNotes: contestantDetails.mobilityNotes || '',
         criminalRecord: contestantDetails.criminalRecord || '',
         auditionRating: contestantDetails.auditionRating || '',
+        playerType: (assignment as any)?.playerType || '',
       });
     }
-  }, [contestantDetails]);
+  }, [contestantDetails, selectedContestantId]);
 
   // Reset edit mode when dialog closes and set player type
   useEffect(() => {
@@ -273,16 +275,28 @@ export function ContestantTable({
     },
   });
 
-  const handleEditFormChange = (field: keyof Contestant, value: any) => {
+  const handleEditFormChange = (field: string, value: any) => {
     setEditFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSaveEdit = () => {
-    updateContestantMutation.mutate(editFormData);
+  const handleSaveEdit = async () => {
+    const { playerType, ...contestantData } = editFormData;
+    
+    // Save contestant data
+    await updateContestantMutation.mutateAsync(contestantData);
+    
+    // Save player type if it's set and changed
+    if (selectedContestantId && playerType) {
+      const assignment = seatAssignmentMap.get(selectedContestantId);
+      if (assignment && (assignment as any).playerType !== playerType) {
+        updatePlayerTypeMutation.mutate(playerType);
+      }
+    }
   };
 
   const handleCancelEdit = () => {
-    if (contestantDetails) {
+    if (contestantDetails && selectedContestantId) {
+      const assignment = seatAssignmentMap.get(selectedContestantId);
       setEditFormData({
         name: contestantDetails.name,
         age: contestantDetails.age,
@@ -294,6 +308,8 @@ export function ContestantTable({
         medicalInfo: contestantDetails.medicalInfo || '',
         mobilityNotes: contestantDetails.mobilityNotes || '',
         criminalRecord: contestantDetails.criminalRecord || '',
+        auditionRating: contestantDetails.auditionRating || '',
+        playerType: (assignment as any)?.playerType || '',
       });
     }
     setIsEditMode(false);
@@ -619,37 +635,38 @@ export function ContestantTable({
                     </div>
                   </div>
                   
-                  {/* Basic Info Edit */}
-                  <div className="flex-1 space-y-4">
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Basic Information</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-name">Name</Label>
+                  {/* Basic Info Edit - Compact */}
+                  <div className="flex-1 space-y-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-name" className="text-xs">Name</Label>
                         <Input
                           id="edit-name"
                           value={editFormData.name || ''}
                           onChange={(e) => handleEditFormChange('name', e.target.value)}
                           data-testid="input-edit-name"
+                          className="h-8"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-age">Age</Label>
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-age" className="text-xs">Age</Label>
                         <Input
                           id="edit-age"
                           type="number"
                           value={editFormData.age || ''}
                           onChange={(e) => handleEditFormChange('age', parseInt(e.target.value) || 0)}
                           data-testid="input-edit-age"
+                          className="h-8"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-gender">Gender</Label>
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-gender" className="text-xs">Gender</Label>
                         <Select 
                           value={editFormData.gender || ''} 
                           onValueChange={(value) => handleEditFormChange('gender', value)}
                         >
-                          <SelectTrigger data-testid="select-edit-gender">
-                            <SelectValue placeholder="Select gender" />
+                          <SelectTrigger data-testid="select-edit-gender" className="h-8 text-xs">
+                            <SelectValue placeholder="Gender" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Male">Male</SelectItem>
@@ -658,23 +675,26 @@ export function ContestantTable({
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-attending">Attending With</Label>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-attending" className="text-xs">Attending With</Label>
                         <Input
                           id="edit-attending"
                           value={editFormData.attendingWith || ''}
                           onChange={(e) => handleEditFormChange('attendingWith', e.target.value)}
                           data-testid="input-edit-attending"
+                          className="h-8"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-rating">Audition Score</Label>
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-rating" className="text-xs">Score</Label>
                         <Select 
                           value={editFormData.auditionRating || ''} 
                           onValueChange={(value) => handleEditFormChange('auditionRating', value)}
                         >
-                          <SelectTrigger data-testid="select-edit-rating">
-                            <SelectValue placeholder="Select rating" />
+                          <SelectTrigger data-testid="select-edit-rating" className="h-8 text-xs">
+                            <SelectValue placeholder="Score" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="A+">A+</SelectItem>
@@ -685,84 +705,91 @@ export function ContestantTable({
                           </SelectContent>
                         </Select>
                       </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-player-type" className="text-xs">Player Type</Label>
+                        <Select 
+                          value={editFormData.playerType || ''} 
+                          onValueChange={(value) => handleEditFormChange('playerType', value)}
+                        >
+                          <SelectTrigger data-testid="select-edit-player-type" className="h-8 text-xs">
+                            <SelectValue placeholder="Type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="player">Player</SelectItem>
+                            <SelectItem value="backup">Backup</SelectItem>
+                            <SelectItem value="player_partner">Partner</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                  </div>
-                </div>
-
-                {/* Contact Information Edit */}
-                <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contact Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-email">Email</Label>
-                      <Input
-                        id="edit-email"
-                        type="email"
-                        value={editFormData.email || ''}
-                        onChange={(e) => handleEditFormChange('email', e.target.value)}
-                        data-testid="input-edit-email"
-                      />
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-email" className="text-xs">Email</Label>
+                        <Input
+                          id="edit-email"
+                          type="email"
+                          value={editFormData.email || ''}
+                          onChange={(e) => handleEditFormChange('email', e.target.value)}
+                          data-testid="input-edit-email"
+                          className="h-8"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-phone" className="text-xs">Phone</Label>
+                        <Input
+                          id="edit-phone"
+                          value={editFormData.phone || ''}
+                          onChange={(e) => handleEditFormChange('phone', e.target.value)}
+                          data-testid="input-edit-phone"
+                          className="h-8"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-location" className="text-xs">Location</Label>
+                        <Input
+                          id="edit-location"
+                          value={editFormData.location || ''}
+                          onChange={(e) => handleEditFormChange('location', e.target.value)}
+                          data-testid="input-edit-location"
+                          className="h-8"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-phone">Phone</Label>
-                      <Input
-                        id="edit-phone"
-                        value={editFormData.phone || ''}
-                        onChange={(e) => handleEditFormChange('phone', e.target.value)}
-                        data-testid="input-edit-phone"
-                      />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-medical" className="text-xs">Medical Conditions</Label>
+                        <Textarea
+                          id="edit-medical"
+                          value={editFormData.medicalInfo || ''}
+                          onChange={(e) => handleEditFormChange('medicalInfo', e.target.value)}
+                          rows={2}
+                          data-testid="input-edit-medical"
+                          className="text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-mobility" className="text-xs">Mobility/Access Notes</Label>
+                        <Textarea
+                          id="edit-mobility"
+                          value={editFormData.mobilityNotes || ''}
+                          onChange={(e) => handleEditFormChange('mobilityNotes', e.target.value)}
+                          rows={2}
+                          data-testid="input-edit-mobility"
+                          className="text-xs"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2 col-span-2">
-                      <Label htmlFor="edit-location">Location</Label>
-                      <Input
-                        id="edit-location"
-                        value={editFormData.location || ''}
-                        onChange={(e) => handleEditFormChange('location', e.target.value)}
-                        data-testid="input-edit-location"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Medical Information Edit */}
-                <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Medical Information</h3>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-medical">Medical Conditions</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor="edit-criminal" className="text-xs">Criminal Record</Label>
                       <Textarea
-                        id="edit-medical"
-                        value={editFormData.medicalInfo || ''}
-                        onChange={(e) => handleEditFormChange('medicalInfo', e.target.value)}
-                        rows={3}
-                        data-testid="input-edit-medical"
+                        id="edit-criminal"
+                        value={editFormData.criminalRecord || ''}
+                        onChange={(e) => handleEditFormChange('criminalRecord', e.target.value)}
+                        rows={2}
+                        data-testid="input-edit-criminal"
+                        className="text-xs"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-mobility">Mobility/Access Notes</Label>
-                      <Textarea
-                        id="edit-mobility"
-                        value={editFormData.mobilityNotes || ''}
-                        onChange={(e) => handleEditFormChange('mobilityNotes', e.target.value)}
-                        rows={3}
-                        data-testid="input-edit-mobility"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Criminal Record Edit */}
-                <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Criminal Record</h3>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-criminal">Criminal Record Information</Label>
-                    <Textarea
-                      id="edit-criminal"
-                      value={editFormData.criminalRecord || ''}
-                      onChange={(e) => handleEditFormChange('criminalRecord', e.target.value)}
-                      rows={3}
-                      data-testid="input-edit-criminal"
-                    />
                   </div>
                 </div>
 
@@ -922,29 +949,6 @@ export function ContestantTable({
                         <div>
                           <label className="text-xs font-medium text-muted-foreground">Attending With</label>
                           <p className="text-sm mt-1">{contestantDetails.attendingWith}</p>
-                        </div>
-                      )}
-                      {selectedContestantId && seatAssignmentMap.get(selectedContestantId) && (
-                        <div>
-                          <label className="text-xs font-medium text-muted-foreground">Player Type</label>
-                          <div className="mt-1">
-                            <Select 
-                              value={selectedPlayerType} 
-                              onValueChange={(value) => {
-                                setSelectedPlayerType(value);
-                                updatePlayerTypeMutation.mutate(value);
-                              }}
-                            >
-                              <SelectTrigger className="text-sm">
-                                <SelectValue placeholder="Select type" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="player">Player</SelectItem>
-                                <SelectItem value="backup">Backup</SelectItem>
-                                <SelectItem value="player_partner">Player Partner</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
                         </div>
                       )}
                     </div>
