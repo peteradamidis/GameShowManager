@@ -116,6 +116,7 @@ export function ContestantTable({
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadingContestantId, setUploadingContestantId] = useState<string | null>(null);
+  const [selectedPlayerType, setSelectedPlayerType] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tableFileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -214,12 +215,17 @@ export function ContestantTable({
     }
   }, [contestantDetails]);
 
-  // Reset edit mode when dialog closes
+  // Reset edit mode when dialog closes and set player type
   useEffect(() => {
     if (!detailDialogOpen) {
       setIsEditMode(false);
+      setSelectedPlayerType("");
+    } else if (selectedContestantId) {
+      // Set initial player type when dialog opens
+      const assignment = seatAssignmentMap.get(selectedContestantId);
+      setSelectedPlayerType((assignment as any)?.playerType || "");
     }
-  }, [detailDialogOpen]);
+  }, [detailDialogOpen, selectedContestantId]);
 
   const updateContestantMutation = useMutation({
     mutationFn: async (data: Partial<Contestant>) => {
@@ -920,8 +926,9 @@ export function ContestantTable({
                           <label className="text-xs font-medium text-muted-foreground">Player Type</label>
                           <div className="mt-1">
                             <Select 
-                              value={(seatAssignmentMap.get(selectedContestantId) as any)?.playerType || ''} 
+                              value={selectedPlayerType} 
                               onValueChange={(value) => {
+                                setSelectedPlayerType(value);
                                 updatePlayerTypeMutation.mutate(value);
                               }}
                             >
