@@ -256,7 +256,8 @@ export function ContestantTable({
       return apiRequest('PATCH', `/api/seat-assignments/${currentAssignment.id}/player-type`, { playerType });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+      // Invalidate all seat assignment queries (exact and partial matches)
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
       toast({
         title: "Player type updated",
