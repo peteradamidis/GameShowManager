@@ -427,7 +427,7 @@ export default function StandbysPage() {
                         </TableCell>
                         <TableCell className="space-x-2 flex items-center flex-wrap gap-2">
                           <StatusBadge status={standby.contestant.availabilityStatus} />
-                          <Badge variant="outline" className="bg-purple-500/10 text-purple-700 border-purple-200 dark:border-purple-800 dark:text-purple-400">
+                          <Badge variant="outline" className="border-yellow-300 bg-yellow-500/20 text-yellow-800 dark:border-yellow-700 dark:text-yellow-400">
                             Standby
                           </Badge>
                         </TableCell>

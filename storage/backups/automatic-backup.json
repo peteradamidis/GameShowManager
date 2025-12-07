@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-07T02:37:34.213Z",
+  "exportedAt": "2025-12-07T02:43:42.341Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -151,24 +151,6 @@
     ],
     "contestants": [
       {
-        "id": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
-        "name": "Peter Adamidis",
-        "age": 34,
-        "gender": "Not Specified",
-        "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
-        "availabilityStatus": "assigned",
-        "attendingWith": "Kathleen Reynolds, Felicity Parker-Hill",
-        "email": "peter.adamidis@gmail.com",
-        "phone": "498086080",
-        "location": "",
-        "medicalInfo": "Y",
-        "mobilityNotes": "Broken Leg",
-        "criminalRecord": "Assault & Theft",
-        "photoUrl": null,
-        "auditionRating": null,
-        "createdAt": "2025-12-02T05:59:07.415Z"
-      },
-      {
         "id": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
         "name": "Felicity Parker-Hill",
         "age": 27,
@@ -203,6 +185,24 @@
         "photoUrl": null,
         "auditionRating": null,
         "createdAt": "2025-12-02T05:59:07.307Z"
+      },
+      {
+        "id": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
+        "name": "Peter Adamidis",
+        "age": 34,
+        "gender": "Not Specified",
+        "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
+        "availabilityStatus": "assigned",
+        "attendingWith": "Kathleen Reynolds, Felicity Parker-Hill",
+        "email": "peter.adamidis@gmail.com",
+        "phone": "498086080",
+        "location": "",
+        "medicalInfo": "Y",
+        "mobilityNotes": "Broken Leg",
+        "criminalRecord": "Assault & Theft",
+        "photoUrl": null,
+        "auditionRating": null,
+        "createdAt": "2025-12-02T05:59:07.415Z"
       }
     ],
     "groups": [
@@ -213,28 +213,6 @@
       }
     ],
     "seatAssignments": [
-      {
-        "id": "d87fb44f-0654-4aed-82a5-2ec6179bc2ab",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
-        "blockNumber": 1,
-        "seatLabel": "B4",
-        "firstNations": null,
-        "rating": null,
-        "location": null,
-        "medicalQuestion": null,
-        "criminalBankruptcy": null,
-        "castingCategory": null,
-        "notes": null,
-        "bookingEmailSent": "2025-12-03T11:34:49.891Z",
-        "confirmedRsvp": "2025-12-03T08:29:13.989Z",
-        "paperworkSent": null,
-        "paperworkReceived": null,
-        "signedIn": null,
-        "otdNotes": null,
-        "standbyReplacementSwaps": null,
-        "createdAt": "2025-12-02T06:07:05.711Z"
-      },
       {
         "id": "1bd961ce-a605-4d4f-8bdd-844664d1b140",
         "recordDayId": "8de562bb-e594-47dd-a50f-ee78c14c0dde",
@@ -280,7 +258,48 @@
         "createdAt": "2025-12-03T03:16:51.708Z"
       }
     ],
-    "standbys": [],
+    "standbys": [
+      {
+        "id": "69511596-e3b5-41be-a93b-920748af4fe0",
+        "contestantId": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "status": "pending",
+        "standbyEmailSent": null,
+        "confirmedAt": null,
+        "notes": null,
+        "assignedToSeat": null,
+        "assignedAt": null,
+        "movedToReschedule": false,
+        "movedToRescheduleAt": null,
+        "createdAt": "2025-12-07T02:39:09.176Z",
+        "contestant": {
+          "id": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
+          "name": "Peter Adamidis",
+          "age": 34,
+          "gender": "Not Specified",
+          "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
+          "availabilityStatus": "assigned",
+          "attendingWith": "Kathleen Reynolds, Felicity Parker-Hill",
+          "email": "peter.adamidis@gmail.com",
+          "phone": "498086080",
+          "location": "",
+          "medicalInfo": "Y",
+          "mobilityNotes": "Broken Leg",
+          "criminalRecord": "Assault & Theft",
+          "photoUrl": null,
+          "auditionRating": null,
+          "createdAt": "2025-12-02T05:59:07.415Z"
+        },
+        "recordDay": {
+          "id": "e432f0fe-1383-44a2-990c-5f787da5008a",
+          "date": "2026-02-04",
+          "rxNumber": "RX1 - 1-5",
+          "totalSeats": 154,
+          "status": "ready",
+          "createdAt": "2025-11-27T11:34:23.272Z"
+        }
+      }
+    ],
     "blockTypes": [
       {
         "id": "4d9813bd-7b99-4771-8da1-ad6fa01c1c6a",
@@ -471,8 +490,8 @@
     "recordDays": 18,
     "contestants": 3,
     "groups": 1,
-    "seatAssignments": 3,
-    "standbys": 0,
+    "seatAssignments": 2,
+    "standbys": 1,
     "blockTypes": 26,
     "canceledAssignments": 0
   }
