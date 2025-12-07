@@ -306,6 +306,7 @@ export default function Contestants() {
     },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
       setStandbyDialogOpen(false);
       setSelectedContestants([]);
       setSelectedRecordDay("");
@@ -829,6 +830,7 @@ export default function Contestants() {
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             rescheduleContestantIds={rescheduleContestantIds}
+            standbyContestantIds={standbyContestantIds}
           />
           
           {/* Pagination Controls */}

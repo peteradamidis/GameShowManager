@@ -425,8 +425,11 @@ export default function StandbysPage() {
                         <TableCell className="text-sm text-muted-foreground">
                           {standby.contestant.email || "-"}
                         </TableCell>
-                        <TableCell>
-                          <StatusBadge status={standby.status} />
+                        <TableCell className="space-x-2 flex items-center flex-wrap gap-2">
+                          <StatusBadge status={standby.contestant.availabilityStatus} />
+                          <Badge variant="outline" className="bg-purple-500/10 text-purple-700 border-purple-200 dark:border-purple-800 dark:text-purple-400">
+                            Standby
+                          </Badge>
                         </TableCell>
                         <TableCell className="font-mono text-sm">
                           {standby.assignedToSeat ? (

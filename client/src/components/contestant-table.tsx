@@ -70,6 +70,7 @@ interface ContestantTableProps {
   searchTerm?: string;
   onSearchChange?: (term: string) => void;
   rescheduleContestantIds?: Set<string>;
+  standbyContestantIds?: Set<string>;
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -97,7 +98,8 @@ export function ContestantTable({
   seatAssignments = [],
   searchTerm: externalSearchTerm,
   onSearchChange,
-  rescheduleContestantIds = new Set()
+  rescheduleContestantIds = new Set(),
+  standbyContestantIds = new Set()
 }: ContestantTableProps) {
   // Create a map for quick lookup of seat assignments by contestant ID
   // Use the most recent assignment if multiple exist
@@ -462,8 +464,13 @@ export function ContestantTable({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="space-x-2 flex items-center flex-wrap gap-2">
                     <StatusBadge status={rescheduleContestantIds.has(contestant.id) ? "Reschedule" : contestant.availabilityStatus} />
+                    {standbyContestantIds.has(contestant.id) && (
+                      <Badge variant="outline" className="bg-purple-500/10 text-purple-700 border-purple-200 dark:border-purple-800 dark:text-purple-400">
+                        Standby
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     {contestant.auditionRating ? (
@@ -849,8 +856,13 @@ export function ContestantTable({
                       </div>
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Status</label>
-                        <div className="mt-1">
+                        <div className="mt-1 flex items-center gap-2 flex-wrap">
                           <StatusBadge status={rescheduleContestantIds.has(contestantDetails.id) ? "Reschedule" : contestantDetails.availabilityStatus} />
+                          {standbyContestantIds.has(contestantDetails.id) && (
+                            <Badge variant="outline" className="bg-purple-500/10 text-purple-700 border-purple-200 dark:border-purple-800 dark:text-purple-400">
+                              Standby
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       <div>
