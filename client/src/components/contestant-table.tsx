@@ -242,6 +242,28 @@ export function ContestantTable({
     },
   });
 
+  const updatePlayerTypeMutation = useMutation({
+    mutationFn: async (playerType: string) => {
+      const currentAssignment = seatAssignmentMap.get(selectedContestantId!);
+      if (!currentAssignment) throw new Error('No seat assignment found');
+      return apiRequest('PATCH', `/api/seat-assignments/${currentAssignment.id}/player-type`, { playerType });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+      toast({
+        title: "Player type updated",
+        description: "Player type has been updated successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleEditFormChange = (field: keyof Contestant, value: any) => {
     setEditFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -891,6 +913,28 @@ export function ContestantTable({
                         <div>
                           <label className="text-xs font-medium text-muted-foreground">Attending With</label>
                           <p className="text-sm mt-1">{contestantDetails.attendingWith}</p>
+                        </div>
+                      )}
+                      {selectedContestantId && seatAssignmentMap.get(selectedContestantId) && (
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground">Player Type</label>
+                          <div className="mt-1">
+                            <Select 
+                              value={(seatAssignmentMap.get(selectedContestantId) as any)?.playerType || ''} 
+                              onValueChange={(value) => {
+                                updatePlayerTypeMutation.mutate(value);
+                              }}
+                            >
+                              <SelectTrigger className="text-sm">
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="player">Player</SelectItem>
+                                <SelectItem value="backup">Backup</SelectItem>
+                                <SelectItem value="player_partner">Player Partner</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                       )}
                     </div>

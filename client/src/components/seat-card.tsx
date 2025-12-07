@@ -244,23 +244,6 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
 
             {seat.assignmentId && (
               <div className="space-y-3 pt-3 border-t">
-                <div className="text-sm">
-                  <label className="text-xs font-medium text-muted-foreground">Label as</label>
-                  <Select value={seat.playerType || ''} onValueChange={(value) => {
-                    apiRequest('PATCH', `/api/seat-assignments/${seat.assignmentId}/player-type`, { playerType: value }).then(() => {
-                      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
-                    });
-                  }}>
-                    <SelectTrigger className="mt-1 h-8 text-xs">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="player">Player</SelectItem>
-                      <SelectItem value="backup">Backup</SelectItem>
-                      <SelectItem value="player_partner">Player Partner</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
