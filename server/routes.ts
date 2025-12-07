@@ -951,6 +951,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           signedIn: assignment.signedIn,
           otdNotes: assignment.otdNotes,
           standbyReplacementSwaps: assignment.standbyReplacementSwaps,
+          playerType: assignment.playerType,
           contestantName: contestant?.name,
           age: contestant?.age,
           gender: contestant?.gender,
