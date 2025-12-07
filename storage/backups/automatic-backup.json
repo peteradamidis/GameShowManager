@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-07T12:24:49.053Z",
+  "exportedAt": "2025-12-07T12:27:59.606Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -192,7 +192,7 @@
         "age": 27,
         "gender": "Not Specified",
         "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
-        "availabilityStatus": "available",
+        "availabilityStatus": "assigned",
         "attendingWith": "Peter Adamidis, Kathleen Reynolds",
         "email": "felicity.parkerhill@endemolshine.com.au",
         "phone": "498086080",
@@ -212,7 +212,31 @@
         "createdAt": "2025-12-02T05:59:07.196Z"
       }
     ],
-    "seatAssignments": [],
+    "seatAssignments": [
+      {
+        "id": "15977bf4-12f1-4e38-bb08-bbd14d25e263",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "contestantId": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
+        "blockNumber": 1,
+        "seatLabel": "B1",
+        "playerType": null,
+        "firstNations": null,
+        "rating": null,
+        "location": null,
+        "medicalQuestion": null,
+        "criminalBankruptcy": null,
+        "castingCategory": null,
+        "notes": null,
+        "bookingEmailSent": null,
+        "confirmedRsvp": null,
+        "paperworkSent": null,
+        "paperworkReceived": null,
+        "signedIn": null,
+        "otdNotes": null,
+        "standbyReplacementSwaps": null,
+        "createdAt": "2025-12-07T12:25:14.599Z"
+      }
+    ],
     "standbys": [
       {
         "id": "4e437be8-c154-44a8-b28d-d663c725a9a7",
@@ -523,7 +547,7 @@
     "recordDays": 18,
     "contestants": 3,
     "groups": 1,
-    "seatAssignments": 0,
+    "seatAssignments": 1,
     "standbys": 2,
     "blockTypes": 26,
     "canceledAssignments": 1

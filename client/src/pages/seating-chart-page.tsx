@@ -163,6 +163,7 @@ export default function SeatingChartPage() {
             assignmentId: assignment.id,
             contestantId: assignment.contestantId,
             auditionRating: assignment.auditionRating,
+            playerType: assignment.playerType,
           };
         }
       }
