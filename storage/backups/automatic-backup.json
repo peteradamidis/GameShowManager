@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-07T02:43:42.341Z",
+  "exportedAt": "2025-12-07T03:44:52.440Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -169,24 +169,6 @@
         "createdAt": "2025-12-02T05:59:07.519Z"
       },
       {
-        "id": "d698b1de-6641-45c6-aa63-f577d2b634bb",
-        "name": "Kathleen Reynolds",
-        "age": 33,
-        "gender": "Not Specified",
-        "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
-        "availabilityStatus": "assigned",
-        "attendingWith": "Peter Adamidis, Felicity Parker-Hill",
-        "email": "kathleenmonicareynolds@gmail.com",
-        "phone": "498086080",
-        "location": "Footscray",
-        "medicalInfo": "N",
-        "mobilityNotes": "N/A",
-        "criminalRecord": "N/A",
-        "photoUrl": null,
-        "auditionRating": null,
-        "createdAt": "2025-12-02T05:59:07.307Z"
-      },
-      {
         "id": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
         "name": "Peter Adamidis",
         "age": 34,
@@ -203,6 +185,24 @@
         "photoUrl": null,
         "auditionRating": null,
         "createdAt": "2025-12-02T05:59:07.415Z"
+      },
+      {
+        "id": "d698b1de-6641-45c6-aa63-f577d2b634bb",
+        "name": "Kathleen Reynolds",
+        "age": 33,
+        "gender": "Not Specified",
+        "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
+        "availabilityStatus": "assigned",
+        "attendingWith": "Peter Adamidis, Felicity Parker-Hill",
+        "email": "kathleenmonicareynolds@gmail.com",
+        "phone": "498086080",
+        "location": "Footscray",
+        "medicalInfo": "N",
+        "mobilityNotes": "N/A",
+        "criminalRecord": "N/A",
+        "photoUrl": null,
+        "auditionRating": null,
+        "createdAt": "2025-12-02T05:59:07.307Z"
       }
     ],
     "groups": [
@@ -234,31 +234,49 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "createdAt": "2025-12-03T03:16:51.284Z"
-      },
-      {
-        "id": "df836401-667b-4ac1-a68f-afe59d04a8b5",
-        "recordDayId": "8de562bb-e594-47dd-a50f-ee78c14c0dde",
-        "contestantId": "d698b1de-6641-45c6-aa63-f577d2b634bb",
-        "blockNumber": 3,
-        "seatLabel": "B5",
-        "firstNations": null,
-        "rating": null,
-        "location": null,
-        "medicalQuestion": null,
-        "criminalBankruptcy": null,
-        "castingCategory": null,
-        "notes": null,
-        "bookingEmailSent": "2025-12-03T06:22:30.757Z",
-        "confirmedRsvp": "2025-12-03T06:24:21.209Z",
-        "paperworkSent": null,
-        "paperworkReceived": null,
-        "signedIn": null,
-        "otdNotes": null,
-        "standbyReplacementSwaps": null,
-        "createdAt": "2025-12-03T03:16:51.708Z"
       }
     ],
     "standbys": [
+      {
+        "id": "4e437be8-c154-44a8-b28d-d663c725a9a7",
+        "contestantId": "d698b1de-6641-45c6-aa63-f577d2b634bb",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "status": "pending",
+        "standbyEmailSent": null,
+        "confirmedAt": null,
+        "notes": null,
+        "assignedToSeat": null,
+        "assignedAt": null,
+        "movedToReschedule": false,
+        "movedToRescheduleAt": null,
+        "createdAt": "2025-12-07T02:44:15.388Z",
+        "contestant": {
+          "id": "d698b1de-6641-45c6-aa63-f577d2b634bb",
+          "name": "Kathleen Reynolds",
+          "age": 33,
+          "gender": "Not Specified",
+          "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
+          "availabilityStatus": "assigned",
+          "attendingWith": "Peter Adamidis, Felicity Parker-Hill",
+          "email": "kathleenmonicareynolds@gmail.com",
+          "phone": "498086080",
+          "location": "Footscray",
+          "medicalInfo": "N",
+          "mobilityNotes": "N/A",
+          "criminalRecord": "N/A",
+          "photoUrl": null,
+          "auditionRating": null,
+          "createdAt": "2025-12-02T05:59:07.307Z"
+        },
+        "recordDay": {
+          "id": "e432f0fe-1383-44a2-990c-5f787da5008a",
+          "date": "2026-02-04",
+          "rxNumber": "RX1 - 1-5",
+          "totalSeats": 154,
+          "status": "ready",
+          "createdAt": "2025-11-27T11:34:23.272Z"
+        }
+      },
       {
         "id": "69511596-e3b5-41be-a93b-920748af4fe0",
         "contestantId": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
@@ -269,8 +287,8 @@
         "notes": null,
         "assignedToSeat": null,
         "assignedAt": null,
-        "movedToReschedule": false,
-        "movedToRescheduleAt": null,
+        "movedToReschedule": true,
+        "movedToRescheduleAt": "2025-12-07T02:43:44.396Z",
         "createdAt": "2025-12-07T02:39:09.176Z",
         "contestant": {
           "id": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
@@ -484,15 +502,53 @@
         "createdAt": "2025-11-28T01:06:10.521Z"
       }
     ],
-    "canceledAssignments": []
+    "canceledAssignments": [
+      {
+        "id": "53071bc2-2450-41b6-ae7a-68a1ab35e988",
+        "contestantId": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "blockNumber": null,
+        "seatLabel": null,
+        "canceledAt": "2025-12-07T02:43:44.342Z",
+        "reason": "Standby - eligible for reschedule",
+        "isFromStandby": true,
+        "originalAttendanceDate": "2026-02-04T00:00:00.000Z",
+        "contestant": {
+          "id": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
+          "name": "Peter Adamidis",
+          "age": 34,
+          "gender": "Not Specified",
+          "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
+          "availabilityStatus": "assigned",
+          "attendingWith": "Kathleen Reynolds, Felicity Parker-Hill",
+          "email": "peter.adamidis@gmail.com",
+          "phone": "498086080",
+          "location": "",
+          "medicalInfo": "Y",
+          "mobilityNotes": "Broken Leg",
+          "criminalRecord": "Assault & Theft",
+          "photoUrl": null,
+          "auditionRating": null,
+          "createdAt": "2025-12-02T05:59:07.415Z"
+        },
+        "recordDay": {
+          "id": "e432f0fe-1383-44a2-990c-5f787da5008a",
+          "date": "2026-02-04",
+          "rxNumber": "RX1 - 1-5",
+          "totalSeats": 154,
+          "status": "ready",
+          "createdAt": "2025-11-27T11:34:23.272Z"
+        }
+      }
+    ]
   },
   "counts": {
     "recordDays": 18,
     "contestants": 3,
     "groups": 1,
-    "seatAssignments": 2,
-    "standbys": 1,
+    "seatAssignments": 1,
+    "standbys": 2,
     "blockTypes": 26,
-    "canceledAssignments": 0
+    "canceledAssignments": 1
   }
 }

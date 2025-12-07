@@ -4,7 +4,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User, X, Ban, Plus } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export interface SeatData {
   id: string;
@@ -18,6 +26,7 @@ export interface SeatData {
   availabilityStatus?: string;
   auditionRating?: string; // A+, A, B+, B, C
   medicalQuestion?: string; // Y/N from booking master
+  playerType?: "player" | "backup" | "player_partner"; // PLAYER, BACKUP, PLAYER_PARTNER
 }
 
 interface SeatCardProps {
@@ -211,6 +220,21 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
                     </Badge>
                   </div>
                 </div>
+
+                {seat.playerType && (
+                  <div className="text-sm">
+                    <label className="text-xs font-medium text-muted-foreground">Player Type</label>
+                    <div className="mt-1">
+                      <Badge className={`${
+                        seat.playerType === 'player' ? 'bg-blue-500/20 text-blue-700 border-blue-300 dark:border-blue-700 dark:text-blue-400' :
+                        seat.playerType === 'backup' ? 'bg-amber-500/20 text-amber-700 border-amber-300 dark:border-amber-700 dark:text-amber-400' :
+                        'bg-purple-500/20 text-purple-700 border-purple-300 dark:border-purple-700 dark:text-purple-400'
+                      } border`}>
+                        {seat.playerType === 'player' ? 'Player' : seat.playerType === 'backup' ? 'Backup' : 'Player Partner'}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <div className="text-sm text-muted-foreground text-center py-2">
@@ -219,33 +243,52 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
             )}
 
             {seat.assignmentId && (
-              <div className="flex gap-2 pt-2 border-t">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove?.(seat.assignmentId!);
-                  }}
-                  data-testid={`button-remove-${seat.assignmentId}`}
-                >
-                  <X className="h-3 w-3 mr-1" />
-                  Remove
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCancel?.(seat.assignmentId!);
-                  }}
-                  data-testid={`button-cancel-${seat.assignmentId}`}
-                >
-                  <Ban className="h-3 w-3 mr-1" />
-                  Cancel
-                </Button>
+              <div className="space-y-3 pt-3 border-t">
+                <div className="text-sm">
+                  <label className="text-xs font-medium text-muted-foreground">Label as</label>
+                  <Select value={seat.playerType || ''} onValueChange={(value) => {
+                    apiRequest('PATCH', `/api/seat-assignments/${seat.assignmentId}/player-type`, { playerType: value }).then(() => {
+                      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+                    });
+                  }}>
+                    <SelectTrigger className="mt-1 h-8 text-xs">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="player">Player</SelectItem>
+                      <SelectItem value="backup">Backup</SelectItem>
+                      <SelectItem value="player_partner">Player Partner</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemove?.(seat.assignmentId!);
+                    }}
+                    data-testid={`button-remove-${seat.assignmentId}`}
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Remove
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCancel?.(seat.assignmentId!);
+                    }}
+                    data-testid={`button-cancel-${seat.assignmentId}`}
+                  >
+                    <Ban className="h-3 w-3 mr-1" />
+                    Cancel
+                  </Button>
+                </div>
               </div>
             )}
           </div>

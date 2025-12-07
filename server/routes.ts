@@ -1896,6 +1896,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update player type for a seat assignment
+  app.patch("/api/seat-assignments/:id/player-type", async (req, res) => {
+    try {
+      const { playerType } = req.body;
+      
+      if (!playerType || !['player', 'backup', 'player_partner'].includes(playerType)) {
+        return res.status(400).json({ error: "Invalid player type" });
+      }
+      
+      const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, { playerType });
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+      
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Cancel seat assignment (move to reschedule)
   app.post("/api/seat-assignments/:id/cancel", async (req, res) => {
     try {

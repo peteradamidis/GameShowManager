@@ -12,6 +12,7 @@ export const confirmationStatusEnum = pgEnum('confirmation_status', ['pending', 
 export const blockTypeEnum = pgEnum('block_type', ['PB', 'NPB']);
 export const standbyStatusEnum = pgEnum('standby_status', ['pending', 'email_sent', 'confirmed', 'declined', 'seated']);
 export const messageDirectionEnum = pgEnum('message_direction', ['outbound', 'inbound']); // outbound = system to contestant, inbound = contestant to system
+export const playerTypeEnum = pgEnum('player_type', ['player', 'backup', 'player_partner']);
 
 // Groups table
 export const groups = pgTable("groups", {
@@ -57,6 +58,7 @@ export const seatAssignments = pgTable("seat_assignments", {
   contestantId: varchar("contestant_id").references(() => contestants.id).notNull(),
   blockNumber: integer("block_number").notNull(), // 1-7
   seatLabel: text("seat_label").notNull(), // e.g., "A1", "B3"
+  playerType: playerTypeEnum("player_type"), // PLAYER, BACKUP, PLAYER_PARTNER
   
   // Booking Master workflow fields
   firstNations: text("first_nations"),
