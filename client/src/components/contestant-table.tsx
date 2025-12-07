@@ -219,7 +219,6 @@ export function ContestantTable({
   useEffect(() => {
     if (!detailDialogOpen) {
       setIsEditMode(false);
-      setSelectedPlayerType("");
     } else if (selectedContestantId) {
       // Set initial player type when dialog opens
       const assignment = seatAssignmentMap.get(selectedContestantId);
@@ -256,6 +255,7 @@ export function ContestantTable({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
       toast({
         title: "Player type updated",
         description: "Player type has been updated successfully.",
@@ -267,6 +267,9 @@ export function ContestantTable({
         description: error.message,
         variant: "destructive",
       });
+      // Reset on error
+      const assignment = seatAssignmentMap.get(selectedContestantId!);
+      setSelectedPlayerType((assignment as any)?.playerType || "");
     },
   });
 
