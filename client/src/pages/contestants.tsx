@@ -305,8 +305,11 @@ export default function Contestants() {
       return apiRequest('POST', '/api/standbys', { contestantIds, recordDayId });
     },
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      // Invalidate ALL related queries for consistent state across tabs
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false });
       setStandbyDialogOpen(false);
       setSelectedContestants([]);
       setSelectedRecordDay("");
@@ -338,8 +341,11 @@ export default function Contestants() {
       return apiRequest('DELETE', `/api/seat-assignments/${assignmentId}`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      // Invalidate ALL related queries for consistent state across tabs
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false });
       setSelectedContestants([]);
       toast({
         title: "Removed from seat",
@@ -362,7 +368,12 @@ export default function Contestants() {
       return apiRequest('DELETE', `/api/contestants/${contestantId}`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      // Invalidate ALL related queries for consistent state across tabs
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/groups'], exact: false });
       setSelectedContestants([]);
       setDeleteConfirmOpen(false);
       toast({

@@ -189,8 +189,14 @@ export default function ReschedulePage() {
       // Delete cancellation record after successful assignment
       await apiRequest('DELETE', `/api/canceled-assignments/${selectedCancellation.id}`, {});
 
+      // Invalidate ALL related queries for consistent state across tabs
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false }),
+      ]);
       await refetch();
-      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
 
       toast({
         title: "Contestant rebooked",
@@ -215,8 +221,14 @@ export default function ReschedulePage() {
 
     try {
       await apiRequest('DELETE', `/api/canceled-assignments/${cancellationId}`, {});
+      // Invalidate ALL related queries for consistent state across tabs
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false }),
+      ]);
       await refetch();
-      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
       toast({
         title: "Returned to Contestants",
         description: `${contestantName} is now available in the contestants tab.`,

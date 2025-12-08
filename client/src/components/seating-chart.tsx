@@ -495,10 +495,12 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         );
       }
 
-      // Invalidate all seat assignment queries to update both Seating Chart and Booking Master
-      await queryClient.invalidateQueries({ 
-        queryKey: ['/api/seat-assignments']
-      });
+      // Invalidate ALL related queries for consistent state across tabs
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
+      ]);
       
       // Also call onRefreshNeeded if provided for backwards compatibility
       if (onRefreshNeeded) {

@@ -308,10 +308,13 @@ export default function SeatingChartPage() {
         playerType: selectedPlayerType || undefined,
       });
       
-      // Invalidate all seat assignment queries to update both Seating Chart and Booking Master
-      await queryClient.invalidateQueries({ 
-        queryKey: ['/api/seat-assignments']
-      });
+      // Invalidate ALL related queries for consistent state across tabs
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false }),
+      ]);
       await refetch();
       
       toast({
@@ -339,10 +342,13 @@ export default function SeatingChartPage() {
   const handleRemove = async (assignmentId: string) => {
     try {
       await apiRequest('DELETE', `/api/seat-assignments/${assignmentId}`, {});
-      // Invalidate all seat assignment queries to update both Seating Chart and Booking Master
-      await queryClient.invalidateQueries({ 
-        queryKey: ['/api/seat-assignments']
-      });
+      // Invalidate ALL related queries for consistent state across tabs
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false }),
+      ]);
       await refetch();
       toast({
         title: "Contestant removed",
@@ -370,10 +376,13 @@ export default function SeatingChartPage() {
       await apiRequest('POST', `/api/seat-assignments/${cancelAssignmentId}/cancel`, {
         reason: cancelReason || "No reason provided",
       });
-      // Invalidate all seat assignment queries to update both Seating Chart and Booking Master
-      await queryClient.invalidateQueries({ 
-        queryKey: ['/api/seat-assignments']
-      });
+      // Invalidate ALL related queries for consistent state across tabs
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false }),
+      ]);
       await refetch();
       setCancelDialogOpen(false);
       setCancelAssignmentId("");

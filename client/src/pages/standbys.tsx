@@ -150,7 +150,11 @@ export default function StandbysPage() {
       return apiRequest('DELETE', `/api/standbys/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+      // Invalidate ALL related queries for consistent state across tabs
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false });
       toast({ title: "Standby removed" });
     },
     onError: (error: Error) => {
@@ -178,7 +182,10 @@ export default function StandbysPage() {
       return apiRequest('POST', '/api/standbys/send-emails', { standbyIds });
     },
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+      // Invalidate ALL related queries for consistent state across tabs
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
       setPreviewDialogOpen(false);
       setSelectedStandbys([]);
       toast({ 
@@ -197,8 +204,11 @@ export default function StandbysPage() {
       return apiRequest('POST', `/api/standbys/${id}/move-to-reschedule`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'] });
+      // Invalidate ALL related queries for consistent state across tabs
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false });
       toast({ 
         title: "Moved to Reschedule", 
         description: "Standby has been moved to the reschedule tab for future booking.",

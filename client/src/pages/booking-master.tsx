@@ -351,7 +351,11 @@ export default function BookingMaster() {
       return await apiRequest("POST", "/api/standbys/assign-seat", { recordDayId, contestantName, seatLabel });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+      // Invalidate ALL related queries for consistent state across tabs
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false });
     },
   });
 
@@ -396,8 +400,10 @@ export default function BookingMaster() {
       });
     },
     onSettled: () => {
-      // Refetch after mutation settles to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', selectedRecordDay] });
+      // Invalidate ALL related queries for consistent state across tabs
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
     },
   });
 
@@ -424,8 +430,10 @@ export default function BookingMaster() {
       
       setSelectedAssignments(new Set());
       setEmailPreviewOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/booking-confirmations/record-day', selectedRecordDay] });
+      // Invalidate ALL related queries for consistent state across tabs
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/booking-confirmations'], exact: false });
     },
     onError: (error: any) => {
       toast({

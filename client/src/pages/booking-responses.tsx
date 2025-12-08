@@ -113,7 +113,10 @@ export default function BookingResponses() {
       toast({ title: "Reply sent successfully" });
       setReplyMessage("");
       refetchMessages();
-      queryClient.invalidateQueries({ queryKey: ["/api/booking-confirmations/record-day", selectedRecordDay] });
+      // Invalidate ALL related queries for consistent state across tabs
+      queryClient.invalidateQueries({ queryKey: ["/api/booking-confirmations"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
     },
     onError: () => {
       toast({ 
