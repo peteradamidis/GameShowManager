@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-07T12:41:43.834Z",
+  "exportedAt": "2025-12-08T02:08:02.298Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -151,6 +151,24 @@
     ],
     "contestants": [
       {
+        "id": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
+        "name": "Felicity Parker-Hill",
+        "age": 27,
+        "gender": "Not Specified",
+        "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
+        "availabilityStatus": "assigned",
+        "attendingWith": "Peter Adamidis, Kathleen Reynolds",
+        "email": "felicity.parkerhill@endemolshine.com.au",
+        "phone": "498086080",
+        "location": "Melbourne",
+        "medicalInfo": "N",
+        "mobilityNotes": "N/A",
+        "criminalRecord": "N/A",
+        "photoUrl": null,
+        "auditionRating": "",
+        "createdAt": "2025-12-02T05:59:07.519Z"
+      },
+      {
         "id": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
         "name": "Peter Adamidis",
         "age": 34,
@@ -185,24 +203,6 @@
         "photoUrl": null,
         "auditionRating": null,
         "createdAt": "2025-12-02T05:59:07.307Z"
-      },
-      {
-        "id": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
-        "name": "Felicity Parker-Hill",
-        "age": 27,
-        "gender": "Not Specified",
-        "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
-        "availabilityStatus": "assigned",
-        "attendingWith": "Peter Adamidis, Kathleen Reynolds",
-        "email": "felicity.parkerhill@endemolshine.com.au",
-        "phone": "498086080",
-        "location": "Melbourne",
-        "medicalInfo": "N",
-        "mobilityNotes": "N/A",
-        "criminalRecord": "N/A",
-        "photoUrl": null,
-        "auditionRating": "",
-        "createdAt": "2025-12-02T05:59:07.519Z"
       }
     ],
     "groups": [
@@ -214,11 +214,11 @@
     ],
     "seatAssignments": [
       {
-        "id": "15977bf4-12f1-4e38-bb08-bbd14d25e263",
+        "id": "c1c5b1c6-2598-472f-b2bc-c2b063643aa5",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
         "contestantId": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
         "blockNumber": 1,
-        "seatLabel": "B1",
+        "seatLabel": "A1",
         "playerType": null,
         "firstNations": null,
         "rating": null,
@@ -234,7 +234,7 @@
         "signedIn": null,
         "otdNotes": null,
         "standbyReplacementSwaps": null,
-        "createdAt": "2025-12-07T12:25:14.599Z"
+        "createdAt": "2025-12-07T12:47:15.086Z"
       }
     ],
     "standbys": [

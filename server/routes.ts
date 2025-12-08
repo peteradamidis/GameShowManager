@@ -274,14 +274,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Get gender with fallback to "Not Specified" if column doesn't exist
         const genderValue = row.GENDER || row.Gender || row.gender || "Not Specified";
         
+        // Get audition rating
+        const auditionRatingValue = getColumnValue(row,
+                                    "Audition Rati", "AUDITION RATI",
+                                    "Audition Rating", "AUDITION RATING", "audition rating",
+                                    "Rating", "RATING");
+        
         return {
           name: nameValue.toString().trim(),
           age: isNaN(parsedAge) ? 0 : parsedAge,
           gender: genderValue,
+          auditionRating: auditionRatingValue || undefined,
           // Handle GROUP ID column or Attending With column
           groupIdFromFile: row["GROUP ID"] || row["Group ID"] || row["group id"] || row["Group"] || row["GROUP"] || null,
           attendingWith: row["ATTENDING WITH"] || row["Attending With"] || row["attending with"] || 
                          row["Attending with"] || row.attendingWith || row["AttendingWith"] ||
+                         row["ATTENDING"] || row["Attending"] || row["attending"] ||
                          row["GUEST"] || row["Guest"] || row["Guests"] || row["GUESTS"] ||
                          row["With"] || row["WITH"] || null,
           email: row.EMAIL || row.Email || row.email || row["E-mail"] || row["E-MAIL"] || 
@@ -295,11 +303,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                    row.CITY || row.City || row.city ||
                    row["Location"] || row["LOCATION"] || null,
           medicalInfo: row["MEDICAL INFO"] || row["Medical Info"] || row["medical_info"] || row.medicalInfo ||
+                       row["MEDICAL"] || row["Medical"] || row["medical"] ||
                        row["MEDICAL CONDITIONS"] || row["Medical Conditions"] || row["medical conditions"] ||
-                       row["Medical"] || row["MEDICAL"] ||
                        row["Health Conditions"] || row["HEALTH CONDITIONS"] ||
                        row["Health"] || row["HEALTH"] || null,
-          mobilityNotes: getColumnValue(row, 
+          mobilityNotes: getColumnValue(row,
+                         "CO Mobility/Acc", "CO MOBILITY/ACC",
                          "Mobility/Access/Medical Notes", "MOBILITY/ACCESS/MEDICAL NOTES",
                          "Mobility/Access/Medical notes", "mobility/access/medical notes",
                          "MOBILITY NOTES", "Mobility Notes", "mobility_notes", 
@@ -311,6 +320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                          "Special Needs", "SPECIAL NEEDS",
                          "Disability", "DISABILITY"),
           criminalRecord: getColumnValue(row,
+                          "Criminal Rec", "CRIMINAL REC",
                           "Criminal Record", "CRIMINAL RECORD", "criminal record",
                           "Criminal", "CRIMINAL",
                           "Background", "BACKGROUND",
@@ -380,6 +390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           medicalInfo: row.medicalInfo,
           mobilityNotes: row.mobilityNotes,
           criminalRecord: row.criminalRecord,
+          auditionRating: row.auditionRating,
           groupId: nameToGroupId.get(row.name) || null,
           availabilityStatus: "available",
         });
