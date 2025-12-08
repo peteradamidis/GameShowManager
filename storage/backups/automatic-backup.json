@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-08T10:44:10.561Z",
+  "exportedAt": "2025-12-08T11:00:23.293Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -166,7 +166,27 @@
         "criminalRecord": "Assault & Theft",
         "photoUrl": null,
         "auditionRating": null,
+        "playerType": null,
         "createdAt": "2025-12-02T05:59:07.415Z"
+      },
+      {
+        "id": "d698b1de-6641-45c6-aa63-f577d2b634bb",
+        "name": "Kathleen Reynolds",
+        "age": 33,
+        "gender": "Not Specified",
+        "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
+        "availabilityStatus": "available",
+        "attendingWith": "Peter Adamidis, Felicity Parker-Hill",
+        "email": "kathleenmonicareynolds@gmail.com",
+        "phone": "498086080",
+        "location": "Footscray",
+        "medicalInfo": "N",
+        "mobilityNotes": "N/A",
+        "criminalRecord": "N/A",
+        "photoUrl": null,
+        "auditionRating": null,
+        "playerType": null,
+        "createdAt": "2025-12-02T05:59:07.307Z"
       },
       {
         "id": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
@@ -184,25 +204,8 @@
         "criminalRecord": "N/A",
         "photoUrl": null,
         "auditionRating": "",
+        "playerType": null,
         "createdAt": "2025-12-02T05:59:07.519Z"
-      },
-      {
-        "id": "d698b1de-6641-45c6-aa63-f577d2b634bb",
-        "name": "Kathleen Reynolds",
-        "age": 33,
-        "gender": "Not Specified",
-        "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
-        "availabilityStatus": "assigned",
-        "attendingWith": "Peter Adamidis, Felicity Parker-Hill",
-        "email": "kathleenmonicareynolds@gmail.com",
-        "phone": "498086080",
-        "location": "Footscray",
-        "medicalInfo": "N",
-        "mobilityNotes": "N/A",
-        "criminalRecord": "N/A",
-        "photoUrl": null,
-        "auditionRating": null,
-        "createdAt": "2025-12-02T05:59:07.307Z"
       }
     ],
     "groups": [
@@ -232,31 +235,7 @@
         "createdAt": "2025-12-08T03:44:51.353Z"
       }
     ],
-    "seatAssignments": [
-      {
-        "id": "6da0092e-89ab-452b-80c7-216b45398ce1",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "d698b1de-6641-45c6-aa63-f577d2b634bb",
-        "blockNumber": 2,
-        "seatLabel": "B5",
-        "playerType": null,
-        "firstNations": null,
-        "rating": null,
-        "location": null,
-        "medicalQuestion": null,
-        "criminalBankruptcy": null,
-        "castingCategory": null,
-        "notes": null,
-        "bookingEmailSent": null,
-        "confirmedRsvp": null,
-        "paperworkSent": null,
-        "paperworkReceived": null,
-        "signedIn": null,
-        "otdNotes": null,
-        "standbyReplacementSwaps": null,
-        "createdAt": "2025-12-08T10:41:22.248Z"
-      }
-    ],
+    "seatAssignments": [],
     "standbys": [
       {
         "id": "69511596-e3b5-41be-a93b-920748af4fe0",
@@ -287,6 +266,7 @@
           "criminalRecord": "Assault & Theft",
           "photoUrl": null,
           "auditionRating": null,
+          "playerType": null,
           "createdAt": "2025-12-02T05:59:07.415Z"
         },
         "recordDay": {
@@ -510,6 +490,7 @@
           "criminalRecord": "Assault & Theft",
           "photoUrl": null,
           "auditionRating": null,
+          "playerType": null,
           "createdAt": "2025-12-02T05:59:07.415Z"
         },
         "recordDay": {
@@ -527,7 +508,7 @@
     "recordDays": 18,
     "contestants": 3,
     "groups": 5,
-    "seatAssignments": 1,
+    "seatAssignments": 0,
     "standbys": 1,
     "blockTypes": 26,
     "canceledAssignments": 1

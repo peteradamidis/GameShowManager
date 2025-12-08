@@ -282,16 +282,14 @@ export function ContestantTable({
   };
 
   const handleSaveEdit = async () => {
-    const { playerType, ...contestantData } = editFormData;
+    // Save contestant data including playerType to the contestants table
+    await updateContestantMutation.mutateAsync(editFormData);
     
-    // Save contestant data
-    await updateContestantMutation.mutateAsync(contestantData);
-    
-    // Save player type if it's set and changed
-    if (selectedContestantId && playerType) {
+    // Also update seat assignment if one exists
+    if (selectedContestantId && editFormData.playerType) {
       const assignment = seatAssignmentMap.get(selectedContestantId);
-      if (assignment && (assignment as any).playerType !== playerType) {
-        updatePlayerTypeMutation.mutate(playerType);
+      if (assignment && (assignment as any).playerType !== editFormData.playerType) {
+        updatePlayerTypeMutation.mutate(editFormData.playerType);
       }
     }
   };
