@@ -209,42 +209,31 @@ function SeatingBlock({
                 Row {row.label}
               </div>
               <div className="relative">
-                <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${row.count}, minmax(0, 1fr))` }}>
+                <div className="grid gap-1 relative" style={{ gridTemplateColumns: `repeat(${row.count}, minmax(0, 1fr))` }}>
                   {row.seats.map((seat, seatIdxInRow) => {
                     const absoluteSeatIdx = SEAT_ROWS.slice(0, originalRowIdx).reduce((sum, r) => sum + r.count, 0) + seatIdxInRow;
-                    return (
-                      <DraggableDroppableSeat
-                        key={seat.id}
-                        seat={seat}
-                        blockIndex={blockIndex}
-                        seatIndex={absoluteSeatIdx}
-                        isOver={overId === seat.id}
-                        onEmptySeatClick={onEmptySeatClick}
-                        onRemove={onRemove}
-                        onCancel={onCancel}
-                      />
-                    );
-                  })}
-                </div>
-                {/* Link icons between adjacent "attending with" seats */}
-                <div className="absolute top-0 left-0 right-0 bottom-0 pointer-events-none">
-                  {row.seats.map((seat, seatIdxInRow) => {
-                    if (seatIdxInRow >= row.seats.length - 1) return null;
-                    const nextSeat = row.seats[seatIdxInRow + 1];
-                    if (!shouldShowLink(seat, nextSeat)) return null;
-                    
-                    // Calculate position between cells: at the midpoint of the gap
-                    const cellWidthPercent = 100 / row.count;
-                    const leftPercent = cellWidthPercent * (seatIdxInRow + 1) - (cellWidthPercent * 0.5);
+                    const nextSeat = seatIdxInRow < row.seats.length - 1 ? row.seats[seatIdxInRow + 1] : null;
+                    const hasLinkToNext = nextSeat && shouldShowLink(seat, nextSeat);
                     
                     return (
-                      <Link2
-                        key={`link-${seatIdxInRow}`}
-                        className="absolute h-4 w-4 text-cyan-500 dark:text-cyan-400 top-1/2 transform -translate-y-1/2 -translate-x-1/2"
-                        style={{ left: `${leftPercent}%` }}
-                        strokeWidth={2.5}
-                        data-testid={`link-icon-${row.label}-${seatIdxInRow}`}
-                      />
+                      <div key={seat.id} className="relative">
+                        <DraggableDroppableSeat
+                          seat={seat}
+                          blockIndex={blockIndex}
+                          seatIndex={absoluteSeatIdx}
+                          isOver={overId === seat.id}
+                          onEmptySeatClick={onEmptySeatClick}
+                          onRemove={onRemove}
+                          onCancel={onCancel}
+                        />
+                        {hasLinkToNext && (
+                          <Link2
+                            className="absolute h-4 w-4 text-cyan-500 dark:text-cyan-400 top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2"
+                            strokeWidth={2.5}
+                            data-testid={`link-icon-${row.label}-${seatIdxInRow}`}
+                          />
+                        )}
+                      </div>
                     );
                   })}
                 </div>
