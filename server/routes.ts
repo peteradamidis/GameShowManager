@@ -277,7 +277,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log all column names from first row for debugging
       if (rawData.length > 0) {
         console.log("Excel columns found:", Object.keys(rawData[0]));
-        console.log("First data row:", rawData[0]);
+        console.log("First data row:", JSON.stringify(rawData[0], null, 2));
+        // Log which columns match audition rating patterns
+        const auditRatingCandidates = Object.keys(rawData[0]).filter(k => 
+          k.toLowerCase().includes('audit') || k.toLowerCase().includes('rating')
+        );
+        console.log("Audition rating column candidates:", auditRatingCandidates);
       }
 
       // Helper function to get value by trying multiple column name variations
@@ -316,11 +321,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Get gender with fallback to "Not Specified" if column doesn't exist
         const genderValue = row.GENDER || row.Gender || row.gender || "Not Specified";
         
-        // Get audition rating
-        const auditionRatingValue = getColumnValue(row,
-                                    "Audition Rati", "AUDITION RATI",
+        // Get audition rating - try all possible column variations, then fallback to any column containing "audition" or "rating"
+        let auditionRatingValue = getColumnValue(row,
+                                    "Audition Rati", "AUDITION RATI", "Audition Rati",
                                     "Audition Rating", "AUDITION RATING", "audition rating",
-                                    "Rating", "RATING");
+                                    "Rating", "RATING", "rating");
+        
+        // If not found, look for any column with audition or rating in the name
+        if (!auditionRatingValue) {
+          const auditionCol = Object.keys(row).find(k => 
+            k.toLowerCase().includes('audit') || k.toLowerCase().includes('rating')
+          );
+          if (auditionCol && row[auditionCol]) {
+            auditionRatingValue = row[auditionCol].toString();
+          }
+        }
+        
+        if (auditionRatingValue) {
+          console.log(`Found audition rating for ${nameValue}: '${auditionRatingValue}'`);
+        }
         
         return {
           name: nameValue.toString().trim(),
