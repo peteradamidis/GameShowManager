@@ -386,32 +386,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (hasGroupIdColumn) {
         // Group by GROUP ID from file
         const fileGroupIds = new Set(data.map((row: any) => row.groupIdFromFile).filter(Boolean));
+        const allGroups = await storage.getGroups();
+        const existingGroupsByRef = new Map(allGroups.map((g: any) => [g.referenceNumber, g.id]));
         
         for (const fileGroupId of Array.from(fileGroupIds)) {
           const membersInGroup = data.filter((row: any) => row.groupIdFromFile === fileGroupId);
           if (membersInGroup.length > 1) {
-            const group = await storage.createGroup({
-              referenceNumber: `GRP${String(fileGroupId)}`,
-            });
-            createdGroups.set(String(fileGroupId), group.id);
+            const refNumber = `GRP${String(fileGroupId)}`;
+            let groupId = existingGroupsByRef.get(refNumber);
+            
+            // Create group only if it doesn't exist
+            if (!groupId) {
+              const group = await storage.createGroup({
+                referenceNumber: refNumber,
+              });
+              groupId = group.id;
+            }
+            
+            createdGroups.set(String(fileGroupId), groupId);
             membersInGroup.forEach((member: any) => {
-              nameToGroupId.set(member.name, group.id);
+              nameToGroupId.set(member.name, groupId);
             });
           }
         }
       } else {
         // Use Attending With column for grouping
         const groupMap = identifyGroups(data);
+        const allGroups = await storage.getGroups();
+        const existingGroupsByRef = new Map(allGroups.map((g: any) => [g.referenceNumber, g.id]));
         
         let groupCounter = 1;
         for (const [groupId, members] of Array.from(groupMap.entries())) {
           if (members.length > 1) {
-            const group = await storage.createGroup({
-              referenceNumber: `GRP${String(groupCounter).padStart(3, "0")}`,
-            });
-            createdGroups.set(groupId, group.id);
+            const refNumber = `GRP${String(groupCounter).padStart(3, "0")}`;
+            let dbGroupId = existingGroupsByRef.get(refNumber);
+            
+            // Create group only if it doesn't exist
+            if (!dbGroupId) {
+              const group = await storage.createGroup({
+                referenceNumber: refNumber,
+              });
+              dbGroupId = group.id;
+            }
+            
+            createdGroups.set(groupId, dbGroupId);
             members.forEach((member: string) => {
-              nameToGroupId.set(member, group.id);
+              nameToGroupId.set(member, dbGroupId);
             });
             groupCounter++;
           }
