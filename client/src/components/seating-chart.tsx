@@ -227,11 +227,15 @@ function SeatingBlock({
                           onCancel={onCancel}
                         />
                         {hasLinkToNext && (
-                          <Link2
-                            className="absolute h-4 w-4 text-cyan-500 dark:text-cyan-400 top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2"
-                            strokeWidth={2.5}
+                          <div 
+                            className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2 z-10"
                             data-testid={`link-icon-${row.label}-${seatIdxInRow}`}
-                          />
+                          >
+                            <Link2
+                              className="h-3 w-3 text-muted-foreground/60"
+                              strokeWidth={2}
+                            />
+                          </div>
                         )}
                       </div>
                     );
@@ -249,7 +253,12 @@ function SeatingBlock({
 // Helper function to check if two seats should be linked (attending with each other)
 function shouldShowLink(seat1: SeatData, seat2: SeatData): boolean {
   if (!seat1.contestantId || !seat2.contestantId) return false;
-  return seat1.attendingWith === seat2.contestantId || seat2.attendingWith === seat1.contestantId;
+  
+  // attendingWith can be comma-separated IDs
+  const seat1Links = seat1.attendingWith ? seat1.attendingWith.split(',').map(id => id.trim()) : [];
+  const seat2Links = seat2.attendingWith ? seat2.attendingWith.split(',').map(id => id.trim()) : [];
+  
+  return seat1Links.includes(seat2.contestantId) || seat2Links.includes(seat1.contestantId);
 }
 
 function calculateBlockStats(block: SeatData[]) {

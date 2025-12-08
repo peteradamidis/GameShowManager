@@ -61,11 +61,6 @@ const ratingColors: Record<string, { bg: string; border: string }> = {
 export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEmptySeatClick, onRemove, onCancel }: SeatCardProps) {
   const isEmpty = !seat.contestantName;
   
-  // Debug: Log attendingWith data
-  if (!isEmpty && seat.attendingWith) {
-    console.log(`[SeatCard Debug] ${seat.contestantName} has attendingWith: ${seat.attendingWith}, contestantId: ${seat.contestantId}`);
-  }
-  
   // Use rating-based colors, fallback to group colors if no rating
   const ratingColorInfo = seat.auditionRating ? ratingColors[seat.auditionRating] : null;
   
@@ -123,11 +118,6 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
             <p className="font-medium truncate text-xs flex-1" title={seat.contestantName}>
               {seat.contestantName}
             </p>
-            {seat.attendingWith && (
-              <div title="Linked to another contestant" className="bg-cyan-500 dark:bg-cyan-400 text-white dark:text-black px-1.5 py-0.5 rounded text-[8px] font-bold flex-shrink-0">
-                LINK
-              </div>
-            )}
             {seat.medicalQuestion === 'Y' && contestantDetails?.medicalInfo && (
               <div title="Medical information">
                 <Plus className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0 font-bold" />

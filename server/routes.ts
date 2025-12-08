@@ -1076,7 +1076,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       });
 
-      console.log(`[API Debug] Returning ${enrichedAssignments.length} seat assignments with attendingWith data:`, enrichedAssignments.slice(0, 2).map(a => ({ name: a.contestantName, attendingWith: a.attendingWith })));
       res.json(enrichedAssignments);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
