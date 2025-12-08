@@ -482,6 +482,7 @@ export class DbStorage implements IStorage {
       criminalBankruptcy: workflowFields.criminalBankruptcy,
       castingCategory: workflowFields.castingCategory,
       notes: workflowFields.notes,
+      playerType: workflowFields.playerType,
       bookingEmailSent: workflowFields.bookingEmailSent,
       confirmedRsvp: workflowFields.confirmedRsvp,
       paperworkSent: workflowFields.paperworkSent,

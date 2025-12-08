@@ -843,10 +843,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a seat assignment
   app.post("/api/seat-assignments", async (req, res) => {
     try {
-      const { recordDayId, contestantId, blockNumber, seatLabel } = req.body;
+      const { recordDayId, contestantId, blockNumber, seatLabel, playerType } = req.body;
 
       if (!recordDayId || !contestantId || !blockNumber || !seatLabel) {
         return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Validate playerType if provided
+      if (playerType && !['player', 'backup', 'player_partner'].includes(playerType)) {
+        return res.status(400).json({ error: "Invalid player type" });
       }
 
       // Check for duplicate assignments
@@ -881,6 +886,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contestantId,
         blockNumber: parseInt(blockNumber),
         seatLabel,
+        playerType,
       });
 
       // Update contestant status to assigned
