@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-08T03:43:24.910Z",
+  "exportedAt": "2025-12-08T03:48:15.324Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -210,6 +210,26 @@
         "id": "5fe641da-4067-49a7-bae7-e63413b3e404",
         "referenceNumber": "GRP001",
         "createdAt": "2025-12-02T05:59:07.196Z"
+      },
+      {
+        "id": "8a692ea1-5300-494c-8074-19f479c5284d",
+        "referenceNumber": "GRP002",
+        "createdAt": "2025-12-08T03:44:51.049Z"
+      },
+      {
+        "id": "6f3cbd80-aae5-463e-836b-f1ecf0c504a2",
+        "referenceNumber": "GRP003",
+        "createdAt": "2025-12-08T03:44:51.151Z"
+      },
+      {
+        "id": "3e3161fd-95f1-4ce9-9810-0ab1d377e2b2",
+        "referenceNumber": "GRP004",
+        "createdAt": "2025-12-08T03:44:51.252Z"
+      },
+      {
+        "id": "5b77330c-45dc-4177-b704-50e8d2e75d75",
+        "referenceNumber": "GRP005",
+        "createdAt": "2025-12-08T03:44:51.353Z"
       }
     ],
     "seatAssignments": [
@@ -546,7 +566,7 @@
   "counts": {
     "recordDays": 18,
     "contestants": 3,
-    "groups": 1,
+    "groups": 5,
     "seatAssignments": 1,
     "standbys": 2,
     "blockTypes": 26,
