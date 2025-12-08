@@ -164,6 +164,7 @@ export default function SeatingChartPage() {
             contestantId: assignment.contestantId,
             auditionRating: assignment.auditionRating,
             playerType: assignment.playerType,
+            attendingWith: assignment.attendingWith,
           };
         }
       }
