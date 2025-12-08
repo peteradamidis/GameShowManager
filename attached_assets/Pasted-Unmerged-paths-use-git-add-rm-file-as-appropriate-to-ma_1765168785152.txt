@@ -1,0 +1,72 @@
+Unmerged paths:
+  (use "git add/rm <file>..." as appropriate to mark resolution)
+	deleted by us:   storage/backups/automatic-backup.json
+	deleted by us:   storage/backups/automatic-backup.xlsx
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   npm-cache/_cacache/index-v5/05/30/1f7b24d93a53fb15e4f265380e013ede9168023d085c1f84e431de1e1c17
+	modified:   npm-cache/_cacache/index-v5/11/96/1b874350c67532d80b504db99734fc862fdcb183613ab2283abb63a6d798
+	modified:   npm-cache/_cacache/index-v5/30/e2/47d7ecd1315891020c0cd6f846580d2927970b085ff614ec169b9a374d9e
+	modified:   npm-cache/_cacache/index-v5/5d/ad/1cb61ae613816d5f049cd87dd24009e364126f73726b1f8eab2350fec505
+	modified:   npm-cache/_cacache/index-v5/79/40/619a536a65a341537678d467e839b7f22eec0597727db82a740c25d25e94
+	modified:   npm-cache/_cacache/index-v5/7c/22/e50fc0132ff15f9bd4ffd260aacb79b3ef25c78697efb5381a263eccb2b3
+	modified:   npm-cache/_cacache/index-v5/80/3a/4a5732c282b178c7db04d066e1bf72f3e188eb895364b06eb795a5f7e87b
+	modified:   npm-cache/_cacache/index-v5/83/43/043f5e3629ba1dea1b4966cff9ef60baec627ebc7f2d847eea40c2901e57
+	modified:   npm-cache/_cacache/index-v5/83/ef/aff47278d7ef72e864717a2bb5e09eca947c1b761d2a3f590af1b5f1b379
+	modified:   npm-cache/_cacache/index-v5/93/51/0d27a16b0776d3e922ba48a32438993a55950ed62a299935555f778528a5
+	modified:   npm-cache/_cacache/index-v5/95/75/687939821827baf89453eb86559a27c09f58aeb98ea6455ac1964224bc85
+	modified:   npm-cache/_cacache/index-v5/a4/28/5f2dcd813be26ae6d72571e0d5bca00905eac194abcf2fbe377ef0aabcd1
+	modified:   npm-cache/_cacache/index-v5/a7/02/2a512783001403565cf7460ec142510337da7589c82f0d17b3f0c10f204a
+	modified:   npm-cache/_cacache/index-v5/ac/51/08b8ee486c2defad1cdc54865b7eea942e6a03e1938888c852c3d6f1144c
+	modified:   npm-cache/_cacache/index-v5/af/03/5c781820370e585dc2323edbbc80669bf714da5b47d56510c7d0bd7521ee
+	modified:   npm-cache/_cacache/index-v5/b6/b1/f58f7d63bb6409cc7c88c376c2e6981aab7c77b23cf6868e771e5e888b30
+	modified:   npm-cache/_cacache/index-v5/c0/c0/650352b245af3fd7ea8ee1c8b1cbc8ef00cc024fe1988df687c049bfbc10
+	modified:   npm-cache/_cacache/index-v5/dc/59/eb2f859fa4cfbe5267ea25086b2ff91a7c429579cfc5f83632f993e98d6b
+	modified:   npm-cache/_cacache/index-v5/e6/be/6e1283f2345247c106f9fd360a38dfd752ea3fc358323729d4095f466da8
+	modified:   npm-cache/_cacache/index-v5/ee/41/9d919883ff80d9d4ae1af85440fde90b96e1c924a26f5324a09ed77e3e9e
+	modified:   npm-cache/_cacache/index-v5/f6/37/6eaf47b4e0c45fd3308115a795cb1486c26d6d0ec33f2bcd1f5a89cd8fcc
+	deleted:    npm-cache/_logs/2025-12-06T13_40_54_349Z-debug-0.log
+	deleted:    npm-cache/_logs/2025-12-07T02_49_57_925Z-debug-0.log
+	deleted:    npm-cache/_logs/2025-12-07T02_50_04_398Z-debug-0.log
+	deleted:    npm-cache/_logs/2025-12-07T03_59_11_827Z-debug-0.log
+	deleted:    npm-cache/_logs/2025-12-07T10_49_36_370Z-debug-0.log
+	deleted:    npm-cache/_logs/2025-12-07T10_49_41_700Z-debug-0.log
+	deleted:    npm-cache/_logs/2025-12-07T11_42_10_395Z-debug-0.log
+	deleted:    npm-cache/_logs/2025-12-07T11_43_29_246Z-debug-0.log
+	deleted:    npm-cache/_logs/2025-12-07T11_50_03_753Z-debug-0.log
+	deleted:    npm-cache/_logs/2025-12-07T12_10_45_885Z-debug-0.log
+	deleted:    npm-cache/_logs/2025-12-08T02_22_40_583Z-debug-0.log
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	npm-cache/_cacache/content-v2/sha512/0d/6e/
+	npm-cache/_cacache/content-v2/sha512/10/d6/
+	npm-cache/_cacache/content-v2/sha512/40/8f/
+	npm-cache/_cacache/content-v2/sha512/5d/2c/
+	npm-cache/_cacache/content-v2/sha512/7f/b3/
+	npm-cache/_cacache/content-v2/sha512/82/7d/
+	npm-cache/_cacache/content-v2/sha512/88/ed/
+	npm-cache/_cacache/content-v2/sha512/a9/b4/
+	npm-cache/_cacache/content-v2/sha512/cf/68/
+	npm-cache/_cacache/content-v2/sha512/f3/ee/
+	npm-cache/_cacache/index-v5/0b/77/
+	npm-cache/_cacache/index-v5/44/
+	npm-cache/_cacache/index-v5/4a/11/
+	npm-cache/_cacache/index-v5/87/16/
+	npm-cache/_cacache/index-v5/8b/09/
+	npm-cache/_cacache/index-v5/f5/c6/
+	npm-cache/_logs/2025-12-08T03_57_40_491Z-debug-0.log
+	npm-cache/_logs/2025-12-08T03_57_46_846Z-debug-0.log
+	npm-cache/_logs/2025-12-08T04_00_11_607Z-debug-0.log
+	npm-cache/_logs/2025-12-08T04_00_54_516Z-debug-0.log
+	npm-cache/_logs/2025-12-08T04_01_07_025Z-debug-0.log
+	npm-cache/_logs/2025-12-08T04_01_12_546Z-debug-0.log
+	npm-cache/_logs/2025-12-08T04_27_29_984Z-debug-0.log
+	npm-cache/_logs/2025-12-08T04_27_46_580Z-debug-0.log
+	npm-cache/_logs/2025-12-08T04_28_12_971Z-debug-0.log
+	npm-cache/_logs/2025-12-08T04_32_02_795Z-debug-0.log
+	npm-cache/_logs/2025-12-08T04_36_51_065Z-debug-0.log
+
+peter.adamidis@Peters-MacBook-Pro GameShowManager-main % 
