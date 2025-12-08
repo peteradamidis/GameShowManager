@@ -260,7 +260,11 @@ function SeatingBlock({
 // Helper function to check if two seats should be linked (attending with each other)
 function shouldShowLink(seat1: SeatData, seat2: SeatData): boolean {
   if (!seat1.contestantId || !seat2.contestantId) return false;
-  return seat1.attendingWith === seat2.contestantId || seat2.attendingWith === seat1.contestantId;
+  const shouldLink = seat1.attendingWith === seat2.contestantId || seat2.attendingWith === seat1.contestantId;
+  if (seat1.contestantName && seat2.contestantName && (seat1.attendingWith || seat2.attendingWith)) {
+    console.log(`[Link Debug] ${seat1.contestantName} (id: ${seat1.contestantId}, attending: ${seat1.attendingWith}) <-> ${seat2.contestantName} (id: ${seat2.contestantId}, attending: ${seat2.attendingWith}) = ${shouldLink}`);
+  }
+  return shouldLink;
 }
 
 function calculateBlockStats(block: SeatData[]) {
