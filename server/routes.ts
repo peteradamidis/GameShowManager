@@ -1101,6 +1101,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter: exclude A+ rated contestants (they must be manually assigned)
       let availableAll = allContestants.filter((c) => c.availabilityStatus === "available");
       
+      // Get existing seat assignments for this record day to exclude already-assigned contestants
+      const currentAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
+      const alreadyAssignedIds = new Set(currentAssignments.map(a => a.contestantId));
+      availableAll = availableAll.filter(c => !alreadyAssignedIds.has(c.id));
+      
       // If onlyConfirmedAvailability is true, filter to only contestants who confirmed for this record day
       if (onlyConfirmedAvailability) {
         const availabilityResponses = await storage.getAvailabilityByRecordDay(recordDayId);
