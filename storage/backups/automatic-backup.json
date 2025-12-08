@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-08T05:13:02.253Z",
+  "exportedAt": "2025-12-08T05:16:04.286Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -238,7 +238,7 @@
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
         "contestantId": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
         "blockNumber": 1,
-        "seatLabel": "B2",
+        "seatLabel": "C2",
         "playerType": null,
         "firstNations": null,
         "rating": null,
