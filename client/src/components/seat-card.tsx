@@ -124,6 +124,19 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
               </div>
             )}
           </div>
+          {seat.playerType && (
+            <div className="flex items-center gap-1">
+              <Badge 
+                variant="outline"
+                className={`h-5 px-1.5 text-[9px] font-semibold ${
+                  seat.playerType === 'player' ? 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700' :
+                  seat.playerType === 'backup' ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700' :
+                  'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-700'
+                }`}>
+                {seat.playerType === 'player' ? 'P' : seat.playerType === 'backup' ? 'B' : 'PP'}
+              </Badge>
+            </div>
+          )}
           <div className="flex items-center gap-2 text-muted-foreground text-[10px]">
             <span>{seat.age}</span>
             <span>•</span>

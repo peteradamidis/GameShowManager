@@ -72,6 +72,9 @@ export default function SeatingChartPage() {
   const [isAutoAssigning, setIsAutoAssigning] = useState(false);
   const [onlyConfirmedAvailability, setOnlyConfirmedAvailability] = useState(false);
   
+  // Player type selection
+  const [selectedPlayerType, setSelectedPlayerType] = useState<string>("");
+  
   // Get record day ID from query parameter or fetch first available
   const searchParams = new URLSearchParams(window.location.search);
   const urlRecordDayId = searchParams.get('day');
@@ -289,6 +292,7 @@ export default function SeatingChartPage() {
     setSelectedBlock(blockNumber);
     setSelectedSeat(seatLabel);
     setSelectedContestant("");
+    setSelectedPlayerType("");
     setAssignDialogOpen(true);
   };
 
@@ -301,6 +305,7 @@ export default function SeatingChartPage() {
         contestantId: selectedContestant,
         blockNumber: selectedBlock,
         seatLabel: selectedSeat,
+        playerType: selectedPlayerType || undefined,
       });
       
       // Invalidate all seat assignment queries to update both Seating Chart and Booking Master
@@ -316,6 +321,7 @@ export default function SeatingChartPage() {
 
       setAssignDialogOpen(false);
       setSelectedContestant("");
+      setSelectedPlayerType("");
     } catch (error: any) {
       // Refresh to get latest seat assignments
       await refetch();
@@ -439,24 +445,43 @@ export default function SeatingChartPage() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="py-4">
+          <div className="py-4 space-y-4">
             {availableContestants.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
                 No available contestants. All contestants are already seated in this record day.
               </p>
             ) : (
-              <Select value={selectedContestant} onValueChange={setSelectedContestant}>
-                <SelectTrigger data-testid="select-contestant">
-                  <SelectValue placeholder="Select a contestant" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableContestants.map((contestant: any) => (
-                    <SelectItem key={contestant.id} value={contestant.id}>
-                      {contestant.name} ({contestant.age}, {contestant.gender})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="contestant-select">Contestant</Label>
+                  <Select value={selectedContestant} onValueChange={setSelectedContestant}>
+                    <SelectTrigger id="contestant-select" data-testid="select-contestant">
+                      <SelectValue placeholder="Select a contestant" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableContestants.map((contestant: any) => (
+                        <SelectItem key={contestant.id} value={contestant.id}>
+                          {contestant.name} ({contestant.age}, {contestant.gender})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="player-type-select">Player Type</Label>
+                  <Select value={selectedPlayerType} onValueChange={setSelectedPlayerType}>
+                    <SelectTrigger id="player-type-select" data-testid="select-player-type">
+                      <SelectValue placeholder="Select player type (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="player">Player</SelectItem>
+                      <SelectItem value="backup">Backup</SelectItem>
+                      <SelectItem value="player_partner">Player Partner</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
           </div>
 
