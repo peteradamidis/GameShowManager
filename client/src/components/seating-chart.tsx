@@ -232,8 +232,8 @@ function SeatingBlock({
                             data-testid={`link-icon-${row.label}-${seatIdxInRow}`}
                           >
                             <Link2
-                              className="h-3 w-3 text-muted-foreground/60"
-                              strokeWidth={2}
+                              className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"
+                              strokeWidth={2.5}
                             />
                           </div>
                         )}
