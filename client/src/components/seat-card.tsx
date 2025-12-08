@@ -190,6 +190,23 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
                   </div>
                 </div>
 
+                {contestantDetails.playerType && (
+                  <div className="text-sm">
+                    <label className="text-xs font-medium text-muted-foreground">Player Type</label>
+                    <Badge className={`text-xs mt-1 ${
+                      contestantDetails.playerType === 'player' ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800' :
+                      contestantDetails.playerType === 'backup' ? 'bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800' :
+                      contestantDetails.playerType === 'player_partner' ? 'bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800' :
+                      'bg-gray-500/20 text-gray-700 dark:text-gray-400 border-gray-200 dark:border-gray-800'
+                    }`}>
+                      {contestantDetails.playerType === 'player' ? 'Player' :
+                       contestantDetails.playerType === 'backup' ? 'Backup' :
+                       contestantDetails.playerType === 'player_partner' ? 'Partner' :
+                       contestantDetails.playerType}
+                    </Badge>
+                  </div>
+                )}
+
                 {contestantDetails.attendingWith && (
                   <div className="text-sm">
                     <label className="text-xs font-medium text-muted-foreground">Attending With</label>
