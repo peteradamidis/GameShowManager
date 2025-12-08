@@ -1,0 +1,107 @@
+up to date, audited 865 packages in 1s
+
+100 packages are looking for funding
+  run `npm fund` for details
+
+11 vulnerabilities (3 low, 5 moderate, 3 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details.
+peter.adamidis@Peters-MacBook-Pro GameShowManager-main % npm run dev
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+  DB Config: NODE_ENV=development, SSL enabled=false
+=== Server Starting ===
+NODE_ENV: development
+PORT: 3000
+DATABASE_URL set: true
+Step 1: Initializing database...
+  DB: Creating connection pool...
+  DB Init: SSL enabled=false
+  DB: Checking tables (10s timeout)...
+  DB: Check started (non-blocking)
+Step 1: Database initialized
+Step 2: Registering routes...
+Step 2: Routes registered
+Step 3: Setting up static serving...
+Step 3: Static serving ready
+Starting server on port 3000...
+5:05:02 PM [express] serving on port 3000
+Step 5: Warming up database connection...
+  DB Warmup: Attempt 1/3...
+✓ All database tables exist
+  DB Warmup: Connection established successfully
+Step 5: Database warmed up and ready
+Step 6: Starting automatic backup scheduler...
+[Backup] Starting automatic backup scheduler (every 1 hour)
+Step 6: Backup scheduler started (runs every hour)
+[Backup] Automatic backup completed at 2025-12-08T06:06:02.730Z
+[Backup] Data: 3 record days, 1 contestants, 0 assignments
+[Backup] Excel backup saved to storage/backups/automatic-backup.xlsx
+peter.adamidis@Peters-MacBook-Pro GameShowManager-main % git pull origin main
+error: Pulling is not possible because you have unmerged files.
+hint: Fix them up in the work tree, and then use 'git add/rm <file>'
+hint: as appropriate to mark resolution and make a commit.
+fatal: Exiting because of an unresolved conflict.
+peter.adamidis@Peters-MacBook-Pro GameShowManager-main % git stash
+git pull origin main
+storage/backups/automatic-backup.json: needs merge
+storage/backups/automatic-backup.xlsx: needs merge
+error: could not write index
+error: Pulling is not possible because you have unmerged files.
+hint: Fix them up in the work tree, and then use 'git add/rm <file>'
+hint: as appropriate to mark resolution and make a commit.
+fatal: Exiting because of an unresolved conflict.
+peter.adamidis@Peters-MacBook-Pro GameShowManager-main % git stash
+storage/backups/automatic-backup.json: needs merge
+storage/backups/automatic-backup.xlsx: needs merge
+error: could not write index
+peter.adamidis@Peters-MacBook-Pro GameShowManager-main % git checkout --ours .
+git add .
+git commit -m "Resolved merge conflicts - kept local changes"
+git pull origin main
+error: path 'storage/backups/automatic-backup.json' does not have our version
+error: path 'storage/backups/automatic-backup.xlsx' does not have our version
+[main e641a04] Resolved merge conflicts - kept local changes
+remote: Enumerating objects: 132, done.
+remote: Counting objects: 100% (132/132), done.
+remote: Compressing objects: 100% (19/19), done.
+remote: Total 116 (delta 88), reused 115 (delta 87), pack-reused 0 (from 0)
+Receiving objects: 100% (116/116), 1.92 MiB | 14.45 MiB/s, done.
+Resolving deltas: 100% (88/88), completed with 14 local objects.
+From https://github.com/peteradamidis/GameShowManager
+ * branch            main       -> FETCH_HEAD
+   7412f75..b857579  main       -> origin/main
+Auto-merging server/routes.ts
+CONFLICT (modify/delete): storage/backups/automatic-backup.json deleted in HEAD and modified in b85757976e07f899db6c91f5804c4a6ac945151f.  Version b85757976e07f899db6c91f5804c4a6ac945151f of storage/backups/automatic-backup.json left in tree.
+CONFLICT (modify/delete): storage/backups/automatic-backup.xlsx deleted in HEAD and modified in b85757976e07f899db6c91f5804c4a6ac945151f.  Version b85757976e07f899db6c91f5804c4a6ac945151f of storage/backups/automatic-backup.xlsx left in tree.
+Automatic merge failed; fix conflicts and then commit the result.
+peter.adamidis@Peters-MacBook-Pro GameShowManager-main % git checkout --theirs storage/backups/automatic-backup.json
+git checkout --theirs storage/backups/automatic-backup.xlsx
+Updated 1 path from the index
+Updated 1 path from the index
+peter.adamidis@Peters-MacBook-Pro GameShowManager-main % git add storage/backups/automatic-backup.json
+git add storage/backups/automatic-backup.xlsx
+peter.adamidis@Peters-MacBook-Pro GameShowManager-main % git commit -m "Resolved merge conflicts - kept backup files"
+[main 6de1e35] Resolved merge conflicts - kept backup files
+peter.adamidis@Peters-MacBook-Pro GameShowManager-main % git pull origin main  
+From https://github.com/peteradamidis/GameShowManager
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+peter.adamidis@Peters-MacBook-Pro GameShowManager-main % npm install npm run dev 
+npm error code EBADPLATFORM
+npm error notsup Unsupported platform for inotify@1.4.6: wanted {"os":"linux"} (current: {"os":"darwin"})
+npm error notsup Valid os:  linux
+npm error notsup Actual os: darwin
+npm error A complete log of this run can be found in: /Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/npm-cache/_logs/2025-12-08T06_11_36_033Z-debug-0.log
+peter.adamidis@Peters-MacBook-Pro GameShowManager-main % 
