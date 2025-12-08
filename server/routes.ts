@@ -221,7 +221,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        rawData = xlsx.utils.sheet_to_json(sheet);
+        
+        // Get raw data with header row in first row
+        rawData = xlsx.utils.sheet_to_json(sheet, { defval: "" });
+        
+        // If we get __EMPTY columns, try reading from row 2 onward
+        if (rawData.length > 0 && Object.keys(rawData[0]).some(key => key.includes("__EMPTY"))) {
+          console.log("Found empty headers, trying alternative parsing...");
+          // Read all rows including headers as raw data
+          const allRows = xlsx.utils.sheet_to_json(sheet, { header: 1, defval: "" }) as any[];
+          
+          // Find first row with actual data (not all empty)
+          let headerRowIndex = 0;
+          for (let i = 0; i < allRows.length; i++) {
+            const row = allRows[i] as any[];
+            const hasContent = row.some(cell => cell && cell.toString().trim() !== "");
+            if (hasContent) {
+              headerRowIndex = i;
+              break;
+            }
+          }
+          
+          // Use that row as headers and remaining rows as data
+          if (headerRowIndex < allRows.length) {
+            const headers = allRows[headerRowIndex] as string[];
+            const dataRows = allRows.slice(headerRowIndex + 1);
+            rawData = dataRows.map(row => {
+              const obj: any = {};
+              headers.forEach((header, index) => {
+                if (header && header.toString().trim() !== "") {
+                  obj[header] = row[index] || "";
+                }
+              });
+              return obj;
+            }).filter(row => Object.keys(row).length > 0);
+          }
+        }
       } catch (parseError: any) {
         console.error("Excel parse error:", parseError);
         return res.status(400).json({ 
@@ -236,6 +271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log all column names from first row for debugging
       if (rawData.length > 0) {
         console.log("Excel columns found:", Object.keys(rawData[0]));
+        console.log("First data row:", rawData[0]);
       }
 
       // Helper function to get value by trying multiple column name variations
