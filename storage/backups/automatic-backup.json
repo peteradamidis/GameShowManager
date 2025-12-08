@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-08T05:16:04.286Z",
+  "exportedAt": "2025-12-08T05:21:08.805Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -234,29 +234,6 @@
     ],
     "seatAssignments": [
       {
-        "id": "91e25164-6f67-42f7-b978-9132a406c060",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
-        "blockNumber": 1,
-        "seatLabel": "C2",
-        "playerType": null,
-        "firstNations": null,
-        "rating": null,
-        "location": null,
-        "medicalQuestion": null,
-        "criminalBankruptcy": null,
-        "castingCategory": null,
-        "notes": null,
-        "bookingEmailSent": null,
-        "confirmedRsvp": null,
-        "paperworkSent": null,
-        "paperworkReceived": null,
-        "signedIn": null,
-        "otdNotes": null,
-        "standbyReplacementSwaps": null,
-        "createdAt": "2025-12-08T05:04:16.617Z"
-      },
-      {
         "id": "ff87f03b-8891-4bb6-ac5c-a510d216fdd6",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
         "contestantId": "d698b1de-6641-45c6-aa63-f577d2b634bb",
@@ -278,6 +255,29 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "createdAt": "2025-12-08T05:04:16.106Z"
+      },
+      {
+        "id": "91e25164-6f67-42f7-b978-9132a406c060",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "contestantId": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
+        "blockNumber": 1,
+        "seatLabel": "B2",
+        "playerType": null,
+        "firstNations": null,
+        "rating": null,
+        "location": null,
+        "medicalQuestion": null,
+        "criminalBankruptcy": null,
+        "castingCategory": null,
+        "notes": null,
+        "bookingEmailSent": null,
+        "confirmedRsvp": null,
+        "paperworkSent": null,
+        "paperworkReceived": null,
+        "signedIn": null,
+        "otdNotes": null,
+        "standbyReplacementSwaps": null,
+        "createdAt": "2025-12-08T05:04:16.617Z"
       }
     ],
     "standbys": [

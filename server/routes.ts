@@ -1032,11 +1032,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const enrichedAssignments = assignments.map((assignment) => {
         const contestant = contestantsMap.get(assignment.contestantId);
         
-        // Resolve attendingWith name to contestant ID
-        let attendingWithId: string | undefined;
+        // Resolve attendingWith names to contestant IDs (comma-separated names)
+        let attendingWithIds: string[] = [];
         if (contestant?.attendingWith) {
-          attendingWithId = nameToIdMap.get(contestant.attendingWith.toLowerCase());
+          // Split by comma and resolve each name
+          const names = contestant.attendingWith.split(',').map(n => n.trim().toLowerCase());
+          for (const name of names) {
+            const id = nameToIdMap.get(name);
+            if (id) {
+              attendingWithIds.push(id);
+            }
+          }
         }
+        const attendingWithId = attendingWithIds.length > 0 ? attendingWithIds.join(',') : undefined;
         
         return {
           id: assignment.id,
