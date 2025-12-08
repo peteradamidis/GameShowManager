@@ -1731,15 +1731,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // PHASE 5: Persist the plan to database with transaction-like semantics
+      // First, deduplicate the plan by contestantId (keep first occurrence)
+      const seenContestantIds = new Set<string>();
+      const deduplicatedPlan = plan.filter(item => {
+        if (seenContestantIds.has(item.contestant.id)) {
+          console.log(`Removing duplicate plan entry for contestant ${item.contestant.id}`);
+          return false;
+        }
+        seenContestantIds.add(item.contestant.id);
+        return true;
+      });
+      
+      console.log(`Deduplication: ${plan.length} items in plan, ${deduplicatedPlan.length} after removing duplicates`);
+      
       const createdAssignments: any[] = [];
       const contestantUpdates: string[] = [];
       
       try {
-        for (const item of plan) {
-          // Double-check that this contestant isn't already assigned (defensive check)
+        for (const item of deduplicatedPlan) {
+          // Double-check that this contestant isn't already assigned in database (defensive check)
           const existingAssign = await storage.getSeatAssignmentByRecordDayAndContestant(recordDayId, item.contestant.id);
           if (existingAssign) {
-            console.log(`Skipping duplicate assignment for contestant ${item.contestant.id} - already assigned`);
+            console.log(`Skipping assignment for contestant ${item.contestant.id} - already in database`);
             continue;
           }
           
