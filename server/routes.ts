@@ -218,45 +218,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let rawData: any[];
       
       try {
-        const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+        // Read workbook - handle both .xls (binary) and .xlsx formats
+        const workbook = xlsx.read(req.file.buffer, { 
+          type: "buffer",
+          cellFormula: false,
+          cellStyles: false 
+        });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         
-        // Get raw data with header row in first row
-        rawData = xlsx.utils.sheet_to_json(sheet, { defval: "" });
+        // Get all rows as arrays first to find header row
+        const allRows = xlsx.utils.sheet_to_json(sheet, { header: 1, defval: "" }) as any[];
         
-        // If we get __EMPTY columns, try reading from row 2 onward
-        if (rawData.length > 0 && Object.keys(rawData[0]).some(key => key.includes("__EMPTY"))) {
-          console.log("Found empty headers, trying alternative parsing...");
-          // Read all rows including headers as raw data
-          const allRows = xlsx.utils.sheet_to_json(sheet, { header: 1, defval: "" }) as any[];
-          
-          // Find first row with actual data (not all empty)
-          let headerRowIndex = 0;
-          for (let i = 0; i < allRows.length; i++) {
-            const row = allRows[i] as any[];
-            const hasContent = row.some(cell => cell && cell.toString().trim() !== "");
-            if (hasContent) {
-              headerRowIndex = i;
-              break;
-            }
-          }
-          
-          // Use that row as headers and remaining rows as data
-          if (headerRowIndex < allRows.length) {
-            const headers = allRows[headerRowIndex] as string[];
-            const dataRows = allRows.slice(headerRowIndex + 1);
-            rawData = dataRows.map(row => {
-              const obj: any = {};
-              headers.forEach((header, index) => {
-                if (header && header.toString().trim() !== "") {
-                  obj[header] = row[index] || "";
-                }
-              });
-              return obj;
-            }).filter(row => Object.keys(row).length > 0);
+        if (!allRows || allRows.length === 0) {
+          return res.status(400).json({ error: "The uploaded file is empty or has no data rows." });
+        }
+        
+        // Find first row with actual content (skip completely empty rows)
+        let headerRowIndex = 0;
+        for (let i = 0; i < allRows.length; i++) {
+          const row = allRows[i] as any[];
+          const hasContent = row.some(cell => cell && cell.toString().trim() !== "");
+          if (hasContent) {
+            headerRowIndex = i;
+            break;
           }
         }
+        
+        // Extract headers and data rows
+        const headers = (allRows[headerRowIndex] as any[])
+          .map((h: any) => h ? h.toString().trim() : "")
+          .filter(h => h !== "");
+        
+        const dataRows = allRows.slice(headerRowIndex + 1);
+        
+        // Convert to objects
+        rawData = dataRows.map((row: any[]) => {
+          const obj: any = {};
+          headers.forEach((header, index) => {
+            if (row[index] !== undefined && row[index] !== null) {
+              obj[header] = row[index];
+            }
+          });
+          return obj;
+        }).filter(row => Object.keys(row).length > 0 && Object.values(row).some(v => v !== "" && v !== null && v !== undefined));
+        
       } catch (parseError: any) {
         console.error("Excel parse error:", parseError);
         return res.status(400).json({ 
