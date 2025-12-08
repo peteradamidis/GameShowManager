@@ -15,6 +15,7 @@ import {
   standbyConfirmationTokens,
   systemConfig,
   formConfigurations,
+  users,
   type Contestant,
   type InsertContestant,
   type Group,
@@ -40,6 +41,8 @@ import {
   type StandbyConfirmationToken,
   type InsertStandbyConfirmationToken,
   type SystemConfig,
+  type User,
+  type InsertUser,
 } from "@shared/schema";
 import { eq, and, sql, inArray } from "drizzle-orm";
 
@@ -218,6 +221,13 @@ export interface IStorage {
   getFormConfigurations(formType: string): Promise<Record<string, string>>;
   setFormConfiguration(formType: string, fieldKey: string, value: string): Promise<void>;
   setFormConfigurations(formType: string, configs: Record<string, string>): Promise<void>;
+  
+  // Users (Authentication)
+  createUser(user: InsertUser): Promise<User>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserById(id: string): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
+  updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined>;
 }
 
 export class DbStorage implements IStorage {
@@ -1246,6 +1256,35 @@ export class DbStorage implements IStorage {
     for (const [fieldKey, value] of Object.entries(configs)) {
       await this.setFormConfiguration(formType, fieldKey, value);
     }
+  }
+
+  // Users (Authentication)
+  async createUser(user: InsertUser): Promise<User> {
+    const [created] = await getDb().insert(users).values(user).returning();
+    return created;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await getDb().select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async getUserById(id: string): Promise<User | undefined> {
+    const [user] = await getDb().select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return getDb().select().from(users);
+  }
+
+  async updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined> {
+    const [updated] = await getDb()
+      .update(users)
+      .set({ password: hashedPassword })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
   }
 }
 

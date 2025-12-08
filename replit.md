@@ -21,6 +21,20 @@ Do not make changes to the file `Y`.
 - **Backend:** Developed with Express.js and TypeScript.
 - **Database:** PostgreSQL (Neon) managed with Drizzle ORM.
 - **Frontend:** Built using React, Wouter for routing, and TanStack Query for data management.
+- **Authentication:** Local username/password authentication for offline deployment.
+    - **Session-based:** Uses express-session with server-side session storage.
+    - **Password hashing:** bcrypt with 12 salt rounds.
+    - **Default admin:** On first startup, creates admin user (username: `admin`, password: `admin`).
+    - **Protected routes:** All /api routes require authentication except public endpoints.
+    - **Public endpoints:** /api/auth/*, /api/availability-response, /api/booking-confirmation, /api/standby-confirmation.
+    - **Environment variables:**
+        - `SESSION_SECRET`: Required for production (generates sessions securely).
+        - Set `NODE_ENV=production` for production deployment.
+    - **API Endpoints:**
+        - `POST /api/auth/login` - Login with username/password.
+        - `POST /api/auth/logout` - Logout and destroy session.
+        - `GET /api/auth/check` - Check if user is authenticated.
+        - `POST /api/auth/change-password` - Change password (requires current password).
 - **Data Import:** Parses Cast It Reach Excel exports, normalizes data, and automatically identifies contestant groups.
 - **Auto-Assignment Algorithm:**
     - Aims for 60-70% female demographic balance.

@@ -10,6 +10,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./db-init";
 import { warmupDatabaseConnection } from "./storage";
 import { startBackupScheduler } from "./backup-scheduler";
+import { getSessionConfig, createDefaultAdmin } from "./auth";
 
 // Log startup info immediately for debugging
 console.log('=== Server Starting ===');
@@ -47,6 +48,9 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: false }));
 
+// Session middleware for authentication
+app.use(getSessionConfig());
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -83,6 +87,10 @@ app.use((req, res, next) => {
     // Initialize database schema on startup
     await initializeDatabase();
     console.log('Step 1: Database initialized');
+    
+    // Create default admin user if no users exist
+    console.log('Step 1.5: Checking for default admin user...');
+    await createDefaultAdmin();
 
     console.log('Step 2: Registering routes...');
     const server = await registerRoutes(app);

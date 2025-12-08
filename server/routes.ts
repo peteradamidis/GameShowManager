@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertContestantSchema, insertRecordDaySchema, insertSeatAssignmentSchema } from "@shared/schema";
@@ -11,6 +11,7 @@ import fs from "fs";
 import { getUncachableGmailClient, sendEmail, sendEmailWithAttachment, getInboxMessages, ParsedEmail, EmailConfig, isGmailAvailable } from "./gmail";
 import { syncRecordDayToSheet, createSheetHeader, updateCellInRecordDaySheet, updateRowInRecordDaySheet, getRecordDaySheetData, isGoogleSheetsAvailable } from "./google-sheets";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { requireAuth, hashPassword, verifyPassword } from "./auth";
 
 // Google Sheets config keys for database storage
 const SHEETS_SPREADSHEET_ID_KEY = 'google_sheets_spreadsheet_id';
@@ -93,6 +94,125 @@ function identifyGroups(contestants: any[]): Map<string, string[]> {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded photos as static files
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+  // ============ AUTHENTICATION ROUTES (PUBLIC) ============
+  
+  // Check if user is authenticated
+  app.get("/api/auth/check", (req, res) => {
+    if (req.session.userId) {
+      res.json({ 
+        authenticated: true, 
+        user: { 
+          id: req.session.userId, 
+          username: req.session.username 
+        } 
+      });
+    } else {
+      res.json({ authenticated: false });
+    }
+  });
+
+  // Login
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ error: "Username and password are required" });
+      }
+
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(401).json({ error: "Invalid username or password" });
+      }
+
+      const isValid = await verifyPassword(password, user.password);
+      
+      if (!isValid) {
+        return res.status(401).json({ error: "Invalid username or password" });
+      }
+
+      // Set session
+      req.session.userId = user.id;
+      req.session.username = user.username;
+
+      res.json({ 
+        success: true, 
+        user: { id: user.id, username: user.username } 
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
+  // Logout
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Logout failed" });
+      }
+      res.json({ success: true });
+    });
+  });
+
+  // Change password (requires authentication)
+  app.post("/api/auth/change-password", requireAuth, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: "Current and new password are required" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ error: "New password must be at least 6 characters" });
+      }
+
+      const user = await storage.getUserById(req.session.userId!);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const isValid = await verifyPassword(currentPassword, user.password);
+      
+      if (!isValid) {
+        return res.status(401).json({ error: "Current password is incorrect" });
+      }
+
+      const hashedPassword = await hashPassword(newPassword);
+      await storage.updateUserPassword(user.id, hashedPassword);
+
+      res.json({ success: true, message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Change password error:", error);
+      res.status(500).json({ error: "Failed to change password" });
+    }
+  });
+
+  // ============ PROTECTED API ROUTES ============
+  // All routes below this middleware require authentication
+  app.use("/api", (req: Request, res: Response, next: NextFunction) => {
+    // Skip auth check for public endpoints
+    // Note: req.path is relative to /api mount, so /api/contestants becomes /contestants
+    // But req.originalUrl has the full path
+    const publicPaths = [
+      '/api/auth/',
+      '/api/availability-response',  // Public form for contestants
+      '/api/booking-confirmation',   // Public form for contestants
+      '/api/standby-confirmation',   // Public form for contestants
+    ];
+    
+    const isPublicPath = publicPaths.some(path => req.originalUrl.startsWith(path));
+    
+    if (isPublicPath) {
+      return next();
+    }
+    
+    return requireAuth(req, res, next);
+  });
 
   // Upload contestant photo
   app.post("/api/contestants/:id/photo", (req, res, next) => {
