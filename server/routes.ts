@@ -1020,9 +1020,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contestantsData = await storage.getContestants();
       const contestantsMap = new Map(contestantsData.map((c) => [c.id, c]));
 
+      // Create a name-to-ID map for resolving attendingWith names to IDs
+      const nameToIdMap = new Map<string, string>();
+      contestantsData.forEach(c => {
+        if (c.name) {
+          nameToIdMap.set(c.name.toLowerCase(), c.id);
+        }
+      });
+
       // Flatten the data structure for frontend compatibility
       const enrichedAssignments = assignments.map((assignment) => {
         const contestant = contestantsMap.get(assignment.contestantId);
+        
+        // Resolve attendingWith name to contestant ID
+        let attendingWithId: string | undefined;
+        if (contestant?.attendingWith) {
+          attendingWithId = nameToIdMap.get(contestant.attendingWith.toLowerCase());
+        }
+        
         return {
           id: assignment.id,
           recordDayId: assignment.recordDayId,
@@ -1049,7 +1064,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gender: contestant?.gender,
           groupId: contestant?.groupId,
           auditionRating: contestant?.auditionRating,
-          attendingWith: contestant?.attendingWith,
+          attendingWith: attendingWithId,
         };
       });
 
