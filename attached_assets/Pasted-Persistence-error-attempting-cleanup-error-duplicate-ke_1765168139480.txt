@@ -1,0 +1,264 @@
+Persistence error, attempting cleanup: error: duplicate key value violates unique constraint "seat_assignments_record_day_id_contestant_id_unique"
+    at /Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/node_modules/pg/lib/client.js:545:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/node_modules/src/node-postgres/session.ts:104:19)
+    at async <anonymous> (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/server/storage.ts:398:25)
+    at async NodePgSession.transaction (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/node_modules/src/node-postgres/session.ts:193:19)
+    at async DbStorage.createSeatAssignment (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/server/storage.ts:396:12)
+    at async <anonymous> (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/server/routes.ts:1734:30) {
+  length: 372,
+  severity: 'ERROR',
+  code: '23505',
+  detail: 'Key (record_day_id, contestant_id)=(f43eaaa4-373e-43d1-aa06-5c9854f4033b, 08f67697-dd92-4070-b1a0-f56efe1643b4) already exists.',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'seat_assignments',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'seat_assignments_record_day_id_contestant_id_unique',
+  file: 'nbtinsert.c',
+  line: '670',
+  routine: '_bt_check_unique'
+}
+Auto-assign error: error: duplicate key value violates unique constraint "seat_assignments_record_day_id_contestant_id_unique"
+    at /Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/node_modules/pg/lib/client.js:545:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/node_modules/src/node-postgres/session.ts:104:19)
+    at async <anonymous> (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/server/storage.ts:398:25)
+    at async NodePgSession.transaction (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/node_modules/src/node-postgres/session.ts:193:19)
+    at async DbStorage.createSeatAssignment (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/server/storage.ts:396:12)
+    at async <anonymous> (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/server/routes.ts:1734:30) {
+  length: 372,
+  severity: 'ERROR',
+  code: '23505',
+  detail: 'Key (record_day_id, contestant_id)=(f43eaaa4-373e-43d1-aa06-5c9854f4033b, 08f67697-dd92-4070-b1a0-f56efe1643b4) already exists.',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'seat_assignments',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'seat_assignments_record_day_id_contestant_id_unique',
+  file: 'nbtinsert.c',
+  line: '670',
+  routine: '_bt_check_unique'
+}
+3:28:00 PM [express] POST /api/auto-assign/f43eaaa4-373e-43d1-aa06-5c9854f4033b 500 in 29ms :: {"err…
+Warning: Could not place group group-44c5603e-cd89-48c6-b02d-b5b39e068c4a with C-rated contestants - no NPB blocks with capacity
+Warning: Could not place group group-8eadeb7f-16df-4277-b337-a6597aeb2812 with C-rated contestants - no NPB blocks with capacity
+Warning: Could not place group group-ac4d8f24-dc96-4118-936f-4a321684a459 with C-rated contestants - no NPB blocks with capacity
+Warning: Could not place group group-bc66096e-1988-476e-b636-650db5ef7004 with C-rated contestants - no NPB blocks with capacity
+Warning: Could not place group solo-69451fe1-5541-4b96-b7c9-1ca52f8eccd5 with C-rated contestants - no NPB blocks with capacity
+Warning: Could not place group solo-651e6dd5-e3dd-4b25-b619-015923def192 with C-rated contestants - no NPB blocks with capacity
+Warning: Could not place group solo-7658eedc-1200-4561-81e7-7b7c6da5ab3f with C-rated contestants - no NPB blocks with capacity
+Warning: Could not place group solo-03762b36-0f24-49f5-9010-cb707ac9efc7 with C-rated contestants - no NPB blocks with capacity
+Warning: Could not place group solo-1a69109d-c992-45ca-8802-48399d9cfe50 with C-rated contestants - no NPB blocks with capacity
+Warning: Could not place group solo-9798efe7-3c11-44ae-a6d0-95bd4a5939e9 with C-rated contestants - no NPB blocks with capacity
+Warning: Could not place group solo-be905289-ff51-4698-b7b7-4d0514185e48 with C-rated contestants - no NPB blocks with capacity
+Warning: Could not place group solo-3f4e9e9e-f975-4cc2-a373-d1ebee62c709 with C-rated contestants - no NPB blocks with capacity
+Warning: Could not place group solo-8e68c0cc-1aa0-493a-acef-555bc12f0a06 with C-rated contestants - no NPB blocks with capacity
+Warning: Could not place group solo-4427c485-8395-427e-abed-a4e0b3dedb14 with C-rated contestants - no NPB blocks with capacity
+Warning: Could not place group solo-be83483e-81a0-4676-b6de-6edde645a3d6 with C-rated contestants - no NPB blocks with capacity
+Warning: Could not place group solo-da3b4a5e-07b7-4eac-ac92-bb3176b4cc00 (size 1) - no block has capacity
+Warning: Could not place group solo-619f31a9-6998-4569-bd31-ece0a7ff99c6 (size 1) - no block has capacity
+Warning: Could not place group solo-4c060237-b4da-48ef-9c51-d9a4c6ebbffc (size 1) - no block has capacity
+Warning: Could not place group solo-39e53527-7853-489d-8524-217aba6e778c (size 1) - no block has capacity
+Warning: Could not place group solo-75c2c2d4-4799-4664-a9e8-8d1539097c73 (size 1) - no block has capacity
+Warning: Could not place group solo-3213eeaf-a7a6-4c78-94ed-45dbd122426e (size 1) - no block has capacity
+Warning: Could not place group solo-9279b4d4-1f40-40e3-9032-155c230d3b8e (size 1) - no block has capacity
+Warning: Could not place group solo-37ff39f8-06e8-419d-a560-211e64c42bbf (size 1) - no block has capacity
+Warning: Could not place group solo-6e56e531-23c2-4f25-89ce-5fd9f39fc344 (size 1) - no block has capacity
+Warning: Could not place group solo-52942d84-18b4-4635-b4e8-19a71bbe68d3 (size 1) - no block has capacity
+Warning: Could not place group solo-ed48bd72-f3ef-456a-8d3e-8085e140a6a9 (size 1) - no block has capacity
+Warning: Could not place group solo-deece9fb-153b-4f8c-b23b-43d41fc4b71b (size 1) - no block has capacity
+Warning: Could not place group solo-a292c07b-590a-46e9-9915-fa2916dfd44a (size 1) - no block has capacity
+Warning: Could not place group solo-f1073f96-3dcd-4a34-8444-94fbbfdba1db (size 1) - no block has capacity
+Warning: Could not place group solo-78122b4c-2902-439a-b204-e2087b23444e (size 1) - no block has capacity
+Warning: Could not place group solo-1c8828ca-90b6-491c-9a3c-5e40dacb26ad (size 1) - no block has capacity
+Warning: Could not place group solo-947c220a-6724-44cb-9ee6-1108e35dde39 (size 1) - no block has capacity
+Warning: Could not place group solo-360f484f-6295-4ebc-ac2a-47fde2ebf9d9 (size 1) - no block has capacity
+Warning: Could not place group solo-5c153021-17c7-4d9f-8aa5-e7d75027de6f (size 1) - no block has capacity
+Warning: Could not place group solo-85ad9bc5-e8b6-42ae-8d36-88a49ac98aed (size 1) - no block has capacity
+Warning: Could not place group solo-ca8fd8dd-288e-435d-88f7-11c533fcba9b (size 1) - no block has capacity
+Warning: Could not place group solo-63f9ded2-08ce-468d-a07e-b369a208d0eb (size 1) - no block has capacity
+Warning: Could not place group solo-855e23fd-5924-46c4-b9eb-4acb1d369651 (size 1) - no block has capacity
+Warning: Could not place group solo-a8260c1c-e06b-44a8-9d31-7d14b1f25337 (size 1) - no block has capacity
+Warning: Could not place group solo-141d1ef4-1692-42d5-a085-7ea97a9253e2 (size 1) - no block has capacity
+Warning: Could not place group solo-e5974a07-dba3-4118-bbdd-9239874f60a0 (size 1) - no block has capacity
+Warning: Could not place group solo-d8c2bf60-afb6-4cf1-a8f2-a9a2a8be8704 (size 1) - no block has capacity
+Warning: Could not place group solo-e46c4b40-6c87-43f8-ba72-57bf005c99bd (size 1) - no block has capacity
+Warning: Could not place group solo-fb17cc61-364e-4459-aab0-fbad6c12dd30 (size 1) - no block has capacity
+Warning: Could not place group solo-e17ceaf6-fcc5-4c9d-83a7-4a1f40a21af4 (size 1) - no block has capacity
+Warning: Could not place group solo-992c5af3-6dcc-4ae2-aad3-0c811a13f9ac (size 1) - no block has capacity
+Warning: Could not place group solo-529ebf96-fe95-4242-8c62-abe697708eb1 (size 1) - no block has capacity
+Warning: Could not place group solo-076f5f5a-daec-4491-856a-b1e26be91bfd (size 1) - no block has capacity
+Warning: Could not place group solo-40093654-17ee-4fcf-8413-5aa539b128ed (size 1) - no block has capacity
+Warning: Could not place group solo-1e29c1ca-d5be-410a-9551-111bfe883e02 (size 1) - no block has capacity
+Warning: Could not place group solo-418e7724-277e-4b39-9936-289740ab427c (size 1) - no block has capacity
+Warning: Could not place group solo-6c99dc77-fb25-4c6e-b0c5-190768a2095c (size 1) - no block has capacity
+Warning: Could not place group solo-7415de75-d5d2-4b3d-971e-ba98478a84a4 (size 1) - no block has capacity
+Warning: Could not place group solo-30111a79-f05d-494d-a01d-d974641e776b (size 1) - no block has capacity
+Warning: Could not place group solo-0730b136-a967-4e50-8867-d592f3e47f57 (size 1) - no block has capacity
+Warning: Could not place solo solo-69451fe1-5541-4b96-b7c9-1ca52f8eccd5 (Hannah  Mercer) - no block has capacity
+Warning: Could not place solo solo-651e6dd5-e3dd-4b25-b619-015923def192 (elik Szewach) - no block has capacity
+Warning: Could not place solo solo-7658eedc-1200-4561-81e7-7b7c6da5ab3f (Karin Penberthy) - no block has capacity
+Warning: Could not place solo solo-03762b36-0f24-49f5-9010-cb707ac9efc7 (Vedrana Aracic) - no block has capacity
+Warning: Could not place solo solo-1a69109d-c992-45ca-8802-48399d9cfe50 (Melissa Salievski) - no block has capacity
+Warning: Could not place solo solo-9798efe7-3c11-44ae-a6d0-95bd4a5939e9 (Michelle  Kasidiaris) - no block has capacity
+Warning: Could not place solo solo-be905289-ff51-4698-b7b7-4d0514185e48 (Adriana  Fejzulovski) - no block has capacity
+Warning: Could not place solo solo-3f4e9e9e-f975-4cc2-a373-d1ebee62c709 (Fathi Yasin Hassan) - no block has capacity
+Warning: Could not place solo solo-8e68c0cc-1aa0-493a-acef-555bc12f0a06 (shane haines) - no block has capacity
+Warning: Could not place solo solo-4427c485-8395-427e-abed-a4e0b3dedb14 (Damian  Midwinter) - no block has capacity
+Warning: Could not place solo solo-be83483e-81a0-4676-b6de-6edde645a3d6 (Michelle Jennings) - no block has capacity
+Warning: Could not place solo solo-da3b4a5e-07b7-4eac-ac92-bb3176b4cc00 (Jay Gusman) - no block has capacity
+Warning: Could not place solo solo-619f31a9-6998-4569-bd31-ece0a7ff99c6 (Sineade Pollock) - no block has capacity
+Warning: Could not place solo solo-4c060237-b4da-48ef-9c51-d9a4c6ebbffc (Durga Chhetri) - no block has capacity
+Warning: Could not place solo solo-39e53527-7853-489d-8524-217aba6e778c (Tea  Mills) - no block has capacity
+Warning: Could not place solo solo-75c2c2d4-4799-4664-a9e8-8d1539097c73 (April Brake) - no block has capacity
+Warning: Could not place solo solo-3213eeaf-a7a6-4c78-94ed-45dbd122426e (nishita arora) - no block has capacity
+Warning: Could not place solo solo-9279b4d4-1f40-40e3-9032-155c230d3b8e (Tri Nguyen) - no block has capacity
+Warning: Could not place solo solo-37ff39f8-06e8-419d-a560-211e64c42bbf (Mark Perkins) - no block has capacity
+Warning: Could not place solo solo-6e56e531-23c2-4f25-89ce-5fd9f39fc344 (Robert  Zucca) - no block has capacity
+Warning: Could not place solo solo-52942d84-18b4-4635-b4e8-19a71bbe68d3 (Kaysie Mitchell) - no block has capacity
+Warning: Could not place solo solo-ed48bd72-f3ef-456a-8d3e-8085e140a6a9 (Mark Steane) - no block has capacity
+Warning: Could not place solo solo-deece9fb-153b-4f8c-b23b-43d41fc4b71b (Glenn Cottier) - no block has capacity
+Warning: Could not place solo solo-a292c07b-590a-46e9-9915-fa2916dfd44a (Madeleine Mariani) - no block has capacity
+Warning: Could not place solo solo-f1073f96-3dcd-4a34-8444-94fbbfdba1db (George Greige) - no block has capacity
+Warning: Could not place solo solo-78122b4c-2902-439a-b204-e2087b23444e (Karen  Mcmaster) - no block has capacity
+Warning: Could not place solo solo-1c8828ca-90b6-491c-9a3c-5e40dacb26ad (Janice  Karsai) - no block has capacity
+Warning: Could not place solo solo-947c220a-6724-44cb-9ee6-1108e35dde39 (Leanne Wilson) - no block has capacity
+Warning: Could not place solo solo-360f484f-6295-4ebc-ac2a-47fde2ebf9d9 (Alastair Davidson) - no block has capacity
+Warning: Could not place solo solo-5c153021-17c7-4d9f-8aa5-e7d75027de6f (Abbey Webber-Sloan) - no block has capacity
+Warning: Could not place solo solo-85ad9bc5-e8b6-42ae-8d36-88a49ac98aed (LACHLAN Hill) - no block has capacity
+Warning: Could not place solo solo-ca8fd8dd-288e-435d-88f7-11c533fcba9b (JENNIFER Moncur) - no block has capacity
+Warning: Could not place solo solo-63f9ded2-08ce-468d-a07e-b369a208d0eb (Ariel Jona) - no block has capacity
+Warning: Could not place solo solo-855e23fd-5924-46c4-b9eb-4acb1d369651 (Toby Krug) - no block has capacity
+Warning: Could not place solo solo-a8260c1c-e06b-44a8-9d31-7d14b1f25337 (Caitlin van Ieperen) - no block has capacity
+Warning: Could not place solo solo-141d1ef4-1692-42d5-a085-7ea97a9253e2 (Shivangi  Bhowmick) - no block has capacity
+Warning: Could not place solo solo-e5974a07-dba3-4118-bbdd-9239874f60a0 (Alexandre Anthony) - no block has capacity
+Warning: Could not place solo solo-d8c2bf60-afb6-4cf1-a8f2-a9a2a8be8704 (Peter-John Simmonds) - no block has capacity
+Warning: Could not place solo solo-e46c4b40-6c87-43f8-ba72-57bf005c99bd (Megan Robinson-Drummond) - no block has capacity
+Warning: Could not place solo solo-fb17cc61-364e-4459-aab0-fbad6c12dd30 (Vasilios (Billy) Gialamas) - no block has capacity
+Warning: Could not place solo solo-e17ceaf6-fcc5-4c9d-83a7-4a1f40a21af4 (Manan Jassal) - no block has capacity
+Warning: Could not place solo solo-992c5af3-6dcc-4ae2-aad3-0c811a13f9ac (Heather Roy) - no block has capacity
+Warning: Could not place solo solo-529ebf96-fe95-4242-8c62-abe697708eb1 (Bianca Chambers) - no block has capacity
+Warning: Could not place solo solo-076f5f5a-daec-4491-856a-b1e26be91bfd (Mary Lou Bennett) - no block has capacity
+Warning: Could not place solo solo-40093654-17ee-4fcf-8413-5aa539b128ed (Jenelle Tartaro) - no block has capacity
+Warning: Could not place solo solo-1e29c1ca-d5be-410a-9551-111bfe883e02 (Mary Lester) - no block has capacity
+Warning: Could not place solo solo-418e7724-277e-4b39-9936-289740ab427c (Alex Mantle) - no block has capacity
+Warning: Could not place solo solo-6c99dc77-fb25-4c6e-b0c5-190768a2095c (Kellie Giannes) - no block has capacity
+Warning: Could not place solo solo-7415de75-d5d2-4b3d-971e-ba98478a84a4 (Liza Simpson) - no block has capacity
+Warning: Could not place solo solo-30111a79-f05d-494d-a01d-d974641e776b (Bonnie  Broadway) - no block has capacity
+Warning: Could not place solo solo-0730b136-a967-4e50-8867-d592f3e47f57 (Andrew Watt) - no block has capacity
+Warning: Final ratio 0.0% is outside target 60-70%. Proceeding anyway.
+Skipping bundle in block 1 - no seat capacity
+Skipping bundle in block 1 - no seat capacity
+Skipping bundle in block 1 - no seat capacity
+Skipping bundle in block 1 - no seat capacity
+Skipping bundle in block 2 - no seat capacity
+Warning: Could not place solo Tayla Galluccio in block 1 - no available seats
+Warning: Could not place solo Tobi Burzacott in block 2 - no available seats
+Persistence error, attempting cleanup: error: duplicate key value violates unique constraint "seat_assignments_record_day_id_contestant_id_unique"
+    at /Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/node_modules/pg/lib/client.js:545:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/node_modules/src/node-postgres/session.ts:104:19)
+    at async <anonymous> (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/server/storage.ts:398:25)
+    at async NodePgSession.transaction (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/node_modules/src/node-postgres/session.ts:193:19)
+    at async DbStorage.createSeatAssignment (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/server/storage.ts:396:12)
+    at async <anonymous> (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/server/routes.ts:1734:30) {
+  length: 372,
+  severity: 'ERROR',
+  code: '23505',
+  detail: 'Key (record_day_id, contestant_id)=(f43eaaa4-373e-43d1-aa06-5c9854f4033b, 08f67697-dd92-4070-b1a0-f56efe1643b4) already exists.',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'seat_assignments',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'seat_assignments_record_day_id_contestant_id_unique',
+  file: 'nbtinsert.c',
+  line: '670',
+  routine: '_bt_check_unique'
+}
+Auto-assign error: error: duplicate key value violates unique constraint "seat_assignments_record_day_id_contestant_id_unique"
+    at /Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/node_modules/pg/lib/client.js:545:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/node_modules/src/node-postgres/session.ts:104:19)
+    at async <anonymous> (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/server/storage.ts:398:25)
+    at async NodePgSession.transaction (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/node_modules/src/node-postgres/session.ts:193:19)
+    at async DbStorage.createSeatAssignment (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/server/storage.ts:396:12)
+    at async <anonymous> (/Users/peter.adamidis/Desktop/dond-app/GameShowManager-main/server/routes.ts:1734:30) {
+  length: 372,
+  severity: 'ERROR',
+  code: '23505',
+  detail: 'Key (record_day_id, contestant_id)=(f43eaaa4-373e-43d1-aa06-5c9854f4033b, 08f67697-dd92-4070-b1a0-f56efe1643b4) already exists.',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'seat_assignments',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'seat_assignments_record_day_id_contestant_id_unique',
+  file: 'nbtinsert.c',
+  line: '670',
+  routine: '_bt_check_unique'
+}
+3:28:00 PM [express] POST /api/auto-assign/f43eaaa4-373e-43d1-aa06-5c9854f4033b 500 in 32ms :: {"err…
+peter.adamidis@Peters-MacBook-Pro GameShowManager-main % git pull origin main npm install
+npm run dev
+error: Pulling is not possible because you have unmerged files.
+hint: Fix them up in the work tree, and then use 'git add/rm <file>'
+hint: as appropriate to mark resolution and make a commit.
+fatal: Exiting because of an unresolved conflict.
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+  DB Config: NODE_ENV=development, SSL enabled=false
+=== Server Starting ===
+NODE_ENV: development
+PORT: 3000
+DATABASE_URL set: true
+Step 1: Initializing database...
+  DB: Creating connection pool...
+  DB Init: SSL enabled=false
+  DB: Checking tables (10s timeout)...
+  DB: Check started (non-blocking)
+Step 1: Database initialized
+Step 2: Registering routes...
+Step 2: Routes registered
+Step 3: Setting up static serving...
+Step 3: Static serving ready
+Starting server on port 3000...
+3:28:15 PM [express] serving on port 3000
+Step 5: Warming up database connection...
+  DB Warmup: Attempt 1/3...
+✓ All database tables exist
+  DB Warmup: Connection established successfully
+Step 5: Database warmed up and ready
+Step 6: Starting automatic backup scheduler...
+[Backup] Starting automatic backup scheduler (every 1 hour)
+Step 6: Backup scheduler started (runs every hour)
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+3:28:17 PM [express] GET /api/record-days 304 in 9ms :: [{"id":"f43eaaa4-373e-43d1-aa06-5c9854f4033b…
+3:28:17 PM [express] GET /api/contestants 200 in 24ms :: [{"id":"e58a8adf-7cb8-40f0-9528-5ee84f1e907…
+3:28:17 PM [express] GET /api/seat-assignments/f43eaaa4-373e-43d1-aa06-5c9854f4033b 304 in 17ms :: […
+3:28:17 PM [express] GET /api/contestants/e58a8adf-7cb8-40f0-9528-5ee84f1e9075 304 in 4ms :: {"id":"…
+3:28:17 PM [express] GET /api/contestants/0ebfd783-da7e-4bcc-b192-525b6f048a5f 304 in 3ms :: {"id":"…
+3:28:17 PM [express] GET /api/record-days/f43eaaa4-373e-43d1-aa06-5c9854f4033b/block-types 304 in 13…
+3:28:17 PM [express] GET /api/contestants/4b993c7f-d22f-46b2-b049-abcd22f26cc9 304 in 14ms :: {"id":…

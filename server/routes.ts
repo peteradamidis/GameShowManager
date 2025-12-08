@@ -1736,6 +1736,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       try {
         for (const item of plan) {
+          // Double-check that this contestant isn't already assigned (defensive check)
+          const existingAssign = await storage.getSeatAssignmentByRecordDayAndContestant(recordDayId, item.contestant.id);
+          if (existingAssign) {
+            console.log(`Skipping duplicate assignment for contestant ${item.contestant.id} - already assigned`);
+            continue;
+          }
+          
           const assignment = await storage.createSeatAssignment({
             recordDayId,
             contestantId: item.contestant.id,

@@ -141,6 +141,7 @@ export interface IStorage {
   createSeatAssignment(assignment: InsertSeatAssignment): Promise<SeatAssignment>;
   getSeatAssignmentById(id: string): Promise<SeatAssignment | undefined>;
   getSeatAssignmentsByRecordDay(recordDayId: string): Promise<SeatAssignment[]>;
+  getSeatAssignmentByRecordDayAndContestant(recordDayId: string, contestantId: string): Promise<SeatAssignment | undefined>;
   getAllSeatAssignments(): Promise<SeatAssignment[]>;
   deleteSeatAssignment(id: string): Promise<void>;
   updateSeatAssignment(id: string, blockNumber: number, seatLabel: string): Promise<SeatAssignment | undefined>;
@@ -417,6 +418,17 @@ export class DbStorage implements IStorage {
       .select()
       .from(seatAssignments)
       .where(eq(seatAssignments.recordDayId, recordDayId));
+  }
+
+  async getSeatAssignmentByRecordDayAndContestant(recordDayId: string, contestantId: string): Promise<SeatAssignment | undefined> {
+    const [assignment] = await db
+      .select()
+      .from(seatAssignments)
+      .where(and(
+        eq(seatAssignments.recordDayId, recordDayId),
+        eq(seatAssignments.contestantId, contestantId)
+      ));
+    return assignment;
   }
 
   async getAllSeatAssignments(): Promise<SeatAssignment[]> {
