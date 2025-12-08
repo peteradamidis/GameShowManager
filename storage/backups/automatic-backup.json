@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-08T06:06:47.491Z",
+  "exportedAt": "2025-12-08T10:30:32.194Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -234,9 +234,9 @@
     ],
     "seatAssignments": [
       {
-        "id": "ff87f03b-8891-4bb6-ac5c-a510d216fdd6",
+        "id": "91e25164-6f67-42f7-b978-9132a406c060",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "d698b1de-6641-45c6-aa63-f577d2b634bb",
+        "contestantId": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
         "blockNumber": 1,
         "seatLabel": "B1",
         "playerType": null,
@@ -254,12 +254,12 @@
         "signedIn": null,
         "otdNotes": null,
         "standbyReplacementSwaps": null,
-        "createdAt": "2025-12-08T05:04:16.106Z"
+        "createdAt": "2025-12-08T05:04:16.617Z"
       },
       {
-        "id": "91e25164-6f67-42f7-b978-9132a406c060",
+        "id": "ff87f03b-8891-4bb6-ac5c-a510d216fdd6",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
+        "contestantId": "d698b1de-6641-45c6-aa63-f577d2b634bb",
         "blockNumber": 1,
         "seatLabel": "B2",
         "playerType": null,
@@ -277,7 +277,7 @@
         "signedIn": null,
         "otdNotes": null,
         "standbyReplacementSwaps": null,
-        "createdAt": "2025-12-08T05:04:16.617Z"
+        "createdAt": "2025-12-08T05:04:16.106Z"
       }
     ],
     "standbys": [
