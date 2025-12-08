@@ -1049,6 +1049,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gender: contestant?.gender,
           groupId: contestant?.groupId,
           auditionRating: contestant?.auditionRating,
+          attendingWith: contestant?.attendingWith,
         };
       });
 
