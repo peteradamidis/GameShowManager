@@ -51,6 +51,7 @@ export interface Contestant {
   criminalRecord?: string;
   photoUrl?: string | null;
   auditionRating?: string | null;
+  playerType?: string;
 }
 
 interface SeatAssignment {
@@ -935,6 +936,26 @@ export function ContestantTable({
                         }`}>
                           {contestantDetails.auditionRating || 'Not rated'}
                         </p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Player Type</label>
+                        <div className="mt-1">
+                          {contestantDetails.playerType ? (
+                            <Badge className={`text-xs ${
+                              contestantDetails.playerType === 'player' ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800' :
+                              contestantDetails.playerType === 'backup' ? 'bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800' :
+                              contestantDetails.playerType === 'player_partner' ? 'bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800' :
+                              'bg-gray-500/20 text-gray-700 dark:text-gray-400 border-gray-200 dark:border-gray-800'
+                            }`}>
+                              {contestantDetails.playerType === 'player' ? 'Player' :
+                               contestantDetails.playerType === 'backup' ? 'Backup' :
+                               contestantDetails.playerType === 'player_partner' ? 'Partner' :
+                               contestantDetails.playerType}
+                            </Badge>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Not set</span>
+                          )}
+                        </div>
                       </div>
                       {contestantDetails.groupId && (
                         <div>
