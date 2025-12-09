@@ -833,17 +833,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Create some groups (about 15 pairs)
+      // Create groups for about 80% of contestants (mix of pairs and trios)
       const shuffled = [...fakeContestants].sort(() => Math.random() - 0.5);
-      for (let i = 0; i < 30; i += 2) {
-        if (shuffled[i] && shuffled[i + 1]) {
-          shuffled[i].attendingWith = shuffled[i + 1].name;
-          shuffled[i + 1].attendingWith = shuffled[i].name;
-          // Find and update in original array
-          const idx1 = fakeContestants.findIndex(c => c.name === shuffled[i].name);
-          const idx2 = fakeContestants.findIndex(c => c.name === shuffled[i + 1].name);
-          if (idx1 >= 0) fakeContestants[idx1].attendingWith = shuffled[i + 1].name;
-          if (idx2 >= 0) fakeContestants[idx2].attendingWith = shuffled[i].name;
+      const targetGrouped = Math.floor(totalCount * 0.80); // 80% in groups
+      let groupedCount = 0;
+      let idx = 0;
+      
+      while (groupedCount < targetGrouped && idx < shuffled.length - 1) {
+        // Randomly decide group size: 70% pairs, 30% trios
+        const groupSize = (Math.random() < 0.70 || idx >= shuffled.length - 2) ? 2 : 3;
+        
+        if (groupSize === 2 && shuffled[idx] && shuffled[idx + 1]) {
+          // Create a pair - each person lists the other
+          const person1 = shuffled[idx];
+          const person2 = shuffled[idx + 1];
+          
+          person1.attendingWith = person2.name;
+          person2.attendingWith = person1.name;
+          
+          // Update in original array
+          const idx1 = fakeContestants.findIndex(c => c.name === person1.name);
+          const idx2 = fakeContestants.findIndex(c => c.name === person2.name);
+          if (idx1 >= 0) fakeContestants[idx1].attendingWith = person2.name;
+          if (idx2 >= 0) fakeContestants[idx2].attendingWith = person1.name;
+          
+          groupedCount += 2;
+          idx += 2;
+        } else if (groupSize === 3 && shuffled[idx] && shuffled[idx + 1] && shuffled[idx + 2]) {
+          // Create a trio - each person lists all others
+          const person1 = shuffled[idx];
+          const person2 = shuffled[idx + 1];
+          const person3 = shuffled[idx + 2];
+          
+          person1.attendingWith = `${person2.name}, ${person3.name}`;
+          person2.attendingWith = `${person1.name}, ${person3.name}`;
+          person3.attendingWith = `${person1.name}, ${person2.name}`;
+          
+          // Update in original array
+          const idx1 = fakeContestants.findIndex(c => c.name === person1.name);
+          const idx2 = fakeContestants.findIndex(c => c.name === person2.name);
+          const idx3 = fakeContestants.findIndex(c => c.name === person3.name);
+          if (idx1 >= 0) fakeContestants[idx1].attendingWith = `${person2.name}, ${person3.name}`;
+          if (idx2 >= 0) fakeContestants[idx2].attendingWith = `${person1.name}, ${person3.name}`;
+          if (idx3 >= 0) fakeContestants[idx3].attendingWith = `${person1.name}, ${person2.name}`;
+          
+          groupedCount += 3;
+          idx += 3;
+        } else {
+          idx++;
         }
       }
 
@@ -866,13 +903,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdContestants.push(contestant);
       }
 
-      // Count groups
-      const groupCount = fakeContestants.filter(c => c.attendingWith).length / 2;
+      // Count grouped contestants
+      const groupedContestantCount = fakeContestants.filter(c => c.attendingWith).length;
+      const soloCount = fakeContestants.filter(c => !c.attendingWith).length;
 
       res.json({ 
-        message: `Generated ${createdContestants.length} fake contestants`,
+        message: `Generated ${createdContestants.length} fake contestants (${groupedContestantCount} in groups, ${soloCount} solo)`,
         count: createdContestants.length,
-        groups: Math.floor(groupCount),
+        groupedCount: groupedContestantCount,
+        soloCount: soloCount,
+        groupedPercentage: Math.round((groupedContestantCount / createdContestants.length) * 100),
       });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
