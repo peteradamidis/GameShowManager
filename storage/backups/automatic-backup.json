@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-09T00:13:22.658Z",
+  "exportedAt": "2025-12-09T00:22:02.473Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -151,25 +151,6 @@
     ],
     "contestants": [
       {
-        "id": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
-        "name": "Peter Adamidis",
-        "age": 34,
-        "gender": "Not Specified",
-        "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
-        "availabilityStatus": "available",
-        "attendingWith": "Kathleen Reynolds, Felicity Parker-Hill",
-        "email": "peter.adamidis@gmail.com",
-        "phone": "498086080",
-        "location": "",
-        "medicalInfo": "Y",
-        "mobilityNotes": "Broken Leg",
-        "criminalRecord": "Assault & Theft",
-        "photoUrl": null,
-        "auditionRating": "",
-        "playerType": null,
-        "createdAt": "2025-12-02T05:59:07.415Z"
-      },
-      {
         "id": "d698b1de-6641-45c6-aa63-f577d2b634bb",
         "name": "Kathleen Reynolds",
         "age": 33,
@@ -206,6 +187,25 @@
         "auditionRating": "",
         "playerType": null,
         "createdAt": "2025-12-02T05:59:07.519Z"
+      },
+      {
+        "id": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
+        "name": "Peter Adamidis",
+        "age": 34,
+        "gender": "Not Specified",
+        "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
+        "availabilityStatus": "available",
+        "attendingWith": "Kathleen Reynolds, Felicity Parker-Hill",
+        "email": "peter.adamidis@gmail.com",
+        "phone": "498086080",
+        "location": "",
+        "medicalInfo": "Y",
+        "mobilityNotes": "Broken Leg",
+        "criminalRecord": "Assault & Theft",
+        "photoUrl": null,
+        "auditionRating": "",
+        "playerType": null,
+        "createdAt": "2025-12-02T05:59:07.415Z"
       }
     ],
     "groups": [
@@ -463,46 +463,7 @@
         "createdAt": "2025-11-28T01:06:10.521Z"
       }
     ],
-    "canceledAssignments": [
-      {
-        "id": "53071bc2-2450-41b6-ae7a-68a1ab35e988",
-        "contestantId": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "blockNumber": null,
-        "seatLabel": null,
-        "canceledAt": "2025-12-07T02:43:44.342Z",
-        "reason": "Standby - eligible for reschedule",
-        "isFromStandby": true,
-        "originalAttendanceDate": "2026-02-04T00:00:00.000Z",
-        "contestant": {
-          "id": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
-          "name": "Peter Adamidis",
-          "age": 34,
-          "gender": "Not Specified",
-          "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
-          "availabilityStatus": "available",
-          "attendingWith": "Kathleen Reynolds, Felicity Parker-Hill",
-          "email": "peter.adamidis@gmail.com",
-          "phone": "498086080",
-          "location": "",
-          "medicalInfo": "Y",
-          "mobilityNotes": "Broken Leg",
-          "criminalRecord": "Assault & Theft",
-          "photoUrl": null,
-          "auditionRating": "",
-          "playerType": null,
-          "createdAt": "2025-12-02T05:59:07.415Z"
-        },
-        "recordDay": {
-          "id": "e432f0fe-1383-44a2-990c-5f787da5008a",
-          "date": "2026-02-04",
-          "rxNumber": "RX1 - 1-5",
-          "totalSeats": 154,
-          "status": "ready",
-          "createdAt": "2025-11-27T11:34:23.272Z"
-        }
-      }
-    ]
+    "canceledAssignments": []
   },
   "counts": {
     "recordDays": 18,
@@ -511,6 +472,6 @@
     "seatAssignments": 0,
     "standbys": 1,
     "blockTypes": 26,
-    "canceledAssignments": 1
+    "canceledAssignments": 0
   }
 }
