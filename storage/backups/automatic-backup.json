@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-09T11:27:45.448Z",
+  "exportedAt": "2025-12-09T11:32:41.873Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -4850,32 +4850,6 @@
         "createdAt": "2025-12-09T11:23:03.754Z"
       },
       {
-        "id": "8ae073c9-2fdb-45a9-bae8-a2430dd540d1",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "bede75d6-a4ec-4fe3-907f-35108a2b4b10",
-        "blockNumber": 1,
-        "seatLabel": "C3",
-        "playerType": null,
-        "originalBlockNumber": null,
-        "originalSeatLabel": null,
-        "swappedAt": null,
-        "firstNations": null,
-        "rating": null,
-        "location": null,
-        "medicalQuestion": null,
-        "criminalBankruptcy": null,
-        "castingCategory": null,
-        "notes": null,
-        "bookingEmailSent": null,
-        "confirmedRsvp": null,
-        "paperworkSent": null,
-        "paperworkReceived": null,
-        "signedIn": null,
-        "otdNotes": null,
-        "standbyReplacementSwaps": null,
-        "createdAt": "2025-12-09T11:23:04.255Z"
-      },
-      {
         "id": "6a4f32c6-4084-4fcd-bbd8-0a6aaa03e309",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
         "contestantId": "210066e7-58e9-4ebb-a504-dfbf383961b5",
@@ -5786,11 +5760,11 @@
         "createdAt": "2025-12-09T11:23:23.872Z"
       },
       {
-        "id": "28aa8da1-d094-49c5-93a7-3ed287f33069",
+        "id": "8ae073c9-2fdb-45a9-bae8-a2430dd540d1",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "1adac400-525f-40f4-8b6d-20df8ce78e9d",
+        "contestantId": "bede75d6-a4ec-4fe3-907f-35108a2b4b10",
         "blockNumber": 1,
-        "seatLabel": "D3",
+        "seatLabel": "C3",
         "playerType": null,
         "originalBlockNumber": null,
         "originalSeatLabel": null,
@@ -5809,14 +5783,14 @@
         "signedIn": null,
         "otdNotes": null,
         "standbyReplacementSwaps": null,
-        "createdAt": "2025-12-09T11:23:06.263Z"
+        "createdAt": "2025-12-09T11:23:04.255Z"
       },
       {
         "id": "13b5c13d-11b8-464c-9889-1a1bef825355",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
         "contestantId": "b9e02c2d-410d-4307-811c-7e52cf93b14b",
         "blockNumber": 1,
-        "seatLabel": "D4",
+        "seatLabel": "D3",
         "playerType": null,
         "originalBlockNumber": null,
         "originalSeatLabel": null,
@@ -7136,6 +7110,32 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "createdAt": "2025-12-09T11:23:09.809Z"
+      },
+      {
+        "id": "28aa8da1-d094-49c5-93a7-3ed287f33069",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "contestantId": "1adac400-525f-40f4-8b6d-20df8ce78e9d",
+        "blockNumber": 1,
+        "seatLabel": "D4",
+        "playerType": null,
+        "originalBlockNumber": null,
+        "originalSeatLabel": null,
+        "swappedAt": null,
+        "firstNations": null,
+        "rating": null,
+        "location": null,
+        "medicalQuestion": null,
+        "criminalBankruptcy": null,
+        "castingCategory": null,
+        "notes": null,
+        "bookingEmailSent": null,
+        "confirmedRsvp": null,
+        "paperworkSent": null,
+        "paperworkReceived": null,
+        "signedIn": null,
+        "otdNotes": null,
+        "standbyReplacementSwaps": null,
+        "createdAt": "2025-12-09T11:23:06.263Z"
       },
       {
         "id": "47ec0204-7cf6-4afb-9b9e-a91324cdf4a9",

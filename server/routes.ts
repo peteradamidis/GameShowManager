@@ -1202,7 +1202,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contestantsMap = new Map(contestantsData.map((c) => [c.id, c]));
 
       // Create a groupId-to-members map for resolving group relationships
-      // This is more reliable than name matching when duplicate names exist
       const groupMembersMap = new Map<string, string[]>();
       contestantsData.forEach(c => {
         if (c.groupId) {
@@ -1212,17 +1211,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+      // Create a name-to-ID map ONLY for contestants assigned on THIS record day
+      // This avoids false positives from duplicate names across different days
+      const assignedContestantIds = new Set(assignments.map(a => a.contestantId));
+      const nameToIdMapForThisDay = new Map<string, string[]>();
+      contestantsData.forEach(c => {
+        if (c.name && assignedContestantIds.has(c.id)) {
+          const nameLower = c.name.toLowerCase();
+          const existing = nameToIdMapForThisDay.get(nameLower) || [];
+          existing.push(c.id);
+          nameToIdMapForThisDay.set(nameLower, existing);
+        }
+      });
+
       // Flatten the data structure for frontend compatibility
       const enrichedAssignments = assignments.map((assignment) => {
         const contestant = contestantsMap.get(assignment.contestantId);
         
-        // Resolve attendingWith using groupId (other group members)
-        // This avoids false positives from duplicate names
+        // Resolve attendingWith - prefer groupId, fall back to name matching
         let attendingWithIds: string[] = [];
+        
         if (contestant?.groupId) {
+          // Method 1: Use groupId (most reliable)
           const groupMembers = groupMembersMap.get(contestant.groupId) || [];
-          // Add all other members of the same group (exclude self)
           attendingWithIds = groupMembers.filter(id => id !== contestant.id);
+        } else if (contestant?.attendingWith) {
+          // Method 2: Fall back to name matching within this day's assignments only
+          // Only match if there's exactly one person with that name on this day
+          const names = contestant.attendingWith.split(/[,&]/).map(n => n.trim().toLowerCase());
+          for (const name of names) {
+            const matchingIds = nameToIdMapForThisDay.get(name) || [];
+            // Only use if exactly one match (avoid ambiguity with duplicate names)
+            if (matchingIds.length === 1) {
+              attendingWithIds.push(matchingIds[0]);
+            }
+          }
         }
         const attendingWithId = attendingWithIds.length > 0 ? attendingWithIds.join(',') : undefined;
         
