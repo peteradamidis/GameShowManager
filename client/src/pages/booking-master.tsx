@@ -791,9 +791,9 @@ export default function BookingMaster() {
             </div>
           ) : (
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 z-50">
                 <TableRow className="bg-[#004d4d] dark:bg-[#003333]">
-                  <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 w-12 text-white">
+                  <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-50 w-12 text-white">
                     <Checkbox
                       checked={selectedAssignments.size > 0 && selectedAssignments.size === bookingRows.filter(r => r.assignment).length}
                       onCheckedChange={handleSelectAll}
@@ -801,24 +801,24 @@ export default function BookingMaster() {
                       className="border-white data-[state=checked]:bg-white data-[state=checked]:text-[#004d4d]"
                     />
                   </TableHead>
-                  {isColumnVisible("seat") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs w-12 text-white font-semibold">SEAT</TableHead>}
-                  {isColumnVisible("name") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs min-w-[150px] text-white font-semibold">NAME</TableHead>}
-                  {isColumnVisible("mobile") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs min-w-[120px] text-white font-semibold">MOBILE</TableHead>}
-                  {isColumnVisible("email") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs w-32 max-w-[130px] text-white font-semibold">EMAIL</TableHead>}
-                  {isColumnVisible("attendingWith") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs text-white font-semibold">ATTENDING WITH</TableHead>}
-                  {isColumnVisible("location") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs text-white font-semibold">LOCATION</TableHead>}
-                  {isColumnVisible("medicalQ") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs w-14 text-center text-white font-semibold">MED<br/>Q</TableHead>}
-                  {isColumnVisible("mobilityNotes") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs text-white font-semibold">MOBILITY / MEDICAL NOTES</TableHead>}
-                  {isColumnVisible("criminal") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs w-20 text-center text-white font-semibold">CRIM/<br/>BANK</TableHead>}
-                  {isColumnVisible("castingCategory") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs text-white font-semibold">CASTING CATEGORY</TableHead>}
-                  {isColumnVisible("notes") && <TableHead className={`sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 border-r-4 border-r-[#1a6b6b] text-white font-semibold ${isFullscreen ? 'min-w-[200px]' : 'min-w-[300px]'}`}>NOTES</TableHead>}
-                  {isColumnVisible("emailSent") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-10 text-xs px-3 text-center w-16 text-[#004d4d] dark:text-white font-semibold">EMAIL<br/>SENT</TableHead>}
-                  {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-10 text-xs px-3 text-center w-16 text-[#004d4d] dark:text-white font-semibold">RSVP</TableHead>}
-                  {isColumnVisible("paperSent") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-10 text-xs px-3 text-center w-16 text-[#004d4d] dark:text-white font-semibold">PAPER<br/>SENT</TableHead>}
-                  {isColumnVisible("paperReceived") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-10 text-xs px-3 text-center w-16 text-[#004d4d] dark:text-white font-semibold">PAPER<br/>✓</TableHead>}
-                  {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-10 text-xs px-3 text-center w-16 text-[#004d4d] dark:text-white font-semibold">SIGNED<br/>IN</TableHead>}
-                  {isColumnVisible("otdNotes") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-10 text-xs px-2 text-center text-[#004d4d] dark:text-white font-semibold">OTD NOTES</TableHead>}
-                  {isColumnVisible("standby") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-10 text-xs px-2 text-center text-[#004d4d] dark:text-white font-semibold">STANDBY / SWAPS</TableHead>}
+                  {isColumnVisible("seat") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-50 text-xs w-12 text-white font-semibold">SEAT</TableHead>}
+                  {isColumnVisible("name") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-50 text-xs min-w-[150px] text-white font-semibold">NAME</TableHead>}
+                  {isColumnVisible("mobile") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-50 text-xs min-w-[120px] text-white font-semibold">MOBILE</TableHead>}
+                  {isColumnVisible("email") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-50 text-xs w-32 max-w-[130px] text-white font-semibold">EMAIL</TableHead>}
+                  {isColumnVisible("attendingWith") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-50 text-xs text-white font-semibold">ATTENDING WITH</TableHead>}
+                  {isColumnVisible("location") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-50 text-xs text-white font-semibold">LOCATION</TableHead>}
+                  {isColumnVisible("medicalQ") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-50 text-xs w-14 text-center text-white font-semibold">MED<br/>Q</TableHead>}
+                  {isColumnVisible("mobilityNotes") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-50 text-xs text-white font-semibold">MOBILITY / MEDICAL NOTES</TableHead>}
+                  {isColumnVisible("criminal") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-50 text-xs w-20 text-center text-white font-semibold">CRIM/<br/>BANK</TableHead>}
+                  {isColumnVisible("castingCategory") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-50 text-xs text-white font-semibold">CASTING CATEGORY</TableHead>}
+                  {isColumnVisible("notes") && <TableHead className={`sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-50 border-r-4 border-r-[#1a6b6b] text-white font-semibold ${isFullscreen ? 'min-w-[200px]' : 'min-w-[300px]'}`}>NOTES</TableHead>}
+                  {isColumnVisible("emailSent") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-xs px-3 text-center w-16 text-[#004d4d] dark:text-white font-semibold">EMAIL<br/>SENT</TableHead>}
+                  {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-xs px-3 text-center w-16 text-[#004d4d] dark:text-white font-semibold">RSVP</TableHead>}
+                  {isColumnVisible("paperSent") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-xs px-3 text-center w-16 text-[#004d4d] dark:text-white font-semibold">PAPER<br/>SENT</TableHead>}
+                  {isColumnVisible("paperReceived") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-xs px-3 text-center w-16 text-[#004d4d] dark:text-white font-semibold">PAPER<br/>✓</TableHead>}
+                  {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-xs px-3 text-center w-16 text-[#004d4d] dark:text-white font-semibold">SIGNED<br/>IN</TableHead>}
+                  {isColumnVisible("otdNotes") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-xs px-2 text-center text-[#004d4d] dark:text-white font-semibold">OTD NOTES</TableHead>}
+                  {isColumnVisible("standby") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-xs px-2 text-center text-[#004d4d] dark:text-white font-semibold">STANDBY / SWAPS</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
