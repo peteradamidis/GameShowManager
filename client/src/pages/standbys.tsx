@@ -72,15 +72,15 @@ interface StandbyAssignment {
 const StatusBadge = ({ status }: { status: string }) => {
   const config: Record<string, { label: string; className: string }> = {
     pending: { 
-      label: "Pending", 
+      label: "Assigned", 
       className: "border-amber-200 bg-amber-500/10 text-amber-700 dark:border-amber-800 dark:text-amber-400" 
     },
     email_sent: { 
-      label: "Email Sent", 
+      label: "Invited", 
       className: "border-blue-200 bg-blue-500/10 text-blue-700 dark:border-blue-800 dark:text-blue-400" 
     },
     confirmed: { 
-      label: "Confirmed", 
+      label: "Booked", 
       className: "border-green-200 bg-green-500/10 text-green-700 dark:border-green-800 dark:text-green-400" 
     },
     declined: { 
