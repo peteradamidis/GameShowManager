@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-09T02:17:31.496Z",
+  "exportedAt": "2025-12-09T02:23:23.545Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -248,7 +248,7 @@
         "paperworkReceived": null,
         "signedIn": null,
         "otdNotes": null,
-        "standbyReplacementSwaps": "",
+        "standbyReplacementSwaps": "Kathleen Reynolds",
         "createdAt": "2025-12-09T01:58:55.742Z"
       },
       {
@@ -280,12 +280,12 @@
         "id": "cc98ff1c-1a1d-43f8-82ea-abcca3482b1e",
         "contestantId": "d698b1de-6641-45c6-aa63-f577d2b634bb",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "status": "pending",
+        "status": "seated",
         "standbyEmailSent": null,
         "confirmedAt": null,
         "notes": null,
-        "assignedToSeat": null,
-        "assignedAt": null,
+        "assignedToSeat": "A2",
+        "assignedAt": "2025-12-09T02:19:51.285Z",
         "movedToReschedule": false,
         "movedToRescheduleAt": null,
         "createdAt": "2025-12-09T02:05:48.889Z",

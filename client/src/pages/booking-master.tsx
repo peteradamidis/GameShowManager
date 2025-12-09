@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, Fragment } from "react";
+import { useState, useRef, useEffect, Fragment, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -121,6 +121,14 @@ interface Contestant {
   attendingWith?: string;
   groupId?: string;
   photoUrl?: string;
+  playerType?: 'player' | 'backup' | 'player_partner' | null;
+}
+
+interface BlockType {
+  id: string;
+  recordDayId: string;
+  blockNumber: number;
+  blockType: 'PB' | 'NPB';
 }
 
 interface SeatAssignment {
@@ -247,6 +255,38 @@ export default function BookingMaster() {
   const { data: contestants = [] } = useQuery<Contestant[]>({
     queryKey: ["/api/contestants"],
   });
+
+  // Fetch block types for the selected record day
+  const { data: blockTypes = [] } = useQuery<BlockType[]>({
+    queryKey: ['/api/record-days', selectedRecordDay, 'block-types'],
+    enabled: !!selectedRecordDay,
+  });
+
+  // Create a map of block number to block type for quick lookup
+  const blockTypeMap = useMemo(() => {
+    const map: Record<number, 'PB' | 'NPB'> = {};
+    blockTypes.forEach(bt => {
+      map[bt.blockNumber] = bt.blockType;
+    });
+    return map;
+  }, [blockTypes]);
+
+  // Helper function to get auto-populated casting category
+  const getAutoCastingCategory = (contestant: Contestant | undefined, blockNumber: number): string => {
+    // If contestant has a player type set, show that
+    if (contestant?.playerType) {
+      switch (contestant.playerType) {
+        case 'player': return 'PLAYER';
+        case 'player_partner': return 'PLAYER PARTNER';
+        case 'backup': return 'BACKUP';
+      }
+    }
+    // Otherwise, auto-populate based on block type
+    const blockType = blockTypeMap[blockNumber];
+    if (blockType === 'PB') return 'PODIUM';
+    if (blockType === 'NPB') return 'NPB';
+    return ''; // If block type not set
+  };
 
   // SharePoint Excel integration - configuration will be done offline
   // This is a placeholder for future SharePoint integration
@@ -901,14 +941,9 @@ export default function BookingMaster() {
                         {isColumnVisible("castingCategory") && (
                           <TableCell className="py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
                             {row.assignment && (
-                              <Input
-                                key={`cat-${row.assignment.id}`}
-                                defaultValue={row.assignment.castingCategory || ""}
-                                onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "castingCategory", e.target.value)}
-                                placeholder="Category"
-                                className="h-6 text-xs"
-                                data-testid={`input-category-${row.seatId}`}
-                              />
+                              <span className="text-xs px-1">
+                                {row.assignment.castingCategory || getAutoCastingCategory(row.contestant, row.blockNumber)}
+                              </span>
                             )}
                           </TableCell>
                         )}
