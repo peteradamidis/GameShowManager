@@ -221,6 +221,8 @@ function SeatingBlock({
         {displayRows.map((row, displayIdx) => {
           // Find the original row index in SEAT_ROWS
           const originalRowIdx = SEAT_ROWS.findIndex(r => r.label === row.label);
+          // Get the next row in display order (for vertical linking)
+          const nextDisplayRow = displayIdx < displayRows.length - 1 ? displayRows[displayIdx + 1] : null;
           
           return (
             <div key={row.label} className="space-y-1">
@@ -234,6 +236,13 @@ function SeatingBlock({
                     const nextSeat = seatIdxInRow < row.seats.length - 1 ? row.seats[seatIdxInRow + 1] : null;
                     const hasLinkToNext = nextSeat && shouldShowLink(seat, nextSeat);
                     
+                    // Check for vertical link to seat in next row (same column position)
+                    // Only check if seat position exists in next row (rows have different counts)
+                    const seatBelowInNextRow = nextDisplayRow && seatIdxInRow < nextDisplayRow.seats.length 
+                      ? nextDisplayRow.seats[seatIdxInRow] 
+                      : null;
+                    const hasVerticalLink = seatBelowInNextRow && shouldShowLink(seat, seatBelowInNextRow);
+                    
                     return (
                       <div key={seat.id} className="relative">
                         <DraggableDroppableSeat
@@ -245,13 +254,26 @@ function SeatingBlock({
                           onRemove={onRemove}
                           onCancel={onCancel}
                         />
+                        {/* Horizontal link to next seat in same row */}
                         {hasLinkToNext && (
                           <div 
                             className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2 z-10"
-                            data-testid={`link-icon-${row.label}-${seatIdxInRow}`}
+                            data-testid={`link-icon-h-${row.label}-${seatIdxInRow}`}
                           >
                             <Link2
                               className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"
+                              strokeWidth={2.5}
+                            />
+                          </div>
+                        )}
+                        {/* Vertical link to seat in row below */}
+                        {hasVerticalLink && (
+                          <div 
+                            className="absolute bottom-0 left-1/2 transform translate-y-1/2 -translate-x-1/2 z-10"
+                            data-testid={`link-icon-v-${row.label}-${seatIdxInRow}`}
+                          >
+                            <Link2
+                              className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 rotate-90"
                               strokeWidth={2.5}
                             />
                           </div>
