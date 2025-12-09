@@ -720,8 +720,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "Bakersfield", "Anaheim", "Santa Ana", "Riverside", "Stockton", "Irvine", "Chula Vista", "Fremont",
         "San Jose", "Pasadena", "Burbank", "Glendale", "Torrance", "Pomona", "Santa Monica", "Newport Beach"
       ];
-      const ratings = ["A+", "A", "B+", "B", "C"];
-      const ratingWeights = [0.05, 0.15, 0.25, 0.35, 0.20]; // 5% A+, 15% A, 25% B+, 35% B, 20% C
+      const ratings = ["A+", "A", "B+", "B"];
+      const ratingWeights = [0.05, 0.15, 0.25, 0.55]; // 5% A+, 15% A, 25% B+, 55% B
 
       // Helper to pick weighted random rating
       const getWeightedRating = (): string => {
@@ -859,8 +859,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           return 'B';
         } else if (hasNPBOnly) {
-          // Must be NPB-compatible: B or C
-          return Math.random() < 0.6 ? 'B' : 'C';
+          // Must be NPB-compatible: B only (C ratings no longer used in fake data)
+          return 'B';
         }
         // No constraints yet, use weighted random
         return getWeightedRating();
