@@ -49,6 +49,7 @@ export const recordDays = pgTable("record_days", {
   rxNumber: text("rx_number"), // e.g., "RX EP 6 - 10"
   totalSeats: integer("total_seats").default(154).notNull(),
   status: recordDayStatusEnum("status").default('draft').notNull(),
+  lockedAt: timestamp("locked_at"), // When record day is locked for RX Day Mode
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -60,6 +61,11 @@ export const seatAssignments = pgTable("seat_assignments", {
   blockNumber: integer("block_number").notNull(), // 1-7
   seatLabel: text("seat_label").notNull(), // e.g., "A1", "B3"
   playerType: playerTypeEnum("player_type"), // PLAYER, BACKUP, PLAYER_PARTNER
+  
+  // Original seat tracking for RX Day Mode swaps
+  originalBlockNumber: integer("original_block_number"), // Original block before swap
+  originalSeatLabel: text("original_seat_label"), // Original seat before swap
+  swappedAt: timestamp("swapped_at"), // When the swap occurred
   
   // Booking Master workflow fields
   firstNations: text("first_nations"),

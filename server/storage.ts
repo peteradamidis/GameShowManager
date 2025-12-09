@@ -135,9 +135,11 @@ export interface IStorage {
   // Record Days
   createRecordDay(recordDay: InsertRecordDay): Promise<RecordDay>;
   getRecordDays(): Promise<RecordDay[]>;
+  getRecordDay(id: string): Promise<RecordDay | undefined>;
   getRecordDayById(id: string): Promise<RecordDay | undefined>;
   updateRecordDay(id: string, data: Partial<InsertRecordDay>): Promise<RecordDay | undefined>;
   updateRecordDayStatus(id: string, status: string): Promise<RecordDay | undefined>;
+  updateRecordDayLock(id: string, lockedAt: Date | null): Promise<RecordDay | undefined>;
   deleteRecordDay(id: string): Promise<{ success: boolean; error?: string }>;
   
   // Seat Assignments
@@ -155,6 +157,14 @@ export interface IStorage {
     targetBlock?: number,
     targetSeat?: string
   ): Promise<{ source: SeatAssignment; target?: SeatAssignment }>;
+  swapSeatAssignmentsWithTracking(
+    assignment1Id: string,
+    assignment2Id: string,
+    assignment1Block: number,
+    assignment1Seat: string,
+    assignment2Block: number,
+    assignment2Seat: string
+  ): Promise<{ assignment1: SeatAssignment; assignment2: SeatAssignment }>;
   cancelSeatAssignment(id: string, reason?: string): Promise<CanceledAssignment>;
   
   // Canceled Assignments
@@ -340,6 +350,19 @@ export class DbStorage implements IStorage {
   async getRecordDayById(id: string): Promise<RecordDay | undefined> {
     const [recordDay] = await db.select().from(recordDays).where(eq(recordDays.id, id));
     return recordDay;
+  }
+
+  async getRecordDay(id: string): Promise<RecordDay | undefined> {
+    return this.getRecordDayById(id);
+  }
+
+  async updateRecordDayLock(id: string, lockedAt: Date | null): Promise<RecordDay | undefined> {
+    const [updated] = await db
+      .update(recordDays)
+      .set({ lockedAt })
+      .where(eq(recordDays.id, id))
+      .returning();
+    return updated;
   }
 
   async updateRecordDayStatus(id: string, status: string): Promise<RecordDay | undefined> {
@@ -629,6 +652,73 @@ export class DbStorage implements IStorage {
 
         return { source: updatedSource };
       }
+    });
+  }
+
+  async swapSeatAssignmentsWithTracking(
+    assignment1Id: string,
+    assignment2Id: string,
+    assignment1Block: number,
+    assignment1Seat: string,
+    assignment2Block: number,
+    assignment2Seat: string
+  ): Promise<{ assignment1: SeatAssignment; assignment2: SeatAssignment }> {
+    return await db.transaction(async (tx) => {
+      // Get both assignments with row-level locks
+      const [assign1] = await tx
+        .select()
+        .from(seatAssignments)
+        .where(eq(seatAssignments.id, assignment1Id))
+        .for('update');
+
+      const [assign2] = await tx
+        .select()
+        .from(seatAssignments)
+        .where(eq(seatAssignments.id, assignment2Id))
+        .for('update');
+
+      if (!assign1 || !assign2) {
+        throw new Error('One or both assignments not found');
+      }
+
+      const now = new Date();
+
+      // Move assignment1 to a temporary location first to avoid unique constraint violation
+      await tx
+        .update(seatAssignments)
+        .set({
+          blockNumber: -1,
+          seatLabel: `TEMP_SWAP_${assignment1Id}`,
+        })
+        .where(eq(seatAssignments.id, assignment1Id));
+
+      // Update assignment2: move to assignment1's original location, track original if not already tracked
+      const [updated2] = await tx
+        .update(seatAssignments)
+        .set({
+          blockNumber: assignment1Block,
+          seatLabel: assignment1Seat,
+          originalBlockNumber: assign2.originalBlockNumber ?? assignment2Block,
+          originalSeatLabel: assign2.originalSeatLabel ?? assignment2Seat,
+          swappedAt: now,
+        })
+        .where(eq(seatAssignments.id, assignment2Id))
+        .returning();
+
+      // Update assignment1: move to assignment2's original location, track original if not already tracked
+      const [updated1] = await tx
+        .update(seatAssignments)
+        .set({
+          blockNumber: assignment2Block,
+          seatLabel: assignment2Seat,
+          originalBlockNumber: assign1.originalBlockNumber ?? assignment1Block,
+          originalSeatLabel: assign1.originalSeatLabel ?? assignment1Seat,
+          swappedAt: now,
+        })
+        .where(eq(seatAssignments.id, assignment1Id))
+        .returning();
+
+      return { assignment1: updated1, assignment2: updated2 };
     });
   }
 

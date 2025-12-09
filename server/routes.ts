@@ -2062,6 +2062,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Lock/Unlock record day for RX Day Mode
+  app.post("/api/record-days/:id/lock", async (req, res) => {
+    try {
+      const recordDayId = req.params.id;
+      const { lock } = req.body; // true to lock, false to unlock
+      
+      const recordDay = await storage.getRecordDay(recordDayId);
+      if (!recordDay) {
+        return res.status(404).json({ error: "Record day not found" });
+      }
+      
+      const lockedAt = lock ? new Date() : null;
+      const updated = await storage.updateRecordDayLock(recordDayId, lockedAt);
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Swap seats in locked (RX Day) mode - swaps two contestants' seats and tracks original positions
+  app.post("/api/seat-assignments/swap", async (req, res) => {
+    try {
+      const { assignment1Id, assignment2Id } = req.body;
+      
+      if (!assignment1Id || !assignment2Id) {
+        return res.status(400).json({ error: "Both assignment IDs are required for swap" });
+      }
+      
+      const assignment1 = await storage.getSeatAssignmentById(assignment1Id);
+      const assignment2 = await storage.getSeatAssignmentById(assignment2Id);
+      
+      if (!assignment1 || !assignment2) {
+        return res.status(404).json({ error: "One or both assignments not found" });
+      }
+      
+      if (assignment1.recordDayId !== assignment2.recordDayId) {
+        return res.status(400).json({ error: "Assignments must be on the same record day" });
+      }
+      
+      // Perform the swap with original seat tracking
+      const swapped = await storage.swapSeatAssignmentsWithTracking(
+        assignment1Id, 
+        assignment2Id,
+        assignment1.blockNumber,
+        assignment1.seatLabel,
+        assignment2.blockNumber,
+        assignment2.seatLabel
+      );
+      
+      res.json(swapped);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Update seat assignment (for drag-and-drop) with collision detection
   app.put("/api/seat-assignments/:id", async (req, res) => {
     try {
