@@ -687,6 +687,17 @@ export class DbStorage implements IStorage {
       }
 
       const now = new Date();
+      
+      // Determine true original positions for each assignment
+      const trueOriginal1Block = assign1.originalBlockNumber ?? assignment1Block;
+      const trueOriginal1Seat = assign1.originalSeatLabel ?? assignment1Seat;
+      const trueOriginal2Block = assign2.originalBlockNumber ?? assignment2Block;
+      const trueOriginal2Seat = assign2.originalSeatLabel ?? assignment2Seat;
+      
+      // After swap: assign1 goes to assignment2's current position, assign2 goes to assignment1's current position
+      // Check if each assignment is returning to their original position
+      const assign1ReturningToOriginal = assignment2Block === trueOriginal1Block && assignment2Seat === trueOriginal1Seat;
+      const assign2ReturningToOriginal = assignment1Block === trueOriginal2Block && assignment1Seat === trueOriginal2Seat;
 
       // Move assignment1 to a temporary location first to avoid unique constraint violation
       await tx
@@ -697,29 +708,49 @@ export class DbStorage implements IStorage {
         })
         .where(eq(seatAssignments.id, assignment1Id));
 
-      // Update assignment2: move to assignment1's original location, track original if not already tracked
+      // Update assignment2: move to assignment1's location
+      const update2Data = assign2ReturningToOriginal
+        ? {
+            blockNumber: assignment1Block,
+            seatLabel: assignment1Seat,
+            originalBlockNumber: null,
+            originalSeatLabel: null,
+            swappedAt: null,
+          }
+        : {
+            blockNumber: assignment1Block,
+            seatLabel: assignment1Seat,
+            originalBlockNumber: trueOriginal2Block,
+            originalSeatLabel: trueOriginal2Seat,
+            swappedAt: now,
+          };
+      
       const [updated2] = await tx
         .update(seatAssignments)
-        .set({
-          blockNumber: assignment1Block,
-          seatLabel: assignment1Seat,
-          originalBlockNumber: assign2.originalBlockNumber ?? assignment2Block,
-          originalSeatLabel: assign2.originalSeatLabel ?? assignment2Seat,
-          swappedAt: now,
-        })
+        .set(update2Data)
         .where(eq(seatAssignments.id, assignment2Id))
         .returning();
 
-      // Update assignment1: move to assignment2's original location, track original if not already tracked
+      // Update assignment1: move to assignment2's location
+      const update1Data = assign1ReturningToOriginal
+        ? {
+            blockNumber: assignment2Block,
+            seatLabel: assignment2Seat,
+            originalBlockNumber: null,
+            originalSeatLabel: null,
+            swappedAt: null,
+          }
+        : {
+            blockNumber: assignment2Block,
+            seatLabel: assignment2Seat,
+            originalBlockNumber: trueOriginal1Block,
+            originalSeatLabel: trueOriginal1Seat,
+            swappedAt: now,
+          };
+      
       const [updated1] = await tx
         .update(seatAssignments)
-        .set({
-          blockNumber: assignment2Block,
-          seatLabel: assignment2Seat,
-          originalBlockNumber: assign1.originalBlockNumber ?? assignment1Block,
-          originalSeatLabel: assign1.originalSeatLabel ?? assignment1Seat,
-          swappedAt: now,
-        })
+        .set(update1Data)
         .where(eq(seatAssignments.id, assignment1Id))
         .returning();
 
@@ -745,17 +776,38 @@ export class DbStorage implements IStorage {
       }
 
       const now = new Date();
+      
+      // Determine the "original" position (either tracked original or current position)
+      const trueOriginalBlock = assignment.originalBlockNumber ?? assignment.blockNumber;
+      const trueOriginalSeat = assignment.originalSeatLabel ?? assignment.seatLabel;
+      
+      // Check if moving back to original position
+      const isMovingBackToOriginal = newBlockNumber === trueOriginalBlock && newSeatLabel === trueOriginalSeat;
 
-      // Update assignment: move to new location, track original if not already tracked
-      const [updated] = await tx
-        .update(seatAssignments)
-        .set({
+      let updateData;
+      if (isMovingBackToOriginal) {
+        // Moving back to original - clear tracking fields
+        updateData = {
           blockNumber: newBlockNumber,
           seatLabel: newSeatLabel,
-          originalBlockNumber: assignment.originalBlockNumber ?? assignment.blockNumber,
-          originalSeatLabel: assignment.originalSeatLabel ?? assignment.seatLabel,
+          originalBlockNumber: null,
+          originalSeatLabel: null,
+          swappedAt: null,
+        };
+      } else {
+        // Moving to a new location - set/keep tracking fields
+        updateData = {
+          blockNumber: newBlockNumber,
+          seatLabel: newSeatLabel,
+          originalBlockNumber: trueOriginalBlock,
+          originalSeatLabel: trueOriginalSeat,
           swappedAt: now,
-        })
+        };
+      }
+
+      const [updated] = await tx
+        .update(seatAssignments)
+        .set(updateData)
         .where(eq(seatAssignments.id, assignmentId))
         .returning();
 
