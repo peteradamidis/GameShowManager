@@ -801,7 +801,7 @@ export default function BookingMaster() {
                       className="border-white data-[state=checked]:bg-white data-[state=checked]:text-[#00363a]"
                     />
                   </TableHead>
-                  {isColumnVisible("seat") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-16 text-white font-semibold">SEAT</TableHead>}
+                  {isColumnVisible("seat") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-14 text-white font-semibold whitespace-nowrap">SEAT</TableHead>}
                   {isColumnVisible("name") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 min-w-[120px] text-white font-semibold">NAME</TableHead>}
                   {isColumnVisible("mobile") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 min-w-[100px] text-white font-semibold">MOBILE</TableHead>}
                   {isColumnVisible("email") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-28 max-w-[110px] text-white font-semibold">EMAIL</TableHead>}
@@ -858,7 +858,7 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        {isColumnVisible("seat") && <TableCell className="font-mono text-xs py-0.5 h-7 w-16 text-[#2e7d32] dark:text-[#66bb6a] font-semibold">{String(row.blockNumber).padStart(2, '0')}-{row.seatLabel}</TableCell>}
+                        {isColumnVisible("seat") && <TableCell className="font-mono text-xs py-0.5 h-7 w-14 text-[#2e7d32] dark:text-[#66bb6a] font-semibold whitespace-nowrap">{String(row.blockNumber).padStart(2, '0')}-{row.seatLabel}</TableCell>}
                         {isColumnVisible("name") && (
                           <TableCell className="font-medium text-xs min-w-[150px] py-0.5 h-7">
                             {row.contestant?.name || <span className="text-muted-foreground italic">Empty</span>}
