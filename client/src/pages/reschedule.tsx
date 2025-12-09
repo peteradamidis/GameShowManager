@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, User, Mail, Phone, MapPin, Users, Heart, AlertTriangle, Pencil, X, Save } from "lucide-react";
+import { Calendar, User, Mail, Phone, MapPin, Users, Heart, AlertTriangle, Pencil, X, Save, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
@@ -358,17 +358,31 @@ export default function ReschedulePage() {
                       {cancellation.reason || '—'}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="default"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRebook(cancellation);
-                        }}
-                        data-testid={`button-rebook-${cancellation.id}`}
-                      >
-                        Rebook
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRebook(cancellation);
+                          }}
+                          data-testid={`button-rebook-${cancellation.id}`}
+                        >
+                          Rebook
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleReturnToContestants(cancellation.id, cancellation.contestant?.name);
+                          }}
+                          title="Return to contestants"
+                          data-testid={`button-return-${cancellation.id}`}
+                        >
+                          <Trash2 className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
