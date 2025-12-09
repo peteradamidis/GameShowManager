@@ -1337,7 +1337,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       console.log(`[Auto-assign] Building groups from ${available.length} available contestants`);
-      console.log(`[Auto-assign] Contestants with attendingWith: ${available.filter(c => c.attendingWith?.trim()).length}`);
+      const contestantsWithAttendingWith = available.filter(c => c.attendingWith?.trim());
+      console.log(`[Auto-assign] Contestants with attendingWith: ${contestantsWithAttendingWith.length}`);
+      
+      // Debug: Show first 5 contestants with attendingWith and if their partner exists
+      contestantsWithAttendingWith.slice(0, 10).forEach(c => {
+        const partnerName = c.attendingWith?.toLowerCase().trim();
+        const partner = nameToContestant.get(partnerName || '');
+        console.log(`[Auto-assign] DEBUG: ${c.name} (${c.auditionRating}) -> attendingWith: "${c.attendingWith}" -> partner found: ${partner ? `${partner.name} (${partner.auditionRating})` : 'NOT FOUND'}`);
+      });
 
       // Track which contestants have been grouped
       const groupedContestantIds = new Set<string>();
@@ -1376,7 +1384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const groupId = `group-${contestant.id}`;
             groupMap.set(groupId, groupMembers);
             groupMembers.forEach(member => groupedContestantIds.add(member.id));
-            console.log(`[Auto-assign] Created group: ${groupMembers.map(m => m.name).join(' + ')}`);
+            console.log(`[Auto-assign] Created group: ${groupMembers.map(m => `${m.name}(${m.auditionRating})`).join(' + ')}`);
           }
         }
       });
@@ -1523,11 +1531,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (block.seatsUsed + bundle.size > maxSeats) return false;
           
           // CONSTRAINT: No block should exceed 70% female
+          // But only apply this constraint when block already has some assignments
+          // to allow initial placements of all-female groups
           const newFemaleCount = block.femaleCount + bundle.femaleCount;
           const newMaleCount = block.maleCount + bundle.maleCount;
           const newTotal = newFemaleCount + newMaleCount;
           const newFemaleRatio = newTotal > 0 ? newFemaleCount / newTotal : 0;
-          if (newFemaleRatio > 0.70) return false;
+          // Only enforce 70% limit if block already has at least 4 people assigned
+          // This allows initial group placements without being overly restrictive
+          if (block.seatsUsed >= 4 && newFemaleRatio > 0.70) return false;
           
           // CONSTRAINT: NPB blocks can ONLY have B and C ratings (no A or B+)
           if (block.blockType === 'NPB') {
