@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-09T04:55:38.398Z",
+  "exportedAt": "2025-12-09T04:58:03.649Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -154,7 +154,7 @@
         "rxNumber": "RX EP 1 - 5",
         "totalSeats": 154,
         "status": "ready",
-        "lockedAt": "2025-12-09T04:55:12.022Z",
+        "lockedAt": "2025-12-09T04:57:33.413Z",
         "createdAt": "2025-11-27T11:34:23.272Z"
       }
     ],
