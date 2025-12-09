@@ -165,6 +165,11 @@ export interface IStorage {
     assignment2Block: number,
     assignment2Seat: string
   ): Promise<{ assignment1: SeatAssignment; assignment2: SeatAssignment }>;
+  moveSeatAssignmentWithTracking(
+    assignmentId: string,
+    newBlockNumber: number,
+    newSeatLabel: string
+  ): Promise<SeatAssignment>;
   cancelSeatAssignment(id: string, reason?: string): Promise<CanceledAssignment>;
   
   // Canceled Assignments
@@ -719,6 +724,42 @@ export class DbStorage implements IStorage {
         .returning();
 
       return { assignment1: updated1, assignment2: updated2 };
+    });
+  }
+
+  async moveSeatAssignmentWithTracking(
+    assignmentId: string,
+    newBlockNumber: number,
+    newSeatLabel: string
+  ): Promise<SeatAssignment> {
+    return await db.transaction(async (tx) => {
+      // Get the assignment with row-level lock
+      const [assignment] = await tx
+        .select()
+        .from(seatAssignments)
+        .where(eq(seatAssignments.id, assignmentId))
+        .for('update');
+
+      if (!assignment) {
+        throw new Error('Assignment not found');
+      }
+
+      const now = new Date();
+
+      // Update assignment: move to new location, track original if not already tracked
+      const [updated] = await tx
+        .update(seatAssignments)
+        .set({
+          blockNumber: newBlockNumber,
+          seatLabel: newSeatLabel,
+          originalBlockNumber: assignment.originalBlockNumber ?? assignment.blockNumber,
+          originalSeatLabel: assignment.originalSeatLabel ?? assignment.seatLabel,
+          swappedAt: now,
+        })
+        .where(eq(seatAssignments.id, assignmentId))
+        .returning();
+
+      return updated;
     });
   }
 

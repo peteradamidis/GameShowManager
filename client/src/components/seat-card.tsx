@@ -280,6 +280,20 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
                   </div>
                 </div>
 
+                {wasSwapped && originalPosition && (
+                  <div className="text-sm p-2 bg-amber-50 dark:bg-amber-950/50 rounded-md border border-amber-200 dark:border-amber-800">
+                    <div className="flex items-center gap-2">
+                      <ArrowLeftRight className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      <div>
+                        <label className="text-xs font-medium text-amber-700 dark:text-amber-300">Moved During RX Day</label>
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                          Originally at seat <strong>{originalPosition}</strong>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {seat.playerType && (
                   <div className="text-sm">
                     <label className="text-xs font-medium text-muted-foreground">Player Type</label>

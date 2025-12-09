@@ -484,13 +484,12 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         return;
       }
 
-      // Use tracked endpoint when in RX Day Mode for swapping two contestants
-      const swapEndpoint = useTrackedEndpoint && targetSeat.seat.assignmentId 
-        ? '/api/seat-assignments/swap-tracked' 
-        : '/api/seat-assignments/swap';
-      
+      // Use tracked endpoint when in RX Day Mode
       if (targetSeat.seat.assignmentId) {
         // Swapping two assigned seats
+        const swapEndpoint = useTrackedEndpoint 
+          ? '/api/seat-assignments/swap-tracked' 
+          : '/api/seat-assignments/swap';
         await apiRequest(
           'POST',
           swapEndpoint,
@@ -500,10 +499,13 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
           }
         );
       } else {
-        // Moving to empty seat
+        // Moving to empty seat - use tracked endpoint if locked
+        const moveEndpoint = useTrackedEndpoint 
+          ? '/api/seat-assignments/move-tracked' 
+          : '/api/seat-assignments/swap';
         await apiRequest(
           'POST',
-          '/api/seat-assignments/swap',
+          moveEndpoint,
           {
             sourceAssignmentId: sourceSeat.seat.assignmentId,
             blockNumber: targetLocation.blockNumber,

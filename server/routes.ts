@@ -1195,6 +1195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           playerType: assignment.playerType,
           originalBlockNumber: assignment.originalBlockNumber,
           originalSeatLabel: assignment.originalSeatLabel,
+          swappedAt: assignment.swappedAt,
           contestantName: contestant?.name,
           age: contestant?.age,
           gender: contestant?.gender,
@@ -2131,6 +2132,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       res.json(swapped);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Move seat assignment to empty seat with tracking (RX Day Mode)
+  app.post("/api/seat-assignments/move-tracked", async (req, res) => {
+    try {
+      const { sourceAssignmentId, blockNumber, seatLabel } = req.body;
+      
+      if (!sourceAssignmentId || blockNumber === undefined || !seatLabel) {
+        return res.status(400).json({ error: "sourceAssignmentId, blockNumber, and seatLabel are required" });
+      }
+      
+      const assignment = await storage.getSeatAssignmentById(sourceAssignmentId);
+      
+      if (!assignment) {
+        return res.status(404).json({ error: "Assignment not found" });
+      }
+      
+      // Check for collision at target seat
+      const allAssignments = await storage.getSeatAssignmentsByRecordDay(assignment.recordDayId);
+      const collision = allAssignments.find(
+        (a) => a.id !== sourceAssignmentId && 
+               a.blockNumber === blockNumber && 
+               a.seatLabel === seatLabel
+      );
+
+      if (collision) {
+        return res.status(400).json({ 
+          error: "Seat already occupied",
+          conflictingAssignment: collision
+        });
+      }
+      
+      // Perform the move with original seat tracking
+      const updated = await storage.moveSeatAssignmentWithTracking(
+        sourceAssignmentId, 
+        blockNumber,
+        seatLabel
+      );
+      
+      res.json({ message: "Seat moved successfully with tracking", assignment: updated });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
