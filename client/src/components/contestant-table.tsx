@@ -976,10 +976,10 @@ export function ContestantTable({
                         </div>
                       </div>
                       {contestantDetails.groupId && (
-                        <div>
+                        <div className="overflow-hidden">
                           <label className="text-xs font-medium text-muted-foreground">Group ID</label>
                           <div className="mt-1">
-                            <Badge variant="outline" className="font-mono text-xs">
+                            <Badge variant="outline" className="font-mono text-xs max-w-full truncate inline-block" title={contestantDetails.groupId}>
                               {contestantDetails.groupId}
                             </Badge>
                           </div>
