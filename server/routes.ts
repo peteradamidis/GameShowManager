@@ -1320,6 +1320,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const key = c.name.toLowerCase().trim();
         nameToContestant.set(key, c);
       });
+      
+      console.log(`[Auto-assign] Building groups from ${available.length} available contestants`);
+      console.log(`[Auto-assign] Contestants with attendingWith: ${available.filter(c => c.attendingWith?.trim()).length}`);
 
       // Track which contestants have been grouped
       const groupedContestantIds = new Set<string>();
@@ -1358,6 +1361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const groupId = `group-${contestant.id}`;
             groupMap.set(groupId, groupMembers);
             groupMembers.forEach(member => groupedContestantIds.add(member.id));
+            console.log(`[Auto-assign] Created group: ${groupMembers.map(m => m.name).join(' + ')}`);
           }
         }
       });
@@ -1406,6 +1410,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Then by size (larger first)
         return b.size - a.size;
       });
+      
+      const groupBundles = bundles.filter(b => b.size > 1);
+      const soloBundles = bundles.filter(b => b.size === 1);
+      console.log(`[Auto-assign] Total bundles: ${bundles.length} (${groupBundles.length} groups, ${soloBundles.length} solos)`);
 
       // PHASE 2: Initialize Block States with rating tracking
       type BlockState = {
@@ -1421,19 +1429,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bundles: string[];
       };
 
-      // Only initialize blocks that were selected
-      const blocks: BlockState[] = validBlocks.map(blockNum => ({
-        blockNumber: blockNum,
-        blockType: blockTypeMap[blockNum],
-        seatsUsed: 0,
-        femaleCount: 0,
-        maleCount: 0,
-        totalAge: 0,
-        ageCount: 0,
-        meanAge: 0,
-        ratingCounts: { 'A': 0, 'B+': 0, 'B': 0, 'C': 0 },
-        bundles: [],
-      }));
+      // Get existing seat assignments to account for used capacity
+      const existingAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
+      
+      // Count existing assignments per block
+      const existingCountByBlock = new Map<number, number>();
+      for (const assignment of existingAssignments) {
+        const count = existingCountByBlock.get(assignment.blockNumber) || 0;
+        existingCountByBlock.set(assignment.blockNumber, count + 1);
+      }
+      
+      // Only initialize blocks that were selected, accounting for existing assignments
+      const blocks: BlockState[] = validBlocks.map(blockNum => {
+        const existingCount = existingCountByBlock.get(blockNum) || 0;
+        return {
+          blockNumber: blockNum,
+          blockType: blockTypeMap[blockNum],
+          seatsUsed: existingCount, // Start with existing assignment count
+          femaleCount: 0,
+          maleCount: 0,
+          totalAge: 0,
+          ageCount: 0,
+          meanAge: 0,
+          ratingCounts: { 'A': 0, 'B+': 0, 'B': 0, 'C': 0 },
+          bundles: [],
+        };
+      });
+      
+      console.log(`[Auto-assign] Existing assignments per block: ${validBlocks.map(b => `Block ${b}: ${existingCountByBlock.get(b) || 0}`).join(', ')}`);
 
       // Global tracking
       let globalFemaleCount = 0;
@@ -1775,9 +1798,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }
       
-      // Get existing seat assignments from database for this record day
-      const existingAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
-      
+      // NOTE: existingAssignments already fetched earlier in PHASE 2 for capacity calculation
       // For each block, assign seats to bundles with row-aware logic
       for (const block of blocks) {
         const blockAssignments = assignments.filter(a => a.blockNumber === block.blockNumber);
@@ -1821,6 +1842,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               });
             }
           });
+          
+          // Log group placements
+          if (bundle.size > 1) {
+            console.log(`[Auto-assign] Group placed in Block ${block.blockNumber}: ${bundle.contestants.map((c, i) => `${c.name} -> ${result.seatLabels[i]}`).join(', ')}`);
+          }
         }
       }
       
