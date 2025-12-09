@@ -768,7 +768,7 @@ export default function BookingMaster() {
             placeholder="Search by name..."
             value={searchName}
             onChange={(e) => setSearchName(e.target.value)}
-            className={isFullscreen ? "w-32" : "w-48"}
+            className={isFullscreen ? "w-48" : "w-64"}
             data-testid="input-search-name"
           />
         )}
