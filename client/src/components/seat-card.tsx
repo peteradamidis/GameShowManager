@@ -30,6 +30,7 @@ export interface SeatData {
   playerType?: "player" | "backup" | "player_partner"; // PLAYER, BACKUP, PLAYER_PARTNER
   originalBlockNumber?: number; // RX Day Mode - original position before swap
   originalSeatLabel?: string; // RX Day Mode - original seat label before swap
+  swappedAt?: string; // RX Day Mode - timestamp when swap occurred (only set for locked swaps)
 }
 
 interface SeatCardProps {
@@ -74,9 +75,9 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
   // Extract seat label from ID (e.g., "A1", "B3")
   const seatLabel = seat.id.split('-').pop() || '';
   
-  // Check if this seat was swapped during RX Day Mode
-  const wasSwapped = seat.originalBlockNumber !== undefined && seat.originalSeatLabel !== undefined;
-  const originalPosition = wasSwapped 
+  // Check if this seat was swapped during RX Day Mode (only when swappedAt is set)
+  const wasSwapped = !!seat.swappedAt;
+  const originalPosition = wasSwapped && seat.originalBlockNumber !== undefined && seat.originalSeatLabel !== undefined
     ? `${String(seat.originalBlockNumber).padStart(2, '0')}-${seat.originalSeatLabel}`
     : null;
 
@@ -103,11 +104,11 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
 
   const seatContent = (
     <Card
-      className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity border-2 ${
+      className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity border-2 relative ${
         isEmpty
           ? "border-dashed bg-muted/30 cursor-pointer hover-elevate"
           : `${groupColorClass} hover-elevate`
-      } ${isDragging ? "opacity-50" : ""}`}
+      } ${isDragging ? "opacity-50" : ""} ${wasSwapped ? "ring-2 ring-amber-400 ring-offset-1" : ""}`}
       style={ratingColorInfo ? {
         backgroundColor: ratingColorInfo.bg,
         borderColor: ratingColorInfo.border,
@@ -115,6 +116,23 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
       data-testid={`seat-${blockIndex}-${seatIndex}`}
       onClick={handleClick}
     >
+      {/* MOVED indicator - positioned in top-right corner of the card */}
+      {wasSwapped && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div 
+              data-testid={`badge-moved-${seat.assignmentId}`}
+              className="absolute -top-1.5 -right-1.5 z-10 flex items-center justify-center w-5 h-5 rounded-full bg-amber-500 text-white cursor-help shadow-sm"
+            >
+              <ArrowLeftRight className="h-3 w-3" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">
+            <p>Originally at: <strong>{originalPosition}</strong></p>
+            <p className="text-muted-foreground">Moved during RX Day</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
       {isEmpty ? (
         <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-1">
           <User className="h-3 w-3" />
@@ -124,23 +142,6 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
         <div className="space-y-1">
           <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
             <span>{seatLabel}</span>
-            {wasSwapped && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span 
-                    data-testid={`badge-moved-${seat.assignmentId}`}
-                    className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-600 cursor-help"
-                  >
-                    <ArrowLeftRight className="h-2.5 w-2.5" />
-                    <span className="text-[8px] font-semibold">MOVED</span>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  <p>Originally at: <strong>{originalPosition}</strong></p>
-                  <p className="text-muted-foreground">Moved during RX Day</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
           </div>
           <div className="flex items-center gap-1">
             <p className="font-medium truncate text-xs flex-1" title={seat.contestantName}>

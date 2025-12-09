@@ -220,6 +220,7 @@ export default function SeatingChartPage() {
             attendingWith: assignment.attendingWith,
             originalBlockNumber: assignment.originalBlockNumber,
             originalSeatLabel: assignment.originalSeatLabel,
+            swappedAt: assignment.swappedAt,
           };
         }
       }
