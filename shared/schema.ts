@@ -37,7 +37,7 @@ export const contestants = pgTable("contestants", {
   mobilityNotes: text("mobility_notes"), // Mobility/Access/Medical notes
   criminalRecord: text("criminal_record"), // Criminal record information
   photoUrl: text("photo_url"), // URL to contestant photo
-  auditionRating: text("audition_rating"), // Rating: A+, A, B+, B, C
+  auditionRating: text("audition_rating"), // Rating: A+, A, B+, B
   playerType: playerTypeEnum("player_type"), // Player, Backup, Player Partner
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
