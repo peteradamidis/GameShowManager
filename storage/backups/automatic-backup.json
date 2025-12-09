@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-09T02:56:01.356Z",
+  "exportedAt": "2025-12-09T02:58:08.965Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -246,32 +246,6 @@
     ],
     "seatAssignments": [
       {
-        "id": "d5957e66-cb7f-4267-bbb8-1c8c7298b62b",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
-        "blockNumber": 1,
-        "seatLabel": "A2",
-        "playerType": null,
-        "originalBlockNumber": null,
-        "originalSeatLabel": null,
-        "swappedAt": null,
-        "firstNations": null,
-        "rating": null,
-        "location": null,
-        "medicalQuestion": null,
-        "criminalBankruptcy": null,
-        "castingCategory": null,
-        "notes": "",
-        "bookingEmailSent": null,
-        "confirmedRsvp": null,
-        "paperworkSent": null,
-        "paperworkReceived": null,
-        "signedIn": null,
-        "otdNotes": null,
-        "standbyReplacementSwaps": "",
-        "createdAt": "2025-12-09T01:58:55.742Z"
-      },
-      {
         "id": "479fcb75-5c6b-42a9-a757-6e4ae8cef47e",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
         "contestantId": "d698b1de-6641-45c6-aa63-f577d2b634bb",
@@ -296,6 +270,32 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "createdAt": "2025-12-09T02:34:16.487Z"
+      },
+      {
+        "id": "d5957e66-cb7f-4267-bbb8-1c8c7298b62b",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "contestantId": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
+        "blockNumber": 1,
+        "seatLabel": "A2",
+        "playerType": null,
+        "originalBlockNumber": null,
+        "originalSeatLabel": null,
+        "swappedAt": null,
+        "firstNations": null,
+        "rating": null,
+        "location": null,
+        "medicalQuestion": null,
+        "criminalBankruptcy": null,
+        "castingCategory": null,
+        "notes": "",
+        "bookingEmailSent": null,
+        "confirmedRsvp": null,
+        "paperworkSent": null,
+        "paperworkReceived": null,
+        "signedIn": null,
+        "otdNotes": null,
+        "standbyReplacementSwaps": "",
+        "createdAt": "2025-12-09T01:58:55.742Z"
       },
       {
         "id": "36cd33af-9bac-49bf-bb65-5b0cc9ad1077",

@@ -45,6 +45,15 @@ Do not make changes to the file `Y`.
     - Supports manual seat assignment with uniqueness constraints (one contestant per record day, one contestant per seat).
     - Implements atomic seat swapping using database transactions, row-level locking, and PostgreSQL advisory locks for concurrency control.
     - Group seat assignment functionality for 2-4 contestants in consecutive seats within a block.
+- **RX Day Mode (Seating Chart Lock):**
+    - Lock/unlock feature for seating charts on recording days.
+    - When locked, an amber "RX Day Mode" badge appears in the seating chart header.
+    - Swapping two contestants while locked tracks their original positions for audit purposes.
+    - Database stores `lockedAt` timestamp on record days and `originalBlockNumber`, `originalSeatLabel`, `swappedAt` on seat assignments.
+    - API Endpoints:
+        - `POST /api/record-days/:id/lock` - Lock record day for RX Day Mode
+        - `POST /api/record-days/:id/unlock` - Unlock record day
+        - `POST /api/seat-assignments/swap-tracked` - Swap two contestants with original position tracking
 - **Availability Check System:**
     - Generates cryptographically strong, expiring tokens for contestants to respond to availability requests via a public form.
     - Allows group responses and provides an admin interface for bulk token generation and status tracking.
