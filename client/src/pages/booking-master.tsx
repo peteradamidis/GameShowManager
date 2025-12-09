@@ -833,11 +833,11 @@ export default function BookingMaster() {
                   return (
                     <Fragment key={row.seatId}>
                       {isFirstRowOfBlock && (
-                        <TableRow key={`block-header-${row.blockNumber}`} className="bg-[#00363a] dark:bg-[#002628] hover:bg-[#00363a] dark:hover:bg-[#002628]">
+                        <TableRow key={`block-header-${row.blockNumber}`} className="bg-[#004d4d] dark:bg-[#003838] hover:bg-[#004d4d] dark:hover:bg-[#003838]">
                           <TableCell colSpan={20} className="py-1 h-8">
                             <div className="flex items-center justify-between">
                               <span className="font-bold text-sm text-white" data-testid={`block-header-${row.blockNumber}`}>
-                                BLOCK {row.blockNumber} - PRODUCER - NPB/PB
+                                BLOCK {row.blockNumber}
                               </span>
                               {blockTotal > 0 && (
                                 <span className="text-xs text-white/80">
