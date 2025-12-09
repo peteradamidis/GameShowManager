@@ -861,7 +861,13 @@ export default function BookingMaster() {
                         {isColumnVisible("seat") && <TableCell className="font-mono text-xs py-0.5 h-7 w-14 text-[#2e7d32] dark:text-[#66bb6a] font-semibold whitespace-nowrap border-r border-gray-200 dark:border-gray-700">{String(row.blockNumber).padStart(2, '0')}-{row.seatLabel}</TableCell>}
                         {isColumnVisible("name") && (
                           <TableCell className="font-medium text-xs min-w-[150px] py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
-                            {row.contestant?.name || <span className="text-muted-foreground italic">Empty</span>}
+                            {row.contestant?.name ? (
+                              <span className={row.assignment?.standbyReplacementSwaps && row.assignment.standbyReplacementSwaps !== "none" ? "text-red-600 line-through" : ""}>
+                                {row.contestant.name}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground italic">Empty</span>
+                            )}
                           </TableCell>
                         )}
                         {isColumnVisible("mobile") && <TableCell className="text-xs min-w-[120px] py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">{row.contestant?.phone || ""}</TableCell>}
