@@ -12,6 +12,7 @@ import { sendEmail, sendEmailWithAttachment, EmailConfig, isEmailAvailable, test
 import { syncRecordDayToSheet, createSheetHeader, updateCellInRecordDaySheet, updateRowInRecordDaySheet, getRecordDaySheetData, isGoogleSheetsAvailable } from "./google-sheets";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { requireAuth, hashPassword, verifyPassword } from "./auth";
+import { wsManager } from "./websocket";
 
 // Google Sheets config keys for database storage
 const SHEETS_SPREADSHEET_ID_KEY = 'google_sheets_spreadsheet_id';
@@ -2476,6 +2477,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Seat assignment not found" });
       }
       
+      // Broadcast update to all connected clients watching this record day
+      for (const [field, value] of Object.entries(workflowFields)) {
+        wsManager.broadcastBookingUpdate({
+          type: 'booking-master-update',
+          recordDayId: updated.recordDayId,
+          assignmentId: req.params.id,
+          field,
+          value,
+        });
+      }
+      
       res.json(updated);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -4932,6 +4944,10 @@ Deal or No Deal Production Team
   });
 
   const httpServer = createServer(app);
+  
+  // Initialize WebSocket server for real-time updates
+  wsManager.initialize(httpServer);
+  
   return httpServer;
 }
 
