@@ -154,6 +154,10 @@ interface SeatAssignment {
   contestantName?: string;
   age?: number;
   gender?: string;
+  // RX Day Mode swap tracking
+  originalBlockNumber?: number;
+  originalSeatLabel?: string;
+  swappedAt?: string;
 }
 
 interface BookingRow {
@@ -593,6 +597,13 @@ export default function BookingMaster() {
         exportRows.push([blockHeader]);
       }
       
+      // Build standby/swaps column value - include swap info if applicable
+      let standbySwapsValue = row.assignment?.standbyReplacementSwaps || "";
+      if (row.assignment?.swappedAt && row.assignment?.originalBlockNumber && row.assignment?.originalSeatLabel) {
+        const swapInfo = `Was: ${row.assignment.originalBlockNumber}-${row.assignment.originalSeatLabel}`;
+        standbySwapsValue = standbySwapsValue ? `${swapInfo} | ${standbySwapsValue}` : swapInfo;
+      }
+      
       exportRows.push([
         row.seatId,
         row.contestant?.name || "",
@@ -611,7 +622,7 @@ export default function BookingMaster() {
         row.assignment?.paperworkReceived ? "✓" : "",
         row.assignment?.signedIn ? "✓" : "",
         row.assignment?.otdNotes || "",
-        row.assignment?.standbyReplacementSwaps || "",
+        standbySwapsValue,
       ]);
     }
 
@@ -888,7 +899,7 @@ export default function BookingMaster() {
                           </TableCell>
                         </TableRow>
                       )}
-                      <TableRow key={row.seatId} className={`${!row.assignment ? "bg-muted/20" : "bg-white dark:bg-background"} h-7 border-b border-gray-200 dark:border-gray-700`}>
+                      <TableRow key={row.seatId} className={`${!row.assignment ? "bg-muted/20" : row.assignment.swappedAt ? "bg-amber-100 dark:bg-amber-900/30" : "bg-white dark:bg-background"} h-7 border-b border-gray-200 dark:border-gray-700`}>
                         <TableCell className="py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
                           {row.assignment && (
                             <Checkbox
@@ -1034,61 +1045,72 @@ export default function BookingMaster() {
                         {isColumnVisible("standby") && (
                           <TableCell className="px-2 py-0.5 h-7 bg-[#e8f4f4] dark:bg-[#1a3a3a]">
                             {row.assignment && (
-                              <Select
-                                key={`standby-${row.assignment.id}`}
-                                defaultValue={row.assignment.standbyReplacementSwaps || "none"}
-                                onValueChange={(value) => {
-                                  const newValue = value === "none" ? "" : value;
-                                  const previousValue = row.assignment!.standbyReplacementSwaps;
-                                  
-                                  handleDebouncedTextUpdate(row.assignment!.id, "standbyReplacementSwaps", newValue);
-                                  
-                                  // Clear the previous standby's seat assignment if there was one
-                                  if (previousValue && previousValue !== newValue) {
-                                    assignStandbyMutation.mutate({
-                                      recordDayId: selectedRecordDay,
-                                      contestantName: previousValue,
-                                      seatLabel: null, // Clear the assignment
-                                    });
-                                  }
-                                  
-                                  // Set the new standby's seat assignment if one was selected
-                                  if (newValue) {
-                                    assignStandbyMutation.mutate({
-                                      recordDayId: selectedRecordDay,
-                                      contestantName: newValue,
-                                      seatLabel: row.seatLabel,
-                                    });
-                                  }
-                                }}
-                              >
-                                <SelectTrigger 
-                                  className="h-7 text-xs w-32"
-                                  data-testid={`select-standby-${row.seatId}`}
+                              <div className="flex flex-col gap-0.5">
+                                {/* Show previous seat if this was a swap in RX Day Mode */}
+                                {row.assignment.swappedAt && row.assignment.originalBlockNumber && row.assignment.originalSeatLabel && (
+                                  <span 
+                                    className="text-[10px] text-amber-700 dark:text-amber-400 font-medium"
+                                    data-testid={`swap-info-${row.seatId}`}
+                                  >
+                                    Was: {row.assignment.originalBlockNumber}-{row.assignment.originalSeatLabel}
+                                  </span>
+                                )}
+                                <Select
+                                  key={`standby-${row.assignment.id}`}
+                                  defaultValue={row.assignment.standbyReplacementSwaps || "none"}
+                                  onValueChange={(value) => {
+                                    const newValue = value === "none" ? "" : value;
+                                    const previousValue = row.assignment!.standbyReplacementSwaps;
+                                    
+                                    handleDebouncedTextUpdate(row.assignment!.id, "standbyReplacementSwaps", newValue);
+                                    
+                                    // Clear the previous standby's seat assignment if there was one
+                                    if (previousValue && previousValue !== newValue) {
+                                      assignStandbyMutation.mutate({
+                                        recordDayId: selectedRecordDay,
+                                        contestantName: previousValue,
+                                        seatLabel: null, // Clear the assignment
+                                      });
+                                    }
+                                    
+                                    // Set the new standby's seat assignment if one was selected
+                                    if (newValue) {
+                                      assignStandbyMutation.mutate({
+                                        recordDayId: selectedRecordDay,
+                                        contestantName: newValue,
+                                        seatLabel: row.seatLabel,
+                                      });
+                                    }
+                                  }}
                                 >
-                                  <SelectValue placeholder="Select standby" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="none">
-                                    <span className="text-muted-foreground">None</span>
-                                  </SelectItem>
-                                  {standbysForRecordDay.map((standby) => (
-                                    <SelectItem key={standby.id} value={standby.contestant.name}>
-                                      <span className="flex items-center gap-2">
-                                        <span>{standby.contestant.name}</span>
-                                        <span className="text-muted-foreground text-xs">
-                                          ({standby.contestant.auditionRating || "?"} / {standby.contestant.gender === "female" ? "F" : "M"})
+                                  <SelectTrigger 
+                                    className="h-7 text-xs w-32"
+                                    data-testid={`select-standby-${row.seatId}`}
+                                  >
+                                    <SelectValue placeholder="Select standby" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="none">
+                                      <span className="text-muted-foreground">None</span>
+                                    </SelectItem>
+                                    {standbysForRecordDay.map((standby) => (
+                                      <SelectItem key={standby.id} value={standby.contestant.name}>
+                                        <span className="flex items-center gap-2">
+                                          <span>{standby.contestant.name}</span>
+                                          <span className="text-muted-foreground text-xs">
+                                            ({standby.contestant.auditionRating || "?"} / {standby.contestant.gender === "female" ? "F" : "M"})
+                                          </span>
                                         </span>
-                                      </span>
-                                    </SelectItem>
-                                  ))}
-                                  {standbysForRecordDay.length === 0 && (
-                                    <SelectItem value="no-standbys" disabled>
-                                      <span className="text-muted-foreground italic">No standbys for this day</span>
-                                    </SelectItem>
-                                  )}
-                                </SelectContent>
-                              </Select>
+                                      </SelectItem>
+                                    ))}
+                                    {standbysForRecordDay.length === 0 && (
+                                      <SelectItem value="no-standbys" disabled>
+                                        <span className="text-muted-foreground italic">No standbys for this day</span>
+                                      </SelectItem>
+                                    )}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             )}
                           </TableCell>
                         )}
