@@ -458,8 +458,8 @@ export function ContestantTable({
         className="hidden"
         data-testid="input-table-photo-upload"
       />
-      <div className="border rounded-md">
-        <Table>
+      <div className="border rounded-md overflow-x-auto">
+        <Table className="min-w-[1400px]">
           <TableHeader>
             <TableRow>
               {onSelectionChange && (
