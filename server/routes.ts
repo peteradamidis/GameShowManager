@@ -1374,7 +1374,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
-      const bundles: GroupBundle[] = Array.from(groupMap.entries()).map(([id, contestants]) => {
+      // PHASE 1B: Split incompatible groups (A/A+/B+ mixed with C cannot be placed together)
+      // PB blocks only accept A, A+, B+, B ratings
+      // NPB blocks only accept B and C ratings
+      // Therefore groups with both A/A+/B+ AND C members cannot be placed together in ANY block
+      const finalGroupMap = new Map<string, typeof available>();
+      
+      const groupEntries = Array.from(groupMap.entries());
+      for (const [groupId, members] of groupEntries) {
+        if (members.length <= 1) {
+          // Solo - keep as is
+          finalGroupMap.set(groupId, members);
+          continue;
+        }
+        
+        // Check for rating incompatibility
+        const hasAOrBPlus = members.some((m: typeof available[0]) => m.auditionRating === 'A' || m.auditionRating === 'A+' || m.auditionRating === 'B+');
+        const hasCRating = members.some((m: typeof available[0]) => m.auditionRating === 'C');
+        
+        if (hasAOrBPlus && hasCRating) {
+          // Incompatible group - split into solos
+          console.log(`[Auto-assign] Splitting incompatible group: ${members.map((m: typeof available[0]) => `${m.name}(${m.auditionRating})`).join(' + ')} - A/B+ cannot be in same block as C`);
+          members.forEach((member: typeof available[0], idx: number) => {
+            finalGroupMap.set(`split-${groupId}-${idx}`, [member]);
+          });
+        } else {
+          // Compatible group - keep together
+          finalGroupMap.set(groupId, members);
+        }
+      }
+
+      const bundles: GroupBundle[] = Array.from(finalGroupMap.entries()).map(([id, contestants]) => {
         const femaleCount = contestants.filter(c => c.gender === "Female").length;
         const maleCount = contestants.filter(c => c.gender === "Male").length;
         const totalAge = contestants.reduce((sum, c) => sum + c.age, 0);
