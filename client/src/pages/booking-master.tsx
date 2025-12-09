@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, Fragment } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -41,7 +40,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Calendar, Mail, Maximize2, Minimize2, Settings, RefreshCw, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle, FileText, Sparkles } from "lucide-react";
+import { Download, Calendar, Mail, Maximize2, Minimize2, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle, FileText, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import * as XLSX from "xlsx";
@@ -95,10 +94,8 @@ const DEFAULT_VISIBLE_COLUMNS: Record<ColumnId, boolean> = {
 
 const STORAGE_KEY = "booking-master-visible-columns";
 
-interface GoogleSheetsConfig {
-  spreadsheetId: string | null;
-  lastSyncTime: string | null;
-  autoSync: boolean;
+interface SharePointConfig {
+  sharePointUrl: string | null;
   isConfigured: boolean;
 }
 
@@ -195,8 +192,7 @@ export default function BookingMaster() {
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
   const [confirmSendOpen, setConfirmSendOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [sheetsDialogOpen, setSheetsDialogOpen] = useState(false);
-  const [spreadsheetIdInput, setSpreadsheetIdInput] = useState("");
+  const [sharePointDialogOpen, setSharePointDialogOpen] = useState(false);
   const [emailPreviewOpen, setEmailPreviewOpen] = useState(false);
   const [emailSubject, setEmailSubject] = useState("Deal or No Deal - Booking Confirmation");
   const [selectedAttachments, setSelectedAttachments] = useState<string[]>([]);
@@ -252,9 +248,12 @@ export default function BookingMaster() {
     queryKey: ["/api/contestants"],
   });
 
-  const { data: sheetsConfig } = useQuery<GoogleSheetsConfig>({
-    queryKey: ["/api/google-sheets/config"],
-  });
+  // SharePoint Excel integration - configuration will be done offline
+  // This is a placeholder for future SharePoint integration
+  const sharePointConfig: SharePointConfig = {
+    sharePointUrl: null,
+    isConfigured: false,
+  };
 
   // Fetch standbys for the selected record day (for the dropdown)
   const { data: standbys = [] } = useQuery<StandbyAssignment[]>({
@@ -278,72 +277,6 @@ export default function BookingMaster() {
   
   // Filter to only PDF assets for attachments
   const pdfAssets = emailAssets.filter(a => a.contentType === 'application/pdf');
-
-  const configuresheetsMutation = useMutation({
-    mutationFn: async (spreadsheetId: string) => {
-      return await apiRequest("POST", "/api/google-sheets/config", { spreadsheetId, autoSync: false });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Google Sheets Connected",
-        description: "Your spreadsheet is now linked. You can sync booking data anytime.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/google-sheets/config"] });
-      setSheetsDialogOpen(false);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Connection Failed",
-        description: error.message || "Could not connect to Google Sheets. Check the spreadsheet ID.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const toggleAutoSyncMutation = useMutation({
-    mutationFn: async ({ autoSync, spreadsheetId }: { autoSync: boolean; spreadsheetId: string }) => {
-      return await apiRequest("POST", "/api/google-sheets/config", { 
-        spreadsheetId, 
-        autoSync 
-      });
-    },
-    onSuccess: (_, { autoSync }) => {
-      toast({
-        title: autoSync ? "Auto-Sync Enabled" : "Auto-Sync Disabled",
-        description: autoSync 
-          ? "Booking data will sync to Google Sheets every 5 minutes." 
-          : "Automatic syncing has been turned off.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/google-sheets/config"] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to Update",
-        description: error.message || "Could not update auto-sync setting.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const syncSheetsMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest("POST", "/api/google-sheets/sync", {});
-    },
-    onSuccess: (data: any) => {
-      toast({
-        title: "Sync Complete",
-        description: data.message || "Booking data has been synced to Google Sheets.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/google-sheets/config"] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Sync Failed",
-        description: error.message || "Could not sync to Google Sheets.",
-        variant: "destructive",
-      });
-    },
-  });
 
   // Mutation to update standby assignment when a standby is assigned to a seat
   const assignStandbyMutation = useMutation({
@@ -444,30 +377,6 @@ export default function BookingMaster() {
     },
   });
 
-  // Auto-sync to Google Sheets every 5 minutes when enabled
-  useEffect(() => {
-    if (!sheetsConfig?.isConfigured || !sheetsConfig?.autoSync) {
-      return;
-    }
-
-    const doSync = async () => {
-      try {
-        console.log('[Auto-Sync] Syncing booking data to Google Sheets...');
-        await apiRequest("POST", "/api/google-sheets/sync", {});
-        queryClient.invalidateQueries({ queryKey: ["/api/google-sheets/config"] });
-      } catch (error) {
-        console.error('[Auto-Sync] Failed to sync:', error);
-      }
-    };
-
-    // Sync immediately when auto-sync is first enabled
-    doSync();
-
-    // Set up 5-minute interval
-    const intervalId = setInterval(doSync, 5 * 60 * 1000); // 5 minutes
-
-    return () => clearInterval(intervalId);
-  }, [sheetsConfig?.isConfigured, sheetsConfig?.autoSync]);
 
   const generateAllSeats = (): BookingRow[] => {
     const rows: BookingRow[] = [];
@@ -723,18 +632,6 @@ export default function BookingMaster() {
             Export to Excel
           </Button>
           
-          {sheetsConfig?.isConfigured ? (
-            <Button 
-              onClick={() => syncSheetsMutation.mutate()} 
-              variant="outline"
-              disabled={syncSheetsMutation.isPending}
-              data-testid="button-sync-sheets"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${syncSheetsMutation.isPending ? 'animate-spin' : ''}`} />
-              Sync to Sheets
-            </Button>
-          ) : null}
-          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon" title="Toggle Columns" data-testid="button-toggle-columns">
@@ -757,128 +654,75 @@ export default function BookingMaster() {
             </DropdownMenuContent>
           </DropdownMenu>
           
-          <Dialog open={sheetsDialogOpen} onOpenChange={setSheetsDialogOpen}>
+          <Dialog open={sharePointDialogOpen} onOpenChange={setSharePointDialogOpen}>
             <DialogTrigger asChild>
               <Button 
                 variant="outline" 
                 size="icon"
-                title="Google Sheets Settings"
-                data-testid="button-sheets-settings"
+                title="SharePoint Excel Settings"
+                data-testid="button-sharepoint-settings"
               >
-                {sheetsConfig?.isConfigured ? (
+                {sharePointConfig.isConfigured ? (
                   <CheckCircle className="h-4 w-4 text-green-600" />
                 ) : (
-                  <Settings className="h-4 w-4" />
+                  <FileText className="h-4 w-4" />
                 )}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Google Sheets Sync</DialogTitle>
+                <DialogTitle>SharePoint Excel Integration</DialogTitle>
                 <DialogDescription>
-                  Connect a Google Sheet to automatically sync booking data. This makes it easy to share with your team.
+                  Link booking data with an Excel spreadsheet on SharePoint for team access.
                 </DialogDescription>
               </DialogHeader>
               
               <div className="space-y-4 py-4">
-                {sheetsConfig?.isConfigured ? (
+                {sharePointConfig.isConfigured ? (
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 text-green-600">
                       <CheckCircle className="h-5 w-5" />
-                      <span className="font-medium">Connected to Google Sheets</span>
+                      <span className="font-medium">Connected to SharePoint Excel</span>
                     </div>
-                    {sheetsConfig.lastSyncTime && (
-                      <p className="text-sm text-muted-foreground">
-                        Last synced: {format(new Date(sheetsConfig.lastSyncTime), "MMM d, yyyy 'at' h:mm a")}
-                      </p>
-                    )}
-                    
-                    <div className="flex items-center justify-between p-3 bg-muted rounded-md">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="auto-sync" className="text-sm font-medium">
-                          Auto-sync every 5 minutes
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                          Automatically keep your spreadsheet up to date
-                        </p>
-                      </div>
-                      <Switch
-                        id="auto-sync"
-                        checked={sheetsConfig.autoSync}
-                        onCheckedChange={(checked) => {
-                          if (sheetsConfig.spreadsheetId) {
-                            toggleAutoSyncMutation.mutate({ 
-                              autoSync: checked, 
-                              spreadsheetId: sheetsConfig.spreadsheetId 
-                            });
-                          }
-                        }}
-                        disabled={toggleAutoSyncMutation.isPending || !sheetsConfig.spreadsheetId}
-                        data-testid="switch-auto-sync"
-                      />
-                    </div>
-                    
                     <p className="text-sm text-muted-foreground">
-                      {sheetsConfig.autoSync 
-                        ? "Your spreadsheet will update automatically. You can also sync manually anytime."
-                        : "Click \"Sync Now\" to update your spreadsheet with the latest booking data."}
+                      Your booking data is linked to the SharePoint spreadsheet.
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    <p className="text-sm">
-                      To connect:
-                    </p>
-                    <ol className="text-sm list-decimal list-inside space-y-2 text-muted-foreground">
-                      <li>Create a new Google Sheet (or use an existing one)</li>
-                      <li>Copy the spreadsheet ID from the URL</li>
-                      <li>Paste it below</li>
-                    </ol>
-                    <div className="bg-muted p-3 rounded-md text-xs">
-                      <p className="font-medium mb-1">Where to find the ID:</p>
-                      <p className="text-muted-foreground break-all">
-                        https://docs.google.com/spreadsheets/d/<span className="text-primary font-medium">THIS-IS-YOUR-ID</span>/edit
+                  <div className="space-y-4">
+                    <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-4 rounded-md">
+                      <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">
+                        Configuration Required
+                      </p>
+                      <p className="text-sm text-amber-700 dark:text-amber-300">
+                        SharePoint Excel integration will be configured offline by your IT administrator. 
+                        Once connected, booking data can sync with your team's shared spreadsheet.
                       </p>
                     </div>
-                    <Input
-                      placeholder="Paste your spreadsheet ID here"
-                      value={spreadsheetIdInput}
-                      onChange={(e) => setSpreadsheetIdInput(e.target.value)}
-                      data-testid="input-spreadsheet-id"
-                    />
+                    
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">What this enables:</p>
+                      <ul className="text-sm list-disc list-inside space-y-1 text-muted-foreground">
+                        <li>Two-way sync with Excel on SharePoint</li>
+                        <li>Real-time updates for your team</li>
+                        <li>Works with your existing workflows</li>
+                      </ul>
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground">
+                      For now, use the "Export to Excel" button to download booking data manually.
+                    </p>
                   </div>
                 )}
               </div>
               
               <DialogFooter>
-                {sheetsConfig?.isConfigured ? (
-                  <div className="flex gap-2 w-full justify-between">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setSpreadsheetIdInput("");
-                        setSheetsDialogOpen(false);
-                      }}
-                    >
-                      Close
-                    </Button>
-                    <Button 
-                      onClick={() => syncSheetsMutation.mutate()}
-                      disabled={syncSheetsMutation.isPending}
-                    >
-                      <RefreshCw className={`h-4 w-4 mr-2 ${syncSheetsMutation.isPending ? 'animate-spin' : ''}`} />
-                      Sync Now
-                    </Button>
-                  </div>
-                ) : (
-                  <Button 
-                    onClick={() => configuresheetsMutation.mutate(spreadsheetIdInput)}
-                    disabled={!spreadsheetIdInput.trim() || configuresheetsMutation.isPending}
-                    data-testid="button-connect-sheets"
-                  >
-                    {configuresheetsMutation.isPending ? "Connecting..." : "Connect Sheet"}
-                  </Button>
-                )}
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSharePointDialogOpen(false)}
+                >
+                  Close
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

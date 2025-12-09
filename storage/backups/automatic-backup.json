@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-09T00:31:10.475Z",
+  "exportedAt": "2025-12-09T00:45:46.540Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -133,20 +133,20 @@
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
       {
-        "id": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "date": "2026-02-04",
-        "rxNumber": "RX1 - 1-5",
-        "totalSeats": 154,
-        "status": "ready",
-        "createdAt": "2025-11-27T11:34:23.272Z"
-      },
-      {
         "id": "628994d9-3a33-43b2-9214-c3bd9793ccd4",
         "date": "2026-02-18",
         "rxNumber": null,
         "totalSeats": 154,
         "status": "draft",
         "createdAt": "2025-12-06T11:48:47.893Z"
+      },
+      {
+        "id": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "date": "2026-02-04",
+        "rxNumber": "RX EP 1 - 5",
+        "totalSeats": 154,
+        "status": "ready",
+        "createdAt": "2025-11-27T11:34:23.272Z"
       }
     ],
     "contestants": [
