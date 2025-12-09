@@ -1,6 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, Edit, Trash2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
@@ -11,7 +10,6 @@ export interface RecordDay {
   totalSeats: number;
   filledSeats: number;
   femalePercent: number;
-  status: "Draft" | "Ready" | "Invited" | "Completed";
 }
 
 interface RecordDayCardProps {
@@ -21,13 +19,6 @@ interface RecordDayCardProps {
   onDelete?: () => void;
   onSendInvitations?: () => void;
 }
-
-const statusColors = {
-  Draft: "bg-gray-500/10 text-gray-700 dark:text-gray-400",
-  Ready: "bg-green-500/10 text-green-700 dark:text-green-400",
-  Invited: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-  Completed: "bg-purple-500/10 text-purple-700 dark:text-purple-400",
-};
 
 export function RecordDayCard({ recordDay, onViewSeating, onEdit, onDelete, onSendInvitations }: RecordDayCardProps) {
   const fillPercent = Math.round((recordDay.filledSeats / recordDay.totalSeats) * 100);
@@ -41,11 +32,8 @@ export function RecordDayCard({ recordDay, onViewSeating, onEdit, onDelete, onSe
               <Calendar className="h-5 w-5 flex-shrink-0" />
               <span className="truncate">{recordDay.date}</span>
             </CardTitle>
-            <CardDescription className="flex items-center gap-2 flex-wrap">
-              <span>{recordDay.rxNumber || "Record Day"}</span>
-              <Badge className={statusColors[recordDay.status]} variant="secondary">
-                {recordDay.status}
-              </Badge>
+            <CardDescription>
+              {recordDay.rxNumber || "Record Day"}
             </CardDescription>
           </div>
           <div className="flex gap-1 flex-shrink-0">

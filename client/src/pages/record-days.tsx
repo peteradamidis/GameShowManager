@@ -26,13 +26,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 type ApiRecordDay = {
   id: string;
@@ -46,7 +39,6 @@ type RecordDayFormData = {
   date: string;
   rxNumber: string;
   totalSeats: number;
-  status: string;
 };
 
 export default function RecordDays() {
@@ -59,7 +51,6 @@ export default function RecordDays() {
     date: "",
     rxNumber: "",
     totalSeats: 154,
-    status: "draft",
   });
 
   const { data: apiRecordDays = [], isLoading } = useQuery<ApiRecordDay[]>({
@@ -86,7 +77,6 @@ export default function RecordDays() {
         date: data.date,
         rxNumber: data.rxNumber || null,
         totalSeats: data.totalSeats,
-        status: data.status,
       });
     },
     onSuccess: () => {
@@ -112,7 +102,6 @@ export default function RecordDays() {
         date: data.date,
         rxNumber: data.rxNumber || null,
         totalSeats: data.totalSeats,
-        status: data.status,
       });
     },
     onSuccess: () => {
@@ -169,7 +158,6 @@ export default function RecordDays() {
         totalSeats: day.totalSeats || 154,
         filledSeats,
         femalePercent,
-        status: day.status === 'draft' ? 'Draft' : day.status === 'ready' ? 'Ready' : day.status === 'completed' ? 'Completed' : 'Invited',
       };
     });
 
@@ -179,7 +167,6 @@ export default function RecordDays() {
       date: "",
       rxNumber: "",
       totalSeats: 154,
-      status: "draft",
     });
     setIsDialogOpen(true);
   };
@@ -190,7 +177,6 @@ export default function RecordDays() {
       date: recordDay.date.split('T')[0],
       rxNumber: recordDay.rxNumber || "",
       totalSeats: recordDay.totalSeats || 154,
-      status: recordDay.status || "draft",
     });
     setIsDialogOpen(true);
   };
@@ -202,7 +188,6 @@ export default function RecordDays() {
       date: "",
       rxNumber: "",
       totalSeats: 154,
-      status: "draft",
     });
   };
 
@@ -330,23 +315,6 @@ export default function RecordDays() {
                   onChange={(e) => setFormData(prev => ({ ...prev, totalSeats: parseInt(e.target.value) || 154 }))}
                   data-testid="input-record-day-total-seats"
                 />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
-                >
-                  <SelectTrigger data-testid="select-record-day-status">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="ready">Ready</SelectItem>
-                    <SelectItem value="invited">Invited</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
             <DialogFooter>
