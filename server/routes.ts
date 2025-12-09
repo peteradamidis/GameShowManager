@@ -833,6 +833,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Helper to check if ratings are compatible for grouping
+      // PB blocks: A, A+, B+, B only
+      // NPB blocks: B, C only
+      // So groups with C cannot have A, A+, or B+ (incompatible block types)
+      const isPBOnlyRating = (rating: string) => ['A', 'A+', 'B+'].includes(rating);
+      const isNPBOnlyRating = (rating: string) => rating === 'C';
+      
+      // Helper to get a compatible rating for a group
+      // If any member has A, A+, or B+ -> all must be PB-compatible (A, A+, B+, B)
+      // If any member has C -> all must be NPB-compatible (B, C)
+      const getCompatibleRating = (existingRatings: string[]): string => {
+        const hasPBOnly = existingRatings.some(isPBOnlyRating);
+        const hasNPBOnly = existingRatings.some(isNPBOnlyRating);
+        
+        if (hasPBOnly) {
+          // Must be PB-compatible: A, A+, B+, or B (weighted)
+          const pbRatings = ['A', 'B+', 'B'];
+          const pbWeights = [0.2, 0.4, 0.4];
+          const rand = Math.random();
+          let cumulative = 0;
+          for (let i = 0; i < pbRatings.length; i++) {
+            cumulative += pbWeights[i];
+            if (rand < cumulative) return pbRatings[i];
+          }
+          return 'B';
+        } else if (hasNPBOnly) {
+          // Must be NPB-compatible: B or C
+          return Math.random() < 0.6 ? 'B' : 'C';
+        }
+        // No constraints yet, use weighted random
+        return getWeightedRating();
+      };
+
       // Create groups for about 80% of contestants (mix of pairs and trios)
       const shuffled = [...fakeContestants].sort(() => Math.random() - 0.5);
       const targetGrouped = Math.floor(totalCount * 0.80); // 80% in groups
@@ -847,6 +880,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Create a pair - each person lists the other
           const person1 = shuffled[idx];
           const person2 = shuffled[idx + 1];
+          
+          // Ensure ratings are compatible - adjust if needed
+          const ratings = [person1.auditionRating, person2.auditionRating];
+          const hasPBOnly = ratings.some(isPBOnlyRating);
+          const hasNPBOnly = ratings.some(isNPBOnlyRating);
+          
+          if (hasPBOnly && hasNPBOnly) {
+            // Incompatible! Adjust the C-rated person to be PB-compatible
+            if (isNPBOnlyRating(person1.auditionRating)) {
+              person1.auditionRating = getCompatibleRating([person2.auditionRating]);
+              const origIdx = fakeContestants.findIndex(c => c.name === person1.name);
+              if (origIdx >= 0) fakeContestants[origIdx].auditionRating = person1.auditionRating;
+            }
+            if (isNPBOnlyRating(person2.auditionRating)) {
+              person2.auditionRating = getCompatibleRating([person1.auditionRating]);
+              const origIdx = fakeContestants.findIndex(c => c.name === person2.name);
+              if (origIdx >= 0) fakeContestants[origIdx].auditionRating = person2.auditionRating;
+            }
+          }
           
           person1.attendingWith = person2.name;
           person2.attendingWith = person1.name;
@@ -864,6 +916,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const person1 = shuffled[idx];
           const person2 = shuffled[idx + 1];
           const person3 = shuffled[idx + 2];
+          
+          // Ensure ratings are compatible - adjust if needed
+          const ratings = [person1.auditionRating, person2.auditionRating, person3.auditionRating];
+          const hasPBOnly = ratings.some(isPBOnlyRating);
+          const hasNPBOnly = ratings.some(isNPBOnlyRating);
+          
+          if (hasPBOnly && hasNPBOnly) {
+            // Incompatible! Adjust C-rated persons to be PB-compatible
+            const pbRatings = ratings.filter(r => !isNPBOnlyRating(r));
+            [person1, person2, person3].forEach(person => {
+              if (isNPBOnlyRating(person.auditionRating)) {
+                person.auditionRating = getCompatibleRating(pbRatings);
+                const origIdx = fakeContestants.findIndex(c => c.name === person.name);
+                if (origIdx >= 0) fakeContestants[origIdx].auditionRating = person.auditionRating;
+              }
+            });
+          }
           
           person1.attendingWith = `${person2.name}, ${person3.name}`;
           person2.attendingWith = `${person1.name}, ${person3.name}`;
