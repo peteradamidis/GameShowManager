@@ -793,7 +793,7 @@ export default function BookingMaster() {
             <Table>
               <TableHeader className="sticky top-0 z-50">
                 <TableRow className="bg-[#00363a] dark:bg-[#002628] h-10">
-                  <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 w-8 py-1 text-white">
+                  <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 w-8 py-1 text-white border-r border-gray-300 dark:border-gray-600">
                     <Checkbox
                       checked={selectedAssignments.size > 0 && selectedAssignments.size === bookingRows.filter(r => r.assignment).length}
                       onCheckedChange={handleSelectAll}
@@ -801,23 +801,23 @@ export default function BookingMaster() {
                       className="border-white data-[state=checked]:bg-white data-[state=checked]:text-[#00363a]"
                     />
                   </TableHead>
-                  {isColumnVisible("seat") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-14 text-white font-semibold whitespace-nowrap">SEAT</TableHead>}
-                  {isColumnVisible("name") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 min-w-[120px] text-white font-semibold">NAME</TableHead>}
-                  {isColumnVisible("mobile") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 min-w-[100px] text-white font-semibold">MOBILE</TableHead>}
-                  {isColumnVisible("email") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-28 max-w-[110px] text-white font-semibold">EMAIL</TableHead>}
-                  {isColumnVisible("attendingWith") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold">ATTENDING<br/>WITH</TableHead>}
-                  {isColumnVisible("location") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold">LOCATION</TableHead>}
-                  {isColumnVisible("medicalQ") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-14 text-center text-white font-semibold">MEDICAL<br/>Q (Y/N)</TableHead>}
-                  {isColumnVisible("mobilityNotes") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold">MOBILITY /<br/>MEDICAL NOTES</TableHead>}
-                  {isColumnVisible("criminal") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-20 text-center text-white font-semibold">CRIMINAL /<br/>BANKRUPTCY</TableHead>}
-                  {isColumnVisible("castingCategory") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold">CASTING<br/>CATEGORY</TableHead>}
+                  {isColumnVisible("seat") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-14 text-white font-semibold whitespace-nowrap border-r border-gray-300 dark:border-gray-600">SEAT</TableHead>}
+                  {isColumnVisible("name") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 min-w-[120px] text-white font-semibold border-r border-gray-300 dark:border-gray-600">NAME</TableHead>}
+                  {isColumnVisible("mobile") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 min-w-[100px] text-white font-semibold border-r border-gray-300 dark:border-gray-600">MOBILE</TableHead>}
+                  {isColumnVisible("email") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-28 max-w-[110px] text-white font-semibold border-r border-gray-300 dark:border-gray-600">EMAIL</TableHead>}
+                  {isColumnVisible("attendingWith") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold border-r border-gray-300 dark:border-gray-600">ATTENDING<br/>WITH</TableHead>}
+                  {isColumnVisible("location") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold border-r border-gray-300 dark:border-gray-600">LOCATION</TableHead>}
+                  {isColumnVisible("medicalQ") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-14 text-center text-white font-semibold border-r border-gray-300 dark:border-gray-600">MEDICAL<br/>Q (Y/N)</TableHead>}
+                  {isColumnVisible("mobilityNotes") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold border-r border-gray-300 dark:border-gray-600">MOBILITY /<br/>MEDICAL NOTES</TableHead>}
+                  {isColumnVisible("criminal") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-20 text-center text-white font-semibold border-r border-gray-300 dark:border-gray-600">CRIMINAL /<br/>BANKRUPTCY</TableHead>}
+                  {isColumnVisible("castingCategory") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold border-r border-gray-300 dark:border-gray-600">CASTING<br/>CATEGORY</TableHead>}
                   {isColumnVisible("notes") && <TableHead className={`sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 border-r-4 border-r-[#1a6b6b] text-white font-semibold ${isFullscreen ? 'min-w-[150px]' : 'min-w-[200px]'}`}>NOTES</TableHead>}
-                  {isColumnVisible("emailSent") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold">BOOKING<br/>EMAIL<br/>SENT</TableHead>}
-                  {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold">CONFIRM<br/>ED RSVP</TableHead>}
-                  {isColumnVisible("paperSent") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold">PAPER<br/>WORK<br/>SENT</TableHead>}
-                  {isColumnVisible("paperReceived") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold">PAPER<br/>WORK<br/>RECEIVED<br/>& LOGGED</TableHead>}
-                  {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold">SIGNED<br/>IN</TableHead>}
-                  {isColumnVisible("otdNotes") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center text-[#00363a] dark:text-white font-semibold">OTD<br/>NOTES</TableHead>}
+                  {isColumnVisible("emailSent") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">BOOKING<br/>EMAIL<br/>SENT</TableHead>}
+                  {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">CONFIRM<br/>ED RSVP</TableHead>}
+                  {isColumnVisible("paperSent") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">PAPER<br/>WORK<br/>SENT</TableHead>}
+                  {isColumnVisible("paperReceived") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">PAPER<br/>WORK<br/>RECEIVED<br/>& LOGGED</TableHead>}
+                  {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">SIGNED<br/>IN</TableHead>}
+                  {isColumnVisible("otdNotes") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">OTD<br/>NOTES</TableHead>}
                   {isColumnVisible("standby") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center text-[#00363a] dark:text-white font-semibold">STANDBY /<br/>SWAPS</TableHead>}
                 </TableRow>
               </TableHeader>
@@ -849,7 +849,7 @@ export default function BookingMaster() {
                         </TableRow>
                       )}
                       <TableRow key={row.seatId} className={`${!row.assignment ? "bg-muted/20" : "bg-white dark:bg-background"} h-7 border-b border-gray-200 dark:border-gray-700`}>
-                        <TableCell className="py-0.5 h-7">
+                        <TableCell className="py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
                           {row.assignment && (
                             <Checkbox
                               checked={selectedAssignments.has(row.assignment.id)}
@@ -858,18 +858,18 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        {isColumnVisible("seat") && <TableCell className="font-mono text-xs py-0.5 h-7 w-14 text-[#2e7d32] dark:text-[#66bb6a] font-semibold whitespace-nowrap">{String(row.blockNumber).padStart(2, '0')}-{row.seatLabel}</TableCell>}
+                        {isColumnVisible("seat") && <TableCell className="font-mono text-xs py-0.5 h-7 w-14 text-[#2e7d32] dark:text-[#66bb6a] font-semibold whitespace-nowrap border-r border-gray-200 dark:border-gray-700">{String(row.blockNumber).padStart(2, '0')}-{row.seatLabel}</TableCell>}
                         {isColumnVisible("name") && (
-                          <TableCell className="font-medium text-xs min-w-[150px] py-0.5 h-7">
+                          <TableCell className="font-medium text-xs min-w-[150px] py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
                             {row.contestant?.name || <span className="text-muted-foreground italic">Empty</span>}
                           </TableCell>
                         )}
-                        {isColumnVisible("mobile") && <TableCell className="text-xs min-w-[120px] py-0.5 h-7">{row.contestant?.phone || ""}</TableCell>}
-                        {isColumnVisible("email") && <TableCell className="text-xs py-0.5 h-7 w-32 max-w-[130px] truncate">{row.contestant?.email || ""}</TableCell>}
-                        {isColumnVisible("attendingWith") && <TableCell className="text-xs py-0.5 h-7">{row.contestant?.attendingWith || ""}</TableCell>}
-                        {isColumnVisible("location") && <TableCell className="text-xs py-0.5 h-7">{row.contestant?.location || ""}</TableCell>}
+                        {isColumnVisible("mobile") && <TableCell className="text-xs min-w-[120px] py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">{row.contestant?.phone || ""}</TableCell>}
+                        {isColumnVisible("email") && <TableCell className="text-xs py-0.5 h-7 w-32 max-w-[130px] truncate border-r border-gray-200 dark:border-gray-700">{row.contestant?.email || ""}</TableCell>}
+                        {isColumnVisible("attendingWith") && <TableCell className="text-xs py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">{row.contestant?.attendingWith || ""}</TableCell>}
+                        {isColumnVisible("location") && <TableCell className="text-xs py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">{row.contestant?.location || ""}</TableCell>}
                         {isColumnVisible("medicalQ") && (
-                          <TableCell className="py-0.5 h-7 w-14">
+                          <TableCell className="py-0.5 h-7 w-14 border-r border-gray-200 dark:border-gray-700">
                             {row.assignment && (
                               <Input
                                 key={`med-${row.assignment.id}`}
@@ -883,17 +883,17 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("mobilityNotes") && (
-                          <TableCell className="text-xs py-0.5 h-7">
+                          <TableCell className="text-xs py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
                             {row.contestant?.mobilityNotes || ""}
                           </TableCell>
                         )}
                         {isColumnVisible("criminal") && (
-                          <TableCell className="text-xs py-0.5 h-7 w-20 text-center">
+                          <TableCell className="text-xs py-0.5 h-7 w-20 text-center border-r border-gray-200 dark:border-gray-700">
                             {row.contestant?.criminalRecord || ""}
                           </TableCell>
                         )}
                         {isColumnVisible("castingCategory") && (
-                          <TableCell className="py-0.5 h-7">
+                          <TableCell className="py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
                             {row.assignment && (
                               <Input
                                 key={`cat-${row.assignment.id}`}
@@ -907,7 +907,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("notes") && (
-                          <TableCell className="border-r-4 border-r-primary/30 py-0.5 h-7">
+                          <TableCell className="border-r-4 border-r-[#1a6b6b] py-0.5 h-7">
                             {row.assignment && (
                               <Input
                                 key={`notes-${row.assignment.id}`}
@@ -921,7 +921,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("emailSent") && (
-                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-[#e8f4f4] dark:bg-[#1a3a3a]">
+                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-[#e8f4f4] dark:bg-[#1a3a3a] border-r border-gray-200 dark:border-gray-700">
                             {row.assignment && (
                               <Checkbox
                                 checked={!!row.assignment.bookingEmailSent}
@@ -932,7 +932,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("rsvp") && (
-                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-[#e8f4f4] dark:bg-[#1a3a3a]">
+                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-[#e8f4f4] dark:bg-[#1a3a3a] border-r border-gray-200 dark:border-gray-700">
                             {row.assignment && (
                               <Checkbox
                                 checked={!!row.assignment.confirmedRsvp}
@@ -943,7 +943,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("paperSent") && (
-                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-[#e8f4f4] dark:bg-[#1a3a3a]">
+                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-[#e8f4f4] dark:bg-[#1a3a3a] border-r border-gray-200 dark:border-gray-700">
                             {row.assignment && (
                               <Checkbox
                                 checked={!!row.assignment.paperworkSent}
@@ -954,7 +954,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("paperReceived") && (
-                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-[#e8f4f4] dark:bg-[#1a3a3a]">
+                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-[#e8f4f4] dark:bg-[#1a3a3a] border-r border-gray-200 dark:border-gray-700">
                             {row.assignment && (
                               <Checkbox
                                 checked={!!row.assignment.paperworkReceived}
@@ -965,7 +965,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("signedIn") && (
-                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-[#e8f4f4] dark:bg-[#1a3a3a]">
+                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-[#e8f4f4] dark:bg-[#1a3a3a] border-r border-gray-200 dark:border-gray-700">
                             {row.assignment && (
                               <Checkbox
                                 checked={!!row.assignment.signedIn}
@@ -976,7 +976,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("otdNotes") && (
-                          <TableCell className="px-2 py-0.5 h-7 bg-[#e8f4f4] dark:bg-[#1a3a3a]">
+                          <TableCell className="px-2 py-0.5 h-7 bg-[#e8f4f4] dark:bg-[#1a3a3a] border-r border-gray-200 dark:border-gray-700">
                             {row.assignment && (
                               <Input
                                 key={`otd-${row.assignment.id}`}
