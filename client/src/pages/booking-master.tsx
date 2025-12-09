@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, Fragment, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useBookingMasterWebSocket } from "@/hooks/use-websocket";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -225,6 +226,9 @@ export default function BookingMaster() {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
   const { toast } = useToast();
+  
+  // Connect to WebSocket for real-time updates
+  useBookingMasterWebSocket(selectedRecordDay || null);
 
   // Save column visibility to localStorage when it changes
   useEffect(() => {
