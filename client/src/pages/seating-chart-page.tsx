@@ -408,8 +408,8 @@ export default function SeatingChartPage() {
             <h1 className="text-2xl font-semibold">Seating Chart</h1>
             {currentRecordDay && (
               <Badge variant="secondary">
+                {currentRecordDay.rxNumber && `${currentRecordDay.rxNumber} - `}
                 {format(new Date(currentRecordDay.date), "MMMM d, yyyy")}
-                {currentRecordDay.showCode && ` - ${currentRecordDay.showCode}`}
               </Badge>
             )}
           </div>
