@@ -792,32 +792,33 @@ export default function BookingMaster() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead className="sticky top-0 bg-background z-10 w-12">
+                <TableRow className="bg-[#004d4d] dark:bg-[#003333]">
+                  <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 w-12 text-white">
                     <Checkbox
                       checked={selectedAssignments.size > 0 && selectedAssignments.size === bookingRows.filter(r => r.assignment).length}
                       onCheckedChange={handleSelectAll}
                       data-testid="checkbox-select-all"
+                      className="border-white data-[state=checked]:bg-white data-[state=checked]:text-[#004d4d]"
                     />
                   </TableHead>
-                  {isColumnVisible("seat") && <TableHead className="sticky top-0 bg-background z-10 text-xs w-12">SEAT</TableHead>}
-                  {isColumnVisible("name") && <TableHead className="sticky top-0 bg-background z-10 text-xs min-w-[150px]">NAME</TableHead>}
-                  {isColumnVisible("mobile") && <TableHead className="sticky top-0 bg-background z-10 text-xs min-w-[120px]">MOBILE</TableHead>}
-                  {isColumnVisible("email") && <TableHead className="sticky top-0 bg-background z-10 text-xs w-32 max-w-[130px]">EMAIL</TableHead>}
-                  {isColumnVisible("attendingWith") && <TableHead className="sticky top-0 bg-background z-10 text-xs">ATTENDING WITH</TableHead>}
-                  {isColumnVisible("location") && <TableHead className="sticky top-0 bg-background z-10 text-xs">LOCATION</TableHead>}
-                  {isColumnVisible("medicalQ") && <TableHead className="sticky top-0 bg-background z-10 text-xs w-14 text-center">MED<br/>Q</TableHead>}
-                  {isColumnVisible("mobilityNotes") && <TableHead className="sticky top-0 bg-background z-10 text-xs">MOBILITY / MEDICAL NOTES</TableHead>}
-                  {isColumnVisible("criminal") && <TableHead className="sticky top-0 bg-background z-10 text-xs w-20 text-center">CRIM/<br/>BANK</TableHead>}
-                  {isColumnVisible("castingCategory") && <TableHead className="sticky top-0 bg-background z-10 text-xs">CASTING CATEGORY</TableHead>}
-                  {isColumnVisible("notes") && <TableHead className={`sticky top-0 bg-background z-10 border-r-4 border-r-primary/30 ${isFullscreen ? 'min-w-[200px]' : 'min-w-[300px]'}`}>NOTES</TableHead>}
-                  {isColumnVisible("emailSent") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">EMAIL<br/>SENT</TableHead>}
-                  {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">RSVP</TableHead>}
-                  {isColumnVisible("paperSent") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">PAPER<br/>SENT</TableHead>}
-                  {isColumnVisible("paperReceived") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">PAPER<br/>✓</TableHead>}
-                  {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-3 text-center w-16">SIGNED<br/>IN</TableHead>}
-                  {isColumnVisible("otdNotes") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 text-center">OTD NOTES</TableHead>}
-                  {isColumnVisible("standby") && <TableHead className="sticky top-0 bg-background z-10 text-xs px-2 text-center">STANDBY / SWAPS</TableHead>}
+                  {isColumnVisible("seat") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs w-12 text-white font-semibold">SEAT</TableHead>}
+                  {isColumnVisible("name") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs min-w-[150px] text-white font-semibold">NAME</TableHead>}
+                  {isColumnVisible("mobile") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs min-w-[120px] text-white font-semibold">MOBILE</TableHead>}
+                  {isColumnVisible("email") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs w-32 max-w-[130px] text-white font-semibold">EMAIL</TableHead>}
+                  {isColumnVisible("attendingWith") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs text-white font-semibold">ATTENDING WITH</TableHead>}
+                  {isColumnVisible("location") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs text-white font-semibold">LOCATION</TableHead>}
+                  {isColumnVisible("medicalQ") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs w-14 text-center text-white font-semibold">MED<br/>Q</TableHead>}
+                  {isColumnVisible("mobilityNotes") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs text-white font-semibold">MOBILITY / MEDICAL NOTES</TableHead>}
+                  {isColumnVisible("criminal") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs w-20 text-center text-white font-semibold">CRIM/<br/>BANK</TableHead>}
+                  {isColumnVisible("castingCategory") && <TableHead className="sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 text-xs text-white font-semibold">CASTING CATEGORY</TableHead>}
+                  {isColumnVisible("notes") && <TableHead className={`sticky top-0 bg-[#004d4d] dark:bg-[#003333] z-10 border-r-4 border-r-[#1a6b6b] text-white font-semibold ${isFullscreen ? 'min-w-[200px]' : 'min-w-[300px]'}`}>NOTES</TableHead>}
+                  {isColumnVisible("emailSent") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-10 text-xs px-3 text-center w-16 text-[#004d4d] dark:text-white font-semibold">EMAIL<br/>SENT</TableHead>}
+                  {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-10 text-xs px-3 text-center w-16 text-[#004d4d] dark:text-white font-semibold">RSVP</TableHead>}
+                  {isColumnVisible("paperSent") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-10 text-xs px-3 text-center w-16 text-[#004d4d] dark:text-white font-semibold">PAPER<br/>SENT</TableHead>}
+                  {isColumnVisible("paperReceived") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-10 text-xs px-3 text-center w-16 text-[#004d4d] dark:text-white font-semibold">PAPER<br/>✓</TableHead>}
+                  {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-10 text-xs px-3 text-center w-16 text-[#004d4d] dark:text-white font-semibold">SIGNED<br/>IN</TableHead>}
+                  {isColumnVisible("otdNotes") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-10 text-xs px-2 text-center text-[#004d4d] dark:text-white font-semibold">OTD NOTES</TableHead>}
+                  {isColumnVisible("standby") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-10 text-xs px-2 text-center text-[#004d4d] dark:text-white font-semibold">STANDBY / SWAPS</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -832,14 +833,14 @@ export default function BookingMaster() {
                   return (
                     <Fragment key={row.seatId}>
                       {isFirstRowOfBlock && (
-                        <TableRow key={`block-header-${row.blockNumber}`} className="bg-primary/10 hover:bg-primary/10">
+                        <TableRow key={`block-header-${row.blockNumber}`} className="bg-[#004d4d] dark:bg-[#003333] hover:bg-[#004d4d] dark:hover:bg-[#003333]">
                           <TableCell colSpan={20} className="py-3">
                             <div className="flex items-center justify-between">
-                              <span className="font-bold text-lg" data-testid={`block-header-${row.blockNumber}`}>
-                                Block {row.blockNumber}
+                              <span className="font-bold text-lg text-white" data-testid={`block-header-${row.blockNumber}`}>
+                                BLOCK {row.blockNumber}
                               </span>
                               {blockTotal > 0 && (
-                                <span className="text-sm text-muted-foreground">
+                                <span className="text-sm text-white/80">
                                   {blockTotal} assigned | {blockFemaleCount}F / {blockMaleCount}M ({femalePercent}% female)
                                 </span>
                               )}
@@ -847,7 +848,7 @@ export default function BookingMaster() {
                           </TableCell>
                         </TableRow>
                       )}
-                      <TableRow key={row.seatId} className={`${!row.assignment ? "bg-muted/20" : ""} h-12`}>
+                      <TableRow key={row.seatId} className={`${!row.assignment ? "bg-muted/20" : "bg-white dark:bg-background"} h-12 border-b border-gray-200 dark:border-gray-700`}>
                         <TableCell className="py-1">
                           {row.assignment && (
                             <Checkbox
@@ -857,7 +858,7 @@ export default function BookingMaster() {
                             />
                           )}
                         </TableCell>
-                        {isColumnVisible("seat") && <TableCell className="font-mono text-xs py-1 w-12">{row.seatLabel}</TableCell>}
+                        {isColumnVisible("seat") && <TableCell className="font-mono text-xs py-1 w-12 text-[#2e7d32] dark:text-[#66bb6a] font-semibold">{row.seatLabel}</TableCell>}
                         {isColumnVisible("name") && (
                           <TableCell className="font-medium text-xs min-w-[150px] py-1">
                             {row.contestant?.name || <span className="text-muted-foreground italic">Empty</span>}
@@ -920,7 +921,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("emailSent") && (
-                          <TableCell className="text-center px-3 w-16 py-1">
+                          <TableCell className="text-center px-3 w-16 py-1 bg-[#e8f4f4] dark:bg-[#1a3a3a]">
                             {row.assignment && (
                               <Checkbox
                                 checked={!!row.assignment.bookingEmailSent}
@@ -931,7 +932,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("rsvp") && (
-                          <TableCell className="text-center px-3 w-16 py-1">
+                          <TableCell className="text-center px-3 w-16 py-1 bg-[#e8f4f4] dark:bg-[#1a3a3a]">
                             {row.assignment && (
                               <Checkbox
                                 checked={!!row.assignment.confirmedRsvp}
@@ -942,7 +943,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("paperSent") && (
-                          <TableCell className="text-center px-3 w-16 py-1">
+                          <TableCell className="text-center px-3 w-16 py-1 bg-[#e8f4f4] dark:bg-[#1a3a3a]">
                             {row.assignment && (
                               <Checkbox
                                 checked={!!row.assignment.paperworkSent}
@@ -953,7 +954,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("paperReceived") && (
-                          <TableCell className="text-center px-3 w-16 py-1">
+                          <TableCell className="text-center px-3 w-16 py-1 bg-[#e8f4f4] dark:bg-[#1a3a3a]">
                             {row.assignment && (
                               <Checkbox
                                 checked={!!row.assignment.paperworkReceived}
@@ -964,7 +965,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("signedIn") && (
-                          <TableCell className="text-center px-3 w-16 py-1">
+                          <TableCell className="text-center px-3 w-16 py-1 bg-[#e8f4f4] dark:bg-[#1a3a3a]">
                             {row.assignment && (
                               <Checkbox
                                 checked={!!row.assignment.signedIn}
@@ -975,7 +976,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("otdNotes") && (
-                          <TableCell className="px-2 py-1">
+                          <TableCell className="px-2 py-1 bg-[#e8f4f4] dark:bg-[#1a3a3a]">
                             {row.assignment && (
                               <Textarea
                                 key={`otd-${row.assignment.id}`}
@@ -989,7 +990,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("standby") && (
-                          <TableCell className="px-2 py-1">
+                          <TableCell className="px-2 py-1 bg-[#e8f4f4] dark:bg-[#1a3a3a]">
                             {row.assignment && (
                               <Select
                                 key={`standby-${row.assignment.id}`}
