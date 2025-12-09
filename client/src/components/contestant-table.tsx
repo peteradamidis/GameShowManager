@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save } from "lucide-react";
+import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -126,6 +126,26 @@ export function ContestantTable({
     queryKey: ['/api/contestants', selectedContestantId],
     enabled: !!selectedContestantId && detailDialogOpen,
   });
+
+  // Fetch record days to show seat assignment date
+  interface RecordDay {
+    id: string;
+    date: string;
+    status: string;
+  }
+  const { data: recordDays = [] } = useQuery<RecordDay[]>({
+    queryKey: ['/api/record-days'],
+  });
+
+  // Get seat assignment for the selected contestant
+  const selectedContestantSeatAssignment = selectedContestantId 
+    ? seatAssignmentMap.get(selectedContestantId) 
+    : null;
+  
+  // Get record day info for the seat assignment
+  const seatAssignmentRecordDay = selectedContestantSeatAssignment
+    ? recordDays.find(rd => rd.id === selectedContestantSeatAssignment.recordDayId)
+    : null;
 
   const uploadPhotoMutation = useMutation({
     mutationFn: async ({ file, contestantId }: { file: File; contestantId: string }) => {
@@ -974,6 +994,41 @@ export function ContestantTable({
                     </div>
                   </div>
                 </div>
+
+                {/* Seat Assignment */}
+                {selectedContestantSeatAssignment && (
+                  <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <h3 className="text-sm font-semibold mb-3 text-blue-700 dark:text-blue-400 uppercase tracking-wide flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Seat Assignment
+                    </h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Record Day</label>
+                        <p className="text-sm mt-1 font-semibold">
+                          {seatAssignmentRecordDay 
+                            ? new Date(seatAssignmentRecordDay.date).toLocaleDateString('en-AU', { 
+                                weekday: 'short', 
+                                day: 'numeric', 
+                                month: 'short', 
+                                year: 'numeric' 
+                              })
+                            : 'Unknown'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Block</label>
+                        <p className="text-sm mt-1 font-semibold">Block {selectedContestantSeatAssignment.blockNumber}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Seat</label>
+                        <p className="text-sm mt-1 font-semibold font-mono text-green-600 dark:text-green-400">
+                          {String(selectedContestantSeatAssignment.blockNumber).padStart(2, '0')}-{selectedContestantSeatAssignment.seatLabel}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Contact Information */}
                 {(contestantDetails.email || contestantDetails.phone || contestantDetails.location) && (
