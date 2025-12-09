@@ -1201,11 +1201,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contestantsData = await storage.getContestants();
       const contestantsMap = new Map(contestantsData.map((c) => [c.id, c]));
 
-      // Create a name-to-ID map for resolving attendingWith names to IDs
-      const nameToIdMap = new Map<string, string>();
+      // Create a groupId-to-members map for resolving group relationships
+      // This is more reliable than name matching when duplicate names exist
+      const groupMembersMap = new Map<string, string[]>();
       contestantsData.forEach(c => {
-        if (c.name) {
-          nameToIdMap.set(c.name.toLowerCase(), c.id);
+        if (c.groupId) {
+          const existing = groupMembersMap.get(c.groupId) || [];
+          existing.push(c.id);
+          groupMembersMap.set(c.groupId, existing);
         }
       });
 
@@ -1213,17 +1216,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const enrichedAssignments = assignments.map((assignment) => {
         const contestant = contestantsMap.get(assignment.contestantId);
         
-        // Resolve attendingWith names to contestant IDs (comma-separated names)
+        // Resolve attendingWith using groupId (other group members)
+        // This avoids false positives from duplicate names
         let attendingWithIds: string[] = [];
-        if (contestant?.attendingWith) {
-          // Split by comma and resolve each name
-          const names = contestant.attendingWith.split(',').map(n => n.trim().toLowerCase());
-          for (const name of names) {
-            const id = nameToIdMap.get(name);
-            if (id) {
-              attendingWithIds.push(id);
-            }
-          }
+        if (contestant?.groupId) {
+          const groupMembers = groupMembersMap.get(contestant.groupId) || [];
+          // Add all other members of the same group (exclude self)
+          attendingWithIds = groupMembers.filter(id => id !== contestant.id);
         }
         const attendingWithId = attendingWithIds.length > 0 ? attendingWithIds.join(',') : undefined;
         
