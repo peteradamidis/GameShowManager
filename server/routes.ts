@@ -641,7 +641,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Contestant not found" });
       }
       
-      const updated = await storage.updateContestant(req.params.id, req.body);
+      // Convert empty strings to null for enum fields
+      const body = { ...req.body };
+      if (body.playerType === '') {
+        body.playerType = null;
+      }
+      if (body.auditionRating === '') {
+        body.auditionRating = null;
+      }
+      if (body.gender === '') {
+        body.gender = null;
+      }
+      if (body.availabilityStatus === '') {
+        body.availabilityStatus = null;
+      }
+      
+      const updated = await storage.updateContestant(req.params.id, body);
       res.json(updated);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
