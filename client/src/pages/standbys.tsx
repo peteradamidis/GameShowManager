@@ -73,11 +73,11 @@ const StatusBadge = ({ status }: { status: string }) => {
   const config: Record<string, { label: string; className: string }> = {
     pending: { 
       label: "Assigned", 
-      className: "border-amber-200 bg-amber-500/10 text-amber-700 dark:border-amber-800 dark:text-amber-400" 
+      className: "border-blue-200 bg-blue-500/10 text-blue-700 dark:border-blue-800 dark:text-blue-400" 
     },
     email_sent: { 
       label: "Invited", 
-      className: "border-blue-200 bg-blue-500/10 text-blue-700 dark:border-blue-800 dark:text-blue-400" 
+      className: "border-purple-200 bg-purple-500/10 text-purple-700 dark:border-purple-800 dark:text-purple-400" 
     },
     confirmed: { 
       label: "Booked", 
@@ -89,7 +89,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     },
     seated: { 
       label: "Seated", 
-      className: "border-purple-200 bg-purple-500/10 text-purple-700 dark:border-purple-800 dark:text-purple-400" 
+      className: "border-teal-200 bg-teal-500/10 text-teal-700 dark:border-teal-800 dark:text-teal-400" 
     },
   };
 

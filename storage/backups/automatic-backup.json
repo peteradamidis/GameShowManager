@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-09T02:00:16.456Z",
+  "exportedAt": "2025-12-09T02:14:19.957Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -237,29 +237,6 @@
     ],
     "seatAssignments": [
       {
-        "id": "a001b03c-7c5b-46ba-957e-bb1aeca919d8",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "d698b1de-6641-45c6-aa63-f577d2b634bb",
-        "blockNumber": 1,
-        "seatLabel": "A1",
-        "playerType": null,
-        "firstNations": null,
-        "rating": null,
-        "location": null,
-        "medicalQuestion": null,
-        "criminalBankruptcy": null,
-        "castingCategory": null,
-        "notes": null,
-        "bookingEmailSent": null,
-        "confirmedRsvp": null,
-        "paperworkSent": null,
-        "paperworkReceived": null,
-        "signedIn": null,
-        "otdNotes": null,
-        "standbyReplacementSwaps": null,
-        "createdAt": "2025-12-09T01:58:55.228Z"
-      },
-      {
         "id": "d5957e66-cb7f-4267-bbb8-1c8c7298b62b",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
         "contestantId": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
@@ -272,14 +249,14 @@
         "medicalQuestion": null,
         "criminalBankruptcy": null,
         "castingCategory": null,
-        "notes": null,
+        "notes": "",
         "bookingEmailSent": null,
         "confirmedRsvp": null,
         "paperworkSent": null,
         "paperworkReceived": null,
         "signedIn": null,
         "otdNotes": null,
-        "standbyReplacementSwaps": null,
+        "standbyReplacementSwaps": "",
         "createdAt": "2025-12-09T01:58:55.742Z"
       },
       {
@@ -302,11 +279,53 @@
         "paperworkReceived": null,
         "signedIn": null,
         "otdNotes": null,
-        "standbyReplacementSwaps": null,
+        "standbyReplacementSwaps": "",
         "createdAt": "2025-12-09T01:58:56.248Z"
       }
     ],
-    "standbys": [],
+    "standbys": [
+      {
+        "id": "cc98ff1c-1a1d-43f8-82ea-abcca3482b1e",
+        "contestantId": "d698b1de-6641-45c6-aa63-f577d2b634bb",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "status": "pending",
+        "standbyEmailSent": null,
+        "confirmedAt": null,
+        "notes": null,
+        "assignedToSeat": null,
+        "assignedAt": null,
+        "movedToReschedule": false,
+        "movedToRescheduleAt": null,
+        "createdAt": "2025-12-09T02:05:48.889Z",
+        "contestant": {
+          "id": "d698b1de-6641-45c6-aa63-f577d2b634bb",
+          "name": "Kathleen Reynolds",
+          "age": 33,
+          "gender": "Not Specified",
+          "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
+          "availabilityStatus": "assigned",
+          "attendingWith": "Peter Adamidis, Felicity Parker-Hill",
+          "email": "kathleenmonicareynolds@gmail.com",
+          "phone": "498086080",
+          "location": "Footscray",
+          "medicalInfo": "N",
+          "mobilityNotes": "N/A",
+          "criminalRecord": "N/A",
+          "photoUrl": null,
+          "auditionRating": null,
+          "playerType": null,
+          "createdAt": "2025-12-02T05:59:07.307Z"
+        },
+        "recordDay": {
+          "id": "e432f0fe-1383-44a2-990c-5f787da5008a",
+          "date": "2026-02-04",
+          "rxNumber": "RX EP 1 - 5",
+          "totalSeats": 154,
+          "status": "ready",
+          "createdAt": "2025-11-27T11:34:23.272Z"
+        }
+      }
+    ],
     "blockTypes": [
       {
         "id": "4d9813bd-7b99-4771-8da1-ad6fa01c1c6a",
@@ -497,8 +516,8 @@
     "recordDays": 18,
     "contestants": 3,
     "groups": 5,
-    "seatAssignments": 3,
-    "standbys": 0,
+    "seatAssignments": 2,
+    "standbys": 1,
     "blockTypes": 26,
     "canceledAssignments": 0
   }
