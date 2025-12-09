@@ -259,6 +259,11 @@ export default function SeatingChartPage() {
         blocks: selectedBlocks,
         onlyConfirmedAvailability
       });
+      // Invalidate contestants query to update their status to "Assigned"
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
+      ]);
       await refetch();
       setAutoAssignDialogOpen(false);
       
