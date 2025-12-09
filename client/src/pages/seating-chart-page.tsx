@@ -1,10 +1,10 @@
 import { SeatingChart } from "@/components/seating-chart";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, RotateCcw } from "lucide-react";
+import { Wand2, RotateCcw, Lock, Unlock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SeatData } from "@/components/seat-card";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState, useMemo } from "react";
@@ -75,6 +75,10 @@ export default function SeatingChartPage() {
   // Player type selection
   const [selectedPlayerType, setSelectedPlayerType] = useState<string>("");
   
+  // RX Day Mode lock state
+  const [lockConfirmDialogOpen, setLockConfirmDialogOpen] = useState(false);
+  const [unlockConfirmDialogOpen, setUnlockConfirmDialogOpen] = useState(false);
+  
   // Get record day ID from query parameter or fetch first available
   const searchParams = new URLSearchParams(window.location.search);
   const urlRecordDayId = searchParams.get('day');
@@ -122,6 +126,52 @@ export default function SeatingChartPage() {
     const seatedIds = new Set(assignments.map((a: any) => a.contestantId));
     return allContestants.filter((c: any) => !seatedIds.has(c.id));
   }, [assignments, allContestants]);
+
+  // Check if record day is locked (RX Day Mode)
+  const isLocked = currentRecordDay?.lockedAt != null;
+
+  // Lock/Unlock mutations
+  const lockMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('POST', `/api/record-days/${recordDayId}/lock`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/record-days'] });
+      setLockConfirmDialogOpen(false);
+      toast({
+        title: "RX Day Mode Enabled",
+        description: "Seat swaps will now be tracked for the master list.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Lock failed",
+        description: error?.message || "Could not lock record day.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const unlockMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('POST', `/api/record-days/${recordDayId}/unlock`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/record-days'] });
+      setUnlockConfirmDialogOpen(false);
+      toast({
+        title: "RX Day Mode Disabled",
+        description: "Seat tracking has been turned off.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Unlock failed",
+        description: error?.message || "Could not unlock record day.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Show loading state if record days are still loading
   if (recordDaysLoading) {
@@ -417,7 +467,34 @@ export default function SeatingChartPage() {
             Drag and drop contestants to arrange seating blocks
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {isLocked ? (
+            <Badge 
+              variant="secondary" 
+              className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100 gap-1"
+            >
+              <Lock className="h-3 w-3" />
+              RX Day Mode
+            </Badge>
+          ) : null}
+          <Button 
+            variant={isLocked ? "default" : "outline"} 
+            onClick={() => isLocked ? setUnlockConfirmDialogOpen(true) : setLockConfirmDialogOpen(true)} 
+            data-testid="button-toggle-lock"
+            className={isLocked ? "bg-amber-600 hover:bg-amber-700 text-white" : ""}
+          >
+            {isLocked ? (
+              <>
+                <Unlock className="h-4 w-4 mr-2" />
+                Unlock
+              </>
+            ) : (
+              <>
+                <Lock className="h-4 w-4 mr-2" />
+                Lock for RX Day
+              </>
+            )}
+          </Button>
           <Button variant="outline" onClick={() => setResetDialogOpen(true)} data-testid="button-reset-seating">
             <RotateCcw className="h-4 w-4 mr-2" />
             Reset
@@ -441,6 +518,7 @@ export default function SeatingChartPage() {
           onEmptySeatClick={handleEmptySeatClick}
           onRemove={handleRemove}
           onCancel={handleCancel}
+          isLocked={isLocked}
         />
       )}
 
@@ -662,6 +740,65 @@ export default function SeatingChartPage() {
               data-testid="button-auto-assign-confirm"
             >
               {isAutoAssigning ? "Assigning..." : `Auto-Assign to ${selectedBlocks.length === 7 ? 'All Blocks' : `${selectedBlocks.length} Block${selectedBlocks.length > 1 ? 's' : ''}`}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lock Confirmation Dialog */}
+      <Dialog open={lockConfirmDialogOpen} onOpenChange={setLockConfirmDialogOpen}>
+        <DialogContent data-testid="dialog-lock-confirmation">
+          <DialogHeader>
+            <DialogTitle>Enable RX Day Mode</DialogTitle>
+            <DialogDescription>
+              This locks the seating chart for recording day. Any seat swaps made after locking will be tracked and highlighted, allowing the master list to show both original and current seat positions.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setLockConfirmDialogOpen(false)}
+              data-testid="button-lock-cancel"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => lockMutation.mutate()}
+              disabled={lockMutation.isPending}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+              data-testid="button-lock-confirm"
+            >
+              {lockMutation.isPending ? "Locking..." : "Enable RX Day Mode"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unlock Confirmation Dialog */}
+      <Dialog open={unlockConfirmDialogOpen} onOpenChange={setUnlockConfirmDialogOpen}>
+        <DialogContent data-testid="dialog-unlock-confirmation">
+          <DialogHeader>
+            <DialogTitle>Disable RX Day Mode</DialogTitle>
+            <DialogDescription>
+              This will disable swap tracking. Existing swap history will be preserved, but new swaps will no longer be tracked until you re-enable RX Day Mode.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setUnlockConfirmDialogOpen(false)}
+              data-testid="button-unlock-cancel"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => unlockMutation.mutate()}
+              disabled={unlockMutation.isPending}
+              data-testid="button-unlock-confirm"
+            >
+              {unlockMutation.isPending ? "Unlocking..." : "Disable RX Day Mode"}
             </Button>
           </DialogFooter>
         </DialogContent>

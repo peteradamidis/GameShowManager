@@ -29,6 +29,7 @@ interface SeatingChartProps {
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
   onRemove?: (assignmentId: string) => void;
   onCancel?: (assignmentId: string) => void;
+  isLocked?: boolean; // RX Day Mode - when true, use tracked swap endpoint
 }
 
 function DraggableDroppableSeat({
@@ -300,7 +301,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, isLocked = false }: SeatingChartProps) {
   const [blocks, setBlocks] = useState<SeatData[][]>(
     initialSeats || Array(7).fill(null).map((_, blockIdx) => 
       generateBlockSeats(recordDayId, blockIdx)
@@ -471,12 +472,14 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         return;
       }
 
-      // Use atomic swap endpoint
+      // Use atomic swap endpoint (tracked version when locked)
+      const swapEndpoint = isLocked ? '/api/seat-assignments/swap-tracked' : '/api/seat-assignments/swap';
+      
       if (targetSeat.seat.assignmentId) {
         // Swapping two assigned seats
         await apiRequest(
           'POST',
-          '/api/seat-assignments/swap',
+          swapEndpoint,
           {
             sourceAssignmentId: sourceSeat.seat.assignmentId,
             targetAssignmentId: targetSeat.seat.assignmentId,

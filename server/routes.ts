@@ -2062,19 +2062,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Lock/Unlock record day for RX Day Mode
+  // Lock record day for RX Day Mode
   app.post("/api/record-days/:id/lock", async (req, res) => {
     try {
       const recordDayId = req.params.id;
-      const { lock } = req.body; // true to lock, false to unlock
       
       const recordDay = await storage.getRecordDay(recordDayId);
       if (!recordDay) {
         return res.status(404).json({ error: "Record day not found" });
       }
       
-      const lockedAt = lock ? new Date() : null;
-      const updated = await storage.updateRecordDayLock(recordDayId, lockedAt);
+      const updated = await storage.updateRecordDayLock(recordDayId, new Date());
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Unlock record day for RX Day Mode
+  app.post("/api/record-days/:id/unlock", async (req, res) => {
+    try {
+      const recordDayId = req.params.id;
+      
+      const recordDay = await storage.getRecordDay(recordDayId);
+      if (!recordDay) {
+        return res.status(404).json({ error: "Record day not found" });
+      }
+      
+      const updated = await storage.updateRecordDayLock(recordDayId, null);
       res.json(updated);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -2082,9 +2097,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Swap seats in locked (RX Day) mode - swaps two contestants' seats and tracks original positions
-  app.post("/api/seat-assignments/swap", async (req, res) => {
+  app.post("/api/seat-assignments/swap-tracked", async (req, res) => {
     try {
-      const { assignment1Id, assignment2Id } = req.body;
+      const { sourceAssignmentId, targetAssignmentId } = req.body;
+      const assignment1Id = sourceAssignmentId;
+      const assignment2Id = targetAssignmentId;
       
       if (!assignment1Id || !assignment2Id) {
         return res.status(400).json({ error: "Both assignment IDs are required for swap" });
