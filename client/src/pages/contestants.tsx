@@ -597,7 +597,7 @@ export default function Contestants() {
               ) : (
                 <>
                   <Button 
-                    className="bg-amber-500 hover:bg-amber-600 text-white"
+                    className="bg-amber-400/80 hover:bg-amber-500/80 text-amber-950"
                     onClick={() => {
                       refetchRecordDays();
                       setStandbyDialogOpen(true);
@@ -1119,7 +1119,7 @@ export default function Contestants() {
               Cancel
             </Button>
             <Button 
-              className="bg-amber-500 hover:bg-amber-600 text-white"
+              className="bg-amber-400/80 hover:bg-amber-500/80 text-amber-950"
               onClick={() => {
                 if (selectedRecordDay && selectedContestants.length > 0) {
                   addStandbyMutation.mutate({
