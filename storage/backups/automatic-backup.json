@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-09T00:22:02.473Z",
+  "exportedAt": "2025-12-09T00:26:05.951Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -236,49 +236,7 @@
       }
     ],
     "seatAssignments": [],
-    "standbys": [
-      {
-        "id": "69511596-e3b5-41be-a93b-920748af4fe0",
-        "contestantId": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "status": "pending",
-        "standbyEmailSent": null,
-        "confirmedAt": null,
-        "notes": null,
-        "assignedToSeat": null,
-        "assignedAt": null,
-        "movedToReschedule": true,
-        "movedToRescheduleAt": "2025-12-07T02:43:44.396Z",
-        "createdAt": "2025-12-07T02:39:09.176Z",
-        "contestant": {
-          "id": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
-          "name": "Peter Adamidis",
-          "age": 34,
-          "gender": "Not Specified",
-          "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
-          "availabilityStatus": "available",
-          "attendingWith": "Kathleen Reynolds, Felicity Parker-Hill",
-          "email": "peter.adamidis@gmail.com",
-          "phone": "498086080",
-          "location": "",
-          "medicalInfo": "Y",
-          "mobilityNotes": "Broken Leg",
-          "criminalRecord": "Assault & Theft",
-          "photoUrl": null,
-          "auditionRating": "",
-          "playerType": null,
-          "createdAt": "2025-12-02T05:59:07.415Z"
-        },
-        "recordDay": {
-          "id": "e432f0fe-1383-44a2-990c-5f787da5008a",
-          "date": "2026-02-04",
-          "rxNumber": "RX1 - 1-5",
-          "totalSeats": 154,
-          "status": "ready",
-          "createdAt": "2025-11-27T11:34:23.272Z"
-        }
-      }
-    ],
+    "standbys": [],
     "blockTypes": [
       {
         "id": "4d9813bd-7b99-4771-8da1-ad6fa01c1c6a",
@@ -470,7 +428,7 @@
     "contestants": 3,
     "groups": 5,
     "seatAssignments": 0,
-    "standbys": 1,
+    "standbys": 0,
     "blockTypes": 26,
     "canceledAssignments": 0
   }

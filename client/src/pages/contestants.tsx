@@ -597,8 +597,7 @@ export default function Contestants() {
               ) : (
                 <>
                   <Button 
-                    variant="outline"
-                    className="border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950"
+                    className="bg-amber-500 hover:bg-amber-600 text-white"
                     onClick={() => {
                       refetchRecordDays();
                       setStandbyDialogOpen(true);
