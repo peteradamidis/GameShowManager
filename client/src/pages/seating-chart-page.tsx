@@ -72,8 +72,6 @@ export default function SeatingChartPage() {
   const [isAutoAssigning, setIsAutoAssigning] = useState(false);
   const [onlyConfirmedAvailability, setOnlyConfirmedAvailability] = useState(false);
   
-  // Player type selection
-  const [selectedPlayerType, setSelectedPlayerType] = useState<string>("");
   
   // RX Day Mode lock state
   const [lockConfirmDialogOpen, setLockConfirmDialogOpen] = useState(false);
@@ -350,7 +348,6 @@ export default function SeatingChartPage() {
     setSelectedBlock(blockNumber);
     setSelectedSeat(seatLabel);
     setSelectedContestant("");
-    setSelectedPlayerType("");
     setAssignDialogOpen(true);
   };
 
@@ -363,7 +360,6 @@ export default function SeatingChartPage() {
         contestantId: selectedContestant,
         blockNumber: selectedBlock,
         seatLabel: selectedSeat,
-        playerType: selectedPlayerType || undefined,
       });
       
       // Invalidate ALL related queries for consistent state across tabs
@@ -382,7 +378,6 @@ export default function SeatingChartPage() {
 
       setAssignDialogOpen(false);
       setSelectedContestant("");
-      setSelectedPlayerType("");
     } catch (error: any) {
       // Refresh to get latest seat assignments
       await refetch();
@@ -546,37 +541,31 @@ export default function SeatingChartPage() {
                 No available contestants. All contestants are already seated in this record day.
               </p>
             ) : (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="contestant-select">Contestant</Label>
-                  <Select value={selectedContestant} onValueChange={setSelectedContestant}>
-                    <SelectTrigger id="contestant-select" data-testid="select-contestant">
-                      <SelectValue placeholder="Select a contestant" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableContestants.map((contestant: any) => (
-                        <SelectItem key={contestant.id} value={contestant.id}>
-                          {contestant.name} ({contestant.age}, {contestant.gender})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="player-type-select">Player Type</Label>
-                  <Select value={selectedPlayerType} onValueChange={setSelectedPlayerType}>
-                    <SelectTrigger id="player-type-select" data-testid="select-player-type">
-                      <SelectValue placeholder="Select player type (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="player">Player</SelectItem>
-                      <SelectItem value="backup">Backup</SelectItem>
-                      <SelectItem value="player_partner">Player Partner</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </>
+              <div className="space-y-2">
+                <Label htmlFor="contestant-select">Contestant</Label>
+                <Select value={selectedContestant} onValueChange={setSelectedContestant}>
+                  <SelectTrigger id="contestant-select" data-testid="select-contestant">
+                    <SelectValue placeholder="Select a contestant" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableContestants.map((contestant: any) => (
+                      <SelectItem key={contestant.id} value={contestant.id}>
+                        <span className="flex items-center gap-2">
+                          <span>{contestant.name}</span>
+                          <span className="text-muted-foreground text-xs">
+                            ({contestant.auditionRating || "?"} / {contestant.gender === "Female" ? "F" : "M"})
+                          </span>
+                          {contestant.attendingWith && (
+                            <span className="text-muted-foreground text-xs italic">
+                              w/ {contestant.attendingWith}
+                            </span>
+                          )}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
           </div>
 
