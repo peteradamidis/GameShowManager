@@ -139,9 +139,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
               </Button>
             </form>
           </Form>
-          <p className="text-sm text-muted-foreground text-center mt-6">
-            Default credentials: admin / admin
-          </p>
         </CardContent>
       </Card>
     </div>
