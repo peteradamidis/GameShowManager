@@ -59,13 +59,13 @@ const COLUMN_CONFIG = [
   { id: "criminal", label: "CRIM / BANK", alwaysVisible: false },
   { id: "castingCategory", label: "CASTING CATEGORY", alwaysVisible: false },
   { id: "notes", label: "NOTES", alwaysVisible: false },
-  { id: "emailSent", label: "EMAIL SENT", alwaysVisible: true },
-  { id: "rsvp", label: "RSVP", alwaysVisible: true },
-  { id: "paperSent", label: "PAPER SENT", alwaysVisible: true },
-  { id: "paperReceived", label: "PAPER ✓", alwaysVisible: true },
-  { id: "signedIn", label: "SIGNED IN", alwaysVisible: true },
-  { id: "otdNotes", label: "OTD NOTES", alwaysVisible: true },
-  { id: "standby", label: "STANDBY / SWAPS", alwaysVisible: true },
+  { id: "emailSent", label: "EMAIL SENT", alwaysVisible: false },
+  { id: "rsvp", label: "RSVP", alwaysVisible: false },
+  { id: "paperSent", label: "PAPER SENT", alwaysVisible: false },
+  { id: "paperReceived", label: "PAPER ✓", alwaysVisible: false },
+  { id: "signedIn", label: "SIGNED IN", alwaysVisible: false },
+  { id: "otdNotes", label: "OTD NOTES", alwaysVisible: false },
+  { id: "standby", label: "STANDBY / SWAPS", alwaysVisible: false },
 ] as const;
 
 type ColumnId = typeof COLUMN_CONFIG[number]["id"];
@@ -816,7 +816,7 @@ export default function BookingMaster() {
                   {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">CONFIRM<br/>ED RSVP</TableHead>}
                   {isColumnVisible("paperSent") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">PAPER<br/>WORK<br/>SENT</TableHead>}
                   {isColumnVisible("paperReceived") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">PAPER<br/>WORK<br/>RECEIVED<br/>& LOGGED</TableHead>}
-                  {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">SIGNED<br/>IN</TableHead>}
+                  {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-[#a8d4a8] dark:bg-[#2a5a3a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">SIGNED<br/>IN</TableHead>}
                   {isColumnVisible("otdNotes") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">OTD<br/>NOTES</TableHead>}
                   {isColumnVisible("standby") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center text-[#00363a] dark:text-white font-semibold">STANDBY /<br/>SWAPS</TableHead>}
                 </TableRow>
@@ -971,11 +971,12 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("signedIn") && (
-                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-[#e8f4f4] dark:bg-[#1a3a3a] border-r border-gray-200 dark:border-gray-700">
+                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-[#d4e8d4] dark:bg-[#1a3a2a] border-r border-gray-200 dark:border-gray-700">
                             {row.assignment && (
                               <Checkbox
                                 checked={!!row.assignment.signedIn}
                                 onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "signedIn", row.assignment!.signedIn)}
+                                className="border-green-600 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                                 data-testid={`checkbox-signed-in-${row.seatId}`}
                               />
                             )}
