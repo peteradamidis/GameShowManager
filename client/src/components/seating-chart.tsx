@@ -16,11 +16,29 @@ import { SeatCard, SeatData } from "./seat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
-import { Link2 } from "lucide-react";
+import { Link2, AlertTriangle } from "lucide-react";
+
+// Pending swap operation type
+interface PendingSwap {
+  sourceSeat: { blockIdx: number; seatIdx: number; seat: SeatData };
+  targetSeat: { blockIdx: number; seatIdx: number; seat: SeatData };
+  sourceLocation: { blockNumber: number; seatLabel: string };
+  targetLocation: { blockNumber: number; seatLabel: string };
+}
 
 interface SeatingChartProps {
   recordDayId: string;
@@ -309,6 +327,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   );
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+  const [pendingSwap, setPendingSwap] = useState<PendingSwap | null>(null);
   const { toast } = useToast();
 
   // Fetch block types for this record day
@@ -388,35 +407,24 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     setOverId(event.over?.id as string | null);
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    setActiveId(null);
-    setOverId(null);
+  // Helper to extract block number and seat label from seat IDs
+  const getBlockAndSeat = (seatId: string) => {
+    // ID format: "recordDayId-blockX-seatLabel"
+    const parts = seatId.split('-');
+    const blockPart = parts[parts.length - 2]; // e.g., "block0"
+    const seatLabel = parts[parts.length - 1]; // e.g., "A1"
+    const blockNumber = parseInt(blockPart.replace('block', '')) + 1; // Convert to 1-indexed
+    return { blockNumber, seatLabel };
+  };
 
-    if (!over || active.id === over.id) return;
-
-    const sourceSeat = findSeat(active.id as string);
-    const targetSeat = findSeat(over.id as string);
-
-    if (!sourceSeat || !targetSeat) return;
-
-    // Don't allow swapping if source is empty
-    if (!sourceSeat.seat.contestantName) return;
-
-    // Extract block number and seat label from seat IDs
-    const getBlockAndSeat = (seatId: string) => {
-      // ID format: "recordDayId-blockX-seatLabel"
-      const parts = seatId.split('-');
-      const blockPart = parts[parts.length - 2]; // e.g., "block0"
-      const seatLabel = parts[parts.length - 1]; // e.g., "A1"
-      const blockNumber = parseInt(blockPart.replace('block', '')) + 1; // Convert to 1-indexed
-      return { blockNumber, seatLabel };
-    };
-
-    const sourceLocation = getBlockAndSeat(sourceSeat.seat.id);
-    const targetLocation = getBlockAndSeat(targetSeat.seat.id);
-
+  // Execute the actual swap operation
+  const executeSwap = async (
+    sourceSeat: PendingSwap['sourceSeat'],
+    targetSeat: PendingSwap['targetSeat'],
+    sourceLocation: PendingSwap['sourceLocation'],
+    targetLocation: PendingSwap['targetLocation'],
+    useTrackedEndpoint: boolean
+  ) => {
     // Update local state immediately for responsive UI
     setBlocks(prevBlocks => {
       const newBlocks = prevBlocks.map(block => [...block]);
@@ -435,6 +443,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         contestantId: targetData.contestantId,
         auditionRating: targetData.auditionRating,
         attendingWith: targetData.attendingWith,
+        originalBlockNumber: targetData.originalBlockNumber,
+        originalSeatLabel: targetData.originalSeatLabel,
       };
       
       newBlocks[targetSeat.blockIdx][targetSeat.seatIdx] = {
@@ -447,6 +457,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         contestantId: sourceData.contestantId,
         auditionRating: sourceData.auditionRating,
         attendingWith: sourceData.attendingWith,
+        originalBlockNumber: sourceData.originalBlockNumber,
+        originalSeatLabel: sourceData.originalSeatLabel,
       };
       
       return newBlocks;
@@ -472,8 +484,10 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         return;
       }
 
-      // Use atomic swap endpoint (tracked version when locked)
-      const swapEndpoint = isLocked ? '/api/seat-assignments/swap-tracked' : '/api/seat-assignments/swap';
+      // Use tracked endpoint when in RX Day Mode for swapping two contestants
+      const swapEndpoint = useTrackedEndpoint && targetSeat.seat.assignmentId 
+        ? '/api/seat-assignments/swap-tracked' 
+        : '/api/seat-assignments/swap';
       
       if (targetSeat.seat.assignmentId) {
         // Swapping two assigned seats
@@ -531,6 +545,57 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         variant: "destructive",
       });
     }
+  };
+
+  // Handle drag end - check if locked and require confirmation
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    setActiveId(null);
+    setOverId(null);
+
+    if (!over || active.id === over.id) return;
+
+    const sourceSeat = findSeat(active.id as string);
+    const targetSeat = findSeat(over.id as string);
+
+    if (!sourceSeat || !targetSeat) return;
+
+    // Don't allow swapping if source is empty
+    if (!sourceSeat.seat.contestantName) return;
+
+    const sourceLocation = getBlockAndSeat(sourceSeat.seat.id);
+    const targetLocation = getBlockAndSeat(targetSeat.seat.id);
+
+    // If locked, show confirmation dialog instead of immediate swap
+    if (isLocked) {
+      setPendingSwap({
+        sourceSeat,
+        targetSeat,
+        sourceLocation,
+        targetLocation,
+      });
+      return;
+    }
+
+    // Not locked - execute swap immediately
+    await executeSwap(sourceSeat, targetSeat, sourceLocation, targetLocation, false);
+  };
+
+  // Handle confirmation of locked swap
+  const handleConfirmLockedSwap = async () => {
+    if (!pendingSwap) return;
+    
+    const { sourceSeat, targetSeat, sourceLocation, targetLocation } = pendingSwap;
+    setPendingSwap(null);
+    
+    // Execute swap with tracked endpoint
+    await executeSwap(sourceSeat, targetSeat, sourceLocation, targetLocation, true);
+  };
+
+  // Handle cancel of locked swap
+  const handleCancelLockedSwap = () => {
+    setPendingSwap(null);
   };
 
   // Split blocks: 0-2 (top row), 3-5 (bottom row), 6 (standing)
@@ -642,6 +707,54 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
             </div>
           ) : null}
         </DragOverlay>
+
+        {/* Locked Swap Confirmation Dialog */}
+        <AlertDialog open={!!pendingSwap} onOpenChange={(open) => !open && handleCancelLockedSwap()}>
+          <AlertDialogContent data-testid="dialog-locked-swap">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                Seating Chart is Locked
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <span className="block">
+                    This seating chart is currently in <strong className="text-amber-600">RX Day Mode</strong>. 
+                    Moving contestants will be tracked for audit purposes.
+                  </span>
+                  {pendingSwap && (
+                    <div className="mt-3 p-3 bg-muted rounded-lg text-sm">
+                      <span className="block font-medium text-foreground">
+                        Move <span className="text-primary">{pendingSwap.sourceSeat.seat.contestantName}</span>
+                        {' '}from seat <strong>{String(pendingSwap.sourceLocation.blockNumber).padStart(2, '0')}-{pendingSwap.sourceLocation.seatLabel}</strong>
+                        {' '}to <strong>{String(pendingSwap.targetLocation.blockNumber).padStart(2, '0')}-{pendingSwap.targetLocation.seatLabel}</strong>
+                      </span>
+                      {pendingSwap.targetSeat.seat.contestantName && (
+                        <span className="block mt-1 text-foreground">
+                          <span className="text-primary">{pendingSwap.targetSeat.seat.contestantName}</span>
+                          {' '}will move to <strong>{String(pendingSwap.sourceLocation.blockNumber).padStart(2, '0')}-{pendingSwap.sourceLocation.seatLabel}</strong>
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <span className="block text-muted-foreground text-xs">
+                    This move will be recorded and visible with a "MOVED" indicator.
+                  </span>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel data-testid="button-locked-swap-cancel">Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                data-testid="button-locked-swap-confirm"
+                className="bg-amber-500 hover:bg-amber-600 text-white"
+                onClick={handleConfirmLockedSwap}
+              >
+                Confirm Move
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
     </DndContext>
   );
 }

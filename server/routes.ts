@@ -1193,6 +1193,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           otdNotes: assignment.otdNotes,
           standbyReplacementSwaps: assignment.standbyReplacementSwaps,
           playerType: assignment.playerType,
+          originalBlockNumber: assignment.originalBlockNumber,
+          originalSeatLabel: assignment.originalSeatLabel,
           contestantName: contestant?.name,
           age: contestant?.age,
           gender: contestant?.gender,

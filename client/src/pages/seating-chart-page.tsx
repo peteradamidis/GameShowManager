@@ -218,6 +218,8 @@ export default function SeatingChartPage() {
             auditionRating: assignment.auditionRating,
             playerType: assignment.playerType,
             attendingWith: assignment.attendingWith,
+            originalBlockNumber: assignment.originalBlockNumber,
+            originalSeatLabel: assignment.originalSeatLabel,
           };
         }
       }

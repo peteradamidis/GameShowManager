@@ -3,7 +3,8 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { User, X, Ban, Plus } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { User, X, Ban, Plus, ArrowLeftRight } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import {
@@ -27,6 +28,8 @@ export interface SeatData {
   auditionRating?: string; // A+, A, B+, B, C
   medicalQuestion?: string; // Y/N from booking master
   playerType?: "player" | "backup" | "player_partner"; // PLAYER, BACKUP, PLAYER_PARTNER
+  originalBlockNumber?: number; // RX Day Mode - original position before swap
+  originalSeatLabel?: string; // RX Day Mode - original seat label before swap
 }
 
 interface SeatCardProps {
@@ -70,6 +73,12 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
 
   // Extract seat label from ID (e.g., "A1", "B3")
   const seatLabel = seat.id.split('-').pop() || '';
+  
+  // Check if this seat was swapped during RX Day Mode
+  const wasSwapped = seat.originalBlockNumber !== undefined && seat.originalSeatLabel !== undefined;
+  const originalPosition = wasSwapped 
+    ? `${String(seat.originalBlockNumber).padStart(2, '0')}-${seat.originalSeatLabel}`
+    : null;
 
   // Fetch full contestant details on hover (only for occupied seats)
   const { data: contestantDetails } = useQuery({
@@ -113,7 +122,26 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
         </div>
       ) : (
         <div className="space-y-1">
-          <div className="text-[10px] font-mono text-muted-foreground">{seatLabel}</div>
+          <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
+            <span>{seatLabel}</span>
+            {wasSwapped && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span 
+                    data-testid={`badge-moved-${seat.assignmentId}`}
+                    className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-600 cursor-help"
+                  >
+                    <ArrowLeftRight className="h-2.5 w-2.5" />
+                    <span className="text-[8px] font-semibold">MOVED</span>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  <p>Originally at: <strong>{originalPosition}</strong></p>
+                  <p className="text-muted-foreground">Moved during RX Day</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
           <div className="flex items-center gap-1">
             <p className="font-medium truncate text-xs flex-1" title={seat.contestantName}>
               {seat.contestantName}

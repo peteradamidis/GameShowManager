@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-09T02:58:08.965Z",
+  "exportedAt": "2025-12-09T04:43:46.730Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -154,7 +154,7 @@
         "rxNumber": "RX EP 1 - 5",
         "totalSeats": 154,
         "status": "ready",
-        "lockedAt": null,
+        "lockedAt": "2025-12-09T04:42:02.796Z",
         "createdAt": "2025-11-27T11:34:23.272Z"
       }
     ],
@@ -272,32 +272,6 @@
         "createdAt": "2025-12-09T02:34:16.487Z"
       },
       {
-        "id": "d5957e66-cb7f-4267-bbb8-1c8c7298b62b",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
-        "blockNumber": 1,
-        "seatLabel": "A2",
-        "playerType": null,
-        "originalBlockNumber": null,
-        "originalSeatLabel": null,
-        "swappedAt": null,
-        "firstNations": null,
-        "rating": null,
-        "location": null,
-        "medicalQuestion": null,
-        "criminalBankruptcy": null,
-        "castingCategory": null,
-        "notes": "",
-        "bookingEmailSent": null,
-        "confirmedRsvp": null,
-        "paperworkSent": null,
-        "paperworkReceived": null,
-        "signedIn": null,
-        "otdNotes": null,
-        "standbyReplacementSwaps": "",
-        "createdAt": "2025-12-09T01:58:55.742Z"
-      },
-      {
         "id": "36cd33af-9bac-49bf-bb65-5b0cc9ad1077",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
         "contestantId": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
@@ -322,6 +296,32 @@
         "otdNotes": null,
         "standbyReplacementSwaps": "",
         "createdAt": "2025-12-09T01:58:56.248Z"
+      },
+      {
+        "id": "d5957e66-cb7f-4267-bbb8-1c8c7298b62b",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "contestantId": "28603f95-d5f6-47ab-88c4-0d79742a6b02",
+        "blockNumber": 1,
+        "seatLabel": "A2",
+        "playerType": null,
+        "originalBlockNumber": null,
+        "originalSeatLabel": null,
+        "swappedAt": null,
+        "firstNations": null,
+        "rating": null,
+        "location": null,
+        "medicalQuestion": null,
+        "criminalBankruptcy": null,
+        "castingCategory": null,
+        "notes": "",
+        "bookingEmailSent": null,
+        "confirmedRsvp": null,
+        "paperworkSent": null,
+        "paperworkReceived": null,
+        "signedIn": null,
+        "otdNotes": null,
+        "standbyReplacementSwaps": "",
+        "createdAt": "2025-12-09T01:58:55.742Z"
       }
     ],
     "standbys": [],
