@@ -8,7 +8,7 @@ import crypto from "crypto";
 import path from "path";
 import express from "express";
 import fs from "fs";
-import { getUncachableGmailClient, sendEmail, sendEmailWithAttachment, getInboxMessages, ParsedEmail, EmailConfig, isGmailAvailable } from "./gmail";
+import { sendEmail, sendEmailWithAttachment, EmailConfig, isEmailAvailable, testSmtpConnection, getSmtpConfig, getSenderEmail } from "./email";
 import { syncRecordDayToSheet, createSheetHeader, updateCellInRecordDaySheet, updateRowInRecordDaySheet, getRecordDaySheetData, isGoogleSheetsAvailable } from "./google-sheets";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { requireAuth, hashPassword, verifyPassword } from "./auth";
@@ -2231,14 +2231,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Availability Management Routes
 
-  // Generate tokens and send availability check emails via Gmail
+  // Generate tokens and send availability check emails
   app.post("/api/availability/send", async (req, res) => {
     try {
-      // Check if Gmail integration is available
-      if (!isGmailAvailable()) {
+      // Check if email is configured
+      if (!await isEmailAvailable()) {
         return res.status(503).json({ 
           code: 'INTEGRATION_DISABLED',
-          error: "Email sending is not available. Gmail integration requires Replit Connectors or local OAuth setup." 
+          error: "Email sending is not available. Please configure SMTP settings in the Settings page." 
         });
       }
 
@@ -2317,8 +2317,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .join('\n  • ');
 
           // Create email with all record days listed
-          const gmail = await getUncachableGmailClient();
-          
           const emailContent = `
 Hi ${contestant.name},
 
@@ -2336,23 +2334,19 @@ Thank you!
 Deal or No Deal Production Team
           `.trim();
 
-          const message = [
-            `To: ${contestant.email}`,
-            'Subject: Availability Confirmation Request - Multiple Dates',
-            'Content-Type: text/plain; charset="UTF-8"',
-            'MIME-Version: 1.0',
-            '',
-            emailContent
-          ].join('\n');
+          // Get sender name from settings
+          const senderNameConfig = await storage.getSystemConfig('email_sender_name');
+          const emailConfig: EmailConfig = {
+            senderName: senderNameConfig || 'Deal or No Deal',
+          };
 
-          const encodedMessage = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-
-          await gmail.users.messages.send({
-            userId: 'me',
-            requestBody: {
-              raw: encodedMessage
-            }
-          });
+          await sendEmail(
+            contestant.email,
+            'Availability Confirmation Request - Multiple Dates',
+            emailContent,
+            undefined,
+            emailConfig
+          );
 
           emailsSent.push({
             contestantId,
@@ -2637,11 +2631,11 @@ Deal or No Deal Production Team
   // Send booking confirmation emails for selected seat assignments
   app.post("/api/booking-confirmations/send", async (req, res) => {
     try {
-      // Check if Gmail integration is available
-      if (!isGmailAvailable()) {
+      // Check if email is configured
+      if (!await isEmailAvailable()) {
         return res.status(503).json({ 
           code: 'INTEGRATION_DISABLED',
-          error: "Email sending is not available. Gmail integration requires Replit Connectors or local OAuth setup." 
+          error: "Email sending is not available. Please configure SMTP settings in the Settings page." 
         });
       }
 
@@ -2948,11 +2942,11 @@ Deal or No Deal Production Team
   // Send follow-up email to a contestant (reply to their questions)
   app.post("/api/booking-confirmations/:id/follow-up", async (req, res) => {
     try {
-      // Check if Gmail integration is available
-      if (!isGmailAvailable()) {
+      // Check if email is configured
+      if (!await isEmailAvailable()) {
         return res.status(503).json({ 
           code: 'INTEGRATION_DISABLED',
-          error: "Email sending is not available. Gmail integration requires Replit Connectors or local OAuth setup." 
+          error: "Email sending is not available. Please configure SMTP settings in the Settings page." 
         });
       }
 
@@ -3388,103 +3382,14 @@ Deal or No Deal Production Team
     }
   });
 
-  // Poll Gmail inbox for contestant email replies and store them in booking_messages
+  // Poll inbox for contestant email replies - not available with SMTP
+  // Note: This feature requires mail server API access (IMAP/Exchange Web Services)
+  // With SMTP-only setup, contestants respond via booking confirmation forms instead
   app.post("/api/booking-confirmations/poll-inbox", async (req, res) => {
-    try {
-      // Check if Gmail integration is available
-      if (!isGmailAvailable()) {
-        return res.status(503).json({ 
-          code: 'INTEGRATION_DISABLED',
-          error: "Inbox polling is not available. Gmail integration requires Replit Connectors or local OAuth setup." 
-        });
-      }
-
-      console.log("📥 Starting inbox polling for contestant replies...");
-      
-      // Fetch recent inbox messages (last 24 hours by default)
-      const oneDayAgo = new Date();
-      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-      
-      const inboxMessages = await getInboxMessages(50, oneDayAgo);
-      console.log(`📥 Retrieved ${inboxMessages.length} inbox messages`);
-      
-      const processedMessages: any[] = [];
-      const skippedMessages: any[] = [];
-      
-      for (const email of inboxMessages) {
-        // Check if this Gmail message has already been processed
-        const alreadyProcessed = await storage.isGmailMessageProcessed(email.id);
-        if (alreadyProcessed) {
-          skippedMessages.push({
-            gmailId: email.id,
-            from: email.fromEmail,
-            subject: email.subject,
-            reason: 'Already processed'
-          });
-          continue;
-        }
-        
-        // Find booking confirmations for this sender's email
-        const confirmations = await storage.getBookingConfirmationsByContestantEmail(email.fromEmail);
-        
-        if (confirmations.length === 0) {
-          skippedMessages.push({
-            gmailId: email.id,
-            from: email.fromEmail,
-            subject: email.subject,
-            reason: 'No matching booking confirmation found'
-          });
-          continue;
-        }
-        
-        // Find the most recent/relevant confirmation for this contestant
-        // Sort by createdAt desc to get the most recent first
-        const sortedConfirmations = confirmations.sort((a, b) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        
-        // Use the most recent active or used confirmation
-        const relevantConfirmation = sortedConfirmations.find(c => 
-          c.status === 'active' || c.status === 'used'
-        ) || sortedConfirmations[0];
-        
-        // Store the inbound message
-        const message = await storage.createBookingMessage({
-          confirmationId: relevantConfirmation.id,
-          direction: 'inbound',
-          messageType: 'reply',
-          subject: email.subject || 'Email Reply',
-          body: email.body || '[No content]',
-          senderEmail: email.fromEmail,
-          gmailMessageId: email.id,
-          sentAt: email.date,
-        });
-        
-        processedMessages.push({
-          gmailId: email.id,
-          messageId: message.id,
-          from: email.fromEmail,
-          subject: email.subject,
-          contestant: relevantConfirmation.contestant.name,
-          confirmationId: relevantConfirmation.id,
-        });
-        
-        console.log(`📨 Stored reply from ${email.fromEmail} (${relevantConfirmation.contestant.name})`);
-      }
-      
-      console.log(`📥 Inbox polling complete: ${processedMessages.length} processed, ${skippedMessages.length} skipped`);
-      
-      res.json({
-        success: true,
-        processed: processedMessages.length,
-        skipped: skippedMessages.length,
-        processedMessages,
-        skippedMessages,
-      });
-    } catch (error: any) {
-      console.error("Error polling inbox:", error);
-      res.status(500).json({ error: error.message });
-    }
+    return res.status(503).json({ 
+      code: 'FEATURE_NOT_AVAILABLE',
+      error: "Inbox polling is not available with SMTP email. Contestants can respond via the booking confirmation forms instead." 
+    });
   });
 
   // ===== STANDBY ENDPOINTS =====
@@ -3844,26 +3749,19 @@ Deal or No Deal Production Team
             <p>Thank you,<br>Deal or No Deal Production Team</p>
           `;
 
-          // Send email via Gmail API
-          const gmail = await getUncachableGmailClient();
-          
-          const message = [
-            `To: ${standby.contestant.email}`,
-            `Subject: ${subject}`,
-            'Content-Type: text/html; charset="UTF-8"',
-            'MIME-Version: 1.0',
-            '',
-            htmlBody
-          ].join('\n');
+          // Send email via SMTP
+          const senderNameConfig = await storage.getSystemConfig('email_sender_name');
+          const emailConfig: EmailConfig = {
+            senderName: senderNameConfig || 'Deal or No Deal',
+          };
 
-          const encodedMessage = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-
-          await gmail.users.messages.send({
-            userId: 'me',
-            requestBody: {
-              raw: encodedMessage
-            }
-          });
+          await sendEmail(
+            standby.contestant.email!,
+            subject,
+            htmlBody, // plain text version will be auto-generated
+            htmlBody,
+            emailConfig
+          );
 
           // Update standby assignment
           await storage.updateStandbyAssignment(standby.id, {
@@ -4017,18 +3915,21 @@ Deal or No Deal Production Team
   // System Integrations Status Endpoint
   // ==========================================
 
-  // Get status of all external integrations (Gmail, Google Sheets, etc.)
+  // Get status of all external integrations (Email, Google Sheets, etc.)
   app.get("/api/system/integrations", async (req, res) => {
     try {
-      const gmailAvailable = isGmailAvailable();
+      const emailAvailable = await isEmailAvailable();
       const googleSheetsAvailable = isGoogleSheetsAvailable();
+      const smtpConfig = await getSmtpConfig();
       
       res.json({
-        gmail: {
-          available: gmailAvailable,
-          message: gmailAvailable 
-            ? 'Gmail integration is connected' 
-            : 'Gmail integration requires Replit Connectors or local OAuth setup'
+        email: {
+          available: emailAvailable,
+          message: emailAvailable 
+            ? `Email configured (SMTP: ${smtpConfig.host})` 
+            : 'Email not configured. Configure SMTP settings in Settings page.',
+          host: smtpConfig.host || null,
+          fromEmail: smtpConfig.fromEmail || null,
         },
         googleSheets: {
           available: googleSheetsAvailable,
@@ -4036,11 +3937,107 @@ Deal or No Deal Production Team
             ? 'Google Sheets integration is connected' 
             : 'Google Sheets integration requires Replit Connectors or local OAuth setup'
         },
-        allAvailable: gmailAvailable && googleSheetsAvailable
+        allAvailable: emailAvailable && googleSheetsAvailable
       });
     } catch (error: any) {
       console.error("Error checking integrations:", error);
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==========================================
+  // SMTP Email Configuration Endpoints
+  // ==========================================
+
+  // Get SMTP configuration (excluding password for security)
+  app.get("/api/smtp/config", requireAuth, async (req, res) => {
+    try {
+      const config = await getSmtpConfig();
+      res.json({
+        host: config.host,
+        port: config.port,
+        secure: config.secure,
+        username: config.username,
+        fromEmail: config.fromEmail,
+        fromName: config.fromName,
+        // Don't expose password
+        hasPassword: !!config.password,
+      });
+    } catch (error: any) {
+      console.error("Error getting SMTP config:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Save SMTP configuration
+  app.post("/api/smtp/config", requireAuth, async (req, res) => {
+    try {
+      const { host, port, secure, username, password, fromEmail, fromName } = req.body;
+      
+      if (host !== undefined) await storage.setSystemConfig('smtp_host', host);
+      if (port !== undefined) await storage.setSystemConfig('smtp_port', String(port));
+      if (secure !== undefined) await storage.setSystemConfig('smtp_secure', String(secure));
+      if (username !== undefined) await storage.setSystemConfig('smtp_username', username);
+      if (password !== undefined) await storage.setSystemConfig('smtp_password', password);
+      if (fromEmail !== undefined) await storage.setSystemConfig('smtp_from_email', fromEmail);
+      if (fromName !== undefined) await storage.setSystemConfig('smtp_from_name', fromName);
+      
+      res.json({ success: true, message: "SMTP configuration saved" });
+    } catch (error: any) {
+      console.error("Error saving SMTP config:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Test SMTP connection
+  app.post("/api/smtp/test", requireAuth, async (req, res) => {
+    try {
+      const result = await testSmtpConnection();
+      
+      if (result.success) {
+        res.json({ success: true, message: "SMTP connection successful" });
+      } else {
+        res.status(400).json({ success: false, error: result.error });
+      }
+    } catch (error: any) {
+      console.error("Error testing SMTP:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Send test email
+  app.post("/api/smtp/test-email", requireAuth, async (req, res) => {
+    try {
+      const { toEmail } = req.body;
+      
+      if (!toEmail) {
+        return res.status(400).json({ error: "toEmail is required" });
+      }
+      
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(toEmail)) {
+        return res.status(400).json({ error: "Invalid email address format" });
+      }
+
+      const smtpConfig = await getSmtpConfig();
+      
+      if (!smtpConfig.host || !smtpConfig.fromEmail) {
+        return res.status(400).json({ error: "SMTP is not configured. Please configure SMTP settings first." });
+      }
+
+      await sendEmail(
+        toEmail,
+        'Test Email from Deal or No Deal Booking System',
+        'This is a test email to verify your SMTP configuration is working correctly.\n\nIf you received this email, your email settings are configured correctly!',
+        '<h2>Test Email</h2><p>This is a test email to verify your SMTP configuration is working correctly.</p><p>If you received this email, your email settings are configured correctly!</p>',
+        { senderName: smtpConfig.fromName || 'Deal or No Deal' }
+      );
+
+      res.json({ success: true, message: `Test email sent to ${toEmail}` });
+    } catch (error: any) {
+      console.error("Error sending test email:", error);
+      res.status(500).json({ success: false, error: error.message });
     }
   });
 

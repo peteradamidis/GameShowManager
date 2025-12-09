@@ -92,8 +92,16 @@ Do not make changes to the file `Y`.
 - **PostgreSQL:** Primary database for all system data.
 - **Neon:** Cloud provider for PostgreSQL.
 - **Cast It Reach:** Source of contestant data via Excel exports.
-- **Gmail Integration:** (Temporary) Currently used for sending availability check emails via the Google Gmail connector. Will be replaced with Outlook once approval is received.
-- **Outlook Integration:** (Planned) To replace Gmail for availability check and booking confirmation emails once user approval is obtained.
+- **SMTP/Outlook Email:** Email sending via SMTP (Outlook/Exchange compatible). Configured in Settings page.
+    - Supports any SMTP server including Office 365 (smtp.office365.com) and on-premises Exchange
+    - Configuration stored in database for easy runtime changes
+    - Alternative: Set environment variables (SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM_EMAIL) for deployment security
+    - All SMTP configuration endpoints require authentication
+    - API Endpoints:
+        - `GET /api/smtp/config` - Get current SMTP configuration (excludes password)
+        - `POST /api/smtp/config` - Save SMTP configuration
+        - `POST /api/smtp/test` - Test SMTP connection
+        - `POST /api/smtp/test-email` - Send a test email
 - **Google Sheets Integration:** (Active) Syncs booking master data to Google Sheets for external reporting.
     - API Endpoints:
         - `GET /api/google-sheets/config` - Get current configuration

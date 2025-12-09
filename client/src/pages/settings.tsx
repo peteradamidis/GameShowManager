@@ -8,7 +8,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail, Download, Database, Clock, RefreshCw, Lock } from "lucide-react";
+import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail, Download, Database, Clock, RefreshCw, Lock, Server, Send } from "lucide-react";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -172,6 +172,90 @@ export default function Settings() {
   const onPasswordSubmit = (data: PasswordChangeForm) => {
     changePasswordMutation.mutate(data);
   };
+
+  // SMTP Configuration
+  interface SmtpConfig {
+    host: string;
+    port: number;
+    secure: boolean;
+    username: string;
+    fromEmail: string;
+    fromName: string;
+    hasPassword: boolean;
+  }
+
+  const [smtpHost, setSmtpHost] = useState('');
+  const [smtpPort, setSmtpPort] = useState('587');
+  const [smtpSecure, setSmtpSecure] = useState(false);
+  const [smtpUsername, setSmtpUsername] = useState('');
+  const [smtpPassword, setSmtpPassword] = useState('');
+  const [smtpFromEmail, setSmtpFromEmail] = useState('');
+  const [smtpFromName, setSmtpFromName] = useState('Deal or No Deal');
+  const [smtpChanged, setSmtpChanged] = useState(false);
+  const [testEmailAddress, setTestEmailAddress] = useState('');
+
+  const { data: smtpConfig, isLoading: smtpLoading } = useQuery<SmtpConfig>({
+    queryKey: ['/api/smtp/config'],
+  });
+
+  useEffect(() => {
+    if (smtpConfig) {
+      setSmtpHost(smtpConfig.host || '');
+      setSmtpPort(String(smtpConfig.port || 587));
+      setSmtpSecure(smtpConfig.secure || false);
+      setSmtpUsername(smtpConfig.username || '');
+      setSmtpFromEmail(smtpConfig.fromEmail || '');
+      setSmtpFromName(smtpConfig.fromName || 'Deal or No Deal');
+    }
+  }, [smtpConfig]);
+
+  const saveSmtpMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/smtp/config", {
+        host: smtpHost,
+        port: parseInt(smtpPort, 10),
+        secure: smtpSecure,
+        username: smtpUsername,
+        password: smtpPassword || undefined,
+        fromEmail: smtpFromEmail,
+        fromName: smtpFromName,
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "SMTP configuration saved" });
+      setSmtpChanged(false);
+      setSmtpPassword('');
+      queryClient.invalidateQueries({ queryKey: ['/api/smtp/config'] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const testSmtpMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/smtp/test");
+    },
+    onSuccess: () => {
+      toast({ title: "Connection successful", description: "SMTP server connection verified." });
+    },
+    onError: (error: any) => {
+      toast({ title: "Connection failed", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const sendTestEmailMutation = useMutation({
+    mutationFn: async (toEmail: string) => {
+      return await apiRequest("POST", "/api/smtp/test-email", { toEmail });
+    },
+    onSuccess: () => {
+      toast({ title: "Test email sent", description: "Check your inbox for the test email." });
+      setTestEmailAddress('');
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to send", description: error.message, variant: "destructive" });
+    },
+  });
 
   const { data: assets = [], isLoading: assetsLoading } = useQuery<EmailAsset[]>({
     queryKey: ['/api/email-assets'],
@@ -352,6 +436,166 @@ export default function Settings() {
                 </Button>
               </form>
             </Form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Server className="w-5 h-5" />
+              SMTP Email Configuration
+            </CardTitle>
+            <CardDescription>
+              Configure your Outlook/Exchange SMTP server for sending emails
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {smtpLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading configuration...
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="smtp-host">SMTP Server</Label>
+                    <Input
+                      id="smtp-host"
+                      value={smtpHost}
+                      onChange={(e) => { setSmtpHost(e.target.value); setSmtpChanged(true); }}
+                      placeholder="smtp.office365.com"
+                      data-testid="input-smtp-host"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="smtp-port">Port</Label>
+                    <Input
+                      id="smtp-port"
+                      value={smtpPort}
+                      onChange={(e) => { setSmtpPort(e.target.value); setSmtpChanged(true); }}
+                      placeholder="587"
+                      data-testid="input-smtp-port"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="smtp-username">Username / Email</Label>
+                    <Input
+                      id="smtp-username"
+                      value={smtpUsername}
+                      onChange={(e) => { setSmtpUsername(e.target.value); setSmtpChanged(true); }}
+                      placeholder="user@company.com"
+                      data-testid="input-smtp-username"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="smtp-password">Password</Label>
+                    <Input
+                      id="smtp-password"
+                      type="password"
+                      value={smtpPassword}
+                      onChange={(e) => { setSmtpPassword(e.target.value); setSmtpChanged(true); }}
+                      placeholder={smtpConfig?.hasPassword ? "••••••••" : "Enter password"}
+                      data-testid="input-smtp-password"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="smtp-from-email">From Email Address</Label>
+                    <Input
+                      id="smtp-from-email"
+                      value={smtpFromEmail}
+                      onChange={(e) => { setSmtpFromEmail(e.target.value); setSmtpChanged(true); }}
+                      placeholder="bookings@company.com"
+                      data-testid="input-smtp-from-email"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="smtp-from-name">From Name</Label>
+                    <Input
+                      id="smtp-from-name"
+                      value={smtpFromName}
+                      onChange={(e) => { setSmtpFromName(e.target.value); setSmtpChanged(true); }}
+                      placeholder="Deal or No Deal"
+                      data-testid="input-smtp-from-name"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="smtp-secure"
+                    checked={smtpSecure}
+                    onCheckedChange={(checked) => { setSmtpSecure(checked); setSmtpChanged(true); }}
+                    data-testid="switch-smtp-secure"
+                  />
+                  <Label htmlFor="smtp-secure">Use SSL/TLS (port 465)</Label>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    onClick={() => saveSmtpMutation.mutate()}
+                    disabled={!smtpChanged || saveSmtpMutation.isPending}
+                    data-testid="button-save-smtp"
+                  >
+                    {saveSmtpMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 mr-2" />
+                    )}
+                    Save Configuration
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => testSmtpMutation.mutate()}
+                    disabled={!smtpHost || testSmtpMutation.isPending}
+                    data-testid="button-test-smtp"
+                  >
+                    {testSmtpMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Server className="w-4 h-4 mr-2" />
+                    )}
+                    Test Connection
+                  </Button>
+                </div>
+
+                <div className="border-t pt-4 space-y-2">
+                  <Label>Send Test Email</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={testEmailAddress}
+                      onChange={(e) => setTestEmailAddress(e.target.value)}
+                      placeholder="test@example.com"
+                      data-testid="input-test-email"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => sendTestEmailMutation.mutate(testEmailAddress)}
+                      disabled={!testEmailAddress || !smtpHost || sendTestEmailMutation.isPending}
+                      data-testid="button-send-test-email"
+                    >
+                      {sendTestEmailMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4 mr-2" />
+                      )}
+                      Send Test
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="text-xs text-muted-foreground space-y-1 pt-2 border-t">
+                  <p><strong>Outlook/Office 365:</strong> smtp.office365.com, port 587, STARTTLS</p>
+                  <p><strong>Exchange Server:</strong> Use your internal Exchange SMTP server address</p>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
