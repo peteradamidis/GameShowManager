@@ -14,7 +14,7 @@ interface RefreshMessage {
   recordDayId: string;
 }
 
-type WebSocketMessage = BookingMasterUpdate | RefreshMessage | { type: 'connected'; message: string };
+type WebSocketMessage = BookingMasterUpdate | RefreshMessage | { type: 'connected'; message: string; authenticated?: boolean };
 
 export function useBookingMasterWebSocket(recordDayId: string | null) {
   const wsRef = useRef<WebSocket | null>(null);
@@ -29,6 +29,11 @@ export function useBookingMasterWebSocket(recordDayId: string | null) {
       reconnectTimeoutRef.current = undefined;
     }
     if (wsRef.current) {
+      // Remove handlers before closing to prevent cleanup race
+      wsRef.current.onclose = null;
+      wsRef.current.onerror = null;
+      wsRef.current.onmessage = null;
+      wsRef.current.onopen = null;
       wsRef.current.close();
       wsRef.current = null;
     }
@@ -45,11 +50,8 @@ export function useBookingMasterWebSocket(recordDayId: string | null) {
       return;
     }
 
-    // Close any existing connection first
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
+    // Close any existing connection first (cleans up handlers)
+    closeConnection();
 
     // Build WebSocket URL
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -60,6 +62,12 @@ export function useBookingMasterWebSocket(recordDayId: string | null) {
       wsRef.current = ws;
 
       ws.onopen = () => {
+        // Guard: only proceed if this is still the current socket
+        if (wsRef.current !== ws) {
+          ws.close();
+          return;
+        }
+        
         console.log('WebSocket connected to Booking Master updates');
         setIsConnected(true);
         
@@ -71,6 +79,9 @@ export function useBookingMasterWebSocket(recordDayId: string | null) {
       };
 
       ws.onmessage = (event) => {
+        // Guard: only process if this is still the current socket
+        if (wsRef.current !== ws) return;
+        
         try {
           const data: WebSocketMessage = JSON.parse(event.data);
           const currentId = currentRecordDayIdRef.current;
@@ -118,6 +129,11 @@ export function useBookingMasterWebSocket(recordDayId: string | null) {
       };
 
       ws.onclose = () => {
+        // Guard: only handle cleanup if this is still the current socket
+        if (wsRef.current !== ws) {
+          return;
+        }
+        
         console.log('WebSocket disconnected');
         setIsConnected(false);
         wsRef.current = null;
@@ -132,6 +148,9 @@ export function useBookingMasterWebSocket(recordDayId: string | null) {
       };
 
       ws.onerror = (error) => {
+        // Guard: only handle if this is still the current socket
+        if (wsRef.current !== ws) return;
+        
         console.error('WebSocket error:', error);
       };
     } catch (e) {

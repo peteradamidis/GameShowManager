@@ -90,6 +90,11 @@ Do not make changes to the file `Y`.
 - **Seating Chart:** Interactive drag-and-drop interface for assigning, swapping, and removing contestants from seats. Includes functionality to assign any available contestant to an empty seat.
 - **Reschedule Page:** Manages canceled assignments, allowing them to be made available or permanently removed.
 - **Booking Master Page:** A complete workflow tracking system for bookings, including inline editing of workflow fields, checkbox tracking for stages (e.g., `bookingEmailSent`, `confirmedRsvp`), and bulk email sending for booking confirmations.
+    - **Real-Time Synchronization:** WebSocket-based live updates across multiple devices/tabs.
+        - Changes made on one device instantly appear on other devices viewing the same record day.
+        - Supports collaborative workflow tracking with multiple team members.
+        - Automatic reconnection on connection loss with proper record day subscription.
+        - WebSocket endpoint: `/ws` with session cookie validation.
     - **Responses Panel:** Toggle panel showing all booking confirmation responses for the selected record day.
         - Filter by status: All, Pending, Confirmed, Declined
         - Shows contestant photo, seat, status, attending with info, dietary requirements/questions
