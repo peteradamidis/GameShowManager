@@ -190,7 +190,7 @@ export function SeatCard({
                 {seat.playerType === 'player' ? 'P' : seat.playerType === 'backup' ? 'B' : 'PP'}
               </Badge>
             )}
-            {isRXDayLocked && seat.winningMoneyAmount !== undefined && (
+            {isRXDayLocked && seat.winningMoneyAmount > 0 && (
               <div title={`$${seat.winningMoneyAmount}`}>
                 <DollarSign className="h-3 w-3 text-green-600 dark:text-green-400 flex-shrink-0" />
               </div>

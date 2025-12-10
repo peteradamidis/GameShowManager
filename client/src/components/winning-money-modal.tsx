@@ -46,6 +46,16 @@ export function WinningMoneyModal({
   const [role, setRole] = useState<string>(currentRole || "player");
   const [amount, setAmount] = useState<string>(currentAmount?.toString() || "");
 
+  // Update form fields when modal opens with existing data
+  useEffect(() => {
+    if (open) {
+      setRxNumber(currentRxNumber || "");
+      setCaseNumber(currentCaseNumber || "");
+      setRole(currentRole || "player");
+      setAmount(currentAmount ? currentAmount.toString() : "");
+    }
+  }, [open, currentRxNumber, currentCaseNumber, currentRole, currentAmount]);
+
   useEffect(() => {
     if (role === "case_holder") {
       setAmount("250");
