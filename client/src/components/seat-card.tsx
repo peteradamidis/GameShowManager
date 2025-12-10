@@ -47,6 +47,7 @@ interface SeatCardProps {
   onRemove?: (assignmentId: string) => void;
   onCancel?: (assignmentId: string) => void;
   onWinningMoneyClick?: (assignmentId: string) => void;
+  onRemoveWinningMoney?: (assignmentId: string) => void;
 }
 
 const groupColors = [
@@ -78,6 +79,7 @@ export function SeatCard({
   onRemove, 
   onCancel,
   onWinningMoneyClick,
+  onRemoveWinningMoney,
 }: SeatCardProps) {
   const isEmpty = !seat.contestantName;
   
@@ -338,6 +340,18 @@ export function SeatCard({
                     </div>
                   </div>
                 )}
+
+                {isRXDayLocked && seat.winningMoneyAmount > 0 && (
+                  <div className="text-sm p-2 bg-green-50 dark:bg-green-950/50 rounded-md border border-green-200 dark:border-green-800">
+                    <label className="text-xs font-medium text-green-700 dark:text-green-300 block mb-2">Winning Money</label>
+                    <div className="space-y-1 text-xs text-green-600 dark:text-green-400">
+                      <p><strong>Role:</strong> {seat.winningMoneyRole === 'player' ? 'Player' : 'Case Holder'}</p>
+                      <p><strong>Amount:</strong> ${seat.winningMoneyAmount}</p>
+                      {seat.rxNumber && <p><strong>RX:</strong> {seat.rxNumber}</p>}
+                      {seat.caseNumber && <p><strong>Case:</strong> {seat.caseNumber}</p>}
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <div className="text-sm text-muted-foreground text-center py-2">
@@ -347,6 +361,20 @@ export function SeatCard({
 
             {seat.assignmentId && (
               <div className="space-y-3 pt-3 border-t">
+                {isRXDayLocked && seat.winningMoneyAmount > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onWinningMoneyClick?.(seat.assignmentId!);
+                    }}
+                    data-testid={`button-edit-winning-money-${seat.assignmentId}`}
+                  >
+                    Edit Winning Money
+                  </Button>
+                )}
                 <div className="flex gap-2">
                   <Button
                     size="sm"

@@ -48,6 +48,7 @@ interface SeatingChartProps {
   onRemove?: (assignmentId: string) => void;
   onCancel?: (assignmentId: string) => void;
   onWinningMoneyClick?: (assignmentId: string) => void;
+  onRemoveWinningMoney?: (assignmentId: string) => void;
   isLocked?: boolean; // RX Day Mode - when true, use tracked swap endpoint
 }
 
@@ -61,6 +62,7 @@ function DraggableDroppableSeat({
   onRemove,
   onCancel,
   onWinningMoneyClick,
+  onRemoveWinningMoney,
 }: {
   seat: SeatData;
   blockIndex: number;
@@ -71,6 +73,7 @@ function DraggableDroppableSeat({
   onRemove?: (assignmentId: string) => void;
   onCancel?: (assignmentId: string) => void;
   onWinningMoneyClick?: (assignmentId: string) => void;
+  onRemoveWinningMoney?: (assignmentId: string) => void;
 }) {
   // Make occupied seats draggable
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
@@ -107,6 +110,7 @@ function DraggableDroppableSeat({
         onRemove={onRemove}
         onCancel={onCancel}
         onWinningMoneyClick={onWinningMoneyClick}
+        onRemoveWinningMoney={onRemoveWinningMoney}
       />
     </div>
   );
@@ -132,6 +136,7 @@ function SeatingBlock({
   onRemove,
   onCancel,
   onWinningMoneyClick,
+  onRemoveWinningMoney,
   blockType,
   onBlockTypeChange,
 }: { 
@@ -145,6 +150,7 @@ function SeatingBlock({
   onRemove?: (assignmentId: string) => void;
   onCancel?: (assignmentId: string) => void;
   onWinningMoneyClick?: (assignmentId: string) => void;
+  onRemoveWinningMoney?: (assignmentId: string) => void;
   blockType?: 'PB' | 'NPB';
   onBlockTypeChange?: (blockNumber: number, newType: 'PB' | 'NPB') => void;
 }) {
@@ -266,6 +272,7 @@ function SeatingBlock({
                           onRemove={onRemove}
                           onCancel={onCancel}
                           onWinningMoneyClick={onWinningMoneyClick}
+                          onRemoveWinningMoney={onRemoveWinningMoney}
                         />
                         {/* Horizontal link to next seat in same row */}
                         {hasLinkToNext && (
@@ -354,7 +361,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, isLocked = false }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, isLocked = false }: SeatingChartProps) {
   const [blocks, setBlocks] = useState<SeatData[][]>(
     initialSeats || Array(7).fill(null).map((_, blockIdx) => 
       generateBlockSeats(recordDayId, blockIdx)
@@ -672,6 +679,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onRemove={onRemove}
                   onCancel={onCancel}
                   onWinningMoneyClick={onWinningMoneyClick}
+                  onRemoveWinningMoney={onRemoveWinningMoney}
                   blockType={blockTypeMap[idx + 1]}
                   onBlockTypeChange={handleBlockTypeChange}
                 />
@@ -706,6 +714,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     onRemove={onRemove}
                     onCancel={onCancel}
                     onWinningMoneyClick={onWinningMoneyClick}
+                    onRemoveWinningMoney={onRemoveWinningMoney}
                     blockType={blockTypeMap[originalIdx + 1]}
                     onBlockTypeChange={handleBlockTypeChange}
                   />
@@ -730,6 +739,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 onRemove={onRemove}
                 onCancel={onCancel}
                 onWinningMoneyClick={onWinningMoneyClick}
+                onRemoveWinningMoney={onRemoveWinningMoney}
                 blockType={blockTypeMap[7]}
                 onBlockTypeChange={handleBlockTypeChange}
               />

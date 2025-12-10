@@ -475,6 +475,35 @@ export default function SeatingChartPage() {
     }
   };
 
+  const handleRemoveWinningMoney = async () => {
+    if (!selectedAssignmentId) return;
+    
+    setWinningMoneyLoading(true);
+    try {
+      await apiRequest('PATCH', `/api/seat-assignments/${selectedAssignmentId}/winning-money`, {
+        rxNumber: "",
+        caseNumber: "",
+        winningMoneyRole: "",
+        winningMoneyAmount: 0,
+      });
+      await refetch();
+      setWinningMoneyModalOpen(false);
+      setSelectedAssignmentId("");
+      toast({
+        title: "Winning money removed",
+        description: "Winning money data has been cleared.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error removing winning money",
+        description: error?.message || "Could not remove winning money.",
+        variant: "destructive",
+      });
+    } finally {
+      setWinningMoneyLoading(false);
+    }
+  };
+
   const handleConfirmCancel = async () => {
     if (!cancelAssignmentId) return;
     
@@ -575,6 +604,7 @@ export default function SeatingChartPage() {
           onRemove={handleRemove}
           onCancel={handleCancel}
           onWinningMoneyClick={isLocked ? handleWinningMoneyClick : undefined}
+          onRemoveWinningMoney={isLocked ? handleRemoveWinningMoney : undefined}
           isLocked={isLocked}
         />
       )}
@@ -688,6 +718,7 @@ export default function SeatingChartPage() {
         open={winningMoneyModalOpen}
         onOpenChange={setWinningMoneyModalOpen}
         onSubmit={handleWinningMoneySave}
+        onRemove={handleRemoveWinningMoney}
         isLoading={winningMoneyLoading}
         currentRxNumber={currentWinningMoneyData.rxNumber}
         currentCaseNumber={currentWinningMoneyData.caseNumber}

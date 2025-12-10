@@ -24,27 +24,32 @@ interface WinningMoneyModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (role: string, amount: number, rxNumber: string, caseNumber: string) => void;
+  onRemove?: () => void;
   isLoading?: boolean;
   currentRole?: string;
   currentAmount?: number;
   currentRxNumber?: string;
   currentCaseNumber?: string;
+  isViewOnly?: boolean;
 }
 
 export function WinningMoneyModal({
   open,
   onOpenChange,
   onSubmit,
+  onRemove,
   isLoading = false,
   currentRole,
   currentAmount,
   currentRxNumber,
   currentCaseNumber,
+  isViewOnly = false,
 }: WinningMoneyModalProps) {
   const [rxNumber, setRxNumber] = useState<string>(currentRxNumber || "");
   const [caseNumber, setCaseNumber] = useState<string>(currentCaseNumber || "");
   const [role, setRole] = useState<string>(currentRole || "player");
   const [amount, setAmount] = useState<string>(currentAmount?.toString() || "");
+  const [isEditing, setIsEditing] = useState(false);
 
   // Update form fields when modal opens with existing data
   useEffect(() => {
@@ -53,6 +58,7 @@ export function WinningMoneyModal({
       setCaseNumber(currentCaseNumber || "");
       setRole(currentRole || "player");
       setAmount(currentAmount ? currentAmount.toString() : "");
+      setIsEditing(false);
     }
   }, [open, currentRxNumber, currentCaseNumber, currentRole, currentAmount]);
 
@@ -90,11 +96,14 @@ export function WinningMoneyModal({
             <div>
               <DialogTitle>Winning Money</DialogTitle>
               <DialogDescription>
-                {hasExistingData ? 'Edit winning money information' : 'Enter winning money information for this contestant'}
+                {!hasExistingData ? 'Enter winning money information for this contestant' : isEditing ? 'Edit winning money information' : 'View winning money information'}
               </DialogDescription>
             </div>
-            {hasExistingData && (
-              <Badge variant="secondary" className="ml-2">Edit Mode</Badge>
+            {hasExistingData && !isEditing && (
+              <Badge variant="secondary" className="ml-2">Saved</Badge>
+            )}
+            {hasExistingData && isEditing && (
+              <Badge variant="secondary" className="ml-2">Editing</Badge>
             )}
           </div>
         </DialogHeader>
@@ -108,6 +117,7 @@ export function WinningMoneyModal({
               value={rxNumber}
               onChange={(e) => setRxNumber(e.target.value)}
               placeholder="Enter RX number"
+              disabled={hasExistingData && !isEditing}
               data-testid="input-rx-number"
             />
           </div>
@@ -120,14 +130,15 @@ export function WinningMoneyModal({
               value={caseNumber}
               onChange={(e) => setCaseNumber(e.target.value)}
               placeholder="Enter case number"
+              disabled={hasExistingData && !isEditing}
               data-testid="input-case-number"
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="role-select">Role</Label>
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger id="role-select" data-testid="select-winning-role">
+            <Select value={role} onValueChange={setRole} disabled={hasExistingData && !isEditing}>
+              <SelectTrigger id="role-select" data-testid="select-winning-role" disabled={hasExistingData && !isEditing}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -145,7 +156,7 @@ export function WinningMoneyModal({
               min="0"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              disabled={role === "case_holder"}
+              disabled={role === "case_holder" || (hasExistingData && !isEditing)}
               placeholder={role === "case_holder" ? "250" : "Enter amount"}
               data-testid="input-winning-amount"
             />
@@ -158,21 +169,58 @@ export function WinningMoneyModal({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isLoading}
-            data-testid="button-winning-cancel"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isLoading || !role || !amount}
-            data-testid="button-winning-save"
-          >
-            Save
-          </Button>
+          {hasExistingData && !isEditing ? (
+            <>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  onRemove?.();
+                  onOpenChange(false);
+                  setIsEditing(false);
+                }}
+                disabled={isLoading}
+                data-testid="button-winning-remove"
+              >
+                Remove
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditing(true)}
+                disabled={isLoading}
+                data-testid="button-winning-edit"
+              >
+                Edit
+              </Button>
+              <Button
+                onClick={() => onOpenChange(false)}
+                disabled={isLoading}
+                data-testid="button-winning-close"
+              >
+                Close
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  onOpenChange(false);
+                  setIsEditing(false);
+                }}
+                disabled={isLoading}
+                data-testid="button-winning-cancel"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={isLoading || !role || !amount}
+                data-testid="button-winning-save"
+              >
+                Save
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
