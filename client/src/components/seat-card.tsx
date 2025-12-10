@@ -111,10 +111,13 @@ export function SeatCard({
     // Stop propagation to prevent drag-and-drop from interfering
     e.stopPropagation();
     
-    if (isEmpty && onEmptySeatClick) {
-      onEmptySeatClick(blockIndex + 1, seatLabel);
-    } else if (!isEmpty && isRXDayLocked && onWinningMoneyClick && seat.assignmentId) {
+    // RX Day Locked: Click occupied seat to edit winning money
+    if (isRXDayLocked && !isEmpty && onWinningMoneyClick && seat.assignmentId) {
       onWinningMoneyClick(seat.assignmentId);
+    }
+    // RX Day Not Locked: Click empty seat to assign contestant
+    else if (!isRXDayLocked && isEmpty && onEmptySeatClick) {
+      onEmptySeatClick(blockIndex + 1, seatLabel);
     }
   };
 
@@ -122,8 +125,12 @@ export function SeatCard({
     <Card
       className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity border-2 relative ${
         isEmpty
-          ? "border-dashed bg-muted/30 cursor-pointer hover-elevate"
-          : `${groupColorClass} ${isRXDayLocked && !isEmpty ? 'cursor-pointer hover-elevate' : 'hover-elevate'}`
+          ? isRXDayLocked 
+            ? "border-dashed bg-muted/30 hover-elevate"  // Locked: not clickable
+            : "border-dashed bg-muted/30 cursor-pointer hover-elevate"  // Unlocked: clickable to assign
+          : isRXDayLocked && !isEmpty
+            ? `${groupColorClass} cursor-pointer hover-elevate`  // Locked: occupied seats are clickable
+            : `${groupColorClass} hover-elevate`  // Unlocked: occupied seats not directly clickable
       } ${isDragging ? "opacity-50" : ""} ${wasSwapped ? "ring-2 ring-amber-400 ring-offset-1" : ""}`}
       style={ratingColorInfo ? {
         backgroundColor: ratingColorInfo.bg,
