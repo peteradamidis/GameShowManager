@@ -1367,6 +1367,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Prevent caching so we always get fresh data
       res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
       
       const allAssignments = await storage.getAllSeatAssignments();
       const recordDays = await storage.getRecordDays();
@@ -1374,10 +1376,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contestants = await storage.getContestants();
       const contestantsMap = new Map(contestants.map(c => [c.id, c]));
 
-      // Filter only those with winning money data
+      // Filter: must have BOTH a valid role AND a valid amount
       const winnersData = allAssignments
-        .filter(a => a.winningMoneyAmount && a.winningMoneyRole)
-        .map(a => {
+        .filter((a: any) => {
+          const hasValidRole = a.winningMoneyRole && typeof a.winningMoneyRole === 'string' && a.winningMoneyRole.trim() !== '';
+          const hasValidAmount = typeof a.winningMoneyAmount === 'number' && a.winningMoneyAmount > 0;
+          return hasValidRole && hasValidAmount;
+        })
+        .map((a: any) => {
           const contestant = contestantsMap.get(a.contestantId);
           const recordDay = recordDaysMap.get(a.recordDayId);
           return {
@@ -1392,14 +1398,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             photoUrl: contestant?.photoUrl,
             blockNumber: a.blockNumber,
             seatLabel: a.seatLabel,
-            rxNumber: a.rxNumber,
-            caseNumber: a.caseNumber,
+            rxNumber: a.rxNumber || '',
+            caseNumber: a.caseNumber || '',
             winningMoneyRole: a.winningMoneyRole,
             winningMoneyAmount: a.winningMoneyAmount,
           };
         });
 
-      console.log("Winners data:", winnersData.length, "winners found");
       res.json(winnersData);
     } catch (error: any) {
       console.error("Error fetching winners data:", error);

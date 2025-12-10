@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-10T12:50:38.925Z",
+  "exportedAt": "2025-12-10T12:59:38.974Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -6986,12 +6986,12 @@
         "createdAt": "2025-12-09T12:27:25.583Z"
       },
       {
-        "id": "4186c00e-c265-4dd5-a5d0-4df7882a204b",
+        "id": "6bde6343-e29a-442a-9189-6dccf7f25850",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "42504e80-d5df-4b97-a283-eb96728c425f",
+        "contestantId": "bb319a54-7dbf-4a05-bd7f-8f2f6aa6b414",
         "blockNumber": 1,
-        "seatLabel": "E1",
-        "playerType": "player",
+        "seatLabel": "E2",
+        "playerType": null,
         "originalBlockNumber": null,
         "originalSeatLabel": null,
         "swappedAt": null,
@@ -7009,11 +7009,11 @@
         "signedIn": null,
         "otdNotes": null,
         "standbyReplacementSwaps": null,
-        "rxNumber": null,
-        "caseNumber": null,
-        "winningMoneyRole": null,
-        "winningMoneyAmount": null,
-        "createdAt": "2025-12-09T12:27:27.089Z"
+        "rxNumber": "5",
+        "caseNumber": "1",
+        "winningMoneyRole": "case_holder",
+        "winningMoneyAmount": 250,
+        "createdAt": "2025-12-09T12:27:27.590Z"
       },
       {
         "id": "4714b65d-0643-42ca-a7a2-8459962131a8",
@@ -7136,12 +7136,12 @@
         "createdAt": "2025-12-09T12:27:22.572Z"
       },
       {
-        "id": "6bde6343-e29a-442a-9189-6dccf7f25850",
+        "id": "4186c00e-c265-4dd5-a5d0-4df7882a204b",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "bb319a54-7dbf-4a05-bd7f-8f2f6aa6b414",
+        "contestantId": "42504e80-d5df-4b97-a283-eb96728c425f",
         "blockNumber": 1,
-        "seatLabel": "E2",
-        "playerType": null,
+        "seatLabel": "E1",
+        "playerType": "player",
         "originalBlockNumber": null,
         "originalSeatLabel": null,
         "swappedAt": null,
@@ -7160,10 +7160,10 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": "1",
-        "caseNumber": "15",
+        "caseNumber": "5",
         "winningMoneyRole": "player",
         "winningMoneyAmount": 500,
-        "createdAt": "2025-12-09T12:27:27.590Z"
+        "createdAt": "2025-12-09T12:27:27.089Z"
       },
       {
         "id": "eef4b984-c474-4f43-aeed-197faa279405",
@@ -7189,10 +7189,10 @@
         "signedIn": null,
         "otdNotes": null,
         "standbyReplacementSwaps": null,
-        "rxNumber": null,
-        "caseNumber": null,
-        "winningMoneyRole": null,
-        "winningMoneyAmount": 0,
+        "rxNumber": "1",
+        "caseNumber": "1",
+        "winningMoneyRole": "case_holder",
+        "winningMoneyAmount": 250,
         "createdAt": "2025-12-09T12:27:24.567Z"
       },
       {
