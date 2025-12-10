@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 
 interface WinningMoneyModalProps {
   open: boolean;
@@ -69,14 +70,23 @@ export function WinningMoneyModal({
     onOpenChange(false);
   };
 
+  const hasExistingData = currentAmount > 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px]" data-testid="dialog-winning-money">
         <DialogHeader>
-          <DialogTitle>Winning Money</DialogTitle>
-          <DialogDescription>
-            Enter the winning money information for this contestant
-          </DialogDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle>Winning Money</DialogTitle>
+              <DialogDescription>
+                {hasExistingData ? 'Edit winning money information' : 'Enter winning money information for this contestant'}
+              </DialogDescription>
+            </div>
+            {hasExistingData && (
+              <Badge variant="secondary" className="ml-2">Edit Mode</Badge>
+            )}
+          </div>
         </DialogHeader>
 
         <div className="space-y-4 py-4">

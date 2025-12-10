@@ -528,6 +528,10 @@ export class DbStorage implements IStorage {
       signedIn: workflowFields.signedIn,
       otdNotes: workflowFields.otdNotes,
       standbyReplacementSwaps: workflowFields.standbyReplacementSwaps,
+      rxNumber: workflowFields.rxNumber,
+      caseNumber: workflowFields.caseNumber,
+      winningMoneyRole: workflowFields.winningMoneyRole,
+      winningMoneyAmount: workflowFields.winningMoneyAmount,
     };
 
     const fieldsToUpdate = Object.fromEntries(
