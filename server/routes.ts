@@ -2583,12 +2583,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { rxNumber, caseNumber, winningMoneyRole, winningMoneyAmount } = req.body;
       
-      if (!winningMoneyRole || !['player', 'case_holder'].includes(winningMoneyRole)) {
-        return res.status(400).json({ error: "Invalid role" });
-      }
-      
       if (typeof winningMoneyAmount !== 'number' || winningMoneyAmount < 0) {
         return res.status(400).json({ error: "Invalid amount" });
+      }
+      
+      // If removing (amount is 0), allow empty role
+      if (winningMoneyAmount === 0) {
+        const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, { 
+          rxNumber: null,
+          caseNumber: null,
+          winningMoneyRole: null, 
+          winningMoneyAmount: 0
+        });
+        
+        if (!updated) {
+          return res.status(404).json({ error: "Seat assignment not found" });
+        }
+        
+        // Broadcast update
+        wsManager.broadcastBookingUpdate({
+          type: 'booking-master-update',
+          recordDayId: updated.recordDayId,
+          assignmentId: req.params.id,
+          field: 'winningMoneyAmount',
+          value: 0,
+        });
+        
+        return res.json(updated);
+      }
+      
+      // For adding/updating, require valid role
+      if (!winningMoneyRole || !['player', 'case_holder'].includes(winningMoneyRole)) {
+        return res.status(400).json({ error: "Invalid role" });
       }
       
       const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, { 
