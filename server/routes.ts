@@ -1358,6 +1358,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all seat assignments with winning money data (for Winners page)
+  app.get("/api/seat-assignments/with-winning-money", async (req, res) => {
+    try {
+      const allAssignments = await storage.getAllSeatAssignments();
+      const recordDays = await storage.getRecordDays();
+      const recordDaysMap = new Map(recordDays.map(rd => [rd.id, rd]));
+      const contestants = await storage.getContestants();
+      const contestantsMap = new Map(contestants.map(c => [c.id, c]));
+
+      // Filter only those with winning money data
+      const winnersData = allAssignments
+        .filter(a => a.winningMoneyAmount && a.winningMoneyRole)
+        .map(a => {
+          const contestant = contestantsMap.get(a.contestantId);
+          const recordDay = recordDaysMap.get(a.recordDayId);
+          return {
+            id: a.id,
+            recordDayId: a.recordDayId,
+            recordDayDate: recordDay?.date ? new Date(recordDay.date).toLocaleDateString() : '',
+            contestantId: a.contestantId,
+            contestantName: contestant?.name,
+            age: contestant?.age,
+            gender: contestant?.gender,
+            auditionRating: contestant?.auditionRating,
+            photoUrl: contestant?.photoUrl,
+            blockNumber: a.blockNumber,
+            seatLabel: a.seatLabel,
+            rxNumber: a.rxNumber,
+            caseNumber: a.caseNumber,
+            winningMoneyRole: a.winningMoneyRole,
+            winningMoneyAmount: a.winningMoneyAmount,
+          };
+        });
+
+      res.json(winnersData);
+    } catch (error: any) {
+      console.error("Error fetching winners data:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Auto-assign seats with demographic balancing
   // Rules:
   // 1. NEVER assign A+ rated contestants (they must be manually assigned)

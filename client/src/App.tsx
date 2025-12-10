@@ -17,6 +17,7 @@ import BookingResponses from "@/pages/booking-responses";
 import AvailabilityManagement from "@/pages/availability-management";
 import StandbysPage from "@/pages/standbys";
 import ReschedulePage from "@/pages/reschedule";
+import WinnersPage from "@/pages/winners";
 import FormsPage from "@/pages/forms";
 import Settings from "@/pages/settings";
 import Backup from "@/pages/backup";
@@ -43,6 +44,7 @@ function Router() {
       <Route path="/availability" component={AvailabilityManagement} />
       <Route path="/standbys" component={StandbysPage} />
       <Route path="/reschedule" component={ReschedulePage} />
+      <Route path="/winners" component={WinnersPage} />
       <Route path="/forms" component={FormsPage} />
       <Route path="/settings" component={Settings} />
       <Route path="/backup" component={Backup} />
