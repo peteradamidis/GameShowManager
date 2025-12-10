@@ -1371,32 +1371,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
       
-      if (!db) {
-        return res.status(500).json({ error: "Database not available" });
-      }
-
-      // Query directly from DB for winners with explicit column selection
-      const winnersRaw = await db
-        .select({
-          id: seatAssignments.id,
-          recordDayId: seatAssignments.recordDayId,
-          contestantId: seatAssignments.contestantId,
-          blockNumber: seatAssignments.blockNumber,
-          seatLabel: seatAssignments.seatLabel,
-          rxNumber: seatAssignments.rxNumber,
-          caseNumber: seatAssignments.caseNumber,
-          winningMoneyRole: seatAssignments.winningMoneyRole,
-          winningMoneyAmount: seatAssignments.winningMoneyAmount,
-        })
-        .from(seatAssignments)
-        .where(sql`${seatAssignments.winningMoneyAmount} > 0 AND ${seatAssignments.winningMoneyRole} IS NOT NULL AND ${seatAssignments.winningMoneyRole} != ''`);
+      // Use storage layer like all other routes - NOT direct db access
+      const allAssignments = await storage.getAllSeatAssignments();
+      
+      // Filter for winners: must have valid role AND positive amount
+      const winnersRaw = allAssignments.filter((a) => {
+        const hasValidRole = a.winningMoneyRole && typeof a.winningMoneyRole === 'string' && a.winningMoneyRole.trim() !== '';
+        const hasValidAmount = typeof a.winningMoneyAmount === 'number' && a.winningMoneyAmount > 0;
+        return hasValidRole && hasValidAmount;
+      });
 
       const recordDays = await storage.getRecordDays();
       const recordDaysMap = new Map(recordDays.map(rd => [rd.id, rd]));
       const contestants = await storage.getContestants();
       const contestantsMap = new Map(contestants.map(c => [c.id, c]));
 
-      const winnersData = winnersRaw.map((a: any) => {
+      const winnersData = winnersRaw.map((a) => {
         const contestant = contestantsMap.get(a.contestantId);
         const recordDay = recordDaysMap.get(a.recordDayId);
         return {
