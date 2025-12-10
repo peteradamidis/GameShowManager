@@ -435,12 +435,13 @@ export default function SeatingChartPage() {
     setWinningMoneyModalOpen(true);
   };
 
-  const handleWinningMoneySave = async (role: string, amount: number) => {
+  const handleWinningMoneySave = async (role: string, amount: number, rxNumber: string) => {
     if (!selectedAssignmentId) return;
     
     setWinningMoneyLoading(true);
     try {
       await apiRequest('PATCH', `/api/seat-assignments/${selectedAssignmentId}/winning-money`, {
+        rxNumber,
         winningMoneyRole: role,
         winningMoneyAmount: amount,
       });

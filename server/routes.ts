@@ -2536,7 +2536,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update winning money for RX Day Mode
   app.patch("/api/seat-assignments/:id/winning-money", async (req, res) => {
     try {
-      const { winningMoneyRole, winningMoneyAmount } = req.body;
+      const { rxNumber, winningMoneyRole, winningMoneyAmount } = req.body;
       
       if (!winningMoneyRole || !['player', 'case_holder'].includes(winningMoneyRole)) {
         return res.status(400).json({ error: "Invalid role" });
@@ -2547,6 +2547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, { 
+        rxNumber: rxNumber || null,
         winningMoneyRole, 
         winningMoneyAmount 
       });

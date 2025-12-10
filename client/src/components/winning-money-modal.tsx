@@ -17,14 +17,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface WinningMoneyModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (role: string, amount: number) => void;
+  onSubmit: (role: string, amount: number, rxNumber: string) => void;
   isLoading?: boolean;
   currentRole?: string;
   currentAmount?: number;
+  currentRxNumber?: string;
 }
 
 export function WinningMoneyModal({
@@ -34,7 +36,9 @@ export function WinningMoneyModal({
   isLoading = false,
   currentRole,
   currentAmount,
+  currentRxNumber,
 }: WinningMoneyModalProps) {
+  const [rxNumber, setRxNumber] = useState<string>(currentRxNumber || "");
   const [role, setRole] = useState<string>(currentRole || "player");
   const [amount, setAmount] = useState<string>(currentAmount?.toString() || "");
 
@@ -54,7 +58,8 @@ export function WinningMoneyModal({
     if (isNaN(amountNum) || amountNum < 0) {
       return;
     }
-    onSubmit(role, amountNum);
+    onSubmit(role, amountNum, rxNumber);
+    setRxNumber("");
     setRole("player");
     setAmount("");
     onOpenChange(false);
@@ -71,6 +76,18 @@ export function WinningMoneyModal({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="rx-input">RX</Label>
+            <Input
+              id="rx-input"
+              type="text"
+              value={rxNumber}
+              onChange={(e) => setRxNumber(e.target.value)}
+              placeholder="Enter RX number"
+              data-testid="input-rx-number"
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="role-select">Role</Label>
             <Select value={role} onValueChange={setRole}>
