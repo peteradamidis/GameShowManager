@@ -225,6 +225,8 @@ export default function SeatingChartPage() {
             originalBlockNumber: assignment.originalBlockNumber,
             originalSeatLabel: assignment.originalSeatLabel,
             swappedAt: assignment.swappedAt,
+            rxNumber: assignment.rxNumber,
+            caseNumber: assignment.caseNumber,
             winningMoneyRole: assignment.winningMoneyRole,
             winningMoneyAmount: assignment.winningMoneyAmount,
           };
@@ -433,6 +435,15 @@ export default function SeatingChartPage() {
   const handleWinningMoneyClick = (assignmentId: string) => {
     setSelectedAssignmentId(assignmentId);
     setWinningMoneyModalOpen(true);
+  };
+
+  // Find current winning money data for the selected assignment
+  const currentAssignment = assignments?.find((a: any) => a.id === selectedAssignmentId);
+  const currentWinningMoneyData = {
+    rxNumber: currentAssignment?.rxNumber || "",
+    caseNumber: currentAssignment?.caseNumber || "",
+    role: currentAssignment?.winningMoneyRole || "player",
+    amount: currentAssignment?.winningMoneyAmount || 0,
   };
 
   const handleWinningMoneySave = async (role: string, amount: number, rxNumber: string, caseNumber: string) => {
@@ -678,6 +689,10 @@ export default function SeatingChartPage() {
         onOpenChange={setWinningMoneyModalOpen}
         onSubmit={handleWinningMoneySave}
         isLoading={winningMoneyLoading}
+        currentRxNumber={currentWinningMoneyData.rxNumber}
+        currentCaseNumber={currentWinningMoneyData.caseNumber}
+        currentRole={currentWinningMoneyData.role}
+        currentAmount={currentWinningMoneyData.amount}
       />
 
       {/* Reset Confirmation Dialog */}

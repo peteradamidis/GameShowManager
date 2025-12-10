@@ -31,6 +31,8 @@ export interface SeatData {
   originalBlockNumber?: number; // RX Day Mode - original position before swap
   originalSeatLabel?: string; // RX Day Mode - original seat label before swap
   swappedAt?: string; // RX Day Mode - timestamp when swap occurred (only set for locked swaps)
+  rxNumber?: string; // RX Day Mode - RX number for winning money
+  caseNumber?: string; // RX Day Mode - case number for winning money
   winningMoneyRole?: string; // RX Day Mode - 'player' or 'case_holder'
   winningMoneyAmount?: number; // RX Day Mode - winning money amount
 }

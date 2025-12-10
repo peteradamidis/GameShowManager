@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-10T12:08:05.134Z",
+  "exportedAt": "2025-12-10T12:09:46.523Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -4640,6 +4640,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T06:24:21.872Z"
@@ -4669,6 +4670,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T05:58:45.636Z"
@@ -4698,6 +4700,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T05:58:46.174Z"
@@ -4727,6 +4730,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:38.431Z"
@@ -4756,6 +4760,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:38.941Z"
@@ -4785,6 +4790,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:39.446Z"
@@ -4814,6 +4820,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:39.951Z"
@@ -4843,6 +4850,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:40.456Z"
@@ -4872,6 +4880,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:40.962Z"
@@ -4901,6 +4910,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:41.467Z"
@@ -4930,6 +4940,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:41.976Z"
@@ -4959,6 +4970,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:42.523Z"
@@ -4988,6 +5000,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:43.027Z"
@@ -5017,6 +5030,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:43.537Z"
@@ -5046,6 +5060,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:44.043Z"
@@ -5075,6 +5090,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:44.548Z"
@@ -5104,6 +5120,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:45.064Z"
@@ -5133,6 +5150,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:45.569Z"
@@ -5162,6 +5180,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:46.078Z"
@@ -5191,6 +5210,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:46.583Z"
@@ -5220,6 +5240,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:21.572Z"
@@ -5249,6 +5270,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:21.067Z"
@@ -5278,6 +5300,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:00:44.337Z"
@@ -5307,6 +5330,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:00:43.825Z"
@@ -5336,6 +5360,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:04:56.678Z"
@@ -5365,6 +5390,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:04:57.178Z"
@@ -5394,6 +5420,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:04:58.178Z"
@@ -5423,6 +5450,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:04:58.678Z"
@@ -5452,6 +5480,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:04:59.180Z"
@@ -5481,6 +5510,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:04:59.680Z"
@@ -5510,6 +5540,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:05:00.186Z"
@@ -5539,6 +5570,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:05:00.691Z"
@@ -5568,6 +5600,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:05:01.192Z"
@@ -5597,6 +5630,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:05:01.694Z"
@@ -5626,6 +5660,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:05:02.194Z"
@@ -5655,6 +5690,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:05:02.696Z"
@@ -5684,6 +5720,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:05:03.196Z"
@@ -5713,6 +5750,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:05:03.701Z"
@@ -5742,6 +5780,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:05:04.201Z"
@@ -5771,6 +5810,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:05:04.706Z"
@@ -5800,6 +5840,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:23.570Z"
@@ -5829,6 +5870,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:22.072Z"
@@ -5858,6 +5900,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:24.069Z"
@@ -5887,6 +5930,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:24.567Z"
@@ -5916,6 +5960,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:26.590Z"
@@ -5945,6 +5990,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:27.590Z"
@@ -5974,6 +6020,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:28.089Z"
@@ -6003,6 +6050,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:28.589Z"
@@ -6032,6 +6080,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:29.093Z"
@@ -6061,6 +6110,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:29.596Z"
@@ -6090,6 +6140,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:30.095Z"
@@ -6119,6 +6170,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:30.595Z"
@@ -6148,6 +6200,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:31.110Z"
@@ -6177,6 +6230,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:31.626Z"
@@ -6206,6 +6260,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:32.124Z"
@@ -6235,6 +6290,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:32.630Z"
@@ -6264,6 +6320,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:33.129Z"
@@ -6293,6 +6350,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:33.650Z"
@@ -6322,6 +6380,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:34.228Z"
@@ -6351,6 +6410,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:34.728Z"
@@ -6380,6 +6440,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:35.252Z"
@@ -6409,6 +6470,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:35.753Z"
@@ -6438,6 +6500,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:36.266Z"
@@ -6467,6 +6530,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:36.771Z"
@@ -6496,6 +6560,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:37.278Z"
@@ -6525,6 +6590,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:37.778Z"
@@ -6554,6 +6620,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:38.278Z"
@@ -6583,6 +6650,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:38.781Z"
@@ -6612,6 +6680,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:39.293Z"
@@ -6641,6 +6710,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:39.818Z"
@@ -6670,6 +6740,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:40.322Z"
@@ -6699,6 +6770,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:40.821Z"
@@ -6728,6 +6800,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:41.320Z"
@@ -6757,6 +6830,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:41.824Z"
@@ -6786,6 +6860,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:42.329Z"
@@ -6815,6 +6890,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T06:23:44.503Z"
@@ -6844,6 +6920,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:35.852Z"
@@ -6873,6 +6950,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:36.360Z"
@@ -6902,6 +6980,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:36.885Z"
@@ -6931,6 +7010,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:37.403Z"
@@ -6960,6 +7040,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-10T06:03:37.927Z"
@@ -6989,6 +7070,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": "Eliana Green",
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:25.583Z"
@@ -7018,6 +7100,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:27.089Z"
@@ -7047,6 +7130,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": "Olivia Gonzalez",
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:26.083Z"
@@ -7076,6 +7160,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:25.084Z"
@@ -7105,6 +7190,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:23.072Z"
@@ -7134,6 +7220,7 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": null,
+        "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
         "createdAt": "2025-12-09T12:27:22.572Z"
