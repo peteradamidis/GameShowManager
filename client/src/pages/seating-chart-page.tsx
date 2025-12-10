@@ -457,6 +457,8 @@ export default function SeatingChartPage() {
         winningMoneyRole: role,
         winningMoneyAmount: amount,
       });
+      // Invalidate winners query to refresh Winners page
+      await queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments/with-winning-money'] });
       await refetch();
       setWinningMoneyModalOpen(false);
       setSelectedAssignmentId("");
@@ -486,6 +488,8 @@ export default function SeatingChartPage() {
         winningMoneyRole: "",
         winningMoneyAmount: 0,
       });
+      // Invalidate winners query to refresh Winners page
+      await queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments/with-winning-money'] });
       await refetch();
       setWinningMoneyModalOpen(false);
       setSelectedAssignmentId("");

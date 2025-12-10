@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-10T12:42:25.382Z",
+  "exportedAt": "2025-12-10T12:44:29.980Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -7159,10 +7159,10 @@
         "signedIn": null,
         "otdNotes": null,
         "standbyReplacementSwaps": null,
-        "rxNumber": "500",
-        "caseNumber": "30",
-        "winningMoneyRole": "player",
-        "winningMoneyAmount": 30,
+        "rxNumber": null,
+        "caseNumber": null,
+        "winningMoneyRole": null,
+        "winningMoneyAmount": 0,
         "createdAt": "2025-12-09T12:27:24.567Z"
       },
       {
