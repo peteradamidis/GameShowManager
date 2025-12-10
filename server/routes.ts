@@ -1365,6 +1365,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all seat assignments with winning money data (for Winners page)
   app.get("/api/seat-assignments/with-winning-money", async (req, res) => {
     try {
+      // Prevent caching so we always get fresh data
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+      
       const allAssignments = await storage.getAllSeatAssignments();
       const recordDays = await storage.getRecordDays();
       const recordDaysMap = new Map(recordDays.map(rd => [rd.id, rd]));
@@ -1396,6 +1399,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         });
 
+      console.log("Winners data:", winnersData.length, "winners found");
       res.json(winnersData);
     } catch (error: any) {
       console.error("Error fetching winners data:", error);
