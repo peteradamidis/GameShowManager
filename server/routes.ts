@@ -1263,6 +1263,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all seat assignments with winning money data (for Winners page)
+  // IMPORTANT: This route MUST be before :recordDayId to avoid "with-winning-money" being captured as a param
+  app.get("/api/seat-assignments/with-winning-money", async (req, res) => {
+    try {
+      // Prevent caching so we always get fresh data
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
+      // Use storage layer like all other routes
+      const allAssignments = await storage.getAllSeatAssignments();
+      
+      // Filter for winners: must have valid role AND positive amount
+      const winnersRaw = allAssignments.filter((a) => {
+        const hasValidRole = a.winningMoneyRole && typeof a.winningMoneyRole === 'string' && a.winningMoneyRole.trim() !== '';
+        const hasValidAmount = typeof a.winningMoneyAmount === 'number' && a.winningMoneyAmount > 0;
+        return hasValidRole && hasValidAmount;
+      });
+
+      const recordDays = await storage.getRecordDays();
+      const recordDaysMap = new Map(recordDays.map(rd => [rd.id, rd]));
+      const contestants = await storage.getContestants();
+      const contestantsMap = new Map(contestants.map(c => [c.id, c]));
+
+      const winnersData = winnersRaw.map((a) => {
+        const contestant = contestantsMap.get(a.contestantId);
+        const recordDay = recordDaysMap.get(a.recordDayId);
+        return {
+          id: a.id,
+          recordDayId: a.recordDayId,
+          recordDayDate: recordDay?.date ? new Date(recordDay.date).toLocaleDateString() : '',
+          contestantId: a.contestantId,
+          contestantName: contestant?.name,
+          age: contestant?.age,
+          gender: contestant?.gender,
+          auditionRating: contestant?.auditionRating,
+          photoUrl: contestant?.photoUrl,
+          blockNumber: a.blockNumber,
+          seatLabel: a.seatLabel,
+          rxNumber: a.rxNumber || '',
+          caseNumber: a.caseNumber || '',
+          winningMoneyRole: a.winningMoneyRole,
+          winningMoneyAmount: a.winningMoneyAmount,
+        };
+      });
+
+      res.json(winnersData);
+    } catch (error: any) {
+      console.error("Error fetching winners data:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get seat assignments for a record day
   app.get("/api/seat-assignments/:recordDayId", async (req, res) => {
     try {
@@ -1359,58 +1412,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(enrichedAssignments);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  // Get all seat assignments with winning money data (for Winners page)
-  app.get("/api/seat-assignments/with-winning-money", async (req, res) => {
-    try {
-      // Prevent caching so we always get fresh data
-      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
-      res.set('Pragma', 'no-cache');
-      res.set('Expires', '0');
-      
-      // Use storage layer like all other routes - NOT direct db access
-      const allAssignments = await storage.getAllSeatAssignments();
-      
-      // Filter for winners: must have valid role AND positive amount
-      const winnersRaw = allAssignments.filter((a) => {
-        const hasValidRole = a.winningMoneyRole && typeof a.winningMoneyRole === 'string' && a.winningMoneyRole.trim() !== '';
-        const hasValidAmount = typeof a.winningMoneyAmount === 'number' && a.winningMoneyAmount > 0;
-        return hasValidRole && hasValidAmount;
-      });
-
-      const recordDays = await storage.getRecordDays();
-      const recordDaysMap = new Map(recordDays.map(rd => [rd.id, rd]));
-      const contestants = await storage.getContestants();
-      const contestantsMap = new Map(contestants.map(c => [c.id, c]));
-
-      const winnersData = winnersRaw.map((a) => {
-        const contestant = contestantsMap.get(a.contestantId);
-        const recordDay = recordDaysMap.get(a.recordDayId);
-        return {
-          id: a.id,
-          recordDayId: a.recordDayId,
-          recordDayDate: recordDay?.date ? new Date(recordDay.date).toLocaleDateString() : '',
-          contestantId: a.contestantId,
-          contestantName: contestant?.name,
-          age: contestant?.age,
-          gender: contestant?.gender,
-          auditionRating: contestant?.auditionRating,
-          photoUrl: contestant?.photoUrl,
-          blockNumber: a.blockNumber,
-          seatLabel: a.seatLabel,
-          rxNumber: a.rxNumber || '',
-          caseNumber: a.caseNumber || '',
-          winningMoneyRole: a.winningMoneyRole,
-          winningMoneyAmount: a.winningMoneyAmount,
-        };
-      });
-
-      res.json(winnersData);
-    } catch (error: any) {
-      console.error("Error fetching winners data:", error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -2595,7 +2596,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { rxNumber, caseNumber, winningMoneyRole, winningMoneyAmount } = req.body;
       
+      console.log("PATCH winning-money received:", { 
+        id: req.params.id, 
+        rxNumber, 
+        caseNumber, 
+        winningMoneyRole, 
+        winningMoneyAmount,
+        typeOfAmount: typeof winningMoneyAmount
+      });
+      
       if (typeof winningMoneyAmount !== 'number' || winningMoneyAmount < 0) {
+        console.log("PATCH winning-money: Invalid amount, returning 400");
         return res.status(400).json({ error: "Invalid amount" });
       }
       

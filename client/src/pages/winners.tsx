@@ -20,7 +20,8 @@ export default function WinnersPage() {
     queryKey: ['/api/seat-assignments/with-winning-money'],
     queryFn: async () => {
       const response = await fetch('/api/seat-assignments/with-winning-money', {
-        cache: 'no-store'
+        cache: 'no-store',
+        credentials: 'include'  // Include session cookie for auth
       });
       if (!response.ok) {
         throw new Error('Failed to fetch winning money data');

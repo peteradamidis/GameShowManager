@@ -83,6 +83,13 @@ Do not make changes to the file `Y`.
     - Create, edit, and delete record days from the Record Days page
     - Delete operations protected by safety checks (prevents deletion if seat assignments exist)
     - Confirmation dialog required before deletion
+- **Winners Page (Winning Money Tracking):**
+    - Displays all contestants with recorded winning money from locked RX days.
+    - Separated into two tabs: Players and Case Holders.
+    - Each entry shows contestant info (photo, name, age, gender, rating), record day, block/seat, RX number, case number, and winning amount.
+    - Winning money can be set/edited via modal on the Seating Chart page (when RX day is locked).
+    - Database fields on `seat_assignments`: `rxNumber` (text), `caseNumber` (text), `winningMoneyRole` ('player' or 'case_holder'), `winningMoneyAmount` (integer).
+    - **API Route Note:** The `/api/seat-assignments/with-winning-money` route MUST be registered BEFORE `/api/seat-assignments/:recordDayId` to prevent Express from capturing "with-winning-money" as a recordDayId parameter.
 
 ### Feature Specifications
 - **Contestant Management:** Comprehensive contestant profiles, search, selection, and filtering capabilities (by status, gender, rating, location, record day, availability response).
