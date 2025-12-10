@@ -85,6 +85,7 @@ export const seatAssignments = pgTable("seat_assignments", {
   
   // RX Day Mode - Winning money tracking
   rxNumber: text("rx_number"), // RX number for this seat
+  caseNumber: text("case_number"), // Case number for this seat
   winningMoneyRole: text("winning_money_role"), // 'player' or 'case_holder'
   winningMoneyAmount: integer("winning_money_amount"), // Amount in dollars
   

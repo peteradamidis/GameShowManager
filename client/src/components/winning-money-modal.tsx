@@ -22,11 +22,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 interface WinningMoneyModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (role: string, amount: number, rxNumber: string) => void;
+  onSubmit: (role: string, amount: number, rxNumber: string, caseNumber: string) => void;
   isLoading?: boolean;
   currentRole?: string;
   currentAmount?: number;
   currentRxNumber?: string;
+  currentCaseNumber?: string;
 }
 
 export function WinningMoneyModal({
@@ -37,8 +38,10 @@ export function WinningMoneyModal({
   currentRole,
   currentAmount,
   currentRxNumber,
+  currentCaseNumber,
 }: WinningMoneyModalProps) {
   const [rxNumber, setRxNumber] = useState<string>(currentRxNumber || "");
+  const [caseNumber, setCaseNumber] = useState<string>(currentCaseNumber || "");
   const [role, setRole] = useState<string>(currentRole || "player");
   const [amount, setAmount] = useState<string>(currentAmount?.toString() || "");
 
@@ -58,8 +61,9 @@ export function WinningMoneyModal({
     if (isNaN(amountNum) || amountNum < 0) {
       return;
     }
-    onSubmit(role, amountNum, rxNumber);
+    onSubmit(role, amountNum, rxNumber, caseNumber);
     setRxNumber("");
+    setCaseNumber("");
     setRole("player");
     setAmount("");
     onOpenChange(false);
@@ -85,6 +89,18 @@ export function WinningMoneyModal({
               onChange={(e) => setRxNumber(e.target.value)}
               placeholder="Enter RX number"
               data-testid="input-rx-number"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="case-input">Case Number</Label>
+            <Input
+              id="case-input"
+              type="text"
+              value={caseNumber}
+              onChange={(e) => setCaseNumber(e.target.value)}
+              placeholder="Enter case number"
+              data-testid="input-case-number"
             />
           </div>
 
