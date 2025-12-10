@@ -16,15 +16,19 @@ import { Trophy, Users } from "lucide-react";
 
 export default function WinnersPage() {
   // Fetch all seat assignments with winning money data
-  const { data: allAssignments = [], isLoading } = useQuery<any[]>({
+  const { data: allAssignments = [], isLoading, refetch } = useQuery<any[]>({
     queryKey: ['/api/seat-assignments/with-winning-money'],
     queryFn: async () => {
-      const response = await fetch('/api/seat-assignments/with-winning-money');
+      const response = await fetch('/api/seat-assignments/with-winning-money', {
+        cache: 'no-store'
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch winning money data');
       }
       return response.json();
     },
+    staleTime: 0,
+    gcTime: 0,
   });
 
   // Filter players (role = 'player')

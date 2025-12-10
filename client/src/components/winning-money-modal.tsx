@@ -88,7 +88,7 @@ export function WinningMoneyModal({
     onOpenChange(false);
   };
 
-  const hasExistingData = currentAmount > 0;
+  const hasExistingData = (currentAmount ?? 0) > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
