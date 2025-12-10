@@ -1,7 +1,8 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { insertContestantSchema, insertRecordDaySchema, insertSeatAssignmentSchema } from "@shared/schema";
+import { storage, db } from "./storage";
+import { insertContestantSchema, insertRecordDaySchema, insertSeatAssignmentSchema, seatAssignments } from "@shared/schema";
+import { sql } from "drizzle-orm";
 import xlsx from "xlsx";
 import multer from "multer";
 import crypto from "crypto";
@@ -1370,40 +1371,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
       
-      const allAssignments = await storage.getAllSeatAssignments();
+      if (!db) {
+        return res.status(500).json({ error: "Database not available" });
+      }
+
+      // Query directly from DB for winners with explicit column selection
+      const winnersRaw = await db
+        .select({
+          id: seatAssignments.id,
+          recordDayId: seatAssignments.recordDayId,
+          contestantId: seatAssignments.contestantId,
+          blockNumber: seatAssignments.blockNumber,
+          seatLabel: seatAssignments.seatLabel,
+          rxNumber: seatAssignments.rxNumber,
+          caseNumber: seatAssignments.caseNumber,
+          winningMoneyRole: seatAssignments.winningMoneyRole,
+          winningMoneyAmount: seatAssignments.winningMoneyAmount,
+        })
+        .from(seatAssignments)
+        .where(sql`${seatAssignments.winningMoneyAmount} > 0 AND ${seatAssignments.winningMoneyRole} IS NOT NULL AND ${seatAssignments.winningMoneyRole} != ''`);
+
       const recordDays = await storage.getRecordDays();
       const recordDaysMap = new Map(recordDays.map(rd => [rd.id, rd]));
       const contestants = await storage.getContestants();
       const contestantsMap = new Map(contestants.map(c => [c.id, c]));
 
-      // Filter: must have BOTH a valid role AND a valid amount
-      const winnersData = allAssignments
-        .filter((a: any) => {
-          const hasValidRole = a.winningMoneyRole && typeof a.winningMoneyRole === 'string' && a.winningMoneyRole.trim() !== '';
-          const hasValidAmount = typeof a.winningMoneyAmount === 'number' && a.winningMoneyAmount > 0;
-          return hasValidRole && hasValidAmount;
-        })
-        .map((a: any) => {
-          const contestant = contestantsMap.get(a.contestantId);
-          const recordDay = recordDaysMap.get(a.recordDayId);
-          return {
-            id: a.id,
-            recordDayId: a.recordDayId,
-            recordDayDate: recordDay?.date ? new Date(recordDay.date).toLocaleDateString() : '',
-            contestantId: a.contestantId,
-            contestantName: contestant?.name,
-            age: contestant?.age,
-            gender: contestant?.gender,
-            auditionRating: contestant?.auditionRating,
-            photoUrl: contestant?.photoUrl,
-            blockNumber: a.blockNumber,
-            seatLabel: a.seatLabel,
-            rxNumber: a.rxNumber || '',
-            caseNumber: a.caseNumber || '',
-            winningMoneyRole: a.winningMoneyRole,
-            winningMoneyAmount: a.winningMoneyAmount,
-          };
-        });
+      const winnersData = winnersRaw.map((a: any) => {
+        const contestant = contestantsMap.get(a.contestantId);
+        const recordDay = recordDaysMap.get(a.recordDayId);
+        return {
+          id: a.id,
+          recordDayId: a.recordDayId,
+          recordDayDate: recordDay?.date ? new Date(recordDay.date).toLocaleDateString() : '',
+          contestantId: a.contestantId,
+          contestantName: contestant?.name,
+          age: contestant?.age,
+          gender: contestant?.gender,
+          auditionRating: contestant?.auditionRating,
+          photoUrl: contestant?.photoUrl,
+          blockNumber: a.blockNumber,
+          seatLabel: a.seatLabel,
+          rxNumber: a.rxNumber || '',
+          caseNumber: a.caseNumber || '',
+          winningMoneyRole: a.winningMoneyRole,
+          winningMoneyAmount: a.winningMoneyAmount,
+        };
+      });
 
       res.json(winnersData);
     } catch (error: any) {
