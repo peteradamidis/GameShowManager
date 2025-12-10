@@ -83,6 +83,10 @@ export const seatAssignments = pgTable("seat_assignments", {
   otdNotes: text("otd_notes"),
   standbyReplacementSwaps: text("standby_replacement_swaps"),
   
+  // RX Day Mode - Winning money tracking
+  winningMoneyRole: text("winning_money_role"), // 'player' or 'case_holder'
+  winningMoneyAmount: integer("winning_money_amount"), // Amount in dollars
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   // Ensure one contestant per record day

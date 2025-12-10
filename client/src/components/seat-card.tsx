@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { User, X, Ban, Plus, ArrowLeftRight } from "lucide-react";
+import { User, X, Ban, Plus, ArrowLeftRight, DollarSign } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import {
@@ -31,6 +31,8 @@ export interface SeatData {
   originalBlockNumber?: number; // RX Day Mode - original position before swap
   originalSeatLabel?: string; // RX Day Mode - original seat label before swap
   swappedAt?: string; // RX Day Mode - timestamp when swap occurred (only set for locked swaps)
+  winningMoneyRole?: string; // RX Day Mode - 'player' or 'case_holder'
+  winningMoneyAmount?: number; // RX Day Mode - winning money amount
 }
 
 interface SeatCardProps {
@@ -38,9 +40,11 @@ interface SeatCardProps {
   blockIndex: number;
   seatIndex: number;
   isDragging?: boolean;
+  isRXDayLocked?: boolean;
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
   onRemove?: (assignmentId: string) => void;
   onCancel?: (assignmentId: string) => void;
+  onWinningMoneyClick?: (assignmentId: string) => void;
 }
 
 const groupColors = [
@@ -62,7 +66,17 @@ const ratingColors: Record<string, { bg: string; border: string }> = {
   'C': { bg: '#fee2e2', border: '#ef4444' },
 };
 
-export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEmptySeatClick, onRemove, onCancel }: SeatCardProps) {
+export function SeatCard({ 
+  seat, 
+  blockIndex, 
+  seatIndex, 
+  isDragging = false, 
+  isRXDayLocked = false,
+  onEmptySeatClick, 
+  onRemove, 
+  onCancel,
+  onWinningMoneyClick,
+}: SeatCardProps) {
   const isEmpty = !seat.contestantName;
   
   // Use rating-based colors, fallback to group colors if no rating
@@ -99,6 +113,8 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
     
     if (isEmpty && onEmptySeatClick) {
       onEmptySeatClick(blockIndex + 1, seatLabel);
+    } else if (!isEmpty && isRXDayLocked && onWinningMoneyClick && seat.assignmentId) {
+      onWinningMoneyClick(seat.assignmentId);
     }
   };
 
@@ -107,7 +123,7 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
       className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity border-2 relative ${
         isEmpty
           ? "border-dashed bg-muted/30 cursor-pointer hover-elevate"
-          : `${groupColorClass} hover-elevate`
+          : `${groupColorClass} ${isRXDayLocked && !isEmpty ? 'cursor-pointer hover-elevate' : 'hover-elevate'}`
       } ${isDragging ? "opacity-50" : ""} ${wasSwapped ? "ring-2 ring-amber-400 ring-offset-1" : ""}`}
       style={ratingColorInfo ? {
         backgroundColor: ratingColorInfo.bg,
@@ -153,8 +169,8 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
               </div>
             )}
           </div>
-          {seat.playerType && (
-            <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1">
+            {seat.playerType && (
               <Badge 
                 variant="outline"
                 className={`h-5 px-1.5 text-[9px] font-semibold ${
@@ -164,8 +180,13 @@ export function SeatCard({ seat, blockIndex, seatIndex, isDragging = false, onEm
                 }`}>
                 {seat.playerType === 'player' ? 'P' : seat.playerType === 'backup' ? 'B' : 'PP'}
               </Badge>
-            </div>
-          )}
+            )}
+            {isRXDayLocked && seat.winningMoneyAmount !== undefined && (
+              <div title={`$${seat.winningMoneyAmount}`}>
+                <DollarSign className="h-3 w-3 text-green-600 dark:text-green-400 flex-shrink-0" />
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-2 text-muted-foreground text-[10px]">
             <span>{seat.age}</span>
             <span>•</span>

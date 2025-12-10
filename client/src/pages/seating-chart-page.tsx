@@ -1,4 +1,5 @@
 import { SeatingChart } from "@/components/seating-chart";
+import { WinningMoneyModal } from "@/components/winning-money-modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Wand2, RotateCcw, Lock, Unlock } from "lucide-react";
@@ -76,6 +77,11 @@ export default function SeatingChartPage() {
   // RX Day Mode lock state
   const [lockConfirmDialogOpen, setLockConfirmDialogOpen] = useState(false);
   const [unlockConfirmDialogOpen, setUnlockConfirmDialogOpen] = useState(false);
+  
+  // Winning money modal state
+  const [winningMoneyModalOpen, setWinningMoneyModalOpen] = useState(false);
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState<string>("");
+  const [winningMoneyLoading, setWinningMoneyLoading] = useState(false);
   
   // Get record day ID from query parameter or fetch first available
   const searchParams = new URLSearchParams(window.location.search);
@@ -219,6 +225,8 @@ export default function SeatingChartPage() {
             originalBlockNumber: assignment.originalBlockNumber,
             originalSeatLabel: assignment.originalSeatLabel,
             swappedAt: assignment.swappedAt,
+            winningMoneyRole: assignment.winningMoneyRole,
+            winningMoneyAmount: assignment.winningMoneyAmount,
           };
         }
       }
@@ -422,6 +430,38 @@ export default function SeatingChartPage() {
     setCancelDialogOpen(true);
   };
 
+  const handleWinningMoneyClick = (assignmentId: string) => {
+    setSelectedAssignmentId(assignmentId);
+    setWinningMoneyModalOpen(true);
+  };
+
+  const handleWinningMoneySave = async (role: string, amount: number) => {
+    if (!selectedAssignmentId) return;
+    
+    setWinningMoneyLoading(true);
+    try {
+      await apiRequest('PATCH', `/api/seat-assignments/${selectedAssignmentId}/winning-money`, {
+        winningMoneyRole: role,
+        winningMoneyAmount: amount,
+      });
+      await refetch();
+      setWinningMoneyModalOpen(false);
+      setSelectedAssignmentId("");
+      toast({
+        title: "Winning money updated",
+        description: `Amount saved: $${amount}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error updating winning money",
+        description: error?.message || "Could not update winning money.",
+        variant: "destructive",
+      });
+    } finally {
+      setWinningMoneyLoading(false);
+    }
+  };
+
   const handleConfirmCancel = async () => {
     if (!cancelAssignmentId) return;
     
@@ -521,6 +561,7 @@ export default function SeatingChartPage() {
           onEmptySeatClick={handleEmptySeatClick}
           onRemove={handleRemove}
           onCancel={handleCancel}
+          onWinningMoneyClick={isLocked ? handleWinningMoneyClick : undefined}
           isLocked={isLocked}
         />
       )}
@@ -628,6 +669,14 @@ export default function SeatingChartPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Winning Money Modal */}
+      <WinningMoneyModal 
+        open={winningMoneyModalOpen}
+        onOpenChange={setWinningMoneyModalOpen}
+        onSubmit={handleWinningMoneySave}
+        isLoading={winningMoneyLoading}
+      />
 
       {/* Reset Confirmation Dialog */}
       <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>

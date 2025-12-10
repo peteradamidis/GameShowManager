@@ -47,6 +47,7 @@ interface SeatingChartProps {
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
   onRemove?: (assignmentId: string) => void;
   onCancel?: (assignmentId: string) => void;
+  onWinningMoneyClick?: (assignmentId: string) => void;
   isLocked?: boolean; // RX Day Mode - when true, use tracked swap endpoint
 }
 
@@ -55,17 +56,21 @@ function DraggableDroppableSeat({
   blockIndex,
   seatIndex,
   isOver,
+  isRXDayLocked,
   onEmptySeatClick,
   onRemove,
   onCancel,
+  onWinningMoneyClick,
 }: {
   seat: SeatData;
   blockIndex: number;
   seatIndex: number;
   isOver: boolean;
+  isRXDayLocked?: boolean;
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
   onRemove?: (assignmentId: string) => void;
   onCancel?: (assignmentId: string) => void;
+  onWinningMoneyClick?: (assignmentId: string) => void;
 }) {
   // Make occupied seats draggable
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
@@ -97,9 +102,11 @@ function DraggableDroppableSeat({
         blockIndex={blockIndex}
         seatIndex={seatIndex}
         isDragging={isDragging}
+        isRXDayLocked={isRXDayLocked}
         onEmptySeatClick={onEmptySeatClick}
         onRemove={onRemove}
         onCancel={onCancel}
+        onWinningMoneyClick={onWinningMoneyClick}
       />
     </div>
   );
@@ -120,9 +127,11 @@ function SeatingBlock({
   blockLabel,
   reverseRows = false,
   overId,
+  isRXDayLocked,
   onEmptySeatClick,
   onRemove,
   onCancel,
+  onWinningMoneyClick,
   blockType,
   onBlockTypeChange,
 }: { 
@@ -131,9 +140,11 @@ function SeatingBlock({
   blockLabel: string;
   reverseRows?: boolean;
   overId: string | null;
+  isRXDayLocked?: boolean;
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
   onRemove?: (assignmentId: string) => void;
   onCancel?: (assignmentId: string) => void;
+  onWinningMoneyClick?: (assignmentId: string) => void;
   blockType?: 'PB' | 'NPB';
   onBlockTypeChange?: (blockNumber: number, newType: 'PB' | 'NPB') => void;
 }) {
@@ -250,9 +261,11 @@ function SeatingBlock({
                           blockIndex={blockIndex}
                           seatIndex={absoluteSeatIdx}
                           isOver={overId === seat.id}
+                          isRXDayLocked={isRXDayLocked}
                           onEmptySeatClick={onEmptySeatClick}
                           onRemove={onRemove}
                           onCancel={onCancel}
+                          onWinningMoneyClick={onWinningMoneyClick}
                         />
                         {/* Horizontal link to next seat in same row */}
                         {hasLinkToNext && (
@@ -341,7 +354,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, isLocked = false }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, isLocked = false }: SeatingChartProps) {
   const [blocks, setBlocks] = useState<SeatData[][]>(
     initialSeats || Array(7).fill(null).map((_, blockIdx) => 
       generateBlockSeats(recordDayId, blockIdx)
@@ -654,9 +667,11 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   blockLabel={`Block ${idx + 1} (Top)`}
                   reverseRows={true}
                   overId={overId}
+                  isRXDayLocked={isLocked}
                   onEmptySeatClick={onEmptySeatClick}
                   onRemove={onRemove}
                   onCancel={onCancel}
+                  onWinningMoneyClick={onWinningMoneyClick}
                   blockType={blockTypeMap[idx + 1]}
                   onBlockTypeChange={handleBlockTypeChange}
                 />
@@ -686,9 +701,11 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     blockLabel={`Block ${originalIdx + 1} (Bottom)`}
                     reverseRows={false}
                     overId={overId}
+                    isRXDayLocked={isLocked}
                     onEmptySeatClick={onEmptySeatClick}
                     onRemove={onRemove}
                     onCancel={onCancel}
+                    onWinningMoneyClick={onWinningMoneyClick}
                     blockType={blockTypeMap[originalIdx + 1]}
                     onBlockTypeChange={handleBlockTypeChange}
                   />
@@ -708,9 +725,11 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 blockIndex={6}
                 blockLabel="Block 7 (Standing)"
                 overId={overId}
+                isRXDayLocked={isLocked}
                 onEmptySeatClick={onEmptySeatClick}
                 onRemove={onRemove}
                 onCancel={onCancel}
+                onWinningMoneyClick={onWinningMoneyClick}
                 blockType={blockTypeMap[7]}
                 onBlockTypeChange={handleBlockTypeChange}
               />

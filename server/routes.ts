@@ -2533,6 +2533,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update winning money for RX Day Mode
+  app.patch("/api/seat-assignments/:id/winning-money", async (req, res) => {
+    try {
+      const { winningMoneyRole, winningMoneyAmount } = req.body;
+      
+      if (!winningMoneyRole || !['player', 'case_holder'].includes(winningMoneyRole)) {
+        return res.status(400).json({ error: "Invalid role" });
+      }
+      
+      if (typeof winningMoneyAmount !== 'number' || winningMoneyAmount < 0) {
+        return res.status(400).json({ error: "Invalid amount" });
+      }
+      
+      const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, { 
+        winningMoneyRole, 
+        winningMoneyAmount 
+      });
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+      
+      // Broadcast update to all connected clients
+      wsManager.broadcastBookingUpdate({
+        type: 'booking-master-update',
+        recordDayId: updated.recordDayId,
+        assignmentId: req.params.id,
+        field: 'winningMoneyAmount',
+        value: winningMoneyAmount,
+      });
+      
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Cancel seat assignment (move to reschedule)
   app.post("/api/seat-assignments/:id/cancel", async (req, res) => {
     try {
