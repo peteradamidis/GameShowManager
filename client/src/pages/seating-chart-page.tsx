@@ -724,6 +724,7 @@ export default function SeatingChartPage() {
         currentCaseNumber={currentWinningMoneyData.caseNumber}
         currentRole={currentWinningMoneyData.role}
         currentAmount={currentWinningMoneyData.amount}
+        contestantName={currentAssignment?.contestantName}
       />
 
       {/* Reset Confirmation Dialog */}

@@ -31,6 +31,7 @@ interface WinningMoneyModalProps {
   currentRxNumber?: string;
   currentCaseNumber?: string;
   isViewOnly?: boolean;
+  contestantName?: string;
 }
 
 export function WinningMoneyModal({
@@ -44,6 +45,7 @@ export function WinningMoneyModal({
   currentRxNumber,
   currentCaseNumber,
   isViewOnly = false,
+  contestantName,
 }: WinningMoneyModalProps) {
   const [rxNumber, setRxNumber] = useState<string>(currentRxNumber || "");
   const [caseNumber, setCaseNumber] = useState<string>(currentCaseNumber || "");
@@ -94,7 +96,10 @@ export function WinningMoneyModal({
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div>
-              <DialogTitle>Winning Money</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                Winning Money
+                {contestantName && <span className="text-sm font-normal text-muted-foreground">— {contestantName}</span>}
+              </DialogTitle>
               <DialogDescription>
                 {!hasExistingData ? 'Enter winning money information for this contestant' : isEditing ? 'Edit winning money information' : 'View winning money information'}
               </DialogDescription>
