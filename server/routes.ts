@@ -1300,6 +1300,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gender: contestant?.gender,
           auditionRating: contestant?.auditionRating,
           photoUrl: contestant?.photoUrl,
+          phone: contestant?.phone,
+          email: contestant?.email,
           blockNumber: a.blockNumber,
           seatLabel: a.seatLabel,
           rxNumber: a.rxNumber || '',
