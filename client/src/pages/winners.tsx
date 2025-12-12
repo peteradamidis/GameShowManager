@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -12,6 +14,7 @@ import {
 import { Trophy, Users, Check, X } from "lucide-react";
 
 export default function WinnersPage() {
+  const [filterType, setFilterType] = useState<'all' | 'player' | 'case_holder'>('all');
   // Fetch all seat assignments with winning money data
   const { data: allAssignments = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/seat-assignments/with-winning-money'],
@@ -30,9 +33,17 @@ export default function WinnersPage() {
   });
 
   // Get all winners with winning money and sort by RX day order
-  const allWinners = allAssignments
-    .filter((a) => a.winningMoneyAmount)
-    .sort((a, b) => new Date(a.recordDayDate).getTime() - new Date(b.recordDayDate).getTime());
+  const allWinners = useMemo(() => {
+    let winners = allAssignments
+      .filter((a) => a.winningMoneyAmount)
+      .sort((a, b) => new Date(a.recordDayDate).getTime() - new Date(b.recordDayDate).getTime());
+    
+    if (filterType !== 'all') {
+      winners = winners.filter((w) => w.winningMoneyRole === filterType);
+    }
+    
+    return winners;
+  }, [allAssignments, filterType]);
 
   if (isLoading) {
     return (
@@ -57,10 +68,36 @@ export default function WinnersPage() {
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-amber-500" />
-          <h3 className="text-lg font-semibold">All Winners</h3>
-          <Badge variant="outline">{allWinners.length}</Badge>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-amber-500" />
+            <h3 className="text-lg font-semibold">All Winners</h3>
+            <Badge variant="outline">{allWinners.length}</Badge>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant={filterType === 'all' ? 'default' : 'outline'}
+              onClick={() => setFilterType('all')}
+              data-testid="button-filter-all"
+            >
+              All
+            </Button>
+            <Button
+              variant={filterType === 'player' ? 'default' : 'outline'}
+              onClick={() => setFilterType('player')}
+              data-testid="button-filter-player"
+            >
+              Players
+            </Button>
+            <Button
+              variant={filterType === 'case_holder' ? 'default' : 'outline'}
+              onClick={() => setFilterType('case_holder')}
+              data-testid="button-filter-case-holder"
+            >
+              Case Holders
+            </Button>
+          </div>
         </div>
 
         {allWinners.length === 0 ? (
