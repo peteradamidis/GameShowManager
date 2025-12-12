@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-12T03:55:33.441Z",
+  "exportedAt": "2025-12-12T04:57:40.678Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -154,7 +154,7 @@
         "rxNumber": "RX EP 1 - 5",
         "totalSeats": 154,
         "status": "ready",
-        "lockedAt": "2025-12-10T13:51:04.338Z",
+        "lockedAt": "2025-12-12T04:16:58.990Z",
         "createdAt": "2025-11-27T11:34:23.272Z"
       }
     ],
@@ -7061,7 +7061,7 @@
         "medicalQuestion": null,
         "criminalBankruptcy": null,
         "castingCategory": null,
-        "notes": "idhsaiufahsdiufhasidufhuaidfhaisduhfaisuhfiuasdhfiuasdfiuasdhfiuadhsfiuadshfiuahsdifuahsdufuaishdfiudhf",
+        "notes": "",
         "bookingEmailSent": null,
         "confirmedRsvp": null,
         "paperworkSent": null,
@@ -8096,36 +8096,6 @@
         "createdAt": "2025-12-10T06:03:37.927Z"
       },
       {
-        "id": "0d5bf843-81f3-4a36-925e-2ac5a65f3543",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "bede75d6-a4ec-4fe3-907f-35108a2b4b10",
-        "blockNumber": 1,
-        "seatLabel": "D1",
-        "playerType": null,
-        "originalBlockNumber": null,
-        "originalSeatLabel": null,
-        "swappedAt": null,
-        "firstNations": null,
-        "rating": null,
-        "location": null,
-        "medicalQuestion": null,
-        "criminalBankruptcy": null,
-        "castingCategory": null,
-        "notes": null,
-        "bookingEmailSent": null,
-        "confirmedRsvp": null,
-        "paperworkSent": null,
-        "paperworkReceived": null,
-        "signedIn": null,
-        "otdNotes": null,
-        "standbyReplacementSwaps": "Eliana Green",
-        "rxNumber": null,
-        "caseNumber": null,
-        "winningMoneyRole": null,
-        "winningMoneyAmount": null,
-        "createdAt": "2025-12-09T12:27:25.583Z"
-      },
-      {
         "id": "4186c00e-c265-4dd5-a5d0-4df7882a204b",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
         "contestantId": "42504e80-d5df-4b97-a283-eb96728c425f",
@@ -8152,7 +8122,7 @@
         "rxNumber": "1",
         "caseNumber": "1",
         "winningMoneyRole": "player",
-        "winningMoneyAmount": 1750,
+        "winningMoneyAmount": 5000,
         "createdAt": "2025-12-09T12:27:27.089Z"
       },
       {
@@ -8366,6 +8336,36 @@
         "createdAt": "2025-12-09T12:27:24.567Z"
       },
       {
+        "id": "0d5bf843-81f3-4a36-925e-2ac5a65f3543",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "contestantId": "bede75d6-a4ec-4fe3-907f-35108a2b4b10",
+        "blockNumber": 1,
+        "seatLabel": "D1",
+        "playerType": null,
+        "originalBlockNumber": null,
+        "originalSeatLabel": null,
+        "swappedAt": null,
+        "firstNations": null,
+        "rating": null,
+        "location": null,
+        "medicalQuestion": null,
+        "criminalBankruptcy": null,
+        "castingCategory": null,
+        "notes": null,
+        "bookingEmailSent": null,
+        "confirmedRsvp": null,
+        "paperworkSent": null,
+        "paperworkReceived": null,
+        "signedIn": null,
+        "otdNotes": null,
+        "standbyReplacementSwaps": "Eliana Green",
+        "rxNumber": "1",
+        "caseNumber": "12",
+        "winningMoneyRole": "case_holder",
+        "winningMoneyAmount": 250,
+        "createdAt": "2025-12-09T12:27:25.583Z"
+      },
+      {
         "id": "313caa2c-fc70-4c67-992c-01c66df3af1f",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
         "contestantId": "0ccaf8bc-6ade-4ad6-9537-92f9829a6502",
@@ -8465,7 +8465,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": "2025-12-10T13:51:04.338Z",
+          "lockedAt": "2025-12-12T04:16:58.990Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       },
@@ -8507,7 +8507,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": "2025-12-10T13:51:04.338Z",
+          "lockedAt": "2025-12-12T04:16:58.990Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       }
@@ -8771,7 +8771,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": "2025-12-10T13:51:04.338Z",
+          "lockedAt": "2025-12-12T04:16:58.990Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       }

@@ -66,6 +66,7 @@ export default function SeatingChartPage() {
   
   // Reset confirmation dialog state
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetConfirmationStep, setResetConfirmationStep] = useState(0);
   
   // Auto-assign block selection dialog state
   const [autoAssignDialogOpen, setAutoAssignDialogOpen] = useState(false);
@@ -331,6 +332,13 @@ export default function SeatingChartPage() {
   };
 
   const handleConfirmReset = async () => {
+    // First confirmation
+    if (resetConfirmationStep === 0) {
+      setResetConfirmationStep(1);
+      return;
+    }
+    
+    // Second confirmation - actually reset
     try {
       // Delete all seat assignments for this record day
       if (assignments && Array.isArray(assignments)) {
@@ -342,6 +350,7 @@ export default function SeatingChartPage() {
       }
       await refetch();
       setResetDialogOpen(false);
+      setResetConfirmationStep(0);
       toast({
         title: "Seating reset",
         description: "All seat assignments have been cleared.",
@@ -353,6 +362,11 @@ export default function SeatingChartPage() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleResetDialogClose = () => {
+    setResetDialogOpen(false);
+    setResetConfirmationStep(0);
   };
 
   const handleEmptySeatClick = (blockNumber: number, seatLabel: string) => {
@@ -733,19 +747,23 @@ export default function SeatingChartPage() {
       />
 
       {/* Reset Confirmation Dialog */}
-      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+      <Dialog open={resetDialogOpen} onOpenChange={handleResetDialogClose}>
         <DialogContent data-testid="dialog-reset-confirmation">
           <DialogHeader>
-            <DialogTitle>Reset Seating Chart</DialogTitle>
+            <DialogTitle>
+              {resetConfirmationStep === 0 ? "Reset Seating Chart" : "Confirm Reset Again"}
+            </DialogTitle>
             <DialogDescription>
-              Are you sure you want to reset all seat assignments? This will remove all contestants from their seats for this record day.
+              {resetConfirmationStep === 0 
+                ? "Are you sure you want to reset all seat assignments? This will remove all contestants from their seats for this record day."
+                : "This action cannot be undone. Are you absolutely certain you want to reset all seat assignments?"}
             </DialogDescription>
           </DialogHeader>
 
           <DialogFooter>
             <Button 
               variant="outline" 
-              onClick={() => setResetDialogOpen(false)}
+              onClick={handleResetDialogClose}
               data-testid="button-reset-cancel"
             >
               Cancel
@@ -755,7 +773,7 @@ export default function SeatingChartPage() {
               onClick={handleConfirmReset}
               data-testid="button-reset-confirm"
             >
-              Yes, Reset All
+              {resetConfirmationStep === 0 ? "Yes, Reset All" : "Yes, Confirm Reset"}
             </Button>
           </DialogFooter>
         </DialogContent>
