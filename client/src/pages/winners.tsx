@@ -61,21 +61,19 @@ export default function WinnersPage() {
             <TableHeader>
               {/* Group header row */}
               <TableRow className="bg-yellow-100 dark:bg-yellow-900 border-b-2">
-                <TableHead colSpan={4} className="text-center font-bold bg-yellow-100 dark:bg-yellow-900 border-r">RECORD</TableHead>
-                <TableHead colSpan={5} className="text-center font-bold bg-yellow-100 dark:bg-yellow-900 border-r">CONTESTANTS</TableHead>
+                <TableHead colSpan={3} className="text-center font-bold bg-yellow-100 dark:bg-yellow-900 border-r">RECORD</TableHead>
+                <TableHead colSpan={4} className="text-center font-bold bg-yellow-100 dark:bg-yellow-900 border-r">CONTESTANTS</TableHead>
                 <TableHead colSpan={4} className="text-center font-bold bg-green-100 dark:bg-green-900">WINNINGS</TableHead>
               </TableRow>
               {/* Column headers */}
               <TableRow className="bg-muted/50">
                 <TableHead className="bg-yellow-50 dark:bg-yellow-950">RX DATE</TableHead>
                 <TableHead className="bg-yellow-50 dark:bg-yellow-950">RX DAY</TableHead>
-                <TableHead className="bg-yellow-50 dark:bg-yellow-950">RX EPISODE NUMBER</TableHead>
-                <TableHead className="bg-yellow-50 dark:bg-yellow-950 border-r">BLOCK-SEAT</TableHead>
+                <TableHead className="bg-yellow-50 dark:bg-yellow-950 border-r">RX EPISODE NUMBER</TableHead>
                 <TableHead className="bg-yellow-50 dark:bg-yellow-950">CONTESTANT NAME</TableHead>
-                <TableHead className="bg-yellow-50 dark:bg-yellow-950">AGE</TableHead>
-                <TableHead className="bg-yellow-50 dark:bg-yellow-950">GENDER</TableHead>
-                <TableHead className="bg-yellow-50 dark:bg-yellow-950">RATING</TableHead>
-                <TableHead className="bg-yellow-50 dark:bg-yellow-950 border-r">PHOTO</TableHead>
+                <TableHead className="bg-yellow-50 dark:bg-yellow-950">PHONE</TableHead>
+                <TableHead className="bg-yellow-50 dark:bg-yellow-950">EMAIL</TableHead>
+                <TableHead className="bg-yellow-50 dark:bg-yellow-950 border-r">AGE</TableHead>
                 <TableHead className="bg-green-50 dark:bg-green-950">CASE NUMBER</TableHead>
                 <TableHead className="bg-green-50 dark:bg-green-950">CASE AMOUNT</TableHead>
                 <TableHead className="bg-green-50 dark:bg-green-950">QUICK CASH</TableHead>
@@ -87,31 +85,11 @@ export default function WinnersPage() {
                 <TableRow key={winner.id} className="hover:bg-muted/30">
                   <TableCell className="text-sm">{winner.recordDayDate}</TableCell>
                   <TableCell className="text-sm font-mono">{winner.recordDayId?.slice(0, 8) || '-'}</TableCell>
-                  <TableCell className="text-sm font-mono">{winner.rxNumber || '-'}</TableCell>
-                  <TableCell className="text-sm font-mono border-r">Block {winner.blockNumber}-{winner.seatLabel}</TableCell>
+                  <TableCell className="text-sm font-mono border-r">{winner.rxNumber || '-'}</TableCell>
                   <TableCell className="font-medium">{winner.contestantName}</TableCell>
-                  <TableCell className="text-sm">{winner.age}</TableCell>
-                  <TableCell className="text-sm text-center">{winner.gender?.[0]}</TableCell>
-                  <TableCell className="text-sm">
-                    <Badge variant="outline" className="font-semibold text-xs">
-                      {winner.auditionRating}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="border-r">
-                    <Avatar className="h-7 w-7">
-                      {winner.photoUrl ? (
-                        <AvatarImage src={winner.photoUrl} alt={winner.contestantName} className="object-cover" />
-                      ) : null}
-                      <AvatarFallback className="text-xs">
-                        {winner.contestantName
-                          ?.split(' ')
-                          .map((n: string) => n[0])
-                          .join('')
-                          .slice(0, 2)
-                          .toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </TableCell>
+                  <TableCell className="text-sm">{winner.phone || '-'}</TableCell>
+                  <TableCell className="text-sm">{winner.email || '-'}</TableCell>
+                  <TableCell className="text-sm border-r">{winner.age}</TableCell>
                   <TableCell className="text-sm font-mono">{winner.caseNumber || '-'}</TableCell>
                   <TableCell className="text-sm font-mono">-</TableCell>
                   <TableCell className="text-sm font-mono">-</TableCell>
