@@ -482,9 +482,22 @@ export default function SeatingChartPage() {
     caseNumber: currentAssignment?.caseNumber || "",
     role: currentAssignment?.winningMoneyRole || "player",
     amount: currentAssignment?.winningMoneyAmount || 0,
+    caseAmount: currentAssignment?.caseAmount,
+    quickCash: currentAssignment?.quickCash,
+    bankOfferTaken: currentAssignment?.bankOfferTaken || false,
+    spinTheWheel: currentAssignment?.spinTheWheel || false,
+    prize: currentAssignment?.prize || "",
   };
 
-  const handleWinningMoneySave = async (role: string, amount: number, rxNumber: string, caseNumber: string) => {
+  interface PlayerFields {
+    caseAmount?: number;
+    quickCash?: number;
+    bankOfferTaken?: boolean;
+    spinTheWheel?: boolean;
+    prize?: string;
+  }
+
+  const handleWinningMoneySave = async (role: string, amount: number, rxNumber: string, caseNumber: string, playerFields?: PlayerFields) => {
     if (!selectedAssignmentId) return;
     
     setWinningMoneyLoading(true);
@@ -494,6 +507,19 @@ export default function SeatingChartPage() {
         caseNumber,
         winningMoneyRole: role,
         winningMoneyAmount: amount,
+        ...(role === 'player' && playerFields ? {
+          caseAmount: playerFields.caseAmount,
+          quickCash: playerFields.quickCash,
+          bankOfferTaken: playerFields.bankOfferTaken,
+          spinTheWheel: playerFields.spinTheWheel,
+          prize: playerFields.prize,
+        } : {
+          caseAmount: null,
+          quickCash: null,
+          bankOfferTaken: null,
+          spinTheWheel: null,
+          prize: null,
+        }),
       });
       // Invalidate winners query to refresh Winners page
       await queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments/with-winning-money'] });
@@ -525,6 +551,11 @@ export default function SeatingChartPage() {
         caseNumber: "",
         winningMoneyRole: "",
         winningMoneyAmount: 0,
+        caseAmount: null,
+        quickCash: null,
+        bankOfferTaken: null,
+        spinTheWheel: null,
+        prize: null,
       });
       // Invalidate winners query to refresh Winners page
       await queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments/with-winning-money'] });
@@ -766,6 +797,11 @@ export default function SeatingChartPage() {
         currentCaseNumber={currentWinningMoneyData.caseNumber}
         currentRole={currentWinningMoneyData.role}
         currentAmount={currentWinningMoneyData.amount}
+        currentCaseAmount={currentWinningMoneyData.caseAmount}
+        currentQuickCash={currentWinningMoneyData.quickCash}
+        currentBankOfferTaken={currentWinningMoneyData.bankOfferTaken}
+        currentSpinTheWheel={currentWinningMoneyData.spinTheWheel}
+        currentPrize={currentWinningMoneyData.prize}
         contestantName={currentAssignment?.contestantName}
       />
 

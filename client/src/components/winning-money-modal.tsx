@@ -17,19 +17,32 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+
+interface PlayerFields {
+  caseAmount?: number;
+  quickCash?: number;
+  bankOfferTaken?: boolean;
+  spinTheWheel?: boolean;
+  prize?: string;
+}
 
 interface WinningMoneyModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (role: string, amount: number, rxNumber: string, caseNumber: string) => void;
+  onSubmit: (role: string, amount: number, rxNumber: string, caseNumber: string, playerFields?: PlayerFields) => void;
   onRemove?: () => void;
   isLoading?: boolean;
   currentRole?: string;
   currentAmount?: number;
   currentRxNumber?: string;
   currentCaseNumber?: string;
+  currentCaseAmount?: number;
+  currentQuickCash?: number;
+  currentBankOfferTaken?: boolean;
+  currentSpinTheWheel?: boolean;
+  currentPrize?: string;
   isViewOnly?: boolean;
   contestantName?: string;
 }
@@ -44,6 +57,11 @@ export function WinningMoneyModal({
   currentAmount,
   currentRxNumber,
   currentCaseNumber,
+  currentCaseAmount,
+  currentQuickCash,
+  currentBankOfferTaken,
+  currentSpinTheWheel,
+  currentPrize,
   isViewOnly = false,
   contestantName,
 }: WinningMoneyModalProps) {
@@ -52,6 +70,13 @@ export function WinningMoneyModal({
   const [role, setRole] = useState<string>(currentRole || "player");
   const [amount, setAmount] = useState<string>(currentAmount?.toString() || "");
   const [isEditing, setIsEditing] = useState(false);
+  
+  // Player-specific fields
+  const [caseAmount, setCaseAmount] = useState<string>(currentCaseAmount?.toString() || "");
+  const [quickCash, setQuickCash] = useState<string>(currentQuickCash?.toString() || "");
+  const [bankOfferTaken, setBankOfferTaken] = useState<boolean>(currentBankOfferTaken || false);
+  const [spinTheWheel, setSpinTheWheel] = useState<boolean>(currentSpinTheWheel || false);
+  const [prize, setPrize] = useState<string>(currentPrize || "");
 
   // Update form fields when modal opens with existing data
   useEffect(() => {
@@ -60,13 +85,24 @@ export function WinningMoneyModal({
       setCaseNumber(currentCaseNumber || "");
       setRole(currentRole || "player");
       setAmount(currentAmount ? currentAmount.toString() : "");
+      setCaseAmount(currentCaseAmount ? currentCaseAmount.toString() : "");
+      setQuickCash(currentQuickCash ? currentQuickCash.toString() : "");
+      setBankOfferTaken(currentBankOfferTaken || false);
+      setSpinTheWheel(currentSpinTheWheel || false);
+      setPrize(currentPrize || "");
       setIsEditing(false);
     }
-  }, [open, currentRxNumber, currentCaseNumber, currentRole, currentAmount]);
+  }, [open, currentRxNumber, currentCaseNumber, currentRole, currentAmount, currentCaseAmount, currentQuickCash, currentBankOfferTaken, currentSpinTheWheel, currentPrize]);
 
   useEffect(() => {
     if (role === "case_holder") {
       setAmount("250");
+      // Reset player-specific fields when switching to case holder
+      setCaseAmount("");
+      setQuickCash("");
+      setBankOfferTaken(false);
+      setSpinTheWheel(false);
+      setPrize("");
     } else if (!amount) {
       setAmount("");
     }
@@ -80,11 +116,26 @@ export function WinningMoneyModal({
     if (isNaN(amountNum) || amountNum < 0) {
       return;
     }
-    onSubmit(role, amountNum, rxNumber, caseNumber);
+    
+    // Build player fields object only if role is player
+    const playerFields: PlayerFields | undefined = role === "player" ? {
+      caseAmount: caseAmount ? parseInt(caseAmount, 10) : undefined,
+      quickCash: quickCash ? parseInt(quickCash, 10) : undefined,
+      bankOfferTaken,
+      spinTheWheel,
+      prize: spinTheWheel ? prize : undefined,
+    } : undefined;
+    
+    onSubmit(role, amountNum, rxNumber, caseNumber, playerFields);
     setRxNumber("");
     setCaseNumber("");
     setRole("player");
     setAmount("");
+    setCaseAmount("");
+    setQuickCash("");
+    setBankOfferTaken(false);
+    setSpinTheWheel(false);
+    setPrize("");
     onOpenChange(false);
   };
 
@@ -92,7 +143,7 @@ export function WinningMoneyModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px]" data-testid="dialog-winning-money">
+      <DialogContent className="sm:max-w-[450px] max-h-[85vh] overflow-y-auto" data-testid="dialog-winning-money">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -154,7 +205,7 @@ export function WinningMoneyModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount-input">Amount ($)</Label>
+            <Label htmlFor="amount-input">Amount Won ($)</Label>
             <Input
               id="amount-input"
               type="number"
@@ -171,6 +222,82 @@ export function WinningMoneyModal({
               </p>
             )}
           </div>
+
+          {/* Player-specific fields */}
+          {role === "player" && (
+            <>
+              <div className="border-t pt-4 mt-4">
+                <p className="text-sm font-medium text-muted-foreground mb-4">Player Details</p>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="case-amount-input">Case Amount ($)</Label>
+                    <Input
+                      id="case-amount-input"
+                      type="number"
+                      min="0"
+                      value={caseAmount}
+                      onChange={(e) => setCaseAmount(e.target.value)}
+                      disabled={hasExistingData && !isEditing}
+                      placeholder="Enter case amount"
+                      data-testid="input-case-amount"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="quick-cash-input">Quick Cash ($)</Label>
+                    <Input
+                      id="quick-cash-input"
+                      type="number"
+                      min="0"
+                      value={quickCash}
+                      onChange={(e) => setQuickCash(e.target.value)}
+                      disabled={hasExistingData && !isEditing}
+                      placeholder="Enter quick cash amount"
+                      data-testid="input-quick-cash"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="bank-offer-switch">Bank Offer Taken</Label>
+                    <Switch
+                      id="bank-offer-switch"
+                      checked={bankOfferTaken}
+                      onCheckedChange={setBankOfferTaken}
+                      disabled={hasExistingData && !isEditing}
+                      data-testid="switch-bank-offer"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="spin-wheel-switch">Spin the Wheel</Label>
+                    <Switch
+                      id="spin-wheel-switch"
+                      checked={spinTheWheel}
+                      onCheckedChange={setSpinTheWheel}
+                      disabled={hasExistingData && !isEditing}
+                      data-testid="switch-spin-wheel"
+                    />
+                  </div>
+
+                  {spinTheWheel && (
+                    <div className="space-y-2">
+                      <Label htmlFor="prize-input">Prize</Label>
+                      <Input
+                        id="prize-input"
+                        type="text"
+                        value={prize}
+                        onChange={(e) => setPrize(e.target.value)}
+                        disabled={hasExistingData && !isEditing}
+                        placeholder="Enter prize won"
+                        data-testid="input-prize"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         <DialogFooter>
