@@ -1463,6 +1463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           originalSeatLabel: assignment.originalSeatLabel,
           swappedAt: assignment.swappedAt,
           rxNumber: assignment.rxNumber,
+          rxEpNumber: assignment.rxEpNumber,
           caseNumber: assignment.caseNumber,
           winningMoneyRole: assignment.winningMoneyRole,
           winningMoneyAmount: assignment.winningMoneyAmount,
