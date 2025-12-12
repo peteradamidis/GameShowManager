@@ -176,17 +176,9 @@ export function SeatCard({
               {seat.contestantName}
             </p>
             {seat.mobilityNotes && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="cursor-help" data-testid={`mobility-icon-${seat.assignmentId}`}>
-                    <Plus className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" style={{ strokeWidth: 3 }} />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs max-w-[200px]">
-                  <p className="font-medium">Mobility/Access Notes</p>
-                  <p className="text-muted-foreground">{seat.mobilityNotes}</p>
-                </TooltipContent>
-              </Tooltip>
+              <div data-testid={`mobility-icon-${seat.assignmentId}`}>
+                <Plus className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" style={{ strokeWidth: 3 }} />
+              </div>
             )}
           </div>
           <div className="flex items-center gap-1">
