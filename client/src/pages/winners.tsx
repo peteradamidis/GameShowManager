@@ -59,24 +59,46 @@ export default function WinnersPage() {
         <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
+              {/* Group header row */}
+              <TableRow className="bg-yellow-100 dark:bg-yellow-900 border-b-2">
+                <TableHead colSpan={4} className="text-center font-bold bg-yellow-100 dark:bg-yellow-900 border-r">RECORD</TableHead>
+                <TableHead colSpan={5} className="text-center font-bold bg-yellow-100 dark:bg-yellow-900 border-r">CONTESTANTS</TableHead>
+                <TableHead colSpan={4} className="text-center font-bold bg-green-100 dark:bg-green-900">WINNINGS</TableHead>
+              </TableRow>
+              {/* Column headers */}
               <TableRow className="bg-muted/50">
-                <TableHead className="w-16">Photo</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Age</TableHead>
-                <TableHead>Gender</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Record Day</TableHead>
-                <TableHead>Block-Seat</TableHead>
-                <TableHead>RX</TableHead>
-                <TableHead>Case Number</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="bg-yellow-50 dark:bg-yellow-950">RX DATE</TableHead>
+                <TableHead className="bg-yellow-50 dark:bg-yellow-950">RX DAY</TableHead>
+                <TableHead className="bg-yellow-50 dark:bg-yellow-950">RX EPISODE NUMBER</TableHead>
+                <TableHead className="bg-yellow-50 dark:bg-yellow-950 border-r">BLOCK-SEAT</TableHead>
+                <TableHead className="bg-yellow-50 dark:bg-yellow-950">CONTESTANT NAME</TableHead>
+                <TableHead className="bg-yellow-50 dark:bg-yellow-950">AGE</TableHead>
+                <TableHead className="bg-yellow-50 dark:bg-yellow-950">GENDER</TableHead>
+                <TableHead className="bg-yellow-50 dark:bg-yellow-950">RATING</TableHead>
+                <TableHead className="bg-yellow-50 dark:bg-yellow-950 border-r">PHOTO</TableHead>
+                <TableHead className="bg-green-50 dark:bg-green-950">CASE NUMBER</TableHead>
+                <TableHead className="bg-green-50 dark:bg-green-950">CASE AMOUNT</TableHead>
+                <TableHead className="bg-green-50 dark:bg-green-950">QUICK CASH</TableHead>
+                <TableHead className="bg-green-50 dark:bg-green-950 text-right">AMOUNT WON</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {winners.map((winner) => (
                 <TableRow key={winner.id} className="hover:bg-muted/30">
-                  <TableCell>
-                    <Avatar className="h-8 w-8">
+                  <TableCell className="text-sm">{winner.recordDayDate}</TableCell>
+                  <TableCell className="text-sm font-mono">{winner.recordDayId?.slice(0, 8) || '-'}</TableCell>
+                  <TableCell className="text-sm font-mono">{winner.rxNumber || '-'}</TableCell>
+                  <TableCell className="text-sm font-mono border-r">Block {winner.blockNumber}-{winner.seatLabel}</TableCell>
+                  <TableCell className="font-medium">{winner.contestantName}</TableCell>
+                  <TableCell className="text-sm">{winner.age}</TableCell>
+                  <TableCell className="text-sm text-center">{winner.gender?.[0]}</TableCell>
+                  <TableCell className="text-sm">
+                    <Badge variant="outline" className="font-semibold text-xs">
+                      {winner.auditionRating}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="border-r">
+                    <Avatar className="h-7 w-7">
                       {winner.photoUrl ? (
                         <AvatarImage src={winner.photoUrl} alt={winner.contestantName} className="object-cover" />
                       ) : null}
@@ -90,20 +112,9 @@ export default function WinnersPage() {
                       </AvatarFallback>
                     </Avatar>
                   </TableCell>
-                  <TableCell className="font-medium">{winner.contestantName}</TableCell>
-                  <TableCell>{winner.age}</TableCell>
-                  <TableCell>{winner.gender?.[0]}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="font-semibold">
-                      {winner.auditionRating}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{winner.recordDayDate}</TableCell>
-                  <TableCell className="font-mono text-sm">
-                    Block {winner.blockNumber}-{winner.seatLabel}
-                  </TableCell>
-                  <TableCell className="font-mono">{winner.rxNumber || '-'}</TableCell>
-                  <TableCell className="font-mono">{winner.caseNumber || '-'}</TableCell>
+                  <TableCell className="text-sm font-mono">{winner.caseNumber || '-'}</TableCell>
+                  <TableCell className="text-sm font-mono">-</TableCell>
+                  <TableCell className="text-sm font-mono">-</TableCell>
                   <TableCell className="text-right font-semibold text-green-600 dark:text-green-400">
                     ${winner.winningMoneyAmount?.toLocaleString()}
                   </TableCell>
