@@ -1308,6 +1308,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           caseNumber: a.caseNumber || '',
           winningMoneyRole: a.winningMoneyRole,
           winningMoneyAmount: a.winningMoneyAmount,
+          caseAmount: a.caseAmount,
+          quickCash: a.quickCash,
+          bankOfferTaken: a.bankOfferTaken,
+          spinTheWheel: a.spinTheWheel,
+          prize: a.prize,
         };
       });
 
@@ -2597,7 +2602,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update winning money for RX Day Mode
   app.patch("/api/seat-assignments/:id/winning-money", async (req, res) => {
     try {
-      const { rxNumber, caseNumber, winningMoneyRole, winningMoneyAmount } = req.body;
+      const { 
+        rxNumber, 
+        caseNumber, 
+        winningMoneyRole, 
+        winningMoneyAmount,
+        caseAmount,
+        quickCash,
+        bankOfferTaken,
+        spinTheWheel,
+        prize
+      } = req.body;
       
       console.log("PATCH winning-money received:", { 
         id: req.params.id, 
@@ -2605,6 +2620,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         caseNumber, 
         winningMoneyRole, 
         winningMoneyAmount,
+        caseAmount,
+        quickCash,
+        bankOfferTaken,
+        spinTheWheel,
+        prize,
         typeOfAmount: typeof winningMoneyAmount
       });
       
@@ -2613,13 +2633,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid amount" });
       }
       
-      // If removing (amount is 0), allow empty role
+      // If removing (amount is 0), clear all winning money fields including player fields
       if (winningMoneyAmount === 0) {
         const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, { 
           rxNumber: null,
           caseNumber: null,
           winningMoneyRole: null, 
-          winningMoneyAmount: 0
+          winningMoneyAmount: 0,
+          caseAmount: null,
+          quickCash: null,
+          bankOfferTaken: null,
+          spinTheWheel: null,
+          prize: null
         });
         
         if (!updated) {
@@ -2643,12 +2668,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid role" });
       }
       
-      const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, { 
+      // Build update object with base fields
+      const updateData: any = { 
         rxNumber: rxNumber || null,
         caseNumber: caseNumber || null,
         winningMoneyRole, 
         winningMoneyAmount 
-      });
+      };
+      
+      // Add player-specific fields if role is player
+      if (winningMoneyRole === 'player') {
+        updateData.caseAmount = caseAmount ?? null;
+        updateData.quickCash = quickCash ?? null;
+        updateData.bankOfferTaken = bankOfferTaken ?? null;
+        updateData.spinTheWheel = spinTheWheel ?? null;
+        updateData.prize = spinTheWheel ? (prize || null) : null;
+      } else {
+        // Clear player-specific fields if role is case_holder
+        updateData.caseAmount = null;
+        updateData.quickCash = null;
+        updateData.bankOfferTaken = null;
+        updateData.spinTheWheel = null;
+        updateData.prize = null;
+      }
+      
+      const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, updateData);
       
       if (!updated) {
         return res.status(404).json({ error: "Seat assignment not found" });
