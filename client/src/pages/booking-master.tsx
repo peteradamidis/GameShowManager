@@ -209,6 +209,7 @@ export default function BookingMaster() {
   const [emailPreviewOpen, setEmailPreviewOpen] = useState(false);
   const [emailSubject, setEmailSubject] = useState("Deal or No Deal - Booking Confirmation");
   const [selectedAttachments, setSelectedAttachments] = useState<string[]>([]);
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   // Use refs instead of state for pending text updates to avoid re-renders
   const pendingTextUpdatesRef = useRef<Record<string, string>>({});
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnId, boolean>>(() => {
@@ -963,16 +964,51 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("notes") && (
-                          <TableCell className="border-r-4 border-r-[#1a6b6b] py-0.5 h-7">
+                          <TableCell className="border-r-4 border-r-[#1a6b6b] py-0.5 group">
                             {row.assignment && (
-                              <Input
-                                key={`notes-${row.assignment.id}`}
-                                defaultValue={row.assignment.notes || ""}
-                                onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "notes", e.target.value)}
-                                placeholder="Notes"
-                                className="h-6 text-xs"
-                                data-testid={`input-notes-${row.seatId}`}
-                              />
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => {
+                                      setExpandedNotes(prev => {
+                                        const next = new Set(prev);
+                                        if (next.has(row.assignment!.id)) {
+                                          next.delete(row.assignment!.id);
+                                        } else {
+                                          next.add(row.assignment!.id);
+                                        }
+                                        return next;
+                                      });
+                                    }}
+                                    className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+                                    data-testid={`button-expand-notes-${row.seatId}`}
+                                  >
+                                    <ChevronDown 
+                                      className={`h-4 w-4 transition-transform ${expandedNotes.has(row.assignment.id) ? 'rotate-180' : ''}`}
+                                    />
+                                  </button>
+                                  {!expandedNotes.has(row.assignment.id) && (
+                                    <Input
+                                      key={`notes-${row.assignment.id}`}
+                                      defaultValue={row.assignment.notes || ""}
+                                      onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "notes", e.target.value)}
+                                      placeholder="Notes"
+                                      className="h-6 text-xs flex-1"
+                                      data-testid={`input-notes-${row.seatId}`}
+                                    />
+                                  )}
+                                </div>
+                                {expandedNotes.has(row.assignment.id) && (
+                                  <Textarea
+                                    key={`notes-expanded-${row.assignment.id}`}
+                                    defaultValue={row.assignment.notes || ""}
+                                    onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "notes", e.target.value)}
+                                    placeholder="Notes"
+                                    className="text-xs min-h-24 resize-none"
+                                    data-testid={`textarea-notes-${row.seatId}`}
+                                  />
+                                )}
+                              </div>
                             )}
                           </TableCell>
                         )}
