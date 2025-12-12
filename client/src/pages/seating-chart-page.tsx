@@ -803,6 +803,8 @@ export default function SeatingChartPage() {
         currentSpinTheWheel={currentWinningMoneyData.spinTheWheel}
         currentPrize={currentWinningMoneyData.prize}
         contestantName={currentAssignment?.contestantName}
+        blockNumber={currentAssignment?.blockNumber}
+        assignments={assignments}
       />
 
       {/* Reset Confirmation Dialog */}

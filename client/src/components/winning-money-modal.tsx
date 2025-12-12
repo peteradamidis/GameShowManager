@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -45,6 +45,8 @@ interface WinningMoneyModalProps {
   currentPrize?: string;
   isViewOnly?: boolean;
   contestantName?: string;
+  blockNumber?: number;
+  assignments?: any[];
 }
 
 export function WinningMoneyModal({
@@ -64,6 +66,8 @@ export function WinningMoneyModal({
   currentPrize,
   isViewOnly = false,
   contestantName,
+  blockNumber,
+  assignments = [],
 }: WinningMoneyModalProps) {
   const [rxNumber, setRxNumber] = useState<string>(currentRxNumber || "");
   const [caseNumber, setCaseNumber] = useState<string>(currentCaseNumber || "");
@@ -77,6 +81,24 @@ export function WinningMoneyModal({
   const [bankOfferTaken, setBankOfferTaken] = useState<boolean>(currentBankOfferTaken ?? false);
   const [spinTheWheel, setSpinTheWheel] = useState<boolean>(currentSpinTheWheel ?? false);
   const [prize, setPrize] = useState<string>(currentPrize || "");
+
+  // Calculate available case numbers for this block
+  const availableCaseNumbers = useMemo(() => {
+    if (!blockNumber) return Array.from({ length: 22 }, (_, i) => (i + 1).toString());
+    
+    // Get all case numbers used by other contestants in the same block
+    const usedNumbers = new Set<string>();
+    assignments.forEach((assignment: any) => {
+      if (assignment.blockNumber === blockNumber && assignment.caseNumber && assignment.caseNumber !== currentCaseNumber) {
+        usedNumbers.add(assignment.caseNumber.toString());
+      }
+    });
+    
+    // Return numbers 1-22 excluding used ones
+    return Array.from({ length: 22 }, (_, i) => (i + 1).toString()).filter(
+      num => !usedNumbers.has(num)
+    );
+  }, [blockNumber, assignments, currentCaseNumber]);
 
   // Update form fields when modal opens with existing data
   useEffect(() => {
@@ -179,16 +201,19 @@ export function WinningMoneyModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="case-input">Case Number</Label>
-            <Input
-              id="case-input"
-              type="text"
-              value={caseNumber}
-              onChange={(e) => setCaseNumber(e.target.value)}
-              placeholder="Enter case number"
-              disabled={hasExistingData && !isEditing}
-              data-testid="input-case-number"
-            />
+            <Label htmlFor="case-select">Case Number</Label>
+            <Select value={caseNumber} onValueChange={setCaseNumber} disabled={hasExistingData && !isEditing}>
+              <SelectTrigger id="case-select" data-testid="select-case-number">
+                <SelectValue placeholder="Select case number" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableCaseNumbers.map((num) => (
+                  <SelectItem key={num} value={num}>
+                    {num}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
