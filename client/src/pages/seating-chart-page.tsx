@@ -2,7 +2,7 @@ import { SeatingChart } from "@/components/seating-chart";
 import { WinningMoneyModal } from "@/components/winning-money-modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, RotateCcw, Lock, Unlock } from "lucide-react";
+import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SeatData } from "@/components/seat-card";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -773,6 +773,11 @@ export default function SeatingChartPage() {
       <Dialog open={resetDialogOpen} onOpenChange={handleResetDialogClose}>
         <DialogContent data-testid="dialog-reset-confirmation">
           <DialogHeader>
+            {resetConfirmationStep === 1 && (
+              <div className="flex items-center justify-center mb-4">
+                <AlertTriangle className="h-12 w-12 text-red-600 dark:text-red-500" />
+              </div>
+            )}
             <DialogTitle>
               {resetConfirmationStep === 0 ? "Reset Seating Chart" : "Confirm Reset Again"}
             </DialogTitle>
