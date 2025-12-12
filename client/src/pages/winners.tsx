@@ -116,7 +116,7 @@ export default function WinnersPage() {
                         <X className="h-4 w-4 text-muted-foreground mx-auto" />
                     ) : '-'}
                   </TableCell>
-                  <TableCell className="text-sm">
+                  <TableCell className="text-sm text-green-600 dark:text-green-400">
                     {winner.spinTheWheel && winner.prize ? (
                       <span>{winner.prize}</span>
                     ) : '-'}
