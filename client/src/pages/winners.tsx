@@ -12,12 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trophy, Users, Check, X, Download, Copy } from "lucide-react";
+import { Trophy, Users, Check, X, Download } from "lucide-react";
 
 export default function WinnersPage() {
   const { toast } = useToast();
   const [filterType, setFilterType] = useState<'all' | 'player' | 'case_holder'>('all');
-  const [copiedEndpoint, setCopiedEndpoint] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownloadExcel = async () => {
@@ -51,17 +50,6 @@ export default function WinnersPage() {
     } finally {
       setIsDownloading(false);
     }
-  };
-
-  const handleCopyEndpoint = () => {
-    const endpoint = `${window.location.origin}/api/seat-assignments/with-winning-money/export`;
-    navigator.clipboard.writeText(endpoint);
-    setCopiedEndpoint(true);
-    toast({
-      title: "Endpoint copied",
-      description: "API endpoint copied to clipboard"
-    });
-    setTimeout(() => setCopiedEndpoint(false), 2000);
   };
 
   // Fetch all seat assignments with winning money data
@@ -116,71 +104,18 @@ export default function WinnersPage() {
         </p>
       </div>
 
-      {/* Export Setup Section */}
-      <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5" />
-            Export Setup
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4">
-            {/* Quick Download */}
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm">Quick Download</h4>
-              <p className="text-sm text-muted-foreground">Download the winners data as an Excel file right now.</p>
-              <Button
-                onClick={handleDownloadExcel}
-                disabled={isDownloading}
-                data-testid="button-download-winners-excel"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                {isDownloading ? 'Downloading...' : 'Download Excel File'}
-              </Button>
-            </div>
-
-            {/* Automated Export */}
-            <div className="space-y-2 border-t pt-4">
-              <h4 className="font-semibold text-sm">Automated Export (When on Internal Network)</h4>
-              <p className="text-sm text-muted-foreground mb-3">
-                Set up a scheduled task on your server to automatically export winners data to a network file path.
-              </p>
-              
-              <div className="bg-white dark:bg-slate-900 p-3 rounded border border-gray-200 dark:border-gray-700 space-y-2">
-                <p className="text-xs font-mono text-muted-foreground">API Endpoint:</p>
-                <div className="flex items-center gap-2">
-                  <code className="text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded flex-1 overflow-x-auto">
-                    {`${window.location.origin}/api/seat-assignments/with-winning-money/export`}
-                  </code>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleCopyEndpoint}
-                    data-testid="button-copy-endpoint"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                {copiedEndpoint && (
-                  <p className="text-xs text-green-600 dark:text-green-400">✓ Copied to clipboard</p>
-                )}
-              </div>
-
-              <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded text-xs space-y-2">
-                <p className="font-semibold">Setup Instructions:</p>
-                <ol className="list-decimal list-inside space-y-1">
-                  <li>Copy the API endpoint URL (click the copy button above)</li>
-                  <li>Create a scheduled task/cron job on your server</li>
-                  <li>Use a tool like <code className="bg-white dark:bg-slate-900 px-1">curl</code> or <code className="bg-white dark:bg-slate-900 px-1">wget</code> to call the endpoint</li>
-                  <li>Save the Excel file to your desired network path</li>
-                  <li>Example: <code className="bg-white dark:bg-slate-900 px-1 text-xs">curl -o /path/to/winners.xlsx "[endpoint-url]"</code></li>
-                </ol>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Quick Export */}
+      <div className="flex justify-end">
+        <Button
+          onClick={handleDownloadExcel}
+          disabled={isDownloading}
+          size="sm"
+          data-testid="button-download-winners-excel"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          {isDownloading ? 'Downloading...' : 'Export to Excel'}
+        </Button>
+      </div>
 
       <div className="space-y-4">
         <div className="flex flex-col gap-4">
