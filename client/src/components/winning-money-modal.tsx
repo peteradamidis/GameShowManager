@@ -281,13 +281,13 @@ export function WinningMoneyModal({
               min="0"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              disabled={role === "case_holder" || (hasExistingData && !isEditing)}
+              disabled={hasExistingData && !isEditing}
               placeholder={role === "case_holder" ? "250" : "Enter amount"}
               data-testid="input-winning-amount"
             />
             {role === "case_holder" && (
               <p className="text-xs text-muted-foreground">
-                Case Holder amount is automatically $250
+                Default case holder amount is $250
               </p>
             )}
           </div>
