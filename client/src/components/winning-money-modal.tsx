@@ -204,6 +204,50 @@ export function WinningMoneyModal({
             </Select>
           </div>
 
+          {/* Player-specific fields before Amount Won */}
+          {role === "player" && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="quick-cash-input">Quick Cash ($)</Label>
+                <Input
+                  id="quick-cash-input"
+                  type="number"
+                  min="0"
+                  value={quickCash}
+                  onChange={(e) => setQuickCash(e.target.value)}
+                  disabled={hasExistingData && !isEditing}
+                  placeholder="Enter quick cash amount"
+                  data-testid="input-quick-cash"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="case-amount-input">Case Amount ($)</Label>
+                <Input
+                  id="case-amount-input"
+                  type="number"
+                  min="0"
+                  value={caseAmount}
+                  onChange={(e) => setCaseAmount(e.target.value)}
+                  disabled={hasExistingData && !isEditing}
+                  placeholder="Enter case amount"
+                  data-testid="input-case-amount"
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="bank-offer-switch">Bank Offer Taken</Label>
+                <Switch
+                  id="bank-offer-switch"
+                  checked={bankOfferTaken}
+                  onCheckedChange={setBankOfferTaken}
+                  disabled={hasExistingData && !isEditing}
+                  data-testid="switch-bank-offer"
+                />
+              </div>
+            </>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="amount-input">Amount Won ($)</Label>
             <Input
@@ -223,79 +267,34 @@ export function WinningMoneyModal({
             )}
           </div>
 
-          {/* Player-specific fields */}
+          {/* Spin the Wheel after Amount Won */}
           {role === "player" && (
             <>
-              <div className="border-t pt-4 mt-4">
-                <p className="text-sm font-medium text-muted-foreground mb-4">Player Details</p>
-                
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="case-amount-input">Case Amount ($)</Label>
-                    <Input
-                      id="case-amount-input"
-                      type="number"
-                      min="0"
-                      value={caseAmount}
-                      onChange={(e) => setCaseAmount(e.target.value)}
-                      disabled={hasExistingData && !isEditing}
-                      placeholder="Enter case amount"
-                      data-testid="input-case-amount"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="quick-cash-input">Quick Cash ($)</Label>
-                    <Input
-                      id="quick-cash-input"
-                      type="number"
-                      min="0"
-                      value={quickCash}
-                      onChange={(e) => setQuickCash(e.target.value)}
-                      disabled={hasExistingData && !isEditing}
-                      placeholder="Enter quick cash amount"
-                      data-testid="input-quick-cash"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="bank-offer-switch">Bank Offer Taken</Label>
-                    <Switch
-                      id="bank-offer-switch"
-                      checked={bankOfferTaken}
-                      onCheckedChange={setBankOfferTaken}
-                      disabled={hasExistingData && !isEditing}
-                      data-testid="switch-bank-offer"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="spin-wheel-switch">Spin the Wheel</Label>
-                    <Switch
-                      id="spin-wheel-switch"
-                      checked={spinTheWheel}
-                      onCheckedChange={setSpinTheWheel}
-                      disabled={hasExistingData && !isEditing}
-                      data-testid="switch-spin-wheel"
-                    />
-                  </div>
-
-                  {spinTheWheel && (
-                    <div className="space-y-2">
-                      <Label htmlFor="prize-input">Prize</Label>
-                      <Input
-                        id="prize-input"
-                        type="text"
-                        value={prize}
-                        onChange={(e) => setPrize(e.target.value)}
-                        disabled={hasExistingData && !isEditing}
-                        placeholder="Enter prize won"
-                        data-testid="input-prize"
-                      />
-                    </div>
-                  )}
-                </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="spin-wheel-switch">Spin the Wheel</Label>
+                <Switch
+                  id="spin-wheel-switch"
+                  checked={spinTheWheel}
+                  onCheckedChange={setSpinTheWheel}
+                  disabled={hasExistingData && !isEditing}
+                  data-testid="switch-spin-wheel"
+                />
               </div>
+
+              {spinTheWheel && (
+                <div className="space-y-2">
+                  <Label htmlFor="prize-input">Prize</Label>
+                  <Input
+                    id="prize-input"
+                    type="text"
+                    value={prize}
+                    onChange={(e) => setPrize(e.target.value)}
+                    disabled={hasExistingData && !isEditing}
+                    placeholder="Enter prize won"
+                    data-testid="input-prize"
+                  />
+                </div>
+              )}
             </>
           )}
         </div>

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-12T06:03:22.461Z",
+  "exportedAt": "2025-12-12T10:21:44.830Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -154,7 +154,7 @@
         "rxNumber": "RX EP 1 - 5",
         "totalSeats": 154,
         "status": "ready",
-        "lockedAt": "2025-12-12T05:52:21.378Z",
+        "lockedAt": "2025-12-12T10:21:27.083Z",
         "createdAt": "2025-11-27T11:34:23.272Z"
       }
     ],
@@ -4643,6 +4643,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T06:24:21.872Z"
       },
       {
@@ -4673,6 +4678,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T05:58:45.636Z"
       },
       {
@@ -4703,6 +4713,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T05:58:46.174Z"
       },
       {
@@ -4733,6 +4748,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:38.431Z"
       },
       {
@@ -4763,6 +4783,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:38.941Z"
       },
       {
@@ -4793,6 +4818,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:39.446Z"
       },
       {
@@ -4823,6 +4853,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:39.951Z"
       },
       {
@@ -4853,6 +4888,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:40.456Z"
       },
       {
@@ -4883,6 +4923,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:40.962Z"
       },
       {
@@ -4913,6 +4958,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:41.467Z"
       },
       {
@@ -4943,6 +4993,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:41.976Z"
       },
       {
@@ -4973,6 +5028,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:42.523Z"
       },
       {
@@ -5003,6 +5063,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:43.027Z"
       },
       {
@@ -5033,6 +5098,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:43.537Z"
       },
       {
@@ -5063,6 +5133,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:44.043Z"
       },
       {
@@ -5093,6 +5168,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:44.548Z"
       },
       {
@@ -5123,6 +5203,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:45.064Z"
       },
       {
@@ -5153,6 +5238,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:45.569Z"
       },
       {
@@ -5183,6 +5273,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:46.078Z"
       },
       {
@@ -5213,6 +5308,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:46.583Z"
       },
       {
@@ -5243,6 +5343,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:07.170Z"
       },
       {
@@ -5273,6 +5378,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:14.810Z"
       },
       {
@@ -5303,6 +5413,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:07.689Z"
       },
       {
@@ -5333,6 +5448,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:08.197Z"
       },
       {
@@ -5363,6 +5483,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:08.707Z"
       },
       {
@@ -5393,6 +5518,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:09.214Z"
       },
       {
@@ -5423,6 +5553,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:09.723Z"
       },
       {
@@ -5453,6 +5588,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:10.231Z"
       },
       {
@@ -5483,6 +5623,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:10.740Z"
       },
       {
@@ -5513,6 +5658,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:11.252Z"
       },
       {
@@ -5543,6 +5693,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:11.760Z"
       },
       {
@@ -5573,6 +5728,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:12.267Z"
       },
       {
@@ -5603,6 +5763,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:12.775Z"
       },
       {
@@ -5633,6 +5798,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:13.283Z"
       },
       {
@@ -5663,6 +5833,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:13.790Z"
       },
       {
@@ -5693,6 +5868,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:14.297Z"
       },
       {
@@ -5723,6 +5903,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:15.319Z"
       },
       {
@@ -5753,6 +5938,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:15.827Z"
       },
       {
@@ -5783,6 +5973,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:16.335Z"
       },
       {
@@ -5813,6 +6008,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:16.843Z"
       },
       {
@@ -5843,6 +6043,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:17.350Z"
       },
       {
@@ -5873,6 +6078,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:02:17.858Z"
       },
       {
@@ -5903,6 +6113,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:34.790Z"
       },
       {
@@ -5933,6 +6148,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:35.321Z"
       },
       {
@@ -5963,6 +6183,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:35.824Z"
       },
       {
@@ -5993,6 +6218,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:36.333Z"
       },
       {
@@ -6023,6 +6253,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:36.836Z"
       },
       {
@@ -6053,6 +6288,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:00:44.337Z"
       },
       {
@@ -6083,6 +6323,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:00:43.825Z"
       },
       {
@@ -6113,6 +6358,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:04:56.678Z"
       },
       {
@@ -6143,6 +6393,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:04:57.178Z"
       },
       {
@@ -6173,6 +6428,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:04:58.178Z"
       },
       {
@@ -6203,6 +6463,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:04:58.678Z"
       },
       {
@@ -6233,6 +6498,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:04:59.180Z"
       },
       {
@@ -6263,6 +6533,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:04:59.680Z"
       },
       {
@@ -6293,6 +6568,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:05:00.186Z"
       },
       {
@@ -6323,6 +6603,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:05:00.691Z"
       },
       {
@@ -6353,6 +6638,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:05:01.192Z"
       },
       {
@@ -6383,6 +6673,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:05:01.694Z"
       },
       {
@@ -6413,6 +6708,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:05:02.194Z"
       },
       {
@@ -6443,6 +6743,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:05:02.696Z"
       },
       {
@@ -6473,6 +6778,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:05:03.196Z"
       },
       {
@@ -6503,6 +6813,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:05:03.701Z"
       },
       {
@@ -6533,6 +6848,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:05:04.201Z"
       },
       {
@@ -6563,6 +6883,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:05:04.706Z"
       },
       {
@@ -6593,6 +6918,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:42.891Z"
       },
       {
@@ -6623,6 +6953,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:37.339Z"
       },
       {
@@ -6653,6 +6988,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:37.841Z"
       },
       {
@@ -6683,6 +7023,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:38.342Z"
       },
       {
@@ -6713,6 +7058,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:38.859Z"
       },
       {
@@ -6743,6 +7093,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:39.362Z"
       },
       {
@@ -6773,6 +7128,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:39.864Z"
       },
       {
@@ -6803,6 +7163,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:40.368Z"
       },
       {
@@ -6833,6 +7198,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:40.869Z"
       },
       {
@@ -6863,6 +7233,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:41.372Z"
       },
       {
@@ -6893,6 +7268,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:41.887Z"
       },
       {
@@ -6923,6 +7303,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:42.389Z"
       },
       {
@@ -6953,6 +7338,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T03:38:43.394Z"
       },
       {
@@ -6983,6 +7373,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:00.615Z"
       },
       {
@@ -7013,6 +7408,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:01.114Z"
       },
       {
@@ -7043,6 +7443,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:11:59.116Z"
       },
       {
@@ -7073,6 +7478,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:11:59.618Z"
       },
       {
@@ -7103,6 +7513,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:33.043Z"
       },
       {
@@ -7133,6 +7548,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:33.545Z"
       },
       {
@@ -7163,6 +7583,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:34.048Z"
       },
       {
@@ -7193,6 +7618,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:34.549Z"
       },
       {
@@ -7223,6 +7653,11 @@
         "caseNumber": "10",
         "winningMoneyRole": "player",
         "winningMoneyAmount": 1000,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:11:58.617Z"
       },
       {
@@ -7253,6 +7688,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:02.614Z"
       },
       {
@@ -7283,6 +7723,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:11:57.619Z"
       },
       {
@@ -7313,37 +7758,12 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:11:57.113Z"
-      },
-      {
-        "id": "94238789-3e48-4182-951f-ad6c22b56835",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "b498fd02-c816-4b07-976f-1100495bf38b",
-        "blockNumber": 1,
-        "seatLabel": "E1",
-        "playerType": null,
-        "originalBlockNumber": null,
-        "originalSeatLabel": null,
-        "swappedAt": null,
-        "firstNations": null,
-        "rating": null,
-        "location": null,
-        "medicalQuestion": null,
-        "criminalBankruptcy": null,
-        "castingCategory": null,
-        "notes": null,
-        "bookingEmailSent": null,
-        "confirmedRsvp": null,
-        "paperworkSent": null,
-        "paperworkReceived": null,
-        "signedIn": null,
-        "otdNotes": null,
-        "standbyReplacementSwaps": null,
-        "rxNumber": "1",
-        "caseNumber": "20",
-        "winningMoneyRole": "case_holder",
-        "winningMoneyAmount": 250,
-        "createdAt": "2025-12-12T05:12:00.118Z"
       },
       {
         "id": "6bd3a81c-aa8a-4591-b7d4-de153efd709e",
@@ -7373,7 +7793,47 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:11:58.118Z"
+      },
+      {
+        "id": "94238789-3e48-4182-951f-ad6c22b56835",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "contestantId": "b498fd02-c816-4b07-976f-1100495bf38b",
+        "blockNumber": 1,
+        "seatLabel": "E1",
+        "playerType": null,
+        "originalBlockNumber": null,
+        "originalSeatLabel": null,
+        "swappedAt": null,
+        "firstNations": null,
+        "rating": null,
+        "location": null,
+        "medicalQuestion": null,
+        "criminalBankruptcy": null,
+        "castingCategory": null,
+        "notes": null,
+        "bookingEmailSent": null,
+        "confirmedRsvp": null,
+        "paperworkSent": null,
+        "paperworkReceived": null,
+        "signedIn": null,
+        "otdNotes": null,
+        "standbyReplacementSwaps": null,
+        "rxNumber": null,
+        "caseNumber": null,
+        "winningMoneyRole": null,
+        "winningMoneyAmount": 0,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
+        "createdAt": "2025-12-12T05:12:00.118Z"
       },
       {
         "id": "b396cb42-cc76-4350-89e8-98b94de4815d",
@@ -7403,6 +7863,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:28.089Z"
       },
       {
@@ -7433,6 +7898,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:28.589Z"
       },
       {
@@ -7463,6 +7933,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:29.093Z"
       },
       {
@@ -7493,6 +7968,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:29.596Z"
       },
       {
@@ -7523,6 +8003,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:30.095Z"
       },
       {
@@ -7553,6 +8038,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:30.595Z"
       },
       {
@@ -7583,6 +8073,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:31.110Z"
       },
       {
@@ -7613,6 +8108,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:31.626Z"
       },
       {
@@ -7643,6 +8143,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:32.124Z"
       },
       {
@@ -7673,6 +8178,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:32.630Z"
       },
       {
@@ -7703,6 +8213,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:33.650Z"
       },
       {
@@ -7733,6 +8248,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:34.228Z"
       },
       {
@@ -7763,6 +8283,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:34.728Z"
       },
       {
@@ -7793,6 +8318,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:35.252Z"
       },
       {
@@ -7823,6 +8353,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:35.753Z"
       },
       {
@@ -7853,6 +8388,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:36.266Z"
       },
       {
@@ -7883,6 +8423,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:36.771Z"
       },
       {
@@ -7913,6 +8458,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:37.278Z"
       },
       {
@@ -7943,6 +8493,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:37.778Z"
       },
       {
@@ -7973,6 +8528,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:38.278Z"
       },
       {
@@ -8003,6 +8563,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:38.781Z"
       },
       {
@@ -8033,6 +8598,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:39.293Z"
       },
       {
@@ -8063,6 +8633,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:39.818Z"
       },
       {
@@ -8093,6 +8668,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:40.322Z"
       },
       {
@@ -8123,6 +8703,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:40.821Z"
       },
       {
@@ -8153,6 +8738,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:41.320Z"
       },
       {
@@ -8183,6 +8773,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:41.824Z"
       },
       {
@@ -8213,6 +8808,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:42.329Z"
       },
       {
@@ -8243,6 +8843,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T06:23:44.503Z"
       },
       {
@@ -8273,6 +8878,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:35.852Z"
       },
       {
@@ -8303,6 +8913,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:36.360Z"
       },
       {
@@ -8333,6 +8948,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:36.885Z"
       },
       {
@@ -8363,6 +8983,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:37.403Z"
       },
       {
@@ -8393,6 +9018,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-10T06:03:37.927Z"
       },
       {
@@ -8423,6 +9053,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": 0,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-09T12:27:33.129Z"
       },
       {
@@ -8453,6 +9088,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:35.049Z"
       },
       {
@@ -8483,6 +9123,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:35.551Z"
       },
       {
@@ -8513,6 +9158,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:36.052Z"
       },
       {
@@ -8543,6 +9193,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:36.553Z"
       },
       {
@@ -8573,6 +9228,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:37.058Z"
       },
       {
@@ -8603,6 +9263,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:37.560Z"
       },
       {
@@ -8633,6 +9298,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:38.067Z"
       },
       {
@@ -8663,6 +9333,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:38.571Z"
       },
       {
@@ -8693,6 +9368,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:39.072Z"
       },
       {
@@ -8723,6 +9403,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:39.573Z"
       },
       {
@@ -8753,6 +9438,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:40.073Z"
       },
       {
@@ -8783,6 +9473,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:40.578Z"
       },
       {
@@ -8813,6 +9508,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:41.079Z"
       },
       {
@@ -8843,6 +9543,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:41.581Z"
       },
       {
@@ -8873,6 +9578,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:42.081Z"
       },
       {
@@ -8903,6 +9613,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:42.582Z"
       },
       {
@@ -8933,6 +9648,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:03.934Z"
       },
       {
@@ -8963,6 +9683,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:04.435Z"
       },
       {
@@ -8993,6 +9718,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:04.937Z"
       },
       {
@@ -9023,6 +9753,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:05.437Z"
       },
       {
@@ -9053,6 +9788,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:05.938Z"
       },
       {
@@ -9083,6 +9823,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:06.438Z"
       },
       {
@@ -9113,6 +9858,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:06.937Z"
       },
       {
@@ -9143,6 +9893,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:07.437Z"
       },
       {
@@ -9173,6 +9928,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:07.936Z"
       },
       {
@@ -9203,6 +9963,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:08.436Z"
       },
       {
@@ -9233,6 +9998,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:08.936Z"
       },
       {
@@ -9263,6 +10033,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:09.436Z"
       },
       {
@@ -9293,6 +10068,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:09.938Z"
       },
       {
@@ -9323,6 +10103,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:10.437Z"
       },
       {
@@ -9353,6 +10138,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:10.936Z"
       },
       {
@@ -9383,6 +10173,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:11.435Z"
       },
       {
@@ -9413,6 +10208,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:11.936Z"
       },
       {
@@ -9443,6 +10243,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:12.440Z"
       },
       {
@@ -9473,6 +10278,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:12.940Z"
       },
       {
@@ -9503,6 +10313,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:13.439Z"
       },
       {
@@ -9533,6 +10348,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:13.938Z"
       },
       {
@@ -9563,6 +10383,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:14.438Z"
       },
       {
@@ -9593,6 +10418,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:14.944Z"
       },
       {
@@ -9623,6 +10453,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:15.444Z"
       },
       {
@@ -9653,6 +10488,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:15.944Z"
       },
       {
@@ -9683,6 +10523,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:16.445Z"
       },
       {
@@ -9713,6 +10558,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:16.944Z"
       },
       {
@@ -9743,6 +10593,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:17.444Z"
       },
       {
@@ -9773,6 +10628,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:17.944Z"
       },
       {
@@ -9803,6 +10663,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:18.445Z"
       },
       {
@@ -9833,6 +10698,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:18.944Z"
       },
       {
@@ -9863,6 +10733,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:19.445Z"
       },
       {
@@ -9893,6 +10768,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:19.944Z"
       },
       {
@@ -9923,6 +10803,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:20.445Z"
       },
       {
@@ -9953,6 +10838,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:20.948Z"
       },
       {
@@ -9983,6 +10873,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:21.447Z"
       },
       {
@@ -10013,6 +10908,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:21.947Z"
       },
       {
@@ -10043,6 +10943,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:22.446Z"
       },
       {
@@ -10073,6 +10978,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:22.946Z"
       },
       {
@@ -10103,6 +11013,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:23.951Z"
       },
       {
@@ -10133,6 +11048,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:24.454Z"
       },
       {
@@ -10163,6 +11083,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:24.954Z"
       },
       {
@@ -10193,6 +11118,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:25.455Z"
       },
       {
@@ -10223,6 +11153,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:13:23.446Z"
       },
       {
@@ -10253,6 +11188,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:01.613Z"
       },
       {
@@ -10283,6 +11223,11 @@
         "caseNumber": null,
         "winningMoneyRole": null,
         "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
         "createdAt": "2025-12-12T05:12:03.112Z"
       }
     ],
@@ -10325,7 +11270,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": "2025-12-12T05:52:21.378Z",
+          "lockedAt": "2025-12-12T10:21:27.083Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       },
@@ -10367,7 +11312,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": "2025-12-12T05:52:21.378Z",
+          "lockedAt": "2025-12-12T10:21:27.083Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       }
@@ -10631,7 +11576,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": "2025-12-12T05:52:21.378Z",
+          "lockedAt": "2025-12-12T10:21:27.083Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       },
@@ -10670,7 +11615,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": "2025-12-12T05:52:21.378Z",
+          "lockedAt": "2025-12-12T10:21:27.083Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       }
