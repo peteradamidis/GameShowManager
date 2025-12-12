@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trophy, Users, Check, X, Gift } from "lucide-react";
+import { Trophy, Users, Check, X } from "lucide-react";
 
 export default function WinnersPage() {
   // Fetch all seat assignments with winning money data
@@ -106,7 +106,7 @@ export default function WinnersPage() {
                         <X className="h-4 w-4 text-muted-foreground mx-auto" />
                     ) : '-'}
                   </TableCell>
-                  <TableCell className="text-right font-semibold text-green-600 dark:text-green-400">
+                  <TableCell className={`text-right font-semibold ${winner.spinTheWheel ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
                     ${winner.winningMoneyAmount?.toLocaleString()}
                   </TableCell>
                   <TableCell className="text-center">
@@ -118,10 +118,7 @@ export default function WinnersPage() {
                   </TableCell>
                   <TableCell className="text-sm">
                     {winner.spinTheWheel && winner.prize ? (
-                      <div className="flex items-center gap-1">
-                        <Gift className="h-4 w-4 text-purple-500" />
-                        <span>{winner.prize}</span>
-                      </div>
+                      <span>{winner.prize}</span>
                     ) : '-'}
                   </TableCell>
                 </TableRow>
