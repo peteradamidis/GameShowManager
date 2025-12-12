@@ -89,6 +89,13 @@ export const seatAssignments = pgTable("seat_assignments", {
   winningMoneyRole: text("winning_money_role"), // 'player' or 'case_holder'
   winningMoneyAmount: integer("winning_money_amount"), // Amount in dollars
   
+  // Player-specific winning fields
+  caseAmount: integer("case_amount"), // Amount in case for player
+  quickCash: integer("quick_cash"), // Quick cash amount offered
+  bankOfferTaken: boolean("bank_offer_taken"), // Whether bank offer was taken
+  spinTheWheel: boolean("spin_the_wheel"), // Whether they spun the wheel
+  prize: text("prize"), // Prize won from spinning the wheel
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   // Ensure one contestant per record day
