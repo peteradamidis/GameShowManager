@@ -1741,6 +1741,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bundles: string[];
       };
 
+      // Reusable scoring type for both groups and solos
+      type BlockScore = {
+        block: BlockState;
+        score: number;
+      };
+
       // Get existing seat assignments to account for used capacity
       const existingAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
       
@@ -1832,11 +1838,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Score each feasible block
-        type BlockScore = {
-          block: BlockState;
-          score: number;
-        };
-
         const scored: BlockScore[] = feasibleBlocks.map((block) => {
           // Simulate adding bundle to block
           const newSeatsUsed = block.seatsUsed + bundle.size;
@@ -1972,8 +1973,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
           continue;
         }
         
-        // Pick the first eligible block (or could use a simple strategy like least-filled block)
-        const selectedBlock = eligibleBlocks[0];
+        // Score each eligible block using the same criteria as groups (demographic balancing)
+        const soloScored: BlockScore[] = eligibleBlocks.map((block) => {
+          // Simulate adding solo to block
+          const newSeatsUsed = block.seatsUsed + 1;
+          const newFemaleCount = block.femaleCount + solo.femaleCount;
+          const newMaleCount = block.maleCount + solo.maleCount;
+          const newTotal = newFemaleCount + newMaleCount;
+          const newFemaleRatio = newTotal > 0 ? newFemaleCount / newTotal : 0;
+          const newTotalAge = block.totalAge + solo.totalAge;
+          const newAgeCount = block.ageCount + 1;
+          const newMeanAge = newAgeCount > 0 ? newTotalAge / newAgeCount : 0;
+
+          // Simulate rating counts
+          const newRatingCounts = { ...block.ratingCounts };
+          Object.keys(solo.ratingCounts).forEach(rating => {
+            newRatingCounts[rating] += solo.ratingCounts[rating];
+          });
+
+          // Simulate global state
+          const simGlobalFemale = globalFemaleCount + solo.femaleCount;
+          const simGlobalMale = globalMaleCount + solo.maleCount;
+          const simGlobalTotal = simGlobalFemale + simGlobalMale;
+          const simGlobalRatio = simGlobalTotal > 0 ? simGlobalFemale / simGlobalTotal : 0;
+
+          // Calculate global mean age
+          const simGlobalTotalAge = globalTotalAge + solo.totalAge;
+          const simGlobalAgeCount = globalAgeCount + 1;
+          const simGlobalMeanAge = simGlobalAgeCount > 0 ? simGlobalTotalAge / simGlobalAgeCount : 0;
+
+          // Scoring components (lower is better) - same as for groups
+          let score = 0;
+
+          // 1. Gender penalty - quadratic distance from target
+          const genderDeviation = Math.abs(newFemaleRatio - TARGET_FEMALE_RATIO);
+          score += genderDeviation * genderDeviation * 1000;
+
+          // 2. Global ratio constraint - heavy penalty if violating
+          if (simGlobalRatio < TARGET_FEMALE_MIN || simGlobalRatio > TARGET_FEMALE_MAX) {
+            score += 10000;
+          }
+
+          // 3. Age deviation penalty - prefer blocks close to global mean age
+          const ageDeviation = Math.abs(newMeanAge - simGlobalMeanAge);
+          score += ageDeviation * 2;
+
+          // 4. Rating balance penalty - prefer even distribution of ratings
+          const totalRatingsInBlock = Object.values(newRatingCounts).reduce((a, b) => a + b, 0);
+          if (totalRatingsInBlock > 0) {
+            const avgRatingCount = totalRatingsInBlock / RATING_ORDER.length;
+            let ratingVariance = 0;
+            RATING_ORDER.forEach(rating => {
+              const deviation = newRatingCounts[rating] - avgRatingCount;
+              ratingVariance += deviation * deviation;
+            });
+            score += ratingVariance * 5;
+          }
+
+          // 5. Capacity utilization bonus - prefer filling blocks evenly
+          const utilizationRatio = newSeatsUsed / SEATS_PER_BLOCK;
+          score -= utilizationRatio * 50;
+
+          // 6. Balance penalty - avoid very skewed gender blocks
+          if (newTotal > 5) {
+            if (newFemaleRatio < 0.3 || newFemaleRatio > 0.9) {
+              score += 500;
+            }
+          }
+
+          // 7. Prefer blocks that already have some variety in ratings
+          const uniqueRatings = Object.values(newRatingCounts).filter(c => c > 0).length;
+          score -= uniqueRatings * 10;
+
+          return { block, score };
+        });
+
+        // Pick best block (lowest score) using the same scoring as groups
+        soloScored.sort((a, b) => a.score - b.score);
+        const selectedBlock = soloScored[0].block;
+        
         assignments.push({ bundle: solo, blockNumber: selectedBlock.blockNumber });
         
         // Update block state
