@@ -1323,6 +1323,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export winners data to Excel file
+  // IMPORTANT: This route MUST be before :recordDayId to avoid being captured as a param
+  app.get("/api/seat-assignments/with-winning-money/export", async (req, res) => {
+    try {
+      // Fetch all winners data (same as /with-winning-money endpoint)
+      const allAssignments = await storage.getAllSeatAssignments();
+      
+      const winnersRaw = allAssignments.filter((a) => {
+        const hasValidRole = a.winningMoneyRole && typeof a.winningMoneyRole === 'string' && a.winningMoneyRole.trim() !== '';
+        const hasValidAmount = typeof a.winningMoneyAmount === 'number' && a.winningMoneyAmount > 0;
+        return hasValidRole && hasValidAmount;
+      });
+
+      const recordDays = await storage.getRecordDays();
+      const recordDaysMap = new Map(recordDays.map(rd => [rd.id, rd]));
+      const contestants = await storage.getContestants();
+      const contestantsMap = new Map(contestants.map(c => [c.id, c]));
+
+      const winnersData = winnersRaw.map((a) => {
+        const contestant = contestantsMap.get(a.contestantId);
+        const recordDay = recordDaysMap.get(a.recordDayId);
+        return {
+          'RX Date': recordDay?.date ? new Date(recordDay.date).toLocaleDateString() : '',
+          'RX Day': a.rxNumber || '',
+          'Contestant Type': a.winningMoneyRole === 'player' ? 'Player' : 'Case Holder',
+          'Contestant Name': contestant?.name,
+          'Phone': contestant?.phone || '',
+          'Email': contestant?.email || '',
+          'Age': contestant?.age,
+          'Block': a.blockNumber,
+          'Seat': a.seatLabel,
+          'Case Number': a.caseNumber || '',
+          'Case Amount': a.caseAmount || '',
+          'Quick Cash': a.quickCash || '',
+          'Bank Offer Taken': a.bankOfferTaken ? 'Yes' : 'No',
+          'Amount Won': a.winningMoneyAmount || '',
+          'Spin the Wheel': a.spinTheWheel ? 'Yes' : 'No',
+          'Prize': a.prize || '',
+        };
+      });
+
+      // Create Excel workbook with winners data
+      const ws = xlsx.utils.json_to_sheet(winnersData);
+      const wb = xlsx.utils.book_new();
+      xlsx.utils.book_append_sheet(wb, ws, 'Winners');
+
+      // Send as downloadable file
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename="winners.xlsx"');
+      res.send(xlsx.write(wb, { bookType: 'xlsx', type: 'buffer' }));
+    } catch (error: any) {
+      console.error("Error exporting winners data:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get seat assignments for a record day
   app.get("/api/seat-assignments/:recordDayId", async (req, res) => {
     try {
