@@ -27,7 +27,7 @@ export interface SeatData {
   availabilityStatus?: string;
   auditionRating?: string; // A+, A, B+, B, C
   medicalQuestion?: string; // Y/N from booking master
-  medicalInfo?: string; // Contestant's medical information
+  mobilityNotes?: string; // Mobility/Access/Medical notes
   playerType?: "player" | "backup" | "player_partner"; // PLAYER, BACKUP, PLAYER_PARTNER
   originalBlockNumber?: number; // RX Day Mode - original position before swap
   originalSeatLabel?: string; // RX Day Mode - original seat label before swap
@@ -175,16 +175,16 @@ export function SeatCard({
             <p className="font-medium truncate text-xs flex-1" title={seat.contestantName}>
               {seat.contestantName}
             </p>
-            {seat.medicalInfo && (
+            {seat.mobilityNotes && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="cursor-help" data-testid={`medical-icon-${seat.assignmentId}`}>
+                  <div className="cursor-help" data-testid={`mobility-icon-${seat.assignmentId}`}>
                     <Plus className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" style={{ strokeWidth: 3 }} />
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs max-w-[200px]">
-                  <p className="font-medium">Medical Info</p>
-                  <p className="text-muted-foreground">{seat.medicalInfo}</p>
+                  <p className="font-medium">Mobility/Access Notes</p>
+                  <p className="text-muted-foreground">{seat.mobilityNotes}</p>
                 </TooltipContent>
               </Tooltip>
             )}

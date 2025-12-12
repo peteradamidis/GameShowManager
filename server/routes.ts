@@ -1407,7 +1407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           groupId: contestant?.groupId,
           auditionRating: contestant?.auditionRating,
           attendingWith: attendingWithId,
-          medicalInfo: contestant?.medicalInfo,
+          mobilityNotes: contestant?.mobilityNotes,
         };
       });
 
