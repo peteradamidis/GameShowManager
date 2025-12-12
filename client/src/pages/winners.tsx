@@ -32,11 +32,15 @@ export default function WinnersPage() {
     gcTime: 0,
   });
 
-  // Filter players (role = 'player')
-  const players = allAssignments.filter((a) => a.winningMoneyRole === 'player' && a.winningMoneyAmount);
+  // Filter and sort players (role = 'player') by RX day order
+  const players = allAssignments
+    .filter((a) => a.winningMoneyRole === 'player' && a.winningMoneyAmount)
+    .sort((a, b) => new Date(a.recordDayDate).getTime() - new Date(b.recordDayDate).getTime());
 
-  // Filter case holders (role = 'case_holder')
-  const caseHolders = allAssignments.filter((a) => a.winningMoneyRole === 'case_holder' && a.winningMoneyAmount);
+  // Filter and sort case holders (role = 'case_holder') by RX day order
+  const caseHolders = allAssignments
+    .filter((a) => a.winningMoneyRole === 'case_holder' && a.winningMoneyAmount)
+    .sort((a, b) => new Date(a.recordDayDate).getTime() - new Date(b.recordDayDate).getTime());
 
   // Players table with all player-specific columns
   const PlayersTable = ({ winners }: { winners: any[] }) => (
