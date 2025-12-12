@@ -773,11 +773,9 @@ export default function SeatingChartPage() {
       <Dialog open={resetDialogOpen} onOpenChange={handleResetDialogClose}>
         <DialogContent data-testid="dialog-reset-confirmation">
           <DialogHeader>
-            {resetConfirmationStep === 1 && (
-              <div className="flex items-center justify-center mb-4">
-                <AlertTriangle className="h-12 w-12 text-red-600 dark:text-red-500" />
-              </div>
-            )}
+            <div className="flex items-center justify-center mb-4">
+              <AlertTriangle className="h-12 w-12 text-red-600 dark:text-red-500" />
+            </div>
             <DialogTitle>
               {resetConfirmationStep === 0 ? "Reset Seating Chart" : "Confirm Reset Again"}
             </DialogTitle>
