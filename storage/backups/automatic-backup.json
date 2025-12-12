@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-12T05:48:43.722Z",
+  "exportedAt": "2025-12-12T05:53:33.476Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -154,7 +154,7 @@
         "rxNumber": "RX EP 1 - 5",
         "totalSeats": 154,
         "status": "ready",
-        "lockedAt": null,
+        "lockedAt": "2025-12-12T05:52:21.378Z",
         "createdAt": "2025-11-27T11:34:23.272Z"
       }
     ],
@@ -10325,7 +10325,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": null,
+          "lockedAt": "2025-12-12T05:52:21.378Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       },
@@ -10367,7 +10367,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": null,
+          "lockedAt": "2025-12-12T05:52:21.378Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       }
@@ -10631,7 +10631,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": null,
+          "lockedAt": "2025-12-12T05:52:21.378Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       },
@@ -10670,7 +10670,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": null,
+          "lockedAt": "2025-12-12T05:52:21.378Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       }
