@@ -74,8 +74,8 @@ export function WinningMoneyModal({
   // Player-specific fields
   const [caseAmount, setCaseAmount] = useState<string>(currentCaseAmount?.toString() || "");
   const [quickCash, setQuickCash] = useState<string>(currentQuickCash?.toString() || "");
-  const [bankOfferTaken, setBankOfferTaken] = useState<boolean>(currentBankOfferTaken || false);
-  const [spinTheWheel, setSpinTheWheel] = useState<boolean>(currentSpinTheWheel || false);
+  const [bankOfferTaken, setBankOfferTaken] = useState<boolean>(currentBankOfferTaken ?? false);
+  const [spinTheWheel, setSpinTheWheel] = useState<boolean>(currentSpinTheWheel ?? false);
   const [prize, setPrize] = useState<string>(currentPrize || "");
 
   // Update form fields when modal opens with existing data
@@ -87,8 +87,8 @@ export function WinningMoneyModal({
       setAmount(currentAmount ? currentAmount.toString() : "");
       setCaseAmount(currentCaseAmount ? currentCaseAmount.toString() : "");
       setQuickCash(currentQuickCash ? currentQuickCash.toString() : "");
-      setBankOfferTaken(currentBankOfferTaken || false);
-      setSpinTheWheel(currentSpinTheWheel || false);
+      setBankOfferTaken(currentBankOfferTaken ?? false);
+      setSpinTheWheel(currentSpinTheWheel ?? false);
       setPrize(currentPrize || "");
       setIsEditing(false);
     }
