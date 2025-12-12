@@ -416,6 +416,8 @@ export default function SeatingChartPage() {
         queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
         queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
         queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/all-seat-assignments'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/record-days'] }),
       ]);
       await refetch();
       
@@ -449,6 +451,8 @@ export default function SeatingChartPage() {
         queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
         queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
         queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/all-seat-assignments'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/record-days'] }),
       ]);
       await refetch();
       toast({
@@ -590,6 +594,8 @@ export default function SeatingChartPage() {
         queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
         queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
         queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/all-seat-assignments'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/record-days'] }),
       ]);
       await refetch();
       setCancelDialogOpen(false);

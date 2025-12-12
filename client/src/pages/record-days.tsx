@@ -69,6 +69,9 @@ export default function RecordDays() {
       return await Promise.all(promises);
     },
     enabled: apiRecordDays.length > 0,
+    staleTime: 5000,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000,
   });
 
   const createMutation = useMutation({
