@@ -90,6 +90,11 @@ Do not make changes to the file `Y`.
     - Winning money can be set/edited via modal on the Seating Chart page (when RX day is locked).
     - Database fields on `seat_assignments`: `rxNumber` (text), `caseNumber` (text), `winningMoneyRole` ('player' or 'case_holder'), `winningMoneyAmount` (integer).
     - **API Route Note:** The `/api/seat-assignments/with-winning-money` route MUST be registered BEFORE `/api/seat-assignments/:recordDayId` to prevent Express from capturing "with-winning-money" as a recordDayId parameter.
+- **Medical Info Indicator (Seating Chart):**
+    - Contestants with data in their `medicalInfo` field display a red medical plus icon on their seat card.
+    - Icon appears next to the contestant's name on the seating chart.
+    - Hovering over the icon shows a tooltip with the label "Medical Info" and the actual medical information text.
+    - Makes it easy to identify contestants with medical needs at a glance.
 
 ### Feature Specifications
 - **Contestant Management:** Comprehensive contestant profiles, search, selection, and filtering capabilities (by status, gender, rating, location, record day, availability response).

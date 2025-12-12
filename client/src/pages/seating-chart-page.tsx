@@ -229,6 +229,7 @@ export default function SeatingChartPage() {
             caseNumber: assignment.caseNumber,
             winningMoneyRole: assignment.winningMoneyRole,
             winningMoneyAmount: assignment.winningMoneyAmount,
+            medicalInfo: assignment.medicalInfo,
           };
         }
       }
