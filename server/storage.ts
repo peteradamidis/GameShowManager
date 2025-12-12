@@ -529,6 +529,7 @@ export class DbStorage implements IStorage {
       otdNotes: workflowFields.otdNotes,
       standbyReplacementSwaps: workflowFields.standbyReplacementSwaps,
       rxNumber: workflowFields.rxNumber,
+      rxEpNumber: workflowFields.rxEpNumber,
       caseNumber: workflowFields.caseNumber,
       winningMoneyRole: workflowFields.winningMoneyRole,
       winningMoneyAmount: workflowFields.winningMoneyAmount,
