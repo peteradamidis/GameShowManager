@@ -31,12 +31,13 @@ interface PlayerFields {
 interface WinningMoneyModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (role: string, amount: number, rxNumber: string, caseNumber: string, playerFields?: PlayerFields) => void;
+  onSubmit: (role: string, amount: number, rxNumber: string, rxEpNumber: string, caseNumber: string, playerFields?: PlayerFields) => void;
   onRemove?: () => void;
   isLoading?: boolean;
   currentRole?: string;
   currentAmount?: number;
   currentRxNumber?: string;
+  currentRxEpNumber?: string;
   currentCaseNumber?: string;
   currentCaseAmount?: number;
   currentQuickCash?: number;
@@ -58,6 +59,7 @@ export function WinningMoneyModal({
   currentRole,
   currentAmount,
   currentRxNumber,
+  currentRxEpNumber,
   currentCaseNumber,
   currentCaseAmount,
   currentQuickCash,
@@ -70,6 +72,7 @@ export function WinningMoneyModal({
   assignments = [],
 }: WinningMoneyModalProps) {
   const [rxNumber, setRxNumber] = useState<string>(currentRxNumber || "");
+  const [rxEpNumber, setRxEpNumber] = useState<string>(currentRxEpNumber || "");
   const [caseNumber, setCaseNumber] = useState<string>(currentCaseNumber || "");
   const [role, setRole] = useState<string>(currentRole || "player");
   const [amount, setAmount] = useState<string>(currentAmount?.toString() || "");
@@ -104,6 +107,7 @@ export function WinningMoneyModal({
   useEffect(() => {
     if (open) {
       setRxNumber(currentRxNumber || "");
+      setRxEpNumber(currentRxEpNumber || "");
       setCaseNumber(currentCaseNumber || "");
       setRole(currentRole || "player");
       setAmount(currentAmount ? currentAmount.toString() : "");
@@ -114,7 +118,7 @@ export function WinningMoneyModal({
       setPrize(currentPrize || "");
       setIsEditing(false);
     }
-  }, [open, currentRxNumber, currentCaseNumber, currentRole, currentAmount, currentCaseAmount, currentQuickCash, currentBankOfferTaken, currentSpinTheWheel, currentPrize]);
+  }, [open, currentRxNumber, currentRxEpNumber, currentCaseNumber, currentRole, currentAmount, currentCaseAmount, currentQuickCash, currentBankOfferTaken, currentSpinTheWheel, currentPrize]);
 
   useEffect(() => {
     if (role === "case_holder") {
@@ -148,8 +152,9 @@ export function WinningMoneyModal({
       prize: spinTheWheel ? prize : undefined,
     } : undefined;
     
-    onSubmit(role, amountNum, rxNumber, caseNumber, playerFields);
+    onSubmit(role, amountNum, rxNumber, rxEpNumber, caseNumber, playerFields);
     setRxNumber("");
+    setRxEpNumber("");
     setCaseNumber("");
     setRole("player");
     setAmount("");
@@ -188,15 +193,28 @@ export function WinningMoneyModal({
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="rx-input">RX</Label>
+            <Label htmlFor="rx-input">RX Day</Label>
             <Input
               id="rx-input"
               type="text"
               value={rxNumber}
               onChange={(e) => setRxNumber(e.target.value)}
-              placeholder="Enter RX number"
+              placeholder="Enter RX Day number"
               disabled={hasExistingData && !isEditing}
               data-testid="input-rx-number"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="rx-ep-input">RX Ep No.</Label>
+            <Input
+              id="rx-ep-input"
+              type="text"
+              value={rxEpNumber}
+              onChange={(e) => setRxEpNumber(e.target.value)}
+              placeholder="Enter RX Episode number"
+              disabled={hasExistingData && !isEditing}
+              data-testid="input-rx-ep-number"
             />
           </div>
 

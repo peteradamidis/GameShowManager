@@ -486,6 +486,7 @@ export default function SeatingChartPage() {
   const currentAssignment = assignments?.find((a: any) => a.id === selectedAssignmentId);
   const currentWinningMoneyData = {
     rxNumber: currentAssignment?.rxNumber || "",
+    rxEpNumber: currentAssignment?.rxEpNumber || "",
     caseNumber: currentAssignment?.caseNumber || "",
     role: currentAssignment?.winningMoneyRole || "player",
     amount: currentAssignment?.winningMoneyAmount || 0,
@@ -504,13 +505,14 @@ export default function SeatingChartPage() {
     prize?: string;
   }
 
-  const handleWinningMoneySave = async (role: string, amount: number, rxNumber: string, caseNumber: string, playerFields?: PlayerFields) => {
+  const handleWinningMoneySave = async (role: string, amount: number, rxNumber: string, rxEpNumber: string, caseNumber: string, playerFields?: PlayerFields) => {
     if (!selectedAssignmentId) return;
     
     setWinningMoneyLoading(true);
     try {
       await apiRequest('PATCH', `/api/seat-assignments/${selectedAssignmentId}/winning-money`, {
         rxNumber,
+        rxEpNumber,
         caseNumber,
         winningMoneyRole: role,
         winningMoneyAmount: amount,
@@ -555,6 +557,7 @@ export default function SeatingChartPage() {
     try {
       await apiRequest('PATCH', `/api/seat-assignments/${selectedAssignmentId}/winning-money`, {
         rxNumber: "",
+        rxEpNumber: "",
         caseNumber: "",
         winningMoneyRole: "",
         winningMoneyAmount: 0,
@@ -804,6 +807,7 @@ export default function SeatingChartPage() {
         onRemove={handleRemoveWinningMoney}
         isLoading={winningMoneyLoading}
         currentRxNumber={currentWinningMoneyData.rxNumber}
+        currentRxEpNumber={currentWinningMoneyData.rxEpNumber}
         currentCaseNumber={currentWinningMoneyData.caseNumber}
         currentRole={currentWinningMoneyData.role}
         currentAmount={currentWinningMoneyData.amount}

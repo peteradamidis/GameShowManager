@@ -1305,6 +1305,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           blockNumber: a.blockNumber,
           seatLabel: a.seatLabel,
           rxNumber: a.rxNumber || '',
+          rxEpNumber: a.rxEpNumber || '',
           caseNumber: a.caseNumber || '',
           winningMoneyRole: a.winningMoneyRole,
           winningMoneyAmount: a.winningMoneyAmount,
@@ -1347,6 +1348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return {
           'RX Date': recordDay?.date ? new Date(recordDay.date).toLocaleDateString() : '',
           'RX Day': a.rxNumber || '',
+          'RX Ep No.': a.rxEpNumber || '',
           'Contestant Type': a.winningMoneyRole === 'player' ? 'Player' : 'Case Holder',
           'Contestant Name': contestant?.name,
           'Phone': contestant?.phone || '',
@@ -2742,7 +2744,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/seat-assignments/:id/winning-money", async (req, res) => {
     try {
       const { 
-        rxNumber, 
+        rxNumber,
+        rxEpNumber,
         caseNumber, 
         winningMoneyRole, 
         winningMoneyAmount,
@@ -2755,7 +2758,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("PATCH winning-money received:", { 
         id: req.params.id, 
-        rxNumber, 
+        rxNumber,
+        rxEpNumber,
         caseNumber, 
         winningMoneyRole, 
         winningMoneyAmount,
@@ -2776,6 +2780,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (winningMoneyAmount === 0) {
         const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, { 
           rxNumber: null,
+          rxEpNumber: null,
           caseNumber: null,
           winningMoneyRole: null, 
           winningMoneyAmount: 0,
@@ -2810,6 +2815,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Build update object with base fields
       const updateData: any = { 
         rxNumber: rxNumber || null,
+        rxEpNumber: rxEpNumber || null,
         caseNumber: caseNumber || null,
         winningMoneyRole, 
         winningMoneyAmount 

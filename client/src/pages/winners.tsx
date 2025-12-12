@@ -165,14 +165,15 @@ export default function WinnersPage() {
               <TableHeader>
                 {/* Group header row */}
                 <TableRow className="bg-yellow-100 dark:bg-yellow-900 border-b-2">
-                  <TableHead colSpan={2} className="text-center font-bold bg-yellow-100 dark:bg-yellow-900 border-r">RECORD</TableHead>
+                  <TableHead colSpan={3} className="text-center font-bold bg-yellow-100 dark:bg-yellow-900 border-r">RECORD</TableHead>
                   <TableHead colSpan={5} className="text-center font-bold bg-yellow-100 dark:bg-yellow-900 border-r">CONTESTANTS</TableHead>
                   <TableHead colSpan={8} className="text-center font-bold bg-green-100 dark:bg-green-900">WINNINGS</TableHead>
                 </TableRow>
                 {/* Column headers */}
                 <TableRow className="bg-muted/50">
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950">RX DATE</TableHead>
-                  <TableHead className="bg-yellow-50 dark:bg-yellow-950 border-r">RX DAY</TableHead>
+                  <TableHead className="bg-yellow-50 dark:bg-yellow-950">RX DAY</TableHead>
+                  <TableHead className="bg-yellow-50 dark:bg-yellow-950 border-r">RX EP NO.</TableHead>
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950">CONTESTANT TYPE</TableHead>
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950">CONTESTANT NAME</TableHead>
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950">PHONE</TableHead>
@@ -191,7 +192,8 @@ export default function WinnersPage() {
                 {allWinners.map((winner) => (
                   <TableRow key={winner.id} className="hover:bg-muted/30" data-testid={`row-winner-${winner.id}`}>
                     <TableCell className="text-sm">{winner.recordDayDate}</TableCell>
-                    <TableCell className="text-sm font-mono border-r">{winner.rxNumber || '-'}</TableCell>
+                    <TableCell className="text-sm font-mono">{winner.rxNumber || '-'}</TableCell>
+                    <TableCell className="text-sm font-mono border-r">{winner.rxEpNumber || '-'}</TableCell>
                     <TableCell className="text-sm font-semibold">
                       {winner.winningMoneyRole === 'player' ? 'Player' : 'Case Holder'}
                     </TableCell>
