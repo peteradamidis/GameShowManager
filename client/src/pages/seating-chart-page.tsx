@@ -67,6 +67,7 @@ export default function SeatingChartPage() {
   // Reset confirmation dialog state
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [resetConfirmationStep, setResetConfirmationStep] = useState(0);
+  const [selectedResetBlocks, setSelectedResetBlocks] = useState<number[]>([1, 2, 3, 4, 5, 6, 7]);
   
   // Auto-assign block selection dialog state
   const [autoAssignDialogOpen, setAutoAssignDialogOpen] = useState(false);
@@ -340,10 +341,13 @@ export default function SeatingChartPage() {
     
     // Second confirmation - actually reset
     try {
-      // Delete all seat assignments for this record day
+      // Delete seat assignments only from selected blocks for this record day
       if (assignments && Array.isArray(assignments)) {
+        const assignmentsToDelete = assignments.filter((a: any) =>
+          selectedResetBlocks.includes(a.blockNumber)
+        );
         await Promise.all(
-          assignments.map((a: any) => 
+          assignmentsToDelete.map((a: any) => 
             apiRequest('DELETE', `/api/seat-assignments/${a.id}`, {})
           )
         );
@@ -351,9 +355,12 @@ export default function SeatingChartPage() {
       await refetch();
       setResetDialogOpen(false);
       setResetConfirmationStep(0);
+      const blockText = selectedResetBlocks.length === 7 
+        ? "All blocks"
+        : `Block${selectedResetBlocks.length > 1 ? 's' : ''} ${selectedResetBlocks.join(', ')}`;
       toast({
         title: "Seating reset",
-        description: "All seat assignments have been cleared.",
+        description: `${blockText} have been cleared.`,
       });
     } catch (error) {
       toast({
@@ -367,6 +374,22 @@ export default function SeatingChartPage() {
   const handleResetDialogClose = () => {
     setResetDialogOpen(false);
     setResetConfirmationStep(0);
+  };
+
+  const handleSelectAllResetBlocks = () => {
+    if (selectedResetBlocks.length === 7) {
+      setSelectedResetBlocks([]);
+    } else {
+      setSelectedResetBlocks([1, 2, 3, 4, 5, 6, 7]);
+    }
+  };
+
+  const handleResetBlockToggle = (blockNum: number) => {
+    setSelectedResetBlocks(prev =>
+      prev.includes(blockNum)
+        ? prev.filter(b => b !== blockNum)
+        : [...prev, blockNum].sort()
+    );
   };
 
   const handleEmptySeatClick = (blockNumber: number, seatLabel: string) => {
@@ -755,10 +778,50 @@ export default function SeatingChartPage() {
             </DialogTitle>
             <DialogDescription>
               {resetConfirmationStep === 0 
-                ? "Are you sure you want to reset all seat assignments? This will remove all contestants from their seats for this record day."
-                : "This action cannot be undone. Are you absolutely certain you want to reset all seat assignments?"}
+                ? "Select which blocks to reset. Contestants in selected blocks will be removed from their seats."
+                : "This action cannot be undone. Are you absolutely certain you want to reset the selected blocks?"}
             </DialogDescription>
           </DialogHeader>
+
+          {resetConfirmationStep === 0 && (
+            <div className="py-4 space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b">
+                <Checkbox 
+                  id="select-all-reset-blocks"
+                  checked={selectedResetBlocks.length === 7}
+                  onCheckedChange={handleSelectAllResetBlocks}
+                  data-testid="checkbox-select-all-reset-blocks"
+                />
+                <Label htmlFor="select-all-reset-blocks" className="font-medium cursor-pointer">
+                  Select All Blocks
+                </Label>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {[1, 2, 3, 4, 5, 6, 7].map(blockNum => (
+                  <div key={blockNum} className="flex items-center gap-2">
+                    <Checkbox 
+                      id={`reset-block-${blockNum}`}
+                      checked={selectedResetBlocks.includes(blockNum)}
+                      onCheckedChange={() => handleResetBlockToggle(blockNum)}
+                      data-testid={`checkbox-reset-block-${blockNum}`}
+                    />
+                    <Label htmlFor={`reset-block-${blockNum}`} className="cursor-pointer">
+                      Block {blockNum}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              
+              {selectedResetBlocks.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {selectedResetBlocks.length === 7 
+                    ? "All 7 blocks selected" 
+                    : `${selectedResetBlocks.length} block${selectedResetBlocks.length > 1 ? 's' : ''} selected: ${selectedResetBlocks.join(', ')}`}
+                </p>
+              )}
+            </div>
+          )}
 
           <DialogFooter>
             <Button 
@@ -771,9 +834,10 @@ export default function SeatingChartPage() {
             <Button 
               variant="destructive"
               onClick={handleConfirmReset}
+              disabled={selectedResetBlocks.length === 0}
               data-testid="button-reset-confirm"
             >
-              {resetConfirmationStep === 0 ? "Yes, Reset All" : "Yes, Confirm Reset"}
+              {resetConfirmationStep === 0 ? "Yes, Reset Selected" : "Yes, Confirm Reset"}
             </Button>
           </DialogFooter>
         </DialogContent>
