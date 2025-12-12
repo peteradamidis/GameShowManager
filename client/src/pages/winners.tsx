@@ -83,7 +83,7 @@ export default function WinnersPage() {
               {winners.map((winner) => (
                 <TableRow key={winner.id} className="hover:bg-muted/30">
                   <TableCell className="text-sm">{winner.recordDayDate}</TableCell>
-                  <TableCell className="text-sm font-mono border-r">{winner.recordDayId?.slice(0, 8) || '-'} - {winner.rxNumber || '-'}</TableCell>
+                  <TableCell className="text-sm font-mono border-r">{winner.rxNumber || '-'}</TableCell>
                   <TableCell className="font-medium">{winner.contestantName}</TableCell>
                   <TableCell className="text-sm">{winner.phone || '-'}</TableCell>
                   <TableCell className="text-sm">{winner.email || '-'}</TableCell>
