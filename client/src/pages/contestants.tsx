@@ -6,6 +6,7 @@ import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, T
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { broadcastContestantChange, broadcastSeatingChange } from "@/lib/crossTabSync";
 import { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
@@ -285,6 +286,7 @@ export default function Contestants() {
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
+      broadcastContestantChange();
       toast({
         title: "Import successful",
         description: `Imported ${data.contestantsCreated} contestants${data.groupsCreated > 0 ? ` and ${data.groupsCreated} groups` : ''}.`,
@@ -310,6 +312,7 @@ export default function Contestants() {
       queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false });
+      broadcastSeatingChange();
       setStandbyDialogOpen(false);
       setSelectedContestants([]);
       setSelectedRecordDay("");
@@ -346,6 +349,7 @@ export default function Contestants() {
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false });
+      broadcastSeatingChange();
       setSelectedContestants([]);
       toast({
         title: "Removed from seat",
@@ -374,6 +378,7 @@ export default function Contestants() {
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/groups'], exact: false });
+      broadcastContestantChange();
       setSelectedContestants([]);
       setDeleteConfirmOpen(false);
       toast({

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient, apiRequest } from "./lib/queryClient";
 import { QueryClientProvider, useQuery, useMutation } from "@tanstack/react-query";
@@ -8,6 +9,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut } from "lucide-react";
+import { initCrossTabSync, closeCrossTabSync } from "./lib/crossTabSync";
 import Dashboard from "@/pages/dashboard";
 import Contestants from "@/pages/contestants";
 import RecordDays from "@/pages/record-days";
@@ -153,6 +155,11 @@ function AuthenticatedApp() {
 }
 
 export default function App() {
+  useEffect(() => {
+    initCrossTabSync();
+    return () => closeCrossTabSync();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

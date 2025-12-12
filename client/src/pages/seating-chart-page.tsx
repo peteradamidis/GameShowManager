@@ -8,6 +8,7 @@ import { SeatData } from "@/components/seat-card";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { broadcastSeatingChange, broadcastRecordDayChange } from "@/lib/crossTabSync";
 import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import {
@@ -419,6 +420,7 @@ export default function SeatingChartPage() {
         queryClient.invalidateQueries({ queryKey: ['/api/all-seat-assignments'] }),
         queryClient.invalidateQueries({ queryKey: ['/api/record-days'] }),
       ]);
+      broadcastSeatingChange(recordDayId);
       await refetch();
       
       toast({
@@ -454,6 +456,7 @@ export default function SeatingChartPage() {
         queryClient.invalidateQueries({ queryKey: ['/api/all-seat-assignments'] }),
         queryClient.invalidateQueries({ queryKey: ['/api/record-days'] }),
       ]);
+      broadcastSeatingChange(recordDayId);
       await refetch();
       toast({
         title: "Contestant removed",
@@ -597,6 +600,7 @@ export default function SeatingChartPage() {
         queryClient.invalidateQueries({ queryKey: ['/api/all-seat-assignments'] }),
         queryClient.invalidateQueries({ queryKey: ['/api/record-days'] }),
       ]);
+      broadcastSeatingChange(recordDayId);
       await refetch();
       setCancelDialogOpen(false);
       setCancelAssignmentId("");

@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useBookingMasterWebSocket } from "@/hooks/use-websocket";
+import { broadcastBookingChange, broadcastSeatingChange } from "@/lib/crossTabSync";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -339,6 +340,7 @@ export default function BookingMaster() {
       queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false });
+      broadcastSeatingChange(selectedRecordDay);
     },
   });
 
@@ -387,6 +389,7 @@ export default function BookingMaster() {
       queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      broadcastBookingChange(selectedRecordDay);
     },
   });
 
@@ -417,6 +420,7 @@ export default function BookingMaster() {
       queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/booking-confirmations'], exact: false });
+      broadcastBookingChange(selectedRecordDay);
     },
     onError: (error: any) => {
       toast({
