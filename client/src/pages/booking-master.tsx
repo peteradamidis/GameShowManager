@@ -210,6 +210,7 @@ export default function BookingMaster() {
   const [emailSubject, setEmailSubject] = useState("Deal or No Deal - Booking Confirmation");
   const [selectedAttachments, setSelectedAttachments] = useState<string[]>([]);
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
+  const [filterMobilityNotes, setFilterMobilityNotes] = useState(false);
   // Use refs instead of state for pending text updates to avoid re-renders
   const pendingTextUpdatesRef = useRef<Record<string, string>>({});
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnId, boolean>>(() => {
@@ -472,11 +473,17 @@ export default function BookingMaster() {
   };
 
   const allBookingRows = selectedRecordDay ? generateAllSeats() : [];
-  const bookingRows = searchName.trim() 
-    ? allBookingRows.filter(row => 
-        row.contestant?.name.toLowerCase().includes(searchName.toLowerCase())
-      )
-    : allBookingRows;
+  const bookingRows = allBookingRows.filter(row => {
+    // Filter by name search
+    if (searchName.trim() && !row.contestant?.name.toLowerCase().includes(searchName.toLowerCase())) {
+      return false;
+    }
+    // Filter by mobility/medical notes
+    if (filterMobilityNotes && !row.contestant?.mobilityNotes) {
+      return false;
+    }
+    return true;
+  });
 
   const handleFieldUpdate = (assignmentId: string, field: string, value: any) => {
     updateWorkflowMutation.mutate({
@@ -784,6 +791,15 @@ export default function BookingMaster() {
           </Dialog>
           
           <Button 
+            onClick={() => setFilterMobilityNotes(!filterMobilityNotes)}
+            variant={filterMobilityNotes ? "default" : "outline"}
+            title={filterMobilityNotes ? "Show all contestants" : "Show only mobility/medical notes"}
+            data-testid="button-filter-mobility-notes"
+          >
+            Show Mobility/Medical Notes
+          </Button>
+
+          <Button 
             onClick={() => setLocation('/booking-responses')}
             variant="outline" 
             size="icon"
@@ -860,7 +876,7 @@ export default function BookingMaster() {
                   {isColumnVisible("seat") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-14 text-white font-semibold whitespace-nowrap border-r border-gray-300 dark:border-gray-600">SEAT</TableHead>}
                   {isColumnVisible("name") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 min-w-[120px] text-white font-semibold border-r border-gray-300 dark:border-gray-600">NAME</TableHead>}
                   {isColumnVisible("mobile") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 min-w-[100px] text-white font-semibold border-r border-gray-300 dark:border-gray-600">MOBILE</TableHead>}
-                  {isColumnVisible("email") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-28 max-w-[110px] text-white font-semibold border-r border-gray-300 dark:border-gray-600">EMAIL</TableHead>}
+                  {isColumnVisible("email") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-48 min-w-[180px] text-white font-semibold border-r border-gray-300 dark:border-gray-600">EMAIL</TableHead>}
                   {isColumnVisible("attendingWith") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold border-r border-gray-300 dark:border-gray-600">ATTENDING<br/>WITH</TableHead>}
                   {isColumnVisible("location") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold border-r border-gray-300 dark:border-gray-600">LOCATION</TableHead>}
                   {isColumnVisible("medicalQ") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-14 text-center text-white font-semibold border-r border-gray-300 dark:border-gray-600">MEDICAL<br/>Q (Y/N)</TableHead>}
@@ -927,7 +943,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("mobile") && <TableCell className="text-xs min-w-[120px] py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">{row.contestant?.phone || ""}</TableCell>}
-                        {isColumnVisible("email") && <TableCell className="text-xs py-0.5 h-7 w-32 max-w-[130px] truncate border-r border-gray-200 dark:border-gray-700">{row.contestant?.email || ""}</TableCell>}
+                        {isColumnVisible("email") && <TableCell className="text-xs py-0.5 h-7 w-48 min-w-[180px] truncate border-r border-gray-200 dark:border-gray-700" title={row.contestant?.email}>{row.contestant?.email || ""}</TableCell>}
                         {isColumnVisible("attendingWith") && <TableCell className="text-xs py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">{row.contestant?.attendingWith || ""}</TableCell>}
                         {isColumnVisible("location") && <TableCell className="text-xs py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">{row.contestant?.location || ""}</TableCell>}
                         {isColumnVisible("medicalQ") && (
