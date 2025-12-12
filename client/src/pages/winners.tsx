@@ -78,9 +78,9 @@ export default function WinnersPage() {
                 <TableHead className="bg-green-50 dark:bg-green-950">CASE AMOUNT</TableHead>
                 <TableHead className="bg-green-50 dark:bg-green-950">QUICK CASH</TableHead>
                 <TableHead className="bg-green-50 dark:bg-green-950 text-center">BANK OFFER</TableHead>
+                <TableHead className="bg-green-50 dark:bg-green-950 text-right">AMOUNT WON</TableHead>
                 <TableHead className="bg-green-50 dark:bg-green-950 text-center">SPIN WHEEL</TableHead>
                 <TableHead className="bg-green-50 dark:bg-green-950">PRIZE</TableHead>
-                <TableHead className="bg-green-50 dark:bg-green-950 text-right">AMOUNT WON</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -106,6 +106,9 @@ export default function WinnersPage() {
                         <X className="h-4 w-4 text-muted-foreground mx-auto" />
                     ) : '-'}
                   </TableCell>
+                  <TableCell className="text-right font-semibold text-green-600 dark:text-green-400">
+                    ${winner.winningMoneyAmount?.toLocaleString()}
+                  </TableCell>
                   <TableCell className="text-center">
                     {winner.spinTheWheel !== null && winner.spinTheWheel !== undefined ? (
                       winner.spinTheWheel ? 
@@ -120,9 +123,6 @@ export default function WinnersPage() {
                         <span>{winner.prize}</span>
                       </div>
                     ) : '-'}
-                  </TableCell>
-                  <TableCell className="text-right font-semibold text-green-600 dark:text-green-400">
-                    ${winner.winningMoneyAmount?.toLocaleString()}
                   </TableCell>
                 </TableRow>
               ))}
