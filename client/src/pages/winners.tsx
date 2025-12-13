@@ -344,7 +344,7 @@ export default function WinnersPage() {
                       {winner.winningMoneyRole === 'player' ? 'Player' : 'Case Holder'}
                     </TableCell>
                     <TableCell className="text-xs">{winner.contestantName}</TableCell>
-                    <TableCell className="text-xs">{winner.phone || '-'}</TableCell>
+                    <TableCell className="text-xs min-w-32">{winner.phone || '-'}</TableCell>
                     <TableCell className="text-xs border-r">{winner.email || '-'}</TableCell>
                     <TableCell className="text-xs font-mono">{winner.caseNumber || '-'}</TableCell>
                     <TableCell className="text-xs font-mono">
