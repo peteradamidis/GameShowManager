@@ -2,7 +2,9 @@ import { SeatingChart } from "@/components/seating-chart";
 import { WinningMoneyModal } from "@/components/winning-money-modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle } from "lucide-react";
+import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { SeatData } from "@/components/seat-card";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -59,6 +61,7 @@ export default function SeatingChartPage() {
   const [selectedBlock, setSelectedBlock] = useState<number>(0);
   const [selectedSeat, setSelectedSeat] = useState<string>("");
   const [selectedContestant, setSelectedContestant] = useState<string>("");
+  const [contestantSearch, setContestantSearch] = useState<string>("");
   
   // Cancel dialog state
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -133,6 +136,17 @@ export default function SeatingChartPage() {
     const seatedIds = new Set(assignments.map((a: any) => a.contestantId));
     return allContestants.filter((c: any) => !seatedIds.has(c.id));
   }, [assignments, allContestants]);
+
+  // Filter available contestants by search term
+  const filteredContestants = useMemo(() => {
+    if (!contestantSearch.trim()) return availableContestants;
+    const searchLower = contestantSearch.toLowerCase();
+    return availableContestants.filter((c: any) => 
+      c.name?.toLowerCase().includes(searchLower) ||
+      c.auditionRating?.toLowerCase().includes(searchLower) ||
+      c.attendingWith?.toLowerCase().includes(searchLower)
+    );
+  }, [availableContestants, contestantSearch]);
 
   // Check if record day is locked (RX Day Mode)
   const isLocked = currentRecordDay?.lockedAt != null;
@@ -397,6 +411,7 @@ export default function SeatingChartPage() {
     setSelectedBlock(blockNumber);
     setSelectedSeat(seatLabel);
     setSelectedContestant("");
+    setContestantSearch("");
     setAssignDialogOpen(true);
   };
 
@@ -680,45 +695,100 @@ export default function SeatingChartPage() {
 
       {/* Assign Contestant to Empty Seat Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent data-testid="dialog-assign-contestant-to-seat">
+        <DialogContent className="max-w-lg" data-testid="dialog-assign-contestant-to-seat">
           <DialogHeader>
             <DialogTitle>Assign Contestant to Seat</DialogTitle>
             <DialogDescription>
-              Select a contestant to assign to Block {selectedBlock}, Seat {selectedSeat}
+              Block {selectedBlock}, Seat {selectedSeat} - Select a contestant below
             </DialogDescription>
           </DialogHeader>
           
-          <div className="py-4 space-y-4">
+          <div className="space-y-3">
             {availableContestants.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
+              <p className="text-sm text-muted-foreground text-center py-8">
                 No available contestants. All contestants are already seated in this record day.
               </p>
             ) : (
-              <div className="space-y-2">
-                <Label htmlFor="contestant-select">Contestant</Label>
-                <Select value={selectedContestant} onValueChange={setSelectedContestant}>
-                  <SelectTrigger id="contestant-select" data-testid="select-contestant">
-                    <SelectValue placeholder="Select a contestant" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableContestants.map((contestant: any) => (
-                      <SelectItem key={contestant.id} value={contestant.id}>
-                        <span className="flex items-center gap-2">
-                          <span>{contestant.name}</span>
-                          <span className="text-muted-foreground text-xs">
-                            ({contestant.auditionRating || "?"} / {contestant.gender === "Female" ? "F" : "M"})
-                          </span>
-                          {contestant.attendingWith && (
-                            <span className="text-muted-foreground text-xs italic">
-                              w/ {contestant.attendingWith}
-                            </span>
-                          )}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name, rating, or group..."
+                    value={contestantSearch}
+                    onChange={(e) => setContestantSearch(e.target.value)}
+                    className="pl-9"
+                    data-testid="input-contestant-search"
+                  />
+                </div>
+                
+                <div className="text-xs text-muted-foreground">
+                  {filteredContestants.length} of {availableContestants.length} contestants
+                </div>
+                
+                <ScrollArea className="h-[320px] border rounded-md">
+                  <div className="p-2 space-y-1">
+                    {filteredContestants.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-8">
+                        No contestants match your search.
+                      </p>
+                    ) : (
+                      filteredContestants.map((contestant: any) => {
+                        const isSelected = selectedContestant === contestant.id;
+                        const ratingColors: Record<string, string> = {
+                          'A+': 'bg-emerald-500 text-white',
+                          'A': 'bg-green-500 text-white',
+                          'B+': 'bg-amber-500 text-white',
+                          'B': 'bg-orange-500 text-white',
+                          'C': 'bg-red-500 text-white',
+                        };
+                        
+                        return (
+                          <div
+                            key={contestant.id}
+                            onClick={() => setSelectedContestant(contestant.id)}
+                            className={`flex items-center gap-3 p-3 rounded-md cursor-pointer transition-colors ${
+                              isSelected 
+                                ? 'bg-primary/10 border-2 border-primary' 
+                                : 'hover-elevate border border-transparent'
+                            }`}
+                            data-testid={`contestant-card-${contestant.id}`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium truncate">{contestant.name}</span>
+                                {isSelected && (
+                                  <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                {contestant.auditionRating && (
+                                  <Badge className={`text-[10px] px-1.5 py-0 h-5 ${ratingColors[contestant.auditionRating] || 'bg-gray-500 text-white'}`}>
+                                    {contestant.auditionRating}
+                                  </Badge>
+                                )}
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5">
+                                  {contestant.gender === "Female" ? "Female" : "Male"}
+                                </Badge>
+                                {contestant.age && (
+                                  <span className="text-xs text-muted-foreground">
+                                    Age {contestant.age}
+                                  </span>
+                                )}
+                              </div>
+                              {contestant.attendingWith && (
+                                <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                                  <Users className="h-3 w-3" />
+                                  <span className="truncate">With: {contestant.attendingWith}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </ScrollArea>
+              </>
             )}
           </div>
 

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-13T04:36:33.580Z",
+  "exportedAt": "2025-12-13T10:31:07.983Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -154,7 +154,7 @@
         "rxNumber": "RX EP 1 - 5",
         "totalSeats": 154,
         "status": "ready",
-        "lockedAt": "2025-12-13T04:30:24.933Z",
+        "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       }
     ],
@@ -9306,55 +9306,15 @@
         "createdAt": "2025-12-12T13:14:17.866Z"
       },
       {
-        "id": "bc22ad22-1b7c-446d-8cd9-8d1a90cafebd",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "4501044d-6fd4-4a45-83a0-416599928b1f",
-        "blockNumber": 1,
-        "seatLabel": "E4",
-        "playerType": null,
-        "originalBlockNumber": 1,
-        "originalSeatLabel": "D4",
-        "swappedAt": "2025-12-13T04:30:45.671Z",
-        "firstNations": null,
-        "rating": null,
-        "location": null,
-        "medicalQuestion": null,
-        "criminalBankruptcy": null,
-        "castingCategory": null,
-        "notes": null,
-        "bookingEmailSent": null,
-        "confirmedRsvp": null,
-        "paperworkSent": null,
-        "paperworkReceived": null,
-        "signedIn": null,
-        "otdNotes": null,
-        "standbyReplacementSwaps": null,
-        "rxNumber": null,
-        "rxEpNumber": null,
-        "caseNumber": null,
-        "winningMoneyRole": null,
-        "winningMoneyAmount": null,
-        "caseAmount": null,
-        "quickCash": null,
-        "bankOfferTaken": false,
-        "spinTheWheel": false,
-        "prize": null,
-        "txNumber": null,
-        "txDate": null,
-        "notifiedOfTx": null,
-        "photosSent": null,
-        "createdAt": "2025-12-12T13:14:18.364Z"
-      },
-      {
         "id": "96ecc4ef-fd63-4393-b7df-9423b5df0868",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
         "contestantId": "6116506f-31f1-444e-bd83-2991a5335470",
         "blockNumber": 1,
-        "seatLabel": "E3",
+        "seatLabel": "D3",
         "playerType": null,
-        "originalBlockNumber": 1,
-        "originalSeatLabel": "D3",
-        "swappedAt": "2025-12-13T04:30:53.743Z",
+        "originalBlockNumber": null,
+        "originalSeatLabel": null,
+        "swappedAt": null,
         "firstNations": null,
         "rating": null,
         "location": null,
@@ -9384,6 +9344,46 @@
         "notifiedOfTx": null,
         "photosSent": null,
         "createdAt": "2025-12-12T13:14:16.369Z"
+      },
+      {
+        "id": "bc22ad22-1b7c-446d-8cd9-8d1a90cafebd",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "contestantId": "4501044d-6fd4-4a45-83a0-416599928b1f",
+        "blockNumber": 1,
+        "seatLabel": "D4",
+        "playerType": null,
+        "originalBlockNumber": null,
+        "originalSeatLabel": null,
+        "swappedAt": null,
+        "firstNations": null,
+        "rating": null,
+        "location": null,
+        "medicalQuestion": null,
+        "criminalBankruptcy": null,
+        "castingCategory": null,
+        "notes": null,
+        "bookingEmailSent": null,
+        "confirmedRsvp": null,
+        "paperworkSent": null,
+        "paperworkReceived": null,
+        "signedIn": null,
+        "otdNotes": null,
+        "standbyReplacementSwaps": null,
+        "rxNumber": null,
+        "rxEpNumber": null,
+        "caseNumber": null,
+        "winningMoneyRole": null,
+        "winningMoneyAmount": null,
+        "caseAmount": null,
+        "quickCash": null,
+        "bankOfferTaken": false,
+        "spinTheWheel": false,
+        "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
+        "createdAt": "2025-12-12T13:14:18.364Z"
       },
       {
         "id": "cb62b970-7194-4872-9fc3-92a543d01f39",
@@ -12385,7 +12385,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": "2025-12-13T04:30:24.933Z",
+          "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       },
@@ -12427,7 +12427,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": "2025-12-13T04:30:24.933Z",
+          "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       }
@@ -12691,7 +12691,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": "2025-12-13T04:30:24.933Z",
+          "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       },
@@ -12730,7 +12730,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": "2025-12-13T04:30:24.933Z",
+          "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       },
@@ -12769,7 +12769,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
-          "lockedAt": "2025-12-13T04:30:24.933Z",
+          "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       }
