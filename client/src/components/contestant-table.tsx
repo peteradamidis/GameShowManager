@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar } from "lucide-react";
+import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar, AlertTriangle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -73,6 +73,84 @@ interface ContestantTableProps {
   onSearchChange?: (term: string) => void;
   rescheduleContestantIds?: Set<string>;
   standbyContestantIds?: Set<string>;
+}
+
+// Docklands, Melbourne coordinates
+const DOCKLANDS_COORDS = { lat: -37.8150, lng: 144.9460 };
+
+// Australian city coordinates (approximate city centers)
+const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  "Melbourne": { lat: -37.8136, lng: 144.9631 },
+  "Sydney": { lat: -33.8688, lng: 151.2093 },
+  "Brisbane": { lat: -27.4698, lng: 153.0251 },
+  "Perth": { lat: -31.9505, lng: 115.8605 },
+  "Adelaide": { lat: -34.9285, lng: 138.6007 },
+  "Canberra": { lat: -35.2809, lng: 149.1300 },
+  "Hobart": { lat: -42.8821, lng: 147.3272 },
+  "Darwin": { lat: -12.4634, lng: 130.8456 },
+  "Geelong": { lat: -38.1499, lng: 144.3617 },
+  "Ballarat": { lat: -37.5622, lng: 143.8503 },
+  "Bendigo": { lat: -36.7570, lng: 144.2794 },
+  "Frankston": { lat: -38.1433, lng: 145.1228 },
+  "Dandenong": { lat: -37.9877, lng: 145.2149 },
+  "Werribee": { lat: -37.9000, lng: 144.6600 },
+  "Sunbury": { lat: -37.5778, lng: 144.7260 },
+  "Melton": { lat: -37.6869, lng: 144.5788 },
+  "Cranbourne": { lat: -38.0996, lng: 145.2834 },
+  "Pakenham": { lat: -38.0711, lng: 145.4878 },
+  "Mornington": { lat: -38.2193, lng: 145.0375 },
+  "Warragul": { lat: -38.1618, lng: 145.9312 },
+  "Traralgon": { lat: -38.1954, lng: 146.5415 },
+  "Sale": { lat: -38.1067, lng: 147.0680 },
+  "Bairnsdale": { lat: -37.8227, lng: 147.6108 },
+  "Shepparton": { lat: -36.3833, lng: 145.4000 },
+  "Wodonga": { lat: -36.1217, lng: 146.8883 },
+  "Albury": { lat: -36.0737, lng: 146.9135 },
+  "Wangaratta": { lat: -36.3578, lng: 146.3120 },
+  "Mildura": { lat: -34.1840, lng: 142.1580 },
+  "Horsham": { lat: -36.7107, lng: 142.1996 },
+  "Warrnambool": { lat: -38.3818, lng: 142.4830 },
+  "Hamilton": { lat: -37.7440, lng: 142.0220 },
+  "Portland": { lat: -38.3433, lng: 141.6037 },
+  "Echuca": { lat: -36.1310, lng: 144.7520 },
+  "Swan Hill": { lat: -35.3378, lng: 143.5544 },
+  "Bacchus Marsh": { lat: -37.6727, lng: 144.4385 },
+  "Gisborne": { lat: -37.4900, lng: 144.5900 },
+  "Kilmore": { lat: -37.3000, lng: 144.9500 },
+  "Seymour": { lat: -37.0267, lng: 145.1392 },
+  "Colac": { lat: -38.3400, lng: 143.5850 },
+  "Torquay": { lat: -38.3300, lng: 144.3200 },
+  "Ocean Grove": { lat: -38.2600, lng: 144.5200 },
+  "Lorne": { lat: -38.5417, lng: 143.9750 },
+  "Apollo Bay": { lat: -38.7600, lng: 143.6700 },
+};
+
+// Calculate distance between two coordinates using Haversine formula
+function calculateDistanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Get distance from Docklands for a city name
+function getDistanceFromDocklands(location: string | undefined | null): { distance: number; isOver60km: boolean } | null {
+  if (!location) return null;
+  
+  // Try to find a matching city (case-insensitive, partial match)
+  const locationLower = location.toLowerCase().trim();
+  for (const [city, coords] of Object.entries(CITY_COORDINATES)) {
+    if (locationLower.includes(city.toLowerCase()) || city.toLowerCase().includes(locationLower)) {
+      const distance = calculateDistanceKm(DOCKLANDS_COORDS.lat, DOCKLANDS_COORDS.lng, coords.lat, coords.lng);
+      return { distance: Math.round(distance), isOver60km: distance > 60 };
+    }
+  }
+  return null;
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -1084,7 +1162,25 @@ export function ContestantTable({
                           <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
                           <div>
                             <label className="text-xs font-medium text-muted-foreground">Location</label>
-                            <p className="text-sm mt-1">{contestantDetails.location}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <p className="text-sm">{contestantDetails.location}</p>
+                              {(() => {
+                                const distanceInfo = getDistanceFromDocklands(contestantDetails.location);
+                                if (distanceInfo?.isOver60km) {
+                                  return (
+                                    <Badge 
+                                      variant="outline" 
+                                      className="border-orange-300 bg-orange-500/20 text-orange-700 dark:border-orange-700 dark:text-orange-400 text-xs"
+                                      data-testid="badge-distance-warning"
+                                    >
+                                      <AlertTriangle className="h-3 w-3 mr-1" />
+                                      {distanceInfo.distance}km from Docklands
+                                    </Badge>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
                           </div>
                         </div>
                       )}
