@@ -758,7 +758,7 @@ export default function SeatingChartPage() {
                 
                 <div className="flex items-center gap-2 flex-wrap">
                   <Select value={filterRating} onValueChange={setFilterRating}>
-                    <SelectTrigger className="w-[100px]" data-testid="select-filter-rating">
+                    <SelectTrigger className="w-[120px]" data-testid="select-filter-rating">
                       <SelectValue placeholder="Rating" />
                     </SelectTrigger>
                     <SelectContent>
@@ -772,7 +772,7 @@ export default function SeatingChartPage() {
                   </Select>
                   
                   <Select value={filterGender} onValueChange={setFilterGender}>
-                    <SelectTrigger className="w-[100px]" data-testid="select-filter-gender">
+                    <SelectTrigger className="w-[120px]" data-testid="select-filter-gender">
                       <SelectValue placeholder="Gender" />
                     </SelectTrigger>
                     <SelectContent>
@@ -783,7 +783,7 @@ export default function SeatingChartPage() {
                   </Select>
                   
                   <Select value={filterGroupSize} onValueChange={setFilterGroupSize}>
-                    <SelectTrigger className="w-[110px]" data-testid="select-filter-group-size">
+                    <SelectTrigger className="w-[120px]" data-testid="select-filter-group-size">
                       <SelectValue placeholder="Group" />
                     </SelectTrigger>
                     <SelectContent>
