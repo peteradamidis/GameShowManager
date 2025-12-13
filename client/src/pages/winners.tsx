@@ -195,7 +195,7 @@ export default function WinnersPage() {
               TX
             </Button>
             <Input
-              placeholder="Search by RX day or date (YYYY-MM-DD)"
+              placeholder="Search by RX day or date (DD-MM-YYYY)"
               value={searchRxDayOrDate}
               onChange={(e) => setSearchRxDayOrDate(e.target.value)}
               data-testid="input-search-rx-day-date"
