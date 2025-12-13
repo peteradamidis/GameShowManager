@@ -164,38 +164,36 @@ export default function WinnersPage() {
             <Badge variant="outline">{allWinners.length}</Badge>
           </div>
 
-          <div className="flex flex-col gap-3">
-            <div className="flex gap-2">
-              <Button
-                variant={filterType === 'all' ? 'default' : 'outline'}
-                onClick={() => setFilterType('all')}
-                data-testid="button-filter-all"
-              >
-                All
-              </Button>
-              <Button
-                variant={filterType === 'player' ? 'default' : 'outline'}
-                onClick={() => setFilterType('player')}
-                data-testid="button-filter-player"
-              >
-                Players
-              </Button>
-              <Button
-                variant={filterType === 'case_holder' ? 'default' : 'outline'}
-                onClick={() => setFilterType('case_holder')}
-                data-testid="button-filter-case-holder"
-              >
-                Case Holders
-              </Button>
-              <Button
-                variant={showTX ? "default" : "outline"}
-                onClick={() => setShowTX(!showTX)}
-                size="sm"
-                data-testid="button-toggle-tx"
-              >
-                TX
-              </Button>
-            </div>
+          <div className="flex gap-2 items-center flex-wrap">
+            <Button
+              variant={filterType === 'all' ? 'default' : 'outline'}
+              onClick={() => setFilterType('all')}
+              data-testid="button-filter-all"
+            >
+              All
+            </Button>
+            <Button
+              variant={filterType === 'player' ? 'default' : 'outline'}
+              onClick={() => setFilterType('player')}
+              data-testid="button-filter-player"
+            >
+              Players
+            </Button>
+            <Button
+              variant={filterType === 'case_holder' ? 'default' : 'outline'}
+              onClick={() => setFilterType('case_holder')}
+              data-testid="button-filter-case-holder"
+            >
+              Case Holders
+            </Button>
+            <Button
+              variant={showTX ? "default" : "outline"}
+              onClick={() => setShowTX(!showTX)}
+              size="sm"
+              data-testid="button-toggle-tx"
+            >
+              TX
+            </Button>
             <Input
               placeholder="Search by RX day or date (YYYY-MM-DD)"
               value={searchRxDayOrDate}
