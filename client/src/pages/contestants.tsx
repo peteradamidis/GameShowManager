@@ -104,6 +104,8 @@ export default function Contestants() {
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [filterStandbyStatus, setFilterStandbyStatus] = useState<string>("all");
   const [filterGroupSize, setFilterGroupSize] = useState<string>("all");
+  const [postcodeFrom, setPostcodeFrom] = useState<string>("");
+  const [postcodeTo, setPostcodeTo] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>("");
   
@@ -232,6 +234,18 @@ export default function Contestants() {
       if (filterGroupSize === "2") return groupSize === 2;
       if (filterGroupSize === "3+") return groupSize >= 3;
       return true;
+    });
+  }
+
+  // Apply postcode range filter
+  if (postcodeFrom || postcodeTo) {
+    displayedContestants = displayedContestants.filter(c => {
+      if (!c.postcode) return false;
+      const postcode = parseInt(c.postcode, 10);
+      if (isNaN(postcode)) return false;
+      const from = postcodeFrom ? parseInt(postcodeFrom, 10) : 0;
+      const to = postcodeTo ? parseInt(postcodeTo, 10) : 9999;
+      return postcode >= from && postcode <= to;
     });
   }
 
@@ -807,8 +821,31 @@ export default function Contestants() {
             </Select>
           </div>
 
+          <div className="flex-1 min-w-[200px] max-w-xs">
+            <label className="text-sm font-medium mb-2 block">Postcode Range</label>
+            <div className="flex gap-2 items-center">
+              <Input
+                type="text"
+                placeholder="From"
+                value={postcodeFrom}
+                onChange={(e) => setPostcodeFrom(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                className="w-20"
+                data-testid="input-postcode-from"
+              />
+              <span className="text-muted-foreground">-</span>
+              <Input
+                type="text"
+                placeholder="To"
+                value={postcodeTo}
+                onChange={(e) => setPostcodeTo(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                className="w-20"
+                data-testid="input-postcode-to"
+              />
+            </div>
+          </div>
+
           {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
-            filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || filterGroupSize !== "all") && (
+            filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || filterGroupSize !== "all" || postcodeFrom || postcodeTo) && (
             <Button 
               variant="outline" 
               onClick={() => {
@@ -819,6 +856,8 @@ export default function Contestants() {
                 setFilterRecordDayId("");
                 setFilterResponseValue("all");
                 setFilterStandbyStatus("all");
+                setPostcodeFrom("");
+                setPostcodeTo("");
                 setFilterGroupSize("all");
               }}
               data-testid="button-clear-filters"
@@ -863,6 +902,11 @@ export default function Contestants() {
           {filterGroupSize !== "all" && (
             <Badge variant="outline">
               Group Size: {filterGroupSize === "1" ? "Solo (1)" : filterGroupSize === "2" ? "Pair (2)" : "3+"}
+            </Badge>
+          )}
+          {(postcodeFrom || postcodeTo) && (
+            <Badge variant="outline">
+              Postcode: {postcodeFrom || '0'} - {postcodeTo || '9999'}
             </Badge>
           )}
         </div>

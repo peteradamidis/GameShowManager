@@ -33,6 +33,7 @@ export const contestants = pgTable("contestants", {
   email: text("email"),
   phone: text("phone"),
   location: text("location"), // City/suburb location
+  postcode: text("postcode"), // Australian postcode
   medicalInfo: text("medical_info"),
   mobilityNotes: text("mobility_notes"), // Mobility/Access/Medical notes
   criminalRecord: text("criminal_record"), // Criminal record information
