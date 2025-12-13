@@ -556,17 +556,10 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         );
       }
 
-      // Invalidate ALL related queries for consistent state across tabs
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
-      ]);
-      
-      // Also call onRefreshNeeded if provided for backwards compatibility
-      if (onRefreshNeeded) {
-        await onRefreshNeeded();
-      }
+      // Invalidate seat assignments, contestants, and standbys to keep all views accurate
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
 
       toast({
         title: "Seats updated",

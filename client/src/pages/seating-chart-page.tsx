@@ -411,17 +411,11 @@ export default function SeatingChartPage() {
         seatLabel: selectedSeat,
       });
       
-      // Invalidate ALL related queries for consistent state across tabs
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ['/api/all-seat-assignments'] }),
-        queryClient.invalidateQueries({ queryKey: ['/api/record-days'] }),
-      ]);
+      // Invalidate essential queries - no redundant refetch() needed
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
       broadcastSeatingChange(recordDayId);
-      await refetch();
       
       toast({
         title: "Contestant assigned",
@@ -447,17 +441,11 @@ export default function SeatingChartPage() {
   const handleRemove = async (assignmentId: string) => {
     try {
       await apiRequest('DELETE', `/api/seat-assignments/${assignmentId}`, {});
-      // Invalidate ALL related queries for consistent state across tabs
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ['/api/all-seat-assignments'] }),
-        queryClient.invalidateQueries({ queryKey: ['/api/record-days'] }),
-      ]);
+      // Invalidate essential queries - no redundant refetch() needed
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
       broadcastSeatingChange(recordDayId);
-      await refetch();
       toast({
         title: "Contestant removed",
         description: "Contestant has been removed from this record day.",
@@ -530,9 +518,9 @@ export default function SeatingChartPage() {
           prize: null,
         }),
       });
-      // Invalidate winners query to refresh Winners page
-      await queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments/with-winning-money'] });
-      await refetch();
+      // Invalidate only the queries needed for winning money
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments/with-winning-money'] });
       setWinningMoneyModalOpen(false);
       setSelectedAssignmentId("");
       toast({
@@ -567,9 +555,9 @@ export default function SeatingChartPage() {
         spinTheWheel: null,
         prize: null,
       });
-      // Invalidate winners query to refresh Winners page
-      await queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments/with-winning-money'] });
-      await refetch();
+      // Invalidate only the queries needed for winning money
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments/with-winning-money'] });
       setWinningMoneyModalOpen(false);
       setSelectedAssignmentId("");
       toast({
@@ -594,17 +582,12 @@ export default function SeatingChartPage() {
       await apiRequest('POST', `/api/seat-assignments/${cancelAssignmentId}/cancel`, {
         reason: cancelReason || "No reason provided",
       });
-      // Invalidate ALL related queries for consistent state across tabs
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ['/api/all-seat-assignments'] }),
-        queryClient.invalidateQueries({ queryKey: ['/api/record-days'] }),
-      ]);
+      // Invalidate essential queries - cancel affects seat assignments, contestants, standbys, and canceled list
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'] });
       broadcastSeatingChange(recordDayId);
-      await refetch();
       setCancelDialogOpen(false);
       setCancelAssignmentId("");
       setCancelReason("");
