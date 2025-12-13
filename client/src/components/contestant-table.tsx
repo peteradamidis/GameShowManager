@@ -661,12 +661,12 @@ export function ContestantTable({
 
       {/* Contestant Detail Dialog */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-contestant-details">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl" data-testid="dialog-contestant-details">
+          <DialogHeader className="pb-2">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <DialogTitle>{isEditMode ? 'Edit Contestant' : 'Contestant Details'}</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-base">{isEditMode ? 'Edit Contestant' : 'Contestant Details'}</DialogTitle>
+                <DialogDescription className="text-xs">
                   {isEditMode ? 'Update contestant information' : `Complete information for ${contestantDetails?.name || "this contestant"}`}
                 </DialogDescription>
               </div>
@@ -948,13 +948,13 @@ export function ContestantTable({
                 </DialogFooter>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-3">
                 {/* Photo and Basic Info Header */}
-                <div className="flex gap-6">
-                  {/* Photo Section */}
-                  <div className="flex flex-col items-center gap-2">
+                <div className="flex gap-4">
+                  {/* Photo Section - Compact */}
+                  <div className="flex flex-col items-center gap-1">
                     <div className="relative group">
-                      <Avatar className="h-24 w-24 border-2 border-border">
+                      <Avatar className="h-16 w-16 border-2 border-border">
                         {contestantDetails.photoUrl ? (
                           <AvatarImage 
                             src={contestantDetails.photoUrl} 
@@ -962,20 +962,17 @@ export function ContestantTable({
                             className="object-cover"
                           />
                         ) : null}
-                        <AvatarFallback className="text-2xl bg-muted">
-                          <User className="h-10 w-10 text-muted-foreground" />
+                        <AvatarFallback className="text-lg bg-muted">
+                          <User className="h-7 w-7 text-muted-foreground" />
                         </AvatarFallback>
                       </Avatar>
-                      
-                      {/* Upload overlay on hover */}
                       <div 
                         className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                         onClick={() => fileInputRef.current?.click()}
                       >
-                        <Camera className="h-6 w-6 text-white" />
+                        <Camera className="h-4 w-4 text-white" />
                       </div>
                     </div>
-                    
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -984,32 +981,22 @@ export function ContestantTable({
                       className="hidden"
                       data-testid="input-photo-upload"
                     />
-                    
                     <div className="flex gap-1">
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="ghost"
+                        className="h-6 px-2 text-xs"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading || uploadPhotoMutation.isPending}
                         data-testid="button-upload-photo"
                       >
-                        {isUploading ? (
-                          <span className="flex items-center gap-1">
-                            <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                            Uploading...
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1">
-                            <Upload className="h-3 w-3" />
-                            Upload
-                          </span>
-                        )}
+                        {isUploading ? '...' : <Upload className="h-3 w-3" />}
                       </Button>
-                      
                       {contestantDetails.photoUrl && (
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
+                          className="h-6 px-2 text-xs"
                           onClick={() => deletePhotoMutation.mutate()}
                           disabled={deletePhotoMutation.isPending}
                           data-testid="button-delete-photo"
@@ -1020,50 +1007,49 @@ export function ContestantTable({
                     </div>
                   </div>
 
-                  {/* Basic Information */}
+                  {/* Basic Information - 4 columns */}
                   <div className="flex-1">
-                    <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Basic Information</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-4 gap-x-4 gap-y-2">
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Name</label>
-                        <p className="text-sm mt-1">{contestantDetails.name}</p>
+                        <p className="text-sm font-medium">{contestantDetails.name}</p>
                       </div>
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Age</label>
-                        <p className="text-sm mt-1">{contestantDetails.age}</p>
+                        <p className="text-sm">{contestantDetails.age}</p>
                       </div>
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Gender</label>
-                        <p className="text-sm mt-1">{contestantDetails.gender}</p>
+                        <p className="text-sm">{contestantDetails.gender}</p>
                       </div>
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Status</label>
-                        <div className="mt-1 flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-1 flex-wrap">
                           <StatusBadge status={rescheduleContestantIds.has(contestantDetails.id) ? "Reschedule" : contestantDetails.availabilityStatus} />
                           {standbyContestantIds.has(contestantDetails.id) && (
-                            <Badge variant="outline" className="border-yellow-300 bg-yellow-500/20 text-yellow-800 dark:border-yellow-700 dark:text-yellow-400">
+                            <Badge variant="outline" className="border-yellow-300 bg-yellow-500/20 text-yellow-800 dark:border-yellow-700 dark:text-yellow-400 text-xs py-0">
                               Standby
                             </Badge>
                           )}
                         </div>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground">Audition Rating</label>
-                        <p className={`text-sm mt-1 font-semibold ${
+                        <label className="text-xs font-medium text-muted-foreground">Rating</label>
+                        <p className={`text-sm font-semibold ${
                           contestantDetails.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
                           contestantDetails.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
                           contestantDetails.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
                           contestantDetails.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
                           contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' : 'text-muted-foreground'
                         }`}>
-                          {contestantDetails.auditionRating || 'Not rated'}
+                          {contestantDetails.auditionRating || '-'}
                         </p>
                       </div>
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Player Type</label>
-                        <div className="mt-1">
+                        <div>
                           {contestantDetails.playerType ? (
-                            <Badge className={`text-xs ${
+                            <Badge className={`text-xs py-0 ${
                               contestantDetails.playerType === 'player' ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800' :
                               contestantDetails.playerType === 'backup' ? 'bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800' :
                               contestantDetails.playerType === 'player_partner' ? 'bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800' :
@@ -1075,160 +1061,117 @@ export function ContestantTable({
                                contestantDetails.playerType}
                             </Badge>
                           ) : (
-                            <span className="text-sm text-muted-foreground">Not set</span>
+                            <span className="text-sm text-muted-foreground">-</span>
                           )}
                         </div>
                       </div>
-                      {contestantDetails.groupId && (
-                        <div className="overflow-hidden">
-                          <label className="text-xs font-medium text-muted-foreground">Group ID</label>
-                          <div className="mt-1">
-                            <Badge variant="outline" className="font-mono text-xs max-w-full truncate inline-block" title={contestantDetails.groupId}>
-                              {contestantDetails.groupId}
-                            </Badge>
-                          </div>
-                        </div>
-                      )}
                       {contestantDetails.attendingWith && (
                         <div>
                           <label className="text-xs font-medium text-muted-foreground">Attending With</label>
-                          <p className="text-sm mt-1">{contestantDetails.attendingWith}</p>
+                          <p className="text-sm">{contestantDetails.attendingWith}</p>
+                        </div>
+                      )}
+                      {contestantDetails.groupId && (
+                        <div className="overflow-hidden">
+                          <label className="text-xs font-medium text-muted-foreground">Group ID</label>
+                          <Badge variant="outline" className="font-mono text-xs max-w-full truncate inline-block py-0" title={contestantDetails.groupId}>
+                            {contestantDetails.groupId}
+                          </Badge>
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
 
-                {/* Seat Assignment */}
+                {/* Seat Assignment - Compact inline */}
                 {selectedContestantSeatAssignment && (
-                  <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                    <h3 className="text-sm font-semibold mb-3 text-blue-700 dark:text-blue-400 uppercase tracking-wide flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Seat Assignment
-                    </h3>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Record Day</label>
-                        <p className="text-sm mt-1 font-semibold">
-                          {seatAssignmentRecordDay 
-                            ? new Date(seatAssignmentRecordDay.date).toLocaleDateString('en-AU', { 
-                                weekday: 'short', 
-                                day: 'numeric', 
-                                month: 'short', 
-                                year: 'numeric' 
-                              })
-                            : 'Unknown'}
-                        </p>
+                  <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2">
+                    <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+                        <Calendar className="h-4 w-4" />
+                        <span className="text-xs font-semibold uppercase">Seat Assignment</span>
                       </div>
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Block</label>
-                        <p className="text-sm mt-1 font-semibold">Block {selectedContestantSeatAssignment.blockNumber}</p>
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Seat</label>
-                        <p className="text-sm mt-1 font-semibold font-mono text-green-600 dark:text-green-400">
-                          {String(selectedContestantSeatAssignment.blockNumber).padStart(2, '0')}-{selectedContestantSeatAssignment.seatLabel}
-                        </p>
+                      <div className="flex items-center gap-4 text-sm">
+                        <span><span className="text-xs text-muted-foreground mr-1">Day:</span><span className="font-medium">{seatAssignmentRecordDay ? new Date(seatAssignmentRecordDay.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : 'Unknown'}</span></span>
+                        <span><span className="text-xs text-muted-foreground mr-1">Block:</span><span className="font-medium">{selectedContestantSeatAssignment.blockNumber}</span></span>
+                        <span><span className="text-xs text-muted-foreground mr-1">Seat:</span><span className="font-mono font-medium text-green-600 dark:text-green-400">{String(selectedContestantSeatAssignment.blockNumber).padStart(2, '0')}-{selectedContestantSeatAssignment.seatLabel}</span></span>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Contact Information */}
-                {(contestantDetails.email || contestantDetails.phone || contestantDetails.location) && (
-                  <div>
-                    <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Contact Information</h3>
-                    <div className="space-y-3">
+                {/* Contact & Medical in 2 columns */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Contact Information */}
+                  <div className="space-y-1">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Contact</h3>
+                    <div className="space-y-1 text-sm">
                       {contestantDetails.email && (
-                        <div className="flex items-start gap-3">
-                          <Mail className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                          <div>
-                            <label className="text-xs font-medium text-muted-foreground">Email</label>
-                            <p className="text-sm mt-1">{contestantDetails.email}</p>
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                          <span className="truncate">{contestantDetails.email}</span>
                         </div>
                       )}
                       {contestantDetails.phone && (
-                        <div className="flex items-start gap-3">
-                          <Phone className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                          <div>
-                            <label className="text-xs font-medium text-muted-foreground">Phone</label>
-                            <p className="text-sm mt-1">{contestantDetails.phone}</p>
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                          <span>{contestantDetails.phone}</span>
                         </div>
                       )}
                       {contestantDetails.location && (
-                        <div className="flex items-start gap-3">
-                          <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                          <div>
-                            <label className="text-xs font-medium text-muted-foreground">Location</label>
-                            <div className="flex items-center gap-2 mt-1">
-                              <p className="text-sm">{contestantDetails.location}</p>
-                              {(() => {
-                                const distanceInfo = getDistanceFromDocklands(contestantDetails.location);
-                                if (distanceInfo?.isOver60km) {
-                                  return (
-                                    <Badge 
-                                      variant="outline" 
-                                      className="border-orange-300 bg-orange-500/20 text-orange-700 dark:border-orange-700 dark:text-orange-400 text-xs"
-                                      data-testid="badge-distance-warning"
-                                    >
-                                      <AlertTriangle className="h-3 w-3 mr-1" />
-                                      {distanceInfo.distance}km from Docklands
-                                    </Badge>
-                                  );
-                                }
-                                return null;
-                              })()}
-                            </div>
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                          <span>{contestantDetails.location}</span>
+                          {(() => {
+                            const distanceInfo = getDistanceFromDocklands(contestantDetails.location);
+                            if (distanceInfo?.isOver60km) {
+                              return (
+                                <Badge 
+                                  variant="outline" 
+                                  className="border-orange-300 bg-orange-500/20 text-orange-700 dark:border-orange-700 dark:text-orange-400 text-xs py-0"
+                                  data-testid="badge-distance-warning"
+                                >
+                                  <AlertTriangle className="h-3 w-3 mr-1" />
+                                  {distanceInfo.distance}km
+                                </Badge>
+                              );
+                            }
+                            return null;
+                          })()}
                         </div>
+                      )}
+                      {!contestantDetails.email && !contestantDetails.phone && !contestantDetails.location && (
+                        <p className="text-muted-foreground italic text-xs">No contact info</p>
                       )}
                     </div>
                   </div>
-                )}
 
-                {/* Medical Information */}
-                <div>
-                  <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Medical Information</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <Heart className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <label className="text-xs font-medium text-muted-foreground">Medical Conditions</label>
-                        {contestantDetails.medicalInfo ? (
-                          <p className="text-sm whitespace-pre-wrap mt-1">{contestantDetails.medicalInfo}</p>
-                        ) : (
-                          <p className="text-sm text-muted-foreground italic mt-1">No medical information provided</p>
-                        )}
+                  {/* Medical Information */}
+                  <div className="space-y-1">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Medical</h3>
+                    <div className="space-y-1 text-sm">
+                      <div>
+                        <span className="text-xs text-muted-foreground">Conditions: </span>
+                        <span className={contestantDetails.medicalInfo ? '' : 'text-muted-foreground italic'}>
+                          {contestantDetails.medicalInfo || 'None'}
+                        </span>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <Heart className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <label className="text-xs font-medium text-muted-foreground">Mobility/Access Notes</label>
-                        {contestantDetails.mobilityNotes ? (
-                          <p className="text-sm whitespace-pre-wrap mt-1">{contestantDetails.mobilityNotes}</p>
-                        ) : (
-                          <p className="text-sm text-muted-foreground italic mt-1">No mobility/access notes provided</p>
-                        )}
+                      <div>
+                        <span className="text-xs text-muted-foreground">Mobility: </span>
+                        <span className={contestantDetails.mobilityNotes ? '' : 'text-muted-foreground italic'}>
+                          {contestantDetails.mobilityNotes || 'None'}
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Criminal Record */}
+                {/* Criminal Record - Compact */}
                 <div>
-                  <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Criminal Record</h3>
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1">
-                      {contestantDetails.criminalRecord ? (
-                        <p className="text-sm whitespace-pre-wrap">{contestantDetails.criminalRecord}</p>
-                      ) : (
-                        <p className="text-sm text-muted-foreground italic">No criminal record information provided</p>
-                      )}
-                    </div>
-                  </div>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Criminal Record</h3>
+                  <p className={`text-sm ${contestantDetails.criminalRecord ? '' : 'text-muted-foreground italic'}`}>
+                    {contestantDetails.criminalRecord || 'No criminal record information provided'}
+                  </p>
                 </div>
               </div>
             )
