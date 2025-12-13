@@ -103,6 +103,7 @@ export default function Contestants() {
   const [filterRating, setFilterRating] = useState<string>("all");
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [filterStandbyStatus, setFilterStandbyStatus] = useState<string>("all");
+  const [filterGroupSize, setFilterGroupSize] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>("");
   
@@ -219,6 +220,16 @@ export default function Contestants() {
       displayedContestants = displayedContestants.filter(c => !standbyContestantIds.has(c.id));
     }
   }
+  if (filterGroupSize !== "all") {
+    displayedContestants = displayedContestants.filter(c => {
+      const groupSizeVal = c.groupSize;
+      if (filterGroupSize === "undefined") return groupSizeVal == null;
+      if (filterGroupSize === "1") return groupSizeVal === 1;
+      if (filterGroupSize === "2") return groupSizeVal === 2;
+      if (filterGroupSize === "3+") return groupSizeVal != null && groupSizeVal >= 3;
+      return true;
+    });
+  }
 
   // Apply search filter (searches across ALL pages before pagination)
   if (searchTerm.trim()) {
@@ -234,7 +245,7 @@ export default function Contestants() {
   // Reset page when filters or search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus, searchTerm]);
+  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus, filterGroupSize, searchTerm]);
 
   // Pagination calculations
   const totalPages = Math.ceil(displayedContestants.length / ITEMS_PER_PAGE);
@@ -777,8 +788,24 @@ export default function Contestants() {
             </Select>
           </div>
 
+          <div className="flex-1 min-w-[200px] max-w-xs">
+            <label className="text-sm font-medium mb-2 block">Group Size</label>
+            <Select value={filterGroupSize} onValueChange={setFilterGroupSize}>
+              <SelectTrigger data-testid="select-filter-group-size">
+                <SelectValue placeholder="All Groups" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Groups</SelectItem>
+                <SelectItem value="undefined">Undefined</SelectItem>
+                <SelectItem value="1">Solo (1)</SelectItem>
+                <SelectItem value="2">Pair (2)</SelectItem>
+                <SelectItem value="3+">3+ Group</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
-            filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all") && (
+            filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || filterGroupSize !== "all") && (
             <Button 
               variant="outline" 
               onClick={() => {
@@ -789,6 +816,7 @@ export default function Contestants() {
                 setFilterRecordDayId("");
                 setFilterResponseValue("all");
                 setFilterStandbyStatus("all");
+                setFilterGroupSize("all");
               }}
               data-testid="button-clear-filters"
             >
@@ -801,7 +829,7 @@ export default function Contestants() {
 
       {/* Results Summary */}
       {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
-        filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all") && (
+        filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || filterGroupSize !== "all") && (
         <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="secondary" data-testid="badge-filter-count">
             {displayedContestants.length} contestant{displayedContestants.length !== 1 ? 's' : ''}
@@ -827,6 +855,11 @@ export default function Contestants() {
           {filterStandbyStatus !== "all" && (
             <Badge variant="outline">
               Standby: {filterStandbyStatus === "is_standby" ? "Is Standby" : "Not Standby"}
+            </Badge>
+          )}
+          {filterGroupSize !== "all" && (
+            <Badge variant="outline">
+              Group Size: {filterGroupSize === "undefined" ? "Undefined" : filterGroupSize === "1" ? "Solo (1)" : filterGroupSize === "2" ? "Pair (2)" : "3+"}
             </Badge>
           )}
         </div>

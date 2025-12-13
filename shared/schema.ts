@@ -39,6 +39,7 @@ export const contestants = pgTable("contestants", {
   photoUrl: text("photo_url"), // URL to contestant photo
   auditionRating: text("audition_rating"), // Rating: A+, A, B+, B, C
   playerType: playerTypeEnum("player_type"), // Player, Backup, Player Partner
+  groupSize: integer("group_size"), // Group size (1 = solo, 2+ = group), null = undefined
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

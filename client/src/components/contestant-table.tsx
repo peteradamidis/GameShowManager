@@ -52,6 +52,7 @@ export interface Contestant {
   photoUrl?: string | null;
   auditionRating?: string | null;
   playerType?: string;
+  groupSize?: number | null;
 }
 
 interface SeatAssignment {
@@ -229,6 +230,7 @@ export function ContestantTable({
         phone: contestantDetails.phone || '',
         location: contestantDetails.location || '',
         attendingWith: contestantDetails.attendingWith || '',
+        groupSize: contestantDetails.groupSize,
         medicalInfo: contestantDetails.medicalInfo || '',
         mobilityNotes: contestantDetails.mobilityNotes || '',
         criminalRecord: contestantDetails.criminalRecord || '',
@@ -325,6 +327,7 @@ export function ContestantTable({
         phone: contestantDetails.phone || '',
         location: contestantDetails.location || '',
         attendingWith: contestantDetails.attendingWith || '',
+        groupSize: contestantDetails.groupSize,
         medicalInfo: contestantDetails.medicalInfo || '',
         mobilityNotes: contestantDetails.mobilityNotes || '',
         criminalRecord: contestantDetails.criminalRecord || '',
@@ -479,6 +482,7 @@ export function ContestantTable({
               <TableHead>Mobile</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Attending With</TableHead>
+              <TableHead>Group Size</TableHead>
               <TableHead>City</TableHead>
               <TableHead>Medical Conditions</TableHead>
               <TableHead>Mobility/Access Notes</TableHead>
@@ -557,6 +561,9 @@ export function ContestantTable({
                   <TableCell>{contestant.phone || "-"}</TableCell>
                   <TableCell>{contestant.email || "-"}</TableCell>
                   <TableCell>{contestant.attendingWith || "-"}</TableCell>
+                  <TableCell>
+                    {contestant.groupSize != null ? contestant.groupSize : "-"}
+                  </TableCell>
                   <TableCell>{contestant.location || "-"}</TableCell>
                   <TableCell className="max-w-[200px] truncate" title={contestant.medicalInfo || ""}>
                     {contestant.medicalInfo || "-"}
@@ -696,7 +703,7 @@ export function ContestantTable({
                         </Select>
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                       <div className="space-y-1">
                         <Label htmlFor="edit-attending" className="text-xs">Attending With</Label>
                         <Input
@@ -706,6 +713,25 @@ export function ContestantTable({
                           data-testid="input-edit-attending"
                           className="h-8"
                         />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-group-size" className="text-xs">Group Size</Label>
+                        <Select 
+                          value={editFormData.groupSize != null ? String(editFormData.groupSize) : 'undefined'} 
+                          onValueChange={(value) => handleEditFormChange('groupSize', value === 'undefined' ? null : parseInt(value))}
+                        >
+                          <SelectTrigger data-testid="select-edit-group-size" className="h-8 text-xs">
+                            <SelectValue placeholder="Size" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="undefined">Undefined</SelectItem>
+                            <SelectItem value="1">1 (Solo)</SelectItem>
+                            <SelectItem value="2">2 (Pair)</SelectItem>
+                            <SelectItem value="3">3</SelectItem>
+                            <SelectItem value="4">4</SelectItem>
+                            <SelectItem value="5">5+</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-1">
                         <Label htmlFor="edit-rating" className="text-xs">Score</Label>
