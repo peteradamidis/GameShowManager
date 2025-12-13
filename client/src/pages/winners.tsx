@@ -25,7 +25,7 @@ export default function WinnersPage() {
 
   const updateTXMutation = useMutation({
     mutationFn: async ({ id, txNumber, txDate, notifiedOfTx, photosSent }: any) => {
-      return apiRequest('PATCH', `/api/seat-assignments/${id}/winning-money`, {
+      return apiRequest('PATCH', `/api/seat-assignments/${id}/workflow`, {
         txNumber,
         txDate,
         notifiedOfTx,
