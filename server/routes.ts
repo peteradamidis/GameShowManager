@@ -2677,7 +2677,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               workflowFields[key] = value;
             }
           } else {
-            workflowFields[key] = value;
+            // Handle empty strings as null for all other fields
+            if (value === '' || value === null || value === undefined) {
+              workflowFields[key] = null;
+            } else {
+              workflowFields[key] = value;
+            }
           }
         }
       }

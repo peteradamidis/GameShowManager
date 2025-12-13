@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-13T04:23:41.973Z",
+  "exportedAt": "2025-12-13T04:26:34.326Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -9299,10 +9299,10 @@
         "bankOfferTaken": true,
         "spinTheWheel": true,
         "prize": "50c",
-        "txNumber": null,
-        "txDate": null,
-        "notifiedOfTx": null,
-        "photosSent": null,
+        "txNumber": "",
+        "txDate": "2025-12-31",
+        "notifiedOfTx": false,
+        "photosSent": false,
         "createdAt": "2025-12-13T04:12:00.533Z"
       },
       {
