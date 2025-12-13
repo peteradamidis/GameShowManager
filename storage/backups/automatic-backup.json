@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-13T03:18:44.580Z",
+  "exportedAt": "2025-12-13T04:01:58.618Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -7499,6 +7499,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:52.872Z"
       },
       {
@@ -7535,6 +7539,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:53.377Z"
       },
       {
@@ -7571,6 +7579,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:53.879Z"
       },
       {
@@ -7607,6 +7619,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:54.384Z"
       },
       {
@@ -7643,6 +7659,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:54.898Z"
       },
       {
@@ -7679,6 +7699,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:55.399Z"
       },
       {
@@ -7715,6 +7739,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:55.900Z"
       },
       {
@@ -7751,6 +7779,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:56.401Z"
       },
       {
@@ -7787,6 +7819,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:56.903Z"
       },
       {
@@ -7823,6 +7859,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:57.407Z"
       },
       {
@@ -7859,6 +7899,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:57.909Z"
       },
       {
@@ -7895,6 +7939,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:58.410Z"
       },
       {
@@ -7931,6 +7979,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:58.912Z"
       },
       {
@@ -7967,6 +8019,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:59.412Z"
       },
       {
@@ -8003,6 +8059,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:59.913Z"
       },
       {
@@ -8039,6 +8099,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:00.416Z"
       },
       {
@@ -8075,6 +8139,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:00.919Z"
       },
       {
@@ -8111,6 +8179,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:01.421Z"
       },
       {
@@ -8147,6 +8219,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:01.923Z"
       },
       {
@@ -8183,6 +8259,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:02.426Z"
       },
       {
@@ -8219,6 +8299,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:02.928Z"
       },
       {
@@ -8255,6 +8339,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:03.431Z"
       },
       {
@@ -8291,6 +8379,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:03.932Z"
       },
       {
@@ -8327,6 +8419,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:04.435Z"
       },
       {
@@ -8363,6 +8459,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:04.936Z"
       },
       {
@@ -8399,6 +8499,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:05.444Z"
       },
       {
@@ -8435,6 +8539,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:05.947Z"
       },
       {
@@ -8471,6 +8579,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:06.448Z"
       },
       {
@@ -8507,6 +8619,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:06.950Z"
       },
       {
@@ -8543,6 +8659,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:07.453Z"
       },
       {
@@ -8579,6 +8699,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:07.956Z"
       },
       {
@@ -8615,6 +8739,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:08.459Z"
       },
       {
@@ -8651,6 +8779,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:08.962Z"
       },
       {
@@ -8687,6 +8819,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:09.462Z"
       },
       {
@@ -8723,6 +8859,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:09.964Z"
       },
       {
@@ -8759,6 +8899,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:10.465Z"
       },
       {
@@ -8795,6 +8939,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:10.968Z"
       },
       {
@@ -8831,6 +8979,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:11.469Z"
       },
       {
@@ -8867,6 +9019,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:11.971Z"
       },
       {
@@ -8903,6 +9059,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:12.471Z"
       },
       {
@@ -8939,6 +9099,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:12.975Z"
       },
       {
@@ -8975,6 +9139,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:13.477Z"
       },
       {
@@ -9011,6 +9179,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:13.979Z"
       },
       {
@@ -9047,6 +9219,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:14.481Z"
       },
       {
@@ -9083,6 +9259,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:15:14.986Z"
       },
       {
@@ -9110,15 +9290,19 @@
         "otdNotes": null,
         "standbyReplacementSwaps": null,
         "rxNumber": "1",
-        "rxEpNumber": null,
-        "caseNumber": "1",
-        "winningMoneyRole": "player",
-        "winningMoneyAmount": 2000,
-        "caseAmount": 5000,
+        "rxEpNumber": "3001",
+        "caseNumber": "2",
+        "winningMoneyRole": "case_holder",
+        "winningMoneyAmount": 250,
+        "caseAmount": null,
         "quickCash": null,
-        "bankOfferTaken": true,
-        "spinTheWheel": true,
-        "prize": "$10",
+        "bankOfferTaken": null,
+        "spinTheWheel": null,
+        "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:18.866Z"
       },
       {
@@ -9155,6 +9339,10 @@
         "bankOfferTaken": null,
         "spinTheWheel": null,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:17.368Z"
       },
       {
@@ -9191,6 +9379,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:12.351Z"
       },
       {
@@ -9227,6 +9419,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:12.869Z"
       },
       {
@@ -9263,6 +9459,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:13.370Z"
       },
       {
@@ -9299,6 +9499,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:13.869Z"
       },
       {
@@ -9335,6 +9539,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:14.369Z"
       },
       {
@@ -9371,6 +9579,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:14.870Z"
       },
       {
@@ -9407,6 +9619,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:15.371Z"
       },
       {
@@ -9443,6 +9659,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:15.869Z"
       },
       {
@@ -9479,6 +9699,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:16.369Z"
       },
       {
@@ -9515,6 +9739,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:16.868Z"
       },
       {
@@ -9551,6 +9779,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:17.866Z"
       },
       {
@@ -9587,6 +9819,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:18.364Z"
       },
       {
@@ -9623,6 +9859,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:19.366Z"
       },
       {
@@ -9659,6 +9899,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:19.867Z"
       },
       {
@@ -9695,6 +9939,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:20.366Z"
       },
       {
@@ -9731,6 +9979,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:20.864Z"
       },
       {
@@ -9767,6 +10019,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:21.362Z"
       },
       {
@@ -9803,6 +10059,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:21.859Z"
       },
       {
@@ -9839,6 +10099,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:22.358Z"
       },
       {
@@ -9875,6 +10139,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:22.858Z"
       },
       {
@@ -9911,6 +10179,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:23.366Z"
       },
       {
@@ -9947,6 +10219,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:23.867Z"
       },
       {
@@ -9983,6 +10259,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:24.367Z"
       },
       {
@@ -10019,6 +10299,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:24.866Z"
       },
       {
@@ -10055,6 +10339,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:25.366Z"
       },
       {
@@ -10091,6 +10379,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:25.865Z"
       },
       {
@@ -10127,6 +10419,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:26.365Z"
       },
       {
@@ -10163,6 +10459,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:26.874Z"
       },
       {
@@ -10199,6 +10499,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:27.374Z"
       },
       {
@@ -10235,6 +10539,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:27.881Z"
       },
       {
@@ -10271,6 +10579,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:28.379Z"
       },
       {
@@ -10307,6 +10619,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:28.875Z"
       },
       {
@@ -10343,6 +10659,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:29.375Z"
       },
       {
@@ -10379,6 +10699,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:29.874Z"
       },
       {
@@ -10415,6 +10739,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:30.382Z"
       },
       {
@@ -10451,6 +10779,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:30.879Z"
       },
       {
@@ -10487,6 +10819,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:31.379Z"
       },
       {
@@ -10523,6 +10859,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:31.876Z"
       },
       {
@@ -10559,6 +10899,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:32.374Z"
       },
       {
@@ -10595,6 +10939,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:32.871Z"
       },
       {
@@ -10631,6 +10979,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:33.368Z"
       },
       {
@@ -10667,6 +11019,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:33.866Z"
       },
       {
@@ -10703,6 +11059,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:34.365Z"
       },
       {
@@ -10739,6 +11099,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:34.865Z"
       },
       {
@@ -10775,6 +11139,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:35.362Z"
       },
       {
@@ -10811,6 +11179,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:35.861Z"
       },
       {
@@ -10847,6 +11219,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:36.359Z"
       },
       {
@@ -10883,6 +11259,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:36.857Z"
       },
       {
@@ -10919,6 +11299,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:37.356Z"
       },
       {
@@ -10955,6 +11339,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:37.854Z"
       },
       {
@@ -10991,6 +11379,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:38.353Z"
       },
       {
@@ -11027,6 +11419,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:38.851Z"
       },
       {
@@ -11063,6 +11459,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:39.349Z"
       },
       {
@@ -11099,6 +11499,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:39.846Z"
       },
       {
@@ -11135,6 +11539,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:40.344Z"
       },
       {
@@ -11171,6 +11579,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:40.841Z"
       },
       {
@@ -11207,6 +11619,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:41.338Z"
       },
       {
@@ -11243,6 +11659,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:41.836Z"
       },
       {
@@ -11279,6 +11699,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:42.336Z"
       },
       {
@@ -11315,6 +11739,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:42.834Z"
       },
       {
@@ -11351,6 +11779,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:43.331Z"
       },
       {
@@ -11387,6 +11819,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:43.830Z"
       },
       {
@@ -11423,6 +11859,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:44.327Z"
       },
       {
@@ -11459,6 +11899,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:44.829Z"
       },
       {
@@ -11495,6 +11939,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:45.329Z"
       },
       {
@@ -11531,6 +11979,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:45.831Z"
       },
       {
@@ -11567,6 +12019,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:46.335Z"
       },
       {
@@ -11603,6 +12059,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:46.839Z"
       },
       {
@@ -11639,6 +12099,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:47.343Z"
       },
       {
@@ -11675,6 +12139,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:47.844Z"
       },
       {
@@ -11711,6 +12179,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:48.347Z"
       },
       {
@@ -11747,6 +12219,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:48.850Z"
       },
       {
@@ -11783,6 +12259,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:49.354Z"
       },
       {
@@ -11819,6 +12299,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:49.863Z"
       },
       {
@@ -11855,6 +12339,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:50.364Z"
       },
       {
@@ -11891,6 +12379,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:50.865Z"
       },
       {
@@ -11927,6 +12419,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:51.367Z"
       },
       {
@@ -11963,6 +12459,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:51.868Z"
       },
       {
@@ -11999,6 +12499,10 @@
         "bankOfferTaken": false,
         "spinTheWheel": false,
         "prize": null,
+        "txNumber": null,
+        "txDate": null,
+        "notifiedOfTx": null,
+        "photosSent": null,
         "createdAt": "2025-12-12T13:14:52.370Z"
       }
     ],

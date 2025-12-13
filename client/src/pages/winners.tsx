@@ -137,14 +137,6 @@ export default function WinnersPage() {
       {/* Quick Export */}
       <div className="flex justify-end gap-2">
         <Button
-          variant={showTX ? "default" : "outline"}
-          onClick={() => setShowTX(!showTX)}
-          size="sm"
-          data-testid="button-toggle-tx"
-        >
-          {showTX ? 'Hide' : 'Show'} TX
-        </Button>
-        <Button
           onClick={handleDownloadExcel}
           disabled={isDownloading}
           size="sm"
@@ -184,6 +176,14 @@ export default function WinnersPage() {
               data-testid="button-filter-case-holder"
             >
               Case Holders
+            </Button>
+            <Button
+              variant={showTX ? "default" : "outline"}
+              onClick={() => setShowTX(!showTX)}
+              size="sm"
+              data-testid="button-toggle-tx"
+            >
+              TX
             </Button>
           </div>
         </div>
