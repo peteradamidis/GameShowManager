@@ -1314,6 +1314,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bankOfferTaken: a.bankOfferTaken,
           spinTheWheel: a.spinTheWheel,
           prize: a.prize,
+          txNumber: a.txNumber || '',
+          txDate: a.txDate || '',
+          notifiedOfTx: a.notifiedOfTx,
+          photosSent: a.photosSent,
         };
       });
 
@@ -2642,7 +2646,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update booking workflow fields for a seat assignment
-  app.patch("/api/seat-assignments/:id/workflow", async (req, res) => {
+  app.patch("/api/seat-assignments/:id/workflow", requireAuth, async (req, res) => {
     try {
       const allowedFields = [
         'firstNations', 'rating', 'location', 'medicalQuestion', 
