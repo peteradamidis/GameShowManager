@@ -642,7 +642,24 @@ export function ContestantTable({
                   <TableCell>
                     {contestant.groupSize != null ? contestant.groupSize : "-"}
                   </TableCell>
-                  <TableCell>{contestant.location || "-"}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <span>{contestant.location || "-"}</span>
+                      {(() => {
+                        const distanceInfo = getDistanceFromDocklands(contestant.location);
+                        if (distanceInfo?.isOver60km) {
+                          return (
+                            <AlertTriangle 
+                              className="h-4 w-4 text-orange-500 flex-shrink-0" 
+                              title={`${distanceInfo.distance}km from Docklands`}
+                              data-testid={`icon-distance-warning-${contestant.id}`}
+                            />
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+                  </TableCell>
                   <TableCell className="max-w-[200px] truncate" title={contestant.medicalInfo || ""}>
                     {contestant.medicalInfo || "-"}
                   </TableCell>
