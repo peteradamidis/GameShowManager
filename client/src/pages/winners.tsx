@@ -239,12 +239,12 @@ export default function WinnersPage() {
               <TableBody>
                 {allWinners.map((winner) => (
                   <TableRow key={winner.id} className="hover:bg-muted/30" data-testid={`row-winner-${winner.id}`}>
-                    <TableCell className="text-sm">{winner.recordDayDate}</TableCell>
-                    <TableCell className="text-sm font-mono">{winner.rxNumber || '-'}</TableCell>
-                    <TableCell className="text-sm font-mono border-r">{winner.rxEpNumber || '-'}</TableCell>
+                    <TableCell className="text-xs">{winner.recordDayDate}</TableCell>
+                    <TableCell className="text-xs font-mono">{winner.rxNumber || '-'}</TableCell>
+                    <TableCell className="text-xs font-mono border-r">{winner.rxEpNumber || '-'}</TableCell>
                     {showTX && (
                       <>
-                        <TableCell className="text-sm">
+                        <TableCell className="text-xs">
                           {editingTX && editingTX.id === winner.id && editingTX.field === 'txNumber' ? (
                             <input
                               type="text"
@@ -271,7 +271,7 @@ export default function WinnersPage() {
                             </span>
                           )}
                         </TableCell>
-                        <TableCell className="text-sm">
+                        <TableCell className="text-xs">
                           {editingTX && editingTX.id === winner.id && editingTX.field === 'txDate' ? (
                             <input
                               type="date"
@@ -340,17 +340,17 @@ export default function WinnersPage() {
                         </TableCell>
                       </>
                     )}
-                    <TableCell className="text-sm font-semibold">
+                    <TableCell className="text-xs font-semibold">
                       {winner.winningMoneyRole === 'player' ? 'Player' : 'Case Holder'}
                     </TableCell>
-                    <TableCell className="font-medium">{winner.contestantName}</TableCell>
-                    <TableCell className="text-sm">{winner.phone || '-'}</TableCell>
-                    <TableCell className="text-sm border-r">{winner.email || '-'}</TableCell>
-                    <TableCell className="text-sm font-mono">{winner.caseNumber || '-'}</TableCell>
-                    <TableCell className="text-sm font-mono">
+                    <TableCell className="text-xs">{winner.contestantName}</TableCell>
+                    <TableCell className="text-xs">{winner.phone || '-'}</TableCell>
+                    <TableCell className="text-xs border-r">{winner.email || '-'}</TableCell>
+                    <TableCell className="text-xs font-mono">{winner.caseNumber || '-'}</TableCell>
+                    <TableCell className="text-xs font-mono">
                       {winner.caseAmount ? `$${winner.caseAmount.toLocaleString()}` : '-'}
                     </TableCell>
-                    <TableCell className="text-sm font-mono">
+                    <TableCell className="text-xs font-mono">
                       {winner.quickCash ? `$${winner.quickCash.toLocaleString()}` : '-'}
                     </TableCell>
                     <TableCell className="text-center">
@@ -370,7 +370,7 @@ export default function WinnersPage() {
                           <X className="h-4 w-4 text-muted-foreground mx-auto" />
                       ) : '-'}
                     </TableCell>
-                    <TableCell className="text-sm text-green-600 dark:text-green-400">
+                    <TableCell className="text-xs text-green-600 dark:text-green-400">
                       {winner.spinTheWheel && winner.prize ? (
                         <span>{winner.prize}</span>
                       ) : '-'}
