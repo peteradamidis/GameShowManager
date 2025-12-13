@@ -2648,7 +2648,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'firstNations', 'rating', 'location', 'medicalQuestion', 
         'criminalBankruptcy', 'castingCategory', 'notes', 
         'bookingEmailSent', 'confirmedRsvp', 'paperworkSent', 
-        'paperworkReceived', 'signedIn', 'otdNotes', 'standbyReplacementSwaps'
+        'paperworkReceived', 'signedIn', 'otdNotes', 'standbyReplacementSwaps',
+        'rxNumber', 'rxEpNumber', 'caseNumber', 'winningMoneyRole', 'winningMoneyAmount',
+        'caseAmount', 'quickCash', 'bankOfferTaken', 'spinTheWheel', 'prize',
+        'txNumber', 'txDate', 'notifiedOfTx', 'photosSent'
       ];
       
       const timestampFields = [
