@@ -222,11 +222,15 @@ export default function Contestants() {
   }
   if (filterGroupSize !== "all") {
     displayedContestants = displayedContestants.filter(c => {
-      const groupSizeVal = c.groupSize;
-      if (filterGroupSize === "undefined") return groupSizeVal == null;
-      if (filterGroupSize === "1") return groupSizeVal === 1;
-      if (filterGroupSize === "2") return groupSizeVal === 2;
-      if (filterGroupSize === "3+") return groupSizeVal != null && groupSizeVal >= 3;
+      // Calculate group size from attendingWith field (same logic as seating chart)
+      const getGroupSize = (attendingWith: string | null | undefined): number => {
+        if (!attendingWith || !attendingWith.trim()) return 1;
+        return attendingWith.split(',').length + 1; // +1 to include the contestant themselves
+      };
+      const groupSize = getGroupSize(c.attendingWith);
+      if (filterGroupSize === "1") return groupSize === 1;
+      if (filterGroupSize === "2") return groupSize === 2;
+      if (filterGroupSize === "3+") return groupSize >= 3;
       return true;
     });
   }
@@ -796,7 +800,6 @@ export default function Contestants() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Groups</SelectItem>
-                <SelectItem value="undefined">Undefined</SelectItem>
                 <SelectItem value="1">Solo (1)</SelectItem>
                 <SelectItem value="2">Pair (2)</SelectItem>
                 <SelectItem value="3+">3+ Group</SelectItem>
@@ -859,7 +862,7 @@ export default function Contestants() {
           )}
           {filterGroupSize !== "all" && (
             <Badge variant="outline">
-              Group Size: {filterGroupSize === "undefined" ? "Undefined" : filterGroupSize === "1" ? "Solo (1)" : filterGroupSize === "2" ? "Pair (2)" : "3+"}
+              Group Size: {filterGroupSize === "1" ? "Solo (1)" : filterGroupSize === "2" ? "Pair (2)" : "3+"}
             </Badge>
           )}
         </div>
