@@ -343,14 +343,14 @@ export default function WinnersPage() {
                     <TableCell className="text-xs font-semibold">
                       {winner.winningMoneyRole === 'player' ? 'Player' : 'Case Holder'}
                     </TableCell>
-                    <TableCell className="text-xs">{winner.contestantName}</TableCell>
+                    <TableCell className="text-xs min-w-40">{winner.contestantName}</TableCell>
                     <TableCell className="text-xs min-w-32">{winner.phone || '-'}</TableCell>
                     <TableCell className="text-xs border-r">{winner.email || '-'}</TableCell>
                     <TableCell className="text-xs font-mono">{winner.caseNumber || '-'}</TableCell>
-                    <TableCell className="text-xs font-mono">
+                    <TableCell className="text-xs font-mono max-w-24">
                       {winner.caseAmount ? `$${winner.caseAmount.toLocaleString()}` : '-'}
                     </TableCell>
-                    <TableCell className="text-xs font-mono">
+                    <TableCell className="text-xs font-mono max-w-24">
                       {winner.quickCash ? `$${winner.quickCash.toLocaleString()}` : '-'}
                     </TableCell>
                     <TableCell className="text-center">
@@ -360,7 +360,7 @@ export default function WinnersPage() {
                           <X className="h-4 w-4 text-muted-foreground mx-auto" />
                       ) : '-'}
                     </TableCell>
-                    <TableCell className={`text-right font-semibold ${winner.spinTheWheel ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+                    <TableCell className={`text-right font-semibold text-xs ${winner.spinTheWheel ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
                       ${winner.winningMoneyAmount?.toLocaleString()}
                     </TableCell>
                     <TableCell className="text-center">
