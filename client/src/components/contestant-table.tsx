@@ -649,11 +649,13 @@ export function ContestantTable({
                         const distanceInfo = getDistanceFromDocklands(contestant.location);
                         if (distanceInfo?.isOver60km) {
                           return (
-                            <AlertTriangle 
-                              className="h-4 w-4 text-orange-500 flex-shrink-0" 
+                            <span 
+                              className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-yellow-200/50 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-500 text-xs font-bold flex-shrink-0" 
                               title={`${distanceInfo.distance}km from Docklands`}
                               data-testid={`icon-distance-warning-${contestant.id}`}
-                            />
+                            >
+                              !
+                            </span>
                           );
                         }
                         return null;
