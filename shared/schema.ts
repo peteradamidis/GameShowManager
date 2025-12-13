@@ -97,6 +97,12 @@ export const seatAssignments = pgTable("seat_assignments", {
   spinTheWheel: boolean("spin_the_wheel"), // Whether they spun the wheel
   prize: text("prize"), // Prize won from spinning the wheel
   
+  // TX tracking fields
+  txNumber: text("tx_number"), // TX number
+  txDate: date("tx_date"), // Date of TX
+  notifiedOfTx: boolean("notified_of_tx"), // Whether contestant was notified of TX
+  photosSent: boolean("photos_sent"), // Whether photos were sent
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   // Ensure one contestant per record day

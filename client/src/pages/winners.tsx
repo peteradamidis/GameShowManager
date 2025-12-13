@@ -1,9 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   Table,
   TableBody,
@@ -12,12 +13,41 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import { Trophy, Users, Check, X, Download } from "lucide-react";
 
 export default function WinnersPage() {
   const { toast } = useToast();
   const [filterType, setFilterType] = useState<'all' | 'player' | 'case_holder'>('all');
   const [isDownloading, setIsDownloading] = useState(false);
+  const [showTX, setShowTX] = useState(false);
+  const [editingTX, setEditingTX] = useState<{ id: string; field: string; value: any } | null>(null);
+
+  const updateTXMutation = useMutation({
+    mutationFn: async ({ id, txNumber, txDate, notifiedOfTx, photosSent }: any) => {
+      return apiRequest('PATCH', `/api/seat-assignments/${id}/winning-money`, {
+        txNumber,
+        txDate,
+        notifiedOfTx,
+        photosSent,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments/with-winning-money'] });
+      toast({
+        title: "TX updated",
+        description: "TX information saved successfully"
+      });
+      setEditingTX(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update failed",
+        description: error.message || "Could not update TX information",
+        variant: "destructive"
+      });
+    },
+  });
 
   const handleDownloadExcel = async () => {
     try {
@@ -105,7 +135,15 @@ export default function WinnersPage() {
       </div>
 
       {/* Quick Export */}
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button
+          variant={showTX ? "default" : "outline"}
+          onClick={() => setShowTX(!showTX)}
+          size="sm"
+          data-testid="button-toggle-tx"
+        >
+          {showTX ? 'Hide' : 'Show'} TX
+        </Button>
         <Button
           onClick={handleDownloadExcel}
           disabled={isDownloading}
@@ -166,6 +204,9 @@ export default function WinnersPage() {
                 {/* Group header row */}
                 <TableRow className="bg-yellow-100 dark:bg-yellow-900 border-b-2">
                   <TableHead colSpan={3} className="text-center font-bold bg-yellow-100 dark:bg-yellow-900 border-r">RECORD</TableHead>
+                  {showTX && (
+                    <TableHead colSpan={4} className="text-center font-bold bg-pink-100 dark:bg-pink-900 border-r">TX</TableHead>
+                  )}
                   <TableHead colSpan={5} className="text-center font-bold bg-yellow-100 dark:bg-yellow-900 border-r">CONTESTANTS</TableHead>
                   <TableHead colSpan={8} className="text-center font-bold bg-green-100 dark:bg-green-900">WINNINGS</TableHead>
                 </TableRow>
@@ -174,6 +215,14 @@ export default function WinnersPage() {
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950">RX DATE</TableHead>
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950">RX DAY</TableHead>
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950 border-r">RX EP NO.</TableHead>
+                  {showTX && (
+                    <>
+                      <TableHead className="bg-pink-50 dark:bg-pink-950">TX NUMBER</TableHead>
+                      <TableHead className="bg-pink-50 dark:bg-pink-950">TX DATE</TableHead>
+                      <TableHead className="bg-pink-50 dark:bg-pink-950 text-center">NOTIFIED OF TX</TableHead>
+                      <TableHead className="bg-pink-50 dark:bg-pink-950 border-r text-center">PHOTOS SENT</TableHead>
+                    </>
+                  )}
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950">CONTESTANT TYPE</TableHead>
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950">CONTESTANT NAME</TableHead>
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950">PHONE</TableHead>
@@ -194,6 +243,104 @@ export default function WinnersPage() {
                     <TableCell className="text-sm">{winner.recordDayDate}</TableCell>
                     <TableCell className="text-sm font-mono">{winner.rxNumber || '-'}</TableCell>
                     <TableCell className="text-sm font-mono border-r">{winner.rxEpNumber || '-'}</TableCell>
+                    {showTX && (
+                      <>
+                        <TableCell className="text-sm">
+                          {editingTX && editingTX.id === winner.id && editingTX.field === 'txNumber' ? (
+                            <input
+                              type="text"
+                              value={editingTX.value}
+                              onChange={(e) => setEditingTX({ ...editingTX, value: e.target.value })}
+                              onBlur={() => {
+                                updateTXMutation.mutate({
+                                  id: winner.id,
+                                  txNumber: editingTX.value,
+                                  txDate: winner.txDate,
+                                  notifiedOfTx: winner.notifiedOfTx,
+                                  photosSent: winner.photosSent,
+                                });
+                              }}
+                              autoFocus
+                              className="w-full px-2 py-1 border rounded"
+                            />
+                          ) : (
+                            <span
+                              onClick={() => setEditingTX({ id: winner.id, field: 'txNumber', value: winner.txNumber || '' })}
+                              className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded"
+                            >
+                              {winner.txNumber || '-'}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {editingTX && editingTX.id === winner.id && editingTX.field === 'txDate' ? (
+                            <input
+                              type="date"
+                              value={editingTX.value}
+                              onChange={(e) => setEditingTX({ ...editingTX, value: e.target.value })}
+                              onBlur={() => {
+                                updateTXMutation.mutate({
+                                  id: winner.id,
+                                  txNumber: winner.txNumber,
+                                  txDate: editingTX.value,
+                                  notifiedOfTx: winner.notifiedOfTx,
+                                  photosSent: winner.photosSent,
+                                });
+                              }}
+                              autoFocus
+                              className="w-full px-2 py-1 border rounded"
+                            />
+                          ) : (
+                            <span
+                              onClick={() => setEditingTX({ id: winner.id, field: 'txDate', value: winner.txDate || '' })}
+                              className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded"
+                            >
+                              {winner.txDate || '-'}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <button
+                            onClick={() => {
+                              updateTXMutation.mutate({
+                                id: winner.id,
+                                txNumber: winner.txNumber,
+                                txDate: winner.txDate,
+                                notifiedOfTx: !winner.notifiedOfTx,
+                                photosSent: winner.photosSent,
+                              });
+                            }}
+                            className="mx-auto"
+                          >
+                            {winner.notifiedOfTx ? (
+                              <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            ) : (
+                              <X className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </button>
+                        </TableCell>
+                        <TableCell className="text-center border-r">
+                          <button
+                            onClick={() => {
+                              updateTXMutation.mutate({
+                                id: winner.id,
+                                txNumber: winner.txNumber,
+                                txDate: winner.txDate,
+                                notifiedOfTx: winner.notifiedOfTx,
+                                photosSent: !winner.photosSent,
+                              });
+                            }}
+                            className="mx-auto"
+                          >
+                            {winner.photosSent ? (
+                              <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            ) : (
+                              <X className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </button>
+                        </TableCell>
+                      </>
+                    )}
                     <TableCell className="text-sm font-semibold">
                       {winner.winningMoneyRole === 'player' ? 'Player' : 'Case Holder'}
                     </TableCell>
