@@ -22,6 +22,7 @@ export default function WinnersPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [showTX, setShowTX] = useState(false);
   const [editingTX, setEditingTX] = useState<{ id: string; field: string; value: any } | null>(null);
+  const [searchRxDayOrDate, setSearchRxDayOrDate] = useState('');
 
   const updateTXMutation = useMutation({
     mutationFn: async ({ id, txNumber, txDate, notifiedOfTx, photosSent }: any) => {
@@ -109,8 +110,16 @@ export default function WinnersPage() {
       winners = winners.filter((w) => w.winningMoneyRole === filterType);
     }
     
+    if (searchRxDayOrDate.trim()) {
+      const search = searchRxDayOrDate.toLowerCase().trim();
+      winners = winners.filter((w) => 
+        (w.rxNumber && w.rxNumber.toLowerCase().includes(search)) ||
+        (w.recordDayDate && w.recordDayDate.includes(search))
+      );
+    }
+    
     return winners;
-  }, [allAssignments, filterType]);
+  }, [allAssignments, filterType, searchRxDayOrDate]);
 
   if (isLoading) {
     return (
@@ -155,36 +164,45 @@ export default function WinnersPage() {
             <Badge variant="outline">{allWinners.length}</Badge>
           </div>
 
-          <div className="flex gap-2">
-            <Button
-              variant={filterType === 'all' ? 'default' : 'outline'}
-              onClick={() => setFilterType('all')}
-              data-testid="button-filter-all"
-            >
-              All
-            </Button>
-            <Button
-              variant={filterType === 'player' ? 'default' : 'outline'}
-              onClick={() => setFilterType('player')}
-              data-testid="button-filter-player"
-            >
-              Players
-            </Button>
-            <Button
-              variant={filterType === 'case_holder' ? 'default' : 'outline'}
-              onClick={() => setFilterType('case_holder')}
-              data-testid="button-filter-case-holder"
-            >
-              Case Holders
-            </Button>
-            <Button
-              variant={showTX ? "default" : "outline"}
-              onClick={() => setShowTX(!showTX)}
-              size="sm"
-              data-testid="button-toggle-tx"
-            >
-              TX
-            </Button>
+          <div className="flex flex-col gap-3">
+            <div className="flex gap-2">
+              <Button
+                variant={filterType === 'all' ? 'default' : 'outline'}
+                onClick={() => setFilterType('all')}
+                data-testid="button-filter-all"
+              >
+                All
+              </Button>
+              <Button
+                variant={filterType === 'player' ? 'default' : 'outline'}
+                onClick={() => setFilterType('player')}
+                data-testid="button-filter-player"
+              >
+                Players
+              </Button>
+              <Button
+                variant={filterType === 'case_holder' ? 'default' : 'outline'}
+                onClick={() => setFilterType('case_holder')}
+                data-testid="button-filter-case-holder"
+              >
+                Case Holders
+              </Button>
+              <Button
+                variant={showTX ? "default" : "outline"}
+                onClick={() => setShowTX(!showTX)}
+                size="sm"
+                data-testid="button-toggle-tx"
+              >
+                TX
+              </Button>
+            </div>
+            <Input
+              placeholder="Search by RX day or date (YYYY-MM-DD)"
+              value={searchRxDayOrDate}
+              onChange={(e) => setSearchRxDayOrDate(e.target.value)}
+              data-testid="input-search-rx-day-date"
+              className="max-w-sm"
+            />
           </div>
         </div>
 
