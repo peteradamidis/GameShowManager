@@ -207,7 +207,7 @@ export default function WinnersPage() {
                   {showTX && (
                     <TableHead colSpan={4} className="text-center font-bold bg-pink-100 dark:bg-pink-900 border-r">TX</TableHead>
                   )}
-                  <TableHead colSpan={5} className="text-center font-bold bg-yellow-100 dark:bg-yellow-900 border-r">CONTESTANTS</TableHead>
+                  <TableHead colSpan={4} className="text-center font-bold bg-yellow-100 dark:bg-yellow-900 border-r">CONTESTANTS</TableHead>
                   <TableHead colSpan={8} className="text-center font-bold bg-green-100 dark:bg-green-900">WINNINGS</TableHead>
                 </TableRow>
                 {/* Column headers */}
@@ -226,8 +226,7 @@ export default function WinnersPage() {
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950">CONTESTANT TYPE</TableHead>
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950">CONTESTANT NAME</TableHead>
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950">PHONE</TableHead>
-                  <TableHead className="bg-yellow-50 dark:bg-yellow-950">EMAIL</TableHead>
-                  <TableHead className="bg-yellow-50 dark:bg-yellow-950 border-r">AGE</TableHead>
+                  <TableHead className="bg-yellow-50 dark:bg-yellow-950 border-r">EMAIL</TableHead>
                   <TableHead className="bg-green-50 dark:bg-green-950">CASE NUMBER</TableHead>
                   <TableHead className="bg-green-50 dark:bg-green-950">CASE AMOUNT</TableHead>
                   <TableHead className="bg-green-50 dark:bg-green-950">QUICK CASH</TableHead>
@@ -346,8 +345,7 @@ export default function WinnersPage() {
                     </TableCell>
                     <TableCell className="font-medium">{winner.contestantName}</TableCell>
                     <TableCell className="text-sm">{winner.phone || '-'}</TableCell>
-                    <TableCell className="text-sm">{winner.email || '-'}</TableCell>
-                    <TableCell className="text-sm border-r">{winner.age}</TableCell>
+                    <TableCell className="text-sm border-r">{winner.email || '-'}</TableCell>
                     <TableCell className="text-sm font-mono">{winner.caseNumber || '-'}</TableCell>
                     <TableCell className="text-sm font-mono">
                       {winner.caseAmount ? `$${winner.caseAmount.toLocaleString()}` : '-'}
