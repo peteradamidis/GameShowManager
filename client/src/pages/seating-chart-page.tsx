@@ -62,6 +62,9 @@ export default function SeatingChartPage() {
   const [selectedSeat, setSelectedSeat] = useState<string>("");
   const [selectedContestant, setSelectedContestant] = useState<string>("");
   const [contestantSearch, setContestantSearch] = useState<string>("");
+  const [filterRating, setFilterRating] = useState<string>("all");
+  const [filterGender, setFilterGender] = useState<string>("all");
+  const [filterGroupSize, setFilterGroupSize] = useState<string>("all");
   
   // Cancel dialog state
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -137,16 +140,45 @@ export default function SeatingChartPage() {
     return allContestants.filter((c: any) => !seatedIds.has(c.id));
   }, [assignments, allContestants]);
 
-  // Filter available contestants by search term
+  // Helper to calculate group size from attendingWith field
+  const getGroupSize = (attendingWith: string | null | undefined): number => {
+    if (!attendingWith || !attendingWith.trim()) return 1;
+    return attendingWith.split(',').length + 1; // +1 to include the contestant themselves
+  };
+
+  // Filter available contestants by search term and filters
   const filteredContestants = useMemo(() => {
-    if (!contestantSearch.trim()) return availableContestants;
-    const searchLower = contestantSearch.toLowerCase();
-    return availableContestants.filter((c: any) => 
-      c.name?.toLowerCase().includes(searchLower) ||
-      c.auditionRating?.toLowerCase().includes(searchLower) ||
-      c.attendingWith?.toLowerCase().includes(searchLower)
-    );
-  }, [availableContestants, contestantSearch]);
+    return availableContestants.filter((c: any) => {
+      // Name search filter
+      if (contestantSearch.trim()) {
+        const searchLower = contestantSearch.toLowerCase();
+        const matchesSearch = 
+          c.name?.toLowerCase().includes(searchLower) ||
+          c.attendingWith?.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
+      
+      // Rating filter
+      if (filterRating !== "all" && c.auditionRating !== filterRating) {
+        return false;
+      }
+      
+      // Gender filter
+      if (filterGender !== "all" && c.gender !== filterGender) {
+        return false;
+      }
+      
+      // Group size filter
+      if (filterGroupSize !== "all") {
+        const groupSize = getGroupSize(c.attendingWith);
+        if (filterGroupSize === "1" && groupSize !== 1) return false;
+        if (filterGroupSize === "2" && groupSize !== 2) return false;
+        if (filterGroupSize === "3+" && groupSize < 3) return false;
+      }
+      
+      return true;
+    });
+  }, [availableContestants, contestantSearch, filterRating, filterGender, filterGroupSize]);
 
   // Check if record day is locked (RX Day Mode)
   const isLocked = currentRecordDay?.lockedAt != null;
@@ -412,6 +444,9 @@ export default function SeatingChartPage() {
     setSelectedSeat(seatLabel);
     setSelectedContestant("");
     setContestantSearch("");
+    setFilterRating("all");
+    setFilterGender("all");
+    setFilterGroupSize("all");
     setAssignDialogOpen(true);
   };
 
@@ -713,7 +748,7 @@ export default function SeatingChartPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by name, rating, or group..."
+                    placeholder="Search by name or group..."
                     value={contestantSearch}
                     onChange={(e) => setContestantSearch(e.target.value)}
                     className="pl-9"
@@ -721,15 +756,54 @@ export default function SeatingChartPage() {
                   />
                 </div>
                 
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={filterRating} onValueChange={setFilterRating}>
+                    <SelectTrigger className="w-[100px]" data-testid="select-filter-rating">
+                      <SelectValue placeholder="Rating" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Ratings</SelectItem>
+                      <SelectItem value="A+">A+</SelectItem>
+                      <SelectItem value="A">A</SelectItem>
+                      <SelectItem value="B+">B+</SelectItem>
+                      <SelectItem value="B">B</SelectItem>
+                      <SelectItem value="C">C</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={filterGender} onValueChange={setFilterGender}>
+                    <SelectTrigger className="w-[100px]" data-testid="select-filter-gender">
+                      <SelectValue placeholder="Gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Genders</SelectItem>
+                      <SelectItem value="Female">Female</SelectItem>
+                      <SelectItem value="Male">Male</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={filterGroupSize} onValueChange={setFilterGroupSize}>
+                    <SelectTrigger className="w-[110px]" data-testid="select-filter-group-size">
+                      <SelectValue placeholder="Group" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Groups</SelectItem>
+                      <SelectItem value="1">Solo</SelectItem>
+                      <SelectItem value="2">Pair</SelectItem>
+                      <SelectItem value="3+">3+ Group</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
                 <div className="text-xs text-muted-foreground">
                   {filteredContestants.length} of {availableContestants.length} contestants
                 </div>
                 
-                <ScrollArea className="h-[320px] border rounded-md">
+                <ScrollArea className="h-[280px] border rounded-md">
                   <div className="p-2 space-y-1">
                     {filteredContestants.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-8">
-                        No contestants match your search.
+                        No contestants match your filters.
                       </p>
                     ) : (
                       filteredContestants.map((contestant: any) => {
