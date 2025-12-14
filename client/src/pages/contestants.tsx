@@ -785,7 +785,10 @@ export default function Contestants() {
               <Filter className="w-3 h-3 inline mr-1" />
               Status
             </label>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <Select value={filterStatus} onValueChange={(value) => {
+              setSelectedContestants([]);
+              setFilterStatus(value);
+            }}>
               <SelectTrigger data-testid="select-filter-status">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
@@ -803,7 +806,10 @@ export default function Contestants() {
             <label className="text-sm font-medium mb-2 block">Rating</label>
             <Select 
               value={filterRating} 
-              onValueChange={setFilterRating}
+              onValueChange={(value) => {
+                setSelectedContestants([]);
+                setFilterRating(value);
+              }}
             >
               <SelectTrigger data-testid="select-filter-rating">
                 <SelectValue placeholder="All ratings" />
@@ -821,7 +827,10 @@ export default function Contestants() {
 
           <div className="flex-1 min-w-[150px] max-w-[180px]">
             <label className="text-sm font-medium mb-2 block">Group Size</label>
-            <Select value={filterGroupSize} onValueChange={setFilterGroupSize}>
+            <Select value={filterGroupSize} onValueChange={(value) => {
+              setSelectedContestants([]);
+              setFilterGroupSize(value);
+            }}>
               <SelectTrigger data-testid="select-filter-group-size">
                 <SelectValue placeholder="All Groups" />
               </SelectTrigger>
@@ -875,7 +884,10 @@ export default function Contestants() {
             <div className="flex gap-4 items-end flex-wrap">
               <div className="flex-1 min-w-[150px] max-w-[180px]">
                 <label className="text-sm font-medium mb-2 block">Gender</label>
-                <Select value={filterGender} onValueChange={setFilterGender}>
+                <Select value={filterGender} onValueChange={(value) => {
+                  setSelectedContestants([]);
+                  setFilterGender(value);
+                }}>
                   <SelectTrigger data-testid="select-filter-gender">
                     <SelectValue placeholder="All genders" />
                   </SelectTrigger>
@@ -892,7 +904,10 @@ export default function Contestants() {
 
               <div className="flex-1 min-w-[150px] max-w-[180px]">
                 <label className="text-sm font-medium mb-2 block">State</label>
-                <Select value={filterState} onValueChange={setFilterState}>
+                <Select value={filterState} onValueChange={(value) => {
+                  setSelectedContestants([]);
+                  setFilterState(value);
+                }}>
                   <SelectTrigger data-testid="select-filter-state">
                     <SelectValue placeholder="All states" />
                   </SelectTrigger>
@@ -911,7 +926,10 @@ export default function Contestants() {
                 <label className="text-sm font-medium mb-2 block">City</label>
                 <Select 
                   value={filterLocation} 
-                  onValueChange={setFilterLocation}
+                  onValueChange={(value) => {
+                    setSelectedContestants([]);
+                    setFilterLocation(value);
+                  }}
                   disabled={uniqueCities.length === 0}
                 >
                   <SelectTrigger data-testid="select-filter-location">
@@ -930,7 +948,10 @@ export default function Contestants() {
 
               <div className="flex-1 min-w-[150px] max-w-[180px]">
                 <label className="text-sm font-medium mb-2 block">Standby</label>
-                <Select value={filterStandbyStatus} onValueChange={setFilterStandbyStatus}>
+                <Select value={filterStandbyStatus} onValueChange={(value) => {
+                  setSelectedContestants([]);
+                  setFilterStandbyStatus(value);
+                }}>
                   <SelectTrigger data-testid="select-filter-standby">
                     <SelectValue placeholder="All" />
                   </SelectTrigger>
@@ -947,6 +968,7 @@ export default function Contestants() {
               <div className="flex-1 min-w-[150px] max-w-[180px]">
                 <label className="text-sm font-medium mb-2 block">Availability</label>
                 <Select value={filterRecordDayId || "na"} onValueChange={(value) => {
+                  setSelectedContestants([]);
                   setFilterRecordDayId(value === "na" ? "" : value);
                   setFilterResponseValue(value === "na" ? "all" : "yes");
                 }}>
@@ -972,7 +994,10 @@ export default function Contestants() {
               {filterRecordDayId && (
                 <div className="flex-1 min-w-[150px] max-w-[180px]">
                   <label className="text-sm font-medium mb-2 block">Response</label>
-                  <Select value={filterResponseValue} onValueChange={setFilterResponseValue}>
+                  <Select value={filterResponseValue} onValueChange={(value) => {
+                    setSelectedContestants([]);
+                    setFilterResponseValue(value);
+                  }}>
                     <SelectTrigger data-testid="select-filter-response">
                       <SelectValue placeholder="Yes" />
                     </SelectTrigger>
@@ -994,7 +1019,10 @@ export default function Contestants() {
                     type="text"
                     placeholder="From"
                     value={postcodeFrom}
-                    onChange={(e) => setPostcodeFrom(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    onChange={(e) => {
+                      setSelectedContestants([]);
+                      setPostcodeFrom(e.target.value.replace(/\D/g, '').slice(0, 4));
+                    }}
                     className="w-20"
                     data-testid="input-postcode-from"
                   />
@@ -1003,7 +1031,10 @@ export default function Contestants() {
                     type="text"
                     placeholder="To"
                     value={postcodeTo}
-                    onChange={(e) => setPostcodeTo(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    onChange={(e) => {
+                      setSelectedContestants([]);
+                      setPostcodeTo(e.target.value.replace(/\D/g, '').slice(0, 4));
+                    }}
                     className="w-20"
                     data-testid="input-postcode-to"
                   />
