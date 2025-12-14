@@ -206,6 +206,8 @@ export function ContestantTable({
   const [uploadingContestantId, setUploadingContestantId] = useState<string | null>(null);
   const [selectedPlayerType, setSelectedPlayerType] = useState<string>("");
   const [groupPreviewOpen, setGroupPreviewOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmContestantId, setDeleteConfirmContestantId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tableFileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -1310,9 +1312,9 @@ export function ContestantTable({
                     variant="destructive"
                     size="sm"
                     onClick={() => {
-                      if (selectedContestantId && onDeleteContestant) {
-                        onDeleteContestant(selectedContestantId);
-                        setDetailDialogOpen(false);
+                      if (selectedContestantId) {
+                        setDeleteConfirmContestantId(selectedContestantId);
+                        setDeleteConfirmOpen(true);
                       }
                     }}
                     data-testid="button-delete-contestant-detail"
@@ -1329,6 +1331,45 @@ export function ContestantTable({
               Loading contestant details...
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Confirm Delete
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to permanently delete {contestantDetails?.name}? This action cannot be undone and will remove all associated data.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button 
+              variant="outline"
+              onClick={() => setDeleteConfirmOpen(false)}
+              data-testid="button-cancel-delete"
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => {
+                if (deleteConfirmContestantId && onDeleteContestant) {
+                  onDeleteContestant(deleteConfirmContestantId);
+                  setDetailDialogOpen(false);
+                  setDeleteConfirmOpen(false);
+                }
+              }}
+              data-testid="button-confirm-delete"
+            >
+              <AlertTriangle className="h-4 w-4 mr-1" />
+              Delete Permanently
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
