@@ -753,21 +753,10 @@ export default function Contestants() {
             )}
           </div>
         </div>
-        {/* Data management buttons - Import and Delete (below booking buttons) */}
+        {/* Data management buttons - Import (below booking buttons) */}
         {selectedContestants.length > 0 && (
           <div className="flex gap-2 justify-end">
             <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={() => setDeleteConfirmOpen(true)}
-              disabled={deleteContestantMutation.isPending}
-              data-testid="button-delete-contestant"
-              className="text-destructive hover:text-destructive"
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Delete ({selectedContestants.length})
-            </Button>
           </div>
         )}
       </div>

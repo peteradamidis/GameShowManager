@@ -1321,6 +1321,33 @@ export function ContestantTable({
                     {contestantDetails.criminalRecord || 'No criminal record information provided'}
                   </p>
                 </div>
+
+                {/* Non-edit Mode Footer with Delete Button */}
+                <div className="flex justify-end gap-2 border-t pt-4 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDetailDialogOpen(false)}
+                    data-testid="button-close-detail-dialog"
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      // Placeholder for delete functionality
+                      // This will be called from parent with the actual delete function
+                      console.log('Delete button clicked in detail dialog');
+                      setDetailDialogOpen(false);
+                    }}
+                    data-testid="button-delete-contestant-detail"
+                    className="text-destructive-foreground"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete Contestant
+                  </Button>
+                </div>
               </div>
             )
           ) : (
