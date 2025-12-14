@@ -29,6 +29,24 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, isSameDay, parseISO } from "date-fns";
 import type { BlockType } from "@shared/schema";
 
+const StatusBadge = ({ status }: { status: string }) => {
+  const colors: Record<string, string> = {
+    pending: "border-amber-200 bg-amber-500/10 text-amber-700 dark:border-amber-800 dark:text-amber-400",
+    available: "border-green-200 bg-green-500/10 text-green-700 dark:border-green-800 dark:text-green-400",
+    assigned: "border-blue-200 bg-blue-500/10 text-blue-700 dark:border-blue-800 dark:text-blue-400",
+    invited: "border-purple-200 bg-purple-500/10 text-purple-700 dark:border-purple-800 dark:text-purple-400",
+    reschedule: "border-yellow-300 bg-yellow-500/20 text-yellow-800 dark:border-yellow-700 dark:text-yellow-400",
+  };
+  
+  const colorClasses = colors[status.toLowerCase()] || colors.available;
+  
+  return (
+    <span className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold ${colorClasses}`}>
+      {status}
+    </span>
+  );
+};
+
 const BLOCKS = [1, 2, 3, 4, 5, 6, 7];
 const SEAT_ROWS = [
   { label: 'A', count: 5 },
@@ -1172,6 +1190,7 @@ export default function Contestants() {
                       )}
                     </div>
                   </div>
+                  <StatusBadge status={member.availabilityStatus} />
                 </div>
               ))}
             </div>
