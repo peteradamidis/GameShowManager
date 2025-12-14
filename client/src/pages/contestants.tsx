@@ -3,7 +3,7 @@ import { ImportExcelDialog } from "@/components/import-excel-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2 } from "lucide-react";
+import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -189,6 +189,70 @@ export default function Contestants() {
     const contestantId = selectedContestants[0];
     return allSeatAssignments.find((sa: any) => sa.contestantId === contestantId) || null;
   }, [selectedContestants, allSeatAssignments]);
+
+  // Create a map of contestantId to seat assignment for quick lookup
+  const seatAssignmentMap = useMemo(() => {
+    return new Map(allSeatAssignments.map((sa: any) => [sa.contestantId, sa]));
+  }, [allSeatAssignments]);
+
+  // Find group members for the single selected contestant (for "Book with Group" button)
+  const selectedContestantGroupMembers = useMemo(() => {
+    if (selectedContestants.length !== 1) return [];
+    const contestantId = selectedContestants[0];
+    const selectedContestant = contestants.find(c => c.id === contestantId);
+    if (!selectedContestant) return [];
+    
+    // If contestant has a groupId, use that to find group members
+    if (selectedContestant.groupId) {
+      return contestants.filter(c => 
+        c.groupId === selectedContestant.groupId &&
+        c.availabilityStatus !== 'Assigned' &&
+        !seatAssignmentMap.has(c.id)
+      );
+    }
+    
+    // Otherwise, try to find group by matching attendingWith names
+    if (selectedContestant.attendingWith) {
+      const attendingNames = selectedContestant.attendingWith.split(',').map(n => n.trim().toLowerCase());
+      const currentName = selectedContestant.name.toLowerCase();
+      
+      // Find people this person is attending with
+      const groupMemberSet = new Set<string>([selectedContestant.id]);
+      
+      contestants.forEach(c => {
+        if (c.id === selectedContestant.id) return;
+        
+        // Check if this person's name is in the selected contestant's attendingWith
+        const nameMatch = attendingNames.some(name => c.name.toLowerCase().includes(name) || name.includes(c.name.toLowerCase()));
+        if (nameMatch) {
+          groupMemberSet.add(c.id);
+        }
+        
+        // Check if selected contestant's name is in this person's attendingWith
+        if (c.attendingWith) {
+          const theirAttending = c.attendingWith.split(',').map(n => n.trim().toLowerCase());
+          const reverseMatch = theirAttending.some(name => currentName.includes(name) || name.includes(currentName));
+          if (reverseMatch) {
+            groupMemberSet.add(c.id);
+          }
+        }
+      });
+      
+      // Return eligible group members (not already assigned)
+      return contestants.filter(c => 
+        groupMemberSet.has(c.id) &&
+        c.availabilityStatus !== 'Assigned' &&
+        !seatAssignmentMap.has(c.id)
+      );
+    }
+    
+    return [];
+  }, [selectedContestants, contestants, seatAssignmentMap]);
+
+  // Check if "Book with Group" button should be shown
+  const showBookWithGroupButton = selectedContestants.length === 1 && 
+    selectedContestantGroupMembers.length > 1 && 
+    !selectedContestantAssignment;
 
   // Get unique values for filter dropdowns
   const uniqueGenders = Array.from(new Set(contestants.map(c => c.gender).filter(Boolean)));
@@ -660,6 +724,24 @@ export default function Contestants() {
                     <UserPlus className="h-4 w-4 mr-2" />
                     Assign {selectedContestants.length} to Record Day
                   </Button>
+                  {showBookWithGroupButton && (
+                    <Button 
+                      variant="secondary"
+                      onClick={() => {
+                        // Pre-select all group members and open the assign dialog
+                        const groupMemberIds = selectedContestantGroupMembers.map(c => c.id);
+                        setSelectedRecordDay("");
+                        setSelectedBlock("");
+                        setSelectedSeat("");
+                        setSelectedContestants(groupMemberIds);
+                        handleOpenAssignDialog();
+                      }} 
+                      data-testid="button-book-with-group"
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      Book with Group ({selectedContestantGroupMembers.length})
+                    </Button>
+                  )}
                 </>
               )}
               <Button 
