@@ -724,7 +724,7 @@ export default function Contestants() {
                     </Button>
                     {showBookWithGroupButton && (
                       <Button 
-                        className="bg-slate-400 hover:bg-slate-500 text-slate-950"
+                        className="bg-slate-200/80 hover:bg-slate-300/80 text-slate-900"
                         onClick={() => {
                           // Pre-select all group members and open the assign dialog
                           const groupMemberIds = selectedContestantGroupMembers.map(c => c.id);
@@ -755,7 +755,7 @@ export default function Contestants() {
         </div>
         {/* Data management buttons - Import and Delete (below booking buttons) */}
         {selectedContestants.length > 0 && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-end">
             <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
             <Button 
               variant="outline"
