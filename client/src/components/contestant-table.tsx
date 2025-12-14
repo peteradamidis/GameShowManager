@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar, AlertTriangle } from "lucide-react";
+import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar, AlertTriangle, Users, CalendarPlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -75,6 +75,8 @@ interface ContestantTableProps {
   onSearchChange?: (term: string) => void;
   rescheduleContestantIds?: Set<string>;
   standbyContestantIds?: Set<string>;
+  allContestants?: Contestant[];
+  onBookWithGroup?: (contestantIds: string[]) => void;
 }
 
 // Docklands, Melbourne coordinates
@@ -181,7 +183,9 @@ export function ContestantTable({
   searchTerm: externalSearchTerm,
   onSearchChange,
   rescheduleContestantIds = new Set(),
-  standbyContestantIds = new Set()
+  standbyContestantIds = new Set(),
+  allContestants,
+  onBookWithGroup
 }: ContestantTableProps) {
   // Create a map for quick lookup of seat assignments by contestant ID
   // Use the most recent assignment if multiple exist
@@ -199,6 +203,7 @@ export function ContestantTable({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadingContestantId, setUploadingContestantId] = useState<string | null>(null);
   const [selectedPlayerType, setSelectedPlayerType] = useState<string>("");
+  const [groupPreviewOpen, setGroupPreviewOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tableFileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -207,6 +212,19 @@ export function ContestantTable({
     queryKey: ['/api/contestants', selectedContestantId],
     enabled: !!selectedContestantId && detailDialogOpen,
   });
+
+  // Find group members for the selected contestant
+  // Falls back to contestants prop if allContestants not provided
+  // Filters to only include eligible contestants (not already assigned via status or seat assignments)
+  const groupMembers = useMemo(() => {
+    if (!contestantDetails?.groupId) return [];
+    const contestantPool = allContestants || contestants;
+    return contestantPool.filter(c => 
+      c.groupId === contestantDetails.groupId &&
+      c.availabilityStatus !== 'Assigned' &&
+      !seatAssignmentMap.has(c.id)
+    );
+  }, [contestantDetails?.groupId, allContestants, contestants, seatAssignmentMap]);
 
   // Fetch record days to show seat assignment date
   interface RecordDay {
@@ -1112,9 +1130,23 @@ export function ContestantTable({
                       {contestantDetails.groupId && (
                         <div className="overflow-hidden">
                           <label className="text-xs font-medium text-muted-foreground">Group ID</label>
-                          <Badge variant="outline" className="font-mono text-xs max-w-full truncate inline-block py-0" title={contestantDetails.groupId}>
-                            {contestantDetails.groupId}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="font-mono text-xs max-w-full truncate inline-block py-0" title={contestantDetails.groupId}>
+                              {contestantDetails.groupId}
+                            </Badge>
+                            {groupMembers.length > 1 && onBookWithGroup && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 px-2 text-xs gap-1"
+                                onClick={() => setGroupPreviewOpen(true)}
+                                data-testid="button-book-with-group"
+                              >
+                                <Users className="h-3 w-3" />
+                                Book with Group ({groupMembers.length})
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1240,6 +1272,91 @@ export function ContestantTable({
               Loading contestant details...
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Group Preview Dialog */}
+      <Dialog open={groupPreviewOpen} onOpenChange={setGroupPreviewOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Book Group Together
+            </DialogTitle>
+            <DialogDescription>
+              Review group members before booking them to a record day
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3">
+            <div className="text-sm text-muted-foreground">
+              The following {groupMembers.length} contestants will be booked together:
+            </div>
+            
+            <div className="border rounded-md divide-y max-h-64 overflow-y-auto">
+              {groupMembers.map((member, index) => (
+                <div 
+                  key={member.id} 
+                  className="flex items-center gap-3 p-3"
+                  data-testid={`group-member-${member.id}`}
+                >
+                  <Avatar className="h-10 w-10">
+                    {member.photoUrl ? (
+                      <AvatarImage src={member.photoUrl} alt={member.name} className="object-cover" />
+                    ) : null}
+                    <AvatarFallback className="text-xs">
+                      {member.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm truncate">{member.name}</span>
+                      {member.id === selectedContestantId && (
+                        <Badge variant="outline" className="text-xs py-0">Current</Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{member.gender}</span>
+                      <span>•</span>
+                      <span>{member.age} yrs</span>
+                      {member.auditionRating && (
+                        <>
+                          <span>•</span>
+                          <span className="font-medium">{member.auditionRating}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <StatusBadge status={member.availabilityStatus} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button 
+              variant="outline" 
+              onClick={() => setGroupPreviewOpen(false)}
+              data-testid="button-cancel-group-booking"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (onBookWithGroup) {
+                  const memberIds = groupMembers.map(m => m.id);
+                  onBookWithGroup(memberIds);
+                  setGroupPreviewOpen(false);
+                  setDetailDialogOpen(false);
+                }
+              }}
+              className="gap-1"
+              data-testid="button-confirm-group-booking"
+            >
+              <CalendarPlus className="h-4 w-4" />
+              Assign to Record Day
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

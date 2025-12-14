@@ -977,6 +977,15 @@ export default function Contestants() {
             onSearchChange={setSearchTerm}
             rescheduleContestantIds={rescheduleContestantIds}
             standbyContestantIds={standbyContestantIds}
+            allContestants={contestants}
+            onBookWithGroup={(contestantIds) => {
+              // Reset assign dialog state before opening for group booking
+              setSelectedRecordDay("");
+              setSelectedBlock("");
+              setSelectedSeat("");
+              setSelectedContestants(contestantIds);
+              handleOpenAssignDialog();
+            }}
           />
           
           {/* Pagination Controls */}
