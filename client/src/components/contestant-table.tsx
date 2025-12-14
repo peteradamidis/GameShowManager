@@ -1179,8 +1179,10 @@ export function ContestantTable({
                       {contestantDetails.attendingWith && (
                         <div>
                           <label className="text-xs font-medium text-muted-foreground">Attending With</label>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <p className="text-sm">{contestantDetails.attendingWith}</p>
+                            {/* Debug info - temporary */}
+                            <span className="text-xs text-red-500">[gm:{groupMembers.length}, cb:{onBookWithGroup ? 'Y' : 'N'}, gid:{contestantDetails.groupId ? 'Y' : 'N'}]</span>
                             {!contestantDetails.groupId && groupMembers.length > 1 && onBookWithGroup && (
                               <Button
                                 size="sm"
