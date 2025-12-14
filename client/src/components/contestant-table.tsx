@@ -1168,43 +1168,15 @@ export function ContestantTable({
                       {contestantDetails.attendingWith && (
                         <div>
                           <label className="text-xs font-medium text-muted-foreground">Attending With</label>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm">{contestantDetails.attendingWith}</p>
-                            {!contestantDetails.groupId && groupMembers.length > 1 && onBookWithGroup && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-6 px-2 text-xs gap-1"
-                                onClick={() => setGroupPreviewOpen(true)}
-                                data-testid="button-book-with-group"
-                              >
-                                <Users className="h-3 w-3" />
-                                Book with Group ({groupMembers.length})
-                              </Button>
-                            )}
-                          </div>
+                          <p className="text-sm">{contestantDetails.attendingWith}</p>
                         </div>
                       )}
                       {contestantDetails.groupId && (
                         <div className="overflow-hidden">
                           <label className="text-xs font-medium text-muted-foreground">Group ID</label>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="font-mono text-xs max-w-full truncate inline-block py-0" title={contestantDetails.groupId}>
-                              {contestantDetails.groupId}
-                            </Badge>
-                            {groupMembers.length > 1 && onBookWithGroup && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-6 px-2 text-xs gap-1"
-                                onClick={() => setGroupPreviewOpen(true)}
-                                data-testid="button-book-with-group"
-                              >
-                                <Users className="h-3 w-3" />
-                                Book with Group ({groupMembers.length})
-                              </Button>
-                            )}
-                          </div>
+                          <Badge variant="outline" className="font-mono text-xs max-w-full truncate inline-block py-0" title={contestantDetails.groupId}>
+                            {contestantDetails.groupId}
+                          </Badge>
                         </div>
                       )}
                     </div>
