@@ -46,6 +46,7 @@ export interface Contestant {
   email?: string;
   phone?: string;
   location?: string;
+  postcode?: string | null;
   medicalInfo?: string;
   mobilityNotes?: string;
   criminalRecord?: string;
