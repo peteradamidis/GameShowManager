@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -94,6 +95,8 @@ export default function Contestants() {
   const [selectedContestants, setSelectedContestants] = useState<string[]>([]);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [standbyDialogOpen, setStandbyDialogOpen] = useState(false);
+  const [groupPreviewOpen, setGroupPreviewOpen] = useState(false);
+  const [groupPreviewMembers, setGroupPreviewMembers] = useState<Contestant[]>([]);
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
   const [selectedBlock, setSelectedBlock] = useState<string>("");
   const [selectedSeat, setSelectedSeat] = useState<string>("");
@@ -726,13 +729,9 @@ export default function Contestants() {
                       <Button 
                         className="bg-slate-200/80 hover:bg-slate-300/80 text-slate-900"
                         onClick={() => {
-                          // Pre-select all group members and open the assign dialog
-                          const groupMemberIds = selectedContestantGroupMembers.map(c => c.id);
-                          setSelectedRecordDay("");
-                          setSelectedBlock("");
-                          setSelectedSeat("");
-                          setSelectedContestants(groupMemberIds);
-                          handleOpenAssignDialog();
+                          // Show group preview dialog
+                          setGroupPreviewMembers(selectedContestantGroupMembers);
+                          setGroupPreviewOpen(true);
                         }} 
                         data-testid="button-book-with-group"
                       >
@@ -1125,6 +1124,86 @@ export default function Contestants() {
           )}
         </>
       )}
+
+      {/* Group Preview Dialog */}
+      <Dialog open={groupPreviewOpen} onOpenChange={setGroupPreviewOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Book Group Together
+            </DialogTitle>
+            <DialogDescription>
+              Review group members before booking them to a record day
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3">
+            <div className="text-sm text-muted-foreground">
+              The following {groupPreviewMembers.length} contestants will be booked together:
+            </div>
+            
+            <div className="border rounded-md divide-y max-h-64 overflow-y-auto">
+              {groupPreviewMembers.map((member) => (
+                <div 
+                  key={member.id} 
+                  className="flex items-center gap-3 p-3"
+                  data-testid={`group-member-${member.id}`}
+                >
+                  <Avatar className="h-10 w-10">
+                    {member.photoUrl ? (
+                      <AvatarImage src={member.photoUrl} alt={member.name} className="object-cover" />
+                    ) : null}
+                    <AvatarFallback className="text-xs">
+                      {member.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate">{member.name}</div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{member.gender}</span>
+                      <span>•</span>
+                      <span>{member.age} yrs</span>
+                      {member.auditionRating && (
+                        <>
+                          <span>•</span>
+                          <span className="font-medium">{member.auditionRating}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button 
+              variant="outline" 
+              onClick={() => setGroupPreviewOpen(false)}
+              data-testid="button-cancel-group-booking"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                const groupMemberIds = groupPreviewMembers.map(c => c.id);
+                setSelectedRecordDay("");
+                setSelectedBlock("");
+                setSelectedSeat("");
+                setSelectedContestants(groupMemberIds);
+                setGroupPreviewOpen(false);
+                handleOpenAssignDialog();
+              }}
+              className="gap-1"
+              data-testid="button-confirm-group-booking"
+            >
+              <Users className="h-4 w-4" />
+              Proceed to Book
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Assign to Seat Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
