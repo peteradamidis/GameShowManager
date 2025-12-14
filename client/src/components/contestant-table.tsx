@@ -219,6 +219,23 @@ export function ContestantTable({
   });
 
   // Get seat assignment for the selected contestant
+  const tempSelectedContestantSeatAssignment = selectedContestantId 
+    ? seatAssignmentMap.get(selectedContestantId) 
+    : null;
+  
+  // Fetch block types for the seat assignment's record day
+  interface BlockType {
+    id: string;
+    recordDayId: string;
+    blockNumber: number;
+    blockType: 'PB' | 'NPB';
+  }
+  const { data: blockTypes = [] } = useQuery<BlockType[]>({
+    queryKey: ['/api/record-days', tempSelectedContestantSeatAssignment?.recordDayId, 'block-types'],
+    enabled: !!tempSelectedContestantSeatAssignment?.recordDayId && detailDialogOpen,
+  });
+
+  // Get seat assignment for the selected contestant
   const selectedContestantSeatAssignment = selectedContestantId 
     ? seatAssignmentMap.get(selectedContestantId) 
     : null;
@@ -1114,7 +1131,29 @@ export function ContestantTable({
                       </div>
                       <div className="flex items-center gap-4 text-sm">
                         <span><span className="text-xs text-muted-foreground mr-1">Day:</span><span className="font-medium">{seatAssignmentRecordDay ? new Date(seatAssignmentRecordDay.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : 'Unknown'}</span></span>
-                        <span><span className="text-xs text-muted-foreground mr-1">Block:</span><span className="font-medium">{selectedContestantSeatAssignment.blockNumber}</span></span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-xs text-muted-foreground">Block:</span>
+                          <span className="font-medium">{selectedContestantSeatAssignment.blockNumber}</span>
+                          {(() => {
+                            const blockType = blockTypes.find(bt => bt.blockNumber === selectedContestantSeatAssignment.blockNumber);
+                            if (blockType) {
+                              return (
+                                <Badge 
+                                  variant="outline" 
+                                  className={`text-xs py-0 px-1.5 ${
+                                    blockType.blockType === 'PB' 
+                                      ? 'border-emerald-300 bg-emerald-500/20 text-emerald-700 dark:border-emerald-700 dark:text-emerald-400' 
+                                      : 'border-slate-300 bg-slate-500/20 text-slate-700 dark:border-slate-600 dark:text-slate-400'
+                                  }`}
+                                  data-testid={`badge-block-type-${blockType.blockType}`}
+                                >
+                                  {blockType.blockType}
+                                </Badge>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </span>
                         <span><span className="text-xs text-muted-foreground mr-1">Seat:</span><span className="font-mono font-medium text-green-600 dark:text-green-400">{String(selectedContestantSeatAssignment.blockNumber).padStart(2, '0')}-{selectedContestantSeatAssignment.seatLabel}</span></span>
                       </div>
                     </div>
