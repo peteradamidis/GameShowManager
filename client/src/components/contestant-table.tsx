@@ -214,17 +214,57 @@ export function ContestantTable({
   });
 
   // Find group members for the selected contestant
+  // Uses groupId if available, otherwise matches by attendingWith names
   // Falls back to contestants prop if allContestants not provided
   // Filters to only include eligible contestants (not already assigned via status or seat assignments)
   const groupMembers = useMemo(() => {
-    if (!contestantDetails?.groupId) return [];
+    if (!contestantDetails) return [];
     const contestantPool = allContestants || contestants;
-    return contestantPool.filter(c => 
-      c.groupId === contestantDetails.groupId &&
-      c.availabilityStatus !== 'Assigned' &&
-      !seatAssignmentMap.has(c.id)
-    );
-  }, [contestantDetails?.groupId, allContestants, contestants, seatAssignmentMap]);
+    
+    // If contestant has a groupId, use that to find group members
+    if (contestantDetails.groupId) {
+      return contestantPool.filter(c => 
+        c.groupId === contestantDetails.groupId &&
+        c.availabilityStatus !== 'Assigned' &&
+        !seatAssignmentMap.has(c.id)
+      );
+    }
+    
+    // Otherwise, try to find group by matching attendingWith names
+    if (contestantDetails.attendingWith) {
+      const attendingNames = contestantDetails.attendingWith.split(',').map(n => n.trim().toLowerCase());
+      const currentName = contestantDetails.name.toLowerCase();
+      
+      // Find people this person is attending with
+      const groupMemberSet = new Set<string>([contestantDetails.id]);
+      
+      contestantPool.forEach(c => {
+        if (c.id === contestantDetails.id) return;
+        
+        // Check if this person's name is in the selected contestant's attendingWith
+        if (attendingNames.some(name => c.name.toLowerCase().includes(name) || name.includes(c.name.toLowerCase()))) {
+          groupMemberSet.add(c.id);
+        }
+        
+        // Check if selected contestant's name is in this person's attendingWith
+        if (c.attendingWith) {
+          const theirAttending = c.attendingWith.split(',').map(n => n.trim().toLowerCase());
+          if (theirAttending.some(name => currentName.includes(name) || name.includes(currentName))) {
+            groupMemberSet.add(c.id);
+          }
+        }
+      });
+      
+      // Return eligible group members
+      return contestantPool.filter(c => 
+        groupMemberSet.has(c.id) &&
+        c.availabilityStatus !== 'Assigned' &&
+        !seatAssignmentMap.has(c.id)
+      );
+    }
+    
+    return [];
+  }, [contestantDetails, allContestants, contestants, seatAssignmentMap]);
 
   // Fetch record days to show seat assignment date
   interface RecordDay {
@@ -1124,7 +1164,21 @@ export function ContestantTable({
                       {contestantDetails.attendingWith && (
                         <div>
                           <label className="text-xs font-medium text-muted-foreground">Attending With</label>
-                          <p className="text-sm">{contestantDetails.attendingWith}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm">{contestantDetails.attendingWith}</p>
+                            {!contestantDetails.groupId && groupMembers.length > 1 && onBookWithGroup && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 px-2 text-xs gap-1"
+                                onClick={() => setGroupPreviewOpen(true)}
+                                data-testid="button-book-with-group"
+                              >
+                                <Users className="h-3 w-3" />
+                                Book with Group ({groupMembers.length})
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       )}
                       {contestantDetails.groupId && (
