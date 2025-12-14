@@ -753,12 +753,10 @@ export default function Contestants() {
             )}
           </div>
         </div>
-        {/* Data management buttons - Import (below booking buttons) */}
-        {selectedContestants.length > 0 && (
-          <div className="flex gap-2 justify-end">
-            <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
-          </div>
-        )}
+        {/* Import button - always visible */}
+        <div className="flex gap-2 justify-end">
+          <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
+        </div>
       </div>
 
       {/* Filter Controls */}
@@ -1069,6 +1067,9 @@ export default function Contestants() {
               setSelectedSeat("");
               setSelectedContestants(contestantIds);
               handleOpenAssignDialog();
+            }}
+            onDeleteContestant={(contestantId) => {
+              deleteContestantMutation.mutate(contestantId);
             }}
           />
           

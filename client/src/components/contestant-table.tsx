@@ -77,6 +77,7 @@ interface ContestantTableProps {
   standbyContestantIds?: Set<string>;
   allContestants?: Contestant[];
   onBookWithGroup?: (contestantIds: string[]) => void;
+  onDeleteContestant?: (contestantId: string) => void;
 }
 
 // Docklands, Melbourne coordinates
@@ -185,7 +186,8 @@ export function ContestantTable({
   rescheduleContestantIds = new Set(),
   standbyContestantIds = new Set(),
   allContestants,
-  onBookWithGroup
+  onBookWithGroup,
+  onDeleteContestant
 }: ContestantTableProps) {
   // Create a map for quick lookup of seat assignments by contestant ID
   // Use the most recent assignment if multiple exist
@@ -1336,10 +1338,10 @@ export function ContestantTable({
                     variant="destructive"
                     size="sm"
                     onClick={() => {
-                      // Placeholder for delete functionality
-                      // This will be called from parent with the actual delete function
-                      console.log('Delete button clicked in detail dialog');
-                      setDetailDialogOpen(false);
+                      if (selectedContestantId && onDeleteContestant) {
+                        onDeleteContestant(selectedContestantId);
+                        setDetailDialogOpen(false);
+                      }
                     }}
                     data-testid="button-delete-contestant-detail"
                     className="text-destructive-foreground"
