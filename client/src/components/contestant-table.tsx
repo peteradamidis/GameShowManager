@@ -221,19 +221,26 @@ export function ContestantTable({
     if (!contestantDetails) return [];
     const contestantPool = allContestants || contestants;
     
+    console.log('[GroupMembers] contestantDetails:', contestantDetails.name, 'attendingWith:', contestantDetails.attendingWith, 'groupId:', contestantDetails.groupId);
+    console.log('[GroupMembers] contestantPool size:', contestantPool.length, 'allContestants passed:', !!allContestants);
+    
     // If contestant has a groupId, use that to find group members
     if (contestantDetails.groupId) {
-      return contestantPool.filter(c => 
+      const result = contestantPool.filter(c => 
         c.groupId === contestantDetails.groupId &&
         c.availabilityStatus !== 'Assigned' &&
         !seatAssignmentMap.has(c.id)
       );
+      console.log('[GroupMembers] Found by groupId:', result.length);
+      return result;
     }
     
     // Otherwise, try to find group by matching attendingWith names
     if (contestantDetails.attendingWith) {
       const attendingNames = contestantDetails.attendingWith.split(',').map(n => n.trim().toLowerCase());
       const currentName = contestantDetails.name.toLowerCase();
+      
+      console.log('[GroupMembers] attendingNames:', attendingNames, 'currentName:', currentName);
       
       // Find people this person is attending with
       const groupMemberSet = new Set<string>([contestantDetails.id]);
@@ -242,25 +249,33 @@ export function ContestantTable({
         if (c.id === contestantDetails.id) return;
         
         // Check if this person's name is in the selected contestant's attendingWith
-        if (attendingNames.some(name => c.name.toLowerCase().includes(name) || name.includes(c.name.toLowerCase()))) {
+        const nameMatch = attendingNames.some(name => c.name.toLowerCase().includes(name) || name.includes(c.name.toLowerCase()));
+        if (nameMatch) {
+          console.log('[GroupMembers] Name match found:', c.name);
           groupMemberSet.add(c.id);
         }
         
         // Check if selected contestant's name is in this person's attendingWith
         if (c.attendingWith) {
           const theirAttending = c.attendingWith.split(',').map(n => n.trim().toLowerCase());
-          if (theirAttending.some(name => currentName.includes(name) || name.includes(currentName))) {
+          const reverseMatch = theirAttending.some(name => currentName.includes(name) || name.includes(currentName));
+          if (reverseMatch) {
+            console.log('[GroupMembers] Reverse match found:', c.name, 'attendingWith:', c.attendingWith);
             groupMemberSet.add(c.id);
           }
         }
       });
       
+      console.log('[GroupMembers] groupMemberSet size before filter:', groupMemberSet.size);
+      
       // Return eligible group members
-      return contestantPool.filter(c => 
+      const result = contestantPool.filter(c => 
         groupMemberSet.has(c.id) &&
         c.availabilityStatus !== 'Assigned' &&
         !seatAssignmentMap.has(c.id)
       );
+      console.log('[GroupMembers] Final result:', result.length, result.map(c => c.name));
+      return result;
     }
     
     return [];
