@@ -3,7 +3,7 @@ import { ImportExcelDialog } from "@/components/import-excel-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2, Users } from "lucide-react";
+import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2, Users, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -662,7 +662,10 @@ export default function Contestants() {
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Contestant</DialogTitle>
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-500 flex-shrink-0" />
+              <DialogTitle>Delete Contestant</DialogTitle>
+            </div>
             <DialogDescription>
               Are you sure you want to permanently delete {selectedContestants.length} contestant{selectedContestants.length !== 1 ? 's' : ''}? This action cannot be undone.
             </DialogDescription>
@@ -684,89 +687,89 @@ export default function Contestants() {
         </DialogContent>
       </Dialog>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold">Contestants</h1>
             <p className="text-muted-foreground">
               Manage auditioned applicants and their availability
             </p>
           </div>
-          {/* Data management buttons - Import and Delete */}
-          <div className="flex gap-2 ml-4">
-            <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
+          {/* Booking action buttons - grouped together */}
+          <div className="flex gap-2">
             {selectedContestants.length > 0 && (
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={() => setDeleteConfirmOpen(true)}
-                disabled={deleteContestantMutation.isPending}
-                data-testid="button-delete-contestant"
-                className="text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete ({selectedContestants.length})
-              </Button>
+              <>
+                {selectedContestantAssignment ? (
+                  <Button 
+                    variant="destructive"
+                    onClick={() => removeSeatMutation.mutate(selectedContestantAssignment.id)}
+                    disabled={removeSeatMutation.isPending}
+                    data-testid="button-remove-from-seat"
+                  >
+                    <UserMinus className="h-4 w-4 mr-2" />
+                    {removeSeatMutation.isPending ? "Removing..." : "Remove from Seat"}
+                  </Button>
+                ) : (
+                  <>
+                    <Button 
+                      className="bg-amber-400/80 hover:bg-amber-500/80 text-amber-950"
+                      onClick={() => {
+                        refetchRecordDays();
+                        setStandbyDialogOpen(true);
+                      }} 
+                      data-testid="button-add-standbys"
+                    >
+                      <UserCheck className="h-4 w-4 mr-2" />
+                      Book {selectedContestants.length} as Standby
+                    </Button>
+                    {showBookWithGroupButton && (
+                      <Button 
+                        className="bg-slate-400 hover:bg-slate-500 text-slate-950"
+                        onClick={() => {
+                          // Pre-select all group members and open the assign dialog
+                          const groupMemberIds = selectedContestantGroupMembers.map(c => c.id);
+                          setSelectedRecordDay("");
+                          setSelectedBlock("");
+                          setSelectedSeat("");
+                          setSelectedContestants(groupMemberIds);
+                          handleOpenAssignDialog();
+                        }} 
+                        data-testid="button-book-with-group"
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Book with Group ({selectedContestantGroupMembers.length})
+                      </Button>
+                    )}
+                    <Button 
+                      onClick={handleOpenAssignDialog} 
+                      data-testid="button-assign-contestants"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Assign {selectedContestants.length} to Record Day
+                    </Button>
+                  </>
+                )}
+              </>
             )}
           </div>
         </div>
-        {/* Booking action buttons - grouped together */}
-        <div className="flex gap-2">
-          {selectedContestants.length > 0 && (
-            <>
-              {selectedContestantAssignment ? (
-                <Button 
-                  variant="destructive"
-                  onClick={() => removeSeatMutation.mutate(selectedContestantAssignment.id)}
-                  disabled={removeSeatMutation.isPending}
-                  data-testid="button-remove-from-seat"
-                >
-                  <UserMinus className="h-4 w-4 mr-2" />
-                  {removeSeatMutation.isPending ? "Removing..." : "Remove from Seat"}
-                </Button>
-              ) : (
-                <>
-                  {showBookWithGroupButton && (
-                    <Button 
-                      className="bg-teal-500 hover:bg-teal-600 text-white"
-                      onClick={() => {
-                        // Pre-select all group members and open the assign dialog
-                        const groupMemberIds = selectedContestantGroupMembers.map(c => c.id);
-                        setSelectedRecordDay("");
-                        setSelectedBlock("");
-                        setSelectedSeat("");
-                        setSelectedContestants(groupMemberIds);
-                        handleOpenAssignDialog();
-                      }} 
-                      data-testid="button-book-with-group"
-                    >
-                      <Users className="h-4 w-4 mr-2" />
-                      Book with Group ({selectedContestantGroupMembers.length})
-                    </Button>
-                  )}
-                  <Button 
-                    className="bg-amber-400/80 hover:bg-amber-500/80 text-amber-950"
-                    onClick={() => {
-                      refetchRecordDays();
-                      setStandbyDialogOpen(true);
-                    }} 
-                    data-testid="button-add-standbys"
-                  >
-                    <UserCheck className="h-4 w-4 mr-2" />
-                    Book {selectedContestants.length} as Standby
-                  </Button>
-                  <Button 
-                    onClick={handleOpenAssignDialog} 
-                    data-testid="button-assign-contestants"
-                  >
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Assign {selectedContestants.length} to Record Day
-                  </Button>
-                </>
-              )}
-            </>
-          )}
-        </div>
+        {/* Data management buttons - Import and Delete (below booking buttons) */}
+        {selectedContestants.length > 0 && (
+          <div className="flex gap-2">
+            <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={() => setDeleteConfirmOpen(true)}
+              disabled={deleteContestantMutation.isPending}
+              data-testid="button-delete-contestant"
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete ({selectedContestants.length})
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Filter Controls */}
