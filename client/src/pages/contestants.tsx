@@ -685,12 +685,32 @@ export default function Contestants() {
       </Dialog>
 
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Contestants</h1>
-          <p className="text-muted-foreground">
-            Manage auditioned applicants and their availability
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold">Contestants</h1>
+            <p className="text-muted-foreground">
+              Manage auditioned applicants and their availability
+            </p>
+          </div>
+          {/* Data management buttons - Import and Delete */}
+          <div className="flex gap-2 ml-4">
+            <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
+            {selectedContestants.length > 0 && (
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => setDeleteConfirmOpen(true)}
+                disabled={deleteContestantMutation.isPending}
+                data-testid="button-delete-contestant"
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete ({selectedContestants.length})
+              </Button>
+            )}
+          </div>
         </div>
+        {/* Booking action buttons - grouped together */}
         <div className="flex gap-2">
           {selectedContestants.length > 0 && (
             <>
@@ -706,6 +726,24 @@ export default function Contestants() {
                 </Button>
               ) : (
                 <>
+                  {showBookWithGroupButton && (
+                    <Button 
+                      className="bg-teal-500 hover:bg-teal-600 text-white"
+                      onClick={() => {
+                        // Pre-select all group members and open the assign dialog
+                        const groupMemberIds = selectedContestantGroupMembers.map(c => c.id);
+                        setSelectedRecordDay("");
+                        setSelectedBlock("");
+                        setSelectedSeat("");
+                        setSelectedContestants(groupMemberIds);
+                        handleOpenAssignDialog();
+                      }} 
+                      data-testid="button-book-with-group"
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      Book with Group ({selectedContestantGroupMembers.length})
+                    </Button>
+                  )}
                   <Button 
                     className="bg-amber-400/80 hover:bg-amber-500/80 text-amber-950"
                     onClick={() => {
@@ -724,38 +762,10 @@ export default function Contestants() {
                     <UserPlus className="h-4 w-4 mr-2" />
                     Assign {selectedContestants.length} to Record Day
                   </Button>
-                  {showBookWithGroupButton && (
-                    <Button 
-                      variant="secondary"
-                      onClick={() => {
-                        // Pre-select all group members and open the assign dialog
-                        const groupMemberIds = selectedContestantGroupMembers.map(c => c.id);
-                        setSelectedRecordDay("");
-                        setSelectedBlock("");
-                        setSelectedSeat("");
-                        setSelectedContestants(groupMemberIds);
-                        handleOpenAssignDialog();
-                      }} 
-                      data-testid="button-book-with-group"
-                    >
-                      <Users className="h-4 w-4 mr-2" />
-                      Book with Group ({selectedContestantGroupMembers.length})
-                    </Button>
-                  )}
                 </>
               )}
-              <Button 
-                variant="destructive"
-                onClick={() => setDeleteConfirmOpen(true)}
-                disabled={deleteContestantMutation.isPending}
-                data-testid="button-delete-contestant"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </Button>
             </>
           )}
-          <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
         </div>
       </div>
 
