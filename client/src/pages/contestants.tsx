@@ -105,8 +105,10 @@ export default function Contestants() {
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [filterStandbyStatus, setFilterStandbyStatus] = useState<string>("all");
   const [filterGroupSize, setFilterGroupSize] = useState<string>("all");
+  const [filterState, setFilterState] = useState<string>("all");
   const [postcodeFrom, setPostcodeFrom] = useState<string>("");
   const [postcodeTo, setPostcodeTo] = useState<string>("");
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>("");
   
@@ -191,6 +193,10 @@ export default function Contestants() {
   // Get unique values for filter dropdowns
   const uniqueGenders = Array.from(new Set(contestants.map(c => c.gender).filter(Boolean)));
   const uniqueCities = Array.from(new Set(contestants.map(c => c.location).filter((loc): loc is string => Boolean(loc)))).sort();
+  const uniqueStates = Array.from(new Set(contestants.map(c => c.state).filter((s): s is string => Boolean(s)))).sort();
+  
+  // Australian states for dropdown
+  const australianStates = ['VIC', 'NSW', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'];
 
   // Determine which contestants to display
   let displayedContestants = filterRecordDayId
@@ -249,6 +255,11 @@ export default function Contestants() {
       return postcode >= from && postcode <= to;
     });
   }
+  
+  // Apply state filter
+  if (filterState !== "all") {
+    displayedContestants = displayedContestants.filter(c => c.state === filterState);
+  }
 
   // Apply search filter (searches across ALL pages before pagination)
   if (searchTerm.trim()) {
@@ -264,7 +275,7 @@ export default function Contestants() {
   // Reset page when filters or search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus, filterGroupSize, searchTerm]);
+  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus, filterGroupSize, filterState, searchTerm]);
 
   // Pagination calculations
   const totalPages = Math.ceil(displayedContestants.length / ITEMS_PER_PAGE);
@@ -668,8 +679,9 @@ export default function Contestants() {
 
       {/* Filter Controls */}
       <div className="space-y-4">
+        {/* Basic Filters Row - Always visible */}
         <div className="flex gap-4 items-end flex-wrap">
-          <div className="flex-1 min-w-[200px] max-w-xs">
+          <div className="flex-1 min-w-[150px] max-w-[180px]">
             <label className="text-sm font-medium mb-2 block">
               <Filter className="w-3 h-3 inline mr-1" />
               Status
@@ -688,24 +700,7 @@ export default function Contestants() {
             </Select>
           </div>
 
-          <div className="flex-1 min-w-[200px] max-w-xs">
-            <label className="text-sm font-medium mb-2 block">Gender</label>
-            <Select value={filterGender} onValueChange={setFilterGender}>
-              <SelectTrigger data-testid="select-filter-gender">
-                <SelectValue placeholder="All genders" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All genders</SelectItem>
-                {uniqueGenders.map((gender) => (
-                  <SelectItem key={gender} value={gender}>
-                    {gender}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex-1 min-w-[200px] max-w-xs">
+          <div className="flex-1 min-w-[150px] max-w-[180px]">
             <label className="text-sm font-medium mb-2 block">Rating</label>
             <Select 
               value={filterRating} 
@@ -725,89 +720,7 @@ export default function Contestants() {
             </Select>
           </div>
 
-          <div className="flex-1 min-w-[200px] max-w-xs">
-            <label className="text-sm font-medium mb-2 block">City</label>
-            <Select 
-              value={filterLocation} 
-              onValueChange={setFilterLocation}
-              disabled={uniqueCities.length === 0}
-            >
-              <SelectTrigger data-testid="select-filter-location">
-                <SelectValue placeholder={uniqueCities.length === 0 ? "No cities available" : "All cities"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All cities</SelectItem>
-                {uniqueCities.map((city) => (
-                  <SelectItem key={city} value={city}>
-                    {city}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="flex gap-4 items-end flex-wrap">
-          <div className="flex-1 min-w-[200px] max-w-xs">
-            <label className="text-sm font-medium mb-2 block">Availability</label>
-            <Select value={filterRecordDayId || "na"} onValueChange={(value) => {
-              setFilterRecordDayId(value === "na" ? "" : value);
-              // Default to 'yes' when selecting a date
-              setFilterResponseValue(value === "na" ? "all" : "yes");
-            }}>
-              <SelectTrigger data-testid="select-filter-availability">
-                <SelectValue placeholder="N/A" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="na">N/A</SelectItem>
-                {recordDays.map((day: any) => (
-                  <SelectItem key={day.id} value={day.id}>
-                    {new Date(day.date).toLocaleDateString('en-US', { 
-                      weekday: 'short', 
-                      year: 'numeric', 
-                      month: 'short', 
-                      day: 'numeric' 
-                    })}
-                    {day.rxNumber ? ` (${day.rxNumber})` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {filterRecordDayId && (
-            <div className="flex-1 min-w-[200px] max-w-xs">
-              <label className="text-sm font-medium mb-2 block">Response</label>
-              <Select value={filterResponseValue} onValueChange={setFilterResponseValue}>
-                <SelectTrigger data-testid="select-filter-response">
-                  <SelectValue placeholder="Yes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="yes">Yes</SelectItem>
-                  <SelectItem value="maybe">Maybe</SelectItem>
-                  <SelectItem value="no">No</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="all">All responses</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="flex-1 min-w-[200px] max-w-xs">
-            <label className="text-sm font-medium mb-2 block">Standby</label>
-            <Select value={filterStandbyStatus} onValueChange={setFilterStandbyStatus}>
-              <SelectTrigger data-testid="select-filter-standby">
-                <SelectValue placeholder="All" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="is_standby">Is Standby</SelectItem>
-                <SelectItem value="not_standby">Not Standby</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex-1 min-w-[200px] max-w-xs">
+          <div className="flex-1 min-w-[150px] max-w-[180px]">
             <label className="text-sm font-medium mb-2 block">Group Size</label>
             <Select value={filterGroupSize} onValueChange={setFilterGroupSize}>
               <SelectTrigger data-testid="select-filter-group-size">
@@ -822,31 +735,18 @@ export default function Contestants() {
             </Select>
           </div>
 
-          <div className="flex-1 min-w-[200px] max-w-xs">
-            <label className="text-sm font-medium mb-2 block">Postcode Range</label>
-            <div className="flex gap-2 items-center">
-              <Input
-                type="text"
-                placeholder="From"
-                value={postcodeFrom}
-                onChange={(e) => setPostcodeFrom(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                className="w-20"
-                data-testid="input-postcode-from"
-              />
-              <span className="text-muted-foreground">-</span>
-              <Input
-                type="text"
-                placeholder="To"
-                value={postcodeTo}
-                onChange={(e) => setPostcodeTo(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                className="w-20"
-                data-testid="input-postcode-to"
-              />
-            </div>
-          </div>
+          <Button 
+            variant={showAdvancedSearch ? "secondary" : "outline"}
+            onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+            data-testid="button-advanced-search"
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            {showAdvancedSearch ? "Hide Advanced" : "Advanced Search"}
+          </Button>
 
           {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
-            filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || filterGroupSize !== "all" || postcodeFrom || postcodeTo) && (
+            filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || 
+            filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo) && (
             <Button 
               variant="outline" 
               onClick={() => {
@@ -854,6 +754,7 @@ export default function Contestants() {
                 setFilterGender("all");
                 setFilterRating("all");
                 setFilterLocation("all");
+                setFilterState("all");
                 setFilterRecordDayId("");
                 setFilterResponseValue("all");
                 setFilterStandbyStatus("all");
@@ -864,15 +765,160 @@ export default function Contestants() {
               data-testid="button-clear-filters"
             >
               <X className="h-4 w-4 mr-2" />
-              Clear All Filters
+              Clear All
             </Button>
           )}
         </div>
+
+        {/* Advanced Filters - Collapsible */}
+        {showAdvancedSearch && (
+          <div className="border rounded-lg p-4 bg-muted/30 space-y-4">
+            <div className="flex gap-4 items-end flex-wrap">
+              <div className="flex-1 min-w-[150px] max-w-[180px]">
+                <label className="text-sm font-medium mb-2 block">Gender</label>
+                <Select value={filterGender} onValueChange={setFilterGender}>
+                  <SelectTrigger data-testid="select-filter-gender">
+                    <SelectValue placeholder="All genders" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All genders</SelectItem>
+                    {uniqueGenders.map((gender) => (
+                      <SelectItem key={gender} value={gender}>
+                        {gender}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex-1 min-w-[150px] max-w-[180px]">
+                <label className="text-sm font-medium mb-2 block">State</label>
+                <Select value={filterState} onValueChange={setFilterState}>
+                  <SelectTrigger data-testid="select-filter-state">
+                    <SelectValue placeholder="All states" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All states</SelectItem>
+                    {australianStates.map((state) => (
+                      <SelectItem key={state} value={state}>
+                        {state}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex-1 min-w-[150px] max-w-[180px]">
+                <label className="text-sm font-medium mb-2 block">City</label>
+                <Select 
+                  value={filterLocation} 
+                  onValueChange={setFilterLocation}
+                  disabled={uniqueCities.length === 0}
+                >
+                  <SelectTrigger data-testid="select-filter-location">
+                    <SelectValue placeholder={uniqueCities.length === 0 ? "No cities" : "All cities"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All cities</SelectItem>
+                    {uniqueCities.map((city) => (
+                      <SelectItem key={city} value={city}>
+                        {city}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex-1 min-w-[150px] max-w-[180px]">
+                <label className="text-sm font-medium mb-2 block">Standby</label>
+                <Select value={filterStandbyStatus} onValueChange={setFilterStandbyStatus}>
+                  <SelectTrigger data-testid="select-filter-standby">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="is_standby">Is Standby</SelectItem>
+                    <SelectItem value="not_standby">Not Standby</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex gap-4 items-end flex-wrap">
+              <div className="flex-1 min-w-[150px] max-w-[180px]">
+                <label className="text-sm font-medium mb-2 block">Availability</label>
+                <Select value={filterRecordDayId || "na"} onValueChange={(value) => {
+                  setFilterRecordDayId(value === "na" ? "" : value);
+                  setFilterResponseValue(value === "na" ? "all" : "yes");
+                }}>
+                  <SelectTrigger data-testid="select-filter-availability">
+                    <SelectValue placeholder="N/A" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="na">N/A</SelectItem>
+                    {recordDays.map((day: any) => (
+                      <SelectItem key={day.id} value={day.id}>
+                        {new Date(day.date).toLocaleDateString('en-US', { 
+                          weekday: 'short', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                        {day.rxNumber ? ` (${day.rxNumber})` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {filterRecordDayId && (
+                <div className="flex-1 min-w-[150px] max-w-[180px]">
+                  <label className="text-sm font-medium mb-2 block">Response</label>
+                  <Select value={filterResponseValue} onValueChange={setFilterResponseValue}>
+                    <SelectTrigger data-testid="select-filter-response">
+                      <SelectValue placeholder="Yes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes</SelectItem>
+                      <SelectItem value="maybe">Maybe</SelectItem>
+                      <SelectItem value="no">No</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="all">All responses</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="flex-1 min-w-[200px] max-w-xs">
+                <label className="text-sm font-medium mb-2 block">Postcode Range</label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="text"
+                    placeholder="From"
+                    value={postcodeFrom}
+                    onChange={(e) => setPostcodeFrom(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    className="w-20"
+                    data-testid="input-postcode-from"
+                  />
+                  <span className="text-muted-foreground">-</span>
+                  <Input
+                    type="text"
+                    placeholder="To"
+                    value={postcodeTo}
+                    onChange={(e) => setPostcodeTo(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    className="w-20"
+                    data-testid="input-postcode-to"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Results Summary */}
       {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
-        filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || filterGroupSize !== "all") && (
+        filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || 
+        filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo) && (
         <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="secondary" data-testid="badge-filter-count">
             {displayedContestants.length} contestant{displayedContestants.length !== 1 ? 's' : ''}
@@ -888,26 +934,29 @@ export default function Contestants() {
             <Badge variant="outline">Rating: {filterRating}</Badge>
           )}
           {filterLocation !== "all" && (
-            <Badge variant="outline">Location: {filterLocation}</Badge>
+            <Badge variant="outline">City: {filterLocation}</Badge>
+          )}
+          {filterState !== "all" && (
+            <Badge variant="outline">State: {filterState}</Badge>
           )}
           {filterRecordDayId && (
             <Badge variant="outline">
-              Availability: {new Date(recordDays.find((d: any) => d.id === filterRecordDayId)?.date).toLocaleDateString()} ({filterResponseValue === "all" ? "all responses" : filterResponseValue})
+              Availability: {new Date(recordDays.find((d: any) => d.id === filterRecordDayId)?.date).toLocaleDateString()} ({filterResponseValue === "all" ? "all" : filterResponseValue})
             </Badge>
           )}
           {filterStandbyStatus !== "all" && (
             <Badge variant="outline">
-              Standby: {filterStandbyStatus === "is_standby" ? "Is Standby" : "Not Standby"}
+              Standby: {filterStandbyStatus === "is_standby" ? "Yes" : "No"}
             </Badge>
           )}
           {filterGroupSize !== "all" && (
             <Badge variant="outline">
-              Group Size: {filterGroupSize === "1" ? "Solo (1)" : filterGroupSize === "2" ? "Pair (2)" : "3+"}
+              Group: {filterGroupSize === "1" ? "Solo" : filterGroupSize === "2" ? "Pair" : "3+"}
             </Badge>
           )}
           {(postcodeFrom || postcodeTo) && (
             <Badge variant="outline">
-              Postcode: {postcodeFrom || '0'} - {postcodeTo || '9999'}
+              Postcode: {postcodeFrom || '0'}-{postcodeTo || '9999'}
             </Badge>
           )}
         </div>

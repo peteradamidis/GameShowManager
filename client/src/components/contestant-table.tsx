@@ -47,6 +47,7 @@ export interface Contestant {
   phone?: string;
   location?: string;
   postcode?: string | null;
+  state?: string | null;
   medicalInfo?: string;
   mobilityNotes?: string;
   criminalRecord?: string;
