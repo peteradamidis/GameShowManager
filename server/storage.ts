@@ -243,6 +243,7 @@ export interface IStorage {
   getUserById(id: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined>;
+  updateUsername(id: string, newUsername: string): Promise<User | undefined>;
 }
 
 export class DbStorage implements IStorage {
@@ -1479,6 +1480,15 @@ export class DbStorage implements IStorage {
     const [updated] = await getDb()
       .update(users)
       .set({ password: hashedPassword })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateUsername(id: string, newUsername: string): Promise<User | undefined> {
+    const [updated] = await getDb()
+      .update(users)
+      .set({ username: newUsername })
       .where(eq(users.id, id))
       .returning();
     return updated;

@@ -23,6 +23,13 @@ interface EmailAsset {
   url: string;
 }
 
+// Username change form schema
+const usernameChangeSchema = z.object({
+  newUsername: z.string().min(3, "Username must be at least 3 characters"),
+});
+
+type UsernameChangeForm = z.infer<typeof usernameChangeSchema>;
+
 // Password change form schema
 const passwordChangeSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),
@@ -171,6 +178,39 @@ export default function Settings() {
 
   const onPasswordSubmit = (data: PasswordChangeForm) => {
     changePasswordMutation.mutate(data);
+  };
+
+  // Username change form
+  const usernameForm = useForm<UsernameChangeForm>({
+    resolver: zodResolver(usernameChangeSchema),
+    defaultValues: {
+      newUsername: "",
+    },
+  });
+
+  const changeUsernameMutation = useMutation({
+    mutationFn: async (data: UsernameChangeForm) => {
+      const response = await apiRequest("POST", "/api/auth/change-username", {
+        newUsername: data.newUsername,
+      });
+      return response;
+    },
+    onSuccess: () => {
+      toast({ title: "Username changed", description: "Your username has been updated successfully." });
+      usernameForm.reset();
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/check"] });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error changing username", 
+        description: error.message || "Failed to change username.", 
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const onUsernameSubmit = (data: UsernameChangeForm) => {
+    changeUsernameMutation.mutate(data);
   };
 
   // SMTP Configuration
@@ -347,6 +387,59 @@ export default function Settings() {
                 data-testid="input-female-target"
               />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lock className="w-5 h-5" />
+              Change Username
+            </CardTitle>
+            <CardDescription>
+              Update your account username
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...usernameForm}>
+              <form onSubmit={usernameForm.handleSubmit(onUsernameSubmit)} className="space-y-4">
+                <FormField
+                  control={usernameForm.control}
+                  name="newUsername"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>New Username</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="text" 
+                          placeholder="Enter new username (min 3 characters)" 
+                          {...field} 
+                          data-testid="input-new-username"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button 
+                  type="submit" 
+                  disabled={changeUsernameMutation.isPending}
+                  data-testid="button-change-username"
+                >
+                  {changeUsernameMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Changing...
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4 mr-2" />
+                      Change Username
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Form>
           </CardContent>
         </Card>
 

@@ -194,6 +194,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Change username (requires authentication)
+  app.post("/api/auth/change-username", requireAuth, async (req, res) => {
+    try {
+      const { newUsername } = req.body;
+      
+      if (!newUsername || newUsername.trim().length === 0) {
+        return res.status(400).json({ error: "New username is required" });
+      }
+
+      if (newUsername.length < 3) {
+        return res.status(400).json({ error: "Username must be at least 3 characters" });
+      }
+
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(newUsername);
+      if (existingUser && existingUser.id !== req.session.userId!) {
+        return res.status(400).json({ error: "Username already in use" });
+      }
+
+      const user = await storage.getUserById(req.session.userId!);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      await storage.updateUsername(user.id, newUsername);
+      req.session.username = newUsername;
+
+      res.json({ success: true, message: "Username changed successfully" });
+    } catch (error) {
+      console.error("Change username error:", error);
+      res.status(500).json({ error: "Failed to change username" });
+    }
+  });
+
   // ============ PROTECTED API ROUTES ============
   // All routes below this middleware require authentication
   app.use("/api", (req: Request, res: Response, next: NextFunction) => {
