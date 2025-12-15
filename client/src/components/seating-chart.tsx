@@ -383,6 +383,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   const [overId, setOverId] = useState<string | null>(null);
   const [pendingSwap, setPendingSwap] = useState<PendingSwap | null>(null);
   const [pendingGroupMove, setPendingGroupMove] = useState<GroupMoveOperation | null>(null);
+  const [activeDragGroup, setActiveDragGroup] = useState<SeatData[]>([]);
   const { toast } = useToast();
 
   // Fetch block types for this record day
@@ -522,6 +523,19 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
 
   const handleDragStart = (event: any) => {
     setActiveId(event.active.id);
+    
+    // Check if this seat is part of a group and set activeDragGroup
+    const seat = findSeat(event.active.id);
+    if (seat && seat.seat.contestantId) {
+      const groupMembers = findSeatedGroupMembers(seat.seat.contestantId, seat.blockIdx);
+      if (groupMembers.length > 1) {
+        setActiveDragGroup(groupMembers.map(m => m.seat));
+      } else {
+        setActiveDragGroup([]);
+      }
+    } else {
+      setActiveDragGroup([]);
+    }
   };
 
   const handleDragOver = (event: DragOverEvent) => {
@@ -1039,15 +1053,35 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         
         <DragOverlay>
           {activeSeat ? (
-            <div className="opacity-80">
-              <SeatCard
-                seat={activeSeat}
-                blockIndex={0}
-                seatIndex={0}
-                isDragging={true}
-                onEmptySeatClick={undefined}
-              />
-            </div>
+            activeDragGroup.length > 1 ? (
+              <div className="opacity-90 flex flex-col gap-1 p-2 bg-blue-100 dark:bg-blue-900 rounded-lg border-2 border-blue-500 shadow-lg">
+                <div className="text-xs font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1 mb-1">
+                  <Link2 className="h-3 w-3" />
+                  Moving Group ({activeDragGroup.length})
+                </div>
+                {activeDragGroup.map((seat, idx) => (
+                  <div key={idx} className="transform scale-90 origin-top-left">
+                    <SeatCard
+                      seat={seat}
+                      blockIndex={0}
+                      seatIndex={idx}
+                      isDragging={true}
+                      onEmptySeatClick={undefined}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="opacity-80">
+                <SeatCard
+                  seat={activeSeat}
+                  blockIndex={0}
+                  seatIndex={0}
+                  isDragging={true}
+                  onEmptySeatClick={undefined}
+                />
+              </div>
+            )
           ) : null}
         </DragOverlay>
 
