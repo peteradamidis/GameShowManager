@@ -361,18 +361,6 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-// Group move operation type
-interface GroupMoveOperation {
-  assignments: Array<{
-    assignmentId: string;
-    contestantName: string;
-    fromBlock: number;
-    fromSeat: string;
-    toBlock: number;
-    toSeat: string;
-  }>;
-}
-
 export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, isLocked = false }: SeatingChartProps) {
   const [blocks, setBlocks] = useState<SeatData[][]>(
     initialSeats || Array(7).fill(null).map((_, blockIdx) => 
@@ -382,8 +370,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [pendingSwap, setPendingSwap] = useState<PendingSwap | null>(null);
-  const [pendingGroupMove, setPendingGroupMove] = useState<GroupMoveOperation | null>(null);
-  const [activeDragGroup, setActiveDragGroup] = useState<SeatData[]>([]);
   const { toast } = useToast();
 
   // Fetch block types for this record day
@@ -455,87 +441,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     return null;
   };
 
-  // Helper to find all seated group members for a given contestant
-  const findSeatedGroupMembers = (contestantId: string, currentBlockIdx: number): Array<{ blockIdx: number; seatIdx: number; seat: SeatData }> => {
-    const members: Array<{ blockIdx: number; seatIdx: number; seat: SeatData }> = [];
-    
-    // Find the source seat first to get the groupId
-    let sourceGroupId: string | null = null;
-    let sourceAttendingWith: string[] = [];
-    
-    for (let blockIdx = 0; blockIdx < blocks.length; blockIdx++) {
-      for (let seatIdx = 0; seatIdx < blocks[blockIdx].length; seatIdx++) {
-        const seat = blocks[blockIdx][seatIdx];
-        if (seat.contestantId === contestantId) {
-          sourceGroupId = seat.groupId || null;
-          sourceAttendingWith = seat.attendingWith ? seat.attendingWith.split(',').map(id => id.trim()) : [];
-          members.push({ blockIdx, seatIdx, seat });
-          break;
-        }
-      }
-    }
-    
-    if (members.length === 0) return [];
-    
-    // Find other group members - only in the same block for simpler group movement
-    const block = blocks[currentBlockIdx];
-    for (let seatIdx = 0; seatIdx < block.length; seatIdx++) {
-      const seat = block[seatIdx];
-      if (!seat.contestantId || seat.contestantId === contestantId) continue;
-      
-      // Check if this seat belongs to the same group
-      const isGroupMember = 
-        (sourceGroupId && seat.groupId === sourceGroupId) ||
-        sourceAttendingWith.includes(seat.contestantId) ||
-        (seat.attendingWith && seat.attendingWith.split(',').map(id => id.trim()).includes(contestantId));
-      
-      if (isGroupMember) {
-        members.push({ blockIdx: currentBlockIdx, seatIdx, seat });
-      }
-    }
-    
-    return members;
-  };
-
-  // Calculate seat offset within a block (for relative positioning)
-  const getSeatOffset = (seatIdx: number): { rowIdx: number; colIdx: number } => {
-    let remaining = seatIdx;
-    for (let rowIdx = 0; rowIdx < SEAT_ROWS.length; rowIdx++) {
-      if (remaining < SEAT_ROWS[rowIdx].count) {
-        return { rowIdx, colIdx: remaining };
-      }
-      remaining -= SEAT_ROWS[rowIdx].count;
-    }
-    return { rowIdx: 0, colIdx: 0 };
-  };
-
-  // Convert row/col offset back to seat index
-  const offsetToSeatIdx = (rowIdx: number, colIdx: number): number | null => {
-    if (rowIdx < 0 || rowIdx >= SEAT_ROWS.length) return null;
-    if (colIdx < 0 || colIdx >= SEAT_ROWS[rowIdx].count) return null;
-    
-    let seatIdx = 0;
-    for (let r = 0; r < rowIdx; r++) {
-      seatIdx += SEAT_ROWS[r].count;
-    }
-    return seatIdx + colIdx;
-  };
-
   const handleDragStart = (event: any) => {
     setActiveId(event.active.id);
-    
-    // Check if this seat is part of a group and set activeDragGroup
-    const seat = findSeat(event.active.id);
-    if (seat && seat.seat.contestantId) {
-      const groupMembers = findSeatedGroupMembers(seat.seat.contestantId, seat.blockIdx);
-      if (groupMembers.length > 1) {
-        setActiveDragGroup(groupMembers.map(m => m.seat));
-      } else {
-        setActiveDragGroup([]);
-      }
-    } else {
-      setActiveDragGroup([]);
-    }
   };
 
   const handleDragOver = (event: DragOverEvent) => {
@@ -677,89 +584,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     }
   };
 
-  // Execute a group move operation
-  const executeGroupMove = async (
-    groupMoves: Array<{
-      assignmentId: string;
-      contestantName: string;
-      fromBlockIdx: number;
-      fromSeatIdx: number;
-      toBlockIdx: number;
-      toSeatIdx: number;
-    }>,
-    useTrackedEndpoint: boolean
-  ) => {
-    // Capture original state for potential revert
-    const originalBlocks = blocks.map(block => block.map(seat => ({ ...seat })));
-    
-    // Optimistically update UI
-    setBlocks(prevBlocks => {
-      const newBlocks = prevBlocks.map(block => [...block]);
-      
-      // First, collect all source data
-      const sourceData = groupMoves.map(move => ({
-        ...newBlocks[move.fromBlockIdx][move.fromSeatIdx]
-      }));
-      
-      // Clear source seats
-      groupMoves.forEach(move => {
-        newBlocks[move.fromBlockIdx][move.fromSeatIdx] = {
-          id: newBlocks[move.fromBlockIdx][move.fromSeatIdx].id
-        };
-      });
-      
-      // Place at target seats
-      groupMoves.forEach((move, idx) => {
-        const targetId = newBlocks[move.toBlockIdx][move.toSeatIdx].id;
-        newBlocks[move.toBlockIdx][move.toSeatIdx] = {
-          ...sourceData[idx],
-          id: targetId,
-        };
-      });
-      
-      return newBlocks;
-    });
-
-    try {
-      // Build the API request payload
-      const moves = groupMoves.map(move => {
-        const targetLocation = getBlockAndSeat(blocks[move.toBlockIdx][move.toSeatIdx].id);
-        return {
-          assignmentId: move.assignmentId,
-          blockNumber: targetLocation.blockNumber,
-          seatLabel: targetLocation.seatLabel,
-        };
-      });
-
-      const endpoint = useTrackedEndpoint 
-        ? '/api/seat-assignments/group-move-tracked' 
-        : '/api/seat-assignments/group-move';
-      
-      await apiRequest('POST', endpoint, { moves });
-
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
-
-      toast({
-        title: "Group moved successfully",
-        description: `Moved ${groupMoves.length} contestants together.`,
-      });
-    } catch (error) {
-      console.error('Failed to execute group move:', error);
-      
-      // Revert UI state
-      setBlocks(originalBlocks);
-
-      toast({
-        title: "Error moving group",
-        description: "The group could not be moved. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   // Handle drag end - check if locked and require confirmation
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -779,91 +603,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
 
     const sourceLocation = getBlockAndSeat(sourceSeat.seat.id);
     const targetLocation = getBlockAndSeat(targetSeat.seat.id);
-
-    // Check if this contestant has group members in the same block
-    const groupMembers = sourceSeat.seat.contestantId 
-      ? findSeatedGroupMembers(sourceSeat.seat.contestantId, sourceSeat.blockIdx)
-      : [];
-    
-    // If there are multiple group members (more than just the dragged contestant)
-    if (groupMembers.length > 1 && !targetSeat.seat.contestantName) {
-      // Calculate the offset of the dragged seat's position
-      const draggedOffset = getSeatOffset(sourceSeat.seatIdx);
-      const targetOffset = getSeatOffset(targetSeat.seatIdx);
-      
-      // Calculate the delta (how much we're moving)
-      const rowDelta = targetOffset.rowIdx - draggedOffset.rowIdx;
-      const colDelta = targetOffset.colIdx - draggedOffset.colIdx;
-      
-      // Check if all group members can move to valid positions in the target block
-      const groupMoves: Array<{
-        assignmentId: string;
-        contestantName: string;
-        fromBlockIdx: number;
-        fromSeatIdx: number;
-        toBlockIdx: number;
-        toSeatIdx: number;
-      }> = [];
-      
-      let canMoveGroup = true;
-      
-      for (const member of groupMembers) {
-        const memberOffset = getSeatOffset(member.seatIdx);
-        const newRowIdx = memberOffset.rowIdx + rowDelta;
-        const newColIdx = memberOffset.colIdx + colDelta;
-        const newSeatIdx = offsetToSeatIdx(newRowIdx, newColIdx);
-        
-        if (newSeatIdx === null) {
-          canMoveGroup = false;
-          break;
-        }
-        
-        // Check if target seat is empty or is another group member's current position
-        const targetSeatInBlock = blocks[targetSeat.blockIdx][newSeatIdx];
-        const isOccupiedByOther = targetSeatInBlock.contestantId && 
-          !groupMembers.some(gm => gm.seat.contestantId === targetSeatInBlock.contestantId);
-        
-        if (isOccupiedByOther) {
-          canMoveGroup = false;
-          break;
-        }
-        
-        if (member.seat.assignmentId) {
-          groupMoves.push({
-            assignmentId: member.seat.assignmentId,
-            contestantName: member.seat.contestantName || '',
-            fromBlockIdx: member.blockIdx,
-            fromSeatIdx: member.seatIdx,
-            toBlockIdx: targetSeat.blockIdx,
-            toSeatIdx: newSeatIdx,
-          });
-        }
-      }
-      
-      if (canMoveGroup && groupMoves.length > 0) {
-        // Set pending group move if locked, otherwise execute immediately
-        if (isLocked) {
-          setPendingGroupMove({
-            assignments: groupMoves.map(move => {
-              const fromLoc = getBlockAndSeat(blocks[move.fromBlockIdx][move.fromSeatIdx].id);
-              const toLoc = getBlockAndSeat(blocks[move.toBlockIdx][move.toSeatIdx].id);
-              return {
-                assignmentId: move.assignmentId,
-                contestantName: move.contestantName,
-                fromBlock: fromLoc.blockNumber,
-                fromSeat: fromLoc.seatLabel,
-                toBlock: toLoc.blockNumber,
-                toSeat: toLoc.seatLabel,
-              };
-            }),
-          });
-        } else {
-          await executeGroupMove(groupMoves, false);
-        }
-        return;
-      }
-      // If group can't move together, fall through to individual move
-    }
 
     // If locked, show confirmation dialog instead of immediate swap
     if (isLocked) {
@@ -894,56 +633,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   // Handle cancel of locked swap
   const handleCancelLockedSwap = () => {
     setPendingSwap(null);
-  };
-
-  // Handle confirmation of group move in locked mode
-  const handleConfirmLockedGroupMove = async () => {
-    if (!pendingGroupMove) return;
-    
-    // Build groupMoves array for executeGroupMove
-    const groupMoves = pendingGroupMove.assignments.map(a => {
-      // Find the seats by their assignment IDs
-      for (let blockIdx = 0; blockIdx < blocks.length; blockIdx++) {
-        for (let seatIdx = 0; seatIdx < blocks[blockIdx].length; seatIdx++) {
-          const seat = blocks[blockIdx][seatIdx];
-          if (seat.assignmentId === a.assignmentId) {
-            // Find target seat index from block and seat label
-            const targetBlockIdx = a.toBlock - 1;
-            const targetSeatIdx = blocks[targetBlockIdx].findIndex(s => {
-              const loc = getBlockAndSeat(s.id);
-              return loc.seatLabel === a.toSeat;
-            });
-            return {
-              assignmentId: a.assignmentId,
-              contestantName: a.contestantName,
-              fromBlockIdx: blockIdx,
-              fromSeatIdx: seatIdx,
-              toBlockIdx: targetBlockIdx,
-              toSeatIdx: targetSeatIdx,
-            };
-          }
-        }
-      }
-      return null;
-    }).filter(Boolean) as Array<{
-      assignmentId: string;
-      contestantName: string;
-      fromBlockIdx: number;
-      fromSeatIdx: number;
-      toBlockIdx: number;
-      toSeatIdx: number;
-    }>;
-    
-    setPendingGroupMove(null);
-    
-    if (groupMoves.length > 0) {
-      await executeGroupMove(groupMoves, true);
-    }
-  };
-
-  // Handle cancel of locked group move
-  const handleCancelLockedGroupMove = () => {
-    setPendingGroupMove(null);
   };
 
   // Split blocks: 0-2 (top row), 3-5 (bottom row), 6 (standing)
@@ -1053,7 +742,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         
         <DragOverlay>
           {activeSeat ? (
-            <div className="relative opacity-80">
+            <div className="opacity-80">
               <SeatCard
                 seat={activeSeat}
                 blockIndex={0}
@@ -1061,11 +750,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 isDragging={true}
                 onEmptySeatClick={undefined}
               />
-              {activeDragGroup.length > 1 && (
-                <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-md">
-                  +{activeDragGroup.length - 1}
-                </div>
-              )}
             </div>
           ) : null}
         </DragOverlay>
@@ -1113,50 +797,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 onClick={handleConfirmLockedSwap}
               >
                 Confirm Move
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        {/* Locked Group Move Confirmation Dialog */}
-        <AlertDialog open={!!pendingGroupMove} onOpenChange={(open) => !open && handleCancelLockedGroupMove()}>
-          <AlertDialogContent data-testid="dialog-locked-group-move">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2">
-                <Link2 className="h-5 w-5 text-blue-500" />
-                Moving Group Together
-              </AlertDialogTitle>
-              <AlertDialogDescription asChild>
-                <div className="space-y-3 text-sm text-muted-foreground">
-                  <span className="block">
-                    This seating chart is currently in <strong className="text-amber-600">RX Day Mode</strong>. 
-                    Group members will be moved together while maintaining their relative positions.
-                  </span>
-                  {pendingGroupMove && (
-                    <div className="mt-3 p-3 bg-muted rounded-lg text-sm space-y-1">
-                      {pendingGroupMove.assignments.map((a, idx) => (
-                        <span key={idx} className="block font-medium text-foreground">
-                          <span className="text-primary">{a.contestantName}</span>
-                          {' '}from <strong>{String(a.fromBlock).padStart(2, '0')}-{a.fromSeat}</strong>
-                          {' '}to <strong>{String(a.toBlock).padStart(2, '0')}-{a.toSeat}</strong>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <span className="block text-muted-foreground text-xs">
-                    These moves will be recorded and visible with "MOVED" indicators.
-                  </span>
-                </div>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel data-testid="button-locked-group-move-cancel">Cancel</AlertDialogCancel>
-              <AlertDialogAction 
-                data-testid="button-locked-group-move-confirm"
-                className="bg-blue-500 hover:bg-blue-600 text-white"
-                onClick={handleConfirmLockedGroupMove}
-              >
-                Move Group
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
