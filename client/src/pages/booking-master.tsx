@@ -212,6 +212,7 @@ export default function BookingMaster() {
   const [selectedAttachments, setSelectedAttachments] = useState<string[]>([]);
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const [filterMobilityNotes, setFilterMobilityNotes] = useState(false);
+  const [filterMedicalNotes, setFilterMedicalNotes] = useState(false);
   // Use refs instead of state for pending text updates to avoid re-renders
   const pendingTextUpdatesRef = useRef<Record<string, string>>({});
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnId, boolean>>(() => {
@@ -484,6 +485,10 @@ export default function BookingMaster() {
     }
     // Filter by mobility/medical notes
     if (filterMobilityNotes && !row.contestant?.mobilityNotes) {
+      return false;
+    }
+    // Filter by medical information
+    if (filterMedicalNotes && !row.contestant?.medicalInfo) {
       return false;
     }
     return true;
@@ -801,6 +806,15 @@ export default function BookingMaster() {
             data-testid="button-filter-mobility-notes"
           >
             Show Mobility/Medical Notes
+          </Button>
+
+          <Button 
+            onClick={() => setFilterMedicalNotes(!filterMedicalNotes)}
+            variant={filterMedicalNotes ? "default" : "outline"}
+            title={filterMedicalNotes ? "Show all contestants" : "Show only medical information"}
+            data-testid="button-filter-medical-notes"
+          >
+            Show Medical Notes
           </Button>
 
           <Button 
