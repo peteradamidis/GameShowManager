@@ -24,8 +24,19 @@ export const pool = process.env.DATABASE_URL
   ? new Pool({ 
       connectionString: process.env.DATABASE_URL,
       ssl: needsSsl ? { rejectUnauthorized: false } : undefined,
+      // Handle Neon serverless idle timeouts
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
     })
   : null;
+
+// Add error handler to prevent app crash on connection termination
+if (pool) {
+  pool.on('error', (err: Error) => {
+    console.error('[DB Pool] Unexpected error on idle client:', err.message);
+    // Don't crash - the pool will create new connections as needed
+  });
+}
 
 export const db = pool 
   ? drizzle(pool, { schema })
