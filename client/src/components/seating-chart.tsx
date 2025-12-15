@@ -361,6 +361,18 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
+// Group move operation type
+interface GroupMoveOperation {
+  assignments: Array<{
+    assignmentId: string;
+    contestantName: string;
+    fromBlock: number;
+    fromSeat: string;
+    toBlock: number;
+    toSeat: string;
+  }>;
+}
+
 export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, isLocked = false }: SeatingChartProps) {
   const [blocks, setBlocks] = useState<SeatData[][]>(
     initialSeats || Array(7).fill(null).map((_, blockIdx) => 
@@ -370,6 +382,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [pendingSwap, setPendingSwap] = useState<PendingSwap | null>(null);
+  const [pendingGroupMove, setPendingGroupMove] = useState<GroupMoveOperation | null>(null);
   const { toast } = useToast();
 
   // Fetch block types for this record day
@@ -439,6 +452,72 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
       }
     }
     return null;
+  };
+
+  // Helper to find all seated group members for a given contestant
+  const findSeatedGroupMembers = (contestantId: string, currentBlockIdx: number): Array<{ blockIdx: number; seatIdx: number; seat: SeatData }> => {
+    const members: Array<{ blockIdx: number; seatIdx: number; seat: SeatData }> = [];
+    
+    // Find the source seat first to get the groupId
+    let sourceGroupId: string | null = null;
+    let sourceAttendingWith: string[] = [];
+    
+    for (let blockIdx = 0; blockIdx < blocks.length; blockIdx++) {
+      for (let seatIdx = 0; seatIdx < blocks[blockIdx].length; seatIdx++) {
+        const seat = blocks[blockIdx][seatIdx];
+        if (seat.contestantId === contestantId) {
+          sourceGroupId = seat.groupId || null;
+          sourceAttendingWith = seat.attendingWith ? seat.attendingWith.split(',').map(id => id.trim()) : [];
+          members.push({ blockIdx, seatIdx, seat });
+          break;
+        }
+      }
+    }
+    
+    if (members.length === 0) return [];
+    
+    // Find other group members - only in the same block for simpler group movement
+    const block = blocks[currentBlockIdx];
+    for (let seatIdx = 0; seatIdx < block.length; seatIdx++) {
+      const seat = block[seatIdx];
+      if (!seat.contestantId || seat.contestantId === contestantId) continue;
+      
+      // Check if this seat belongs to the same group
+      const isGroupMember = 
+        (sourceGroupId && seat.groupId === sourceGroupId) ||
+        sourceAttendingWith.includes(seat.contestantId) ||
+        (seat.attendingWith && seat.attendingWith.split(',').map(id => id.trim()).includes(contestantId));
+      
+      if (isGroupMember) {
+        members.push({ blockIdx: currentBlockIdx, seatIdx, seat });
+      }
+    }
+    
+    return members;
+  };
+
+  // Calculate seat offset within a block (for relative positioning)
+  const getSeatOffset = (seatIdx: number): { rowIdx: number; colIdx: number } => {
+    let remaining = seatIdx;
+    for (let rowIdx = 0; rowIdx < SEAT_ROWS.length; rowIdx++) {
+      if (remaining < SEAT_ROWS[rowIdx].count) {
+        return { rowIdx, colIdx: remaining };
+      }
+      remaining -= SEAT_ROWS[rowIdx].count;
+    }
+    return { rowIdx: 0, colIdx: 0 };
+  };
+
+  // Convert row/col offset back to seat index
+  const offsetToSeatIdx = (rowIdx: number, colIdx: number): number | null => {
+    if (rowIdx < 0 || rowIdx >= SEAT_ROWS.length) return null;
+    if (colIdx < 0 || colIdx >= SEAT_ROWS[rowIdx].count) return null;
+    
+    let seatIdx = 0;
+    for (let r = 0; r < rowIdx; r++) {
+      seatIdx += SEAT_ROWS[r].count;
+    }
+    return seatIdx + colIdx;
   };
 
   const handleDragStart = (event: any) => {
