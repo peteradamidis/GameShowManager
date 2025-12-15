@@ -1063,7 +1063,7 @@ export default function Contestants() {
                   htmlFor="filter-podium-story"
                   className="text-sm font-medium cursor-pointer"
                 >
-                  Has Podium Story
+                  Podium Story
                 </label>
               </div>
             </div>
