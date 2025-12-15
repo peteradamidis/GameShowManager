@@ -509,6 +509,57 @@ export class DbStorage implements IStorage {
     return updated;
   }
 
+  async batchUpdateSeatAssignments(
+    moves: Array<{ assignmentId: string; blockNumber: number; seatLabel: string }>
+  ): Promise<SeatAssignment[]> {
+    return await db.transaction(async (tx) => {
+      const results: SeatAssignment[] = [];
+      for (const move of moves) {
+        const [updated] = await tx
+          .update(seatAssignments)
+          .set({ blockNumber: move.blockNumber, seatLabel: move.seatLabel })
+          .where(eq(seatAssignments.id, move.assignmentId))
+          .returning();
+        if (updated) results.push(updated);
+      }
+      return results;
+    });
+  }
+
+  async batchMoveSeatAssignmentsWithTracking(
+    moves: Array<{ assignmentId: string; blockNumber: number; seatLabel: string }>
+  ): Promise<SeatAssignment[]> {
+    return await db.transaction(async (tx) => {
+      const results: SeatAssignment[] = [];
+      for (const move of moves) {
+        const [current] = await tx
+          .select()
+          .from(seatAssignments)
+          .where(eq(seatAssignments.id, move.assignmentId));
+        
+        if (!current) continue;
+        
+        const updateData: any = {
+          blockNumber: move.blockNumber,
+          seatLabel: move.seatLabel,
+        };
+        
+        if (!current.originalBlockNumber) {
+          updateData.originalBlockNumber = current.blockNumber;
+          updateData.originalSeatLabel = current.seatLabel;
+        }
+        
+        const [updated] = await tx
+          .update(seatAssignments)
+          .set(updateData)
+          .where(eq(seatAssignments.id, move.assignmentId))
+          .returning();
+        if (updated) results.push(updated);
+      }
+      return results;
+    });
+  }
+
   async updateSeatAssignmentWorkflow(
     id: string,
     workflowFields: Partial<SeatAssignment>
