@@ -42,6 +42,7 @@ export const contestants = pgTable("contestants", {
   auditionRating: text("audition_rating"), // Rating: A+, A, B+, B, C
   playerType: playerTypeEnum("player_type"), // Player, Backup, Player Partner
   groupSize: integer("group_size"), // Group size (1 = solo, 2+ = group), null = undefined
+  podiumStory: boolean("podium_story").default(false), // Has podium story
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

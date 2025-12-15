@@ -3,6 +3,7 @@ import { ImportExcelDialog } from "@/components/import-excel-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2, Users, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -129,6 +130,7 @@ export default function Contestants() {
   const [filterState, setFilterState] = useState<string>("all");
   const [postcodeFrom, setPostcodeFrom] = useState<string>("");
   const [postcodeTo, setPostcodeTo] = useState<string>("");
+  const [filterPodiumStory, setFilterPodiumStory] = useState(false);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -344,6 +346,11 @@ export default function Contestants() {
   // Apply state filter
   if (filterState !== "all") {
     displayedContestants = displayedContestants.filter(c => c.state === filterState);
+  }
+
+  // Apply podium story filter
+  if (filterPodiumStory) {
+    displayedContestants = displayedContestants.filter(c => c.podiumStory);
   }
 
   // Apply search filter (searches across ALL pages before pagination)
@@ -854,7 +861,7 @@ export default function Contestants() {
 
           {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
             filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || 
-            filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo) && (
+            filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory) && (
             <Button 
               variant="outline" 
               onClick={() => {
@@ -869,6 +876,7 @@ export default function Contestants() {
                 setPostcodeFrom("");
                 setPostcodeTo("");
                 setFilterGroupSize("all");
+                setFilterPodiumStory(false);
               }}
               data-testid="button-clear-filters"
             >
@@ -1040,6 +1048,24 @@ export default function Contestants() {
                   />
                 </div>
               </div>
+
+              <div className="flex items-center gap-2 mt-6">
+                <Checkbox
+                  id="filter-podium-story"
+                  checked={filterPodiumStory}
+                  onCheckedChange={(checked) => {
+                    setSelectedContestants([]);
+                    setFilterPodiumStory(checked as boolean);
+                  }}
+                  data-testid="checkbox-filter-podium-story"
+                />
+                <label 
+                  htmlFor="filter-podium-story"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Has Podium Story
+                </label>
+              </div>
             </div>
           </div>
         )}
@@ -1048,7 +1074,7 @@ export default function Contestants() {
       {/* Results Summary */}
       {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
         filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || 
-        filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo) && (
+        filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory) && (
         <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="secondary" data-testid="badge-filter-count">
             {displayedContestants.length} contestant{displayedContestants.length !== 1 ? 's' : ''}
@@ -1087,6 +1113,11 @@ export default function Contestants() {
           {(postcodeFrom || postcodeTo) && (
             <Badge variant="outline">
               Postcode: {postcodeFrom || '0'}-{postcodeTo || '9999'}
+            </Badge>
+          )}
+          {filterPodiumStory && (
+            <Badge variant="outline">
+              Podium Story: Yes
             </Badge>
           )}
         </div>
