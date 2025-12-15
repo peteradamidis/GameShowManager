@@ -970,9 +970,10 @@ export default function BookingMaster() {
                               <Input
                                 key={`med-${row.assignment.id}`}
                                 defaultValue={row.assignment.medicalQuestion || ""}
-                                onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "medicalQuestion", e.target.value)}
-                                placeholder="Y/N"
-                                className="h-6 text-xs w-10"
+                                onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "medicalQuestion", e.target.value.toUpperCase())}
+                                placeholder="Y"
+                                className="h-6 text-xs w-10 text-center"
+                                maxLength={1}
                                 data-testid={`input-medical-${row.seatId}`}
                               />
                             )}
