@@ -1220,6 +1220,23 @@ export default function BookingMaster() {
           </DialogHeader>
           
           <div className="flex-1 overflow-y-auto space-y-4 py-4">
+            {/* Recipients List */}
+            <div className="border rounded-lg p-3 bg-blue-50 dark:bg-blue-950/20 space-y-2">
+              <Label className="text-sm font-semibold text-blue-900 dark:text-blue-200">
+                Emails will be sent to:
+              </Label>
+              <div className="max-h-40 overflow-y-auto bg-white dark:bg-slate-950 rounded border border-blue-200 dark:border-blue-800 p-2 space-y-1">
+                {bookingRows
+                  .filter(row => row.assignment && selectedAssignments.has(row.assignment.id))
+                  .map(row => (
+                    <div key={row.assignment!.id} className="text-sm text-slate-700 dark:text-slate-300 flex justify-between gap-3 px-2 py-1">
+                      <span className="font-medium">{row.contestant?.name || 'Unknown'}</span>
+                      <span className="text-xs text-muted-foreground">{row.contestant?.email || 'No email'}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+            
             <div className="space-y-2">
               <Label htmlFor="email-subject">Subject</Label>
               <Input
