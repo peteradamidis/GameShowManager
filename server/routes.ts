@@ -478,16 +478,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Get gender with fallback to "Not Specified" if column doesn't exist
         const genderValue = row.GENDER || row.Gender || row.gender || "Not Specified";
         
-        // Get audition rating - try all possible column variations, then fallback to any column containing "audition" or "rating"
+        // Get audition rating - try all possible column variations, then fallback to any column containing "audition" or "rating" or "score"
         let auditionRatingValue = getColumnValue(row,
+                                    "Audition Score", "AUDITION SCORE", "audition score",
                                     "Audition Rati", "AUDITION RATI", "Audition Rati",
                                     "Audition Rating", "AUDITION RATING", "audition rating",
-                                    "Rating", "RATING", "rating");
+                                    "Rating", "RATING", "rating",
+                                    "Score", "SCORE", "score");
         
-        // If not found, look for any column with audition or rating in the name
+        // If not found, look for any column with audition or rating or score in the name
         if (!auditionRatingValue) {
           const auditionCol = Object.keys(row).find(k => 
-            k.toLowerCase().includes('audit') || k.toLowerCase().includes('rating')
+            k.toLowerCase().includes('audit') || k.toLowerCase().includes('rating') || k.toLowerCase().includes('score')
           );
           if (auditionCol && row[auditionCol]) {
             auditionRatingValue = row[auditionCol].toString();
@@ -498,11 +500,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Found audition rating for ${nameValue}: '${auditionRatingValue}'`);
         }
         
+        // Get group size from column
+        const groupSizeValue = getColumnValue(row,
+                               "Group Size", "GROUP SIZE", "group size",
+                               "GroupSize", "GROUPSIZE", "groupsize",
+                               "Size", "SIZE");
+        const parsedGroupSize = groupSizeValue ? parseInt(groupSizeValue.toString()) : null;
+        
+        // Get postcode from column
+        const postcodeValue = getColumnValue(row,
+                              "Postcode", "POSTCODE", "postcode",
+                              "Post Code", "POST CODE", "post code",
+                              "Zip", "ZIP", "zip",
+                              "Zip Code", "ZIP CODE", "zip code");
+        
+        // Get state from column (or extract from postcode for Australian postcodes)
+        const stateValue = getColumnValue(row,
+                           "State", "STATE", "state",
+                           "Province", "PROVINCE", "province",
+                           "Region", "REGION", "region");
+        
+        // Get standby indicator from column
+        const standbyValue = getColumnValue(row,
+                             "Standby", "STANDBY", "standby",
+                             "Is Standby", "IS STANDBY", "is standby",
+                             "Backup", "BACKUP", "backup");
+        
         return {
           name: nameValue.toString().trim(),
           age: isNaN(parsedAge) ? 0 : parsedAge,
           gender: genderValue,
           auditionRating: auditionRatingValue || undefined,
+          groupSize: (parsedGroupSize && !isNaN(parsedGroupSize)) ? parsedGroupSize : undefined,
+          postcode: postcodeValue ? postcodeValue.toString().trim() : undefined,
+          state: stateValue ? stateValue.toString().trim() : undefined,
+          isStandby: standbyValue ? standbyValue.toString().trim().toLowerCase() === 'yes' || standbyValue.toString().trim().toLowerCase() === 'true' || standbyValue.toString().trim() === '1' : false,
           // Handle GROUP ID column or Attending With column
           groupIdFromFile: row["GROUP ID"] || row["Group ID"] || row["group id"] || row["Group"] || row["GROUP"] || null,
           attendingWith: row["ATTENDING WITH"] || row["Attending With"] || row["attending with"] || 
@@ -528,6 +560,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           mobilityNotes: getColumnValue(row,
                          "CO Mobility/Acc", "CO MOBILITY/ACC",
                          "Mobility/Access/Medical Notes", "MOBILITY/ACCESS/MEDICAL NOTES",
+                         "Mobility Access/Medical Notes", "MOBILITY ACCESS/MEDICAL NOTES",
                          "Mobility/Access/Medical notes", "mobility/access/medical notes",
                          "MOBILITY NOTES", "Mobility Notes", "mobility_notes", 
                          "MOBILITY/ACCESS NOTES", "Mobility/Access Notes", 
@@ -625,14 +658,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: row.email,
           phone: row.phone,
           location: row.location,
+          postcode: row.postcode,
+          state: row.state,
           medicalInfo: row.medicalInfo,
           mobilityNotes: row.mobilityNotes,
           criminalRecord: row.criminalRecord,
           auditionRating: row.auditionRating,
+          groupSize: row.groupSize,
           groupId: nameToGroupId.get(row.name) || null,
           availabilityStatus: "available",
         });
         createdContestants.push(contestant);
+        
+        // Note: isStandby from import is stored on contestant record for display
+        // Actual standby assignments are created separately via the standby management system
       }
 
       res.json({
