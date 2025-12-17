@@ -623,7 +623,7 @@ export function ContestantTable({
         data-testid="input-table-photo-upload"
       />
       <div className="border rounded-md overflow-x-auto">
-        <Table className="min-w-[1400px]">
+        <Table className="min-w-[1200px]">
           <TableHeader>
             <TableRow>
               {onSelectionChange && (
@@ -645,9 +645,9 @@ export function ContestantTable({
               <TableHead>Attending With</TableHead>
               <TableHead>Group Size</TableHead>
               <TableHead>City</TableHead>
-              <TableHead>Medical Conditions</TableHead>
-              <TableHead>Mobility/Access Notes</TableHead>
-              <TableHead>Criminal Record</TableHead>
+              <TableHead className="max-w-[100px]">Medical</TableHead>
+              <TableHead className="max-w-[100px]">Mobility</TableHead>
+              <TableHead className="max-w-[100px]">Criminal</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -745,13 +745,13 @@ export function ContestantTable({
                       })()}
                     </div>
                   </TableCell>
-                  <TableCell className="max-w-[200px] truncate" title={contestant.medicalInfo || ""}>
+                  <TableCell className="max-w-[100px] truncate text-xs" title={contestant.medicalInfo || ""}>
                     {contestant.medicalInfo || "-"}
                   </TableCell>
-                  <TableCell className="max-w-[200px] truncate" title={contestant.mobilityNotes || ""}>
+                  <TableCell className="max-w-[100px] truncate text-xs" title={contestant.mobilityNotes || ""}>
                     {contestant.mobilityNotes || "-"}
                   </TableCell>
-                  <TableCell className="max-w-[200px] truncate" title={contestant.criminalRecord || ""}>
+                  <TableCell className="max-w-[100px] truncate text-xs" title={contestant.criminalRecord || ""}>
                     {contestant.criminalRecord || "-"}
                   </TableCell>
                 </TableRow>
