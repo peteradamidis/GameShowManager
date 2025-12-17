@@ -3446,7 +3446,25 @@ Deal or No Deal Production Team
               .replace(/\{\{confirmationLink\}\}/g, confirmationLink);
           } else {
             // Get banner URL from system config or use default
-            const bannerUrl = await storage.getSystemConfig('email_banner_url') || `${baseUrl}/uploads/branding/dond_banner.png`;
+            let bannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
+            
+            // Convert banner image to base64 for offline viewing
+            let bannerUrl = bannerUrlConfig;
+            if (bannerUrlConfig.startsWith('/')) {
+              // It's a local file path - read and convert to base64
+              const bannerPath = path.join(process.cwd(), bannerUrlConfig.replace(/^\//, ''));
+              try {
+                if (fs.existsSync(bannerPath)) {
+                  const imageBuffer = fs.readFileSync(bannerPath);
+                  const base64Image = imageBuffer.toString('base64');
+                  const ext = path.extname(bannerPath).toLowerCase().replace('.', '');
+                  const mimeType = ext === 'jpg' ? 'jpeg' : ext; // Normalize jpg to jpeg
+                  bannerUrl = `data:image/${mimeType};base64,${base64Image}`;
+                }
+              } catch (error) {
+                console.warn(`Warning: Could not read banner image at ${bannerPath}, using URL fallback:`, error);
+              }
+            }
             
             // Get configurable text from system config with defaults
             const emailHeadline = await storage.getSystemConfig('booking_email_headline') || 'Your Booking is Confirmed!';
