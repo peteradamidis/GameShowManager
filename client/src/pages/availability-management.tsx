@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Mail, Users, CheckCircle, Clock, XCircle, Send, Eye, RefreshCw, Search, Calendar, BarChart3 } from "lucide-react";
+import { Mail, Users, CheckCircle, Clock, XCircle, Send, Eye, RefreshCw, Search, Calendar, BarChart3, Edit, RotateCcw } from "lucide-react";
 import type { Contestant, RecordDay } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -49,6 +51,13 @@ type StatsByDay = {
   total: number;
 };
 
+const DEFAULT_EMAIL_SUBJECT = "Deal or No Deal - Availability Confirmation Request";
+const DEFAULT_EMAIL_HEADLINE = "Confirm Your Availability";
+const DEFAULT_EMAIL_INTRO = "Thank you for registering to be part of the Deal or No Deal audience! We're excited to potentially have you join us for an upcoming recording session.";
+const DEFAULT_EMAIL_INSTRUCTIONS = "Please click the button below to let us know which recording dates work for you. This helps us plan our audience seating and ensures we can accommodate you on your preferred day.";
+const DEFAULT_EMAIL_BUTTON_TEXT = "Select My Available Dates";
+const DEFAULT_EMAIL_FOOTER = "This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.";
+
 export default function AvailabilityManagement() {
   const { toast } = useToast();
   const [selectedContestants, setSelectedContestants] = useState<Set<string>>(new Set());
@@ -57,6 +66,13 @@ export default function AvailabilityManagement() {
   const [confirmSendOpen, setConfirmSendOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [emailSubject, setEmailSubject] = useState(DEFAULT_EMAIL_SUBJECT);
+  const [emailHeadline, setEmailHeadline] = useState(DEFAULT_EMAIL_HEADLINE);
+  const [emailIntro, setEmailIntro] = useState(DEFAULT_EMAIL_INTRO);
+  const [emailInstructions, setEmailInstructions] = useState(DEFAULT_EMAIL_INSTRUCTIONS);
+  const [emailButtonText, setEmailButtonText] = useState(DEFAULT_EMAIL_BUTTON_TEXT);
+  const [emailFooter, setEmailFooter] = useState(DEFAULT_EMAIL_FOOTER);
 
   const { data: stats } = useQuery<AvailabilityStats>({
     queryKey: ["/api/availability/status"],
@@ -78,11 +94,30 @@ export default function AvailabilityManagement() {
     queryKey: ["/api/availability/stats-by-day"],
   });
 
+  const resetEmailToDefaults = () => {
+    setEmailSubject(DEFAULT_EMAIL_SUBJECT);
+    setEmailHeadline(DEFAULT_EMAIL_HEADLINE);
+    setEmailIntro(DEFAULT_EMAIL_INTRO);
+    setEmailInstructions(DEFAULT_EMAIL_INSTRUCTIONS);
+    setEmailButtonText(DEFAULT_EMAIL_BUTTON_TEXT);
+    setEmailFooter(DEFAULT_EMAIL_FOOTER);
+    toast({
+      title: "Email Reset",
+      description: "Email content has been reset to defaults.",
+    });
+  };
+
   const sendMutation = useMutation({
     mutationFn: async () => {
       return apiRequest("POST", "/api/availability/send", {
         contestantIds: Array.from(selectedContestants),
         recordDayIds: Array.from(selectedRecordDays),
+        emailSubject,
+        emailHeadline,
+        emailIntro,
+        emailInstructions,
+        emailButtonText,
+        emailFooter,
       });
     },
     onSuccess: (data: any) => {
@@ -617,85 +652,184 @@ export default function AvailabilityManagement() {
         <TabsContent value="preview" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Email Preview</CardTitle>
-              <CardDescription>
-                Preview how the availability check email will appear to contestants
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="border rounded-lg p-6 bg-muted/30 space-y-6">
-                {/* Email Header */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="font-medium text-muted-foreground">From:</span>
-                    <span>Deal or No Deal Production &lt;casting@example.com&gt;</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="font-medium text-muted-foreground">To:</span>
-                    <span className="text-primary">[Contestant Name] &lt;[email]&gt;</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="font-medium text-muted-foreground">Subject:</span>
-                    <span className="font-medium">Confirm Your Availability for Recording</span>
-                  </div>
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                  <CardTitle>Email Preview</CardTitle>
+                  <CardDescription>
+                    {isEditingEmail ? "Edit the availability email content" : "Preview how the availability check email will appear to contestants"}
+                  </CardDescription>
                 </div>
-
-                <hr />
-
-                {/* Email Body */}
-                <div className="space-y-4">
-                  <p>Dear <span className="text-primary font-medium">[Contestant Name]</span>,</p>
-                  
-                  <p>
-                    Thank you for your interest in participating in our show! We're excited to 
-                    potentially have you join us for an upcoming recording session.
-                  </p>
-
-                  <p>
-                    Please let us know your availability for the following recording dates by 
-                    clicking the link below:
-                  </p>
-
-                  <div className="bg-background border rounded-md p-4 space-y-2">
-                    <p className="font-medium">Upcoming Recording Dates:</p>
-                    <ul className="list-disc list-inside space-y-1 text-sm">
-                      {recordDays.slice(0, 5).map((day) => (
-                        <li key={day.id}>
-                          {format(new Date(day.date), 'EEEE, MMMM d, yyyy')}
-                          {day.rxNumber && <span className="text-muted-foreground"> - {day.rxNumber}</span>}
-                        </li>
-                      ))}
-                      {recordDays.length > 5 && (
-                        <li className="text-muted-foreground">...and {recordDays.length - 5} more dates</li>
-                      )}
-                    </ul>
-                  </div>
-
-                  <div className="bg-primary/5 border border-primary/20 rounded-md p-4 text-center">
-                    <Button className="pointer-events-none">
-                      Confirm My Availability
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditingEmail(!isEditingEmail)}
+                    data-testid="button-toggle-edit-email"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    {isEditingEmail ? "Preview" : "Edit Email"}
+                  </Button>
+                  {isEditingEmail && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={resetEmailToDefaults}
+                      data-testid="button-reset-email"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Reset to Defaults
                     </Button>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      This link will expire in 14 days
-                    </p>
-                  </div>
-
-                  <p>
-                    If you have any questions, please don't hesitate to reach out to our 
-                    production team.
-                  </p>
-
-                  <p>
-                    Best regards,<br />
-                    <span className="font-medium">The Production Team</span>
-                  </p>
+                  )}
                 </div>
               </div>
-
-              <p className="text-sm text-muted-foreground mt-4">
-                Note: Email integration requires RESEND_API_KEY and FROM_EMAIL to be configured. 
-                Currently, the system generates tokens and response URLs that can be manually shared.
-              </p>
+            </CardHeader>
+            <CardContent>
+              {isEditingEmail ? (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="email-subject">Email Subject</Label>
+                    <Input
+                      id="email-subject"
+                      value={emailSubject}
+                      onChange={(e) => setEmailSubject(e.target.value)}
+                      className="mt-1"
+                      data-testid="input-email-subject"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email-headline">Headline (Gold Banner Text)</Label>
+                    <Input
+                      id="email-headline"
+                      value={emailHeadline}
+                      onChange={(e) => setEmailHeadline(e.target.value)}
+                      className="mt-1"
+                      data-testid="input-email-headline"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email-intro">Introduction Paragraph</Label>
+                    <Textarea
+                      id="email-intro"
+                      value={emailIntro}
+                      onChange={(e) => setEmailIntro(e.target.value)}
+                      className="mt-1"
+                      rows={3}
+                      data-testid="textarea-email-intro"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email-instructions">Instructions (after dates list)</Label>
+                    <Textarea
+                      id="email-instructions"
+                      value={emailInstructions}
+                      onChange={(e) => setEmailInstructions(e.target.value)}
+                      className="mt-1"
+                      rows={3}
+                      data-testid="textarea-email-instructions"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email-button">Button Text</Label>
+                    <Input
+                      id="email-button"
+                      value={emailButtonText}
+                      onChange={(e) => setEmailButtonText(e.target.value)}
+                      className="mt-1"
+                      data-testid="input-email-button"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email-footer">Footer Text</Label>
+                    <Textarea
+                      id="email-footer"
+                      value={emailFooter}
+                      onChange={(e) => setEmailFooter(e.target.value)}
+                      className="mt-1"
+                      rows={2}
+                      data-testid="textarea-email-footer"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="border rounded-lg overflow-hidden" style={{ backgroundColor: '#2a0a0a' }}>
+                  <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+                    <div style={{ background: 'linear-gradient(180deg, #8B0000 0%, #5a0000 100%)', padding: '20px', textAlign: 'center' as const }}>
+                      <h2 style={{ color: '#D4AF37', fontSize: '24px', fontWeight: 'bold', margin: 0, letterSpacing: '2px' }}>
+                        DEAL OR NO DEAL
+                      </h2>
+                    </div>
+                    
+                    <div style={{ background: 'linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%)', padding: '25px 30px', textAlign: 'center' as const }}>
+                      <h1 style={{ color: '#D4AF37', fontSize: '26px', fontWeight: 'bold', margin: 0, letterSpacing: '3px', textTransform: 'uppercase' as const }}>
+                        {emailHeadline}
+                      </h1>
+                    </div>
+                    
+                    <div style={{ backgroundColor: '#2a0a0a', padding: '0 20px 25px 20px' }}>
+                      <div style={{ backgroundColor: '#ffffff', borderRadius: '10px', padding: '35px 30px' }}>
+                        <p style={{ color: '#333333', fontSize: '16px', lineHeight: 1.6, margin: '0 0 18px 0' }}>
+                          Hi <span style={{ color: '#8B0000', fontWeight: 'bold' }}>[Contestant Name]</span>,
+                        </p>
+                        
+                        <p style={{ color: '#333333', fontSize: '16px', lineHeight: 1.6, margin: '0 0 25px 0' }}>
+                          {emailIntro}
+                        </p>
+                        
+                        <div style={{ background: 'linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%)', borderRadius: '8px', borderLeft: '5px solid #D4AF37', padding: '20px', margin: '0 0 25px 0' }}>
+                          <h2 style={{ color: '#8B0000', fontSize: '14px', fontWeight: 'bold', margin: '0 0 12px 0', textTransform: 'uppercase' as const, letterSpacing: '1px' }}>
+                            Available Recording Dates
+                          </h2>
+                          <ul style={{ color: '#444444', fontSize: '15px', lineHeight: 1.7, margin: 0, paddingLeft: '20px' }}>
+                            {recordDays.slice(0, 5).map((day) => (
+                              <li key={day.id}>
+                                {format(new Date(day.date), 'EEEE, MMMM d, yyyy')}
+                                {day.rxNumber && <span style={{ color: '#888888' }}> ({day.rxNumber})</span>}
+                              </li>
+                            ))}
+                            {recordDays.length > 5 && (
+                              <li style={{ color: '#888888' }}>...and {recordDays.length - 5} more dates</li>
+                            )}
+                          </ul>
+                        </div>
+                        
+                        <p style={{ color: '#555555', fontSize: '15px', lineHeight: 1.6, margin: '0 0 25px 0' }}>
+                          {emailInstructions}
+                        </p>
+                        
+                        <div style={{ textAlign: 'center' as const, margin: '0 0 25px 0' }}>
+                          <span style={{ 
+                            display: 'inline-block', 
+                            background: 'linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)', 
+                            borderRadius: '8px', 
+                            padding: '16px 40px', 
+                            color: '#2a0a0a', 
+                            fontWeight: 'bold', 
+                            textTransform: 'uppercase' as const, 
+                            letterSpacing: '1.5px',
+                            fontSize: '15px'
+                          }}>
+                            {emailButtonText}
+                          </span>
+                          <p style={{ color: '#888888', fontSize: '12px', marginTop: '10px' }}>
+                            This link will expire in 14 days
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div style={{ backgroundColor: '#2a0a0a', padding: '15px 30px 30px 30px', textAlign: 'center' as const }}>
+                      <p style={{ color: '#aa8888', fontSize: '11px', lineHeight: 1.6, margin: 0 }}>
+                        {emailFooter}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4">
+                <span className="font-medium">Subject:</span>
+                <span>{emailSubject}</span>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

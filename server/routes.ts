@@ -2998,7 +2998,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { contestantIds, recordDayIds } = req.body;
+      const { 
+        contestantIds, 
+        recordDayIds,
+        emailSubject,
+        emailHeadline,
+        emailIntro,
+        emailInstructions,
+        emailButtonText,
+        emailFooter
+      } = req.body;
 
       if (!contestantIds || !Array.isArray(contestantIds) || contestantIds.length === 0) {
         return res.status(400).json({ error: "contestantIds array is required" });
@@ -3016,6 +3025,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const recordDays = await Promise.all(
         recordDayIds.map(id => storage.getRecordDayById(id))
       );
+      
+      // Get banner URL from system config or use default
+      let bannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
+      
+      // Convert banner image to base64 for offline viewing
+      let bannerUrl = bannerUrlConfig;
+      if (bannerUrlConfig.startsWith('/')) {
+        const bannerPath = path.join(process.cwd(), bannerUrlConfig.replace(/^\//, ''));
+        try {
+          if (fs.existsSync(bannerPath)) {
+            const imageBuffer = fs.readFileSync(bannerPath);
+            const base64Image = imageBuffer.toString('base64');
+            const ext = path.extname(bannerPath).toLowerCase().replace('.', '');
+            const mimeType = ext === 'jpg' ? 'jpeg' : ext;
+            bannerUrl = `data:image/${mimeType};base64,${base64Image}`;
+          }
+        } catch (error) {
+          console.warn(`Warning: Could not read banner image at ${bannerPath}, using URL fallback:`, error);
+        }
+      }
+      
+      // Default email content values
+      const finalEmailSubject = emailSubject || 'Deal or No Deal - Availability Confirmation Request';
+      const finalEmailHeadline = emailHeadline || 'Confirm Your Availability';
+      const finalEmailIntro = emailIntro || "Thank you for registering to be part of the Deal or No Deal audience! We're excited to potentially have you join us for an upcoming recording session.";
+      const finalEmailInstructions = emailInstructions || "Please click the button below to let us know which recording dates work for you. This helps us plan our audience seating and ensures we can accommodate you on your preferred day.";
+      const finalEmailButtonText = emailButtonText || 'Select My Available Dates';
+      const finalEmailFooter = emailFooter || 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.';
 
       for (const contestantId of contestantIds) {
         const contestant = await storage.getContestantById(contestantId);
@@ -3061,34 +3098,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const responseUrl = `${baseUrl}/availability/respond/${tokenRecord.token}`;
           
-          // Format record day dates for the email
-          const recordDaysList = recordDays
+          // Format record day dates for the email HTML list
+          const recordDaysHtml = recordDays
             .filter((rd): rd is NonNullable<typeof recordDays[0]> => rd !== null && rd !== undefined && rd.date !== undefined)
-            .map(rd => new Date(rd.date!).toLocaleDateString('en-US', {
+            .map(rd => {
+              const dateStr = new Date(rd.date!).toLocaleDateString('en-AU', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              });
+              const rxInfo = rd.rxNumber ? ` <span style="color: #888888;">(${rd.rxNumber})</span>` : '';
+              return `<li style="margin-bottom: 6px;">${dateStr}${rxInfo}</li>`;
+            })
+            .join('');
+
+          // Create professional HTML email template matching booking email aesthetic
+          const htmlEmailContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    <!-- Full-width Banner Image -->
+    <tr>
+      <td style="padding: 0; line-height: 0;">
+        <img src="${bannerUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />
+      </td>
+    </tr>
+    
+    <!-- Gold Title Bar -->
+    <tr>
+      <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          ${finalEmailHeadline}
+        </h1>
+      </td>
+    </tr>
+    
+    <!-- Content Card -->
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+          <tr>
+            <td style="padding: 35px 30px;">
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
+                Hi ${contestant.name.split(' ')[0]},
+              </p>
+              
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+                ${finalEmailIntro}
+              </p>
+              
+              <!-- Recording Dates Box -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                      Available Recording Dates
+                    </h2>
+                    <ul style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0; padding-left: 20px;">
+                      ${recordDaysHtml}
+                    </ul>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                ${finalEmailInstructions}
+              </p>
+              
+              <!-- Gold/Red CTA Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 25px auto;">
+                <tr>
+                  <td style="background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); border-radius: 8px; box-shadow: 0 4px 10px rgba(139,0,0,0.3);">
+                    <a href="${responseUrl}" target="_blank" style="display: inline-block; padding: 16px 40px; color: #2a0a0a; text-decoration: none; font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px;">${finalEmailButtonText}</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #888888; font-size: 12px; text-align: center; margin: 0;">
+                This link will expire in 14 days
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    
+    <!-- Footer -->
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
+        <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
+          ${finalEmailFooter}
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+          // Plain text fallback
+          const recordDaysText = recordDays
+            .filter((rd): rd is NonNullable<typeof recordDays[0]> => rd !== null && rd !== undefined && rd.date !== undefined)
+            .map(rd => new Date(rd.date!).toLocaleDateString('en-AU', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
               day: 'numeric'
             }))
-            .join('\n  • ');
+            .join('\n  - ');
+            
+          const plainTextContent = `Hi ${contestant.name},
 
-          // Create email with all record days listed
-          const emailContent = `
-Hi ${contestant.name},
+${finalEmailIntro}
 
-We need to confirm your availability for our upcoming recording sessions. Please respond to let us know which dates you can attend.
+Available Recording Dates:
+  - ${recordDaysText}
 
-Recording Dates:
-  • ${recordDaysList}
+${finalEmailInstructions}
 
-Please click the link below to select your availability for each date:
-${responseUrl}
+Click here to select your available dates: ${responseUrl}
 
 This link will expire in 14 days.
 
-Thank you!
-Deal or No Deal Production Team
-          `.trim();
+${finalEmailFooter}`;
 
           // Get sender name from settings
           const senderNameConfig = await storage.getSystemConfig('email_sender_name');
@@ -3098,9 +3234,9 @@ Deal or No Deal Production Team
 
           await sendEmail(
             contestant.email,
-            'Availability Confirmation Request - Multiple Dates',
-            emailContent,
-            undefined,
+            finalEmailSubject,
+            plainTextContent,
+            htmlEmailContent,
             emailConfig
           );
 
