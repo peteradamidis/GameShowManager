@@ -1611,6 +1611,91 @@ export default function Contestants() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Sticky Floating Action Bar - appears when contestants are selected */}
+      {selectedContestants.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t shadow-lg z-50 py-3 px-4" data-testid="floating-action-bar">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <span className="bg-primary text-primary-foreground px-2 py-1 rounded-md">
+                {selectedContestants.length}
+              </span>
+              <span className="text-muted-foreground">
+                contestant{selectedContestants.length !== 1 ? 's' : ''} selected
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedContestants([])}
+                className="text-muted-foreground hover:text-foreground"
+                data-testid="button-clear-selection"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear
+              </Button>
+            </div>
+            <div className="flex gap-2 flex-wrap justify-end">
+              {selectedContestantAssignment ? (
+                <Button 
+                  variant="destructive"
+                  onClick={() => removeSeatMutation.mutate(selectedContestantAssignment.id)}
+                  disabled={removeSeatMutation.isPending}
+                  data-testid="floating-button-remove-from-seat"
+                >
+                  <UserMinus className="h-4 w-4 mr-2" />
+                  {removeSeatMutation.isPending ? "Removing..." : "Remove from Seat"}
+                </Button>
+              ) : (
+                <>
+                  <Button 
+                    className="bg-amber-400/80 hover:bg-amber-500/80 text-amber-950"
+                    onClick={() => {
+                      refetchRecordDays();
+                      setStandbyDialogOpen(true);
+                    }} 
+                    data-testid="floating-button-add-standbys"
+                  >
+                    <UserCheck className="h-4 w-4 mr-2" />
+                    Book as Standby
+                  </Button>
+                  {showBookWithGroupButton && (
+                    <Button 
+                      className="bg-slate-200/80 hover:bg-slate-300/80 text-slate-900"
+                      onClick={() => {
+                        setGroupPreviewMembers(selectedContestantGroupMembers);
+                        setGroupPreviewOpen(true);
+                      }} 
+                      data-testid="floating-button-book-with-group"
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      Book with Group ({selectedContestantGroupMembers.length})
+                    </Button>
+                  )}
+                  <Button 
+                    onClick={handleOpenAssignDialog} 
+                    data-testid="floating-button-assign-contestants"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Assign to Record Day
+                  </Button>
+                </>
+              )}
+              <Button 
+                variant="destructive"
+                className="bg-red-600 hover:bg-red-700"
+                onClick={() => {
+                  setDeleteConfirmStep(1);
+                  setDeleteConfirmOpen(true);
+                }}
+                data-testid="floating-button-mass-delete"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
