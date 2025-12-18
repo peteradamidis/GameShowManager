@@ -56,6 +56,7 @@ export interface Contestant {
   playerType?: string;
   groupSize?: number | null;
   podiumStory?: boolean;
+  availableForStandby?: boolean;
 }
 
 interface SeatAssignment {

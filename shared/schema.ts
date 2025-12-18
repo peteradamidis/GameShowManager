@@ -43,6 +43,7 @@ export const contestants = pgTable("contestants", {
   playerType: playerTypeEnum("player_type"), // Player, Backup, Player Partner
   groupSize: integer("group_size"), // Group size (1 = solo, 2+ = group), null = undefined
   podiumStory: boolean("podium_story").default(false), // Has podium story
+  availableForStandby: boolean("available_for_standby").default(false), // Marked as available for standby in import
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

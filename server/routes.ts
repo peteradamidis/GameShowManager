@@ -520,10 +520,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                            "Province", "PROVINCE", "province",
                            "Region", "REGION", "region");
         
-        // Get standby indicator from column
+        // Get standby indicator from column (marks if available for standby from import)
         const standbyValue = getColumnValue(row,
                              "Standby", "STANDBY", "standby",
                              "Is Standby", "IS STANDBY", "is standby",
+                             "Available for Standby", "AVAILABLE FOR STANDBY", "available for standby",
                              "Backup", "BACKUP", "backup");
         
         return {
@@ -534,7 +535,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           groupSize: (parsedGroupSize && !isNaN(parsedGroupSize)) ? parsedGroupSize : undefined,
           postcode: postcodeValue ? postcodeValue.toString().trim() : undefined,
           state: stateValue ? stateValue.toString().trim() : undefined,
-          isStandby: standbyValue ? standbyValue.toString().trim().toLowerCase() === 'yes' || standbyValue.toString().trim().toLowerCase() === 'true' || standbyValue.toString().trim() === '1' : false,
+          availableForStandby: standbyValue ? standbyValue.toString().trim().toLowerCase() === 'yes' || standbyValue.toString().trim().toLowerCase() === 'true' || standbyValue.toString().trim() === '1' : false,
           // Handle GROUP ID column or Attending With column
           groupIdFromFile: row["GROUP ID"] || row["Group ID"] || row["group id"] || row["Group"] || row["GROUP"] || null,
           attendingWith: row["ATTENDING WITH"] || row["Attending With"] || row["attending with"] || 
@@ -667,11 +668,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           groupSize: row.groupSize,
           groupId: nameToGroupId.get(row.name) || null,
           availabilityStatus: "available",
+          availableForStandby: row.availableForStandby,
         });
         createdContestants.push(contestant);
-        
-        // Note: isStandby from import is stored on contestant record for display
-        // Actual standby assignments are created separately via the standby management system
       }
 
       res.json({

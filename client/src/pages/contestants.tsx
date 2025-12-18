@@ -311,11 +311,13 @@ export default function Contestants() {
     displayedContestants = displayedContestants.filter(c => c.location === filterLocation);
   }
   if (filterStandbyStatus !== "all") {
-    // Filter contestants by standby status
-    if (filterStandbyStatus === "is_standby") {
+    // Filter by standby status: "available_for_standby" = marked in import, "booked_standby" = actually booked
+    if (filterStandbyStatus === "available_for_standby") {
+      displayedContestants = displayedContestants.filter(c => c.availableForStandby);
+    } else if (filterStandbyStatus === "booked_standby") {
       displayedContestants = displayedContestants.filter(c => standbyContestantIds.has(c.id));
     } else if (filterStandbyStatus === "not_standby") {
-      displayedContestants = displayedContestants.filter(c => !standbyContestantIds.has(c.id));
+      displayedContestants = displayedContestants.filter(c => !standbyContestantIds.has(c.id) && !c.availableForStandby);
     }
   }
   if (filterGroupSize !== "all") {
@@ -1025,7 +1027,8 @@ export default function Contestants() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="is_standby">Is Standby</SelectItem>
+                    <SelectItem value="available_for_standby">Available for Standby</SelectItem>
+                    <SelectItem value="booked_standby">Booked as Standby</SelectItem>
                     <SelectItem value="not_standby">Not Standby</SelectItem>
                   </SelectContent>
                 </Select>
