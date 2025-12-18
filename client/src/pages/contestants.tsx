@@ -1,4 +1,4 @@
-import { ContestantTable, Contestant } from "@/components/contestant-table";
+import { ContestantTable, Contestant, getDistanceFromDocklands } from "@/components/contestant-table";
 import { ImportExcelDialog } from "@/components/import-excel-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -131,6 +131,7 @@ export default function Contestants() {
   const [postcodeFrom, setPostcodeFrom] = useState<string>("");
   const [postcodeTo, setPostcodeTo] = useState<string>("");
   const [filterPodiumStory, setFilterPodiumStory] = useState(false);
+  const [filterWithin60km, setFilterWithin60km] = useState(false);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -351,6 +352,15 @@ export default function Contestants() {
   // Apply podium story filter
   if (filterPodiumStory) {
     displayedContestants = displayedContestants.filter(c => c.podiumStory);
+  }
+
+  // Apply within 60km of Docklands filter
+  if (filterWithin60km) {
+    displayedContestants = displayedContestants.filter(c => {
+      const distanceInfo = getDistanceFromDocklands(c.location);
+      // Only include contestants within 60km (exclude those over 60km or unknown)
+      return distanceInfo !== null && !distanceInfo.isOver60km;
+    });
   }
 
   // Apply search filter (searches across ALL pages before pagination)
@@ -861,7 +871,7 @@ export default function Contestants() {
 
           {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
             filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || 
-            filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory) && (
+            filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km) && (
             <Button 
               variant="outline" 
               onClick={() => {
@@ -877,6 +887,7 @@ export default function Contestants() {
                 setPostcodeTo("");
                 setFilterGroupSize("all");
                 setFilterPodiumStory(false);
+                setFilterWithin60km(false);
               }}
               data-testid="button-clear-filters"
             >
@@ -1066,6 +1077,24 @@ export default function Contestants() {
                   Podium Story
                 </label>
               </div>
+
+              <div className="flex items-center gap-2 mt-6">
+                <Checkbox
+                  id="filter-within-60km"
+                  checked={filterWithin60km}
+                  onCheckedChange={(checked) => {
+                    setSelectedContestants([]);
+                    setFilterWithin60km(checked as boolean);
+                  }}
+                  data-testid="checkbox-filter-within-60km"
+                />
+                <label 
+                  htmlFor="filter-within-60km"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Within 60km
+                </label>
+              </div>
             </div>
           </div>
         )}
@@ -1074,7 +1103,7 @@ export default function Contestants() {
       {/* Results Summary */}
       {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
         filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || 
-        filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory) && (
+        filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km) && (
         <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="secondary" data-testid="badge-filter-count">
             {displayedContestants.length} contestant{displayedContestants.length !== 1 ? 's' : ''}
@@ -1118,6 +1147,11 @@ export default function Contestants() {
           {filterPodiumStory && (
             <Badge variant="outline">
               Podium Story: Yes
+            </Badge>
+          )}
+          {filterWithin60km && (
+            <Badge variant="outline">
+              Within 60km of Docklands
             </Badge>
           )}
         </div>

@@ -55,6 +55,7 @@ export interface Contestant {
   auditionRating?: string | null;
   playerType?: string;
   groupSize?: number | null;
+  podiumStory?: boolean;
 }
 
 interface SeatAssignment {
@@ -144,7 +145,7 @@ function calculateDistanceKm(lat1: number, lng1: number, lat2: number, lng2: num
 }
 
 // Get distance from Docklands for a city name
-function getDistanceFromDocklands(location: string | undefined | null): { distance: number; isOver60km: boolean } | null {
+export function getDistanceFromDocklands(location: string | undefined | null): { distance: number; isOver60km: boolean } | null {
   if (!location) return null;
   
   // Try to find a matching city (case-insensitive, partial match)
