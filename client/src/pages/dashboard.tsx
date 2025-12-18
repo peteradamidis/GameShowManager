@@ -50,14 +50,6 @@ export default function Dashboard() {
     const assignmentsForDay = seatAssignments.filter(sa => sa.recordDayId === rd.id);
     const filledSeats = assignmentsForDay.length;
     
-    // Calculate female percentage from assigned contestants
-    const assignedContestantIds = new Set(assignmentsForDay.map(sa => sa.contestantId));
-    const assignedContestantsForDay = contestants.filter(c => assignedContestantIds.has(c.id));
-    const femaleCount = assignedContestantsForDay.filter(c => c.gender === 'Female').length;
-    const femalePercent = assignedContestantsForDay.length > 0 
-      ? Math.round((femaleCount / assignedContestantsForDay.length) * 100) 
-      : 0;
-
     // Map status to expected format
     const statusMap: Record<string, "Draft" | "Ready" | "Invited" | "Completed"> = {
       draft: "Draft",
@@ -76,7 +68,6 @@ export default function Dashboard() {
       rxNumber: rd.rxNumber,
       totalSeats: rd.totalSeats || 154,
       filledSeats,
-      femalePercent,
       status: statusMap[rd.status] || "Draft",
     };
   });

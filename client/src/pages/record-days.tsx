@@ -151,8 +151,6 @@ export default function RecordDays() {
     .map((day) => {
       const dayAssignments = allAssignments.find((a) => a.recordDayId === day.id)?.assignments || [];
       const filledSeats = dayAssignments.length;
-      const femaleCount = dayAssignments.filter((a: any) => a.gender === 'Female').length;
-      const femalePercent = filledSeats > 0 ? Math.round((femaleCount / filledSeats) * 100) : 0;
 
       return {
         id: day.id,
@@ -160,7 +158,6 @@ export default function RecordDays() {
         rxNumber: day.rxNumber,
         totalSeats: day.totalSeats || 154,
         filledSeats,
-        femalePercent,
       };
     });
 
