@@ -647,8 +647,8 @@ export function ContestantTable({
               <TableHead>Attending With</TableHead>
               <TableHead>Group Size</TableHead>
               <TableHead>City</TableHead>
-              <TableHead className="max-w-[100px]">Medical</TableHead>
-              <TableHead className="max-w-[100px]">Mobility</TableHead>
+              <TableHead className="max-w-[100px]">Medical - App</TableHead>
+              <TableHead className="max-w-[100px]">Medical - Aud</TableHead>
               <TableHead className="max-w-[100px]">Criminal</TableHead>
             </TableRow>
           </TableHeader>
@@ -985,7 +985,7 @@ export function ContestantTable({
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <Label htmlFor="edit-medical" className="text-xs">Medical Conditions</Label>
+                        <Label htmlFor="edit-medical" className="text-xs">Medical - App</Label>
                         <Textarea
                           id="edit-medical"
                           value={editFormData.medicalInfo || ''}
@@ -996,7 +996,7 @@ export function ContestantTable({
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor="edit-mobility" className="text-xs">Mobility/Access Notes</Label>
+                        <Label htmlFor="edit-mobility" className="text-xs">Medical - Aud</Label>
                         <Textarea
                           id="edit-mobility"
                           value={editFormData.mobilityNotes || ''}
@@ -1277,13 +1277,13 @@ export function ContestantTable({
                     <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Medical</h3>
                     <div className="space-y-1 text-sm">
                       <div>
-                        <span className="text-xs text-muted-foreground">Conditions: </span>
+                        <span className="text-xs text-muted-foreground">App: </span>
                         <span className={contestantDetails.medicalInfo ? '' : 'text-muted-foreground italic'}>
                           {contestantDetails.medicalInfo || 'None'}
                         </span>
                       </div>
                       <div>
-                        <span className="text-xs text-muted-foreground">Mobility: </span>
+                        <span className="text-xs text-muted-foreground">Aud: </span>
                         <span className={contestantDetails.mobilityNotes ? '' : 'text-muted-foreground italic'}>
                           {contestantDetails.mobilityNotes || 'None'}
                         </span>

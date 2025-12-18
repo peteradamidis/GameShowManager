@@ -553,24 +553,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           location: row.ADDRESS || row.Address || row.address || 
                    row.CITY || row.City || row.city ||
                    row["Location"] || row["LOCATION"] || null,
-          medicalInfo: row["MEDICAL INFO"] || row["Medical Info"] || row["medical_info"] || row.medicalInfo ||
-                       row["MEDICAL"] || row["Medical"] || row["medical"] ||
-                       row["MEDICAL CONDITIONS"] || row["Medical Conditions"] || row["medical conditions"] ||
-                       row["Health Conditions"] || row["HEALTH CONDITIONS"] ||
-                       row["Health"] || row["HEALTH"] || null,
+          medicalInfo: row["MEDICAL CONDITIONS"] || row["Medical Conditions"] || row["medical conditions"] ||
+                       row["Health Conditions"] || row["HEALTH CONDITIONS"] || null,
           mobilityNotes: getColumnValue(row,
-                         "CO Mobility/Acc", "CO MOBILITY/ACC",
-                         "Mobility/Access/Medical Notes", "MOBILITY/ACCESS/MEDICAL NOTES",
                          "Mobility Access/Medical Notes", "MOBILITY ACCESS/MEDICAL NOTES",
+                         "Mobility/Access/Medical Notes", "MOBILITY/ACCESS/MEDICAL NOTES",
                          "Mobility/Access/Medical notes", "mobility/access/medical notes",
-                         "MOBILITY NOTES", "Mobility Notes", "mobility_notes", 
-                         "MOBILITY/ACCESS NOTES", "Mobility/Access Notes", 
-                         "ACCESS NOTES", "Access Notes",
-                         "Mobility", "MOBILITY",
-                         "Access", "ACCESS",
-                         "Accessibility", "ACCESSIBILITY",
-                         "Special Needs", "SPECIAL NEEDS",
-                         "Disability", "DISABILITY"),
+                         "CO Mobility/Acc", "CO MOBILITY/ACC"),
           criminalRecord: getColumnValue(row,
                           "Criminal Rec", "CRIMINAL REC",
                           "Criminal Record", "CRIMINAL RECORD", "criminal record",
