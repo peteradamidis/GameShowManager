@@ -457,6 +457,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           k.toLowerCase().includes('audit') || k.toLowerCase().includes('rating')
         );
         console.log("Audition rating column candidates:", auditRatingCandidates);
+        
+        // Log which columns match group size patterns
+        const groupSizeCandidates = Object.keys(rawData[0]).filter(k => {
+          const lk = k.toLowerCase();
+          return lk.includes('group') || lk.includes('size') || lk.includes('party');
+        });
+        console.log("Group size column candidates:", groupSizeCandidates);
       }
 
       // Helper function to get value by trying multiple column name variations
@@ -545,10 +552,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
+        // Log the raw value found before parsing
+        if (groupSizeValue) {
+          console.log(`Raw group size value for ${nameValue}: '${groupSizeValue}' (type: ${typeof groupSizeValue})`);
+        }
+        
         const parsedGroupSize = groupSizeValue ? parseInt(groupSizeValue.toString()) : null;
         
         if (parsedGroupSize && !isNaN(parsedGroupSize)) {
           console.log(`Parsed group size for ${nameValue}: ${parsedGroupSize}`);
+        } else if (groupSizeValue) {
+          console.log(`Failed to parse group size for ${nameValue} - raw value: '${groupSizeValue}'`);
         }
         
         // Get postcode from column
