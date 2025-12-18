@@ -1579,7 +1579,7 @@ export function ContestantTable({
               )}
               
               {!isEditMode && (
-                <div className="sticky bottom-0 z-50 flex justify-end gap-2 border-t bg-background pt-4 pb-4 flex-shrink-0">
+                <div className="flex justify-end gap-2 border-t bg-background pt-4 pb-4 flex-shrink-0">
                   <Button
                     variant="outline"
                     size="sm"
