@@ -473,6 +473,7 @@ export function ContestantTable({
   const [deleteConfirmContestantId, setDeleteConfirmContestantId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tableFileInputRef = useRef<HTMLInputElement>(null);
+  const contentScrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const { data: contestantDetails } = useQuery<Contestant>({
@@ -672,6 +673,10 @@ export function ContestantTable({
       // Set initial player type when dialog opens
       const assignment = seatAssignmentMap.get(selectedContestantId);
       setSelectedPlayerType((assignment as any)?.playerType || "");
+      // Scroll content to top when dialog opens
+      if (contentScrollRef.current) {
+        contentScrollRef.current.scrollTop = 0;
+      }
     }
   }, [detailDialogOpen, selectedContestantId]);
 
@@ -1051,7 +1056,7 @@ export function ContestantTable({
 
           {contestantDetails ? (
             <>
-              <div className="flex-1 overflow-y-auto">
+              <div ref={contentScrollRef} className="flex-1 overflow-y-auto min-h-0">
                 {isEditMode ? (
                   <div className="space-y-6 pr-4">
                 {/* Photo Section */}
