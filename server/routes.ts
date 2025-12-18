@@ -4252,18 +4252,18 @@ ${finalEmailFooter}`;
 </body>
 </html>`;
               
-              // Get PDF attachments from email assets
-              const objectStorageService = new ObjectStorageService();
-              const allAssets = await objectStorageService.listEmailAssets();
-              const pdfAssets = allAssets.filter(asset => asset.contentType === 'application/pdf');
-              
+              // Get configured PDF for auto-confirmation emails
+              const configuredPdfPath = await storage.getSystemConfig('auto_confirmation_pdf_path');
               const attachments = [];
-              for (const pdfAsset of pdfAssets) {
+              
+              if (configuredPdfPath && configuredPdfPath !== 'none') {
                 try {
-                  const { buffer, contentType, filename } = await objectStorageService.getObjectAsBuffer(pdfAsset.path);
+                  const objectStorageService = new ObjectStorageService();
+                  const { buffer, contentType, filename } = await objectStorageService.getObjectAsBuffer(configuredPdfPath);
                   attachments.push({ content: buffer, contentType, filename });
+                  console.log(`📎 Loaded configured PDF attachment: ${filename}`);
                 } catch (attachErr: any) {
-                  console.error(`Failed to load PDF attachment ${pdfAsset.path}:`, attachErr.message);
+                  console.error(`Failed to load configured PDF attachment ${configuredPdfPath}:`, attachErr.message);
                 }
               }
               

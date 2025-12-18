@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -66,6 +67,10 @@ export default function Settings() {
   const [emailAdditionalInstructions, setEmailAdditionalInstructions] = useState(EMAIL_TEMPLATE_DEFAULTS.booking_email_additional_instructions);
   const [emailFooter, setEmailFooter] = useState(EMAIL_TEMPLATE_DEFAULTS.booking_email_footer);
   const [emailTemplateChanged, setEmailTemplateChanged] = useState(false);
+  
+  // Auto-confirmation PDF state
+  const [autoConfirmationPdf, setAutoConfirmationPdf] = useState<string>("");
+  const [autoConfirmationPdfChanged, setAutoConfirmationPdfChanged] = useState(false);
 
   const { data: savedSenderName } = useQuery<string | null>({
     queryKey: ["/api/system-config/email_sender_name"],
@@ -78,6 +83,7 @@ export default function Settings() {
   const { data: savedButtonText } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_button_text"] });
   const { data: savedAdditionalInstructions } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_additional_instructions"] });
   const { data: savedFooter } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_footer"] });
+  const { data: savedAutoConfirmationPdf } = useQuery<string | null>({ queryKey: ["/api/system-config/auto_confirmation_pdf_path"] });
 
   useEffect(() => {
     if (savedSenderName) {
@@ -104,6 +110,10 @@ export default function Settings() {
   useEffect(() => {
     if (savedFooter) setEmailFooter(savedFooter);
   }, [savedFooter]);
+  
+  useEffect(() => {
+    if (savedAutoConfirmationPdf) setAutoConfirmationPdf(savedAutoConfirmationPdf);
+  }, [savedAutoConfirmationPdf]);
 
   const saveSenderNameMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -113,6 +123,20 @@ export default function Settings() {
       toast({ title: "Sender name saved" });
       setSenderNameChanged(false);
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/email_sender_name"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+  
+  const saveAutoConfirmationPdfMutation = useMutation({
+    mutationFn: async (pdfPath: string) => {
+      return await apiRequest("PUT", "/api/system-config/auto_confirmation_pdf_path", { value: pdfPath });
+    },
+    onSuccess: () => {
+      toast({ title: "Auto-confirmation PDF saved", description: "This PDF will be attached to confirmation emails sent after contestants confirm their booking." });
+      setAutoConfirmationPdfChanged(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/auto_confirmation_pdf_path"] });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -985,6 +1009,54 @@ export default function Settings() {
                     </div>
                   ))}
                 </div>
+              )}
+            </div>
+            
+            {/* Auto-Confirmation PDF Selection */}
+            <div className="border-t pt-4">
+              <h4 className="font-medium mb-2">Auto-Confirmation Email PDF</h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Select the PDF to attach when contestants confirm their booking. This works offline once configured.
+              </p>
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <Select 
+                    value={autoConfirmationPdf} 
+                    onValueChange={(value) => {
+                      setAutoConfirmationPdf(value);
+                      setAutoConfirmationPdfChanged(true);
+                    }}
+                  >
+                    <SelectTrigger data-testid="select-auto-confirmation-pdf">
+                      <SelectValue placeholder="Select a PDF..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No PDF attachment</SelectItem>
+                      {assets.filter(a => isPdf(a.contentType)).map((asset) => (
+                        <SelectItem key={asset.path} value={asset.path}>
+                          {asset.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  onClick={() => saveAutoConfirmationPdfMutation.mutate(autoConfirmationPdf)}
+                  disabled={!autoConfirmationPdfChanged || saveAutoConfirmationPdfMutation.isPending}
+                  data-testid="button-save-auto-confirmation-pdf"
+                >
+                  {saveAutoConfirmationPdfMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  Save
+                </Button>
+              </div>
+              {autoConfirmationPdf && autoConfirmationPdf !== "none" && (
+                <p className="text-xs text-green-600 mt-2">
+                  Currently using: {assets.find(a => a.path === autoConfirmationPdf)?.name || autoConfirmationPdf}
+                </p>
               )}
             </div>
           </CardContent>
