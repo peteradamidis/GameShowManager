@@ -145,12 +145,44 @@ function calculateDistanceKm(lat1: number, lng1: number, lat2: number, lng2: num
   return R * c;
 }
 
-// Get distance from Docklands for a city name
+// Postcode to coordinates mapping for Victoria (Australian postcodes)
+const POSTCODE_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  // Inner Melbourne
+  "3000": { lat: -37.8128, lng: 144.9633 }, // CBD
+  "3001": { lat: -37.8308, lng: 144.9692 }, // Docklands
+  "3002": { lat: -37.8397, lng: 144.9557 }, // Southbank
+  "3003": { lat: -37.8235, lng: 144.9872 }, // St Kilda Road
+  "3004": { lat: -37.8435, lng: 144.9892 }, // Melbourne
+  "3006": { lat: -37.8000, lng: 144.9500 }, // West Melbourne
+  "3011": { lat: -37.7800, lng: 144.8500 }, // Williamstown
+  // Outer areas
+  "3144": { lat: -37.8600, lng: 145.0500 }, // Glen Waverley
+  "3165": { lat: -37.9200, lng: 145.2300 }, // Mountain Gate
+  "3174": { lat: -37.9500, lng: 145.3800 }, // Lilydale
+  "3168": { lat: -38.0200, lng: 145.0800 }, // Dandenong
+  "3175": { lat: -38.1200, lng: 145.2700 }, // Cranbourne
+  "3015": { lat: -37.9000, lng: 144.6600 }, // Werribee
+  "3064": { lat: -37.6800, lng: 144.5800 }, // Melton
+  "3754": { lat: -38.1500, lng: 145.1200 }, // Frankston
+  "3803": { lat: -38.3000, lng: 145.0500 }, // Mornington
+};
+
+// Get distance from Docklands for a city name or postcode
 export function getDistanceFromDocklands(location: string | undefined | null): { distance: number; isOver60km: boolean } | null {
   if (!location) return null;
   
-  // Try to find a matching city (case-insensitive, partial match)
   const locationLower = location.toLowerCase().trim();
+  
+  // Try postcode lookup first (if it's 4 digits)
+  if (/^\d{4}$/.test(locationLower)) {
+    const coords = POSTCODE_COORDINATES[locationLower];
+    if (coords) {
+      const distance = calculateDistanceKm(DOCKLANDS_COORDS.lat, DOCKLANDS_COORDS.lng, coords.lat, coords.lng);
+      return { distance: Math.round(distance), isOver60km: distance > 60 };
+    }
+  }
+  
+  // Try to find a matching city (case-insensitive, partial match)
   for (const [city, coords] of Object.entries(CITY_COORDINATES)) {
     if (locationLower.includes(city.toLowerCase()) || city.toLowerCase().includes(locationLower)) {
       const distance = calculateDistanceKm(DOCKLANDS_COORDS.lat, DOCKLANDS_COORDS.lng, coords.lat, coords.lng);
@@ -1239,7 +1271,16 @@ export function ContestantTable({
                           })()}
                         </div>
                       )}
-                      {!contestantDetails.email && !contestantDetails.phone && !contestantDetails.location && (
+                      {contestantDetails.postcode && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Postcode:</span>
+                          <span>{contestantDetails.postcode}</span>
+                          {contestantDetails.state && (
+                            <span className="text-xs text-muted-foreground">{contestantDetails.state}</span>
+                          )}
+                        </div>
+                      )}
+                      {!contestantDetails.email && !contestantDetails.phone && !contestantDetails.location && !contestantDetails.postcode && (
                         <p className="text-muted-foreground italic text-xs">No contact info</p>
                       )}
                     </div>
