@@ -130,6 +130,43 @@ const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
   "Ocean Grove": { lat: -38.2600, lng: 144.5200 },
   "Lorne": { lat: -38.5417, lng: 143.9750 },
   "Apollo Bay": { lat: -38.7600, lng: 143.6700 },
+  "Prahran": { lat: -37.8600, lng: 145.0067 },
+  "South Yarra": { lat: -37.8750, lng: 145.0233 },
+  "Toorak": { lat: -37.8933, lng: 145.0400 },
+  "St Kilda": { lat: -37.8667, lng: 145.0200 },
+  "Elsternwick": { lat: -37.8667, lng: 145.0167 },
+  "Port Melbourne": { lat: -37.8000, lng: 144.8800 },
+  "Spotswood": { lat: -37.8267, lng: 144.8600 },
+  "Altona": { lat: -37.8667, lng: 144.7867 },
+  "Footscray": { lat: -37.8433, lng: 144.8067 },
+  "Carlton": { lat: -37.7667, lng: 144.9667 },
+  "Collingwood": { lat: -37.7533, lng: 145.0167 },
+  "Abbotsford": { lat: -37.7667, lng: 145.0533 },
+  "Fitzroy": { lat: -37.7333, lng: 145.0500 },
+  "Brunswick": { lat: -37.7300, lng: 144.9200 },
+  "Thornbury": { lat: -37.7067, lng: 144.9833 },
+  "Preston": { lat: -37.6867, lng: 145.0333 },
+  "Heidelberg": { lat: -37.7500, lng: 145.0833 },
+  "Ivanhoe": { lat: -37.7200, lng: 145.0900 },
+  "Eltham": { lat: -37.6900, lng: 145.1500 },
+  "Box Hill": { lat: -37.8200, lng: 145.1300 },
+  "Mitcham": { lat: -37.8600, lng: 145.1500 },
+  "Ringwood": { lat: -37.8300, lng: 145.2300 },
+  "Mooroolbark": { lat: -37.7800, lng: 145.3100 },
+  "Croydon": { lat: -37.7900, lng: 145.2800 },
+  "Nunawading": { lat: -37.8400, lng: 145.1700 },
+  "Blackburn": { lat: -37.8500, lng: 145.1800 },
+  "Oakleigh": { lat: -37.9000, lng: 145.1100 },
+  "Chadstone": { lat: -37.9100, lng: 145.0800 },
+  "Glen Waverley": { lat: -37.8800, lng: 145.1400 },
+  "Rowville": { lat: -37.9500, lng: 145.1800 },
+  "Knoxfield": { lat: -37.9800, lng: 145.2000 },
+  "Ferntree Gully": { lat: -37.8900, lng: 145.2500 },
+  "Belgrave": { lat: -37.8500, lng: 145.3300 },
+  "Kew": { lat: -37.8067, lng: 145.0867 },
+  "Hawthorn": { lat: -37.8233, lng: 145.0733 },
+  "Camberwell": { lat: -37.8433, lng: 145.0600 },
+  "Balwyn": { lat: -37.8167, lng: 145.1033 },
 };
 
 // Calculate distance between two coordinates using Haversine formula
@@ -147,7 +184,7 @@ function calculateDistanceKm(lat1: number, lng1: number, lat2: number, lng2: num
 
 // Postcode to coordinates mapping for Victoria (Australian postcodes)
 const POSTCODE_COORDINATES: Record<string, { lat: number; lng: number }> = {
-  // Inner Melbourne
+  // Inner CBD & Close suburbs
   "3000": { lat: -37.8128, lng: 144.9633 }, // CBD
   "3001": { lat: -37.8308, lng: 144.9692 }, // Docklands
   "3002": { lat: -37.8397, lng: 144.9557 }, // Southbank
@@ -155,8 +192,30 @@ const POSTCODE_COORDINATES: Record<string, { lat: number; lng: number }> = {
   "3004": { lat: -37.8435, lng: 144.9892 }, // Melbourne
   "3006": { lat: -37.8000, lng: 144.9500 }, // West Melbourne
   "3011": { lat: -37.7800, lng: 144.8500 }, // Williamstown
-  // Outer areas
+  "3008": { lat: -37.7867, lng: 144.8633 }, // Southside
+  // Inner suburbs - South & East
+  "3181": { lat: -37.8600, lng: 145.0067 }, // Prahran
+  "3182": { lat: -37.8750, lng: 145.0233 }, // South Yarra
+  "3183": { lat: -37.8933, lng: 145.0400 }, // Toorak
+  "3142": { lat: -37.8533, lng: 145.0100 }, // St Kilda
+  "3141": { lat: -37.8667, lng: 145.0167 }, // Elsternwick
   "3144": { lat: -37.8600, lng: 145.0500 }, // Glen Waverley
+  "3187": { lat: -37.8867, lng: 144.9467 }, // Albert Park
+  "3205": { lat: -37.8533, lng: 144.9200 }, // Southbank
+  "3207": { lat: -37.8000, lng: 144.8800 }, // Port Melbourne
+  // Inner suburbs - West
+  "3012": { lat: -37.8267, lng: 144.8600 }, // Spotswood
+  "3014": { lat: -37.8667, lng: 144.7867 }, // Altona
+  "3013": { lat: -37.8433, lng: 144.8067 }, // Footscray
+  // Inner suburbs - North & NorthEast
+  "3051": { lat: -37.7667, lng: 144.9667 }, // Carlton
+  "3053": { lat: -37.7533, lng: 145.0167 }, // Collingwood
+  "3054": { lat: -37.7667, lng: 145.0533 }, // Abbotsford
+  "3068": { lat: -37.7333, lng: 145.0500 }, // Fitzroy
+  "3031": { lat: -37.7300, lng: 144.9200 }, // Brunswick
+  "3056": { lat: -37.7067, lng: 144.9833 }, // Thornbury
+  "3070": { lat: -37.6867, lng: 145.0333 }, // Preston
+  // Outer areas
   "3165": { lat: -37.9200, lng: 145.2300 }, // Mountain Gate
   "3174": { lat: -37.9500, lng: 145.3800 }, // Lilydale
   "3168": { lat: -38.0200, lng: 145.0800 }, // Dandenong
