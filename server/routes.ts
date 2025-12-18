@@ -55,18 +55,33 @@ const photoUpload = multer({
 function identifyGroups(contestants: any[]): Map<string, string[]> {
   const groupMap = new Map<string, string[]>();
   const nameToGroup = new Map<string, string>();
+  
+  // Create a normalized name to original name mapping for contestants
+  const normalizedNameMap = new Map<string, string>();
+  contestants.forEach((c) => {
+    const normalized = c.name.toLowerCase().trim();
+    normalizedNameMap.set(normalized, c.name);
+  });
 
   contestants.forEach((contestant) => {
+    const contestantNormalized = contestant.name.toLowerCase().trim();
+    
     if (!contestant.attendingWith) return;
     
+    // Parse attending with names
     const attendingWithNames = contestant.attendingWith
       .split(/[,&]/)
-      .map((name: string) => name.trim())
+      .map((name: string) => name.trim().toLowerCase())
       .filter((name: string) => name.length > 0);
 
     // Find all people in this group (including this contestant)
-    const groupMembers = new Set<string>([contestant.name]);
-    attendingWithNames.forEach((name: string) => groupMembers.add(name));
+    const groupMembers = new Set<string>([contestantNormalized]);
+    attendingWithNames.forEach((name: string) => {
+      // Only add if the person exists in our contestant list (case-insensitive)
+      if (normalizedNameMap.has(name)) {
+        groupMembers.add(name);
+      }
+    });
 
     // Check if any member already has a group
     let existingGroupId: string | null = null;
@@ -84,8 +99,10 @@ function identifyGroups(contestants: any[]): Map<string, string[]> {
       if (!groupMap.has(groupId)) {
         groupMap.set(groupId, []);
       }
-      if (!groupMap.get(groupId)!.includes(member)) {
-        groupMap.get(groupId)!.push(member);
+      // Use original name from contestant data, not normalized
+      const originalName = normalizedNameMap.get(member) || member;
+      if (!groupMap.get(groupId)!.includes(originalName)) {
+        groupMap.get(groupId)!.push(originalName);
       }
     });
   });
@@ -630,7 +647,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             createdGroups.set(groupId, dbGroupId);
             members.forEach((member: string) => {
-              nameToGroupId.set(member, dbGroupId);
+              // Use case-insensitive matching to set group ID
+              const matchedContestant = data.find((d: any) => d.name.toLowerCase().trim() === member.toLowerCase().trim());
+              if (matchedContestant) {
+                nameToGroupId.set(matchedContestant.name, dbGroupId);
+              }
             });
             groupCounter++;
           }
