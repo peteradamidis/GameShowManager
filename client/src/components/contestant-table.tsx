@@ -167,6 +167,69 @@ const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
   "Hawthorn": { lat: -37.8233, lng: 145.0733 },
   "Camberwell": { lat: -37.8433, lng: 145.0600 },
   "Balwyn": { lat: -37.8167, lng: 145.1033 },
+  "Officer": { lat: -37.6200, lng: 145.2000 },
+  "Berwick": { lat: -38.0167, lng: 145.3833 },
+  "Narre Warren": { lat: -38.0500, lng: 145.2500 },
+  "Cranbourne": { lat: -38.1200, lng: 145.2700 },
+  "Frankston": { lat: -38.1500, lng: 145.1200 },
+  "Mornington": { lat: -38.3000, lng: 145.0500 },
+  "Langwarrin": { lat: -38.3000, lng: 145.1500 },
+  "Hastings": { lat: -38.3800, lng: 145.2000 },
+  "Pakenham": { lat: -38.0200, lng: 145.4200 },
+  "Clyde": { lat: -37.9000, lng: 145.5200 },
+  "Gembrook": { lat: -37.8700, lng: 145.5500 },
+  "Werribee": { lat: -37.9000, lng: 144.6600 },
+  "Laverton": { lat: -37.9200, lng: 144.7500 },
+  "Melton": { lat: -37.6800, lng: 144.5800 },
+  "Bacchus Marsh": { lat: -37.7300, lng: 144.3300 },
+  "Ballan": { lat: -37.8200, lng: 144.1500 },
+  "Sunbury": { lat: -37.4800, lng: 144.8000 },
+  "Tullamarine": { lat: -37.6000, lng: 144.9000 },
+  "Essendon": { lat: -37.5800, lng: 144.8500 },
+  "Lilydale": { lat: -37.9500, lng: 145.3800 },
+  "Dandenong": { lat: -38.0200, lng: 145.0800 },
+  "Mountain Gate": { lat: -37.9200, lng: 145.2300 },
+  "Vermont South": { lat: -37.7000, lng: 145.2500 },
+  "Mount Waverley": { lat: -37.6500, lng: 145.3000 },
+  "Notting Hill": { lat: -37.7800, lng: 145.2000 },
+  "Mount Evelyn": { lat: -37.8100, lng: 145.3200 },
+  "Sassafras": { lat: -37.8000, lng: 145.4000 },
+  "Diggers Rest": { lat: -37.6000, lng: 144.3000 },
+  "Ashburton": { lat: -37.9200, lng: 145.0900 },
+  "Silvan": { lat: -37.7500, lng: 145.4800 },
+  "Bunyip": { lat: -38.1000, lng: 145.6000 },
+  "Koo Wee Rup": { lat: -38.2500, lng: 145.6500 },
+  "Tynong": { lat: -37.9800, lng: 145.5500 },
+  "Fountain Gate": { lat: -38.0333, lng: 145.3000 },
+  "Somerville": { lat: -38.3500, lng: 145.1800 },
+  "Albert Park": { lat: -37.8867, lng: 144.9467 },
+  "Southbank": { lat: -37.8397, lng: 144.9557 },
+  "Docklands": { lat: -37.8308, lng: 144.9692 },
+  "West Melbourne": { lat: -37.8000, lng: 144.9500 },
+  "Williamstown": { lat: -37.7800, lng: 144.8500 },
+  "Glenhuntly": { lat: -37.8867, lng: 145.0367 },
+  "Bentleigh": { lat: -37.9167, lng: 145.0567 },
+  "Moorabbin": { lat: -37.9300, lng: 145.0733 },
+  "McKinnon": { lat: -37.9533, lng: 145.0833 },
+  "Brighton": { lat: -37.9267, lng: 145.0200 },
+  "Sandringham": { lat: -37.9533, lng: 145.0033 },
+  "Mentone": { lat: -37.9800, lng: 145.0700 },
+  "Parkdale": { lat: -38.0067, lng: 145.0633 },
+  "Beaumaris": { lat: -38.0533, lng: 145.0500 },
+  "Highett": { lat: -37.9967, lng: 145.0367 },
+  "Ormond": { lat: -37.9467, lng: 145.0900 },
+  "Mordialloc": { lat: -38.0133, lng: 145.0833 },
+  "Auburn": { lat: -37.7167, lng: 144.9667 },
+  "Moonee Ponds": { lat: -37.7600, lng: 144.9133 },
+  "Ascot Vale": { lat: -37.7467, lng: 144.9233 },
+  "Coburg": { lat: -37.7400, lng: 144.9600 },
+  "Pascoe Vale": { lat: -37.7300, lng: 144.9500 },
+  "Fawkner": { lat: -37.7167, lng: 144.9867 },
+  "Airport West": { lat: -37.7200, lng: 144.8667 },
+  "Keilor": { lat: -37.7133, lng: 144.8000 },
+  "Niddrie": { lat: -37.7533, lng: 144.8467 },
+  "Avondale Heights": { lat: -37.7567, lng: 144.8267 },
+  "Sunshine": { lat: -37.8000, lng: 144.7600 },
 };
 
 // Calculate distance between two coordinates using Haversine formula
@@ -215,15 +278,54 @@ const POSTCODE_COORDINATES: Record<string, { lat: number; lng: number }> = {
   "3031": { lat: -37.7300, lng: 144.9200 }, // Brunswick
   "3056": { lat: -37.7067, lng: 144.9833 }, // Thornbury
   "3070": { lat: -37.6867, lng: 145.0333 }, // Preston
-  // Outer areas
+  // Outer South East
   "3165": { lat: -37.9200, lng: 145.2300 }, // Mountain Gate
   "3174": { lat: -37.9500, lng: 145.3800 }, // Lilydale
   "3168": { lat: -38.0200, lng: 145.0800 }, // Dandenong
   "3175": { lat: -38.1200, lng: 145.2700 }, // Cranbourne
-  "3015": { lat: -37.9000, lng: 144.6600 }, // Werribee
-  "3064": { lat: -37.6800, lng: 144.5800 }, // Melton
+  "3170": { lat: -38.1500, lng: 145.3500 }, // Badger Creek
+  "3806": { lat: -38.0167, lng: 145.3833 }, // Berwick
+  "3805": { lat: -38.0333, lng: 145.3000 }, // Fountain Gate
+  "3804": { lat: -38.0500, lng: 145.2500 }, // Narre Warren
+  "3910": { lat: -38.3000, lng: 145.1500 }, // Langwarrin
+  "3912": { lat: -38.3500, lng: 145.1800 }, // Somerville
+  "3915": { lat: -38.3800, lng: 145.2000 }, // Hastings
+  "3783": { lat: -37.8700, lng: 145.5500 }, // Gembrook
+  "3810": { lat: -38.0200, lng: 145.4200 }, // Pakenham
+  "3978": { lat: -37.9000, lng: 145.5200 }, // Clyde
+  "3821": { lat: -38.1000, lng: 145.6000 }, // Bunyip
+  "3981": { lat: -38.2500, lng: 145.6500 }, // Koo Wee Rup
+  "3813": { lat: -37.9800, lng: 145.5500 }, // Tynong
   "3754": { lat: -38.1500, lng: 145.1200 }, // Frankston
   "3803": { lat: -38.3000, lng: 145.0500 }, // Mornington
+  // Outer South West
+  "3015": { lat: -37.9000, lng: 144.6600 }, // Werribee
+  "3030": { lat: -37.9200, lng: 144.7500 }, // Laverton
+  "3026": { lat: -37.8700, lng: 144.6300 }, // Docklands West
+  "3032": { lat: -37.7800, lng: 144.6500 }, // Williamstown North
+  // Outer West
+  "3064": { lat: -37.6800, lng: 144.5800 }, // Melton
+  "3038": { lat: -37.7300, lng: 144.3300 }, // Bacchus Marsh
+  "3342": { lat: -37.8200, lng: 144.1500 }, // Ballan
+  "3370": { lat: -37.7800, lng: 143.9500 }, // Buninyong
+  "3097": { lat: -37.6500, lng: 144.4000 }, // Gisborne
+  "3350": { lat: -37.5500, lng: 143.8000 }, // Ballarat
+  // Outer North West
+  "3341": { lat: -37.4800, lng: 144.8000 }, // Sunbury
+  "3024": { lat: -37.6000, lng: 144.9000 }, // Tullamarine
+  "3022": { lat: -37.5800, lng: 144.8500 }, // Essendon
+  // Outer East
+  "3040": { lat: -37.6700, lng: 145.3500 }, // Narre Warren East
+  "3037": { lat: -37.6200, lng: 145.2000 }, // Officer
+  "3134": { lat: -37.7500, lng: 145.4800 }, // Silvan
+  "3161": { lat: -37.9200, lng: 145.0900 }, // Ashburton
+  // Outer North East
+  "3077": { lat: -37.7000, lng: 145.2500 }, // Vermont South
+  "3088": { lat: -37.6500, lng: 145.3000 }, // Mount Waverley
+  "3149": { lat: -37.7800, lng: 145.2000 }, // Notting Hill
+  "3124": { lat: -37.8100, lng: 145.3200 }, // Mount Evelyn
+  "3135": { lat: -37.8000, lng: 145.4000 }, // Sassafras
+  "3957": { lat: -37.6000, lng: 144.3000 }, // Diggers Rest
 };
 
 // Get distance from Docklands for a city name or postcode
