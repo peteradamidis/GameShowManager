@@ -133,6 +133,7 @@ export default function Contestants() {
   const [filterPodiumStory, setFilterPodiumStory] = useState(false);
   const [filterWithin60km, setFilterWithin60km] = useState(false);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [deleteConfirmStep, setDeleteConfirmStep] = useState<1 | 2>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>("");
   
@@ -697,30 +698,64 @@ export default function Contestants() {
 
   return (
     <div className="space-y-6">
-      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+      <Dialog open={deleteConfirmOpen} onOpenChange={(open) => {
+        setDeleteConfirmOpen(open);
+        if (!open) setDeleteConfirmStep(1);
+      }}>
         <DialogContent>
           <DialogHeader>
             <div className="flex items-center gap-3">
-              <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-500 flex-shrink-0" />
-              <DialogTitle>Delete Contestant</DialogTitle>
+              <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-500 flex-shrink-0" />
+              <DialogTitle className="text-red-600 dark:text-red-500">
+                {deleteConfirmStep === 1 ? "Delete Contestants" : "FINAL WARNING"}
+              </DialogTitle>
             </div>
-            <DialogDescription>
-              Are you sure you want to permanently delete {selectedContestants.length} contestant{selectedContestants.length !== 1 ? 's' : ''}? This action cannot be undone.
+            <DialogDescription className="pt-2">
+              {deleteConfirmStep === 1 ? (
+                <>
+                  You are about to delete <strong>{selectedContestants.length} contestant{selectedContestants.length !== 1 ? 's' : ''}</strong>. 
+                  This will remove all their data including availability responses, booking confirmations, and seat assignments.
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 p-3 bg-red-100 dark:bg-red-950 border border-red-300 dark:border-red-800 rounded-md">
+                    <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-500 flex-shrink-0" />
+                    <span className="font-semibold text-red-700 dark:text-red-400">
+                      This action is PERMANENT and CANNOT be undone!
+                    </span>
+                  </div>
+                  <p>
+                    Are you absolutely sure you want to permanently delete <strong>{selectedContestants.length} contestant{selectedContestants.length !== 1 ? 's' : ''}</strong>?
+                  </p>
+                </div>
+              )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
-            <Button 
-              variant="destructive" 
-              onClick={() => {
-                selectedContestants.forEach(id => {
-                  deleteContestantMutation.mutate(id);
-                });
-              }}
-              disabled={deleteContestantMutation.isPending}
-            >
-              {deleteContestantMutation.isPending ? "Deleting..." : "Delete"}
-            </Button>
+            <Button variant="outline" onClick={() => {
+              setDeleteConfirmOpen(false);
+              setDeleteConfirmStep(1);
+            }}>Cancel</Button>
+            {deleteConfirmStep === 1 ? (
+              <Button 
+                variant="destructive" 
+                onClick={() => setDeleteConfirmStep(2)}
+              >
+                Continue to Delete
+              </Button>
+            ) : (
+              <Button 
+                variant="destructive" 
+                onClick={() => {
+                  selectedContestants.forEach(id => {
+                    deleteContestantMutation.mutate(id);
+                  });
+                }}
+                disabled={deleteContestantMutation.isPending}
+              >
+                {deleteContestantMutation.isPending ? "Deleting..." : "Yes, Delete Permanently"}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -783,6 +818,18 @@ export default function Contestants() {
                     </Button>
                   </>
                 )}
+                <Button 
+                  variant="destructive"
+                  className="bg-red-600 hover:bg-red-700"
+                  onClick={() => {
+                    setDeleteConfirmStep(1);
+                    setDeleteConfirmOpen(true);
+                  }}
+                  data-testid="button-mass-delete"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete {selectedContestants.length}
+                </Button>
               </>
             )}
           </div>
