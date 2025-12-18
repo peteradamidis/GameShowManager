@@ -673,10 +673,18 @@ export function ContestantTable({
       // Set initial player type when dialog opens
       const assignment = seatAssignmentMap.get(selectedContestantId);
       setSelectedPlayerType((assignment as any)?.playerType || "");
-      // Scroll content to top when dialog opens
-      if (contentScrollRef.current) {
-        contentScrollRef.current.scrollTop = 0;
-      }
+      // Scroll content to top when dialog opens - use multiple approaches for reliability
+      const scrollToTop = () => {
+        if (contentScrollRef.current) {
+          contentScrollRef.current.scrollTop = 0;
+        }
+      };
+      // Try immediate scroll
+      scrollToTop();
+      // Also try after next frame
+      requestAnimationFrame(scrollToTop);
+      // And after a tiny delay as backup
+      setTimeout(scrollToTop, 10);
     }
   }, [detailDialogOpen, selectedContestantId]);
 
