@@ -908,9 +908,9 @@ export function ContestantTable({
               <TableHead>Attending With</TableHead>
               <TableHead>Group Size</TableHead>
               <TableHead>City</TableHead>
-              <TableHead className="max-w-[100px]">Medical - App</TableHead>
-              <TableHead className="max-w-[100px]">Medical - Aud</TableHead>
-              <TableHead className="max-w-[100px]">Criminal</TableHead>
+              <TableHead className="max-w-[150px]">Medical - App</TableHead>
+              <TableHead className="max-w-[150px]">Medical - Aud</TableHead>
+              <TableHead className="max-w-[150px]">Criminal</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -1008,13 +1008,13 @@ export function ContestantTable({
                       })()}
                     </div>
                   </TableCell>
-                  <TableCell className="max-w-[100px] truncate text-xs" title={contestant.medicalInfo || ""}>
+                  <TableCell className="max-w-[150px] truncate text-xs" title={contestant.medicalInfo || ""}>
                     {contestant.medicalInfo || "-"}
                   </TableCell>
-                  <TableCell className="max-w-[100px] truncate text-xs" title={contestant.mobilityNotes || ""}>
+                  <TableCell className="max-w-[150px] truncate text-xs" title={contestant.mobilityNotes || ""}>
                     {contestant.mobilityNotes || "-"}
                   </TableCell>
-                  <TableCell className="max-w-[100px] truncate text-xs" title={contestant.criminalRecord || ""}>
+                  <TableCell className="max-w-[150px] truncate text-xs" title={contestant.criminalRecord || ""}>
                     {contestant.criminalRecord || "-"}
                   </TableCell>
                 </TableRow>
