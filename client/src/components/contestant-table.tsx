@@ -674,19 +674,17 @@ export function ContestantTable({
       // Set initial player type when dialog opens
       const assignment = seatAssignmentMap.get(selectedContestantId);
       setSelectedPlayerType((assignment as any)?.playerType || "");
-      // Scroll both DialogContent and inner content to top when dialog opens
+      // Scroll DialogContent to top when dialog opens - use setTimeout to ensure DOM is ready
       const scrollToTop = () => {
         if (dialogContentRef.current) {
           dialogContentRef.current.scrollTop = 0;
         }
-        if (contentScrollRef.current) {
-          contentScrollRef.current.scrollTop = 0;
-        }
       };
-      // Try immediate scroll
+      // Use multiple timing approaches for reliability
       scrollToTop();
-      // Also try after next frame to ensure DOM is ready
       requestAnimationFrame(scrollToTop);
+      setTimeout(scrollToTop, 0);
+      setTimeout(scrollToTop, 50);
     }
   }, [detailDialogOpen, selectedContestantId]);
 
@@ -1041,7 +1039,7 @@ export function ContestantTable({
 
       {/* Contestant Detail Dialog */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-        <DialogContent ref={dialogContentRef} className="max-w-4xl flex flex-col h-[90vh] overflow-hidden" data-testid="dialog-contestant-details">
+        <DialogContent ref={dialogContentRef} className="max-w-4xl flex flex-col h-[90vh]" data-testid="dialog-contestant-details">
           <DialogHeader className="pb-2 flex-shrink-0">
             <div className="flex items-center justify-between gap-4">
               <div>
