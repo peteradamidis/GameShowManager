@@ -535,7 +535,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           groupSize: (parsedGroupSize && !isNaN(parsedGroupSize)) ? parsedGroupSize : undefined,
           postcode: postcodeValue ? postcodeValue.toString().trim() : undefined,
           state: stateValue ? stateValue.toString().trim() : undefined,
-          availableForStandby: standbyValue ? standbyValue.toString().trim().toLowerCase() === 'yes' || standbyValue.toString().trim().toLowerCase() === 'true' || standbyValue.toString().trim() === '1' : false,
+          availableForStandby: standbyValue ? standbyValue.toString().trim().toLowerCase() === 'standby' : false,
           // Handle GROUP ID column or Attending With column
           groupIdFromFile: row["GROUP ID"] || row["Group ID"] || row["group id"] || row["Group"] || row["GROUP"] || null,
           attendingWith: row["ATTENDING WITH"] || row["Attending With"] || row["attending with"] || 
