@@ -818,18 +818,6 @@ export default function Contestants() {
                     </Button>
                   </>
                 )}
-                <Button 
-                  variant="destructive"
-                  className="bg-red-600 hover:bg-red-700"
-                  onClick={() => {
-                    setDeleteConfirmStep(1);
-                    setDeleteConfirmOpen(true);
-                  }}
-                  data-testid="button-mass-delete"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete {selectedContestants.length}
-                </Button>
               </>
             )}
           </div>
@@ -837,6 +825,20 @@ export default function Contestants() {
         {/* Import button - always visible */}
         <div className="flex gap-2 justify-end">
           <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
+          {selectedContestants.length > 0 && (
+            <Button 
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                setDeleteConfirmStep(1);
+                setDeleteConfirmOpen(true);
+              }}
+              data-testid="button-mass-delete"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete {selectedContestants.length}
+            </Button>
+          )}
         </div>
       </div>
 
