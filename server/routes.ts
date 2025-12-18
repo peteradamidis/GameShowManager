@@ -517,12 +517,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Found audition rating for ${nameValue}: '${auditionRatingValue}'`);
         }
         
-        // Get group size from column
-        const groupSizeValue = getColumnValue(row,
+        // Get group size from column - try all possible column variations
+        let groupSizeValue = getColumnValue(row,
                                "Group Size", "GROUP SIZE", "group size",
                                "GroupSize", "GROUPSIZE", "groupsize",
-                               "Size", "SIZE");
+                               "Size", "SIZE", "size",
+                               "Number in Group", "NUMBER IN GROUP", "number in group",
+                               "No. in Group", "NO. IN GROUP", "no. in group",
+                               "Group #", "GROUP #", "group #",
+                               "Party Size", "PARTY SIZE", "party size",
+                               "Group Count", "GROUP COUNT", "group count",
+                               "Num in Group", "NUM IN GROUP", "num in group",
+                               "# in Group", "# IN GROUP", "# in group",
+                               "Grp Size", "GRP SIZE", "grp size");
+        
+        // If not found, look for any column with "group" and ("size" or "number" or "count" or "#") in the name
+        if (!groupSizeValue) {
+          const groupSizeCol = Object.keys(row).find(k => {
+            const lowerKey = k.toLowerCase();
+            return (lowerKey.includes('group') && (lowerKey.includes('size') || lowerKey.includes('number') || lowerKey.includes('count') || lowerKey.includes('#') || lowerKey.includes('no'))) ||
+                   (lowerKey.includes('party') && lowerKey.includes('size')) ||
+                   (lowerKey === 'size' || lowerKey === 'grp size');
+          });
+          if (groupSizeCol && row[groupSizeCol]) {
+            groupSizeValue = row[groupSizeCol].toString();
+            console.log(`Found group size for ${nameValue} in column '${groupSizeCol}': '${groupSizeValue}'`);
+          }
+        }
+        
         const parsedGroupSize = groupSizeValue ? parseInt(groupSizeValue.toString()) : null;
+        
+        if (parsedGroupSize && !isNaN(parsedGroupSize)) {
+          console.log(`Parsed group size for ${nameValue}: ${parsedGroupSize}`);
+        }
         
         // Get postcode from column
         const postcodeValue = getColumnValue(row,
