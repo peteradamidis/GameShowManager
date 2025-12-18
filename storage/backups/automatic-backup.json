@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-18T00:46:41.288Z",
+  "exportedAt": "2025-12-18T01:45:53.519Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -160,6 +160,366 @@
     ],
     "contestants": [
       {
+        "id": "87467196-8e6a-4aa4-a098-051eeae34713",
+        "name": "Matthew Sjostrom",
+        "age": 24,
+        "gender": "Male",
+        "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
+        "availabilityStatus": "available",
+        "attendingWith": "Roxanne Benko, Matthew Sjostrom, Lauren Namua",
+        "email": "mattbenko01@gmail.com",
+        "phone": "451710041",
+        "location": "Prahran",
+        "postcode": "3181",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 3,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:04.100Z"
+      },
+      {
+        "id": "5c3852ec-d7b5-4916-a398-829cd32746c6",
+        "name": "Maddie Streader",
+        "age": 27,
+        "gender": "Female",
+        "groupId": "8a692ea1-5300-494c-8074-19f479c5284d",
+        "availabilityStatus": "available",
+        "attendingWith": "Marc Cuspilli",
+        "email": "maddiestreader@outlook.com",
+        "phone": "413901065",
+        "location": "Doncaster",
+        "postcode": "3108",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:04.247Z"
+      },
+      {
+        "id": "41823bfb-d4b8-402c-97f4-109282880398",
+        "name": "Jynese Bernard",
+        "age": 44,
+        "gender": "Female",
+        "groupId": null,
+        "availabilityStatus": "available",
+        "attendingWith": null,
+        "email": "LADEMOISELLE81@GMAIL.COM",
+        "phone": "422223257",
+        "location": "Preston",
+        "postcode": "3072",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 1,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:04.351Z"
+      },
+      {
+        "id": "03349789-5ef5-461b-b37e-ceaa6d5bfed1",
+        "name": "Emma Hall",
+        "age": 54,
+        "gender": "Female",
+        "groupId": "6f3cbd80-aae5-463e-836b-f1ecf0c504a2",
+        "availabilityStatus": "available",
+        "attendingWith": "Emma Hall, Emma Heine, Charlotte Hastie",
+        "email": "emmaj.hall@bigpond.com",
+        "phone": "433792195",
+        "location": "Melbourne",
+        "postcode": "3195",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 3,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:04.454Z"
+      },
+      {
+        "id": "c388f104-81db-45a7-a92d-a5c012b99daf",
+        "name": "Eva Irwin",
+        "age": 25,
+        "gender": "Female",
+        "groupId": "3e3161fd-95f1-4ce9-9810-0ab1d377e2b2",
+        "availabilityStatus": "available",
+        "attendingWith": "Solo ",
+        "email": "evairwin00@gmail.com",
+        "phone": "413427475",
+        "location": "Spring Gully",
+        "postcode": "3550",
+        "state": null,
+        "medicalInfo": "I’m currently in a moon boot, will be off it after the 2nd of April",
+        "mobilityNotes": "No ",
+        "criminalRecord": "No ",
+        "photoUrl": null,
+        "auditionRating": "A",
+        "playerType": null,
+        "groupSize": 1,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:04.558Z"
+      },
+      {
+        "id": "ffc26030-f308-47e2-b44e-448f1a6baffc",
+        "name": "Kerry Wellington",
+        "age": 60,
+        "gender": "Female",
+        "groupId": "5b77330c-45dc-4177-b704-50e8d2e75d75",
+        "availabilityStatus": "available",
+        "attendingWith": "Would be a group of up to 8 ladies.\r\nAmanda Hobbs\r\nKerry Wellington\r\nEdwina Muir\r\n",
+        "email": "Kmaddernwellington@gmail.com",
+        "phone": "490757330",
+        "location": "Carrum",
+        "postcode": "3197",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "A",
+        "playerType": null,
+        "groupSize": 5,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:04.665Z"
+      },
+      {
+        "id": "40f872e2-b313-4e89-addc-bcfcbdce79aa",
+        "name": "Farrah King",
+        "age": 43,
+        "gender": "Female",
+        "groupId": null,
+        "availabilityStatus": "available",
+        "attendingWith": null,
+        "email": "Cherrychikita@hotmail.com",
+        "phone": "401193923",
+        "location": "Hadfield",
+        "postcode": "3046",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "A",
+        "playerType": null,
+        "groupSize": null,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:04.769Z"
+      },
+      {
+        "id": "711a9a1e-1b83-49e1-9c15-d494cdcf9796",
+        "name": "Edwina Muir",
+        "age": 58,
+        "gender": "Female",
+        "groupId": "5b77330c-45dc-4177-b704-50e8d2e75d75",
+        "availabilityStatus": "available",
+        "attendingWith": "Would be a group of up to 8 ladies.\r\nAmanda Hobbs\r\nKerry Wellington\r\nEdwina Muir\r\n",
+        "email": "maeemuir@tpg.com.au",
+        "phone": "439781947",
+        "location": "Mt Eliza",
+        "postcode": "3930",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "A",
+        "playerType": null,
+        "groupSize": 5,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:04.872Z"
+      },
+      {
+        "id": "24be11e0-6dfe-4b44-8d9f-162ec3002134",
+        "name": "Vivienne Degran",
+        "age": 36,
+        "gender": "Female",
+        "groupId": "59e24653-3037-4c9a-aaf1-2e7ed15cfee4",
+        "availabilityStatus": "available",
+        "attendingWith": "Andrew Stringer",
+        "email": "vrdegran@gmail.com",
+        "phone": "424953901",
+        "location": "Templestowe Lower",
+        "postcode": "3107",
+        "state": null,
+        "medicalInfo": "I have ADHD which I don't consider a disability. I wasn't going to say anything but got anxious about how specific you wanted me to be and then I overthought it.  ",
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:04.975Z"
+      },
+      {
+        "id": "05ef4417-fb40-46b7-8dfd-3c178684509e",
+        "name": "Andrew Stringer",
+        "age": 37,
+        "gender": "Male",
+        "groupId": "59e24653-3037-4c9a-aaf1-2e7ed15cfee4",
+        "availabilityStatus": "available",
+        "attendingWith": "Vivienne Degran",
+        "email": "a_string@hotmail.com",
+        "phone": "417534471",
+        "location": "Lower Templestowe",
+        "postcode": "3107",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:05.078Z"
+      },
+      {
+        "id": "3292e33d-7639-461a-8a89-7088c0d90926",
+        "name": "Sophia papas",
+        "age": 23,
+        "gender": "Female",
+        "groupId": "465f25a6-51b9-4661-9750-a89a88d3bc67",
+        "availabilityStatus": "available",
+        "attendingWith": "Effie Vlangos, Christina papas, Sophia papas",
+        "email": "sophiapapas6@hotmail.com",
+        "phone": "498868739",
+        "location": "Melbourne",
+        "postcode": "3075",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 3,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:05.181Z"
+      },
+      {
+        "id": "bc9034ab-64c0-4b4a-ab31-63704a9798ce",
+        "name": "Shane Gruis",
+        "age": 37,
+        "gender": "Male",
+        "groupId": "a768bfd0-4262-44dc-b6bb-e1b7e45ea930",
+        "availabilityStatus": "available",
+        "attendingWith": "Brooke Monaghan",
+        "email": "shaneg87@hotmail.com",
+        "phone": "407714293",
+        "location": "Traralgon ",
+        "postcode": "3844",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": "DUI - 2012 - LOSS LICENSE",
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:05.284Z"
+      },
+      {
+        "id": "dc9d5c0e-64f3-4361-bd0b-c6e1d71050d7",
+        "name": "Hannah Mclaughlin",
+        "age": 30,
+        "gender": "Female",
+        "groupId": null,
+        "availabilityStatus": "available",
+        "attendingWith": null,
+        "email": "Hannahlmclaughlin@gmail.com",
+        "phone": "402367400",
+        "location": "Melbourne",
+        "postcode": "3032",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": null,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:05.393Z"
+      },
+      {
+        "id": "b422c78b-6705-4b03-94ee-6bdd0b4715ac",
+        "name": "Susan McKenna",
+        "age": 60,
+        "gender": "Female",
+        "groupId": "65d7aafc-81dc-4167-9597-567ea7a89170",
+        "availabilityStatus": "available",
+        "attendingWith": "SOLO",
+        "email": "suemckenna627@gmail.com",
+        "phone": "455215555",
+        "location": "Officer South",
+        "postcode": "3809",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": "NA",
+        "criminalRecord": "NA",
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 1,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:05.496Z"
+      },
+      {
+        "id": "df2f5cbc-b306-437c-99c6-700cbbf31c71",
+        "name": "Hayley Jenkins",
+        "age": 42,
+        "gender": "Female",
+        "groupId": "6387251b-466b-408c-9aee-fcf8a05d21b7",
+        "availabilityStatus": "available",
+        "attendingWith": "Paragi Doshi",
+        "email": "hkarynjenkins@gmail.com",
+        "phone": "405270888",
+        "location": "BENTLEIGH EAST",
+        "postcode": "3165",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:05.599Z"
+      },
+      {
         "id": "40a64316-1fb5-4a09-8c9d-14bbc19036d1",
         "name": "Olivia Gonzalez",
         "age": 52,
@@ -180,7 +540,368 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:39.534Z"
+      },
+      {
+        "id": "f445658c-a35b-4a62-baa4-1661e03155bf",
+        "name": "Wadzanayi Chitambo",
+        "age": 31,
+        "gender": "Female",
+        "groupId": "daa8fd8b-8af2-4382-9127-051623496ba7",
+        "availabilityStatus": "available",
+        "attendingWith": "Ashlee Skrzelinski",
+        "email": "wadzichitambo@gmail.com",
+        "phone": "415052242",
+        "location": "Pascoe Vale South",
+        "postcode": "3044",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": "NA",
+        "criminalRecord": "NA",
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:05.705Z"
+      },
+      {
+        "id": "35b50f34-12bf-4c1c-b6c2-391130aa3d18",
+        "name": "Corbin Eather",
+        "age": 28,
+        "gender": "Male",
+        "groupId": "65d7aafc-81dc-4167-9597-567ea7a89170",
+        "availabilityStatus": "available",
+        "attendingWith": "SOLO",
+        "email": "Corby1909@hotmail.com",
+        "phone": "487992952",
+        "location": "Portland",
+        "postcode": "3305",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 1,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:05.807Z"
+      },
+      {
+        "id": "5e5010fe-f694-44c1-a8d2-e4cc4a2d05b9",
+        "name": "Charlie Davidson",
+        "age": 26,
+        "gender": "Female",
+        "groupId": "0968969b-26ec-43d9-a744-b41541fbb225",
+        "availabilityStatus": "available",
+        "attendingWith": "Corey Mcormond, Charlie Davidson",
+        "email": "Charlieisabelle8@gmail.com",
+        "phone": "404109356",
+        "location": "Ringwood",
+        "postcode": "3134",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:05.911Z"
+      },
+      {
+        "id": "42d96626-bafe-4dec-8c66-a44c22fdc359",
+        "name": "Daniel Montalto",
+        "age": 50,
+        "gender": "Male",
+        "groupId": "e352b4d8-3eeb-4f15-9257-317bb0a46dde",
+        "availabilityStatus": "available",
+        "attendingWith": "maree montalto",
+        "email": "Montecarr91@gmail.com",
+        "phone": "401883434",
+        "location": "Melbourne ",
+        "postcode": "3044",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "A",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:06.013Z"
+      },
+      {
+        "id": "f15ce3f4-a66b-445b-a168-2a6dc069b8c3",
+        "name": "Glenda  Fleming",
+        "age": 60,
+        "gender": "Female",
+        "groupId": "fb2c36e3-f601-41a8-8c3a-c62b9e0c9902",
+        "availabilityStatus": "available",
+        "attendingWith": "Steven Fleming, Kye Embrey, Glenda Fleming",
+        "email": "glendafleming@bigpond.com",
+        "phone": "400967493",
+        "location": "Nambrok ",
+        "postcode": "3847",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 3,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:06.117Z"
+      },
+      {
+        "id": "3f912084-15ed-4cf2-a9bd-69808d91878e",
+        "name": "Cazz Chandler",
+        "age": 50,
+        "gender": "Female",
+        "groupId": "6dcdeddf-c5a3-4ee4-aef0-0ec71e6fea37",
+        "availabilityStatus": "available",
+        "attendingWith": "Gabby Chandler",
+        "email": "cazzchandler@gmail.com",
+        "phone": "408538891",
+        "location": "Edithvale",
+        "postcode": "3196",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:06.220Z"
+      },
+      {
+        "id": "cec35e1e-b6fa-4f31-a961-a4484c3ba77a",
+        "name": "Grace Bee",
+        "age": 20,
+        "gender": "Female",
+        "groupId": "26b75180-660d-4b2d-8e59-da58bf4ed2b9",
+        "availabilityStatus": "available",
+        "attendingWith": "Friends\r\nGrace Bee\r\nKlara Nuc-Kraljak",
+        "email": "graceyybee@gmail.com",
+        "phone": "426996862",
+        "location": "Geelong",
+        "postcode": "3214",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:06.324Z"
+      },
+      {
+        "id": "299508d3-5643-4142-833b-a85b93e42b8c",
+        "name": "Maddy Rottinger",
+        "age": 22,
+        "gender": "Female",
+        "groupId": "f1cb34d7-7872-4b03-b696-27dc9ecf6cf5",
+        "availabilityStatus": "available",
+        "attendingWith": "Maddy Rottinger, David Rottinger",
+        "email": "maddyrottinger@gmail.com",
+        "phone": "449812432",
+        "location": "Melbourne ",
+        "postcode": "3136",
+        "state": null,
+        "medicalInfo": "I have Autism but no need for any accommodation ",
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:06.427Z"
+      },
+      {
+        "id": "86f383a1-d202-4a69-b5d4-ae3c3580e928",
+        "name": "Alessandro Amati",
+        "age": 37,
+        "gender": "Male",
+        "groupId": "a18330d2-0770-499f-96f6-75e67e2a75d4",
+        "availabilityStatus": "available",
+        "attendingWith": "Judy Robinet",
+        "email": "Alessandro.amati88@gmail.com",
+        "phone": "0414 080 042 ",
+        "location": "Melbourne ",
+        "postcode": "3006",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": "NA",
+        "criminalRecord": "NA",
+        "photoUrl": null,
+        "auditionRating": "A",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:06.530Z"
+      },
+      {
+        "id": "54083857-1734-43ee-a749-a567e1c8a0b0",
+        "name": "Jodi Kett",
+        "age": 52,
+        "gender": "Female",
+        "groupId": "cbf209b8-2a31-4cf9-bc54-83485fa4051d",
+        "availabilityStatus": "available",
+        "attendingWith": "Wendy Manton",
+        "email": "Jkett985@gmail.com",
+        "phone": "410716195",
+        "location": "Lalor",
+        "postcode": "3075",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:06.632Z"
+      },
+      {
+        "id": "6080cf05-adb5-4efe-974e-9b2317006ab4",
+        "name": "Brooke Finn",
+        "age": 27,
+        "gender": "Female",
+        "groupId": "67044596-c8f7-4375-a21f-2b0349eb7637",
+        "availabilityStatus": "available",
+        "attendingWith": "renee ullrich, brooke finn, Jemah Finn\r\n",
+        "email": "Brookefinn13@gmail.com",
+        "phone": "447139482",
+        "location": "Geelong",
+        "postcode": "3219",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 3,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:06.735Z"
+      },
+      {
+        "id": "c43df161-b4c3-448c-a813-8636f1b5a4bd",
+        "name": "Sam Marden",
+        "age": 46,
+        "gender": "Male",
+        "groupId": "6ade295b-882d-462d-a68b-2d985302d9db",
+        "availabilityStatus": "available",
+        "attendingWith": "Sister - Janelle marden...she need sto apply",
+        "email": "sammarden@gmail.com",
+        "phone": "0452 037 334 ",
+        "location": "Chelsea ",
+        "postcode": "3196",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:06.838Z"
+      },
+      {
+        "id": "56c75621-ec89-47b1-a7a0-9963b388b9e8",
+        "name": "Emily Leos",
+        "age": 24,
+        "gender": "Female",
+        "groupId": "ff0b886a-f8ef-41e4-a628-3dabf997ba58",
+        "availabilityStatus": "available",
+        "attendingWith": "Ethan Bell",
+        "email": "emilymarie.leos@gmail.com",
+        "phone": "415128111",
+        "location": "Preston",
+        "postcode": "3072",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:06.941Z"
+      },
+      {
+        "id": "fb165133-2b4f-4814-8d53-3ec6f3fed750",
+        "name": "Ethan Bell",
+        "age": 24,
+        "gender": "Male",
+        "groupId": "ff0b886a-f8ef-41e4-a628-3dabf997ba58",
+        "availabilityStatus": "available",
+        "attendingWith": "Emily Leos",
+        "email": "e.bell2001@outlook.com.au",
+        "phone": "412377981",
+        "location": "melbourne",
+        "postcode": "3072",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "A",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:07.051Z"
+      },
+      {
+        "id": "d5609f39-77f4-40b0-a9e0-105f50805765",
+        "name": "Carl Mikhail SEVILLANO",
+        "age": 23,
+        "gender": "Male",
+        "groupId": "23259da3-85da-4d69-a2bc-f1e643c3e4a5",
+        "availabilityStatus": "available",
+        "attendingWith": "Carl Mikhail SEVILLANO, Jessica Newton, Carolina Sevillano, Manuel Sevillano",
+        "email": "mikkisevillano@gmail.com",
+        "phone": "424795297",
+        "location": "Sydenham",
+        "postcode": "3037",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B",
+        "playerType": null,
+        "groupSize": 4,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:07.154Z"
       },
       {
         "id": "d2e4b795-48d9-43e4-8ebe-6916a61a544e",
@@ -203,7 +924,128 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:39.652Z"
+      },
+      {
+        "id": "2e7a82a4-998c-4f82-a686-5a4d0bcc725b",
+        "name": "Jessica Newton",
+        "age": 23,
+        "gender": "Female",
+        "groupId": "23259da3-85da-4d69-a2bc-f1e643c3e4a5",
+        "availabilityStatus": "available",
+        "attendingWith": "Carl Mikhail SEVILLANO, Jessica Newton, Carolina Sevillano, Manuel Sevillano",
+        "email": "jessicamareenewton@gmail.com",
+        "phone": "403316735",
+        "location": "Melbourne ",
+        "postcode": "3037",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B",
+        "playerType": null,
+        "groupSize": 4,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:07.257Z"
+      },
+      {
+        "id": "bf0f24b8-c7b2-4c41-8bbe-993b8806c243",
+        "name": "Chloe Wilson",
+        "age": 26,
+        "gender": "Female",
+        "groupId": "1d8a7e45-0b40-4677-bf88-ed8c29eb0e03",
+        "availabilityStatus": "available",
+        "attendingWith": "Jayne Parkinson",
+        "email": "chloeshaniawilson@hotmail.com",
+        "phone": "439717876",
+        "location": "Mount clear ",
+        "postcode": "3350",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": "NA",
+        "criminalRecord": "NA",
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": null,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:07.362Z"
+      },
+      {
+        "id": "7e5c8e3d-1708-4b56-b262-e6c2743e4865",
+        "name": "Christian  Veri",
+        "age": 21,
+        "gender": "Male",
+        "groupId": "5414f8e6-7fb4-4979-abf0-151495e1cfff",
+        "availabilityStatus": "available",
+        "attendingWith": "Christian Veri, Natasha Veri, Frank Veri, Gianna Veri",
+        "email": "christian.veri04@gmail.com",
+        "phone": "490766823",
+        "location": "Melbourne",
+        "postcode": "3108",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "A",
+        "playerType": null,
+        "groupSize": 4,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:07.467Z"
+      },
+      {
+        "id": "1b90e38c-6849-41d7-8b76-6e886b542be5",
+        "name": "Nermina Malic",
+        "age": 50,
+        "gender": "Female",
+        "groupId": "d7082c1c-800b-4072-8c4c-6b07681145f4",
+        "availabilityStatus": "available",
+        "attendingWith": "Ivana Pavic",
+        "email": "n.malic@hotmail.com",
+        "phone": "431480024",
+        "location": "Altona meadows",
+        "postcode": "3028",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:07.570Z"
+      },
+      {
+        "id": "5d5e3785-ca4f-4312-96ff-4a0d79884a70",
+        "name": "Charlotte Rowson",
+        "age": 27,
+        "gender": "Female",
+        "groupId": "ba7c8f2a-7027-4b21-9a88-82709f083acb",
+        "availabilityStatus": "available",
+        "attendingWith": "Madison Bartholomew",
+        "email": "rowschar@gmail.com",
+        "phone": "426195518",
+        "location": "Abbotsford",
+        "postcode": "3067",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": "NA",
+        "criminalRecord": "NA",
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:07.673Z"
       },
       {
         "id": "50b3a8f6-823f-477c-b52d-5b4fba4edbd2",
@@ -226,7 +1068,368 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:41.085Z"
+      },
+      {
+        "id": "6c100962-ee82-41d1-afdf-6810823ea88e",
+        "name": "Madeleine  Floros",
+        "age": 25,
+        "gender": "Female",
+        "groupId": "d31fd676-cd74-4239-9827-4bfd973cc237",
+        "availabilityStatus": "available",
+        "attendingWith": "Claudia Floros",
+        "email": "mfloros@y7mail.com",
+        "phone": "413533385",
+        "location": "Bundoora",
+        "postcode": "3083",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:07.778Z"
+      },
+      {
+        "id": "2d64b97f-64bb-4190-abdf-5a2a9d37c810",
+        "name": "Wendy  Manton",
+        "age": 67,
+        "gender": "Female",
+        "groupId": "cbf209b8-2a31-4cf9-bc54-83485fa4051d",
+        "availabilityStatus": "available",
+        "attendingWith": "Jodi Kett",
+        "email": "wendymantonxo7@gmail.com",
+        "phone": "439858211",
+        "location": "Melbourne ",
+        "postcode": "3205",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:07.883Z"
+      },
+      {
+        "id": "4f8c4348-e7af-42bc-93d9-bdf0b8e1585e",
+        "name": "SOPHIE ARMES",
+        "age": 54,
+        "gender": "Female",
+        "groupId": "d64a0044-98eb-47c9-a610-f16b009bfcb4",
+        "availabilityStatus": "available",
+        "attendingWith": "Sophie Armes - Player\r\nEdward Armes - Son\r\nPamela Stone - Friend\r\nSheila Hawe - Friend\r\n",
+        "email": "sophievaudeleau@hotmail.com",
+        "phone": "401235498",
+        "location": "HIGHTON",
+        "postcode": "3216",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 4,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:07.986Z"
+      },
+      {
+        "id": "4c6757f5-c98a-41a1-bc6f-783d02a7e884",
+        "name": "Matthew Bailey",
+        "age": 38,
+        "gender": "Male",
+        "groupId": "0d1c49df-1962-42f1-9457-855ef54578e6",
+        "availabilityStatus": "available",
+        "attendingWith": "matthew bailey, simone bailey",
+        "email": "m.bailey23@hotmail.com",
+        "phone": "423462472",
+        "location": "Craigieburn",
+        "postcode": "3064",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:08.091Z"
+      },
+      {
+        "id": "7ef0a863-f193-4ea2-b6b1-9f6990d9c72b",
+        "name": "EDWARD Armes",
+        "age": 21,
+        "gender": "Male",
+        "groupId": "d64a0044-98eb-47c9-a610-f16b009bfcb4",
+        "availabilityStatus": "available",
+        "attendingWith": "Sophie Armes - Player\r\nEdward Armes - Son\r\nPamela Stone - Friend\r\nSheila Hawe - Friend",
+        "email": "edarmes99@gmail.com",
+        "phone": "439861309",
+        "location": "Geelong ",
+        "postcode": "3215",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 4,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:08.193Z"
+      },
+      {
+        "id": "fe448c1e-878b-4ce5-b11f-de34f1d7ad19",
+        "name": "Antigoni  Simmons",
+        "age": 34,
+        "gender": "Female",
+        "groupId": "b24e1d25-603c-49cb-97d3-f44db7487a00",
+        "availabilityStatus": "available",
+        "attendingWith": "Jamie Simmons - Needs to Apply\r\nAlex Triantafylidis - Mum (tri-anta-fell-ease)\r\n",
+        "email": "antigoni_trianta@outlook.com",
+        "phone": "431186284",
+        "location": "Melbourne ",
+        "postcode": "3033",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 3,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:08.297Z"
+      },
+      {
+        "id": "acb3e630-d526-4057-b545-aa192312bdbd",
+        "name": "Tejas Deshmukh",
+        "age": 35,
+        "gender": "Male",
+        "groupId": "ea07ea19-44f5-4443-8d44-890ef7a5078a",
+        "availabilityStatus": "available",
+        "attendingWith": "Tejas Deshmukh, Chaitali Bhanushali",
+        "email": "arch.tejasd@gmail.com",
+        "phone": "481988781",
+        "location": "Melton South",
+        "postcode": "3338",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:08.400Z"
+      },
+      {
+        "id": "47072c44-a802-4d24-962c-1654f4e2b639",
+        "name": "gaylene piscopo",
+        "age": 22,
+        "gender": "Female",
+        "groupId": null,
+        "availabilityStatus": "available",
+        "attendingWith": null,
+        "email": "gayleneeepiscopo03@gmail.com",
+        "phone": "499626264",
+        "location": "Victoria",
+        "postcode": "3338",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B",
+        "playerType": null,
+        "groupSize": 1,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:08.503Z"
+      },
+      {
+        "id": "712e4c3c-2bc9-486c-9fd0-42ce55f8247f",
+        "name": "Kellie Fefelic",
+        "age": 58,
+        "gender": "Female",
+        "groupId": "54189d4e-7afc-4225-a6cb-28a8fff1a856",
+        "availabilityStatus": "available",
+        "attendingWith": "Philip Heywood",
+        "email": "kemalafelic@gmail.com",
+        "phone": "452090905",
+        "location": "Mornington",
+        "postcode": "3931",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": "NA",
+        "criminalRecord": "NA",
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:08.606Z"
+      },
+      {
+        "id": "1cfa5805-2855-4ff9-9175-697120cf327a",
+        "name": "Abrar Musa",
+        "age": 23,
+        "gender": "Female",
+        "groupId": null,
+        "availabilityStatus": "available",
+        "attendingWith": null,
+        "email": "abrarmusa459@gmail.com",
+        "phone": "412610736",
+        "location": "SPRINGVALE SOUTH",
+        "postcode": "3172",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 1,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:08.708Z"
+      },
+      {
+        "id": "3a3ae62d-7e17-46a1-b4ca-f3edde675c9a",
+        "name": "Huda Hayek",
+        "age": 41,
+        "gender": "Female",
+        "groupId": "1edf8348-87ac-4690-a22c-ef5721f32b81",
+        "availabilityStatus": "available",
+        "attendingWith": "Fadey Souied",
+        "email": "Huda_hayek@yahoo.com.au",
+        "phone": "413787207",
+        "location": "Melbourne ",
+        "postcode": "3028",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": "NA",
+        "criminalRecord": "NA",
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:08.811Z"
+      },
+      {
+        "id": "11ad6470-961f-4c41-9474-0159c23c81bd",
+        "name": "Caron Miller",
+        "age": 62,
+        "gender": "Female",
+        "groupId": "bc5440fa-e979-4a58-9300-e0349edf8d54",
+        "availabilityStatus": "available",
+        "attendingWith": "Victoria Morrison",
+        "email": "mistyjasper@hotmail.com",
+        "phone": "417331948",
+        "location": "Narre Warren East",
+        "postcode": "3804",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 1,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:08.914Z"
+      },
+      {
+        "id": "cff9458b-cbd8-491e-9a5f-2171891b3f66",
+        "name": "Shana Kent",
+        "age": 45,
+        "gender": "Female",
+        "groupId": "96b83e8d-93db-4d09-9d4f-2398e8c44538",
+        "availabilityStatus": "available",
+        "attendingWith": "Daughter - Emma Kent.  - needs to apply",
+        "email": "banna12sk@hotmail.com",
+        "phone": "408333616",
+        "location": "Hurstbridge ",
+        "postcode": "3099",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 1,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:09.017Z"
+      },
+      {
+        "id": "32b624eb-d8d0-4725-b366-f8c07b803eee",
+        "name": "amy milbourne",
+        "age": 20,
+        "gender": "Female",
+        "groupId": "fc1a8405-88ef-43cc-a677-2d1bdc00bb6a",
+        "availabilityStatus": "available",
+        "attendingWith": "amy milbourne (MAIN PLAYER - B+)\r\nKeely Elliott (B-)\r\nKate Ryan (B+)\r\n",
+        "email": "amy.milbourne005@gmail.com",
+        "phone": "474656699",
+        "location": "haven",
+        "postcode": "3401",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:09.120Z"
+      },
+      {
+        "id": "6b9babbd-6769-4410-bb4c-e9b9c9a4e966",
+        "name": "Angelina Butler",
+        "age": 23,
+        "gender": "Female",
+        "groupId": "c5549c5d-d4f2-46cd-a749-5c78710368b5",
+        "availabilityStatus": "available",
+        "attendingWith": "Angelina Butler, Ebony Norris, Caragh Butler",
+        "email": "Angelinab31@hotmail.com",
+        "phone": "433646367",
+        "location": "Wangaratta",
+        "postcode": "3677",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 3,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:09.222Z"
       },
       {
         "id": "6366884b-6583-493e-80bc-a1dff1926c59",
@@ -249,6 +1452,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:40.576Z"
       },
       {
@@ -272,168 +1476,8 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:40.165Z"
-      },
-      {
-        "id": "e897bbe7-50a2-441c-9ba2-0d1c40619f32",
-        "name": "Chloe Williams",
-        "age": 57,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "chloe.williams70@hotmail.com",
-        "phone": "(398) 161-2308",
-        "location": "Los Angeles",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/11.jpg",
-        "auditionRating": "B+",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:40.677Z"
-      },
-      {
-        "id": "47cc1288-cbc0-4159-a52d-924c8912434d",
-        "name": "Stella Martinez",
-        "age": 47,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "stella.martinez75@gmail.com",
-        "phone": "0404 227 272",
-        "location": "Ballarat",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/61.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "222469f4-a8d9-4550-b6ee-db9d00e24edd",
-        "name": "Chloe Flores",
-        "age": 63,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Evelyn Sanchez",
-        "email": "chloe.flores93@yahoo.com",
-        "phone": "0400 918 463",
-        "location": "Townsville",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/42.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "32ffeaf9-5f22-4db7-a70b-cbaab834db0d",
-        "name": "Isabella Hill",
-        "age": 30,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "isabella.hill77@hotmail.com",
-        "phone": "0412 663 356",
-        "location": "Darwin",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/87.jpg",
-        "auditionRating": "B+",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "799c4a95-9c60-477c-ab86-09dfb2ad8324",
-        "name": "Naomi Brown",
-        "age": 41,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Brooklyn Nguyen",
-        "email": "naomi.brown56@yahoo.com",
-        "phone": "(932) 818-9639",
-        "location": "Sacramento",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/18.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:41.391Z"
-      },
-      {
-        "id": "703385ff-46f6-4b8f-9998-1e18951304e0",
-        "name": "Avery Cruz",
-        "age": 52,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Lydia Torres, Mia Anderson",
-        "email": "avery.cruz48@yahoo.com",
-        "phone": "(405) 750-6185",
-        "location": "Fremont",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/22.jpg",
-        "auditionRating": "B+",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:41.798Z"
-      },
-      {
-        "id": "5c31add6-7626-46c5-a3e1-0e452ead739d",
-        "name": "Charles Torres",
-        "age": 46,
-        "gender": "Male",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "charles.torres98@outlook.com",
-        "phone": "0401 744 176",
-        "location": "Wollongong",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/men/73.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
         "id": "b57be3ad-f74f-4f2b-aa79-6e410d2c199b",
@@ -456,490 +1500,8 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:41.696Z"
-      },
-      {
-        "id": "34685ff7-6e85-4bbd-b546-77cfe11d7f7d",
-        "name": "Grace Walker",
-        "age": 56,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "grace.walker52@hotmail.com",
-        "phone": "0412 754 780",
-        "location": "Canberra",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/13.jpg",
-        "auditionRating": "A+",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "6b672a17-fbf7-4b44-841d-dc10fbe8cbce",
-        "name": "Sadie Williams",
-        "age": 55,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Michael Campbell, Eleanor Hall",
-        "email": "sadie.williams7@icloud.com",
-        "phone": "(175) 960-1387",
-        "location": "Anaheim",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/19.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:41.492Z"
-      },
-      {
-        "id": "939eed5c-b520-4a34-8d08-2243d6aa41c1",
-        "name": "Andrew Garcia",
-        "age": 41,
-        "gender": "Male",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "andrew.garcia26@hotmail.com",
-        "phone": "0400 450 222",
-        "location": "Darwin",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": "Limited mobility - prefers ground floor seating",
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/men/35.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "9d6b206c-c62d-4b71-b83d-fb61ac2fd06b",
-        "name": "Paisley Brown",
-        "age": 60,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Amelia Nguyen",
-        "email": "paisley.brown87@outlook.com",
-        "phone": "(164) 124-5926",
-        "location": "Anaheim",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/27.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:42.309Z"
-      },
-      {
-        "id": "cd2f354f-9f45-4422-af14-1c94758ec1c1",
-        "name": "Hannah Murphy",
-        "age": 30,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Thomas Rivera",
-        "email": "hannah.murphy4@outlook.com",
-        "phone": "(544) 415-8741",
-        "location": "Pomona",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/25.jpg",
-        "auditionRating": "A",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:42.103Z"
-      },
-      {
-        "id": "4f1d5a65-9d8d-4c5a-836a-f0ea71c91e56",
-        "name": "Savannah Rivera",
-        "age": 33,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Penelope Williams",
-        "email": "savannah.rivera74@hotmail.com",
-        "phone": "(132) 232-5005",
-        "location": "Stockton",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/23.jpg",
-        "auditionRating": "A+",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:41.899Z"
-      },
-      {
-        "id": "523bddcf-6298-42a0-b9cb-4deffb688143",
-        "name": "Brooklyn Rivera",
-        "age": 34,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "John Carter",
-        "email": "brooklyn.rivera69@outlook.com",
-        "phone": "(847) 715-1204",
-        "location": "Glendale",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/24.jpg",
-        "auditionRating": "A+",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:42.001Z"
-      },
-      {
-        "id": "cd648690-8cd1-44b6-be26-0521038f442f",
-        "name": "Stella Hall",
-        "age": 58,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "stella.hall72@gmail.com",
-        "phone": "0410 133 818",
-        "location": "Wollongong",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/74.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "3db7cdb3-9a92-467c-b554-d23b524f42f5",
-        "name": "Claire Campbell",
-        "age": 23,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "claire.campbell9@outlook.com",
-        "phone": "0401 164 490",
-        "location": "Darwin",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/74.jpg",
-        "auditionRating": "B+",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "25370fa8-38bb-4172-9e02-23a59fcfd87a",
-        "name": "Carter Hill",
-        "age": 25,
-        "gender": "Male",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "carter.hill93@gmail.com",
-        "phone": "0404 349 309",
-        "location": "Newcastle",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/men/3.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "ee7f9d33-09d6-417b-a45f-3e6554489f5b",
-        "name": "Dylan Miller",
-        "age": 35,
-        "gender": "Male",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "dylan.miller23@hotmail.com",
-        "phone": "0402 417 876",
-        "location": "Melbourne",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/men/7.jpg",
-        "auditionRating": "A",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "bb319a54-7dbf-4a05-bd7f-8f2f6aa6b414",
-        "name": "Isabella Brown",
-        "age": 55,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Ella Anderson",
-        "email": "isabella.brown43@outlook.com",
-        "phone": "0403 771 690",
-        "location": "Darwin",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/97.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "349c5100-5395-45db-a63a-4f1c0e44ab44",
-        "name": "Alexa Hall",
-        "age": 58,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "William Allen, Sadie Cook",
-        "email": "alexa.hall12@hotmail.com",
-        "phone": "(220) 308-9173",
-        "location": "Santa Ana",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/26.jpg",
-        "auditionRating": "A+",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:42.206Z"
-      },
-      {
-        "id": "a2ff3ad7-7964-4523-bf18-ce9994a910da",
-        "name": "Nora Mitchell",
-        "age": 29,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "nora.mitchell66@outlook.com",
-        "phone": "0412 196 419",
-        "location": "Adelaide",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/19.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "da40ad70-95be-413c-b0f1-d089ef285cc8",
-        "name": "Emily Smith",
-        "age": 24,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "emily.smith56@hotmail.com",
-        "phone": "0410 101 780",
-        "location": "Toowoomba",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": "Limited mobility - prefers ground floor seating",
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/76.jpg",
-        "auditionRating": "A+",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "bf0a6231-41b8-4ee9-a915-1043ca5ba524",
-        "name": "Elizabeth Nelson",
-        "age": 31,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Grayson Edwards, Joseph Anderson",
-        "email": "elizabeth.nelson1@hotmail.com",
-        "phone": "(821) 379-6476",
-        "location": "Oakland",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/63.jpg",
-        "auditionRating": "A+",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:45.988Z"
-      },
-      {
-        "id": "1df33560-ebf2-41ec-995c-52f3f1df78d5",
-        "name": "Genesis Jones",
-        "age": 39,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "genesis.jones50@yahoo.com",
-        "phone": "0404 967 604",
-        "location": "Sydney",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/14.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "14ca564a-7d73-46a9-9bdd-e4924eac5eda",
-        "name": "Hailey Thompson",
-        "age": 46,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "hailey.thompson30@yahoo.com",
-        "phone": "(356) 680-9661",
-        "location": "Fremont",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/64.jpg",
-        "auditionRating": "B+",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:46.090Z"
-      },
-      {
-        "id": "6591420b-4762-4d90-b738-8a5b70458c40",
-        "name": "Aurora Hill",
-        "age": 34,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "aurora.hill33@hotmail.com",
-        "phone": "0410 373 844",
-        "location": "Gold Coast",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/51.jpg",
-        "auditionRating": "B+",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "5a6b21ec-9fac-4adc-b5ab-bcad20d0eca4",
-        "name": "Hunter Harris",
-        "age": 37,
-        "gender": "Male",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "",
-        "email": "hunter.harris1@gmail.com",
-        "phone": "0404 782 485",
-        "location": "Gold Coast",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": "sdfasdf",
-        "mobilityNotes": "sdfasdfa",
-        "criminalRecord": "asdfasdf",
-        "photoUrl": "https://randomuser.me/api/portraits/men/11.jpg",
-        "auditionRating": "A",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "5b54b59b-b78d-4a12-906b-7f9069a82fb5",
-        "name": "Amelia Lopez",
-        "age": 27,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Lillian Campbell",
-        "email": "amelia.lopez92@yahoo.com",
-        "phone": "(297) 700-2964",
-        "location": "Pomona",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/20.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:41.594Z"
       },
       {
         "id": "8d8070dd-3ee6-476f-aaf2-631e80f67ef7",
@@ -962,6 +1524,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:42.614Z"
       },
       {
@@ -985,30 +1548,8 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:42.818Z"
-      },
-      {
-        "id": "182bd5d2-7f68-4c83-b156-e80856f3b6b7",
-        "name": "Mason Nelson",
-        "age": 59,
-        "gender": "Male",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "mason.nelson14@hotmail.com",
-        "phone": "0403 485 650",
-        "location": "Canberra",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/men/92.jpg",
-        "auditionRating": "B+",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
         "id": "36fd980a-62d1-491b-97d6-079c33195e3d",
@@ -1031,30 +1572,8 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:42.716Z"
-      },
-      {
-        "id": "f693d8fc-436b-426a-9bca-0b141221ab3f",
-        "name": "Evelyn Clark",
-        "age": 22,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "evelyn.clark47@outlook.com",
-        "phone": "0410 941 656",
-        "location": "Hobart",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/88.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
         "id": "40c53847-674f-43b5-8678-2decb3d42133",
@@ -1077,237 +1596,8 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:42.411Z"
-      },
-      {
-        "id": "0dd7de5c-0409-45e3-84a5-5f2ffbd591d8",
-        "name": "Harper Sanchez",
-        "age": 21,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Leah Scott",
-        "email": "harper.sanchez76@gmail.com",
-        "phone": "0411 422 972",
-        "location": "Geelong",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/42.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "1adac400-525f-40f4-8b6d-20df8ce78e9d",
-        "name": "Grace Scott",
-        "age": 35,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Emily Moore",
-        "email": "grace.scott40@outlook.com",
-        "phone": "0401 870 853",
-        "location": "Ballarat",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": "Hearing impaired - requires front row seating",
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/96.jpg",
-        "auditionRating": "B+",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "97108062-7918-4f7f-a3f7-92bcbc478acd",
-        "name": "Olivia Nelson",
-        "age": 60,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Joseph Stewart, Madelyn Martinez",
-        "email": "olivia.nelson14@gmail.com",
-        "phone": "(582) 644-7834",
-        "location": "Bakersfield",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/29.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:42.513Z"
-      },
-      {
-        "id": "c9e05b47-6028-4cd1-b568-57342a489141",
-        "name": "Victoria Scott",
-        "age": 49,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "William Taylor",
-        "email": "victoria.scott67@icloud.com",
-        "phone": "(507) 166-2977",
-        "location": "Torrance",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/33.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:42.920Z"
-      },
-      {
-        "id": "852226e3-fccb-4228-8627-5dc42cfe4387",
-        "name": "Aurora Rodriguez",
-        "age": 25,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Emilia Lopez",
-        "email": "aurora.rodriguez20@yahoo.com",
-        "phone": "0404 720 692",
-        "location": "Hobart",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": "Arthritis - prefers aisle seating for easy exit",
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/4.jpg",
-        "auditionRating": "A",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "bf283832-25b8-4d7f-9e0f-ef2f10903233",
-        "name": "Hunter Jackson",
-        "age": 64,
-        "gender": "Male",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "hunter.jackson50@outlook.com",
-        "phone": "0404 841 788",
-        "location": "Townsville",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/men/71.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "7728eead-ab7c-467f-bb41-2abd7952591a",
-        "name": "Oliver Rivera",
-        "age": 33,
-        "gender": "Male",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "oliver.rivera58@outlook.com",
-        "phone": "0412 991 121",
-        "location": "Canberra",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": "Requires wheelchair access",
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/men/94.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T05:49:37.147Z"
-      },
-      {
-        "id": "bb7daa74-0f25-4289-9b11-4b838ebf5986",
-        "name": "Emma Torres",
-        "age": 36,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Ellie Allen, Charlotte Hernandez",
-        "email": "emma.torres53@outlook.com",
-        "phone": "(809) 313-7642",
-        "location": "Bakersfield",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/37.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:43.329Z"
-      },
-      {
-        "id": "410dbe34-810b-4a5d-8731-985738541b4b",
-        "name": "Penelope Williams",
-        "age": 52,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": "Savannah Rivera",
-        "email": "penelope.williams29@hotmail.com",
-        "phone": "(735) 691-4267",
-        "location": "Sacramento",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/44.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:44.043Z"
-      },
-      {
-        "id": "076ad666-a34b-4ae1-b91f-de785dbdf5ec",
-        "name": "Nora Rogers",
-        "age": 55,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "nora.rogers98@yahoo.com",
-        "phone": "(704) 607-6893",
-        "location": "Riverside",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/47.jpg",
-        "auditionRating": "B",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "createdAt": "2025-12-09T11:20:44.349Z"
       },
       {
         "id": "4e28a208-5278-410d-b375-d9c77ba144d7",
@@ -1330,6 +1620,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:44.756Z"
       },
       {
@@ -1353,6 +1644,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:43.941Z"
       },
       {
@@ -1376,6 +1668,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -1399,6 +1692,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:44.653Z"
       },
       {
@@ -1422,6 +1716,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:45.068Z"
       },
       {
@@ -1445,6 +1740,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:45.275Z"
       },
       {
@@ -1468,6 +1764,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:43.123Z"
       },
       {
@@ -1491,6 +1788,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:43.432Z"
       },
       {
@@ -1514,6 +1812,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:44.247Z"
       },
       {
@@ -1537,6 +1836,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:43.227Z"
       },
       {
@@ -1560,6 +1860,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -1583,6 +1884,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:43.534Z"
       },
       {
@@ -1606,6 +1908,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:43.636Z"
       },
       {
@@ -1629,6 +1932,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:45.377Z"
       },
       {
@@ -1652,6 +1956,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:44.966Z"
       },
       {
@@ -1675,6 +1980,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:45.172Z"
       },
       {
@@ -1698,6 +2004,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:45.479Z"
       },
       {
@@ -1721,6 +2028,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:44.552Z"
       },
       {
@@ -1744,6 +2052,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:44.858Z"
       },
       {
@@ -1767,6 +2076,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:43.738Z"
       },
       {
@@ -1790,6 +2100,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:43.021Z"
       },
       {
@@ -1813,6 +2124,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:44.450Z"
       },
       {
@@ -1836,6 +2148,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:44.145Z"
       },
       {
@@ -1859,6 +2172,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -1882,6 +2196,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:43.840Z"
       },
       {
@@ -1905,6 +2220,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -1928,6 +2244,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:45.886Z"
       },
       {
@@ -1951,6 +2268,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:45.682Z"
       },
       {
@@ -1974,6 +2292,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -1997,6 +2316,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2020,6 +2340,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2043,6 +2364,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2066,6 +2388,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2089,6 +2412,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2112,6 +2436,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:45.784Z"
       },
       {
@@ -2135,6 +2460,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2158,6 +2484,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2181,6 +2508,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2204,6 +2532,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2227,6 +2556,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2250,6 +2580,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2273,6 +2604,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:45.581Z"
       },
       {
@@ -2296,6 +2628,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2319,6 +2652,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2342,6 +2676,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2365,6 +2700,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2388,6 +2724,7 @@
         "playerType": "player",
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-02T05:59:07.307Z"
       },
       {
@@ -2411,6 +2748,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2434,6 +2772,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2457,6 +2796,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2480,6 +2820,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2503,6 +2844,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2526,6 +2868,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -2549,6 +2892,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:46.599Z"
       },
       {
@@ -2572,6 +2916,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:48.228Z"
       },
       {
@@ -2595,6 +2940,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:49.246Z"
       },
       {
@@ -2618,6 +2964,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:48.330Z"
       },
       {
@@ -2641,6 +2988,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:48.738Z"
       },
       {
@@ -2664,6 +3012,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:48.840Z"
       },
       {
@@ -2687,6 +3036,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:47.413Z"
       },
       {
@@ -2710,6 +3060,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:46.396Z"
       },
       {
@@ -2733,6 +3084,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:48.941Z"
       },
       {
@@ -2756,6 +3108,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:49.551Z"
       },
       {
@@ -2779,6 +3132,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:47.210Z"
       },
       {
@@ -2802,6 +3156,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:47.109Z"
       },
       {
@@ -2825,6 +3180,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:47.312Z"
       },
       {
@@ -2848,6 +3204,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:46.702Z"
       },
       {
@@ -2871,6 +3228,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:48.534Z"
       },
       {
@@ -2894,6 +3252,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:49.043Z"
       },
       {
@@ -2917,6 +3276,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:46.803Z"
       },
       {
@@ -2940,6 +3300,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:47.719Z"
       },
       {
@@ -2963,6 +3324,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:47.516Z"
       },
       {
@@ -2986,6 +3348,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:49.348Z"
       },
       {
@@ -3009,6 +3372,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:47.007Z"
       },
       {
@@ -3032,6 +3396,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:46.906Z"
       },
       {
@@ -3055,6 +3420,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:49.145Z"
       },
       {
@@ -3078,6 +3444,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:46.497Z"
       },
       {
@@ -3101,6 +3468,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:46.293Z"
       },
       {
@@ -3124,6 +3492,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:48.024Z"
       },
       {
@@ -3147,6 +3516,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:47.820Z"
       },
       {
@@ -3170,6 +3540,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:46.192Z"
       },
       {
@@ -3193,6 +3564,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:47.617Z"
       },
       {
@@ -3216,6 +3588,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:51.485Z"
       },
       {
@@ -3239,6 +3612,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:51.892Z"
       },
       {
@@ -3262,6 +3636,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:52.096Z"
       },
       {
@@ -3285,6 +3660,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:49.960Z"
       },
       {
@@ -3308,6 +3684,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:50.061Z"
       },
       {
@@ -3331,6 +3708,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:50.671Z"
       },
       {
@@ -3354,6 +3732,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:51.587Z"
       },
       {
@@ -3377,6 +3756,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:49.755Z"
       },
       {
@@ -3400,6 +3780,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -3423,6 +3804,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:49.654Z"
       },
       {
@@ -3446,6 +3828,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:50.367Z"
       },
       {
@@ -3469,6 +3852,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:51.078Z"
       },
       {
@@ -3492,6 +3876,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -3515,6 +3900,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:50.977Z"
       },
       {
@@ -3538,6 +3924,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:40.062Z"
       },
       {
@@ -3561,6 +3948,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:41.289Z"
       },
       {
@@ -3584,6 +3972,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:50.875Z"
       },
       {
@@ -3607,6 +3996,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:52.707Z"
       },
       {
@@ -3630,6 +4020,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:52.504Z"
       },
       {
@@ -3653,6 +4044,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:51.282Z"
       },
       {
@@ -3676,6 +4068,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:51.994Z"
       },
       {
@@ -3699,6 +4092,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:51.383Z"
       },
       {
@@ -3722,6 +4116,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:50.570Z"
       },
       {
@@ -3745,6 +4140,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:47.922Z"
       },
       {
@@ -3768,6 +4164,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:49.858Z"
       },
       {
@@ -3791,6 +4188,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:50.163Z"
       },
       {
@@ -3814,6 +4212,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:52.198Z"
       },
       {
@@ -3837,6 +4236,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:39.755Z"
       },
       {
@@ -3860,6 +4260,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:48.432Z"
       },
       {
@@ -3883,6 +4284,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -3906,6 +4308,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -3929,6 +4332,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -3952,6 +4356,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -3975,6 +4380,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:49.449Z"
       },
       {
@@ -3998,6 +4404,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:51.688Z"
       },
       {
@@ -4021,6 +4428,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:40.882Z"
       },
       {
@@ -4044,6 +4452,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:51.180Z"
       },
       {
@@ -4067,6 +4476,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:48.127Z"
       },
       {
@@ -4090,6 +4500,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-02T05:59:07.415Z"
       },
       {
@@ -4113,6 +4524,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -4136,6 +4548,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-02T05:59:07.519Z"
       },
       {
@@ -4159,6 +4572,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -4182,6 +4596,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:48.636Z"
       },
       {
@@ -4205,6 +4620,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -4228,6 +4644,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -4251,6 +4668,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:50.468Z"
       },
       {
@@ -4274,6 +4692,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:52.605Z"
       },
       {
@@ -4297,6 +4716,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:51.790Z"
       },
       {
@@ -4320,6 +4740,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:52.402Z"
       },
       {
@@ -4343,6 +4764,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:50.773Z"
       },
       {
@@ -4366,6 +4788,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4389,6 +4812,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4412,6 +4836,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:52.300Z"
       },
       {
@@ -4435,6 +4860,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T11:20:50.265Z"
       },
       {
@@ -4458,6 +4884,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4481,6 +4908,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4504,6 +4932,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4527,6 +4956,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4550,6 +4980,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4573,6 +5004,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4596,6 +5028,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4619,6 +5052,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4642,6 +5076,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4665,6 +5100,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4688,6 +5124,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4711,6 +5148,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4734,6 +5172,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4757,6 +5196,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4780,6 +5220,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4803,6 +5244,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4826,6 +5268,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4849,6 +5292,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4872,6 +5316,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4895,6 +5340,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4918,6 +5364,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4941,6 +5388,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4964,6 +5412,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -4987,6 +5436,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5010,6 +5460,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5033,6 +5484,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5056,6 +5508,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5079,6 +5532,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5102,6 +5556,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5125,6 +5580,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5148,6 +5604,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5171,6 +5628,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5194,6 +5652,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5217,6 +5676,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5240,6 +5700,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5263,6 +5724,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5286,6 +5748,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5309,6 +5772,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5332,6 +5796,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5355,6 +5820,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5378,6 +5844,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5401,6 +5868,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5424,6 +5892,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5447,6 +5916,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5470,6 +5940,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5493,6 +5964,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5516,6 +5988,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5539,6 +6012,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5562,6 +6036,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5585,6 +6060,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5608,6 +6084,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5631,6 +6108,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5654,6 +6132,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5677,6 +6156,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5700,6 +6180,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5723,6 +6204,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5746,6 +6228,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5769,6 +6252,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5792,6 +6276,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5815,6 +6300,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5838,6 +6324,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5861,6 +6348,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5884,6 +6372,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5907,6 +6396,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5930,6 +6420,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5953,6 +6444,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5976,6 +6468,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -5999,6 +6492,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6022,6 +6516,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6045,6 +6540,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6068,6 +6564,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6091,6 +6588,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6114,6 +6612,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6137,6 +6636,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6160,6 +6660,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6183,6 +6684,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6206,6 +6708,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6229,6 +6732,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6252,6 +6756,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6275,6 +6780,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6298,6 +6804,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6321,6 +6828,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6344,6 +6852,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6367,6 +6876,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6390,6 +6900,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6413,6 +6924,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6436,6 +6948,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6459,6 +6972,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6482,6 +6996,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6505,6 +7020,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6528,6 +7044,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6551,6 +7068,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6574,6 +7092,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6597,6 +7116,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6620,6 +7140,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6643,6 +7164,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6666,6 +7188,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6689,6 +7212,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6712,6 +7236,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6735,6 +7260,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6758,6 +7284,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6781,6 +7308,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6804,6 +7332,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6827,6 +7356,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6850,6 +7380,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6873,6 +7404,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6896,6 +7428,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6919,6 +7452,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6942,6 +7476,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6965,6 +7500,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -6988,6 +7524,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7011,6 +7548,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7034,6 +7572,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7057,6 +7596,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7080,6 +7620,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7103,6 +7644,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7126,6 +7668,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7149,6 +7692,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7172,6 +7716,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7195,6 +7740,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7218,6 +7764,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7241,6 +7788,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7264,6 +7812,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7287,6 +7836,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7310,6 +7860,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7333,6 +7884,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7356,6 +7908,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7379,6 +7932,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7402,6 +7956,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7425,6 +7980,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7448,6 +8004,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7471,6 +8028,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7494,6 +8052,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7517,6 +8076,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7540,6 +8100,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7563,6 +8124,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7586,6 +8148,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7609,6 +8172,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7632,6 +8196,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7655,6 +8220,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7678,6 +8244,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7701,6 +8268,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7724,6 +8292,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7747,6 +8316,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7770,6 +8340,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7793,6 +8364,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7816,6 +8388,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7839,6 +8412,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-12T11:39:35.564Z"
       },
       {
@@ -7862,6 +8436,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       },
       {
@@ -7885,6 +8460,7 @@
         "playerType": null,
         "groupSize": null,
         "podiumStory": false,
+        "availableForStandby": false,
         "createdAt": "2025-12-09T05:49:37.147Z"
       }
     ],
@@ -7913,6 +8489,171 @@
         "id": "5b77330c-45dc-4177-b704-50e8d2e75d75",
         "referenceNumber": "GRP005",
         "createdAt": "2025-12-08T03:44:51.353Z"
+      },
+      {
+        "id": "59e24653-3037-4c9a-aaf1-2e7ed15cfee4",
+        "referenceNumber": "GRP006",
+        "createdAt": "2025-12-18T00:50:00.699Z"
+      },
+      {
+        "id": "465f25a6-51b9-4661-9750-a89a88d3bc67",
+        "referenceNumber": "GRP007",
+        "createdAt": "2025-12-18T00:50:00.818Z"
+      },
+      {
+        "id": "a768bfd0-4262-44dc-b6bb-e1b7e45ea930",
+        "referenceNumber": "GRP008",
+        "createdAt": "2025-12-18T00:50:00.920Z"
+      },
+      {
+        "id": "65d7aafc-81dc-4167-9597-567ea7a89170",
+        "referenceNumber": "GRP009",
+        "createdAt": "2025-12-18T00:50:01.023Z"
+      },
+      {
+        "id": "6387251b-466b-408c-9aee-fcf8a05d21b7",
+        "referenceNumber": "GRP010",
+        "createdAt": "2025-12-18T00:50:01.125Z"
+      },
+      {
+        "id": "daa8fd8b-8af2-4382-9127-051623496ba7",
+        "referenceNumber": "GRP011",
+        "createdAt": "2025-12-18T00:50:01.227Z"
+      },
+      {
+        "id": "0968969b-26ec-43d9-a744-b41541fbb225",
+        "referenceNumber": "GRP012",
+        "createdAt": "2025-12-18T00:50:01.330Z"
+      },
+      {
+        "id": "e352b4d8-3eeb-4f15-9257-317bb0a46dde",
+        "referenceNumber": "GRP013",
+        "createdAt": "2025-12-18T00:50:01.432Z"
+      },
+      {
+        "id": "fb2c36e3-f601-41a8-8c3a-c62b9e0c9902",
+        "referenceNumber": "GRP014",
+        "createdAt": "2025-12-18T00:50:01.536Z"
+      },
+      {
+        "id": "6dcdeddf-c5a3-4ee4-aef0-0ec71e6fea37",
+        "referenceNumber": "GRP015",
+        "createdAt": "2025-12-18T00:50:01.639Z"
+      },
+      {
+        "id": "26b75180-660d-4b2d-8e59-da58bf4ed2b9",
+        "referenceNumber": "GRP016",
+        "createdAt": "2025-12-18T00:50:01.741Z"
+      },
+      {
+        "id": "f1cb34d7-7872-4b03-b696-27dc9ecf6cf5",
+        "referenceNumber": "GRP017",
+        "createdAt": "2025-12-18T00:50:01.844Z"
+      },
+      {
+        "id": "a18330d2-0770-499f-96f6-75e67e2a75d4",
+        "referenceNumber": "GRP018",
+        "createdAt": "2025-12-18T00:50:01.946Z"
+      },
+      {
+        "id": "cbf209b8-2a31-4cf9-bc54-83485fa4051d",
+        "referenceNumber": "GRP019",
+        "createdAt": "2025-12-18T00:50:02.049Z"
+      },
+      {
+        "id": "67044596-c8f7-4375-a21f-2b0349eb7637",
+        "referenceNumber": "GRP020",
+        "createdAt": "2025-12-18T00:50:02.151Z"
+      },
+      {
+        "id": "6ade295b-882d-462d-a68b-2d985302d9db",
+        "referenceNumber": "GRP021",
+        "createdAt": "2025-12-18T00:50:02.254Z"
+      },
+      {
+        "id": "ff0b886a-f8ef-41e4-a628-3dabf997ba58",
+        "referenceNumber": "GRP022",
+        "createdAt": "2025-12-18T00:50:02.357Z"
+      },
+      {
+        "id": "23259da3-85da-4d69-a2bc-f1e643c3e4a5",
+        "referenceNumber": "GRP023",
+        "createdAt": "2025-12-18T00:50:02.460Z"
+      },
+      {
+        "id": "1d8a7e45-0b40-4677-bf88-ed8c29eb0e03",
+        "referenceNumber": "GRP024",
+        "createdAt": "2025-12-18T00:50:02.562Z"
+      },
+      {
+        "id": "5414f8e6-7fb4-4979-abf0-151495e1cfff",
+        "referenceNumber": "GRP025",
+        "createdAt": "2025-12-18T00:50:02.665Z"
+      },
+      {
+        "id": "d7082c1c-800b-4072-8c4c-6b07681145f4",
+        "referenceNumber": "GRP026",
+        "createdAt": "2025-12-18T00:50:02.767Z"
+      },
+      {
+        "id": "ba7c8f2a-7027-4b21-9a88-82709f083acb",
+        "referenceNumber": "GRP027",
+        "createdAt": "2025-12-18T00:50:02.869Z"
+      },
+      {
+        "id": "d31fd676-cd74-4239-9827-4bfd973cc237",
+        "referenceNumber": "GRP028",
+        "createdAt": "2025-12-18T00:50:02.971Z"
+      },
+      {
+        "id": "d64a0044-98eb-47c9-a610-f16b009bfcb4",
+        "referenceNumber": "GRP029",
+        "createdAt": "2025-12-18T00:50:03.075Z"
+      },
+      {
+        "id": "0d1c49df-1962-42f1-9457-855ef54578e6",
+        "referenceNumber": "GRP030",
+        "createdAt": "2025-12-18T00:50:03.177Z"
+      },
+      {
+        "id": "b24e1d25-603c-49cb-97d3-f44db7487a00",
+        "referenceNumber": "GRP031",
+        "createdAt": "2025-12-18T00:50:03.280Z"
+      },
+      {
+        "id": "ea07ea19-44f5-4443-8d44-890ef7a5078a",
+        "referenceNumber": "GRP032",
+        "createdAt": "2025-12-18T00:50:03.382Z"
+      },
+      {
+        "id": "54189d4e-7afc-4225-a6cb-28a8fff1a856",
+        "referenceNumber": "GRP033",
+        "createdAt": "2025-12-18T00:50:03.484Z"
+      },
+      {
+        "id": "1edf8348-87ac-4690-a22c-ef5721f32b81",
+        "referenceNumber": "GRP034",
+        "createdAt": "2025-12-18T00:50:03.587Z"
+      },
+      {
+        "id": "bc5440fa-e979-4a58-9300-e0349edf8d54",
+        "referenceNumber": "GRP035",
+        "createdAt": "2025-12-18T00:50:03.689Z"
+      },
+      {
+        "id": "96b83e8d-93db-4d09-9d4f-2398e8c44538",
+        "referenceNumber": "GRP036",
+        "createdAt": "2025-12-18T00:50:03.791Z"
+      },
+      {
+        "id": "fc1a8405-88ef-43cc-a677-2d1bdc00bb6a",
+        "referenceNumber": "GRP037",
+        "createdAt": "2025-12-18T00:50:03.895Z"
+      },
+      {
+        "id": "c5549c5d-d4f2-46cd-a749-5c78710368b5",
+        "referenceNumber": "GRP038",
+        "createdAt": "2025-12-18T00:50:03.997Z"
       }
     ],
     "seatAssignments": [
@@ -8512,6 +9253,7 @@
           "playerType": null,
           "groupSize": null,
           "podiumStory": false,
+          "availableForStandby": false,
           "createdAt": "2025-12-09T11:20:39.534Z"
         },
         "recordDay": {
@@ -8558,6 +9300,7 @@
           "playerType": null,
           "groupSize": null,
           "podiumStory": false,
+          "availableForStandby": false,
           "createdAt": "2025-12-09T11:20:42.411Z"
         },
         "recordDay": {
@@ -8787,6 +9530,7 @@
           "playerType": null,
           "groupSize": null,
           "podiumStory": false,
+          "availableForStandby": false,
           "createdAt": "2025-12-09T11:20:40.576Z"
         },
         "recordDay": {
@@ -8830,6 +9574,7 @@
           "playerType": null,
           "groupSize": null,
           "podiumStory": false,
+          "availableForStandby": false,
           "createdAt": "2025-12-09T11:20:51.790Z"
         },
         "recordDay": {
@@ -8873,6 +9618,7 @@
           "playerType": null,
           "groupSize": null,
           "podiumStory": false,
+          "availableForStandby": false,
           "createdAt": "2025-12-09T11:20:48.127Z"
         },
         "recordDay": {
@@ -8916,6 +9662,7 @@
           "playerType": null,
           "groupSize": null,
           "podiumStory": false,
+          "availableForStandby": false,
           "createdAt": "2025-12-09T11:20:39.534Z"
         },
         "recordDay": {
@@ -8932,8 +9679,8 @@
   },
   "counts": {
     "recordDays": 17,
-    "contestants": 336,
-    "groups": 5,
+    "contestants": 346,
+    "groups": 38,
     "seatAssignments": 14,
     "standbys": 2,
     "blockTypes": 26,

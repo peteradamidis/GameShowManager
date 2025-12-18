@@ -765,8 +765,8 @@ export function ContestantTable({
 
       {/* Contestant Detail Dialog */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-        <DialogContent className="max-w-4xl" data-testid="dialog-contestant-details">
-          <DialogHeader className="pb-2">
+        <DialogContent className="max-w-4xl flex flex-col h-[90vh]" data-testid="dialog-contestant-details">
+          <DialogHeader className="pb-2 flex-shrink-0">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <DialogTitle className="text-base">{isEditMode ? 'Edit Contestant' : 'Contestant Details'}</DialogTitle>
@@ -789,8 +789,10 @@ export function ContestantTable({
           </DialogHeader>
 
           {contestantDetails ? (
-            isEditMode ? (
-              <div className="space-y-6">
+            <>
+              <div className="flex-1 overflow-y-auto">
+                {isEditMode ? (
+                  <div className="space-y-6 pr-4">
                 {/* Photo Section */}
                 <div className="flex gap-6">
                   <div className="flex flex-col items-center gap-2">
@@ -1021,38 +1023,9 @@ export function ContestantTable({
                   </div>
                 </div>
 
-                {/* Edit Mode Footer */}
-                <DialogFooter className="gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleCancelEdit}
-                    disabled={updateContestantMutation.isPending}
-                    data-testid="button-cancel-edit"
-                  >
-                    <X className="h-4 w-4 mr-1" />
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleSaveEdit}
-                    disabled={updateContestantMutation.isPending}
-                    data-testid="button-save-edit"
-                  >
-                    {updateContestantMutation.isPending ? (
-                      <span className="flex items-center gap-1">
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                        Saving...
-                      </span>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4 mr-1" />
-                        Save Changes
-                      </>
-                    )}
-                  </Button>
-                </DialogFooter>
-              </div>
-            ) : (
-              <div className="space-y-3">
+                  </div>
+                ) : (
+                  <div className="space-y-3 pr-4">
                 {/* Photo and Basic Info Header */}
                 <div className="flex gap-4">
                   {/* Photo Section - Compact */}
@@ -1326,8 +1299,70 @@ export function ContestantTable({
                     Delete Contestant
                   </Button>
                 </div>
+                  </div>
+                )}
               </div>
-            )
+              
+              {/* Footer - Sticky at bottom */}
+              {isEditMode && (
+                <DialogFooter className="gap-2 flex-shrink-0 border-t pt-4 mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={handleCancelEdit}
+                    disabled={updateContestantMutation.isPending}
+                    data-testid="button-cancel-edit"
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSaveEdit}
+                    disabled={updateContestantMutation.isPending}
+                    data-testid="button-save-edit"
+                  >
+                    {updateContestantMutation.isPending ? (
+                      <span className="flex items-center gap-1">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        Saving...
+                      </span>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-1" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              )}
+              
+              {!isEditMode && (
+                <div className="flex justify-end gap-2 border-t pt-4 mt-4 flex-shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDetailDialogOpen(false)}
+                    data-testid="button-close-detail-dialog"
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      if (selectedContestantId) {
+                        setDeleteConfirmContestantId(selectedContestantId);
+                        setDeleteConfirmOpen(true);
+                      }
+                    }}
+                    data-testid="button-delete-contestant-detail"
+                    className="text-destructive-foreground"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete Contestant
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               Loading contestant details...
