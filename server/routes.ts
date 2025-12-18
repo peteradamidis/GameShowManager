@@ -4161,8 +4161,25 @@ ${finalEmailFooter}`;
                 senderName: senderNameConfig || 'Deal or No Deal',
               };
               
-              // Get banner URL from system config or use default
-              const bannerUrl = await storage.getSystemConfig('email_banner_url') || `${confirmEmailBaseUrl}/uploads/branding/dond_banner.png`;
+              // Get banner URL from system config or use default and convert to base64 for offline viewing
+              let bannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
+              let bannerUrl = bannerUrlConfig.startsWith('/') ? `${confirmEmailBaseUrl}${bannerUrlConfig}` : bannerUrlConfig;
+              
+              // Convert banner image to base64 for offline viewing
+              if (bannerUrlConfig.startsWith('/')) {
+                const bannerPath = path.join(process.cwd(), bannerUrlConfig.replace(/^\//, ''));
+                try {
+                  if (fs.existsSync(bannerPath)) {
+                    const imageBuffer = fs.readFileSync(bannerPath);
+                    const base64Image = imageBuffer.toString('base64');
+                    const ext = path.extname(bannerPath).toLowerCase().replace('.', '');
+                    const mimeType = ext === 'jpg' ? 'jpeg' : ext;
+                    bannerUrl = `data:image/${mimeType};base64,${base64Image}`;
+                  }
+                } catch (error) {
+                  console.warn(`Warning: Could not read banner image at ${bannerPath}, using URL fallback:`, error);
+                }
+              }
               
               // Build confirmation receipt email matching booking email style
               const confirmationEmailSubject = `Deal or No Deal - Attendance Confirmed for ${recordDate}`;
