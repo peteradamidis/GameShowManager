@@ -34,7 +34,7 @@ Do not make changes to the file `Y`.
 - **Winners Page (Winning Money Tracking):** Displays contestants with recorded winning money, filterable by type, with an Excel export feature. Includes specific fields for tracking prize details.
 - **Mobility/Access Notes Indicator:** Visually highlights contestants with mobility notes on the seating chart.
 - **Booking Master Page:** A comprehensive workflow tracking system with inline editing, checkbox tracking, and real-time WebSocket-based synchronization for collaborative use. Includes a responses panel to view booking confirmation details and facilitate follow-ups.
-- **Standby Seating System:** Allows drag-and-drop assignment of standbys to empty seats on the seating chart. Only works in RX Mode (locked day) and standbys can only replace cancelled contestants. The Standbys panel appears next to Block 7 with amber styling when the day is locked.
+- **Standby Seating System:** Allows drag-and-drop assignment of standbys to any empty seats on the seating chart. Only works in RX Mode (locked day). The Standbys panel appears next to Block 7 with amber styling when the day is locked.
 
 ### Feature Specifications
 - **Contestant Management:** Profiles, search, filtering by status, gender, rating, etc.

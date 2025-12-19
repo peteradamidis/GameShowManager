@@ -463,22 +463,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     queryKey: ['/api/record-days', recordDayId, 'block-types'],
   });
 
-  // Fetch canceled assignments to validate standby placement
-  const { data: canceledAssignments = [] } = useQuery<Array<{
-    id: string;
-    contestantId: string;
-    recordDayId: string;
-    blockNumber: number | null;
-    seatLabel: string | null;
-  }>>({
-    queryKey: ['/api/canceled-assignments'],
-  });
-
-  // Filter canceled assignments for this record day
-  const canceledSeatsForDay = canceledAssignments.filter(
-    ca => ca.recordDayId === recordDayId && ca.blockNumber !== null && ca.seatLabel !== null
-  );
-
   // Create a map of block number to block type
   const blockTypeMap: Record<number, 'PB' | 'NPB'> = {};
   if (blockTypesData) {
@@ -715,24 +699,14 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
       
       // Check if target seat is occupied
       if (targetSeat.seat.contestantName) {
-        setStandbyError("Cannot seat standby in an occupied seat. The seat must be empty (contestant cancelled and moved to reschedule).");
+        setStandbyError("Cannot seat standby in an occupied seat. Please choose an empty seat.");
         return;
       }
       
       // Get target location details
       const targetLocation = getBlockAndSeat(targetSeat.seat.id);
       
-      // Validate that this seat was previously occupied by a cancelled contestant
-      const wasCancelled = canceledSeatsForDay.some(
-        ca => ca.blockNumber === targetLocation.blockNumber && ca.seatLabel === targetLocation.seatLabel
-      );
-      
-      if (!wasCancelled) {
-        setStandbyError("Standbys can only be placed in seats where a contestant has been cancelled and moved to reschedule. This seat was not previously occupied.");
-        return;
-      }
-      
-      // Seat is empty, day is locked, and seat was from a cancelled contestant - proceed with assignment
+      // Seat is empty and day is locked - proceed with assignment
       setPendingStandbyAssign({
         standby,
         targetBlockNumber: targetLocation.blockNumber,
