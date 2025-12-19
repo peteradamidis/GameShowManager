@@ -130,6 +130,9 @@ export const canceledAssignments = pgTable("canceled_assignments", {
   reason: text("reason"),
   isFromStandby: boolean("is_from_standby").default(false), // True if this came from standby tab
   originalAttendanceDate: timestamp("original_attendance_date"), // Date standby originally attended
+  // Carry over paperwork status when rescheduling
+  paperworkSent: timestamp("paperwork_sent"),
+  paperworkReceived: timestamp("paperwork_received"),
 });
 
 // Availability Tokens table - stores unique tokens for availability check responses

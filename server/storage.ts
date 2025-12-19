@@ -849,6 +849,9 @@ export class DbStorage implements IStorage {
           blockNumber: assignment.blockNumber,
           seatLabel: assignment.seatLabel,
           reason,
+          // Carry over paperwork status for rescheduling
+          paperworkSent: assignment.paperworkSent,
+          paperworkReceived: assignment.paperworkReceived,
         })
         .returning();
 

@@ -1251,12 +1251,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ error: "This seat is already occupied" });
       }
 
+      // Check for previous canceled assignments to carry over paperwork status
+      const canceledAssignments = await storage.getCanceledAssignments();
+      const previousCanceled = canceledAssignments.find(
+        (c: any) => c.contestantId === contestantId && (c.paperworkSent || c.paperworkReceived)
+      );
+
       const assignment = await storage.createSeatAssignment({
         recordDayId,
         contestantId,
         blockNumber: parseInt(blockNumber),
         seatLabel,
         playerType,
+        // Carry over paperwork status from previous bookings
+        paperworkSent: previousCanceled?.paperworkSent || undefined,
+        paperworkReceived: previousCanceled?.paperworkReceived || undefined,
       });
 
       // Update contestant status to assigned
@@ -1351,19 +1360,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Get canceled assignments to check for paperwork status to carry over
+      const allCanceledAssignments = await storage.getCanceledAssignments();
+
       // Create all assignments
       const assignments = [];
       for (let i = 0; i < contestantIds.length; i++) {
+        const contestantId = contestantIds[i];
+        
+        // Check for previous canceled assignments to carry over paperwork status
+        const previousCanceled = allCanceledAssignments.find(
+          (c: any) => c.contestantId === contestantId && (c.paperworkSent || c.paperworkReceived)
+        );
+        
         const assignment = await storage.createSeatAssignment({
           recordDayId,
-          contestantId: contestantIds[i],
+          contestantId,
           blockNumber: parseInt(blockNumber),
           seatLabel: seatLabels[i],
+          // Carry over paperwork status from previous bookings
+          paperworkSent: previousCanceled?.paperworkSent || undefined,
+          paperworkReceived: previousCanceled?.paperworkReceived || undefined,
         });
         assignments.push(assignment);
         
         // Update contestant status to assigned
-        await storage.updateContestantAvailability(contestantIds[i], 'assigned');
+        await storage.updateContestantAvailability(contestantId, 'assigned');
       }
 
       res.json({
@@ -2455,6 +2477,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Deduplication: ${plan.length} items in plan, ${deduplicatedPlan.length} after removing duplicates`);
       
+      // Get canceled assignments to check for paperwork status to carry over
+      const allCanceledAssignments = await storage.getCanceledAssignments();
+      
       const createdAssignments: any[] = [];
       const contestantUpdates: string[] = [];
       
@@ -2467,11 +2492,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             continue;
           }
           
+          // Check for previous canceled assignments to carry over paperwork status
+          const previousCanceled = allCanceledAssignments.find(
+            (c: any) => c.contestantId === item.contestant.id && (c.paperworkSent || c.paperworkReceived)
+          );
+          
           const assignment = await storage.createSeatAssignment({
             recordDayId,
             contestantId: item.contestant.id,
             blockNumber: item.blockNumber,
             seatLabel: item.seatLabel,
+            // Carry over paperwork status from previous bookings
+            paperworkSent: previousCanceled?.paperworkSent || undefined,
+            paperworkReceived: previousCanceled?.paperworkReceived || undefined,
           });
           createdAssignments.push(assignment);
           contestantUpdates.push(item.contestant.id);
