@@ -42,7 +42,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Calendar, Mail, Maximize2, Minimize2, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle, FileText, Sparkles } from "lucide-react";
+import { Download, Calendar, Mail, Maximize2, Minimize2, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle, FileText, Sparkles, Users } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import * as XLSX from "xlsx";
@@ -152,6 +153,7 @@ interface SeatAssignment {
   confirmedRsvp?: string;
   paperworkSent?: string;
   paperworkReceived?: string;
+  paperworkOnDay?: string;
   signedIn?: string;
   otdNotes?: string;
   standbyReplacementSwaps?: string;
@@ -180,6 +182,7 @@ interface StandbyAssignment {
   standbyEmailSent: string | null;
   confirmedAt: string | null;
   notes: string | null;
+  assignedToSeat: string | null;
   contestant: {
     id: string;
     name: string;
@@ -215,6 +218,7 @@ export default function BookingMaster() {
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const [filterMobilityNotes, setFilterMobilityNotes] = useState(false);
   const [filterMedicalNotes, setFilterMedicalNotes] = useState(false);
+  const [isStandbyMode, setIsStandbyMode] = useState(false);
   // Use refs instead of state for pending text updates to avoid re-renders
   const pendingTextUpdatesRef = useRef<Record<string, string>>({});
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnId, boolean>>(() => {
@@ -856,6 +860,20 @@ export default function BookingMaster() {
           </SelectContent>
         </Select>
         {selectedRecordDay && (
+          <div className="flex items-center gap-2 px-3 py-1 rounded-md border bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800">
+            <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            <Label htmlFor="standby-toggle" className="text-sm font-medium text-purple-700 dark:text-purple-300 cursor-pointer">
+              Standby
+            </Label>
+            <Switch
+              id="standby-toggle"
+              checked={isStandbyMode}
+              onCheckedChange={setIsStandbyMode}
+              data-testid="toggle-standby-mode"
+            />
+          </div>
+        )}
+        {selectedRecordDay && (
           <Input
             placeholder="Search by name..."
             value={searchName}
@@ -879,8 +897,111 @@ export default function BookingMaster() {
         >
           {loadingAssignments ? (
             <div className="p-8 text-center text-muted-foreground">
-              Loading assignments...
+              Loading...
             </div>
+          ) : isStandbyMode ? (
+            /* Standby Booking Master Table */
+            <Table>
+              <TableHeader className="sticky top-0 z-50">
+                <TableRow className="bg-purple-700 dark:bg-purple-900 h-10">
+                  <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 w-10 text-white font-semibold border-r border-purple-500 dark:border-purple-700">#</TableHead>
+                  <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 w-16 text-white font-semibold border-r border-purple-500 dark:border-purple-700">STATUS</TableHead>
+                  {isColumnVisible("name") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 min-w-[120px] text-white font-semibold border-r border-purple-500 dark:border-purple-700">NAME</TableHead>}
+                  {isColumnVisible("mobile") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 min-w-[100px] text-white font-semibold border-r border-purple-500 dark:border-purple-700">MOBILE</TableHead>}
+                  {isColumnVisible("email") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 w-48 min-w-[180px] text-white font-semibold border-r border-purple-500 dark:border-purple-700">EMAIL</TableHead>}
+                  {isColumnVisible("attendingWith") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 text-white font-semibold border-r border-purple-500 dark:border-purple-700">ATTENDING<br/>WITH</TableHead>}
+                  {isColumnVisible("location") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 text-white font-semibold border-r border-purple-500 dark:border-purple-700">LOCATION</TableHead>}
+                  {isColumnVisible("mobilityNotes") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 text-white font-semibold border-r border-purple-500 dark:border-purple-700">MOBILITY /<br/>MEDICAL NOTES</TableHead>}
+                  {isColumnVisible("criminal") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 w-20 text-center text-white font-semibold border-r border-purple-500 dark:border-purple-700">CRIMINAL /<br/>BANKRUPTCY</TableHead>}
+                  {isColumnVisible("notes") && <TableHead className={`sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 border-r-4 border-r-purple-400 text-white font-semibold ${isFullscreen ? 'min-w-[150px]' : 'min-w-[200px]'}`}>NOTES</TableHead>}
+                  {isColumnVisible("emailSent") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">STANDBY<br/>EMAIL<br/>SENT</TableHead>}
+                  {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">CONFIRM<br/>ED</TableHead>}
+                  <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-20 text-purple-900 dark:text-white font-semibold">ASSIGNED<br/>TO SEAT</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {standbysForRecordDay
+                  .filter(standby => {
+                    if (!searchName) return true;
+                    return standby.contestant.name.toLowerCase().includes(searchName.toLowerCase());
+                  })
+                  .map((standby, index) => {
+                    const contestant = contestants.find(c => c.id === standby.contestantId);
+                    return (
+                      <TableRow key={standby.id} className="bg-purple-50 dark:bg-purple-950/20 h-7 border-b border-purple-200 dark:border-purple-800">
+                        <TableCell className="font-mono text-xs py-0.5 h-7 w-10 text-purple-700 dark:text-purple-300 font-semibold border-r border-purple-200 dark:border-purple-800">{index + 1}</TableCell>
+                        <TableCell className="py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">
+                          <Badge 
+                            variant="secondary" 
+                            className={`text-[10px] ${
+                              standby.status === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                              standby.status === 'seated' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+                              standby.status === 'declined' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                              standby.status === 'email_sent' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                              'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                            }`}
+                          >
+                            {standby.status}
+                          </Badge>
+                        </TableCell>
+                        {isColumnVisible("name") && (
+                          <TableCell className="font-medium text-xs min-w-[150px] py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">
+                            {standby.contestant.name}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("mobile") && <TableCell className="text-xs min-w-[120px] py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{standby.contestant.phone || ""}</TableCell>}
+                        {isColumnVisible("email") && <TableCell className="text-xs py-0.5 h-7 w-48 min-w-[180px] truncate border-r border-purple-200 dark:border-purple-800" title={standby.contestant.email || ""}>{standby.contestant.email || ""}</TableCell>}
+                        {isColumnVisible("attendingWith") && <TableCell className="text-xs py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{contestant?.attendingWith || ""}</TableCell>}
+                        {isColumnVisible("location") && <TableCell className="text-xs py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{contestant?.location || ""}</TableCell>}
+                        {isColumnVisible("mobilityNotes") && <TableCell className="text-xs py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{contestant?.mobilityNotes || ""}</TableCell>}
+                        {isColumnVisible("criminal") && <TableCell className="text-xs py-0.5 h-7 w-20 text-center border-r border-purple-200 dark:border-purple-800">{contestant?.criminalRecord || ""}</TableCell>}
+                        {isColumnVisible("notes") && (
+                          <TableCell className="border-r-4 border-r-purple-400 py-0.5 text-xs">
+                            {standby.notes || ""}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("emailSent") && (
+                          <TableCell className="py-0.5 h-7 text-center border-r border-purple-200 dark:border-purple-800">
+                            {standby.standbyEmailSent ? (
+                              <CheckCircle className="h-4 w-4 text-green-600 mx-auto" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-gray-300 mx-auto" />
+                            )}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("rsvp") && (
+                          <TableCell className="py-0.5 h-7 text-center border-r border-purple-200 dark:border-purple-800">
+                            {standby.confirmedAt ? (
+                              <CheckCircle className="h-4 w-4 text-green-600 mx-auto" />
+                            ) : standby.status === 'declined' ? (
+                              <XCircle className="h-4 w-4 text-red-500 mx-auto" />
+                            ) : (
+                              <span className="text-xs text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                        )}
+                        <TableCell className="py-0.5 h-7 text-center">
+                          {standby.assignedToSeat ? (
+                            <Badge variant="secondary" className="text-[10px] bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                              {standby.assignedToSeat}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                {standbysForRecordDay.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={15} className="text-center py-8 text-muted-foreground">
+                      <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      No standbys assigned for this record day
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           ) : (
             <Table>
               <TableHeader className="sticky top-0 z-50">

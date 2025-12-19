@@ -1,9 +1,19 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-19T12:28:29.985Z",
+  "exportedAt": "2025-12-19T12:40:36.680Z",
   "automatic": true,
   "data": {
     "recordDays": [
+      {
+        "id": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "date": "2026-02-04",
+        "rxNumber": "RX EP 1 - 5",
+        "totalSeats": 154,
+        "status": "ready",
+        "producer": "Maggie Carty",
+        "lockedAt": null,
+        "createdAt": "2025-11-27T11:34:23.272Z"
+      },
       {
         "id": "8de562bb-e594-47dd-a50f-ee78c14c0dde",
         "date": "2026-02-05",
@@ -161,16 +171,6 @@
         "totalSeats": 154,
         "status": "draft",
         "producer": null,
-        "lockedAt": null,
-        "createdAt": "2025-11-27T11:34:23.272Z"
-      },
-      {
-        "id": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "date": "2026-02-04",
-        "rxNumber": "RX EP 1 - 5",
-        "totalSeats": 154,
-        "status": "ready",
-        "producer": "Maggie Carty",
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       }
@@ -8774,6 +8774,55 @@
     ],
     "blockTypes": [
       {
+        "id": "b248391e-18a0-4a53-bb54-8a0953ee2107",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "blockNumber": 2,
+        "blockType": "PB",
+        "createdAt": "2025-11-28T01:01:50.151Z"
+      },
+      {
+        "id": "60ae8d96-a0a8-4bf5-ab37-7d9bbc68104a",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "blockNumber": 3,
+        "blockType": "PB",
+        "createdAt": "2025-11-28T01:02:45.890Z"
+      },
+      {
+        "id": "19e49e78-cb04-48f1-b38c-1b5ae955926c",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "blockNumber": 5,
+        "blockType": "NPB",
+        "createdAt": "2025-11-28T01:03:28.068Z"
+      },
+      {
+        "id": "ff774508-8faa-437d-b90c-98020b4fce99",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "blockNumber": 4,
+        "blockType": "PB",
+        "createdAt": "2025-11-28T01:03:30.883Z"
+      },
+      {
+        "id": "a2d47c69-208d-44d2-9033-3b6ab96616bd",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "blockNumber": 1,
+        "blockType": "PB",
+        "createdAt": "2025-11-28T01:01:21.118Z"
+      },
+      {
+        "id": "d1e4b23c-d687-4444-8a8d-c54032f59162",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "blockNumber": 6,
+        "blockType": "NPB",
+        "createdAt": "2025-11-28T01:03:25.803Z"
+      },
+      {
+        "id": "51e9e36b-3d3e-42bb-87d4-4f6a5085828d",
+        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
+        "blockNumber": 7,
+        "blockType": "PB",
+        "createdAt": "2025-11-28T01:06:10.521Z"
+      },
+      {
         "id": "4d9813bd-7b99-4771-8da1-ad6fa01c1c6a",
         "recordDayId": "8de562bb-e594-47dd-a50f-ee78c14c0dde",
         "blockNumber": 1,
@@ -8905,103 +8954,9 @@
         "blockNumber": 2,
         "blockType": "PB",
         "createdAt": "2025-12-01T02:24:00.138Z"
-      },
-      {
-        "id": "b248391e-18a0-4a53-bb54-8a0953ee2107",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "blockNumber": 2,
-        "blockType": "PB",
-        "createdAt": "2025-11-28T01:01:50.151Z"
-      },
-      {
-        "id": "60ae8d96-a0a8-4bf5-ab37-7d9bbc68104a",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "blockNumber": 3,
-        "blockType": "PB",
-        "createdAt": "2025-11-28T01:02:45.890Z"
-      },
-      {
-        "id": "19e49e78-cb04-48f1-b38c-1b5ae955926c",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "blockNumber": 5,
-        "blockType": "NPB",
-        "createdAt": "2025-11-28T01:03:28.068Z"
-      },
-      {
-        "id": "ff774508-8faa-437d-b90c-98020b4fce99",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "blockNumber": 4,
-        "blockType": "PB",
-        "createdAt": "2025-11-28T01:03:30.883Z"
-      },
-      {
-        "id": "a2d47c69-208d-44d2-9033-3b6ab96616bd",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "blockNumber": 1,
-        "blockType": "PB",
-        "createdAt": "2025-11-28T01:01:21.118Z"
-      },
-      {
-        "id": "d1e4b23c-d687-4444-8a8d-c54032f59162",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "blockNumber": 6,
-        "blockType": "NPB",
-        "createdAt": "2025-11-28T01:03:25.803Z"
-      },
-      {
-        "id": "51e9e36b-3d3e-42bb-87d4-4f6a5085828d",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "blockNumber": 7,
-        "blockType": "PB",
-        "createdAt": "2025-11-28T01:06:10.521Z"
       }
     ],
     "canceledAssignments": [
-      {
-        "id": "03f5c6b5-b47c-40de-9554-c0d6fb75930b",
-        "contestantId": "6366884b-6583-493e-80bc-a1dff1926c59",
-        "recordDayId": "abce05e1-0917-4949-a374-ef5f941df712",
-        "blockNumber": 5,
-        "seatLabel": "B1",
-        "canceledAt": "2025-12-10T06:06:25.092Z",
-        "reason": "Cant do feb - book in march onwards",
-        "isFromStandby": false,
-        "originalAttendanceDate": null,
-        "contestant": {
-          "id": "6366884b-6583-493e-80bc-a1dff1926c59",
-          "name": "Eleanor Allen",
-          "age": 53,
-          "gender": "Female",
-          "groupId": null,
-          "availabilityStatus": "available",
-          "attendingWith": "Christopher Allen",
-          "email": "eleanor.allen67@outlook.com",
-          "phone": "(510) 261-1846",
-          "location": "Los Angeles",
-          "postcode": null,
-          "state": null,
-          "medicalInfo": null,
-          "mobilityNotes": null,
-          "criminalRecord": null,
-          "photoUrl": "https://randomuser.me/api/portraits/women/10.jpg",
-          "auditionRating": "A",
-          "playerType": null,
-          "groupSize": null,
-          "podiumStory": false,
-          "availableForStandby": false,
-          "createdAt": "2025-12-09T11:20:40.576Z"
-        },
-        "recordDay": {
-          "id": "abce05e1-0917-4949-a374-ef5f941df712",
-          "date": "2026-02-09",
-          "rxNumber": "RX EP 16 - 20",
-          "totalSeats": 154,
-          "status": "draft",
-          "producer": null,
-          "lockedAt": null,
-          "createdAt": "2025-11-27T11:34:23.272Z"
-        }
-      },
       {
         "id": "8408c349-ac9b-49ab-989d-44cfabae6ca5",
         "contestantId": "b2c7422d-5caa-41a4-8352-77a36b30b055",
@@ -9133,6 +9088,51 @@
           "totalSeats": 154,
           "status": "ready",
           "producer": "Maggie Carty",
+          "lockedAt": null,
+          "createdAt": "2025-11-27T11:34:23.272Z"
+        }
+      },
+      {
+        "id": "03f5c6b5-b47c-40de-9554-c0d6fb75930b",
+        "contestantId": "6366884b-6583-493e-80bc-a1dff1926c59",
+        "recordDayId": "abce05e1-0917-4949-a374-ef5f941df712",
+        "blockNumber": 5,
+        "seatLabel": "B1",
+        "canceledAt": "2025-12-10T06:06:25.092Z",
+        "reason": "Cant do feb - book in march onwards",
+        "isFromStandby": false,
+        "originalAttendanceDate": null,
+        "contestant": {
+          "id": "6366884b-6583-493e-80bc-a1dff1926c59",
+          "name": "Eleanor Allen",
+          "age": 53,
+          "gender": "Female",
+          "groupId": null,
+          "availabilityStatus": "available",
+          "attendingWith": "Christopher Allen",
+          "email": "eleanor.allen67@outlook.com",
+          "phone": "(510) 261-1846",
+          "location": "Los Angeles",
+          "postcode": null,
+          "state": null,
+          "medicalInfo": null,
+          "mobilityNotes": null,
+          "criminalRecord": null,
+          "photoUrl": "https://randomuser.me/api/portraits/women/10.jpg",
+          "auditionRating": "A",
+          "playerType": null,
+          "groupSize": null,
+          "podiumStory": false,
+          "availableForStandby": false,
+          "createdAt": "2025-12-09T11:20:40.576Z"
+        },
+        "recordDay": {
+          "id": "abce05e1-0917-4949-a374-ef5f941df712",
+          "date": "2026-02-09",
+          "rxNumber": "RX EP 16 - 20",
+          "totalSeats": 154,
+          "status": "draft",
+          "producer": null,
           "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
