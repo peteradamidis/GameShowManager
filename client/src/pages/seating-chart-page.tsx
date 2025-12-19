@@ -528,6 +528,7 @@ export default function SeatingChartPage() {
     caseNumber: currentAssignment?.caseNumber || "",
     role: currentAssignment?.winningMoneyRole || "player",
     amount: currentAssignment?.winningMoneyAmount || 0,
+    amountText: currentAssignment?.winningMoneyText || "",
     caseAmount: currentAssignment?.caseAmount,
     quickCash: currentAssignment?.quickCash,
     bankOfferTaken: currentAssignment?.bankOfferTaken || false,
@@ -543,7 +544,7 @@ export default function SeatingChartPage() {
     prize?: string;
   }
 
-  const handleWinningMoneySave = async (role: string, amount: number, rxNumber: string, rxEpNumber: string, caseNumber: string, playerFields?: PlayerFields) => {
+  const handleWinningMoneySave = async (role: string, amount: number | null, rxNumber: string, rxEpNumber: string, caseNumber: string, playerFields?: PlayerFields, amountText?: string) => {
     if (!selectedAssignmentId) return;
     
     setWinningMoneyLoading(true);
@@ -554,6 +555,7 @@ export default function SeatingChartPage() {
         caseNumber,
         winningMoneyRole: role,
         winningMoneyAmount: amount,
+        winningMoneyText: role === 'case_holder' ? amountText : null,
         ...(role === 'player' && playerFields ? {
           caseAmount: playerFields.caseAmount,
           quickCash: playerFields.quickCash,
@@ -573,9 +575,10 @@ export default function SeatingChartPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments/with-winning-money'] });
       setWinningMoneyModalOpen(false);
       setSelectedAssignmentId("");
+      const displayAmount = amount !== null ? `$${amount}` : amountText;
       toast({
         title: "Winning money updated",
-        description: `Amount saved: $${amount}`,
+        description: `Amount saved: ${displayAmount}`,
       });
     } catch (error: any) {
       toast({
@@ -938,6 +941,7 @@ export default function SeatingChartPage() {
         currentCaseNumber={currentWinningMoneyData.caseNumber}
         currentRole={currentWinningMoneyData.role}
         currentAmount={currentWinningMoneyData.amount}
+        currentAmountText={currentWinningMoneyData.amountText}
         currentCaseAmount={currentWinningMoneyData.caseAmount}
         currentQuickCash={currentWinningMoneyData.quickCash}
         currentBankOfferTaken={currentWinningMoneyData.bankOfferTaken}

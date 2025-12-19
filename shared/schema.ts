@@ -95,6 +95,7 @@ export const seatAssignments = pgTable("seat_assignments", {
   caseNumber: text("case_number"), // Case number for this seat
   winningMoneyRole: text("winning_money_role"), // 'player' or 'case_holder'
   winningMoneyAmount: integer("winning_money_amount"), // Amount in dollars
+  winningMoneyText: text("winning_money_text"), // Text description for case holders (e.g. "Car", "Trip")
   
   // Player-specific winning fields
   caseAmount: integer("case_amount"), // Amount in case for player

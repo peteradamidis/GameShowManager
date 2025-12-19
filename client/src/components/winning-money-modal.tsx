@@ -31,11 +31,12 @@ interface PlayerFields {
 interface WinningMoneyModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (role: string, amount: number, rxNumber: string, rxEpNumber: string, caseNumber: string, playerFields?: PlayerFields) => void;
+  onSubmit: (role: string, amount: number | null, rxNumber: string, rxEpNumber: string, caseNumber: string, playerFields?: PlayerFields, amountText?: string) => void;
   onRemove?: () => void;
   isLoading?: boolean;
   currentRole?: string;
   currentAmount?: number;
+  currentAmountText?: string;
   currentRxNumber?: string;
   currentRxEpNumber?: string;
   currentCaseNumber?: string;
@@ -58,6 +59,7 @@ export function WinningMoneyModal({
   isLoading = false,
   currentRole,
   currentAmount,
+  currentAmountText,
   currentRxNumber,
   currentRxEpNumber,
   currentCaseNumber,
@@ -110,7 +112,12 @@ export function WinningMoneyModal({
       setRxEpNumber(currentRxEpNumber || "");
       setCaseNumber(currentCaseNumber || "");
       setRole(currentRole || "player");
-      setAmount(currentAmount ? currentAmount.toString() : "");
+      // For case holders, prefer text amount if available
+      if (currentRole === "case_holder" && currentAmountText) {
+        setAmount(currentAmountText);
+      } else {
+        setAmount(currentAmount ? currentAmount.toString() : "");
+      }
       setCaseAmount(currentCaseAmount ? currentCaseAmount.toString() : "");
       setQuickCash(currentQuickCash ? currentQuickCash.toString() : "");
       setBankOfferTaken(currentBankOfferTaken ?? false);
@@ -118,7 +125,7 @@ export function WinningMoneyModal({
       setPrize(currentPrize || "");
       setIsEditing(false);
     }
-  }, [open, currentRxNumber, currentRxEpNumber, currentCaseNumber, currentRole, currentAmount, currentCaseAmount, currentQuickCash, currentBankOfferTaken, currentSpinTheWheel, currentPrize]);
+  }, [open, currentRxNumber, currentRxEpNumber, currentCaseNumber, currentRole, currentAmount, currentAmountText, currentCaseAmount, currentQuickCash, currentBankOfferTaken, currentSpinTheWheel, currentPrize]);
 
   useEffect(() => {
     if (role === "case_holder") {
@@ -138,9 +145,18 @@ export function WinningMoneyModal({
     if (!role) {
       return;
     }
+    
+    // For case holders, allow text input (e.g., "Car", "Trip", or a number)
+    // For players, require a valid number
     const amountNum = parseInt(amount, 10);
-    if (isNaN(amountNum) || amountNum < 0) {
-      return;
+    const isValidNumber = !isNaN(amountNum) && amountNum >= 0;
+    
+    if (role === "player" && !isValidNumber) {
+      return; // Players must have a valid number
+    }
+    
+    if (role === "case_holder" && !amount.trim()) {
+      return; // Case holders must have some value
     }
     
     // Build player fields object only if role is player
@@ -152,7 +168,12 @@ export function WinningMoneyModal({
       prize: spinTheWheel ? prize : undefined,
     } : undefined;
     
-    onSubmit(role, amountNum, rxNumber, rxEpNumber, caseNumber, playerFields);
+    // For case holders with text, pass null for amount and include amountText
+    // For case holders with valid number, pass the number
+    const finalAmount = isValidNumber ? amountNum : null;
+    const amountText = role === "case_holder" ? amount.trim() : undefined;
+    
+    onSubmit(role, finalAmount, rxNumber, rxEpNumber, caseNumber, playerFields, amountText);
     setRxNumber("");
     setRxEpNumber("");
     setCaseNumber("");
@@ -166,7 +187,7 @@ export function WinningMoneyModal({
     onOpenChange(false);
   };
 
-  const hasExistingData = (currentAmount ?? 0) > 0;
+  const hasExistingData = (currentAmount ?? 0) > 0 || !!currentAmountText;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -292,20 +313,20 @@ export function WinningMoneyModal({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="amount-input">Amount Won ($)</Label>
+            <Label htmlFor="amount-input">{role === "case_holder" ? "Amount/Prize Won" : "Amount Won ($)"}</Label>
             <Input
               id="amount-input"
-              type="number"
-              min="0"
+              type={role === "case_holder" ? "text" : "number"}
+              min={role === "case_holder" ? undefined : "0"}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               disabled={hasExistingData && !isEditing}
-              placeholder={role === "case_holder" ? "250" : "Enter amount"}
+              placeholder={role === "case_holder" ? "250 or Car, Trip, etc." : "Enter amount"}
               data-testid="input-winning-amount"
             />
             {role === "case_holder" && (
               <p className="text-xs text-muted-foreground">
-                Default case holder amount is $250
+                Enter amount ($250) or text description (Car, Trip, etc.)
               </p>
             )}
           </div>
