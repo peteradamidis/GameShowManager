@@ -54,6 +54,7 @@ export const recordDays = pgTable("record_days", {
   rxNumber: text("rx_number"), // e.g., "RX EP 6 - 10"
   totalSeats: integer("total_seats").default(154).notNull(),
   status: recordDayStatusEnum("status").default('draft').notNull(),
+  producer: text("producer"), // Producer assigned to this record day
   lockedAt: timestamp("locked_at"), // When record day is locked for RX Day Mode
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

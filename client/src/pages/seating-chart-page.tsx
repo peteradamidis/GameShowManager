@@ -11,7 +11,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { broadcastSeatingChange, broadcastRecordDayChange } from "@/lib/crossTabSync";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { format } from "date-fns";
 import {
   Dialog,
@@ -92,6 +92,10 @@ export default function SeatingChartPage() {
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<string>("");
   const [winningMoneyLoading, setWinningMoneyLoading] = useState(false);
   
+  // Producer state
+  const [selectedProducer, setSelectedProducer] = useState<string>("");
+  const [producerUpdating, setProducerUpdating] = useState(false);
+  
   // Get record day ID from query parameter or fetch first available
   const searchParams = new URLSearchParams(window.location.search);
   const urlRecordDayId = searchParams.get('day');
@@ -109,6 +113,13 @@ export default function SeatingChartPage() {
     if (!recordDays || !recordDayId) return null;
     return recordDays.find((rd: any) => rd.id === recordDayId);
   }, [recordDays, recordDayId]);
+
+  // Sync producer state with current record day
+  useEffect(() => {
+    if (currentRecordDay && !selectedProducer) {
+      setSelectedProducer(currentRecordDay.producer || "");
+    }
+  }, [currentRecordDay?.id]);
 
   // Fetch seat assignments for this record day
   const { data: assignments, isLoading, refetch } = useQuery({
@@ -225,6 +236,28 @@ export default function SeatingChartPage() {
       });
     },
   });
+
+  // Producer update handler
+  const handleProducerChange = async (newProducer: string) => {
+    setSelectedProducer(newProducer);
+    setProducerUpdating(true);
+    try {
+      await apiRequest('PATCH', `/api/record-days/${recordDayId}`, {
+        producer: newProducer || null,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/record-days'] });
+    } catch (error: any) {
+      toast({
+        title: "Producer update failed",
+        description: error?.message || "Could not update producer.",
+        variant: "destructive",
+      });
+      // Revert on error
+      setSelectedProducer(currentRecordDay?.producer || "");
+    } finally {
+      setProducerUpdating(false);
+    }
+  };
 
   // Show loading state if record days are still loading
   if (recordDaysLoading) {
@@ -660,8 +693,8 @@ export default function SeatingChartPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-3">
             <h1 className="text-2xl font-semibold">Seating Chart</h1>
             {currentRecordDay && (
               <Badge variant="secondary">
@@ -670,9 +703,27 @@ export default function SeatingChartPage() {
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground">
-            Drag and drop contestants to arrange seating blocks
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-muted-foreground">
+              Drag and drop contestants to arrange seating blocks
+            </p>
+            {currentRecordDay && (
+              <div className="flex items-center gap-2">
+                <Label htmlFor="producer-select" className="font-medium">Producer:</Label>
+                <Select value={selectedProducer} onValueChange={handleProducerChange} disabled={producerUpdating}>
+                  <SelectTrigger id="producer-select" className="w-56" data-testid="select-producer">
+                    <SelectValue placeholder="Select producer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="Peter Adamidis">Peter Adamidis</SelectItem>
+                    <SelectItem value="Kathleen Reynolds">Kathleen Reynolds</SelectItem>
+                    <SelectItem value="Maggie Carty">Maggie Carty</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex gap-2 items-center">
           {isLocked ? (
