@@ -726,6 +726,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 block={standingBlock}
                 blockIndex={6}
                 blockLabel="Block 7 (Standing)"
+                reverseRows={true}
                 overId={overId}
                 isRXDayLocked={isLocked}
                 onEmptySeatClick={onEmptySeatClick}
