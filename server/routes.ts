@@ -1514,6 +1514,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const assignments = await storage.getSeatAssignmentsByRecordDay(req.params.recordDayId);
       
+      // Get standby assignments to check who was seated from standby
+      const standbys = await storage.getStandbyAssignmentsByRecordDay(req.params.recordDayId);
+      const seatedStandbyContestantIds = new Set(
+        standbys.filter(s => s.status === 'seated').map(s => s.contestantId)
+      );
+      
       // Get full contestant data
       const contestantsData = await storage.getContestants();
       const contestantsMap = new Map(contestantsData.map((c) => [c.id, c]));
@@ -1607,6 +1613,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           auditionRating: contestant?.auditionRating,
           attendingWith: attendingWithId,
           mobilityNotes: contestant?.mobilityNotes,
+          wasStandby: seatedStandbyContestantIds.has(assignment.contestantId),
         };
       });
 

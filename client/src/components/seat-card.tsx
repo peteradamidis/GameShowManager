@@ -36,6 +36,7 @@ export interface SeatData {
   caseNumber?: string; // RX Day Mode - case number for winning money
   winningMoneyRole?: string; // RX Day Mode - 'player' or 'case_holder'
   winningMoneyAmount?: number; // RX Day Mode - winning money amount
+  wasStandby?: boolean; // True if contestant was seated from standby list
 }
 
 interface SeatCardProps {
@@ -70,6 +71,9 @@ const ratingColors: Record<string, { bg: string; border: string }> = {
   'C': { bg: '#fee2e2', border: '#ef4444' },
 };
 
+// Standby styling - purple to distinguish from regular contestants
+const standbyColors = { bg: '#f3e8ff', border: '#9333ea' };
+
 export function SeatCard({ 
   seat, 
   blockIndex, 
@@ -84,10 +88,13 @@ export function SeatCard({
 }: SeatCardProps) {
   const isEmpty = !seat.contestantName;
   
-  // Use rating-based colors, fallback to group colors if no rating
-  const ratingColorInfo = seat.auditionRating ? ratingColors[seat.auditionRating] : null;
+  // Use standby colors for standbys, then rating-based colors, fallback to group colors if no rating
+  // Standbys get purple styling to distinguish them from regular contestants
+  const colorInfo = seat.wasStandby 
+    ? standbyColors 
+    : (seat.auditionRating ? ratingColors[seat.auditionRating] : null);
   
-  const groupColorClass = !ratingColorInfo && seat.groupId
+  const groupColorClass = !colorInfo && seat.groupId
     ? groupColors[parseInt(seat.groupId.replace(/\D/g, "")) % groupColors.length]
     : "";
 
@@ -137,9 +144,9 @@ export function SeatCard({
             ? `${groupColorClass} cursor-pointer hover-elevate`  // Locked: occupied seats are clickable
             : `${groupColorClass} hover-elevate`  // Unlocked: occupied seats not directly clickable
       } ${isDragging ? "opacity-50" : ""} ${wasSwapped ? "ring-2 ring-amber-400 ring-offset-1" : ""}`}
-      style={ratingColorInfo ? {
-        backgroundColor: ratingColorInfo.bg,
-        borderColor: ratingColorInfo.border,
+      style={colorInfo ? {
+        backgroundColor: colorInfo.bg,
+        borderColor: colorInfo.border,
       } : undefined}
       data-testid={`seat-${blockIndex}-${seatIndex}`}
       onClick={handleClick}
