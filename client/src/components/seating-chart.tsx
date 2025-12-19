@@ -64,6 +64,7 @@ interface SeatingChartProps {
   onCancel?: (assignmentId: string) => void;
   onWinningMoneyClick?: (assignmentId: string) => void;
   onRemoveWinningMoney?: (assignmentId: string) => void;
+  onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
   isLocked?: boolean; // RX Day Mode - when true, use tracked swap endpoint
   standbys?: StandbyData[]; // Standbys for this record day
   onStandbySeated?: () => void; // Callback when standby is seated
@@ -80,6 +81,7 @@ function DraggableDroppableSeat({
   onCancel,
   onWinningMoneyClick,
   onRemoveWinningMoney,
+  onReturnToStandby,
 }: {
   seat: SeatData;
   blockIndex: number;
@@ -91,6 +93,7 @@ function DraggableDroppableSeat({
   onCancel?: (assignmentId: string) => void;
   onWinningMoneyClick?: (assignmentId: string) => void;
   onRemoveWinningMoney?: (assignmentId: string) => void;
+  onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
 }) {
   // Make occupied seats draggable
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
@@ -128,6 +131,7 @@ function DraggableDroppableSeat({
         onCancel={onCancel}
         onWinningMoneyClick={onWinningMoneyClick}
         onRemoveWinningMoney={onRemoveWinningMoney}
+        onReturnToStandby={onReturnToStandby}
       />
     </div>
   );
@@ -217,6 +221,7 @@ function SeatingBlock({
   onCancel,
   onWinningMoneyClick,
   onRemoveWinningMoney,
+  onReturnToStandby,
   blockType,
   onBlockTypeChange,
 }: { 
@@ -231,6 +236,7 @@ function SeatingBlock({
   onCancel?: (assignmentId: string) => void;
   onWinningMoneyClick?: (assignmentId: string) => void;
   onRemoveWinningMoney?: (assignmentId: string) => void;
+  onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
   blockType?: 'PB' | 'NPB';
   onBlockTypeChange?: (blockNumber: number, newType: 'PB' | 'NPB') => void;
 }) {
@@ -353,6 +359,7 @@ function SeatingBlock({
                           onCancel={onCancel}
                           onWinningMoneyClick={onWinningMoneyClick}
                           onRemoveWinningMoney={onRemoveWinningMoney}
+                          onReturnToStandby={onReturnToStandby}
                         />
                         {/* Horizontal link to next seat in same row */}
                         {hasLinkToNext && (
@@ -441,7 +448,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, isLocked = false, standbys = [], onStandbySeated }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, isLocked = false, standbys = [], onStandbySeated }: SeatingChartProps) {
   const [blocks, setBlocks] = useState<SeatData[][]>(
     initialSeats || Array(7).fill(null).map((_, blockIdx) => 
       generateBlockSeats(recordDayId, blockIdx)
@@ -835,6 +842,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onCancel={onCancel}
                   onWinningMoneyClick={onWinningMoneyClick}
                   onRemoveWinningMoney={onRemoveWinningMoney}
+                  onReturnToStandby={onReturnToStandby}
                   blockType={blockTypeMap[idx + 1]}
                   onBlockTypeChange={handleBlockTypeChange}
                 />
@@ -870,6 +878,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     onCancel={onCancel}
                     onWinningMoneyClick={onWinningMoneyClick}
                     onRemoveWinningMoney={onRemoveWinningMoney}
+                    onReturnToStandby={onReturnToStandby}
                     blockType={blockTypeMap[originalIdx + 1]}
                     onBlockTypeChange={handleBlockTypeChange}
                   />
@@ -898,6 +907,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onCancel={onCancel}
                   onWinningMoneyClick={onWinningMoneyClick}
                   onRemoveWinningMoney={onRemoveWinningMoney}
+                  onReturnToStandby={onReturnToStandby}
                   blockType={blockTypeMap[7]}
                   onBlockTypeChange={handleBlockTypeChange}
                 />

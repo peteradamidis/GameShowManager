@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { User, X, Ban, Plus, ArrowLeftRight, DollarSign } from "lucide-react";
+import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import {
@@ -50,6 +50,7 @@ interface SeatCardProps {
   onCancel?: (assignmentId: string) => void;
   onWinningMoneyClick?: (assignmentId: string) => void;
   onRemoveWinningMoney?: (assignmentId: string) => void;
+  onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
 }
 
 const groupColors = [
@@ -85,6 +86,7 @@ export function SeatCard({
   onCancel,
   onWinningMoneyClick,
   onRemoveWinningMoney,
+  onReturnToStandby,
 }: SeatCardProps) {
   const isEmpty = !seat.contestantName;
   
@@ -381,6 +383,21 @@ export function SeatCard({
                     data-testid={`button-edit-winning-money-${seat.assignmentId}`}
                   >
                     Edit Winning Money
+                  </Button>
+                )}
+                {seat.wasStandby && seat.contestantId && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onReturnToStandby?.(seat.assignmentId!, seat.contestantId!);
+                    }}
+                    data-testid={`button-return-standby-${seat.assignmentId}`}
+                  >
+                    <Undo2 className="h-3 w-3 mr-1" />
+                    Return to Standby
                   </Button>
                 )}
                 <div className="flex gap-2">

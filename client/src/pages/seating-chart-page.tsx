@@ -561,6 +561,50 @@ export default function SeatingChartPage() {
     setCancelDialogOpen(true);
   };
 
+  // Return a seated standby back to the standby list
+  const handleReturnToStandby = async (assignmentId: string, contestantId: string) => {
+    try {
+      // Find the standby record for this contestant on this record day
+      const standbyRecord = standbys?.find((s: any) => s.contestantId === contestantId);
+      
+      if (!standbyRecord) {
+        toast({
+          title: "Error",
+          description: "Could not find standby record for this contestant.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Update standby status back to 'pending'
+      await apiRequest('PATCH', `/api/standbys/${standbyRecord.id}`, {
+        status: 'pending',
+        assignedToSeat: null,
+      });
+      
+      // Delete the seat assignment
+      await apiRequest('DELETE', `/api/seat-assignments/${assignmentId}`, {});
+      
+      // Refresh queries
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys/record-day', recordDayId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      refetchStandbys();
+      broadcastSeatingChange(recordDayId);
+      
+      toast({
+        title: "Returned to standby",
+        description: "Contestant has been moved back to the standby list.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to return to standby",
+        description: error?.message || "Could not return contestant to standby list.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleWinningMoneyClick = (assignmentId: string) => {
     setSelectedAssignmentId(assignmentId);
     setWinningMoneyModalOpen(true);
@@ -791,6 +835,7 @@ export default function SeatingChartPage() {
           onCancel={handleCancel}
           onWinningMoneyClick={isLocked ? handleWinningMoneyClick : undefined}
           onRemoveWinningMoney={isLocked ? handleRemoveWinningMoney : undefined}
+          onReturnToStandby={handleReturnToStandby}
           isLocked={isLocked}
           standbys={standbys}
           onStandbySeated={() => {
