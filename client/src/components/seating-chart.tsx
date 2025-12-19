@@ -753,7 +753,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
       await apiRequest('PATCH', `/api/standbys/${standby.id}`, {
         status: 'seated',
         assignedToSeat: `${targetBlockNumber}${targetSeatLabel}`,
-        assignedAt: new Date().toISOString(),
       });
       
       // Now create the seat assignment (standby check will pass since status is 'seated')
