@@ -692,7 +692,7 @@ export default function SeatingChartPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-6">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-3">
             <h1 className="text-2xl font-semibold">Seating Chart</h1>
@@ -703,64 +703,64 @@ export default function SeatingChartPage() {
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-4">
-            <p className="text-muted-foreground">
-              Drag and drop contestants to arrange seating blocks
-            </p>
-            {currentRecordDay && (
-              <div className="flex items-center gap-2">
-                <Label htmlFor="producer-select" className="font-medium">Producer:</Label>
-                <Select value={selectedProducer || "none"} onValueChange={handleProducerChange} disabled={producerUpdating}>
-                  <SelectTrigger id="producer-select" className="w-56" data-testid="select-producer">
-                    <SelectValue placeholder="Select producer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="Peter Adamidis">Peter Adamidis</SelectItem>
-                    <SelectItem value="Kathleen Reynolds">Kathleen Reynolds</SelectItem>
-                    <SelectItem value="Maggie Carty">Maggie Carty</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
+          <p className="text-muted-foreground">
+            Drag and drop contestants to arrange seating blocks
+          </p>
         </div>
-        <div className="flex gap-2 items-center">
-          {isLocked ? (
-            <Badge 
-              variant="secondary" 
-              className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100 gap-1"
-            >
-              <Lock className="h-3 w-3" />
-              RX Day Mode
-            </Badge>
-          ) : null}
-          <Button 
-            variant={isLocked ? "default" : "outline"} 
-            onClick={() => isLocked ? setUnlockConfirmDialogOpen(true) : setLockConfirmDialogOpen(true)} 
-            data-testid="button-toggle-lock"
-            className={isLocked ? "bg-amber-600 hover:bg-amber-700 text-white" : ""}
-          >
+        <div className="flex flex-col gap-2 items-end">
+          {currentRecordDay && (
+            <div className="flex items-center gap-2">
+              <Label htmlFor="producer-select" className="font-medium">Producer:</Label>
+              <Select value={selectedProducer || "none"} onValueChange={handleProducerChange} disabled={producerUpdating}>
+                <SelectTrigger id="producer-select" className="w-56" data-testid="select-producer">
+                  <SelectValue placeholder="Select producer" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="Peter Adamidis">Peter Adamidis</SelectItem>
+                  <SelectItem value="Kathleen Reynolds">Kathleen Reynolds</SelectItem>
+                  <SelectItem value="Maggie Carty">Maggie Carty</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="flex gap-2 items-center">
             {isLocked ? (
-              <>
-                <Unlock className="h-4 w-4 mr-2" />
-                Unlock
-              </>
-            ) : (
-              <>
-                <Lock className="h-4 w-4 mr-2" />
-                Lock for RX Day
-              </>
-            )}
-          </Button>
-          <Button variant="outline" onClick={() => setResetDialogOpen(true)} data-testid="button-reset-seating">
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Reset
-          </Button>
-          <Button variant="outline" onClick={() => setAutoAssignDialogOpen(true)} data-testid="button-auto-assign">
-            <Wand2 className="h-4 w-4 mr-2" />
-            Auto-Assign Seats
-          </Button>
+              <Badge 
+                variant="secondary" 
+                className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100 gap-1"
+              >
+                <Lock className="h-3 w-3" />
+                RX Day Mode
+              </Badge>
+            ) : null}
+            <Button 
+              variant={isLocked ? "default" : "outline"} 
+              onClick={() => isLocked ? setUnlockConfirmDialogOpen(true) : setLockConfirmDialogOpen(true)} 
+              data-testid="button-toggle-lock"
+              className={isLocked ? "bg-amber-600 hover:bg-amber-700 text-white" : ""}
+            >
+              {isLocked ? (
+                <>
+                  <Unlock className="h-4 w-4 mr-2" />
+                  Unlock
+                </>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4 mr-2" />
+                  Lock for RX Day
+                </>
+              )}
+            </Button>
+            <Button variant="outline" onClick={() => setResetDialogOpen(true)} data-testid="button-reset-seating">
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset
+            </Button>
+            <Button variant="outline" onClick={() => setAutoAssignDialogOpen(true)} data-testid="button-auto-assign">
+              <Wand2 className="h-4 w-4 mr-2" />
+              Auto-Assign Seats
+            </Button>
+          </div>
         </div>
       </div>
 
