@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-19T11:08:45.990Z",
+  "exportedAt": "2025-12-19T11:46:14.268Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -10,6 +10,7 @@
         "rxNumber": "RX EP 6 - 10",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -19,6 +20,7 @@
         "rxNumber": "RX EP 11 - 15",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -28,6 +30,7 @@
         "rxNumber": "RX EP 16 - 20",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -37,6 +40,7 @@
         "rxNumber": "RX EP 21 - 25",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -46,6 +50,7 @@
         "rxNumber": "RX EP 26 - 30",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -55,6 +60,7 @@
         "rxNumber": "RX EP 31 - 35",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -64,6 +70,7 @@
         "rxNumber": "RX EP 36 - 40",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -73,6 +80,7 @@
         "rxNumber": "RX EP 41 - 45",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -82,6 +90,7 @@
         "rxNumber": "RX EP 46 - 50",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -91,6 +100,7 @@
         "rxNumber": "RX EP 51 - 55",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -100,6 +110,7 @@
         "rxNumber": "RX EP 56 - 60",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -109,6 +120,7 @@
         "rxNumber": "RX EP 61 - 65",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -118,6 +130,7 @@
         "rxNumber": "RX EP 66 - 70",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -127,6 +140,7 @@
         "rxNumber": "RX EP 71 - 75",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -136,6 +150,7 @@
         "rxNumber": "RX EP 76 - 80",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -145,6 +160,7 @@
         "rxNumber": "RX EP 81 - 85",
         "totalSeats": 154,
         "status": "draft",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       },
@@ -154,6 +170,7 @@
         "rxNumber": "RX EP 1 - 5",
         "totalSeats": 154,
         "status": "ready",
+        "producer": null,
         "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       }
@@ -8701,6 +8718,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
+          "producer": null,
           "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
@@ -8748,6 +8766,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
+          "producer": null,
           "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
@@ -8978,6 +8997,7 @@
           "rxNumber": "RX EP 16 - 20",
           "totalSeats": 154,
           "status": "draft",
+          "producer": null,
           "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
@@ -9022,6 +9042,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
+          "producer": null,
           "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
@@ -9066,6 +9087,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
+          "producer": null,
           "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
@@ -9110,6 +9132,7 @@
           "rxNumber": "RX EP 1 - 5",
           "totalSeats": 154,
           "status": "ready",
+          "producer": null,
           "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }

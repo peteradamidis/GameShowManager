@@ -243,7 +243,7 @@ export default function SeatingChartPage() {
     setProducerUpdating(true);
     try {
       await apiRequest('PATCH', `/api/record-days/${recordDayId}`, {
-        producer: newProducer || null,
+        producer: newProducer === "none" ? null : newProducer,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/record-days'] });
     } catch (error: any) {
@@ -253,7 +253,7 @@ export default function SeatingChartPage() {
         variant: "destructive",
       });
       // Revert on error
-      setSelectedProducer(currentRecordDay?.producer || "");
+      setSelectedProducer(currentRecordDay?.producer || "none");
     } finally {
       setProducerUpdating(false);
     }
@@ -710,12 +710,12 @@ export default function SeatingChartPage() {
             {currentRecordDay && (
               <div className="flex items-center gap-2">
                 <Label htmlFor="producer-select" className="font-medium">Producer:</Label>
-                <Select value={selectedProducer} onValueChange={handleProducerChange} disabled={producerUpdating}>
+                <Select value={selectedProducer || "none"} onValueChange={handleProducerChange} disabled={producerUpdating}>
                   <SelectTrigger id="producer-select" className="w-56" data-testid="select-producer">
                     <SelectValue placeholder="Select producer" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     <SelectItem value="Peter Adamidis">Peter Adamidis</SelectItem>
                     <SelectItem value="Kathleen Reynolds">Kathleen Reynolds</SelectItem>
                     <SelectItem value="Maggie Carty">Maggie Carty</SelectItem>
