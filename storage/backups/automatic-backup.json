@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-19T12:27:06.649Z",
+  "exportedAt": "2025-12-19T12:28:29.985Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -171,7 +171,7 @@
         "totalSeats": 154,
         "status": "ready",
         "producer": "Maggie Carty",
-        "lockedAt": "2025-12-19T12:05:31.389Z",
+        "lockedAt": null,
         "createdAt": "2025-11-27T11:34:23.272Z"
       }
     ],
@@ -1598,7 +1598,7 @@
         "age": 31,
         "gender": "Female",
         "groupId": null,
-        "availabilityStatus": "assigned",
+        "availabilityStatus": "available",
         "attendingWith": "Olivia Gonzalez",
         "email": "eliana.green54@gmail.com",
         "phone": "(894) 795-3178",
@@ -8673,60 +8673,17 @@
         "createdAt": "2025-12-18T00:50:03.997Z"
       }
     ],
-    "seatAssignments": [
-      {
-        "id": "8a50bf67-8261-4ac0-ab7c-72c9fc4c6559",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "40c53847-674f-43b5-8678-2decb3d42133",
-        "blockNumber": 7,
-        "seatLabel": "E3",
-        "playerType": null,
-        "originalBlockNumber": null,
-        "originalSeatLabel": null,
-        "swappedAt": null,
-        "firstNations": null,
-        "rating": null,
-        "location": null,
-        "medicalQuestion": null,
-        "criminalBankruptcy": null,
-        "castingCategory": null,
-        "notes": null,
-        "bookingEmailSent": null,
-        "confirmedRsvp": null,
-        "paperworkSent": null,
-        "paperworkReceived": null,
-        "paperworkOnDay": null,
-        "signedIn": null,
-        "otdNotes": null,
-        "standbyReplacementSwaps": null,
-        "rxNumber": null,
-        "rxEpNumber": null,
-        "caseNumber": null,
-        "winningMoneyRole": null,
-        "winningMoneyAmount": null,
-        "winningMoneyText": null,
-        "caseAmount": null,
-        "quickCash": null,
-        "bankOfferTaken": false,
-        "spinTheWheel": false,
-        "prize": null,
-        "txNumber": null,
-        "txDate": null,
-        "notifiedOfTx": null,
-        "photosSent": null,
-        "createdAt": "2025-12-19T12:15:09.093Z"
-      }
-    ],
+    "seatAssignments": [],
     "standbys": [
       {
         "id": "31d2ce8a-617f-451e-a2a4-9a92fc3f17e2",
         "contestantId": "40c53847-674f-43b5-8678-2decb3d42133",
         "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "status": "seated",
+        "status": "pending",
         "standbyEmailSent": null,
         "confirmedAt": null,
         "notes": null,
-        "assignedToSeat": "7E3",
+        "assignedToSeat": null,
         "assignedAt": null,
         "movedToReschedule": false,
         "movedToRescheduleAt": null,
@@ -8737,7 +8694,7 @@
           "age": 31,
           "gender": "Female",
           "groupId": null,
-          "availabilityStatus": "assigned",
+          "availabilityStatus": "available",
           "attendingWith": "Olivia Gonzalez",
           "email": "eliana.green54@gmail.com",
           "phone": "(894) 795-3178",
@@ -8762,7 +8719,7 @@
           "totalSeats": 154,
           "status": "ready",
           "producer": "Maggie Carty",
-          "lockedAt": "2025-12-19T12:05:31.389Z",
+          "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       },
@@ -8810,7 +8767,7 @@
           "totalSeats": 154,
           "status": "ready",
           "producer": "Maggie Carty",
-          "lockedAt": "2025-12-19T12:05:31.389Z",
+          "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       }
@@ -9086,7 +9043,7 @@
           "totalSeats": 154,
           "status": "ready",
           "producer": "Maggie Carty",
-          "lockedAt": "2025-12-19T12:05:31.389Z",
+          "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       },
@@ -9131,7 +9088,7 @@
           "totalSeats": 154,
           "status": "ready",
           "producer": "Maggie Carty",
-          "lockedAt": "2025-12-19T12:05:31.389Z",
+          "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       },
@@ -9176,7 +9133,7 @@
           "totalSeats": 154,
           "status": "ready",
           "producer": "Maggie Carty",
-          "lockedAt": "2025-12-19T12:05:31.389Z",
+          "lockedAt": null,
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       }
@@ -9186,7 +9143,7 @@
     "recordDays": 17,
     "contestants": 346,
     "groups": 38,
-    "seatAssignments": 1,
+    "seatAssignments": 0,
     "standbys": 2,
     "blockTypes": 26,
     "canceledAssignments": 4

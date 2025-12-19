@@ -768,7 +768,7 @@ export default function SeatingChartPage() {
           {currentRecordDay && (
             <div className="flex items-center gap-2">
               <Label htmlFor="producer-select" className="font-medium">Producer:</Label>
-              <Select value={selectedProducer || "none"} onValueChange={handleProducerChange} disabled={producerUpdating}>
+              <Select value={selectedProducer || "none"} onValueChange={handleProducerChange} disabled={producerUpdating || isLocked}>
                 <SelectTrigger id="producer-select" className="w-56" data-testid="select-producer">
                   <SelectValue placeholder="Select producer" />
                 </SelectTrigger>
