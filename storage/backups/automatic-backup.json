@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-19T12:45:54.913Z",
+  "exportedAt": "2025-12-19T12:47:27.688Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -537,30 +537,6 @@
         "createdAt": "2025-12-18T00:50:05.599Z"
       },
       {
-        "id": "40a64316-1fb5-4a09-8c9d-14bbc19036d1",
-        "name": "Olivia Gonzalez",
-        "age": 52,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "assigned",
-        "attendingWith": "Eliana Green",
-        "email": "olivia.gonzalez77@hotmail.com",
-        "phone": "(982) 690-7408",
-        "location": "Long Beach",
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "https://randomuser.me/api/portraits/women/0.jpg",
-        "auditionRating": "B+",
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "availableForStandby": false,
-        "createdAt": "2025-12-09T11:20:39.534Z"
-      },
-      {
         "id": "f445658c-a35b-4a62-baa4-1661e03155bf",
         "name": "Wadzanayi Chitambo",
         "age": 31,
@@ -919,6 +895,30 @@
         "podiumStory": false,
         "availableForStandby": false,
         "createdAt": "2025-12-18T00:50:07.154Z"
+      },
+      {
+        "id": "40a64316-1fb5-4a09-8c9d-14bbc19036d1",
+        "name": "Olivia Gonzalez",
+        "age": 52,
+        "gender": "Female",
+        "groupId": null,
+        "availabilityStatus": "available",
+        "attendingWith": "Eliana Green",
+        "email": "olivia.gonzalez77@hotmail.com",
+        "phone": "(982) 690-7408",
+        "location": "Long Beach",
+        "postcode": null,
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": "https://randomuser.me/api/portraits/women/0.jpg",
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": null,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-09T11:20:39.534Z"
       },
       {
         "id": "2e7a82a4-998c-4f82-a686-5a4d0bcc725b",
@@ -8765,54 +8765,6 @@
           "lockedAt": "2025-12-19T12:41:23.421Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
-      },
-      {
-        "id": "a11b3754-0163-43a3-8112-793c87694f2e",
-        "contestantId": "40a64316-1fb5-4a09-8c9d-14bbc19036d1",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "status": "seated",
-        "standbyEmailSent": null,
-        "confirmedAt": null,
-        "notes": null,
-        "assignedToSeat": "A1",
-        "assignedAt": "2025-12-15T11:30:35.507Z",
-        "movedToReschedule": true,
-        "movedToRescheduleAt": "2025-12-10T06:15:25.097Z",
-        "createdAt": "2025-12-10T06:12:30.395Z",
-        "contestant": {
-          "id": "40a64316-1fb5-4a09-8c9d-14bbc19036d1",
-          "name": "Olivia Gonzalez",
-          "age": 52,
-          "gender": "Female",
-          "groupId": null,
-          "availabilityStatus": "assigned",
-          "attendingWith": "Eliana Green",
-          "email": "olivia.gonzalez77@hotmail.com",
-          "phone": "(982) 690-7408",
-          "location": "Long Beach",
-          "postcode": null,
-          "state": null,
-          "medicalInfo": null,
-          "mobilityNotes": null,
-          "criminalRecord": null,
-          "photoUrl": "https://randomuser.me/api/portraits/women/0.jpg",
-          "auditionRating": "B+",
-          "playerType": null,
-          "groupSize": null,
-          "podiumStory": false,
-          "availableForStandby": false,
-          "createdAt": "2025-12-09T11:20:39.534Z"
-        },
-        "recordDay": {
-          "id": "e432f0fe-1383-44a2-990c-5f787da5008a",
-          "date": "2026-02-04",
-          "rxNumber": "RX EP 1 - 5",
-          "totalSeats": 154,
-          "status": "ready",
-          "producer": "Peter Adamidis",
-          "lockedAt": "2025-12-19T12:41:23.421Z",
-          "createdAt": "2025-11-27T11:34:23.272Z"
-        }
       }
     ],
     "blockTypes": [
@@ -9106,7 +9058,7 @@
           "age": 52,
           "gender": "Female",
           "groupId": null,
-          "availabilityStatus": "assigned",
+          "availabilityStatus": "available",
           "attendingWith": "Eliana Green",
           "email": "olivia.gonzalez77@hotmail.com",
           "phone": "(982) 690-7408",
@@ -9187,7 +9139,7 @@
     "contestants": 346,
     "groups": 38,
     "seatAssignments": 1,
-    "standbys": 2,
+    "standbys": 1,
     "blockTypes": 26,
     "canceledAssignments": 4
   }

@@ -814,6 +814,11 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
 
   // Get active seat for drag overlay
   const activeSeat = activeId ? findSeat(activeId)?.seat : null;
+  
+  // Get active standby for drag overlay
+  const activeStandby = activeId?.toString().startsWith('standby-') 
+    ? standbys.find(s => `standby-${s.id}` === activeId)
+    : null;
 
   return (
     <DndContext
@@ -955,7 +960,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
           </div>
         </div>
         
-        <DragOverlay>
+        <DragOverlay dropAnimation={null}>
           {activeSeat ? (
             <div className="opacity-80">
               <SeatCard
@@ -965,6 +970,25 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 isDragging={true}
                 onEmptySeatClick={undefined}
               />
+            </div>
+          ) : activeStandby ? (
+            <div className="opacity-80 p-2 border rounded-md border-amber-500/50 bg-amber-50 dark:bg-amber-950/20 cursor-grabbing">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{activeStandby.contestant.name}</p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                      {activeStandby.contestant.gender === "Female" ? "F" : "M"}
+                    </Badge>
+                  </div>
+                </div>
+                <Badge 
+                  variant="secondary" 
+                  className="text-[10px] h-5 bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100"
+                >
+                  {activeStandby.status}
+                </Badge>
+              </div>
             </div>
           ) : null}
         </DragOverlay>
