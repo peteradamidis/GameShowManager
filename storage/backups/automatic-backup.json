@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-19T12:04:56.749Z",
+  "exportedAt": "2025-12-19T12:07:53.783Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -171,7 +171,7 @@
         "totalSeats": 154,
         "status": "ready",
         "producer": "Maggie Carty",
-        "lockedAt": null,
+        "lockedAt": "2025-12-19T12:05:31.389Z",
         "createdAt": "2025-11-27T11:34:23.272Z"
       }
     ],
@@ -8719,7 +8719,7 @@
           "totalSeats": 154,
           "status": "ready",
           "producer": "Maggie Carty",
-          "lockedAt": null,
+          "lockedAt": "2025-12-19T12:05:31.389Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       },
@@ -8767,7 +8767,7 @@
           "totalSeats": 154,
           "status": "ready",
           "producer": "Maggie Carty",
-          "lockedAt": null,
+          "lockedAt": "2025-12-19T12:05:31.389Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       }
@@ -9043,7 +9043,7 @@
           "totalSeats": 154,
           "status": "ready",
           "producer": "Maggie Carty",
-          "lockedAt": null,
+          "lockedAt": "2025-12-19T12:05:31.389Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       },
@@ -9088,7 +9088,7 @@
           "totalSeats": 154,
           "status": "ready",
           "producer": "Maggie Carty",
-          "lockedAt": null,
+          "lockedAt": "2025-12-19T12:05:31.389Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       },
@@ -9133,7 +9133,7 @@
           "totalSeats": 154,
           "status": "ready",
           "producer": "Maggie Carty",
-          "lockedAt": null,
+          "lockedAt": "2025-12-19T12:05:31.389Z",
           "createdAt": "2025-11-27T11:34:23.272Z"
         }
       }

@@ -749,19 +749,19 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     setPendingStandbyAssign(null);
     
     try {
-      // Create a seat assignment for the standby contestant
+      // First update the standby status to 'seated' - this removes the standby block
+      await apiRequest('PATCH', `/api/standbys/${standby.id}`, {
+        status: 'seated',
+        assignedToSeat: `${targetBlockNumber}${targetSeatLabel}`,
+        assignedAt: new Date().toISOString(),
+      });
+      
+      // Now create the seat assignment (standby check will pass since status is 'seated')
       await apiRequest('POST', `/api/seat-assignments`, {
         recordDayId,
         contestantId: standby.contestantId,
         blockNumber: targetBlockNumber,
         seatLabel: targetSeatLabel,
-      });
-      
-      // Update the standby status to 'seated'
-      await apiRequest('PATCH', `/api/standbys/${standby.id}`, {
-        status: 'seated',
-        assignedToSeat: `${targetBlockNumber}${targetSeatLabel}`,
-        assignedAt: new Date().toISOString(),
       });
       
       toast({

@@ -1237,9 +1237,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingStandbys = await storage.getStandbyAssignmentsByRecordDay(recordDayId);
       const standbyAssignment = existingStandbys.find((s: any) => s.contestantId === contestantId);
       
-      // Allow rebooking if they've been moved to reschedule (from standby)
+      // Allow rebooking if they've been moved to reschedule OR status is 'seated' (being seated now)
       // Otherwise, block if they're still an active standby
-      if (standbyAssignment && !standbyAssignment.movedToReschedule) {
+      if (standbyAssignment && !standbyAssignment.movedToReschedule && standbyAssignment.status !== 'seated') {
         return res.status(409).json({ error: "Contestant is already a standby for this record day. Remove them from standbys first." });
       }
       
@@ -1334,8 +1334,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         const standbyAssignment = existingStandbys.find((s: any) => s.contestantId === contestantId);
-        // Allow rebooking if they've been moved to reschedule, otherwise block if still active standby
-        if (standbyAssignment && !standbyAssignment.movedToReschedule) {
+        // Allow rebooking if they've been moved to reschedule OR status is 'seated', otherwise block if still active standby
+        if (standbyAssignment && !standbyAssignment.movedToReschedule && standbyAssignment.status !== 'seated') {
           const contestant = await storage.getContestantById(contestantId);
           return res.status(409).json({ error: `${contestant?.name || 'A contestant'} is already a standby for this record day. Remove them from standbys first.` });
         }
