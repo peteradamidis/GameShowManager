@@ -143,6 +143,18 @@ export default function SeatingChartPage() {
     queryKey: ['/api/contestants'],
   });
 
+  // Fetch standbys for this record day
+  const { data: standbys = [], refetch: refetchStandbys } = useQuery({
+    queryKey: ['/api/standbys/record-day', recordDayId],
+    queryFn: async () => {
+      if (!recordDayId) return [];
+      const response = await fetch(`/api/standbys/record-day/${recordDayId}`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!recordDayId,
+  });
+
   // Derive available contestants from assignments and all contestants
   // This eliminates staleness issues since it's computed from latest data
   const availableContestants = useMemo(() => {
@@ -779,6 +791,11 @@ export default function SeatingChartPage() {
           onWinningMoneyClick={isLocked ? handleWinningMoneyClick : undefined}
           onRemoveWinningMoney={isLocked ? handleRemoveWinningMoney : undefined}
           isLocked={isLocked}
+          standbys={standbys}
+          onStandbySeated={() => {
+            refetch();
+            refetchStandbys();
+          }}
         />
       )}
 

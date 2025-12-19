@@ -40,6 +40,21 @@ interface PendingSwap {
   targetLocation: { blockNumber: number; seatLabel: string };
 }
 
+// Standby data type
+interface StandbyData {
+  id: string;
+  contestantId: string;
+  recordDayId: string;
+  status: string;
+  contestant: {
+    id: string;
+    name: string;
+    gender: string;
+    age: number;
+    auditionRating?: string;
+  };
+}
+
 interface SeatingChartProps {
   recordDayId: string;
   initialSeats?: SeatData[][];
@@ -50,6 +65,8 @@ interface SeatingChartProps {
   onWinningMoneyClick?: (assignmentId: string) => void;
   onRemoveWinningMoney?: (assignmentId: string) => void;
   isLocked?: boolean; // RX Day Mode - when true, use tracked swap endpoint
+  standbys?: StandbyData[]; // Standbys for this record day
+  onStandbySeated?: () => void; // Callback when standby is seated
 }
 
 function DraggableDroppableSeat({
@@ -112,6 +129,69 @@ function DraggableDroppableSeat({
         onWinningMoneyClick={onWinningMoneyClick}
         onRemoveWinningMoney={onRemoveWinningMoney}
       />
+    </div>
+  );
+}
+
+// Draggable Standby Item
+function DraggableStandby({
+  standby,
+  isLocked,
+}: {
+  standby: StandbyData;
+  isLocked?: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `standby-${standby.id}`,
+    data: { type: 'standby', standby },
+    disabled: !isLocked, // Only draggable when locked (RX mode)
+  });
+
+  const ratingColors: Record<string, string> = {
+    'A+': 'bg-emerald-500 text-white',
+    'A': 'bg-green-500 text-white',
+    'B+': 'bg-amber-500 text-white',
+    'B': 'bg-orange-500 text-white',
+    'C': 'bg-red-500 text-white',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className={`p-2 border rounded-md ${isDragging ? 'opacity-50' : ''} ${
+        isLocked 
+          ? 'cursor-grab hover:bg-muted/50 border-amber-500/50 bg-amber-50 dark:bg-amber-950/20' 
+          : 'cursor-not-allowed opacity-60 border-muted'
+      }`}
+      data-testid={`standby-item-${standby.id}`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm truncate">{standby.contestant.name}</p>
+          <div className="flex items-center gap-1 mt-0.5">
+            <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+              {standby.contestant.gender === "Female" ? "F" : "M"}
+            </Badge>
+            {standby.contestant.auditionRating && (
+              <Badge className={`text-[10px] px-1 py-0 h-4 ${ratingColors[standby.contestant.auditionRating] || 'bg-gray-500 text-white'}`}>
+                {standby.contestant.auditionRating}
+              </Badge>
+            )}
+          </div>
+        </div>
+        <Badge 
+          variant="secondary" 
+          className={`text-[10px] h-5 ${
+            standby.status === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' :
+            standby.status === 'seated' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100' :
+            'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100'
+          }`}
+        >
+          {standby.status}
+        </Badge>
+      </div>
     </div>
   );
 }
@@ -361,7 +441,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, isLocked = false }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, isLocked = false, standbys = [], onStandbySeated }: SeatingChartProps) {
   const [blocks, setBlocks] = useState<SeatData[][]>(
     initialSeats || Array(7).fill(null).map((_, blockIdx) => 
       generateBlockSeats(recordDayId, blockIdx)
@@ -370,12 +450,34 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [pendingSwap, setPendingSwap] = useState<PendingSwap | null>(null);
+  const [standbyError, setStandbyError] = useState<string | null>(null);
+  const [pendingStandbyAssign, setPendingStandbyAssign] = useState<{
+    standby: StandbyData;
+    targetBlockNumber: number;
+    targetSeatLabel: string;
+  } | null>(null);
   const { toast } = useToast();
 
   // Fetch block types for this record day
   const { data: blockTypesData } = useQuery<BlockType[]>({
     queryKey: ['/api/record-days', recordDayId, 'block-types'],
   });
+
+  // Fetch canceled assignments to validate standby placement
+  const { data: canceledAssignments = [] } = useQuery<Array<{
+    id: string;
+    contestantId: string;
+    recordDayId: string;
+    blockNumber: number | null;
+    seatLabel: string | null;
+  }>>({
+    queryKey: ['/api/canceled-assignments'],
+  });
+
+  // Filter canceled assignments for this record day
+  const canceledSeatsForDay = canceledAssignments.filter(
+    ca => ca.recordDayId === recordDayId && ca.blockNumber !== null && ca.seatLabel !== null
+  );
 
   // Create a map of block number to block type
   const blockTypeMap: Record<number, 'PB' | 'NPB'> = {};
@@ -593,6 +695,52 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
 
     if (!over || active.id === over.id) return;
 
+    const activeIdStr = active.id as string;
+    
+    // Check if this is a standby being dragged
+    if (activeIdStr.startsWith('standby-')) {
+      const standbyData = active.data?.current as { type: string; standby: StandbyData } | undefined;
+      if (!standbyData || standbyData.type !== 'standby') return;
+      
+      const standby = standbyData.standby;
+      const targetSeat = findSeat(over.id as string);
+      
+      if (!targetSeat) return;
+      
+      // Check if day is locked (RX mode required)
+      if (!isLocked) {
+        setStandbyError("Standbys can only be seated when the day is in RX Mode (locked).");
+        return;
+      }
+      
+      // Check if target seat is occupied
+      if (targetSeat.seat.contestantName) {
+        setStandbyError("Cannot seat standby in an occupied seat. The seat must be empty (contestant cancelled and moved to reschedule).");
+        return;
+      }
+      
+      // Get target location details
+      const targetLocation = getBlockAndSeat(targetSeat.seat.id);
+      
+      // Validate that this seat was previously occupied by a cancelled contestant
+      const wasCancelled = canceledSeatsForDay.some(
+        ca => ca.blockNumber === targetLocation.blockNumber && ca.seatLabel === targetLocation.seatLabel
+      );
+      
+      if (!wasCancelled) {
+        setStandbyError("Standbys can only be placed in seats where a contestant has been cancelled and moved to reschedule. This seat was not previously occupied.");
+        return;
+      }
+      
+      // Seat is empty, day is locked, and seat was from a cancelled contestant - proceed with assignment
+      setPendingStandbyAssign({
+        standby,
+        targetBlockNumber: targetLocation.blockNumber,
+        targetSeatLabel: targetLocation.seatLabel,
+      });
+      return;
+    }
+
     const sourceSeat = findSeat(active.id as string);
     const targetSeat = findSeat(over.id as string);
 
@@ -617,6 +765,47 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
 
     // Not locked - execute swap immediately
     await executeSwap(sourceSeat, targetSeat, sourceLocation, targetLocation, false);
+  };
+  
+  // Handle standby seat assignment
+  const handleConfirmStandbyAssign = async () => {
+    if (!pendingStandbyAssign) return;
+    
+    const { standby, targetBlockNumber, targetSeatLabel } = pendingStandbyAssign;
+    setPendingStandbyAssign(null);
+    
+    try {
+      // Create a seat assignment for the standby contestant
+      await apiRequest('POST', `/api/seat-assignments`, {
+        recordDayId,
+        contestantId: standby.contestantId,
+        blockNumber: targetBlockNumber,
+        seatLabel: targetSeatLabel,
+      });
+      
+      // Update the standby status to 'seated'
+      await apiRequest('PATCH', `/api/standbys/${standby.id}`, {
+        status: 'seated',
+        assignedToSeat: `${targetBlockNumber}${targetSeatLabel}`,
+        assignedAt: new Date().toISOString(),
+      });
+      
+      toast({
+        title: "Standby seated",
+        description: `${standby.contestant.name} has been assigned to Block ${targetBlockNumber}, Seat ${targetSeatLabel}.`,
+      });
+      
+      // Refresh data
+      onRefreshNeeded?.();
+      onStandbySeated?.();
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys/record-day', recordDayId] });
+    } catch (error: any) {
+      toast({
+        title: "Failed to seat standby",
+        description: error?.message || "Could not assign standby to seat.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Handle confirmation of locked swap
@@ -716,27 +905,69 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
             </div>
           </div>
 
-          {/* Standing Block - Separate */}
+          {/* Standing Block and Standbys - Side by Side */}
           <div className="border-t pt-6">
             <div className="text-center mb-4">
               <Badge variant="outline" className="text-sm">Standing Side of Set</Badge>
             </div>
-            <div className="max-w-sm mx-auto">
-              <SeatingBlock
-                block={standingBlock}
-                blockIndex={6}
-                blockLabel="Block 7 (Standing)"
-                reverseRows={true}
-                overId={overId}
-                isRXDayLocked={isLocked}
-                onEmptySeatClick={onEmptySeatClick}
-                onRemove={onRemove}
-                onCancel={onCancel}
-                onWinningMoneyClick={onWinningMoneyClick}
-                onRemoveWinningMoney={onRemoveWinningMoney}
-                blockType={blockTypeMap[7]}
-                onBlockTypeChange={handleBlockTypeChange}
-              />
+            <div className="flex gap-6 justify-center items-start">
+              {/* Block 7 (Standing) */}
+              <div className="w-full max-w-sm">
+                <SeatingBlock
+                  block={standingBlock}
+                  blockIndex={6}
+                  blockLabel="Block 7 (Standing)"
+                  reverseRows={true}
+                  overId={overId}
+                  isRXDayLocked={isLocked}
+                  onEmptySeatClick={onEmptySeatClick}
+                  onRemove={onRemove}
+                  onCancel={onCancel}
+                  onWinningMoneyClick={onWinningMoneyClick}
+                  onRemoveWinningMoney={onRemoveWinningMoney}
+                  blockType={blockTypeMap[7]}
+                  onBlockTypeChange={handleBlockTypeChange}
+                />
+              </div>
+              
+              {/* Standbys Panel */}
+              <Card className="w-full max-w-xs" data-testid="standbys-panel">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <CardTitle className="text-sm font-medium">Standbys</CardTitle>
+                    <Badge 
+                      variant="secondary" 
+                      className={isLocked ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100" : ""}
+                    >
+                      {standbys.filter(s => s.status !== 'seated').length} available
+                    </Badge>
+                  </div>
+                  {!isLocked && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Lock RX Day mode to drag standbys into empty seats
+                    </p>
+                  )}
+                </CardHeader>
+                <CardContent className="pt-0">
+                  {standbys.filter(s => s.status !== 'seated').length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No standbys for this day
+                    </p>
+                  ) : (
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                      {standbys
+                        .filter(s => s.status !== 'seated')
+                        .map((standby) => (
+                          <DraggableStandby
+                            key={standby.id}
+                            standby={standby}
+                            isLocked={isLocked}
+                          />
+                        ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
@@ -798,6 +1029,63 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 onClick={handleConfirmLockedSwap}
               >
                 Confirm Move
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Standby Error Dialog */}
+        <AlertDialog open={!!standbyError} onOpenChange={(open) => !open && setStandbyError(null)}>
+          <AlertDialogContent data-testid="dialog-standby-error">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+                Cannot Seat Standby
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {standbyError}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={() => setStandbyError(null)}>
+                OK
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Standby Seat Assignment Confirmation Dialog */}
+        <AlertDialog open={!!pendingStandbyAssign} onOpenChange={(open) => !open && setPendingStandbyAssign(null)}>
+          <AlertDialogContent data-testid="dialog-standby-assign">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                Seat Standby
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <span className="block">
+                    You are about to assign a standby to a seat. This action will be recorded.
+                  </span>
+                  {pendingStandbyAssign && (
+                    <div className="mt-3 p-3 bg-muted rounded-lg text-sm">
+                      <span className="block font-medium text-foreground">
+                        Assign <span className="text-primary">{pendingStandbyAssign.standby.contestant.name}</span>
+                        {' '}to seat <strong>{String(pendingStandbyAssign.targetBlockNumber).padStart(2, '0')}-{pendingStandbyAssign.targetSeatLabel}</strong>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel data-testid="button-standby-assign-cancel">Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                data-testid="button-standby-assign-confirm"
+                className="bg-amber-500 hover:bg-amber-600 text-white"
+                onClick={handleConfirmStandbyAssign}
+              >
+                Confirm Assignment
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
