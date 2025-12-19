@@ -65,6 +65,7 @@ const COLUMN_CONFIG = [
   { id: "rsvp", label: "RSVP", alwaysVisible: false },
   { id: "paperSent", label: "PAPER SENT", alwaysVisible: false },
   { id: "paperReceived", label: "PAPER ✓", alwaysVisible: false },
+  { id: "paperOnDay", label: "PAPER OTD", alwaysVisible: false },
   { id: "signedIn", label: "SIGNED IN", alwaysVisible: false },
   { id: "otdNotes", label: "OTD NOTES", alwaysVisible: false },
   { id: "standby", label: "STANDBY / SWAPS", alwaysVisible: false },
@@ -89,6 +90,7 @@ const DEFAULT_VISIBLE_COLUMNS: Record<ColumnId, boolean> = {
   rsvp: true,
   paperSent: true,
   paperReceived: true,
+  paperOnDay: true,
   signedIn: true,
   otdNotes: true,
   standby: true,
@@ -906,6 +908,7 @@ export default function BookingMaster() {
                   {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">CONFIRM<br/>ED RSVP</TableHead>}
                   {isColumnVisible("paperSent") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">PAPER<br/>WORK<br/>SENT</TableHead>}
                   {isColumnVisible("paperReceived") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">PAPER<br/>WORK<br/>RECEIVED<br/>& LOGGED</TableHead>}
+                  {isColumnVisible("paperOnDay") && <TableHead className="sticky top-0 bg-[#d4c8b8] dark:bg-[#5a4a3a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">PAPER<br/>WORK<br/>ON DAY</TableHead>}
                   {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-[#a8d4a8] dark:bg-[#2a5a3a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">SIGNED<br/>IN</TableHead>}
                   {isColumnVisible("otdNotes") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">OTD<br/>NOTES</TableHead>}
                   {isColumnVisible("standby") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center text-[#00363a] dark:text-white font-semibold">STANDBY /<br/>SWAPS</TableHead>}
@@ -1087,6 +1090,18 @@ export default function BookingMaster() {
                                 checked={!!row.assignment.paperworkReceived}
                                 onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "paperworkReceived", row.assignment!.paperworkReceived)}
                                 data-testid={`checkbox-paperwork-received-${row.seatId}`}
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("paperOnDay") && (
+                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-[#f4e8d4] dark:bg-[#3a3a1a] border-r border-gray-200 dark:border-gray-700">
+                            {row.assignment && (
+                              <Checkbox
+                                checked={!!row.assignment.paperworkOnDay}
+                                onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "paperworkOnDay", row.assignment!.paperworkOnDay)}
+                                className="border-amber-600 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                                data-testid={`checkbox-paperwork-on-day-${row.seatId}`}
                               />
                             )}
                           </TableCell>
