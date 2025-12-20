@@ -4,7 +4,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Enums
-export const availabilityStatusEnum = pgEnum('availability_status', ['pending', 'available', 'assigned', 'invited', 'confirmed']);
+export const availabilityStatusEnum = pgEnum('availability_status', ['available', 'assigned', 'invited', 'confirmed']);
 export const recordDayStatusEnum = pgEnum('record_day_status', ['draft', 'ready', 'invited', 'completed']);
 export const tokenStatusEnum = pgEnum('token_status', ['active', 'expired', 'used', 'revoked']);
 export const responseValueEnum = pgEnum('response_value', ['pending', 'yes', 'no', 'maybe']);
@@ -28,7 +28,7 @@ export const contestants = pgTable("contestants", {
   age: integer("age").notNull(),
   gender: text("gender").notNull(),
   groupId: varchar("group_id").references(() => groups.id),
-  availabilityStatus: availabilityStatusEnum("availability_status").default('pending').notNull(),
+  availabilityStatus: availabilityStatusEnum("availability_status").default('available').notNull(),
   attendingWith: text("attending_with"), // Raw data from Excel
   email: text("email"),
   phone: text("phone"),

@@ -3905,6 +3905,9 @@ ${finalEmailFooter}`;
           bookingEmailSent: new Date(),
         });
 
+        // Update contestant status to 'invited'
+        await storage.updateContestantAvailability(assignment.contestantId, 'invited');
+
         results.push({
           seatAssignmentId,
           success: true,
