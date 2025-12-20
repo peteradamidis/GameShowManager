@@ -4215,6 +4215,9 @@ ${finalEmailFooter}`;
           confirmedRsvp: new Date(),
         });
 
+        // Update contestant's availability status to 'confirmed'
+        await storage.updateContestantAvailability(assignment.contestantId, 'confirmed');
+
         // Update contestant's attendingWith if provided
         if (attendingWith) {
           await storage.updateContestantAttendingWith(assignment.contestantId, attendingWith);
