@@ -4,7 +4,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Enums
-export const availabilityStatusEnum = pgEnum('availability_status', ['pending', 'available', 'assigned', 'invited']);
+export const availabilityStatusEnum = pgEnum('availability_status', ['pending', 'available', 'assigned', 'invited', 'confirmed']);
 export const recordDayStatusEnum = pgEnum('record_day_status', ['draft', 'ready', 'invited', 'completed']);
 export const tokenStatusEnum = pgEnum('token_status', ['active', 'expired', 'used', 'revoked']);
 export const responseValueEnum = pgEnum('response_value', ['pending', 'yes', 'no', 'maybe']);
