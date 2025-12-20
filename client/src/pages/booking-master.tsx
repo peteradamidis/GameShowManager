@@ -928,7 +928,12 @@ export default function BookingMaster() {
                               'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
                             }`}
                           >
-                            {standby.status}
+                            {standby.status === 'pending' ? 'Assigned' :
+                             standby.status === 'email_sent' ? 'Invited' :
+                             standby.status === 'seated' ? 'Assigned' :
+                             standby.status === 'confirmed' ? 'Confirmed' :
+                             standby.status === 'declined' ? 'Declined' :
+                             standby.status}
                           </Badge>
                         </TableCell>
                         {isColumnVisible("name") && (

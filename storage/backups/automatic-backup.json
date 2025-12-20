@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2025-12-20T03:28:22.184Z",
+  "exportedAt": "2025-12-20T05:30:47.972Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -176,30 +176,6 @@
       }
     ],
     "contestants": [
-      {
-        "id": "87467196-8e6a-4aa4-a098-051eeae34713",
-        "name": "Matthew Sjostrom",
-        "age": 24,
-        "gender": "Male",
-        "groupId": "5fe641da-4067-49a7-bae7-e63413b3e404",
-        "availabilityStatus": "available",
-        "attendingWith": "Roxanne Benko, Matthew Sjostrom, Lauren Namua",
-        "email": "mattbenko01@gmail.com",
-        "phone": "451710041",
-        "location": "Prahran",
-        "postcode": "3181",
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": null,
-        "auditionRating": "B+",
-        "playerType": null,
-        "groupSize": 3,
-        "podiumStory": false,
-        "availableForStandby": false,
-        "createdAt": "2025-12-18T00:50:04.100Z"
-      },
       {
         "id": "5c3852ec-d7b5-4916-a398-829cd32746c6",
         "name": "Maddie Streader",
@@ -535,6 +511,30 @@
         "podiumStory": false,
         "availableForStandby": false,
         "createdAt": "2025-12-18T00:50:05.599Z"
+      },
+      {
+        "id": "87467196-8e6a-4aa4-a098-051eeae34713",
+        "name": "Matthew Sjostrom",
+        "age": 24,
+        "gender": "Male",
+        "groupId": null,
+        "availabilityStatus": "available",
+        "attendingWith": "Roxanne Benko, Matthew Sjostrom, Lauren Namua",
+        "email": "mattbenko01@gmail.com",
+        "phone": "451710041",
+        "location": "Prahran",
+        "postcode": "3181",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": "B+",
+        "playerType": null,
+        "groupSize": 3,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2025-12-18T00:50:04.100Z"
       },
       {
         "id": "f445658c-a35b-4a62-baa4-1661e03155bf",
