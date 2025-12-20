@@ -672,19 +672,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const allGroups = await storage.getGroups();
         const existingGroupsByRef = new Map(allGroups.map((g: any) => [g.referenceNumber, g.id]));
         
+        // Find the next available group number (start after existing groups)
         let groupCounter = 1;
+        while (existingGroupsByRef.has(`GRP${String(groupCounter).padStart(3, "0")}`)) {
+          groupCounter++;
+        }
+        
         for (const [groupId, members] of Array.from(groupMap.entries())) {
           if (members.length > 1) {
+            // Always create a new group with a unique reference number
             const refNumber = `GRP${String(groupCounter).padStart(3, "0")}`;
-            let dbGroupId = existingGroupsByRef.get(refNumber);
-            
-            // Create group only if it doesn't exist
-            if (!dbGroupId) {
-              const group = await storage.createGroup({
-                referenceNumber: refNumber,
-              });
-              dbGroupId = group.id;
-            }
+            const group = await storage.createGroup({
+              referenceNumber: refNumber,
+            });
+            const dbGroupId = group.id;
             
             createdGroups.set(groupId, dbGroupId);
             members.forEach((member: string) => {
