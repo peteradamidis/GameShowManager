@@ -189,12 +189,12 @@ function DraggableStandby({
           variant="secondary" 
           className={`text-[10px] h-5 ${
             standby.status === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' :
-            standby.status === 'seated' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100' :
-            'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100'
+            'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
           }`}
         >
           {standby.status === 'pending' ? 'Assigned' : 
            standby.status === 'email_sent' ? 'Invited' : 
+           standby.status === 'seated' ? 'Assigned' :
            standby.status}
         </Badge>
       </div>
@@ -990,6 +990,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 >
                   {activeStandby.status === 'pending' ? 'Assigned' : 
                    activeStandby.status === 'email_sent' ? 'Invited' : 
+                   activeStandby.status === 'seated' ? 'Assigned' :
                    activeStandby.status}
                 </Badge>
               </div>
