@@ -338,21 +338,6 @@ export default function BookingMaster() {
   // Filter to only PDF assets for attachments
   const pdfAssets = emailAssets.filter(a => a.contentType === 'application/pdf');
 
-  // Mutation to update standby assignment when a standby is assigned to a seat
-  const assignStandbyMutation = useMutation({
-    mutationFn: async ({ recordDayId, contestantName, seatLabel }: { recordDayId: string; contestantName: string; seatLabel: string | null }) => {
-      return await apiRequest("POST", "/api/standbys/assign-seat", { recordDayId, contestantName, seatLabel });
-    },
-    onSuccess: () => {
-      // Invalidate ALL related queries for consistent state across tabs
-      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
-      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
-      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
-      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false });
-      broadcastSeatingChange(selectedRecordDay);
-    },
-  });
-
   const updateWorkflowMutation = useMutation({
     mutationFn: async ({ assignmentId, fields }: { assignmentId: string; fields: Partial<SeatAssignment> }) => {
       return await apiRequest("PATCH", `/api/seat-assignments/${assignmentId}/workflow`, fields);
@@ -1265,64 +1250,22 @@ export default function BookingMaster() {
                                     className="text-[10px] text-amber-700 dark:text-amber-400 font-medium"
                                     data-testid={`swap-info-${row.seatId}`}
                                   >
-                                    Was: {row.assignment.originalBlockNumber}-{row.assignment.originalSeatLabel}
+                                    Swapped from: {row.assignment.originalBlockNumber}-{row.assignment.originalSeatLabel}
                                   </span>
                                 )}
-                                <Select
-                                  key={`standby-${row.assignment.id}`}
-                                  defaultValue={row.assignment.standbyReplacementSwaps || "none"}
-                                  onValueChange={(value) => {
-                                    const newValue = value === "none" ? "" : value;
-                                    const previousValue = row.assignment!.standbyReplacementSwaps;
-                                    
-                                    handleDebouncedTextUpdate(row.assignment!.id, "standbyReplacementSwaps", newValue);
-                                    
-                                    // Clear the previous standby's seat assignment if there was one
-                                    if (previousValue && previousValue !== newValue) {
-                                      assignStandbyMutation.mutate({
-                                        recordDayId: selectedRecordDay,
-                                        contestantName: previousValue,
-                                        seatLabel: null, // Clear the assignment
-                                      });
-                                    }
-                                    
-                                    // Set the new standby's seat assignment if one was selected
-                                    if (newValue) {
-                                      assignStandbyMutation.mutate({
-                                        recordDayId: selectedRecordDay,
-                                        contestantName: newValue,
-                                        seatLabel: row.seatLabel,
-                                      });
-                                    }
-                                  }}
-                                >
-                                  <SelectTrigger 
-                                    className="h-7 text-xs w-32"
-                                    data-testid={`select-standby-${row.seatId}`}
+                                {/* Show standby replacement info if applicable */}
+                                {row.assignment.standbyReplacementSwaps && (
+                                  <span 
+                                    className="text-[10px] text-purple-700 dark:text-purple-400 font-medium"
+                                    data-testid={`standby-info-${row.seatId}`}
                                   >
-                                    <SelectValue placeholder="Select standby" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="none">
-                                      <span className="text-muted-foreground">None</span>
-                                    </SelectItem>
-                                    {standbysForRecordDay.map((standby) => (
-                                      <SelectItem key={standby.id} value={standby.contestant.name}>
-                                        <span className="flex items-center gap-2">
-                                          <span>{standby.contestant.name}</span>
-                                          <span className="text-muted-foreground text-xs">
-                                            ({standby.contestant.auditionRating || "?"} / {standby.contestant.gender === "female" ? "F" : "M"})
-                                          </span>
-                                        </span>
-                                      </SelectItem>
-                                    ))}
-                                    {standbysForRecordDay.length === 0 && (
-                                      <SelectItem value="no-standbys" disabled>
-                                        <span className="text-muted-foreground italic">No standbys for this day</span>
-                                      </SelectItem>
-                                    )}
-                                  </SelectContent>
-                                </Select>
+                                    Standby: {row.assignment.standbyReplacementSwaps}
+                                  </span>
+                                )}
+                                {/* Show if no swap/standby activity */}
+                                {!row.assignment.swappedAt && !row.assignment.standbyReplacementSwaps && (
+                                  <span className="text-[10px] text-muted-foreground">—</span>
+                                )}
                               </div>
                             )}
                           </TableCell>
