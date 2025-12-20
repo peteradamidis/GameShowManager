@@ -193,7 +193,9 @@ function DraggableStandby({
             'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100'
           }`}
         >
-          {standby.status}
+          {standby.status === 'pending' ? 'Available' : 
+           standby.status === 'email_sent' ? 'Invited' : 
+           standby.status}
         </Badge>
       </div>
     </div>
@@ -986,7 +988,9 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   variant="secondary" 
                   className="text-[10px] h-5 bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100"
                 >
-                  {activeStandby.status}
+                  {activeStandby.status === 'pending' ? 'Available' : 
+                   activeStandby.status === 'email_sent' ? 'Invited' : 
+                   activeStandby.status}
                 </Badge>
               </div>
             </div>
