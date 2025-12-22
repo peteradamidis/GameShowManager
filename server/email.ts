@@ -186,3 +186,103 @@ export async function testSmtpConnection(): Promise<{ success: boolean; error?: 
     return { success: false, error: error.message };
   }
 }
+
+// ===== Adobe Sign Email Configuration (Separate from main SMTP) =====
+
+let adobeSignTransporter: nodemailer.Transporter | null = null;
+
+// Check if Adobe Sign email is configured
+export async function isAdobeSignEmailAvailable(): Promise<boolean> {
+  try {
+    const config = await getAdobeSignSmtpConfig();
+    return !!(config.host && config.username && config.password && config.fromEmail);
+  } catch {
+    return false;
+  }
+}
+
+// Get Adobe Sign SMTP configuration from database
+export async function getAdobeSignSmtpConfig(): Promise<SmtpConfig> {
+  const host = await storage.getSystemConfig('adobe_sign_smtp_host') || '';
+  const port = parseInt(await storage.getSystemConfig('adobe_sign_smtp_port') || '587', 10);
+  const secure = (await storage.getSystemConfig('adobe_sign_smtp_secure') || 'false') === 'true';
+  const username = await storage.getSystemConfig('adobe_sign_smtp_username') || '';
+  const password = await storage.getSystemConfig('adobe_sign_smtp_password') || '';
+  const fromEmail = await storage.getSystemConfig('adobe_sign_smtp_from_email') || '';
+  const fromName = await storage.getSystemConfig('adobe_sign_smtp_from_name') || 'Deal or No Deal Paperwork';
+  
+  return { host, port, secure, username, password, fromEmail, fromName };
+}
+
+// Create Adobe Sign email transporter
+async function getAdobeSignTransporter(): Promise<nodemailer.Transporter> {
+  const config = await getAdobeSignSmtpConfig();
+  
+  if (!config.host || !config.username || !config.password) {
+    throw new Error('Adobe Sign email not configured. Please configure Adobe Sign SMTP settings in Settings page.');
+  }
+  
+  adobeSignTransporter = nodemailer.createTransport({
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    auth: {
+      user: config.username,
+      pass: config.password,
+    },
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
+  
+  return adobeSignTransporter;
+}
+
+// Send paperwork email via Adobe Sign SMTP
+export async function sendPaperworkEmail(
+  to: string, 
+  subject: string, 
+  body: string, 
+  htmlBody?: string,
+  config?: EmailConfig
+): Promise<boolean> {
+  try {
+    const transport = await getAdobeSignTransporter();
+    const smtpConfig = await getAdobeSignSmtpConfig();
+    const senderName = config?.senderName || smtpConfig.fromName || 'Deal or No Deal Paperwork';
+    const replyTo = config?.replyTo || smtpConfig.fromEmail;
+    const domain = extractDomain(smtpConfig.fromEmail);
+    const messageId = generateMessageId(domain);
+    
+    await transport.sendMail({
+      from: `${senderName} <${smtpConfig.fromEmail}>`,
+      to,
+      replyTo,
+      subject,
+      text: body,
+      html: htmlBody || body,
+      messageId,
+      headers: {
+        'X-Priority': '3',
+        'X-Mailer': 'Deal-or-No-Deal-Paperwork-System',
+      },
+    });
+
+    console.log(`📝 Paperwork email sent successfully to ${to} (from: ${senderName} <${smtpConfig.fromEmail}>)`);
+    return true;
+  } catch (error: any) {
+    console.error(`Error sending paperwork email to ${to}:`, error);
+    throw error;
+  }
+}
+
+// Test Adobe Sign SMTP connection
+export async function testAdobeSignSmtpConnection(): Promise<{ success: boolean; error?: string }> {
+  try {
+    const transport = await getAdobeSignTransporter();
+    await transport.verify();
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

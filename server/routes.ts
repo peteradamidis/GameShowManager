@@ -5066,6 +5066,233 @@ ${finalEmailFooter}`;
   });
 
   // ==========================================
+  // Adobe Sign SMTP Configuration Endpoints
+  // ==========================================
+
+  // Get Adobe Sign SMTP configuration
+  app.get("/api/adobe-sign-smtp/config", requireAuth, async (req, res) => {
+    try {
+      const { getAdobeSignSmtpConfig } = await import("./email");
+      const config = await getAdobeSignSmtpConfig();
+      res.json({
+        host: config.host,
+        port: config.port,
+        secure: config.secure,
+        username: config.username,
+        fromEmail: config.fromEmail,
+        fromName: config.fromName,
+        hasPassword: !!config.password,
+      });
+    } catch (error: any) {
+      console.error("Error getting Adobe Sign SMTP config:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Save Adobe Sign SMTP configuration
+  app.post("/api/adobe-sign-smtp/config", requireAuth, async (req, res) => {
+    try {
+      const { host, port, secure, username, password, fromEmail, fromName } = req.body;
+      
+      if (host !== undefined) await storage.setSystemConfig('adobe_sign_smtp_host', host);
+      if (port !== undefined) await storage.setSystemConfig('adobe_sign_smtp_port', String(port));
+      if (secure !== undefined) await storage.setSystemConfig('adobe_sign_smtp_secure', String(secure));
+      if (username !== undefined) await storage.setSystemConfig('adobe_sign_smtp_username', username);
+      if (password !== undefined) await storage.setSystemConfig('adobe_sign_smtp_password', password);
+      if (fromEmail !== undefined) await storage.setSystemConfig('adobe_sign_smtp_from_email', fromEmail);
+      if (fromName !== undefined) await storage.setSystemConfig('adobe_sign_smtp_from_name', fromName);
+      
+      res.json({ success: true, message: "Adobe Sign SMTP configuration saved" });
+    } catch (error: any) {
+      console.error("Error saving Adobe Sign SMTP config:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Test Adobe Sign SMTP connection
+  app.post("/api/adobe-sign-smtp/test", requireAuth, async (req, res) => {
+    try {
+      const { testAdobeSignSmtpConnection } = await import("./email");
+      const result = await testAdobeSignSmtpConnection();
+      
+      if (result.success) {
+        res.json({ success: true, message: "Adobe Sign SMTP connection successful" });
+      } else {
+        res.status(400).json({ success: false, error: result.error });
+      }
+    } catch (error: any) {
+      console.error("Error testing Adobe Sign SMTP:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // ==========================================
+  // Paperwork Tracking Endpoints
+  // ==========================================
+
+  // Get all confirmed contestants pending paperwork
+  app.get("/api/paperwork", requireAuth, async (req, res) => {
+    try {
+      const { recordDayId } = req.query;
+      
+      // Get all seat assignments with confirmed RSVP
+      const assignments = await storage.getSeatAssignments();
+      const contestants = await storage.getContestants();
+      const recordDays = await storage.getRecordDays();
+      
+      // Filter to confirmed contestants
+      let confirmedAssignments = assignments.filter(a => a.confirmedRsvp);
+      
+      // Filter by record day if specified
+      if (recordDayId && typeof recordDayId === 'string') {
+        confirmedAssignments = confirmedAssignments.filter(a => a.recordDayId === recordDayId);
+      }
+      
+      // Enrich with contestant and record day data
+      const enrichedAssignments = confirmedAssignments.map(a => {
+        const contestant = contestants.find(c => c.id === a.contestantId);
+        const recordDay = recordDays.find(rd => rd.id === a.recordDayId);
+        return {
+          ...a,
+          contestant: contestant || null,
+          recordDay: recordDay || null,
+        };
+      });
+      
+      res.json(enrichedAssignments);
+    } catch (error: any) {
+      console.error("Error getting paperwork data:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Mark paperwork as sent
+  app.post("/api/paperwork/:assignmentId/sent", requireAuth, async (req, res) => {
+    try {
+      const { assignmentId } = req.params;
+      const { sentBy } = req.body;
+      
+      const assignment = await storage.getSeatAssignment(assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+      
+      // Update the seat assignment with paperwork sent timestamp
+      const now = new Date();
+      await storage.updateSeatAssignment(assignmentId, {
+        paperworkSent: now,
+        paperworkSentBy: sentBy || 'Unknown',
+      });
+      
+      // Broadcast update via WebSocket
+      broadcastMessage({
+        type: 'SEAT_ASSIGNMENT_UPDATED',
+        payload: { id: assignmentId, paperworkSent: now, paperworkSentBy: sentBy || 'Unknown' }
+      });
+      
+      res.json({ 
+        success: true, 
+        message: "Paperwork marked as sent",
+        paperworkSent: now,
+        paperworkSentBy: sentBy || 'Unknown',
+      });
+    } catch (error: any) {
+      console.error("Error marking paperwork as sent:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Mark paperwork as received and logged
+  app.post("/api/paperwork/:assignmentId/received", requireAuth, async (req, res) => {
+    try {
+      const { assignmentId } = req.params;
+      const { receivedBy } = req.body;
+      
+      const assignment = await storage.getSeatAssignment(assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+      
+      // Update the seat assignment with paperwork received timestamp
+      const now = new Date();
+      await storage.updateSeatAssignment(assignmentId, {
+        paperworkReceived: now,
+        paperworkReceivedBy: receivedBy || 'Unknown',
+      });
+      
+      // Broadcast update via WebSocket
+      broadcastMessage({
+        type: 'SEAT_ASSIGNMENT_UPDATED',
+        payload: { id: assignmentId, paperworkReceived: now, paperworkReceivedBy: receivedBy || 'Unknown' }
+      });
+      
+      res.json({ 
+        success: true, 
+        message: "Paperwork marked as received and logged",
+        paperworkReceived: now,
+        paperworkReceivedBy: receivedBy || 'Unknown',
+      });
+    } catch (error: any) {
+      console.error("Error marking paperwork as received:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Clear paperwork sent status
+  app.delete("/api/paperwork/:assignmentId/sent", requireAuth, async (req, res) => {
+    try {
+      const { assignmentId } = req.params;
+      
+      const assignment = await storage.getSeatAssignment(assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+      
+      await storage.updateSeatAssignment(assignmentId, {
+        paperworkSent: null,
+        paperworkSentBy: null,
+      });
+      
+      broadcastMessage({
+        type: 'SEAT_ASSIGNMENT_UPDATED',
+        payload: { id: assignmentId, paperworkSent: null, paperworkSentBy: null }
+      });
+      
+      res.json({ success: true, message: "Paperwork sent status cleared" });
+    } catch (error: any) {
+      console.error("Error clearing paperwork sent status:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Clear paperwork received status
+  app.delete("/api/paperwork/:assignmentId/received", requireAuth, async (req, res) => {
+    try {
+      const { assignmentId } = req.params;
+      
+      const assignment = await storage.getSeatAssignment(assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+      
+      await storage.updateSeatAssignment(assignmentId, {
+        paperworkReceived: null,
+        paperworkReceivedBy: null,
+      });
+      
+      broadcastMessage({
+        type: 'SEAT_ASSIGNMENT_UPDATED',
+        payload: { id: assignmentId, paperworkReceived: null, paperworkReceivedBy: null }
+      });
+      
+      res.json({ success: true, message: "Paperwork received status cleared" });
+    } catch (error: any) {
+      console.error("Error clearing paperwork received status:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==========================================
   // System Config Endpoints
   // ==========================================
 
