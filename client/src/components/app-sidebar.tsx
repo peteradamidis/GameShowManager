@@ -53,6 +53,11 @@ const menuItems = [
     icon: MessageSquareText,
   },
   {
+    title: "Paperwork",
+    url: "/paperwork",
+    icon: FileText,
+  },
+  {
     title: "Reschedule",
     url: "/reschedule",
     icon: RefreshCcw,
@@ -65,11 +70,6 @@ const menuItems = [
   {
     title: "Forms",
     url: "/forms",
-    icon: FileText,
-  },
-  {
-    title: "Paperwork",
-    url: "/paperwork",
     icon: FileText,
   },
   {
