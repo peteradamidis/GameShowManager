@@ -5,8 +5,28 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, MapPin, Clock, Users, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+
+const DIETARY_OPTIONS = [
+  { value: "none", label: "No dietary requirements" },
+  { value: "vegetarian", label: "Vegetarian" },
+  { value: "vegan", label: "Vegan" },
+  { value: "gluten-free", label: "Gluten Free" },
+  { value: "dairy-free", label: "Dairy Free" },
+  { value: "halal", label: "Halal" },
+  { value: "kosher", label: "Kosher" },
+  { value: "nut-allergy", label: "Nut Allergy" },
+  { value: "shellfish-allergy", label: "Shellfish Allergy" },
+  { value: "other", label: "Other (please specify in questions)" },
+];
 
 const DEFAULT_CONFIG: Record<string, string> = {
   title: "Deal or No Deal",
@@ -85,7 +105,10 @@ export default function BookingConfirmationPage() {
     mutationFn: async (confirmationStatus: "confirmed" | "declined") => {
       // Combine dietary and questions into notes field for backend
       const notesParts = [];
-      if (dietary.trim()) notesParts.push(`Dietary Requirements: ${dietary.trim()}`);
+      if (dietary && dietary !== "none") {
+        const dietaryLabel = DIETARY_OPTIONS.find(opt => opt.value === dietary)?.label || dietary;
+        notesParts.push(`Dietary Requirements: ${dietaryLabel}`);
+      }
       if (questions.trim()) notesParts.push(`Questions: ${questions.trim()}`);
       const notes = notesParts.join('\n\n');
       
@@ -432,20 +455,30 @@ export default function BookingConfirmationPage() {
               </p>
             </div>
 
-            {/* Dietary requirements input */}
+            {/* Dietary requirements dropdown */}
             <div className="space-y-2 mb-6">
               <Label htmlFor="dietary" data-testid="label-dietary" className="text-gray-700">
                 {getConfig("dietaryLabel")}
               </Label>
-              <Textarea
-                id="dietary"
-                data-testid="textarea-dietary"
-                placeholder={getConfig("dietaryPlaceholder")}
+              <Select
                 value={dietary}
-                onChange={(e) => setDietary(e.target.value)}
-                rows={3}
-                className="border-gray-300"
-              />
+                onValueChange={(value) => setDietary(value)}
+              >
+                <SelectTrigger 
+                  id="dietary"
+                  data-testid="select-dietary"
+                  className="border-gray-300 bg-white"
+                >
+                  <SelectValue placeholder="Select dietary requirements" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DIETARY_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Questions input */}

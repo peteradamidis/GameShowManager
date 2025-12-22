@@ -356,7 +356,7 @@ export default function StandbysPage() {
                     <Button 
                       onClick={handlePreviewEmails}
                       disabled={previewEmailsMutation.isPending}
-                      className="bg-purple-600 hover:bg-purple-700"
+                      className="bg-purple-600"
                       data-testid="button-preview-emails"
                     >
                       <Mail className="h-4 w-4 mr-2" />
