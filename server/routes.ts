@@ -4815,32 +4815,142 @@ ${finalEmailFooter}`;
             : 'http://localhost:5000';
           const confirmationUrl = `${baseUrl}/standby-confirmation/${tokenString}`;
 
-          // Build email content
+          // Prepare banner image for CID embedding (works offline in all email clients)
+          const standbyBannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
+          const standbyBannerCid = 'standby-banner-image';
+          let standbyBannerUrl = `cid:${standbyBannerCid}`;
+          let standbyBannerBuffer: Buffer | null = null;
+          let standbyBannerContentType = 'image/png';
+          let standbyBannerFilename = 'dond_banner.png';
+          
+          if (standbyBannerUrlConfig.startsWith('/')) {
+            const bannerPath = path.join(process.cwd(), standbyBannerUrlConfig.replace(/^\//, ''));
+            try {
+              if (fs.existsSync(bannerPath)) {
+                standbyBannerBuffer = fs.readFileSync(bannerPath);
+                const ext = path.extname(bannerPath).toLowerCase().replace('.', '');
+                standbyBannerContentType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+                standbyBannerFilename = path.basename(bannerPath);
+              }
+            } catch (error) {
+              console.warn(`Warning: Could not read banner image at ${bannerPath}:`, error);
+              standbyBannerUrl = standbyBannerUrlConfig;  // Fallback to URL
+            }
+          } else {
+            standbyBannerUrl = standbyBannerUrlConfig;  // External URL
+          }
+
+          // Build email content matching booking email style with purple standby theme
           const subject = `Deal or No Deal - Standby Booking for ${formattedDate}`;
-          const htmlBody = `
-            <p>Dear ${standby.contestant.name},</p>
-            
-            <p>Thank you for your interest in being part of Deal or No Deal!</p>
-            
-            <p>You have been selected as a <strong>STANDBY</strong> for the recording on <strong>${formattedDate}</strong>${standby.recordDay.rxNumber ? ` (${standby.recordDay.rxNumber})` : ''}.</p>
-            
-            <p><strong>Important Information:</strong></p>
-            <ul>
-              <li>As a standby, you are not guaranteed a seat in the studio audience</li>
-              <li>You will only be seated if a spot becomes available on the day</li>
-              <li>If you are not seated, you will be given a fast-track invitation to another upcoming studio day</li>
-            </ul>
-            
-            <p>Please confirm your availability by clicking the link below:</p>
-            
-            <p><a href="${confirmationUrl}" style="display: inline-block; background-color: #E91E63; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Confirm Standby Booking</a></p>
-            
-            <p>If you are no longer available, please click the link above and select "Decline".</p>
-            
-            <p>This confirmation link will expire in 7 days.</p>
-            
-            <p>Thank you,<br>Deal or No Deal Production Team</p>
-          `;
+          const htmlBody = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a2a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    <!-- Full-width Banner Image -->
+    <tr>
+      <td style="padding: 0; line-height: 0;">
+        <img src="${standbyBannerUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />
+      </td>
+    </tr>
+    
+    <!-- Purple Title Bar for Standby -->
+    <tr>
+      <td style="background: linear-gradient(180deg, #4a1a6e 0%, #2a0a2a 100%); padding: 25px 30px; text-align: center;">
+        <h1 style="color: #c084fc; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          Standby Invitation
+        </h1>
+      </td>
+    </tr>
+    
+    <!-- Content Card -->
+    <tr>
+      <td style="background-color: #2a0a2a; padding: 0 20px 25px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+          <tr>
+            <td style="padding: 35px 30px;">
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
+                Dear ${standby.contestant.name.split(' ')[0]},
+              </p>
+              
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
+                Thank you for your interest in being part of <strong style="color: #8B0000;">Deal or No Deal</strong>!
+              </p>
+              
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+                You have been selected as a <strong style="color: #7c3aed;">STANDBY</strong> for the recording on <strong>${formattedDate}</strong>${standby.recordDay.rxNumber ? ` (${standby.recordDay.rxNumber})` : ''}.
+              </p>
+              
+              <!-- Important Info Box -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-radius: 8px; border-left: 5px solid #7c3aed; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 style="color: #5b21b6; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                      Important Information
+                    </h2>
+                    <ul style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0; padding-left: 20px;">
+                      <li style="margin-bottom: 6px;">As a standby, you are not guaranteed a seat in the studio audience</li>
+                      <li style="margin-bottom: 6px;">You will only be seated if a spot becomes available on the day</li>
+                      <li style="margin-bottom: 0;">If you are not seated, you will be given a fast-track invitation to another upcoming studio day</li>
+                    </ul>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
+                Please confirm your availability by clicking the button below:
+              </p>
+              
+              <!-- CTA Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 25px auto;">
+                <tr>
+                  <td style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); border-radius: 8px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);">
+                    <a href="${confirmationUrl}" style="display: inline-block; padding: 16px 40px; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: bold; letter-spacing: 1px;">
+                      Confirm Standby Booking
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 0 0 15px 0; text-align: center;">
+                If you are no longer available, please click the button above and select "Decline".
+              </p>
+              
+              <p style="color: #888888; font-size: 13px; line-height: 1.6; margin: 0; text-align: center;">
+                This confirmation link will expire in 7 days.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    
+    <!-- Footer -->
+    <tr>
+      <td style="background-color: #2a0a2a; padding: 15px 30px 30px 30px; text-align: center;">
+        <p style="color: #aa88aa; font-size: 11px; line-height: 1.6; margin: 0;">
+          This is an automated message from the Deal or No Deal production team.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+          // Prepare attachments with CID-embedded banner
+          const standbyAttachments: { filename: string; content: Buffer; contentType: string; cid?: string }[] = [];
+          
+          if (standbyBannerBuffer) {
+            standbyAttachments.push({
+              filename: standbyBannerFilename,
+              content: standbyBannerBuffer,
+              contentType: standbyBannerContentType,
+              cid: standbyBannerCid,
+            });
+          }
 
           // Send email via SMTP
           const senderNameConfig = await storage.getSystemConfig('email_sender_name');
@@ -4848,13 +4958,23 @@ ${finalEmailFooter}`;
             senderName: senderNameConfig || 'Deal or No Deal',
           };
 
-          await sendEmail(
-            standby.contestant.email!,
-            subject,
-            htmlBody, // plain text version will be auto-generated
-            htmlBody,
-            emailConfig
-          );
+          if (standbyAttachments.length > 0) {
+            await sendEmailWithAttachment(
+              standby.contestant.email!,
+              subject,
+              htmlBody,
+              standbyAttachments,
+              emailConfig
+            );
+          } else {
+            await sendEmail(
+              standby.contestant.email!,
+              subject,
+              htmlBody,
+              htmlBody,
+              emailConfig
+            );
+          }
 
           // Update standby assignment
           await storage.updateStandbyAssignment(standby.id, {
