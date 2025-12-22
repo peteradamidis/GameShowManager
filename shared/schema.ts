@@ -84,7 +84,9 @@ export const seatAssignments = pgTable("seat_assignments", {
   bookingEmailSent: timestamp("booking_email_sent"),
   confirmedRsvp: timestamp("confirmed_rsvp"),
   paperworkSent: timestamp("paperwork_sent"),
+  paperworkSentBy: text("paperwork_sent_by"), // Who sent the paperwork
   paperworkReceived: timestamp("paperwork_received"),
+  paperworkReceivedBy: text("paperwork_received_by"), // Who logged the received paperwork
   paperworkOnDay: timestamp("paperwork_on_day"),
   signedIn: timestamp("signed_in"),
   otdNotes: text("otd_notes"),
