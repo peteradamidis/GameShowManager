@@ -5170,7 +5170,14 @@ ${finalEmailFooter}`;
   app.post("/api/paperwork/:assignmentId/sent", requireAuth, async (req, res) => {
     try {
       const { assignmentId } = req.params;
-      const { sentBy } = req.body;
+      // Use authenticated user's username from session for audit
+      // If session username not set, look up user by session userId
+      let sentBy = (req.session as any)?.username;
+      if (!sentBy && (req.session as any)?.userId) {
+        const user = await storage.getUserById((req.session as any).userId);
+        sentBy = user?.username || 'System';
+      }
+      sentBy = sentBy || 'System';
       
       const assignment = await storage.getSeatAssignmentById(assignmentId);
       if (!assignment) {
@@ -5181,7 +5188,7 @@ ${finalEmailFooter}`;
       const now = new Date();
       await storage.updateSeatAssignmentWorkflow(assignmentId, {
         paperworkSent: now,
-        paperworkSentBy: sentBy || 'Unknown',
+        paperworkSentBy: sentBy,
       });
       
       // Broadcast update via WebSocket
@@ -5209,7 +5216,14 @@ ${finalEmailFooter}`;
   app.post("/api/paperwork/:assignmentId/received", requireAuth, async (req, res) => {
     try {
       const { assignmentId } = req.params;
-      const { receivedBy } = req.body;
+      // Use authenticated user's username from session for audit
+      // If session username not set, look up user by session userId
+      let receivedBy = (req.session as any)?.username;
+      if (!receivedBy && (req.session as any)?.userId) {
+        const user = await storage.getUserById((req.session as any).userId);
+        receivedBy = user?.username || 'System';
+      }
+      receivedBy = receivedBy || 'System';
       
       const assignment = await storage.getSeatAssignmentById(assignmentId);
       if (!assignment) {
@@ -5220,7 +5234,7 @@ ${finalEmailFooter}`;
       const now = new Date();
       await storage.updateSeatAssignmentWorkflow(assignmentId, {
         paperworkReceived: now,
-        paperworkReceivedBy: receivedBy || 'Unknown',
+        paperworkReceivedBy: receivedBy,
       });
       
       // Broadcast update via WebSocket

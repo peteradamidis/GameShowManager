@@ -52,32 +52,35 @@ export default function Paperwork() {
     queryKey: ["/api/record-days"],
   });
 
+  const paperworkUrl = selectedRecordDay === "all" 
+    ? "/api/paperwork" 
+    : `/api/paperwork?recordDayId=${selectedRecordDay}`;
+    
   const { data: paperworkData = [], isLoading: loadingPaperwork, refetch: refetchPaperwork } = useQuery<PaperworkAssignment[]>({
-    queryKey: ["/api/paperwork", selectedRecordDay],
-    queryFn: async () => {
-      const url = selectedRecordDay === "all" 
-        ? "/api/paperwork" 
-        : `/api/paperwork?recordDayId=${selectedRecordDay}`;
-      const response = await fetch(url, { credentials: "include" });
-      if (!response.ok) throw new Error("Failed to fetch paperwork data");
-      return response.json();
-    },
+    queryKey: [paperworkUrl],
   });
 
   const { data: adobeConfig } = useQuery<AdobeSignConfig>({
     queryKey: ["/api/adobe-sign-smtp/config"],
   });
 
+  const invalidatePaperworkQueries = () => {
+    queryClient.invalidateQueries({
+      predicate: (query) => {
+        const key = query.queryKey[0];
+        return typeof key === 'string' && key.startsWith('/api/paperwork');
+      },
+    });
+  };
+
   const markSentMutation = useMutation({
     mutationFn: async (assignmentId: string) => {
-      const response = await apiRequest("POST", `/api/paperwork/${assignmentId}/sent`, { 
-        sentBy: "Staff" 
-      });
+      const response = await apiRequest("POST", `/api/paperwork/${assignmentId}/sent`, {});
       return response.json();
     },
     onSuccess: () => {
       toast({ title: "Paperwork marked as sent" });
-      queryClient.invalidateQueries({ queryKey: ["/api/paperwork"] });
+      invalidatePaperworkQueries();
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -86,14 +89,12 @@ export default function Paperwork() {
 
   const markReceivedMutation = useMutation({
     mutationFn: async (assignmentId: string) => {
-      const response = await apiRequest("POST", `/api/paperwork/${assignmentId}/received`, { 
-        receivedBy: "Staff" 
-      });
+      const response = await apiRequest("POST", `/api/paperwork/${assignmentId}/received`, {});
       return response.json();
     },
     onSuccess: () => {
       toast({ title: "Paperwork marked as received and logged" });
-      queryClient.invalidateQueries({ queryKey: ["/api/paperwork"] });
+      invalidatePaperworkQueries();
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -107,7 +108,7 @@ export default function Paperwork() {
     },
     onSuccess: () => {
       toast({ title: "Paperwork sent status cleared" });
-      queryClient.invalidateQueries({ queryKey: ["/api/paperwork"] });
+      invalidatePaperworkQueries();
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -121,7 +122,7 @@ export default function Paperwork() {
     },
     onSuccess: () => {
       toast({ title: "Paperwork received status cleared" });
-      queryClient.invalidateQueries({ queryKey: ["/api/paperwork"] });
+      invalidatePaperworkQueries();
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -207,25 +208,25 @@ export default function Paperwork() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
+            <Card className="border-orange-200 dark:border-orange-800">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Mail className="h-5 w-5 text-blue-600" />
+                  <Mail className="h-5 w-5 text-orange-400" />
                   Pending Send
                 </CardTitle>
                 <CardDescription>Awaiting paperwork to be sent</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-blue-600" data-testid="text-pending-send-count">
+                <p className="text-3xl font-bold text-orange-500" data-testid="text-pending-send-count">
                   {pendingSent.length}
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-orange-200 dark:border-orange-800">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-orange-600" />
+                  <Clock className="h-5 w-5 text-orange-500" />
                   Pending Return
                 </CardTitle>
                 <CardDescription>Awaiting paperwork return</CardDescription>
@@ -237,16 +238,16 @@ export default function Paperwork() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-orange-200 dark:border-orange-800">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <CheckCircle className="h-5 w-5 text-orange-700 dark:text-orange-400" />
                   Completed
                 </CardTitle>
                 <CardDescription>Paperwork received and logged</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-green-600" data-testid="text-completed-count">
+                <p className="text-3xl font-bold text-orange-700 dark:text-orange-400" data-testid="text-completed-count">
                   {completed.length}
                 </p>
               </CardContent>
@@ -293,7 +294,7 @@ export default function Paperwork() {
                       <TableRow 
                         key={item.id} 
                         className={`
-                          ${item.paperworkReceived ? 'bg-green-50 dark:bg-green-900/10' : 
+                          ${item.paperworkReceived ? 'bg-orange-100/50 dark:bg-orange-900/20' : 
                             item.paperworkSent ? 'bg-orange-50 dark:bg-orange-900/10' : ''}
                         `}
                         data-testid={`row-paperwork-${item.id}`}
@@ -308,7 +309,7 @@ export default function Paperwork() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">
+                          <Badge className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700">
                             Block {item.blockNumber} - {item.seatLabel}
                           </Badge>
                         </TableCell>
@@ -358,17 +359,17 @@ export default function Paperwork() {
                         </TableCell>
                         <TableCell>
                           {item.paperworkReceived ? (
-                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            <Badge className="bg-orange-700 text-white dark:bg-orange-600 dark:text-white">
                               <CheckCircle className="h-3 w-3 mr-1" />
                               Complete
                             </Badge>
                           ) : item.paperworkSent ? (
-                            <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                            <Badge className="bg-orange-500 text-white dark:bg-orange-500 dark:text-white">
                               <Clock className="h-3 w-3 mr-1" />
                               Awaiting Return
                             </Badge>
                           ) : (
-                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            <Badge className="bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
                               <Send className="h-3 w-3 mr-1" />
                               Ready to Send
                             </Badge>
