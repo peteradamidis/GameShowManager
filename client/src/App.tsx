@@ -23,6 +23,7 @@ import WinnersPage from "@/pages/winners";
 import FormsPage from "@/pages/forms";
 import Settings from "@/pages/settings";
 import Backup from "@/pages/backup";
+import Paperwork from "@/pages/paperwork";
 import AvailabilityResponsePage from "@/pages/availability-response-page";
 import BookingConfirmationPage from "@/pages/booking-confirmation-page";
 import Login from "@/pages/login";
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/reschedule" component={ReschedulePage} />
       <Route path="/winners" component={WinnersPage} />
       <Route path="/forms" component={FormsPage} />
+      <Route path="/paperwork" component={Paperwork} />
       <Route path="/settings" component={Settings} />
       <Route path="/backup" component={Backup} />
       <Route path="/availability/respond/:token" component={AvailabilityResponsePage} />

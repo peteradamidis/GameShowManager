@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage, db } from "./storage";
-import { insertContestantSchema, insertRecordDaySchema, insertSeatAssignmentSchema, seatAssignments } from "@shared/schema";
+import { insertContestantSchema, insertRecordDaySchema, insertSeatAssignmentSchema, seatAssignments, SeatAssignment } from "@shared/schema";
 import { sql } from "drizzle-orm";
 import xlsx from "xlsx";
 import multer from "multer";
@@ -5136,20 +5136,20 @@ ${finalEmailFooter}`;
       const { recordDayId } = req.query;
       
       // Get all seat assignments with confirmed RSVP
-      const assignments = await storage.getSeatAssignments();
+      const assignments = await storage.getAllSeatAssignments();
       const contestants = await storage.getContestants();
       const recordDays = await storage.getRecordDays();
       
       // Filter to confirmed contestants
-      let confirmedAssignments = assignments.filter(a => a.confirmedRsvp);
+      let confirmedAssignments = assignments.filter((a: SeatAssignment) => a.confirmedRsvp);
       
       // Filter by record day if specified
       if (recordDayId && typeof recordDayId === 'string') {
-        confirmedAssignments = confirmedAssignments.filter(a => a.recordDayId === recordDayId);
+        confirmedAssignments = confirmedAssignments.filter((a: SeatAssignment) => a.recordDayId === recordDayId);
       }
       
       // Enrich with contestant and record day data
-      const enrichedAssignments = confirmedAssignments.map(a => {
+      const enrichedAssignments = confirmedAssignments.map((a: SeatAssignment) => {
         const contestant = contestants.find(c => c.id === a.contestantId);
         const recordDay = recordDays.find(rd => rd.id === a.recordDayId);
         return {
@@ -5172,22 +5172,25 @@ ${finalEmailFooter}`;
       const { assignmentId } = req.params;
       const { sentBy } = req.body;
       
-      const assignment = await storage.getSeatAssignment(assignmentId);
+      const assignment = await storage.getSeatAssignmentById(assignmentId);
       if (!assignment) {
         return res.status(404).json({ error: "Seat assignment not found" });
       }
       
       // Update the seat assignment with paperwork sent timestamp
       const now = new Date();
-      await storage.updateSeatAssignment(assignmentId, {
+      await storage.updateSeatAssignmentWorkflow(assignmentId, {
         paperworkSent: now,
         paperworkSentBy: sentBy || 'Unknown',
       });
       
       // Broadcast update via WebSocket
-      broadcastMessage({
-        type: 'SEAT_ASSIGNMENT_UPDATED',
-        payload: { id: assignmentId, paperworkSent: now, paperworkSentBy: sentBy || 'Unknown' }
+      wsManager.broadcastBookingUpdate({
+        type: 'booking-master-update',
+        recordDayId: assignment.recordDayId,
+        assignmentId,
+        field: 'paperworkSent',
+        value: now,
       });
       
       res.json({ 
@@ -5208,22 +5211,25 @@ ${finalEmailFooter}`;
       const { assignmentId } = req.params;
       const { receivedBy } = req.body;
       
-      const assignment = await storage.getSeatAssignment(assignmentId);
+      const assignment = await storage.getSeatAssignmentById(assignmentId);
       if (!assignment) {
         return res.status(404).json({ error: "Seat assignment not found" });
       }
       
       // Update the seat assignment with paperwork received timestamp
       const now = new Date();
-      await storage.updateSeatAssignment(assignmentId, {
+      await storage.updateSeatAssignmentWorkflow(assignmentId, {
         paperworkReceived: now,
         paperworkReceivedBy: receivedBy || 'Unknown',
       });
       
       // Broadcast update via WebSocket
-      broadcastMessage({
-        type: 'SEAT_ASSIGNMENT_UPDATED',
-        payload: { id: assignmentId, paperworkReceived: now, paperworkReceivedBy: receivedBy || 'Unknown' }
+      wsManager.broadcastBookingUpdate({
+        type: 'booking-master-update',
+        recordDayId: assignment.recordDayId,
+        assignmentId,
+        field: 'paperworkReceived',
+        value: now,
       });
       
       res.json({ 
@@ -5243,19 +5249,22 @@ ${finalEmailFooter}`;
     try {
       const { assignmentId } = req.params;
       
-      const assignment = await storage.getSeatAssignment(assignmentId);
+      const assignment = await storage.getSeatAssignmentById(assignmentId);
       if (!assignment) {
         return res.status(404).json({ error: "Seat assignment not found" });
       }
       
-      await storage.updateSeatAssignment(assignmentId, {
+      await storage.updateSeatAssignmentWorkflow(assignmentId, {
         paperworkSent: null,
         paperworkSentBy: null,
       });
       
-      broadcastMessage({
-        type: 'SEAT_ASSIGNMENT_UPDATED',
-        payload: { id: assignmentId, paperworkSent: null, paperworkSentBy: null }
+      wsManager.broadcastBookingUpdate({
+        type: 'booking-master-update',
+        recordDayId: assignment.recordDayId,
+        assignmentId,
+        field: 'paperworkSent',
+        value: null,
       });
       
       res.json({ success: true, message: "Paperwork sent status cleared" });
@@ -5270,19 +5279,22 @@ ${finalEmailFooter}`;
     try {
       const { assignmentId } = req.params;
       
-      const assignment = await storage.getSeatAssignment(assignmentId);
+      const assignment = await storage.getSeatAssignmentById(assignmentId);
       if (!assignment) {
         return res.status(404).json({ error: "Seat assignment not found" });
       }
       
-      await storage.updateSeatAssignment(assignmentId, {
+      await storage.updateSeatAssignmentWorkflow(assignmentId, {
         paperworkReceived: null,
         paperworkReceivedBy: null,
       });
       
-      broadcastMessage({
-        type: 'SEAT_ASSIGNMENT_UPDATED',
-        payload: { id: assignmentId, paperworkReceived: null, paperworkReceivedBy: null }
+      wsManager.broadcastBookingUpdate({
+        type: 'booking-master-update',
+        recordDayId: assignment.recordDayId,
+        assignmentId,
+        field: 'paperworkReceived',
+        value: null,
       });
       
       res.json({ success: true, message: "Paperwork received status cleared" });
@@ -5470,7 +5482,7 @@ ${finalEmailFooter}`;
               hasPaperworkReceived ? 'Paperwork Received' : '',
               hasSignedIn ? 'Signed In' : '',
             ].filter(Boolean).join(', ') || 'Pending',
-            availabilityRsvp: contestant.availabilityStatus === 'available' ? 'Yes' : contestant.availabilityStatus === 'pending' ? 'Pending' : 'No',
+            availabilityRsvp: contestant.availabilityStatus === 'available' ? 'Yes' : contestant.availabilityStatus === 'assigned' ? 'Assigned' : contestant.availabilityStatus === 'invited' ? 'Invited' : contestant.availabilityStatus === 'confirmed' ? 'Confirmed' : 'No',
             confirmedRsvp: assignment.confirmedRsvp ? new Date(assignment.confirmedRsvp).toLocaleDateString() : '',
             declined: contestant.availabilityStatus === 'invited' ? 'Declined' : '',
             notes: assignment.notes || assignment.otdNotes || '',

@@ -68,6 +68,11 @@ const menuItems = [
     icon: FileText,
   },
   {
+    title: "Paperwork",
+    url: "/paperwork",
+    icon: FileText,
+  },
+  {
     title: "Settings",
     url: "/settings",
     icon: Settings,
