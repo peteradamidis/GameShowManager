@@ -9,7 +9,7 @@ import crypto from "crypto";
 import path from "path";
 import express from "express";
 import fs from "fs";
-import { sendEmail, sendEmailWithAttachment, EmailConfig, isEmailAvailable, testSmtpConnection, getSmtpConfig, getSenderEmail } from "./email";
+import { sendEmail, sendEmailWithAttachment, sendEmailWithEmbeddedImages, EmbeddedImage, EmailConfig, isEmailAvailable, testSmtpConnection, getSmtpConfig, getSenderEmail } from "./email";
 import { syncRecordDayToSheet, createSheetHeader, updateCellInRecordDaySheet, updateRowInRecordDaySheet, getRecordDaySheetData, isGoogleSheetsAvailable } from "./google-sheets";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { requireAuth, hashPassword, verifyPassword } from "./auth";
@@ -3120,21 +3120,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get banner URL from system config or use default
       let bannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
       
-      // Convert banner image to base64 for offline viewing
-      let bannerUrl = bannerUrlConfig;
+      // Prepare banner image for CID embedding (works offline in all email clients)
+      let bannerCid = 'banner-image';
+      let bannerUrl = `cid:${bannerCid}`;  // Reference the embedded image
+      let bannerImageBuffer: Buffer | null = null;
+      let bannerContentType = 'image/png';
+      let bannerFilename = 'dond_banner.png';
+      
       if (bannerUrlConfig.startsWith('/')) {
         const bannerPath = path.join(process.cwd(), bannerUrlConfig.replace(/^\//, ''));
         try {
           if (fs.existsSync(bannerPath)) {
-            const imageBuffer = fs.readFileSync(bannerPath);
-            const base64Image = imageBuffer.toString('base64');
+            bannerImageBuffer = fs.readFileSync(bannerPath);
             const ext = path.extname(bannerPath).toLowerCase().replace('.', '');
-            const mimeType = ext === 'jpg' ? 'jpeg' : ext;
-            bannerUrl = `data:image/${mimeType};base64,${base64Image}`;
+            bannerContentType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+            bannerFilename = path.basename(bannerPath);
           }
         } catch (error) {
-          console.warn(`Warning: Could not read banner image at ${bannerPath}, using URL fallback:`, error);
+          console.warn(`Warning: Could not read banner image at ${bannerPath}:`, error);
+          bannerUrl = bannerUrlConfig;  // Fallback to URL if file can't be read
         }
+      } else {
+        // External URL - can't embed, use as-is
+        bannerUrl = bannerUrlConfig;
       }
       
       // Default email content values
@@ -3323,13 +3331,37 @@ ${finalEmailFooter}`;
             senderName: senderNameConfig || 'Deal or No Deal',
           };
 
-          await sendEmail(
-            contestant.email,
-            finalEmailSubject,
-            plainTextContent,
-            htmlEmailContent,
-            emailConfig
-          );
+          // Prepare embedded images for CID attachment
+          const embeddedImages: EmbeddedImage[] = [];
+          if (bannerImageBuffer) {
+            embeddedImages.push({
+              filename: bannerFilename,
+              content: bannerImageBuffer,
+              contentType: bannerContentType,
+              cid: bannerCid,
+            });
+          }
+
+          // Send email with embedded banner image (works offline)
+          if (embeddedImages.length > 0) {
+            await sendEmailWithEmbeddedImages(
+              contestant.email,
+              finalEmailSubject,
+              plainTextContent,
+              htmlEmailContent,
+              embeddedImages,
+              emailConfig
+            );
+          } else {
+            // Fallback to regular email if no image to embed
+            await sendEmail(
+              contestant.email,
+              finalEmailSubject,
+              plainTextContent,
+              htmlEmailContent,
+              emailConfig
+            );
+          }
 
           emailsSent.push({
             contestantId,
@@ -3700,6 +3732,13 @@ ${finalEmailFooter}`;
           const confirmationLink = `${baseUrl}/booking-confirmation/${token}`;
           const recordDate = new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
           
+          // Prepare banner image for CID embedding (declare outside if/else so available for attachments)
+          let bookingBannerCid = 'booking-banner-image';
+          let bookingBannerBuffer: Buffer | null = null;
+          let bookingBannerContentType = 'image/png';
+          let bookingBannerFilename = 'dond_banner.png';
+          let bannerUrl = '';
+          
           // Use custom email body if provided, otherwise use default HTML template
           let emailBody: string;
           if (customEmailBody) {
@@ -3712,24 +3751,26 @@ ${finalEmailFooter}`;
               .replace(/\{\{confirmationLink\}\}/g, confirmationLink);
           } else {
             // Get banner URL from system config or use default
-            let bannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
+            const bannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
             
-            // Convert banner image to base64 for offline viewing
-            let bannerUrl = bannerUrlConfig;
+            // Prepare banner for CID embedding
+            bannerUrl = `cid:${bookingBannerCid}`;
+            
             if (bannerUrlConfig.startsWith('/')) {
-              // It's a local file path - read and convert to base64
               const bannerPath = path.join(process.cwd(), bannerUrlConfig.replace(/^\//, ''));
               try {
                 if (fs.existsSync(bannerPath)) {
-                  const imageBuffer = fs.readFileSync(bannerPath);
-                  const base64Image = imageBuffer.toString('base64');
+                  bookingBannerBuffer = fs.readFileSync(bannerPath);
                   const ext = path.extname(bannerPath).toLowerCase().replace('.', '');
-                  const mimeType = ext === 'jpg' ? 'jpeg' : ext; // Normalize jpg to jpeg
-                  bannerUrl = `data:image/${mimeType};base64,${base64Image}`;
+                  bookingBannerContentType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+                  bookingBannerFilename = path.basename(bannerPath);
                 }
               } catch (error) {
-                console.warn(`Warning: Could not read banner image at ${bannerPath}, using URL fallback:`, error);
+                console.warn(`Warning: Could not read banner image at ${bannerPath}:`, error);
+                bannerUrl = bannerUrlConfig;  // Fallback to URL
               }
+            } else {
+              bannerUrl = bannerUrlConfig;  // External URL
             }
             
             // Get configurable text from system config with defaults
@@ -3851,25 +3892,36 @@ ${finalEmailFooter}`;
             senderName: senderNameConfig || 'Deal or No Deal',
           };
           
-          // Check if there are attachments to include
+          // Prepare attachments including CID-embedded banner image
+          const allAttachments: { filename: string; content: Buffer; contentType: string; cid?: string }[] = [];
+          
+          // Add CID-embedded banner image if available (for non-custom email bodies)
+          if (!customEmailBody && bookingBannerBuffer) {
+            allAttachments.push({
+              filename: bookingBannerFilename,
+              content: bookingBannerBuffer,
+              contentType: bookingBannerContentType,
+              cid: bookingBannerCid,
+            });
+          }
+          
+          // Add PDF attachments if specified
           if (attachmentPaths && Array.isArray(attachmentPaths) && attachmentPaths.length > 0) {
             const objectStorageService = new ObjectStorageService();
-            const attachments = [];
             
             for (const attachmentPath of attachmentPaths) {
               try {
                 const { buffer, contentType, filename } = await objectStorageService.getObjectAsBuffer(attachmentPath);
-                attachments.push({ content: buffer, contentType, filename });
+                allAttachments.push({ content: buffer, contentType, filename });
               } catch (attachErr: any) {
                 console.error(`Failed to load attachment ${attachmentPath}:`, attachErr.message);
               }
             }
-            
-            if (attachments.length > 0) {
-              await sendEmailWithAttachment(contestant.email, subject, emailBody, attachments, emailConfig);
-            } else {
-              await sendEmail(contestant.email, subject, emailBody, undefined, emailConfig);
-            }
+          }
+          
+          // Send email with attachments (CID banner and/or PDFs)
+          if (allAttachments.length > 0) {
+            await sendEmailWithAttachment(contestant.email, subject, emailBody, allAttachments, emailConfig);
           } else {
             await sendEmail(contestant.email, subject, emailBody, undefined, emailConfig);
           }
@@ -4249,24 +4301,29 @@ ${finalEmailFooter}`;
                 senderName: senderNameConfig || 'Deal or No Deal',
               };
               
-              // Get banner URL from system config or use default and convert to base64 for offline viewing
-              let bannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
-              let bannerUrl = bannerUrlConfig.startsWith('/') ? `${confirmEmailBaseUrl}${bannerUrlConfig}` : bannerUrlConfig;
+              // Prepare banner image for CID embedding (works offline in all email clients)
+              const confirmBannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
+              const confirmBannerCid = 'confirm-banner-image';
+              let confirmBannerUrl = `cid:${confirmBannerCid}`;
+              let confirmBannerBuffer: Buffer | null = null;
+              let confirmBannerContentType = 'image/png';
+              let confirmBannerFilename = 'dond_banner.png';
               
-              // Convert banner image to base64 for offline viewing
-              if (bannerUrlConfig.startsWith('/')) {
-                const bannerPath = path.join(process.cwd(), bannerUrlConfig.replace(/^\//, ''));
+              if (confirmBannerUrlConfig.startsWith('/')) {
+                const bannerPath = path.join(process.cwd(), confirmBannerUrlConfig.replace(/^\//, ''));
                 try {
                   if (fs.existsSync(bannerPath)) {
-                    const imageBuffer = fs.readFileSync(bannerPath);
-                    const base64Image = imageBuffer.toString('base64');
+                    confirmBannerBuffer = fs.readFileSync(bannerPath);
                     const ext = path.extname(bannerPath).toLowerCase().replace('.', '');
-                    const mimeType = ext === 'jpg' ? 'jpeg' : ext;
-                    bannerUrl = `data:image/${mimeType};base64,${base64Image}`;
+                    confirmBannerContentType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+                    confirmBannerFilename = path.basename(bannerPath);
                   }
                 } catch (error) {
-                  console.warn(`Warning: Could not read banner image at ${bannerPath}, using URL fallback:`, error);
+                  console.warn(`Warning: Could not read banner image at ${bannerPath}:`, error);
+                  confirmBannerUrl = confirmBannerUrlConfig;  // Fallback to URL
                 }
+              } else {
+                confirmBannerUrl = confirmBannerUrlConfig;  // External URL
               }
               
               // Build confirmation receipt email matching booking email style
@@ -4282,7 +4339,7 @@ ${finalEmailFooter}`;
     <!-- Full-width Banner Image -->
     <tr>
       <td style="padding: 0; line-height: 0;">
-        <img src="${bannerUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />
+        <img src="${confirmBannerUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />
       </td>
     </tr>
     
@@ -4357,25 +4414,37 @@ ${finalEmailFooter}`;
 </body>
 </html>`;
               
+              // Prepare attachments including CID-embedded banner image
+              const confirmAttachments: { filename: string; content: Buffer; contentType: string; cid?: string }[] = [];
+              
+              // Add CID-embedded banner image if available
+              if (confirmBannerBuffer) {
+                confirmAttachments.push({
+                  filename: confirmBannerFilename,
+                  content: confirmBannerBuffer,
+                  contentType: confirmBannerContentType,
+                  cid: confirmBannerCid,
+                });
+              }
+              
               // Get configured PDF for auto-confirmation emails
               const configuredPdfPath = await storage.getSystemConfig('auto_confirmation_pdf_path');
-              const attachments = [];
               
               if (configuredPdfPath && configuredPdfPath !== 'none') {
                 try {
                   const objectStorageService = new ObjectStorageService();
                   const { buffer, contentType, filename } = await objectStorageService.getObjectAsBuffer(configuredPdfPath);
-                  attachments.push({ content: buffer, contentType, filename });
+                  confirmAttachments.push({ content: buffer, contentType, filename });
                   console.log(`📎 Loaded configured PDF attachment: ${filename}`);
                 } catch (attachErr: any) {
                   console.error(`Failed to load configured PDF attachment ${configuredPdfPath}:`, attachErr.message);
                 }
               }
               
-              // Send the confirmation email
-              if (attachments.length > 0) {
-                await sendEmailWithAttachment(contestant.email, confirmationEmailSubject, confirmationEmailBody, attachments, emailConfig);
-                console.log(`📧 Auto-confirmation email sent to ${contestant.email} with ${attachments.length} PDF attachment(s)`);
+              // Send the confirmation email with attachments (CID banner and/or PDFs)
+              if (confirmAttachments.length > 0) {
+                await sendEmailWithAttachment(contestant.email, confirmationEmailSubject, confirmationEmailBody, confirmAttachments, emailConfig);
+                console.log(`📧 Auto-confirmation email sent to ${contestant.email} with ${confirmAttachments.length} attachment(s)`);
               } else {
                 await sendEmail(contestant.email, confirmationEmailSubject, confirmationEmailBody, undefined, emailConfig);
                 console.log(`📧 Auto-confirmation email sent to ${contestant.email} (no attachments)`);

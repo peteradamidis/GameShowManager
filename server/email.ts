@@ -23,6 +23,14 @@ export interface EmailAttachment {
   filename: string;
   content: Buffer;
   contentType: string;
+  cid?: string;  // Optional Content-ID for inline embedding (use src="cid:..." in HTML)
+}
+
+export interface EmbeddedImage {
+  filename: string;
+  content: Buffer;
+  contentType: string;
+  cid: string;  // Content-ID for referencing in HTML as src="cid:..."
 }
 
 // Check if email is configured
@@ -147,11 +155,12 @@ export async function sendEmailWithAttachment(
     const domain = extractDomain(smtpConfig.fromEmail);
     const messageId = generateMessageId(domain);
     
-    // Convert attachments to nodemailer format
+    // Convert attachments to nodemailer format (supports both regular and CID-embedded attachments)
     const nodemailerAttachments = attachments.map(att => ({
       filename: att.filename,
       content: att.content,
       contentType: att.contentType,
+      ...(att.cid ? { cid: att.cid, contentDisposition: 'inline' as const } : {}),
     }));
 
     await transport.sendMail({
@@ -172,6 +181,55 @@ export async function sendEmailWithAttachment(
     return true;
   } catch (error: any) {
     console.error(`Error sending email with attachment to ${to}:`, error);
+    throw error;
+  }
+}
+
+// Send email with embedded images (using CID for inline images - works offline in email clients)
+export async function sendEmailWithEmbeddedImages(
+  to: string, 
+  subject: string, 
+  plainText: string,
+  htmlBody: string,
+  embeddedImages: EmbeddedImage[] = [],
+  config?: EmailConfig
+): Promise<boolean> {
+  try {
+    const transport = await getTransporter();
+    const smtpConfig = await getSmtpConfig();
+    const senderName = config?.senderName || smtpConfig.fromName || 'Deal or No Deal';
+    const replyTo = config?.replyTo || smtpConfig.fromEmail;
+    const domain = extractDomain(smtpConfig.fromEmail);
+    const messageId = generateMessageId(domain);
+    
+    // Convert embedded images to nodemailer attachment format with CID
+    const attachments = embeddedImages.map(img => ({
+      filename: img.filename,
+      content: img.content,
+      contentType: img.contentType,
+      cid: img.cid,  // Content-ID for referencing in HTML
+      contentDisposition: 'inline' as const,  // Mark as inline attachment
+    }));
+
+    await transport.sendMail({
+      from: `${senderName} <${smtpConfig.fromEmail}>`,
+      to,
+      replyTo,
+      subject,
+      text: plainText,
+      html: htmlBody,
+      messageId,
+      attachments,
+      headers: {
+        'X-Priority': '3',
+        'X-Mailer': 'Deal-or-No-Deal-Booking-System',
+      },
+    });
+
+    console.log(`📧 Email with ${embeddedImages.length} embedded image(s) sent successfully to ${to} (from: ${senderName} <${smtpConfig.fromEmail}>)`);
+    return true;
+  } catch (error: any) {
+    console.error(`Error sending email with embedded images to ${to}:`, error);
     throw error;
   }
 }
