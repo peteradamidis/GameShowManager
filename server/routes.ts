@@ -2131,14 +2131,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       // Build a name lookup map for matching attendingWith
+      // IMPORTANT: If there are duplicate names, we can't reliably match by name alone
       const nameToContestant = new Map<string, typeof available[0]>();
+      const duplicateNames = new Set<string>();
       available.forEach(c => {
         // Use lowercase for case-insensitive matching
         const key = c.name.toLowerCase().trim();
+        if (nameToContestant.has(key)) {
+          // Duplicate name detected - mark it so we don't use name-only matching
+          duplicateNames.add(key);
+          console.log(`[Auto-assign] WARNING: Duplicate name detected: "${c.name}" - will use groupId or bidirectional matching only`);
+        }
         nameToContestant.set(key, c);
       });
       
+      // Build groupId-based groups first (most reliable)
+      const groupIdToContestants = new Map<string, typeof available>();
+      available.forEach(c => {
+        if (c.groupId) {
+          if (!groupIdToContestants.has(c.groupId)) {
+            groupIdToContestants.set(c.groupId, []);
+          }
+          groupIdToContestants.get(c.groupId)!.push(c);
+        }
+      });
+      
       console.log(`[Auto-assign] Building groups from ${available.length} available contestants`);
+      console.log(`[Auto-assign] Found ${groupIdToContestants.size} pre-existing groups from groupId field`);
       const contestantsWithAttendingWith = available.filter(c => c.attendingWith?.trim());
       console.log(`[Auto-assign] Contestants with attendingWith: ${contestantsWithAttendingWith.length}`);
       
@@ -2155,7 +2174,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Track contestants who have attendingWith but their partner is not available/accessible
       const contestantsWithUnavailablePartners = new Set<string>();
 
-      // First pass: find all groups based on attendingWith matching
+      // Helper: Check if person B lists person A (bidirectional verification)
+      const listsEachOther = (personA: typeof available[0], personB: typeof available[0]): boolean => {
+        if (!personB.attendingWith) return false;
+        const bListsNames = personB.attendingWith
+          .split(/[,&]/)
+          .map((name: string) => name.toLowerCase().trim())
+          .filter((name: string) => name.length > 0);
+        return bListsNames.some(name => name === personA.name.toLowerCase().trim());
+      };
+
+      // PHASE 1A: First, create groups from existing groupId field (most reliable)
+      const groupIdEntries = Array.from(groupIdToContestants.entries());
+      for (const [gId, members] of groupIdEntries) {
+        // Filter out A+ rated contestants
+        const eligibleMembers = members.filter((m: typeof available[0]) => m.auditionRating !== 'A+');
+        if (eligibleMembers.length > 1) {
+          const groupId = `dbgroup-${gId}`;
+          groupMap.set(groupId, eligibleMembers);
+          eligibleMembers.forEach((member: typeof available[0]) => groupedContestantIds.add(member.id));
+          console.log(`[Auto-assign] Created group from groupId: ${eligibleMembers.map((m: typeof available[0]) => `${m.name}(${m.auditionRating})`).join(' + ')}`);
+        } else if (eligibleMembers.length === 1 && members.length > 1) {
+          // Has a group partner but they're A+ - can't auto-assign
+          contestantsWithUnavailablePartners.add(eligibleMembers[0].id);
+          console.log(`[Auto-assign] Skipping ${eligibleMembers[0].name} - group partner is A+ rated`);
+        }
+      }
+
+      // PHASE 1B: Find groups based on attendingWith matching (with bidirectional verification for duplicate names)
       // BUT: Don't group anyone with an A+ contestant (A+ must be manually assigned)
       available.forEach((contestant) => {
         if (groupedContestantIds.has(contestant.id)) return;
@@ -2183,6 +2229,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           for (const name of attendingWithNames) {
             const partner = nameToContestant.get(name);
             if (partner && partner.id !== contestant.id && !groupedContestantIds.has(partner.id)) {
+              // For duplicate names, require bidirectional verification
+              if (duplicateNames.has(name)) {
+                // Only match if the partner also lists this contestant
+                if (!listsEachOther(contestant, partner)) {
+                  console.log(`[Auto-assign] Skipping match ${contestant.name} -> ${partner.name} - duplicate name requires bidirectional verification`);
+                  allPartnersFound = false;
+                  continue;
+                }
+              }
+              
               // Only add if not A+ rated (A+ must be manually assigned)
               if (partner.auditionRating !== 'A+') {
                 groupMembers.push(partner);
