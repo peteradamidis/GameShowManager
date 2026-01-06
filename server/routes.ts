@@ -1082,9 +1082,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Create contestants
+      // Get existing contestants to check for duplicates
+      const existingContestants = await storage.getContestants();
+      const existingNames = new Set(
+        existingContestants.map((c: any) => c.name?.toLowerCase().trim()).filter(Boolean)
+      );
+      const existingEmails = new Set(
+        existingContestants.map((c: any) => c.email?.toLowerCase().trim()).filter(Boolean)
+      );
+      
+      // Create contestants, skipping duplicates
       const createdContestants = [];
+      const skippedDuplicates = [];
+      
       for (const row of data as any[]) {
+        const normalizedName = row.name?.toLowerCase().trim();
+        const normalizedEmail = row.email?.toLowerCase().trim();
+        
+        // Check for duplicate by name (exact match) or email
+        const isDuplicateName = normalizedName && existingNames.has(normalizedName);
+        const isDuplicateEmail = normalizedEmail && existingEmails.has(normalizedEmail);
+        
+        if (isDuplicateName || isDuplicateEmail) {
+          skippedDuplicates.push({
+            name: row.name,
+            reason: isDuplicateName ? 'Name already exists' : 'Email already exists'
+          });
+          continue;
+        }
+        
         const contestant = await storage.createContestant({
           name: row.name,
           age: row.age,
@@ -1105,13 +1131,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           availableForStandby: row.availableForStandby,
         });
         createdContestants.push(contestant);
+        
+        // Add to existing sets to prevent duplicates within same import
+        if (normalizedName) existingNames.add(normalizedName);
+        if (normalizedEmail) existingEmails.add(normalizedEmail);
       }
 
+      const message = skippedDuplicates.length > 0
+        ? `Imported ${createdContestants.length} contestants, skipped ${skippedDuplicates.length} duplicates`
+        : `Successfully imported ${createdContestants.length} contestants`;
+
       res.json({
-        message: `Successfully imported ${createdContestants.length} contestants`,
+        message,
         contestants: createdContestants,
         contestantsCreated: createdContestants.length,
         groupsCreated: createdGroups.size,
+        skippedDuplicates: skippedDuplicates.length,
+        duplicates: skippedDuplicates.slice(0, 20), // Show first 20 duplicates
       });
     } catch (error: any) {
       console.error("Import error:", error);

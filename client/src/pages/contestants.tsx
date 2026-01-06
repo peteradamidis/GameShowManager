@@ -434,9 +434,19 @@ export default function Contestants() {
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
       broadcastContestantChange();
+      
+      let description = `Imported ${data.contestantsCreated} contestants`;
+      if (data.groupsCreated > 0) {
+        description += ` and ${data.groupsCreated} groups`;
+      }
+      if (data.skippedDuplicates > 0) {
+        description += `. Skipped ${data.skippedDuplicates} duplicate${data.skippedDuplicates > 1 ? 's' : ''}`;
+      }
+      description += '.';
+      
       toast({
-        title: "Import successful",
-        description: `Imported ${data.contestantsCreated} contestants${data.groupsCreated > 0 ? ` and ${data.groupsCreated} groups` : ''}.`,
+        title: data.skippedDuplicates > 0 ? "Import completed with duplicates skipped" : "Import successful",
+        description,
       });
     },
     onError: (error: Error) => {
