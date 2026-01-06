@@ -2278,9 +2278,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isSoloIndicator = (value: string | null | undefined): boolean => {
         if (!value || !value.trim()) return true;
         const normalized = value.toLowerCase().trim();
-        // Check for common solo indicators
-        const soloPatterns = ['solo', 'alone', 'by myself', 'n/a', 'na', 'none', 'no one', 'nobody', '-', 'self'];
-        return soloPatterns.some(pattern => normalized === pattern || normalized.includes(pattern));
+        // Check for exact match solo indicators (these should match exactly)
+        const exactMatchPatterns = ['-', 'na', 'n/a', 'none', 'solo', 'alone', 'self', 'no one', 'nobody'];
+        if (exactMatchPatterns.includes(normalized)) return true;
+        // Check for patterns that can be contained within the value
+        const containsPatterns = ['by myself', 'attending alone', 'coming alone', 'going alone'];
+        return containsPatterns.some(pattern => normalized.includes(pattern));
       };
 
       // PHASE 1B: Find groups based on attendingWith matching (with bidirectional verification for duplicate names)
