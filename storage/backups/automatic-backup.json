@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2026-01-06T11:52:29.682Z",
+  "exportedAt": "2026-01-06T11:54:58.656Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -206,7 +206,7 @@
         "age": 65,
         "gender": "Female",
         "groupId": null,
-        "availabilityStatus": "assigned",
+        "availabilityStatus": "available",
         "attendingWith": "Donna Collins, Tom Collins",
         "email": "Donna0@hotmail.com",
         "phone": "408122305",
@@ -1389,52 +1389,7 @@
         "createdAt": "2026-01-06T06:23:22.018Z"
       }
     ],
-    "seatAssignments": [
-      {
-        "id": "1208c385-b9b8-47af-b3d2-f30717990aef",
-        "recordDayId": "e432f0fe-1383-44a2-990c-5f787da5008a",
-        "contestantId": "34b3d848-f096-4bc9-bd55-dc4dd85ad1b3",
-        "blockNumber": 1,
-        "seatLabel": "E1",
-        "playerType": null,
-        "originalBlockNumber": null,
-        "originalSeatLabel": null,
-        "swappedAt": null,
-        "firstNations": null,
-        "rating": null,
-        "location": null,
-        "medicalQuestion": null,
-        "criminalBankruptcy": null,
-        "castingCategory": null,
-        "notes": null,
-        "bookingEmailSent": null,
-        "confirmedRsvp": null,
-        "paperworkSent": null,
-        "paperworkSentBy": null,
-        "paperworkReceived": null,
-        "paperworkReceivedBy": null,
-        "paperworkOnDay": null,
-        "signedIn": null,
-        "otdNotes": null,
-        "standbyReplacementSwaps": null,
-        "rxNumber": null,
-        "rxEpNumber": null,
-        "caseNumber": null,
-        "winningMoneyRole": null,
-        "winningMoneyAmount": null,
-        "winningMoneyText": null,
-        "caseAmount": null,
-        "quickCash": null,
-        "bankOfferTaken": false,
-        "spinTheWheel": false,
-        "prize": null,
-        "txNumber": null,
-        "txDate": null,
-        "notifiedOfTx": null,
-        "photosSent": null,
-        "createdAt": "2026-01-06T10:52:05.576Z"
-      }
-    ],
+    "seatAssignments": [],
     "standbys": [],
     "blockTypes": [
       {
@@ -1626,7 +1581,7 @@
     "recordDays": 17,
     "contestants": 50,
     "groups": 2,
-    "seatAssignments": 1,
+    "seatAssignments": 0,
     "standbys": 0,
     "blockTypes": 26,
     "canceledAssignments": 0

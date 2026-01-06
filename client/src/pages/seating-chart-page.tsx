@@ -1025,25 +1025,30 @@ export default function SeatingChartPage() {
 
       {/* Assign Contestant to Empty Seat Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] flex flex-col" data-testid="dialog-assign-contestant-to-seat">
-          <DialogHeader>
-            <DialogTitle>Assign Contestant to Seat</DialogTitle>
+        <DialogContent className="max-w-lg max-h-[85vh] flex flex-col gap-4" data-testid="dialog-assign-contestant-to-seat">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center gap-2">
+              Assign to Block {selectedBlock}, Seat {selectedSeat}
+            </DialogTitle>
             <DialogDescription>
-              Block {selectedBlock}, Seat {selectedSeat} - Select a contestant below
+              Choose a contestant from the list below
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-3">
-            {availableContestants.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No available contestants. All contestants are already seated in this record day.
-              </p>
-            ) : (
-              <>
+          {availableContestants.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Users className="h-10 w-10 mx-auto mb-2 opacity-50" />
+              <p className="font-medium">No available contestants</p>
+              <p className="text-sm">All contestants are already seated.</p>
+            </div>
+          ) : (
+            <>
+              {/* Search and Filters */}
+              <div className="space-y-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by name or group..."
+                    placeholder="Search by name..."
                     value={contestantSearch}
                     onChange={(e) => setContestantSearch(e.target.value)}
                     className="pl-9"
@@ -1051,13 +1056,14 @@ export default function SeatingChartPage() {
                   />
                 </div>
                 
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground">Filter:</span>
                   <Select value={filterRating} onValueChange={setFilterRating}>
-                    <SelectTrigger className="w-[100px]" data-testid="select-filter-rating">
+                    <SelectTrigger className="h-7 w-[80px] text-xs" data-testid="select-filter-rating">
                       <SelectValue placeholder="Rating" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="all">Any Rating</SelectItem>
                       <SelectItem value="A+">A+</SelectItem>
                       <SelectItem value="A">A</SelectItem>
                       <SelectItem value="B+">B+</SelectItem>
@@ -1067,137 +1073,152 @@ export default function SeatingChartPage() {
                   </Select>
                   
                   <Select value={filterGender} onValueChange={setFilterGender}>
-                    <SelectTrigger className="w-[90px]" data-testid="select-filter-gender">
+                    <SelectTrigger className="h-7 w-[80px] text-xs" data-testid="select-filter-gender">
                       <SelectValue placeholder="Gender" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="all">Any</SelectItem>
                       <SelectItem value="Female">Female</SelectItem>
                       <SelectItem value="Male">Male</SelectItem>
                     </SelectContent>
                   </Select>
                   
                   <Select value={filterGroupSize} onValueChange={setFilterGroupSize}>
-                    <SelectTrigger className="w-[90px]" data-testid="select-filter-group-size">
+                    <SelectTrigger className="h-7 w-[80px] text-xs" data-testid="select-filter-group-size">
                       <SelectValue placeholder="Group" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="all">Any Size</SelectItem>
                       <SelectItem value="1">Solo</SelectItem>
                       <SelectItem value="2">Pair</SelectItem>
                       <SelectItem value="3+">3+</SelectItem>
                     </SelectContent>
                   </Select>
+                  
+                  <span className="ml-auto text-muted-foreground">
+                    {filteredContestants.length} found
+                  </span>
                 </div>
-                
-                <div className="text-xs text-muted-foreground">
-                  {filteredContestants.length} of {availableContestants.length} contestants
-                </div>
-                
-                <ScrollArea className="h-[200px] border rounded-md">
-                  <div className="p-2 space-y-1">
-                    {filteredContestants.length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-8">
-                        No contestants match your filters.
-                      </p>
-                    ) : (
-                      filteredContestants.map((contestant: any) => {
-                        const isSelected = selectedContestant === contestant.id;
-                        const ratingColors: Record<string, string> = {
-                          'A+': 'bg-emerald-500 text-white',
-                          'A': 'bg-green-500 text-white',
-                          'B+': 'bg-amber-500 text-white',
-                          'B': 'bg-orange-500 text-white',
-                          'C': 'bg-red-500 text-white',
-                        };
-                        
-                        return (
-                          <div
-                            key={contestant.id}
-                            onClick={() => setSelectedContestant(contestant.id)}
-                            className={`flex items-center gap-3 p-3 rounded-md cursor-pointer transition-colors ${
-                              isSelected 
-                                ? 'bg-primary/10 border-2 border-primary' 
-                                : 'hover-elevate border border-transparent'
-                            }`}
-                            data-testid={`contestant-card-${contestant.id}`}
-                          >
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium truncate">{contestant.name}</span>
-                                {isSelected && (
-                                  <Check className="h-4 w-4 text-primary flex-shrink-0" />
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                {contestant.auditionRating && (
-                                  <Badge className={`text-[10px] px-1.5 py-0 h-5 ${ratingColors[contestant.auditionRating] || 'bg-gray-500 text-white'}`}>
-                                    {contestant.auditionRating}
-                                  </Badge>
-                                )}
-                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5">
-                                  {contestant.gender === "Female" ? "Female" : "Male"}
-                                </Badge>
-                                {contestant.age && (
-                                  <span className="text-xs text-muted-foreground">
-                                    Age {contestant.age}
-                                  </span>
-                                )}
-                              </div>
-                              {contestant.attendingWith && (
-                                <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                                  <Users className="h-3 w-3" />
-                                  <span className="truncate">With: {contestant.attendingWith}</span>
-                                </div>
+              </div>
+              
+              {/* Contestant List */}
+              <ScrollArea className="flex-1 min-h-[180px] max-h-[250px] border rounded-md bg-muted/20">
+                <div className="p-2 space-y-1">
+                  {filteredContestants.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-6">
+                      No contestants match your filters.
+                    </p>
+                  ) : (
+                    filteredContestants.map((contestant: any) => {
+                      const isSelected = selectedContestant === contestant.id;
+                      const ratingColors: Record<string, string> = {
+                        'A+': 'bg-emerald-500 text-white',
+                        'A': 'bg-green-500 text-white',
+                        'B+': 'bg-amber-500 text-white',
+                        'B': 'bg-orange-500 text-white',
+                        'C': 'bg-red-500 text-white',
+                      };
+                      const hasGroup = !!contestant.attendingWith;
+                      
+                      return (
+                        <div
+                          key={contestant.id}
+                          onClick={() => setSelectedContestant(contestant.id)}
+                          className={`flex items-center gap-3 p-2.5 rounded-md cursor-pointer transition-all ${
+                            isSelected 
+                              ? 'bg-primary text-primary-foreground shadow-sm' 
+                              : 'hover:bg-muted'
+                          }`}
+                          data-testid={`contestant-card-${contestant.id}`}
+                        >
+                          {/* Rating indicator */}
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                            contestant.auditionRating 
+                              ? ratingColors[contestant.auditionRating] || 'bg-gray-500 text-white'
+                              : 'bg-muted text-muted-foreground'
+                          }`}>
+                            {contestant.auditionRating || '?'}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className={`font-medium truncate ${isSelected ? '' : ''}`}>
+                                {contestant.name}
+                              </span>
+                              {hasGroup && (
+                                <Users className={`h-3.5 w-3.5 flex-shrink-0 ${isSelected ? 'text-primary-foreground/70' : 'text-blue-500'}`} />
+                              )}
+                            </div>
+                            <div className={`flex items-center gap-2 text-xs ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                              <span>{contestant.gender === "Female" ? "F" : "M"}</span>
+                              {contestant.age && <span>Age {contestant.age}</span>}
+                              {hasGroup && (
+                                <span className="truncate">with {contestant.attendingWith}</span>
                               )}
                             </div>
                           </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </ScrollArea>
-              </>
-            )}
-          </div>
-          
-          {/* Group booking option - shows when a contestant with partners is selected */}
-          {selectedContestant && hasGroupToSeat && (
-            <div className="border rounded-md p-3 bg-muted/30">
-              <div className="flex items-start gap-3">
-                <Checkbox
-                  id="seat-group-together"
-                  checked={seatGroupTogether}
-                  onCheckedChange={(checked) => setSeatGroupTogether(checked === true)}
-                  disabled={!canSeatGroupTogether}
-                  data-testid="checkbox-seat-group-together"
-                />
-                <div className="flex-1">
-                  <label 
-                    htmlFor="seat-group-together" 
-                    className={`text-sm font-medium cursor-pointer ${!canSeatGroupTogether ? 'text-muted-foreground' : ''}`}
-                  >
-                    Seat group together ({groupMembersToSeat.length} people)
-                  </label>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {canSeatGroupTogether ? (
-                      <>
-                        Will assign: {groupMembersToSeat.map((m: any) => m.name).join(', ')}
-                        <br />
-                        To seats: {adjacentSeats.slice(0, groupMembersToSeat.length).join(', ')}
-                      </>
-                    ) : (
-                      <span className="text-amber-600 dark:text-amber-400">
-                        Not enough adjacent empty seats in this row ({adjacentSeats.length} available, {groupMembersToSeat.length} needed)
-                      </span>
-                    )}
-                  </div>
+                          
+                          {isSelected && (
+                            <Check className="h-5 w-5 flex-shrink-0" />
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
-              </div>
-            </div>
+              </ScrollArea>
+              
+              {/* Selection Preview & Group Option */}
+              {selectedContestant && selectedContestantData && (
+                <div className="border rounded-md p-3 bg-card space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Selected:</span>
+                    <span className="text-sm">{selectedContestantData.name}</span>
+                  </div>
+                  
+                  {hasGroupToSeat && (
+                    <div className={`p-2.5 rounded-md ${canSeatGroupTogether ? 'bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800' : 'bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800'}`}>
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          id="seat-group-together"
+                          checked={seatGroupTogether}
+                          onCheckedChange={(checked) => setSeatGroupTogether(checked === true)}
+                          disabled={!canSeatGroupTogether}
+                          className="mt-0.5"
+                          data-testid="checkbox-seat-group-together"
+                        />
+                        <div className="flex-1 text-sm">
+                          <label 
+                            htmlFor="seat-group-together" 
+                            className={`font-medium cursor-pointer ${!canSeatGroupTogether ? 'text-muted-foreground' : ''}`}
+                          >
+                            Seat entire group together
+                          </label>
+                          {canSeatGroupTogether ? (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              <div className="flex items-center gap-1">
+                                <Users className="h-3 w-3" />
+                                <span>{groupMembersToSeat.map((m: any) => m.name).join(' + ')}</span>
+                              </div>
+                              <div className="mt-0.5">
+                                Seats: {adjacentSeats.slice(0, groupMembersToSeat.length).join(', ')}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                              Need {groupMembersToSeat.length} adjacent seats, only {adjacentSeats.length} available in this row
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setAssignDialogOpen(false)}>
               Cancel
             </Button>
@@ -1206,7 +1227,9 @@ export default function SeatingChartPage() {
               disabled={!selectedContestant || availableContestants.length === 0}
               data-testid="button-confirm-seat-assign"
             >
-              {seatGroupTogether && canSeatGroupTogether ? `Assign ${groupMembersToSeat.length} to Seats` : 'Assign to Seat'}
+              {seatGroupTogether && canSeatGroupTogether 
+                ? `Assign ${groupMembersToSeat.length} People` 
+                : 'Assign to Seat'}
             </Button>
           </DialogFooter>
         </DialogContent>
