@@ -643,6 +643,9 @@ export function ContestantTable({
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<Contestant> & { playerType?: string }>({});
+  
+  // Photo lightbox state (for viewing larger photo when not in edit mode)
+  const [showPhotoLightbox, setShowPhotoLightbox] = useState(false);
 
   // Reset edit form when contestant details change
   useEffect(() => {
@@ -1302,9 +1305,12 @@ export function ContestantTable({
                   <div className="space-y-3 pr-4">
                 {/* Photo and Basic Info Header */}
                 <div className="flex gap-4">
-                  {/* Photo Section - Compact */}
+                  {/* Photo Section - Compact (click to view larger) */}
                   <div className="flex flex-col items-center gap-1">
-                    <div className="relative group">
+                    <div 
+                      className="relative group cursor-pointer"
+                      onClick={() => contestantDetails.photoUrl && setShowPhotoLightbox(true)}
+                    >
                       <Avatar className="h-16 w-16 border-2 border-border">
                         {contestantDetails.photoUrl ? (
                           <AvatarImage 
@@ -1317,43 +1323,10 @@ export function ContestantTable({
                           <User className="h-7 w-7 text-muted-foreground" />
                         </AvatarFallback>
                       </Avatar>
-                      <div 
-                        className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <Camera className="h-4 w-4 text-white" />
-                      </div>
-                    </div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      data-testid="input-photo-upload"
-                    />
-                    <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 px-2 text-xs"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isUploading || uploadPhotoMutation.isPending}
-                        data-testid="button-upload-photo"
-                      >
-                        {isUploading ? '...' : <Upload className="h-3 w-3" />}
-                      </Button>
                       {contestantDetails.photoUrl && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 px-2 text-xs"
-                          onClick={() => deletePhotoMutation.mutate()}
-                          disabled={deletePhotoMutation.isPending}
-                          data-testid="button-delete-photo"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Search className="h-4 w-4 text-white" />
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1748,6 +1721,26 @@ export function ContestantTable({
               Assign to Record Day
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Photo Lightbox Dialog - shows larger photo when clicked outside edit mode */}
+      <Dialog open={showPhotoLightbox} onOpenChange={setShowPhotoLightbox}>
+        <DialogContent className="sm:max-w-md p-2">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Photo View</DialogTitle>
+            <DialogDescription>Contestant photo enlarged view</DialogDescription>
+          </DialogHeader>
+          {contestantDetails?.photoUrl && (
+            <div className="flex items-center justify-center">
+              <img 
+                src={contestantDetails.photoUrl} 
+                alt={contestantDetails.name || 'Contestant'} 
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                data-testid="img-photo-lightbox"
+              />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
