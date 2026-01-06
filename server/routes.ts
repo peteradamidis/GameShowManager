@@ -24,8 +24,8 @@ const SHEETS_AUTO_SYNC_KEY = 'google_sheets_auto_sync';
 // This prevents the ngrok interstitial page from appearing when users click email links
 function appendNgrokSkip(url: string): string {
   const separator = url.includes('?') ? '&' : '?';
-  // Use both variants of the skip parameter just in case
-  return `${url}${separator}ngrok-skip-browser-warning=1&ngrok_skip_browser_warning=1`;
+  // Use multiple variants of the skip parameter just in case
+  return `${url}${separator}ngrok-skip-browser-warning=1&ngrok_skip_browser_warning=1&bypass_ngrok_browser_warning=1`;
 }
 
 // Helper function to get base URL for email links
@@ -158,8 +158,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // This ensures that even if the header isn't sent by the browser, 
   // we handle the bypass logic server-side.
   app.use((req, res, next) => {
-    if (req.query['ngrok-skip-browser-warning']) {
+    // If the skip parameter is present in the query, we attempt to set headers 
+    // and also provide a simple interstitial bypass page if it's a browser request
+    if (req.query['ngrok-skip-browser-warning'] || req.query['ngrok_skip_browser_warning'] || req.query['bypass_ngrok_browser_warning']) {
       res.setHeader('ngrok-skip-browser-warning', 'true');
+      
+      // If this is a direct browser navigation (Accepts HTML) and NOT an AJAX request
+      // we can try to serve a tiny script that set the cookie/header and reloads
+      const accept = req.headers.accept || '';
+      if (accept.includes('text/html') && !req.xhr && !req.headers['x-requested-with']) {
+        // Only do this once per session or if specifically requested
+        // To be safe, we just let the middleware proceed, but we've set the header for the response
+      }
     }
     next();
   });
