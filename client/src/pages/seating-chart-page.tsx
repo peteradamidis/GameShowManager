@@ -96,17 +96,40 @@ export default function SeatingChartPage() {
   const [selectedProducer, setSelectedProducer] = useState<string>("");
   const [producerUpdating, setProducerUpdating] = useState(false);
   
-  // Get record day ID from query parameter or fetch first available
+  // Get record day ID from query parameter, localStorage, or fetch first available
   const searchParams = new URLSearchParams(window.location.search);
   const urlRecordDayId = searchParams.get('day');
+  
+  // State for the selected record day (persisted in localStorage)
+  const [selectedRecordDayId, setSelectedRecordDayId] = useState<string | null>(() => {
+    // First check URL, then localStorage, will fall back to first record day after query loads
+    if (urlRecordDayId) return urlRecordDayId;
+    const stored = localStorage.getItem('seating-chart-selected-day');
+    return stored || null;
+  });
 
   // Fetch all record days
   const { data: recordDays, isLoading: recordDaysLoading } = useQuery<any[]>({
     queryKey: ['/api/record-days'],
   });
 
-  // Use URL ID or first available record day
-  const recordDayId = urlRecordDayId || recordDays?.[0]?.id || null;
+  // Use selected ID or first available record day (and save to localStorage)
+  const recordDayId = useMemo(() => {
+    // Priority: URL param > selected state > first available
+    if (urlRecordDayId) return urlRecordDayId;
+    if (selectedRecordDayId && recordDays?.some((rd: any) => rd.id === selectedRecordDayId)) {
+      return selectedRecordDayId;
+    }
+    return recordDays?.[0]?.id || null;
+  }, [urlRecordDayId, selectedRecordDayId, recordDays]);
+  
+  // Persist selected record day to localStorage when it changes
+  useEffect(() => {
+    if (recordDayId) {
+      localStorage.setItem('seating-chart-selected-day', recordDayId);
+      setSelectedRecordDayId(recordDayId);
+    }
+  }, [recordDayId]);
 
   // Find the current record day from the list
   const currentRecordDay = useMemo(() => {
