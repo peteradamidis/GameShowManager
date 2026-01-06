@@ -1091,13 +1091,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         existingContestants.map((c: any) => c.email?.toLowerCase().trim()).filter(Boolean)
       );
       
-      // Create contestants, skipping duplicates
+      // Create contestants, skipping duplicates and DNU-rated contestants
       const createdContestants = [];
       const skippedDuplicates = [];
+      const skippedDNU = [];
       
       for (const row of data as any[]) {
         const normalizedName = row.name?.toLowerCase().trim();
         const normalizedEmail = row.email?.toLowerCase().trim();
+        
+        // Skip contestants with DNU (Do Not Use) rating
+        if (row.auditionRating && row.auditionRating.toString().toUpperCase().trim() === 'DNU') {
+          skippedDNU.push({ name: row.name, reason: 'Rated DNU (Do Not Use)' });
+          continue;
+        }
         
         // Check for duplicate by name (exact match) or email
         const isDuplicateName = normalizedName && existingNames.has(normalizedName);
@@ -1137,9 +1144,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (normalizedEmail) existingEmails.add(normalizedEmail);
       }
 
-      const message = skippedDuplicates.length > 0
-        ? `Imported ${createdContestants.length} contestants, skipped ${skippedDuplicates.length} duplicates`
-        : `Successfully imported ${createdContestants.length} contestants`;
+      let message = `Successfully imported ${createdContestants.length} contestants`;
+      if (skippedDuplicates.length > 0 || skippedDNU.length > 0) {
+        const parts = [];
+        if (skippedDuplicates.length > 0) parts.push(`${skippedDuplicates.length} duplicates`);
+        if (skippedDNU.length > 0) parts.push(`${skippedDNU.length} DNU-rated`);
+        message = `Imported ${createdContestants.length} contestants, skipped ${parts.join(' and ')}`;
+      }
 
       res.json({
         message,
@@ -1147,7 +1158,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contestantsCreated: createdContestants.length,
         groupsCreated: createdGroups.size,
         skippedDuplicates: skippedDuplicates.length,
+        skippedDNU: skippedDNU.length,
         duplicates: skippedDuplicates.slice(0, 20), // Show first 20 duplicates
+        dnuContestants: skippedDNU.slice(0, 20), // Show first 20 DNU-rated
       });
     } catch (error: any) {
       console.error("Import error:", error);
