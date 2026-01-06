@@ -20,16 +20,13 @@ const SHEETS_SPREADSHEET_ID_KEY = 'google_sheets_spreadsheet_id';
 const SHEETS_LAST_SYNC_KEY = 'google_sheets_last_sync';
 const SHEETS_AUTO_SYNC_KEY = 'google_sheets_auto_sync';
 
-// Helper function to append ngrok skip browser warning parameter to URLs
-// This prevents the ngrok interstitial page from appearing when users click email links
-function appendNgrokSkip(url: string): string {
+// Helper function to append Cloudflare/ngrok bypass parameters to URLs
+function appendBypassParams(url: string): string {
   const separator = url.includes('?') ? '&' : '?';
-  // Use multiple variants of the skip parameter just in case
-  return `${url}${separator}ngrok-skip-browser-warning=1&ngrok_skip_browser_warning=1&bypass_ngrok_browser_warning=1`;
+  return `${url}${separator}cf-bypass=1&ngrok-skip-browser-warning=1`;
 }
 
 // Helper function to get base URL for email links
-// Priority: BASE_URL env var > Replit deployment URL > request headers > localhost
 function getBaseUrl(req?: Request): string {
   // 1. Check for explicit BASE_URL (for offline/self-hosted deployments)
   if (process.env.BASE_URL) {
@@ -158,31 +155,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // This ensures that even if the header isn't sent by the browser, 
   // we handle the bypass logic server-side.
   app.use((req, res, next) => {
-    // If the skip parameter is present in the query, we serve a tiny bypass page
-    // that sets the required header/cookie via a fetch request and then reloads.
-    if (req.query['ngrok-skip-browser-warning'] || req.query['ngrok_skip_browser_warning'] || req.query['bypass_ngrok_browser_warning']) {
-      const accept = req.headers.accept || '';
-      // Only serve the bypass page for direct browser navigations (Accepts HTML)
-      // and only if the ngrok header isn't already present in the request
-      if (accept.includes('text/html') && !req.headers['ngrok-skip-browser-warning']) {
-        return res.send(`
-          <html>
-            <head>
-              <title>Loading...</title>
-              <script>
-                fetch(window.location.href, {
-                  headers: { 'ngrok-skip-browser-warning': 'true' }
-                }).then(() => window.location.reload());
-              </script>
-            </head>
-            <body>
-              <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif;">
-                <p>Loading Deal or No Deal...</p>
-              </div>
-            </body>
-          </html>
-        `);
-      }
+    // Basic middleware for any potential bypass headers
+    if (req.query['cf-bypass'] || req.query['ngrok-skip-browser-warning']) {
+      res.setHeader('cf-bypass', 'true');
+      res.setHeader('ngrok-skip-browser-warning', 'true');
     }
     next();
   });
@@ -3271,7 +3247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             throw new Error(`Contestant ${contestant.name} has no email address`);
           }
 
-          const responseUrl = appendNgrokSkip(`${baseUrl}/availability/respond/${tokenRecord.token}`);
+          const responseUrl = appendBypassParams(`${baseUrl}/availability/respond/${tokenRecord.token}`);
           
           // Format record day dates for the email HTML list
           const recordDaysHtml = recordDays
@@ -3799,11 +3775,11 @@ ${finalEmailFooter}`;
         });
 
         // Generate response URL
-        const responseUrl = appendNgrokSkip(`${baseUrl}/booking-confirmation/${token}`);
+        const responseUrl = appendBypassParams(`${baseUrl}/booking-confirmation/${token}`);
 
         // Send booking confirmation email via Gmail
         try {
-          const confirmationLink = appendNgrokSkip(`${baseUrl}/booking-confirmation/${token}`);
+          const confirmationLink = appendBypassParams(`${baseUrl}/booking-confirmation/${token}`);
           const recordDate = new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
           
           // Prepare banner image for CID embedding (declare outside if/else so available for attachments)
@@ -4005,7 +3981,7 @@ ${finalEmailFooter}`;
 
         // Create a booking message record for this initial email
         const recordDateForLog = new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const confirmationLinkForLog = appendNgrokSkip(`${baseUrl}/booking-confirmation/${token}`);
+        const confirmationLinkForLog = appendBypassParams(`${baseUrl}/booking-confirmation/${token}`);
         let storedBody: string;
         if (customEmailBody) {
           storedBody = customEmailBody
@@ -4883,7 +4859,7 @@ ${finalEmailFooter}`;
 
           // Build confirmation URL
           const baseUrl = getBaseUrl(req);
-          const confirmationUrl = appendNgrokSkip(`${baseUrl}/standby-confirmation/${tokenString}`);
+          const confirmationUrl = appendBypassParams(`${baseUrl}/standby-confirmation/${tokenString}`);
 
           // Prepare banner image for CID embedding (works offline in all email clients)
           const standbyBannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
