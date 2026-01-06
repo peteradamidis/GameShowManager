@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2026-01-06T11:54:58.656Z",
+  "exportedAt": "2026-01-06T11:59:36.787Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -225,30 +225,6 @@
         "createdAt": "2026-01-06T06:23:23.163Z"
       },
       {
-        "id": "6b9ae7f0-4a81-4dda-8e55-e49415d98ec6",
-        "name": "Tayla Huxtable",
-        "age": 28,
-        "gender": "Female",
-        "groupId": "6b341038-788f-4120-a2ca-16551bbc1d11",
-        "availabilityStatus": "available",
-        "attendingWith": "Troy Smith",
-        "email": "Taylahuxtable@gmail.com",
-        "phone": "435320280",
-        "location": "FERNTREE GULLY",
-        "postcode": "3156",
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": "/uploads/photos/contestant-gallery-6b9ae7f0-4a81-4dda-8e55-e49415d98ec6-1767680627848.png",
-        "auditionRating": null,
-        "playerType": null,
-        "groupSize": 2,
-        "podiumStory": false,
-        "availableForStandby": false,
-        "createdAt": "2026-01-06T06:23:22.643Z"
-      },
-      {
         "id": "1fe25fd6-dc69-4d29-b22f-9a15ad3d457f",
         "name": "Sharon King",
         "age": 58,
@@ -439,6 +415,30 @@
         "podiumStory": false,
         "availableForStandby": false,
         "createdAt": "2026-01-06T06:23:22.540Z"
+      },
+      {
+        "id": "6b9ae7f0-4a81-4dda-8e55-e49415d98ec6",
+        "name": "Tayla Huxtable",
+        "age": 28,
+        "gender": "Female",
+        "groupId": "6b341038-788f-4120-a2ca-16551bbc1d11",
+        "availabilityStatus": "available",
+        "attendingWith": "Troy Smith",
+        "email": "Taylahuxtable@gmail.com",
+        "phone": "435320280",
+        "location": "FERNTREE GULLY",
+        "postcode": "3156",
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": "/uploads/photos/contestant-gallery-6b9ae7f0-4a81-4dda-8e55-e49415d98ec6-1767680627848.png",
+        "auditionRating": null,
+        "playerType": null,
+        "groupSize": 2,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2026-01-06T06:23:22.643Z"
       },
       {
         "id": "fb6dd634-cefe-4cce-a1cc-af5d1677fdcb",
