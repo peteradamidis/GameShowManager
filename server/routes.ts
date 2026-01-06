@@ -20,6 +20,13 @@ const SHEETS_SPREADSHEET_ID_KEY = 'google_sheets_spreadsheet_id';
 const SHEETS_LAST_SYNC_KEY = 'google_sheets_last_sync';
 const SHEETS_AUTO_SYNC_KEY = 'google_sheets_auto_sync';
 
+// Helper function to append ngrok skip browser warning parameter to URLs
+// This prevents the ngrok interstitial page from appearing when users click email links
+function appendNgrokSkip(url: string): string {
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}ngrok-skip-browser-warning=true`;
+}
+
 // Helper function to get base URL for email links
 // Priority: BASE_URL env var > Replit deployment URL > request headers > localhost
 function getBaseUrl(req?: Request): string {
@@ -3230,7 +3237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             throw new Error(`Contestant ${contestant.name} has no email address`);
           }
 
-          const responseUrl = `${baseUrl}/availability/respond/${tokenRecord.token}`;
+          const responseUrl = appendNgrokSkip(`${baseUrl}/availability/respond/${tokenRecord.token}`);
           
           // Format record day dates for the email HTML list
           const recordDaysHtml = recordDays
@@ -3758,11 +3765,11 @@ ${finalEmailFooter}`;
         });
 
         // Generate response URL
-        const responseUrl = `${baseUrl}/booking-confirmation/${token}`;
+        const responseUrl = appendNgrokSkip(`${baseUrl}/booking-confirmation/${token}`);
 
         // Send booking confirmation email via Gmail
         try {
-          const confirmationLink = `${baseUrl}/booking-confirmation/${token}`;
+          const confirmationLink = appendNgrokSkip(`${baseUrl}/booking-confirmation/${token}`);
           const recordDate = new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
           
           // Prepare banner image for CID embedding (declare outside if/else so available for attachments)
@@ -3964,7 +3971,7 @@ ${finalEmailFooter}`;
 
         // Create a booking message record for this initial email
         const recordDateForLog = new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const confirmationLinkForLog = `${baseUrl}/booking-confirmation/${token}`;
+        const confirmationLinkForLog = appendNgrokSkip(`${baseUrl}/booking-confirmation/${token}`);
         let storedBody: string;
         if (customEmailBody) {
           storedBody = customEmailBody
@@ -4842,7 +4849,7 @@ ${finalEmailFooter}`;
 
           // Build confirmation URL
           const baseUrl = getBaseUrl(req);
-          const confirmationUrl = `${baseUrl}/standby-confirmation/${tokenString}`;
+          const confirmationUrl = appendNgrokSkip(`${baseUrl}/standby-confirmation/${tokenString}`);
 
           // Prepare banner image for CID embedding (works offline in all email clients)
           const standbyBannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
