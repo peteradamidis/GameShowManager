@@ -1,0 +1,82 @@
+admin@admins-Mac-mini GameShowManager % brew install ngrok/ngrok/ngrok
+ngrok http 5000
+==> Auto-updating Homebrew...
+Adjust how often this is run with `$HOMEBREW_AUTO_UPDATE_SECS` or disable with
+`$HOMEBREW_NO_AUTO_UPDATE=1`. Hide these hints with `$HOMEBREW_NO_ENV_HINTS=1` (see `man brew`).
+==> Downloading https://ghcr.io/v2/homebrew/core/portable-ruby/blobs/sha256:1c98fa49eacc935640a6f8e10a2bf33f14cfc276804b71ddb658ea45ba99d167
+#################################################################################################################################################################################################################### 100.0%
+==> Pouring portable-ruby-3.4.8.arm64_big_sur.bottle.tar.gz
+==> Auto-updated Homebrew!
+Updated 2 taps (homebrew/core and homebrew/cask).
+==> New Formulae
+adplay: Command-line player for OPL2 music
+astra: Command-Line Interface for DataStax Astra
+av1an: Cross-platform command-line encoding framework
+beads: Memory upgrade for your coding agent
+bookokrat: Terminal EPUB Book Reader
+calm-cli: CLI allows you to interact with the Common Architecture Language Model (CALM)
+ccextractor: Tool for extracting closed captions from video files
+cinecli: Browse, inspect, and launch movie torrents directly from your terminal
+ctags-lsp: LSP implementation using universal-ctags as backend
+depot: Build your Docker images in the cloud
+dnspyre: CLI tool for a high QPS DNS benchmark
+docker-language-server: Language server for Dockerfiles, Compose files, and Bake files
+dotnet@9: .NET Core
+garage: S3 object store so reliable you can run it outside datacenters
+gastown: Multi-agent workspace manager
+git-get: Better way to clone, organize and manage multiple git repositories
+global-arrays: Partitioned Global Address Space (PGAS) library for distributed arrays
+graphqlite: SQLite graph database extension
+hayagriva: Bibliography management tool
+headson: Head/tail for structured data
+jsonfmt: Like gofmt, but for JSON files
+khaos: Kafka traffic simulator for observability and chaos engineering
+klog: Command-line tool for time tracking in a human-readable, plain-text file format
+kubernetes-cli@1.34: Kubernetes command-line interface
+kyua: Testing framework for infrastructure software
+leetsolv: CLI tool for DSA problem revision with spaced repetition
+libevdev: Wrapper library for evdev devices
+lispkit: Scheme framework for extension and scripting languages on macOS and iOS
+macchanger: Change your mac address, for macOS
+mole: Deep clean and optimize your Mac
+neo4j-mcp: Neo4j official Model Context Protocol server for AI tools
+octodns: Tools for managing DNS across multiple providers
+papis: Powerful command-line document and bibliography manager
+patchpal: AI Assisted Patch Backporting Tool Frontend
+pixlet: App runtime and UX toolkit for pixel-based apps
+pony-language-server: Language server for Pony
+pvetui: Terminal UI for Proxmox VE
+ruby@3.4: Powerful, clean, object-oriented scripting language
+snitch: Prettier way to inspect network connections
+superseedr: BitTorrent Client in your Terminal
+svu: Semantic version utility
+talm: Manage Talos Linux configurations the GitOps way
+topydo: Todo list application using the todo.txt format
+tronbyt-server: Manage your apps on your Tronbyt (flashed Tidbyt) completely locally
+vacuum: World's fastest OpenAPI & Swagger linter
+wifitui: Fast featureful friendly wifi terminal UI
+witr: Why is this running?
+
+==> Tapping ngrok/ngrok
+Cloning into '/opt/homebrew/Library/Taps/ngrok/homebrew-ngrok'...
+remote: Enumerating objects: 333, done.
+remote: Counting objects: 100% (50/50), done.
+remote: Compressing objects: 100% (39/39), done.
+remote: Total 333 (delta 8), reused 16 (delta 8), pack-reused 283 (from 3)
+Receiving objects: 100% (333/333), 73.92 KiB | 8.21 MiB/s, done.
+Resolving deltas: 100% (68/68), done.
+Tapped 1 cask (14 files, 91.7KB).
+==> Downloading https://bin.equinox.io/a/hA4j9pEcs11/ngrok-v3-3.34.1-darwin-arm64.zip
+#################################################################################################################################################################################################################### 100.0%
+==> Installing Cask ngrok
+==> Linking Binary 'ngrok' to '/opt/homebrew/bin/ngrok'
+🍺  ngrok was successfully installed!
+ERROR:  authentication failed: Usage of ngrok requires a verified account and authtoken.
+ERROR:  
+ERROR:  Sign up for an account: https://dashboard.ngrok.com/signup
+ERROR:  Install your authtoken: https://dashboard.ngrok.com/get-started/your-authtoken
+ERROR:  
+ERROR:  ERR_NGROK_4018
+ERROR:  https://ngrok.com/docs/errors/err_ngrok_4018
+ERROR:  
+admin@admins-Mac-mini GameShowManager % 
