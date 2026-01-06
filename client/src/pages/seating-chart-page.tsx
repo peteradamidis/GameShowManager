@@ -1172,16 +1172,17 @@ export default function SeatingChartPage() {
                           
                           {/* View button */}
                           <Button
-                            size="icon"
-                            variant="ghost"
-                            className={`h-7 w-7 flex-shrink-0 ${isSelected ? 'hover:bg-primary-foreground/20' : ''}`}
+                            size="sm"
+                            variant={isSelected ? "secondary" : "outline"}
+                            className="h-7 px-2 flex-shrink-0"
                             onClick={(e) => {
                               e.stopPropagation();
                               setViewContestantId(contestant.id);
                             }}
                             data-testid={`button-view-contestant-${contestant.id}`}
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-3.5 w-3.5 mr-1" />
+                            View
                           </Button>
                           
                           {isSelected && (
