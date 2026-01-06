@@ -2,7 +2,8 @@ import { SeatingChart } from "@/components/seating-chart";
 import { WinningMoneyModal } from "@/components/winning-money-modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check } from "lucide-react";
+import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check, Eye, User, Mail, Phone, MapPin } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
@@ -84,6 +85,9 @@ export default function SeatingChartPage() {
   
   // Group booking state
   const [seatGroupTogether, setSeatGroupTogether] = useState(false);
+  
+  // View contestant details state
+  const [viewContestantId, setViewContestantId] = useState<string | null>(null);
   
   
   // RX Day Mode lock state
@@ -1056,46 +1060,54 @@ export default function SeatingChartPage() {
                   />
                 </div>
                 
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-muted-foreground">Filter:</span>
-                  <Select value={filterRating} onValueChange={setFilterRating}>
-                    <SelectTrigger className="h-7 w-[80px] text-xs" data-testid="select-filter-rating">
-                      <SelectValue placeholder="Rating" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Any Rating</SelectItem>
-                      <SelectItem value="A+">A+</SelectItem>
-                      <SelectItem value="A">A</SelectItem>
-                      <SelectItem value="B+">B+</SelectItem>
-                      <SelectItem value="B">B</SelectItem>
-                      <SelectItem value="C">C</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-end gap-3 text-xs">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground text-[10px] font-medium">Rating</span>
+                    <Select value={filterRating} onValueChange={setFilterRating}>
+                      <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-rating">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="A+">A+</SelectItem>
+                        <SelectItem value="A">A</SelectItem>
+                        <SelectItem value="B+">B+</SelectItem>
+                        <SelectItem value="B">B</SelectItem>
+                        <SelectItem value="C">C</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   
-                  <Select value={filterGender} onValueChange={setFilterGender}>
-                    <SelectTrigger className="h-7 w-[80px] text-xs" data-testid="select-filter-gender">
-                      <SelectValue placeholder="Gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Any</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Male">Male</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground text-[10px] font-medium">Gender</span>
+                    <Select value={filterGender} onValueChange={setFilterGender}>
+                      <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-gender">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="Male">Male</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   
-                  <Select value={filterGroupSize} onValueChange={setFilterGroupSize}>
-                    <SelectTrigger className="h-7 w-[80px] text-xs" data-testid="select-filter-group-size">
-                      <SelectValue placeholder="Group" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Any Size</SelectItem>
-                      <SelectItem value="1">Solo</SelectItem>
-                      <SelectItem value="2">Pair</SelectItem>
-                      <SelectItem value="3+">3+</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground text-[10px] font-medium">Group Size</span>
+                    <Select value={filterGroupSize} onValueChange={setFilterGroupSize}>
+                      <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-group-size">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="1">Solo</SelectItem>
+                        <SelectItem value="2">Pair</SelectItem>
+                        <SelectItem value="3+">3+</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   
-                  <span className="ml-auto text-muted-foreground">
+                  <span className="ml-auto text-muted-foreground self-end pb-1">
                     {filteredContestants.length} found
                   </span>
                 </div>
@@ -1157,6 +1169,20 @@ export default function SeatingChartPage() {
                               )}
                             </div>
                           </div>
+                          
+                          {/* View button */}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className={`h-7 w-7 flex-shrink-0 ${isSelected ? 'hover:bg-primary-foreground/20' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setViewContestantId(contestant.id);
+                            }}
+                            data-testid={`button-view-contestant-${contestant.id}`}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           
                           {isSelected && (
                             <Check className="h-5 w-5 flex-shrink-0" />
@@ -1232,6 +1258,141 @@ export default function SeatingChartPage() {
                 : 'Assign to Seat'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Contestant Details Dialog */}
+      <Dialog open={!!viewContestantId} onOpenChange={(open) => !open && setViewContestantId(null)}>
+        <DialogContent className="max-w-md" data-testid="dialog-view-contestant">
+          {(() => {
+            const contestant = availableContestants.find((c: any) => c.id === viewContestantId);
+            if (!contestant) return <div className="py-8 text-center text-muted-foreground">Contestant not found</div>;
+            
+            const ratingColors: Record<string, string> = {
+              'A+': 'bg-emerald-500',
+              'A': 'bg-green-500',
+              'B+': 'bg-amber-500',
+              'B': 'bg-orange-500',
+              'C': 'bg-red-500',
+            };
+            
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Contestant Details</DialogTitle>
+                </DialogHeader>
+                
+                <div className="space-y-4">
+                  {/* Header with photo and basic info */}
+                  <div className="flex items-start gap-4">
+                    <Avatar className="h-20 w-20 border-2 border-border">
+                      {contestant.photoUrl ? (
+                        <AvatarImage src={contestant.photoUrl} alt={contestant.name} className="object-cover" />
+                      ) : null}
+                      <AvatarFallback className="text-xl bg-muted">
+                        <User className="h-8 w-8 text-muted-foreground" />
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-lg truncate">{contestant.name}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline">{contestant.gender}</Badge>
+                        {contestant.age && <Badge variant="outline">Age {contestant.age}</Badge>}
+                        {contestant.auditionRating && (
+                          <Badge className={`${ratingColors[contestant.auditionRating] || 'bg-gray-500'} text-white`}>
+                            {contestant.auditionRating}
+                          </Badge>
+                        )}
+                      </div>
+                      {contestant.playerType && (
+                        <Badge variant="secondary" className="mt-2 text-xs">
+                          {contestant.playerType === 'player' ? 'Player' : 
+                           contestant.playerType === 'backup' ? 'Backup' : 'Partner'}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Contact Info */}
+                  <div className="space-y-2 border-t pt-3">
+                    <h4 className="text-sm font-medium text-muted-foreground">Contact</h4>
+                    {contestant.email && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span className="truncate">{contestant.email}</span>
+                      </div>
+                    )}
+                    {contestant.phone && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span>{contestant.phone}</span>
+                      </div>
+                    )}
+                    {contestant.location && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span>{contestant.location}</span>
+                      </div>
+                    )}
+                    {!contestant.email && !contestant.phone && !contestant.location && (
+                      <p className="text-sm text-muted-foreground italic">No contact info available</p>
+                    )}
+                  </div>
+                  
+                  {/* Group Info */}
+                  {contestant.attendingWith && (
+                    <div className="space-y-2 border-t pt-3">
+                      <h4 className="text-sm font-medium text-muted-foreground">Group</h4>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Users className="h-4 w-4 text-blue-500" />
+                        <span>Attending with: <strong>{contestant.attendingWith}</strong></span>
+                      </div>
+                      {contestant.groupSize && (
+                        <div className="text-sm text-muted-foreground">
+                          Group size: {contestant.groupSize}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Notes */}
+                  {(contestant.medicalInfo || contestant.mobilityNotes || contestant.notes) && (
+                    <div className="space-y-2 border-t pt-3">
+                      <h4 className="text-sm font-medium text-muted-foreground">Notes</h4>
+                      {contestant.medicalInfo && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Medical:</span> {contestant.medicalInfo}
+                        </div>
+                      )}
+                      {contestant.mobilityNotes && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Mobility:</span> {contestant.mobilityNotes}
+                        </div>
+                      )}
+                      {contestant.notes && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Other:</span> {contestant.notes}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setViewContestantId(null)}>
+                    Close
+                  </Button>
+                  <Button onClick={() => {
+                    setSelectedContestant(contestant.id);
+                    setViewContestantId(null);
+                  }}>
+                    Select for Assignment
+                  </Button>
+                </DialogFooter>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
