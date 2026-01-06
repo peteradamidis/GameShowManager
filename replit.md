@@ -27,7 +27,7 @@ Do not make changes to the file `Y`.
 - **RX Day Mode (Seating Chart Lock):** Locks seating charts on recording days, tracks original positions during swaps for auditing.
 - **Availability Check System:** Generates expiring tokens for contestants to respond to availability requests, supporting group responses and admin tracking.
 - **Booking Confirmation System:** Generates expiring tokens for booking confirmations/declines, updates workflow statuses, and manages rescheduling. Includes bulk email functionality and a public confirmation form.
-- **Contestant Photo Management:** Upload and deletion of contestant photos, stored on disk.
+- **Contestant Photo Management:** Upload and deletion of contestant photos, stored on disk. Includes Gallery PDF Import feature to bulk import photos from Cast It Reach Gallery exports - extracts images and matches them to contestants by name.
 - **Reschedule Status Tracking:** Visually identifies contestants moved to a reschedule list.
 - **Automatic Backup System:** Hourly JSON and Excel backups of all system data, with error tracking and manual backup options.
 - **Contestant & Record Day Management:** Features for deleting contestants (cascades to related data) and managing record days with safety checks.
