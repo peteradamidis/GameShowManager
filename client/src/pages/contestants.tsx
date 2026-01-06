@@ -239,24 +239,27 @@ export default function Contestants() {
     
     // Otherwise, try to find group by matching attendingWith names
     if (selectedContestant.attendingWith) {
-      const attendingNames = selectedContestant.attendingWith.split(',').map(n => n.trim().toLowerCase());
-      const currentName = selectedContestant.name.toLowerCase();
+      // Split by commas, ampersands, and newlines - then normalize spaces
+      const attendingNames = selectedContestant.attendingWith.split(/[,&\n\r]+/).map(n => n.trim().replace(/\s+/g, ' ').toLowerCase()).filter(n => n);
+      const currentName = selectedContestant.name.replace(/\s+/g, ' ').toLowerCase();
       
       // Find people this person is attending with
       const groupMemberSet = new Set<string>([selectedContestant.id]);
       
       contestants.forEach(c => {
         if (c.id === selectedContestant.id) return;
+        const normalizedName = c.name.replace(/\s+/g, ' ').toLowerCase();
         
         // Check if this person's name is in the selected contestant's attendingWith
-        const nameMatch = attendingNames.some(name => c.name.toLowerCase().includes(name) || name.includes(c.name.toLowerCase()));
+        const nameMatch = attendingNames.some(name => normalizedName.includes(name) || name.includes(normalizedName));
         if (nameMatch) {
           groupMemberSet.add(c.id);
         }
         
         // Check if selected contestant's name is in this person's attendingWith
         if (c.attendingWith) {
-          const theirAttending = c.attendingWith.split(',').map(n => n.trim().toLowerCase());
+          // Split by commas, ampersands, and newlines - then normalize spaces
+          const theirAttending = c.attendingWith.split(/[,&\n\r]+/).map(n => n.trim().replace(/\s+/g, ' ').toLowerCase()).filter(n => n);
           const reverseMatch = theirAttending.some(name => currentName.includes(name) || name.includes(currentName));
           if (reverseMatch) {
             groupMemberSet.add(c.id);
