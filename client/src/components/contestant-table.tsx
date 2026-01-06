@@ -1726,7 +1726,7 @@ export function ContestantTable({
 
       {/* Photo Lightbox Dialog - shows larger photo when clicked outside edit mode */}
       <Dialog open={showPhotoLightbox} onOpenChange={setShowPhotoLightbox}>
-        <DialogContent className="sm:max-w-md p-2">
+        <DialogContent className="sm:max-w-2xl p-4">
           <DialogHeader className="sr-only">
             <DialogTitle>Photo View</DialogTitle>
             <DialogDescription>Contestant photo enlarged view</DialogDescription>
