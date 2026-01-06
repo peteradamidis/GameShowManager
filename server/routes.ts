@@ -2204,11 +2204,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Build a name lookup map for matching attendingWith
       // IMPORTANT: If there are duplicate names, we can't reliably match by name alone
+      // Normalize spaces (collapse multiple spaces to single space)
+      const normalizeName = (name: string) => name.toLowerCase().trim().replace(/\s+/g, ' ');
       const nameToContestant = new Map<string, typeof available[0]>();
       const duplicateNames = new Set<string>();
       available.forEach(c => {
-        // Use lowercase for case-insensitive matching
-        const key = c.name.toLowerCase().trim();
+        // Use lowercase for case-insensitive matching, normalize spaces
+        const key = normalizeName(c.name);
         if (nameToContestant.has(key)) {
           // Duplicate name detected - mark it so we don't use name-only matching
           duplicateNames.add(key);
@@ -2250,10 +2252,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const listsEachOther = (personA: typeof available[0], personB: typeof available[0]): boolean => {
         if (!personB.attendingWith) return false;
         const bListsNames = personB.attendingWith
-          .split(/[,&]/)
-          .map((name: string) => name.toLowerCase().trim())
+          .split(/[,&\n\r]+/)
+          .map((name: string) => normalizeName(name))
           .filter((name: string) => name.length > 0);
-        return bListsNames.some(name => name === personA.name.toLowerCase().trim());
+        return bListsNames.some(name => name === normalizeName(personA.name));
       };
 
       // PHASE 1A: First, create groups from existing groupId field (most reliable)
@@ -2298,13 +2300,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Check if this contestant has an attendingWith value
         if (contestant.attendingWith && contestant.attendingWith.trim()) {
-          // Split by comma or ampersand to handle multiple people (e.g., "John, Jane, Bob")
+          // Split by comma, ampersand, or newline to handle multiple people (e.g., "John, Jane, Bob" or multi-line lists)
           const attendingWithNames = contestant.attendingWith
-            .split(/[,&]/)
+            .split(/[,&\n\r]+/)
             .map((name: string) => name.toLowerCase().trim())
             .filter((name: string) => name.length > 0)
-            // IMPORTANT: Filter out contestant's own name to prevent self-matching
-            .filter((name: string) => name !== contestant.name.toLowerCase().trim());
+            // IMPORTANT: Filter out contestant's own name to prevent self-matching (handle extra spaces)
+            .filter((name: string) => name.replace(/\s+/g, ' ') !== contestant.name.toLowerCase().trim().replace(/\s+/g, ' '));
 
           // If all names were filtered out (contestant only listed themselves), skip
           if (attendingWithNames.length === 0) {
@@ -2317,10 +2319,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           let allPartnersFound = true;
 
           for (const name of attendingWithNames) {
-            const partner = nameToContestant.get(name);
+            // Normalize the name for lookup (handles extra spaces, case differences)
+            const normalizedName = normalizeName(name);
+            const partner = nameToContestant.get(normalizedName);
             if (partner && partner.id !== contestant.id && !groupedContestantIds.has(partner.id)) {
               // For duplicate names, require bidirectional verification
-              if (duplicateNames.has(name)) {
+              if (duplicateNames.has(normalizedName)) {
                 // Only match if the partner also lists this contestant
                 if (!listsEachOther(contestant, partner)) {
                   console.log(`[Auto-assign] Skipping match ${contestant.name} -> ${partner.name} - duplicate name requires bidirectional verification`);
