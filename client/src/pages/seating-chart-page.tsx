@@ -923,7 +923,7 @@ export default function SeatingChartPage() {
 
       {/* Assign Contestant to Empty Seat Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent className="max-w-lg" data-testid="dialog-assign-contestant-to-seat">
+        <DialogContent className="max-w-md w-[95vw] overflow-hidden" data-testid="dialog-assign-contestant-to-seat">
           <DialogHeader>
             <DialogTitle>Assign Contestant to Seat</DialogTitle>
             <DialogDescription>
@@ -951,11 +951,11 @@ export default function SeatingChartPage() {
                 
                 <div className="flex items-center gap-2 flex-wrap">
                   <Select value={filterRating} onValueChange={setFilterRating}>
-                    <SelectTrigger className="w-[120px]" data-testid="select-filter-rating">
+                    <SelectTrigger className="w-[100px]" data-testid="select-filter-rating">
                       <SelectValue placeholder="Rating" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Ratings</SelectItem>
+                      <SelectItem value="all">All</SelectItem>
                       <SelectItem value="A+">A+</SelectItem>
                       <SelectItem value="A">A</SelectItem>
                       <SelectItem value="B+">B+</SelectItem>
@@ -965,25 +965,25 @@ export default function SeatingChartPage() {
                   </Select>
                   
                   <Select value={filterGender} onValueChange={setFilterGender}>
-                    <SelectTrigger className="w-[120px]" data-testid="select-filter-gender">
+                    <SelectTrigger className="w-[90px]" data-testid="select-filter-gender">
                       <SelectValue placeholder="Gender" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Genders</SelectItem>
+                      <SelectItem value="all">All</SelectItem>
                       <SelectItem value="Female">Female</SelectItem>
                       <SelectItem value="Male">Male</SelectItem>
                     </SelectContent>
                   </Select>
                   
                   <Select value={filterGroupSize} onValueChange={setFilterGroupSize}>
-                    <SelectTrigger className="w-[120px]" data-testid="select-filter-group-size">
+                    <SelectTrigger className="w-[90px]" data-testid="select-filter-group-size">
                       <SelectValue placeholder="Group" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Groups</SelectItem>
+                      <SelectItem value="all">All</SelectItem>
                       <SelectItem value="1">Solo</SelectItem>
                       <SelectItem value="2">Pair</SelectItem>
-                      <SelectItem value="3+">3+ Group</SelectItem>
+                      <SelectItem value="3+">3+</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
