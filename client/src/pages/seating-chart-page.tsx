@@ -1029,7 +1029,7 @@ export default function SeatingChartPage() {
 
       {/* Assign Contestant to Empty Seat Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent className="max-w-xl max-h-[85vh] flex flex-col gap-4" data-testid="dialog-assign-contestant-to-seat">
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col gap-4" data-testid="dialog-assign-contestant-to-seat">
           <DialogHeader className="pb-2">
             <DialogTitle className="flex items-center gap-2">
               Assign to Block {selectedBlock}, Seat {selectedSeat}
@@ -1152,21 +1152,19 @@ export default function SeatingChartPage() {
                             {contestant.auditionRating || '?'}
                           </div>
                           
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 overflow-hidden">
                             <div className="flex items-center gap-2">
-                              <span className={`font-medium truncate ${isSelected ? '' : ''}`}>
+                              <span className={`font-medium truncate`}>
                                 {contestant.name}
                               </span>
                               {hasGroup && (
                                 <Users className={`h-3.5 w-3.5 flex-shrink-0 ${isSelected ? 'text-primary-foreground/70' : 'text-blue-500'}`} />
                               )}
                             </div>
-                            <div className={`flex items-center gap-2 text-xs ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
-                              <span>{contestant.gender === "Female" ? "F" : "M"}</span>
-                              {contestant.age && <span>Age {contestant.age}</span>}
-                              {hasGroup && (
-                                <span className="truncate">with {contestant.attendingWith}</span>
-                              )}
+                            <div className={`text-xs truncate ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                              {contestant.gender === "Female" ? "F" : "M"}
+                              {contestant.age && ` | Age ${contestant.age}`}
+                              {hasGroup && ` | ${contestant.attendingWith}`}
                             </div>
                           </div>
                           
