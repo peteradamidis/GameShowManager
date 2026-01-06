@@ -24,7 +24,8 @@ const SHEETS_AUTO_SYNC_KEY = 'google_sheets_auto_sync';
 // This prevents the ngrok interstitial page from appearing when users click email links
 function appendNgrokSkip(url: string): string {
   const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}ngrok-skip-browser-warning=true`;
+  // Use both variants of the skip parameter just in case
+  return `${url}${separator}ngrok-skip-browser-warning=1&ngrok_skip_browser_warning=1`;
 }
 
 // Helper function to get base URL for email links
