@@ -353,6 +353,59 @@ export default function SeatingChartPage() {
       }
     });
   }
+  
+  // Detect separated groups - mark contestants whose partners are not in adjacent seats
+  // Build a map of all assigned contestants for quick lookup
+  const assignedContestants = new Map<string, { blockIdx: number; seatIdx: number; seatLabel: string }>();
+  seats.forEach((block, blockIdx) => {
+    block.forEach((seat, seatIdx) => {
+      if (seat.contestantName) {
+        // Extract seat label from id (format: recordDayId-blockX-seatLabel)
+        const seatLabel = seat.id.split('-').pop() || '';
+        assignedContestants.set(seat.contestantName.toLowerCase().trim(), { blockIdx, seatIdx, seatLabel });
+      }
+    });
+  });
+  
+  // Helper to check if two seats are adjacent (same block, same row, consecutive numbers)
+  const areSeatsAdjacent = (
+    block1: number, label1: string, 
+    block2: number, label2: string
+  ): boolean => {
+    if (block1 !== block2) return false;
+    // Extract row letter and seat number
+    const row1 = label1.charAt(0);
+    const num1 = parseInt(label1.substring(1));
+    const row2 = label2.charAt(0);
+    const num2 = parseInt(label2.substring(1));
+    // Adjacent if same row and consecutive numbers
+    return row1 === row2 && Math.abs(num1 - num2) === 1;
+  };
+  
+  // Mark separated contestants
+  seats.forEach((block, blockIdx) => {
+    block.forEach((seat, seatIdx) => {
+      if (!seat.contestantName || !seat.attendingWith) return;
+      
+      const partnerName = seat.attendingWith.toLowerCase().trim();
+      const partnerLocation = assignedContestants.get(partnerName);
+      
+      if (!partnerLocation) {
+        // Partner not assigned at all - not separated (they're just not here)
+        return;
+      }
+      
+      const seatLabel = seat.id.split('-').pop() || '';
+      const isAdjacent = areSeatsAdjacent(
+        blockIdx, seatLabel,
+        partnerLocation.blockIdx, partnerLocation.seatLabel
+      );
+      
+      if (!isAdjacent) {
+        seat.isGroupSeparated = true;
+      }
+    });
+  });
 
   const handleBlockToggle = (blockNum: number) => {
     setSelectedBlocks(prev => 

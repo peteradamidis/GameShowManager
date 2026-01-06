@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2 } from "lucide-react";
+import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import {
@@ -37,6 +37,7 @@ export interface SeatData {
   winningMoneyRole?: string; // RX Day Mode - 'player' or 'case_holder'
   winningMoneyAmount?: number; // RX Day Mode - winning money amount
   wasStandby?: boolean; // True if contestant was seated from standby list
+  isGroupSeparated?: boolean; // True if contestant has a partner/group member not sitting adjacent
 }
 
 interface SeatCardProps {
@@ -184,6 +185,18 @@ export function SeatCard({
             <p className="font-medium truncate text-xs flex-1" title={seat.contestantName}>
               {seat.contestantName}
             </p>
+            {seat.isGroupSeparated && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div data-testid={`separated-icon-${seat.assignmentId}`}>
+                    <Users className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" style={{ strokeWidth: 2.5 }} />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  <p>Group member not adjacent</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
             {seat.mobilityNotes && (
               <div data-testid={`mobility-icon-${seat.assignmentId}`}>
                 <Plus className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" style={{ strokeWidth: 3 }} />
