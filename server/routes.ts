@@ -20,6 +20,37 @@ const SHEETS_SPREADSHEET_ID_KEY = 'google_sheets_spreadsheet_id';
 const SHEETS_LAST_SYNC_KEY = 'google_sheets_last_sync';
 const SHEETS_AUTO_SYNC_KEY = 'google_sheets_auto_sync';
 
+// Helper function to get base URL for email links
+// Priority: BASE_URL env var > Replit deployment URL > request headers > localhost
+function getBaseUrl(req?: Request): string {
+  // 1. Check for explicit BASE_URL (for offline/self-hosted deployments)
+  if (process.env.BASE_URL) {
+    return process.env.BASE_URL.replace(/\/$/, ''); // Remove trailing slash
+  }
+  
+  // 2. Check for Replit deployment URL
+  if (process.env.REPLIT_DEPLOYMENT_URL) {
+    return process.env.REPLIT_DEPLOYMENT_URL.replace(/\/$/, '');
+  }
+  
+  // 3. Check for Replit dev domain
+  if (process.env.REPLIT_DEV_DOMAIN) {
+    return `https://${process.env.REPLIT_DEV_DOMAIN}`;
+  }
+  
+  // 4. Try to get from request headers (for dynamic detection)
+  if (req) {
+    const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
+    const host = req.get('x-forwarded-host') || req.get('host');
+    if (host) {
+      return `${protocol}://${host}`;
+    }
+  }
+  
+  // 5. Fallback to localhost
+  return 'http://localhost:5000';
+}
+
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Photo upload configuration - store on disk
@@ -3190,7 +3221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Send ONE email per contestant with all record days
         try {
-          const baseUrl = process.env.REPLIT_DEPLOYMENT_URL || 'http://localhost:5000';
+          const baseUrl = getBaseUrl(req);
           if (!contestant.email) {
             throw new Error(`Contestant ${contestant.name} has no email address`);
           }
@@ -3660,10 +3691,8 @@ ${finalEmailFooter}`;
         return res.status(400).json({ error: "seatAssignmentIds array is required" });
       }
 
-      // Get base URL from request headers
-      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
-      const host = req.get('x-forwarded-host') || req.get('host') || 'localhost:5000';
-      const baseUrl = `${protocol}://${host}`;
+      // Get base URL for email links
+      const baseUrl = getBaseUrl(req);
 
       const results = [];
 
@@ -4291,9 +4320,7 @@ ${finalEmailFooter}`;
               });
               
               // Get base URL for email links/images
-              const protocol = req.headers['x-forwarded-proto'] || 'https';
-              const host = req.headers.host || 'localhost:5000';
-              const confirmEmailBaseUrl = `${protocol}://${host}`;
+              const confirmEmailBaseUrl = getBaseUrl(req);
               
               // Get email config
               const senderNameConfig = await storage.getSystemConfig('email_sender_name');
@@ -4810,9 +4837,7 @@ ${finalEmailFooter}`;
           });
 
           // Build confirmation URL
-          const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-            ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-            : 'http://localhost:5000';
+          const baseUrl = getBaseUrl(req);
           const confirmationUrl = `${baseUrl}/standby-confirmation/${tokenString}`;
 
           // Prepare banner image for CID embedding (works offline in all email clients)
