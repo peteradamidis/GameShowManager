@@ -1,0 +1,23 @@
+admin@admins-Mac-mini GameShowManager % pm2 restart                   
+
+  error: missing required argument `id|name|namespace|all|json|stdin'
+
+admin@admins-Mac-mini GameShowManager % pm2 status
+┌────┬─────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name        │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ gameshow    │ default     │ N/A     │ fork    │ 71591    │ 88m    │ 26   │ online    │ 0%       │ 51.4mb   │ admin    │ disabled │
+└────┴─────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+admin@admins-Mac-mini GameShowManager % pm2 restart gameshow
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [gameshow](ids: [ 0 ])
+[PM2] [gameshow](0) ✓
+┌────┬─────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name        │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ gameshow    │ default     │ N/A     │ fork    │ 74102    │ 0s     │ 27   │ online    │ 0%       │ 1.5mb    │ admin    │ disabled │
+└────┴─────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+admin@admins-Mac-mini GameShowManager % ps aux | grep ngrok
+admin            71710   0.1  0.9 412019216  74128 s000  S+   12:37PM   0:23.81 ngrok http 5000
+admin            74196   0.0  0.0 410059936    160 s001  R+    2:05PM   0:00.00 grep ngrok
+admin@admins-Mac-mini GameShowManager % 
