@@ -1025,7 +1025,7 @@ export default function SeatingChartPage() {
 
       {/* Assign Contestant to Empty Seat Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent className="max-w-md w-[95vw] overflow-hidden" data-testid="dialog-assign-contestant-to-seat">
+        <DialogContent className="max-w-md max-h-[90vh] flex flex-col" data-testid="dialog-assign-contestant-to-seat">
           <DialogHeader>
             <DialogTitle>Assign Contestant to Seat</DialogTitle>
             <DialogDescription>
@@ -1094,7 +1094,7 @@ export default function SeatingChartPage() {
                   {filteredContestants.length} of {availableContestants.length} contestants
                 </div>
                 
-                <ScrollArea className="h-[280px] border rounded-md">
+                <ScrollArea className="h-[200px] border rounded-md">
                   <div className="p-2 space-y-1">
                     {filteredContestants.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-8">
