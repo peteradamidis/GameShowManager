@@ -2273,10 +2273,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Helper function to check if attendingWith indicates a true solo
+      // MOVED BEFORE Phase 1B so it can be used during partner matching
+      const isSoloIndicator = (value: string | null | undefined): boolean => {
+        if (!value || !value.trim()) return true;
+        const normalized = value.toLowerCase().trim();
+        // Check for common solo indicators
+        const soloPatterns = ['solo', 'alone', 'by myself', 'n/a', 'na', 'none', 'no one', 'nobody', '-', 'self'];
+        return soloPatterns.some(pattern => normalized === pattern || normalized.includes(pattern));
+      };
+
       // PHASE 1B: Find groups based on attendingWith matching (with bidirectional verification for duplicate names)
       // BUT: Don't group anyone with an A+ contestant (A+ must be manually assigned)
       available.forEach((contestant) => {
         if (groupedContestantIds.has(contestant.id)) return;
+
+        // If their attendingWith indicates solo, skip partner matching entirely - they'll be added as solo later
+        if (isSoloIndicator(contestant.attendingWith)) {
+          return;
+        }
 
         // Check if this contestant has an attendingWith value
         if (contestant.attendingWith && contestant.attendingWith.trim()) {
@@ -2339,15 +2354,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       });
-
-      // Helper function to check if attendingWith indicates a true solo
-      const isSoloIndicator = (value: string | null | undefined): boolean => {
-        if (!value || !value.trim()) return true;
-        const normalized = value.toLowerCase().trim();
-        // Check for common solo indicators
-        const soloPatterns = ['solo', 'alone', 'by myself', 'n/a', 'na', 'none', 'no one', 'nobody', '-', 'self'];
-        return soloPatterns.some(pattern => normalized === pattern || normalized.includes(pattern));
-      };
 
       // Second pass: add solo contestants (those not in any group AND don't have unavailable partners)
       // If someone has an attendingWith and their partner isn't available, they should NOT be assigned
