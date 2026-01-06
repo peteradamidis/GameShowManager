@@ -66,6 +66,7 @@ export default function SeatingChartPage() {
   const [filterRating, setFilterRating] = useState<string>("all");
   const [filterGender, setFilterGender] = useState<string>("all");
   const [filterGroupSize, setFilterGroupSize] = useState<string>("all");
+  const [filterAge, setFilterAge] = useState<string>("all");
   
   // Cancel dialog state
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -285,9 +286,21 @@ export default function SeatingChartPage() {
         if (filterGroupSize === "3+" && groupSize < 3) return false;
       }
       
+      // Age filter
+      if (filterAge !== "all" && c.age) {
+        const age = parseInt(c.age);
+        if (!isNaN(age)) {
+          if (filterAge === "18-29" && (age < 18 || age > 29)) return false;
+          if (filterAge === "30-39" && (age < 30 || age > 39)) return false;
+          if (filterAge === "40-49" && (age < 40 || age > 49)) return false;
+          if (filterAge === "50-59" && (age < 50 || age > 59)) return false;
+          if (filterAge === "60+" && age < 60) return false;
+        }
+      }
+      
       return true;
     });
-  }, [availableContestants, contestantSearch, filterRating, filterGender, filterGroupSize]);
+  }, [availableContestants, contestantSearch, filterRating, filterGender, filterGroupSize, filterAge]);
 
   // Check if record day is locked (RX Day Mode)
   const isLocked = currentRecordDay?.lockedAt != null;
@@ -1107,6 +1120,23 @@ export default function SeatingChartPage() {
                     </Select>
                   </div>
                   
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground text-[10px] font-medium">Age</span>
+                    <Select value={filterAge} onValueChange={setFilterAge}>
+                      <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-age">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="18-29">18-29</SelectItem>
+                        <SelectItem value="30-39">30-39</SelectItem>
+                        <SelectItem value="40-49">40-49</SelectItem>
+                        <SelectItem value="50-59">50-59</SelectItem>
+                        <SelectItem value="60+">60+</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
                   <span className="ml-auto text-muted-foreground self-end pb-1">
                     {filteredContestants.length} found
                   </span>
@@ -1136,15 +1166,25 @@ export default function SeatingChartPage() {
                         <div
                           key={contestant.id}
                           onClick={() => setSelectedContestant(contestant.id)}
-                          className={`grid grid-cols-[auto_1fr_auto] items-center gap-3 p-2.5 rounded-md cursor-pointer transition-all ${
+                          className={`grid grid-cols-[auto_auto_1fr_auto] items-center gap-2 p-2 rounded-md cursor-pointer transition-all ${
                             isSelected 
                               ? 'bg-primary text-primary-foreground shadow-sm' 
                               : 'hover:bg-muted'
                           }`}
                           data-testid={`contestant-card-${contestant.id}`}
                         >
+                          {/* Photo */}
+                          <Avatar className="h-9 w-9 border border-border">
+                            {contestant.photoUrl ? (
+                              <AvatarImage src={contestant.photoUrl} alt={contestant.name} className="object-cover" />
+                            ) : null}
+                            <AvatarFallback className="text-xs bg-muted">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                            </AvatarFallback>
+                          </Avatar>
+                          
                           {/* Rating indicator */}
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${
                             contestant.auditionRating 
                               ? ratingColors[contestant.auditionRating] || 'bg-gray-500 text-white'
                               : 'bg-muted text-muted-foreground'
@@ -1155,7 +1195,7 @@ export default function SeatingChartPage() {
                           {/* Info section - constrained to available space */}
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium truncate">
+                              <span className="font-medium text-sm truncate">
                                 {contestant.name}
                               </span>
                               {hasGroup && (
