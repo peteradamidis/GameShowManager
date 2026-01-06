@@ -25,7 +25,11 @@ const SHEETS_AUTO_SYNC_KEY = 'google_sheets_auto_sync';
 function getBaseUrl(req?: Request): string {
   // 1. Check for explicit BASE_URL (for offline/self-hosted deployments)
   if (process.env.BASE_URL) {
-    return process.env.BASE_URL.replace(/\/$/, ''); // Remove trailing slash
+    // Remove any trailing whitespace, quotes, or accidental "->" separators
+    let url = process.env.BASE_URL.trim();
+    url = url.split(/\s+->\s+/)[0]; // Handle accidental ngrok status line paste
+    url = url.replace(/['"]/g, ''); // Remove quotes
+    return url.replace(/\/$/, ''); // Remove trailing slash
   }
   
   // 2. Check for Replit deployment URL
