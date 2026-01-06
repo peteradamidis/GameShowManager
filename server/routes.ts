@@ -2152,6 +2152,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Track which contestants have been grouped
       const groupedContestantIds = new Set<string>();
       const groupMap = new Map<string, typeof available>();
+      // Track contestants who have attendingWith but their partner is not available/accessible
+      const contestantsWithUnavailablePartners = new Set<string>();
 
       // First pass: find all groups based on attendingWith matching
       // BUT: Don't group anyone with an A+ contestant (A+ must be manually assigned)
@@ -2164,20 +2166,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const attendingWithNames = contestant.attendingWith
             .split(/[,&]/)
             .map((name: string) => name.toLowerCase().trim())
-            .filter((name: string) => name.length > 0);
+            .filter((name: string) => name.length > 0)
+            // IMPORTANT: Filter out contestant's own name to prevent self-matching
+            .filter((name: string) => name !== contestant.name.toLowerCase().trim());
+
+          // If all names were filtered out (contestant only listed themselves), skip
+          if (attendingWithNames.length === 0) {
+            return;
+          }
 
           // Find all matching people for this contestant
           const groupMembers: typeof available = [contestant];
           let hasNonAPlusPartners = false;
+          let allPartnersFound = true;
 
           for (const name of attendingWithNames) {
             const partner = nameToContestant.get(name);
-            if (partner && !groupedContestantIds.has(partner.id)) {
+            if (partner && partner.id !== contestant.id && !groupedContestantIds.has(partner.id)) {
               // Only add if not A+ rated (A+ must be manually assigned)
               if (partner.auditionRating !== 'A+') {
                 groupMembers.push(partner);
                 hasNonAPlusPartners = true;
+              } else {
+                // Partner is A+ and must be manually assigned, so this contestant can't be auto-assigned
+                allPartnersFound = false;
               }
+            } else if (!partner) {
+              // Partner not found in available contestants
+              allPartnersFound = false;
             }
           }
 
@@ -2187,15 +2203,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
             groupMap.set(groupId, groupMembers);
             groupMembers.forEach(member => groupedContestantIds.add(member.id));
             console.log(`[Auto-assign] Created group: ${groupMembers.map(m => `${m.name}(${m.auditionRating})`).join(' + ')}`);
+          } else if (!allPartnersFound) {
+            // This contestant has an attendingWith but their partner is not available/accessible
+            // Mark them so they won't be assigned as a solo either
+            contestantsWithUnavailablePartners.add(contestant.id);
+            console.log(`[Auto-assign] Skipping ${contestant.name} - partner(s) not available: "${contestant.attendingWith}"`);
           }
         }
       });
 
-      // Second pass: add solo contestants (those not in any group)
+      // Helper function to check if attendingWith indicates a true solo
+      const isSoloIndicator = (value: string | null | undefined): boolean => {
+        if (!value || !value.trim()) return true;
+        const normalized = value.toLowerCase().trim();
+        // Check for common solo indicators
+        const soloPatterns = ['solo', 'alone', 'by myself', 'n/a', 'na', 'none', 'no one', 'nobody', '-', 'self'];
+        return soloPatterns.some(pattern => normalized === pattern || normalized.includes(pattern));
+      };
+
+      // Second pass: add solo contestants (those not in any group AND don't have unavailable partners)
+      // If someone has an attendingWith and their partner isn't available, they should NOT be assigned
       available.forEach((contestant) => {
-        if (!groupedContestantIds.has(contestant.id)) {
-          const soloId = `solo-${contestant.id}`;
-          groupMap.set(soloId, [contestant]);
+        if (!groupedContestantIds.has(contestant.id) && !contestantsWithUnavailablePartners.has(contestant.id)) {
+          // Only add as solo if they don't have an attendingWith requirement
+          // OR if their attendingWith field indicates solo (empty, "Solo", "N/A", etc.)
+          if (isSoloIndicator(contestant.attendingWith)) {
+            const soloId = `solo-${contestant.id}`;
+            groupMap.set(soloId, [contestant]);
+          } else {
+            // They have attendingWith but weren't grouped - means partner not found
+            console.log(`[Auto-assign] Skipping ${contestant.name} - has attendingWith but partner not matched: "${contestant.attendingWith}"`);
+          }
         }
       });
 
