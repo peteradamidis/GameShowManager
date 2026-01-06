@@ -82,6 +82,9 @@ export default function SeatingChartPage() {
   const [isAutoAssigning, setIsAutoAssigning] = useState(false);
   const [onlyConfirmedAvailability, setOnlyConfirmedAvailability] = useState(false);
   
+  // Group booking state
+  const [seatGroupTogether, setSeatGroupTogether] = useState(false);
+  
   
   // RX Day Mode lock state
   const [lockConfirmDialogOpen, setLockConfirmDialogOpen] = useState(false);
@@ -190,6 +193,62 @@ export default function SeatingChartPage() {
   const getGroupSize = (attendingWith: string | null | undefined): number => {
     if (!attendingWith || !attendingWith.trim()) return 1;
     return attendingWith.split(',').length + 1; // +1 to include the contestant themselves
+  };
+  
+  // Helper to find group members for a selected contestant
+  const getGroupMembers = (contestantId: string): any[] => {
+    const contestant = availableContestants.find((c: any) => c.id === contestantId);
+    if (!contestant || !contestant.attendingWith) return [contestant].filter(Boolean);
+    
+    // Get partner names from attendingWith
+    const partnerNames = contestant.attendingWith.split(',').map((n: string) => n.trim().toLowerCase());
+    
+    // Find matching available contestants
+    const partners = availableContestants.filter((c: any) => 
+      partnerNames.includes(c.name?.toLowerCase().trim())
+    );
+    
+    return [contestant, ...partners];
+  };
+  
+  // Helper to get adjacent empty seats in the same row starting from selected seat
+  const getAdjacentEmptySeats = (blockNumber: number, seatLabel: string, neededCount: number): string[] => {
+    const blockIdx = blockNumber - 1;
+    if (!seats[blockIdx]) return [];
+    
+    const row = seatLabel.charAt(0);
+    const seatNum = parseInt(seatLabel.substring(1));
+    
+    // Get all seats in this row
+    const rowSeats = seats[blockIdx].filter((s: SeatData) => {
+      const label = s.id.split('-').pop() || '';
+      return label.charAt(0) === row;
+    });
+    
+    // Find consecutive empty seats starting from selected seat
+    const emptySeats: string[] = [seatLabel]; // Start with selected seat
+    
+    // Look right (higher numbers)
+    for (let i = seatNum + 1; emptySeats.length < neededCount; i++) {
+      const nextSeat = rowSeats.find((s: SeatData) => {
+        const label = s.id.split('-').pop() || '';
+        return label === `${row}${i}` && !s.contestantName;
+      });
+      if (!nextSeat) break;
+      emptySeats.push(`${row}${i}`);
+    }
+    
+    // If still need more, look left (lower numbers)
+    for (let i = seatNum - 1; emptySeats.length < neededCount && i >= 1; i--) {
+      const prevSeat = rowSeats.find((s: SeatData) => {
+        const label = s.id.split('-').pop() || '';
+        return label === `${row}${i}` && !s.contestantName;
+      });
+      if (!prevSeat) break;
+      emptySeats.unshift(`${row}${i}`);
+    }
+    
+    return emptySeats;
   };
 
   // Filter available contestants by search term and filters
@@ -569,33 +628,76 @@ export default function SeatingChartPage() {
     setFilterRating("all");
     setFilterGender("all");
     setFilterGroupSize("all");
+    setSeatGroupTogether(false);
     setAssignDialogOpen(true);
   };
+  
+  // Compute group booking info when a contestant is selected
+  const selectedContestantData = selectedContestant 
+    ? availableContestants.find((c: any) => c.id === selectedContestant) 
+    : null;
+  
+  const groupMembersToSeat = selectedContestant ? getGroupMembers(selectedContestant) : [];
+  const hasGroupToSeat = groupMembersToSeat.length > 1;
+  
+  const adjacentSeats = selectedBlock && selectedSeat && hasGroupToSeat
+    ? getAdjacentEmptySeats(selectedBlock, selectedSeat, groupMembersToSeat.length)
+    : [];
+  const canSeatGroupTogether = adjacentSeats.length >= groupMembersToSeat.length;
 
   const handleAssignContestant = async () => {
     if (!selectedContestant || !selectedBlock || !selectedSeat) return;
 
     try {
-      await apiRequest('POST', '/api/seat-assignments', {
-        recordDayId,
-        contestantId: selectedContestant,
-        blockNumber: selectedBlock,
-        seatLabel: selectedSeat,
-      });
-      
-      // Invalidate essential queries - no redundant refetch() needed
-      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
-      broadcastSeatingChange(recordDayId);
-      
-      toast({
-        title: "Contestant assigned",
-        description: `Assigned to Block ${selectedBlock}, Seat ${selectedSeat}`,
-      });
+      // Determine if we're booking a group or individual
+      if (seatGroupTogether && canSeatGroupTogether && groupMembersToSeat.length > 1) {
+        // Book all group members
+        const seatsToUse = adjacentSeats.slice(0, groupMembersToSeat.length);
+        
+        for (let i = 0; i < groupMembersToSeat.length; i++) {
+          await apiRequest('POST', '/api/seat-assignments', {
+            recordDayId,
+            contestantId: groupMembersToSeat[i].id,
+            blockNumber: selectedBlock,
+            seatLabel: seatsToUse[i],
+          });
+        }
+        
+        // Invalidate essential queries
+        queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+        queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+        broadcastSeatingChange(recordDayId);
+        
+        const names = groupMembersToSeat.map((m: any) => m.name).join(', ');
+        toast({
+          title: "Group assigned",
+          description: `Assigned ${groupMembersToSeat.length} contestants to Block ${selectedBlock}, Seats ${seatsToUse.join(', ')}`,
+        });
+      } else {
+        // Book individual
+        await apiRequest('POST', '/api/seat-assignments', {
+          recordDayId,
+          contestantId: selectedContestant,
+          blockNumber: selectedBlock,
+          seatLabel: selectedSeat,
+        });
+        
+        // Invalidate essential queries
+        queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+        queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+        broadcastSeatingChange(recordDayId);
+        
+        toast({
+          title: "Contestant assigned",
+          description: `Assigned to Block ${selectedBlock}, Seat ${selectedSeat}`,
+        });
+      }
 
       setAssignDialogOpen(false);
       setSelectedContestant("");
+      setSeatGroupTogether(false);
     } catch (error: any) {
       // Refresh to get latest seat assignments
       await refetch();
@@ -1058,6 +1160,42 @@ export default function SeatingChartPage() {
               </>
             )}
           </div>
+          
+          {/* Group booking option - shows when a contestant with partners is selected */}
+          {selectedContestant && hasGroupToSeat && (
+            <div className="border rounded-md p-3 bg-muted/30">
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="seat-group-together"
+                  checked={seatGroupTogether}
+                  onCheckedChange={(checked) => setSeatGroupTogether(checked === true)}
+                  disabled={!canSeatGroupTogether}
+                  data-testid="checkbox-seat-group-together"
+                />
+                <div className="flex-1">
+                  <label 
+                    htmlFor="seat-group-together" 
+                    className={`text-sm font-medium cursor-pointer ${!canSeatGroupTogether ? 'text-muted-foreground' : ''}`}
+                  >
+                    Seat group together ({groupMembersToSeat.length} people)
+                  </label>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {canSeatGroupTogether ? (
+                      <>
+                        Will assign: {groupMembersToSeat.map((m: any) => m.name).join(', ')}
+                        <br />
+                        To seats: {adjacentSeats.slice(0, groupMembersToSeat.length).join(', ')}
+                      </>
+                    ) : (
+                      <span className="text-amber-600 dark:text-amber-400">
+                        Not enough adjacent empty seats in this row ({adjacentSeats.length} available, {groupMembersToSeat.length} needed)
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setAssignDialogOpen(false)}>
@@ -1068,7 +1206,7 @@ export default function SeatingChartPage() {
               disabled={!selectedContestant || availableContestants.length === 0}
               data-testid="button-confirm-seat-assign"
             >
-              Assign to Seat
+              {seatGroupTogether && canSeatGroupTogether ? `Assign ${groupMembersToSeat.length} to Seats` : 'Assign to Seat'}
             </Button>
           </DialogFooter>
         </DialogContent>
