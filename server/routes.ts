@@ -2290,12 +2290,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // PHASE 1B: Find groups based on attendingWith matching (with bidirectional verification for duplicate names)
       // BUT: Don't group anyone with an A+ contestant (A+ must be manually assigned)
-      available.forEach((contestant) => {
-        if (groupedContestantIds.has(contestant.id)) return;
+      // Track groups to persist after the loop (to avoid async issues)
+      const groupsToPersist: { groupMembers: typeof available }[] = [];
+      
+      for (const contestant of available) {
+        if (groupedContestantIds.has(contestant.id)) continue;
 
         // If their attendingWith indicates solo, skip partner matching entirely - they'll be added as solo later
         if (isSoloIndicator(contestant.attendingWith)) {
-          return;
+          continue;
         }
 
         // Check if this contestant has an attendingWith value
@@ -2310,7 +2313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // If all names were filtered out (contestant only listed themselves), skip
           if (attendingWithNames.length === 0) {
-            return;
+            continue;
           }
 
           // Find all matching people for this contestant
@@ -2338,7 +2341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 groupMembers.push(partner);
                 hasNonAPlusPartners = true;
               } else {
-                // Partner is A+ and must be manually assigned, so this contestant can't be auto-assigned
+                // Partner is A+ and must be manually assigned, so this contestant can't be auto-assign
                 allPartnersFound = false;
               }
             } else if (!partner) {
@@ -2352,6 +2355,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const groupId = `group-${contestant.id}`;
             groupMap.set(groupId, groupMembers);
             groupMembers.forEach(member => groupedContestantIds.add(member.id));
+            
+            // Persist group to database if members don't already share a groupId
+            const existingGroupIds = groupMembers.map(m => m.groupId).filter(Boolean);
+            const sharedGroupId = existingGroupIds.length > 0 ? existingGroupIds[0] : null;
+            
+            if (!sharedGroupId) {
+              groupsToPersist.push({ groupMembers });
+            }
+            
             console.log(`[Auto-assign] Created group: ${groupMembers.map(m => `${m.name}(${m.auditionRating})`).join(' + ')}`);
           } else if (!allPartnersFound) {
             // This contestant has an attendingWith but their partner is not available/accessible
@@ -2360,7 +2372,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`[Auto-assign] Skipping ${contestant.name} - partner(s) not available: "${contestant.attendingWith}"`);
           }
         }
-      });
+      }
+      
+      // Persist newly discovered groups to database
+      for (const { groupMembers } of groupsToPersist) {
+        try {
+          const refNumber = `AUTO-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2, 4)}`;
+          const dbGroup = await storage.createGroup({ referenceNumber: refNumber });
+          for (const member of groupMembers) {
+            await storage.updateContestant(member.id, { groupId: dbGroup.id });
+            member.groupId = dbGroup.id; // Update in-memory too
+          }
+          console.log(`[Auto-assign] Persisted group ${dbGroup.id} for: ${groupMembers.map(m => m.name).join(', ')}`);
+        } catch (groupErr) {
+          console.log(`[Auto-assign] Warning: Could not persist group: ${groupErr}`);
+        }
+      }
 
       // Second pass: add solo contestants (those not in any group AND don't have unavailable partners)
       // If someone has an attendingWith and their partner isn't available, they should NOT be assigned
