@@ -20,10 +20,9 @@ const SHEETS_SPREADSHEET_ID_KEY = 'google_sheets_spreadsheet_id';
 const SHEETS_LAST_SYNC_KEY = 'google_sheets_last_sync';
 const SHEETS_AUTO_SYNC_KEY = 'google_sheets_auto_sync';
 
-// Helper function to append ngrok skip browser warning parameter to URLs
+// Helper function to append bypass parameters to URLs (deprecated, kept for compatibility)
 function appendNgrokSkip(url: string): string {
-  const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}ngrok-skip-browser-warning=1`;
+  return url;
 }
 
 // Helper function to get base URL for email links
@@ -155,10 +154,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // This ensures that even if the header isn't sent by the browser, 
   // we handle the bypass logic server-side.
   app.use((req, res, next) => {
-    // Middleware to handle ngrok skip browser warning
-    if (req.query['ngrok-skip-browser-warning']) {
-      res.setHeader('ngrok-skip-browser-warning', 'true');
-    }
     next();
   });
 
