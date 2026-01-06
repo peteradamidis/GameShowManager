@@ -1656,6 +1656,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid player type" });
       }
 
+      // Check if contestant is DNU-rated (Do Not Use)
+      const contestant = await storage.getContestant(contestantId);
+      if (contestant?.auditionRating?.toUpperCase().trim() === 'DNU') {
+        return res.status(400).json({ error: "Cannot seat a DNU-rated contestant (Do Not Use)" });
+      }
+
       // Check for duplicate assignments
       const existingAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
       
@@ -1720,6 +1726,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!Array.isArray(contestantIds) || contestantIds.length < 2 || contestantIds.length > 4) {
         return res.status(400).json({ error: "Must provide 2-4 contestants for group seating" });
+      }
+
+      // Check if any contestant is DNU-rated (Do Not Use)
+      for (const contestantId of contestantIds) {
+        const contestant = await storage.getContestant(contestantId);
+        if (contestant?.auditionRating?.toUpperCase().trim() === 'DNU') {
+          return res.status(400).json({ error: `Cannot seat ${contestant.name} - they are DNU-rated (Do Not Use)` });
+        }
       }
 
       // Define seat structure - same as frontend for consistency
@@ -2136,8 +2150,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         availableAll = availableAll.filter(c => confirmedContestantIds.has(c.id));
       }
       
+      // Exclude A+ (must be manually assigned) and DNU (Do Not Use) contestants
       const aPlusContestants = availableAll.filter(c => c.auditionRating === 'A+');
-      const available = availableAll.filter(c => c.auditionRating !== 'A+');
+      const dnuContestants = availableAll.filter(c => c.auditionRating?.toUpperCase().trim() === 'DNU');
+      const available = availableAll.filter(c => 
+        c.auditionRating !== 'A+' && 
+        c.auditionRating?.toUpperCase().trim() !== 'DNU'
+      );
 
       if (available.length === 0) {
         return res.status(400).json({ 

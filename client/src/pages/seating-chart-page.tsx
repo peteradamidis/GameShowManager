@@ -191,7 +191,10 @@ export default function SeatingChartPage() {
   const availableContestants = useMemo(() => {
     if (!assignments || !allContestants || !Array.isArray(allContestants)) return [];
     const seatedIds = new Set(assignments.map((a: any) => a.contestantId));
-    return allContestants.filter((c: any) => !seatedIds.has(c.id));
+    return allContestants.filter((c: any) => 
+      !seatedIds.has(c.id) && 
+      c.auditionRating?.toUpperCase().trim() !== 'DNU' // Exclude DNU-rated contestants
+    );
   }, [assignments, allContestants]);
 
   // Helper to calculate group size from attendingWith field
