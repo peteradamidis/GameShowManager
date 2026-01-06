@@ -478,12 +478,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allContestants = await storage.getContestants();
       console.log(`[Gallery Import] Found ${allContestants.length} contestants in database`);
 
-      // Create name lookup maps (case-insensitive, trimmed)
+      // Create name lookup maps (case-insensitive, trimmed, normalized spaces)
       const contestantByName = new Map<string, typeof allContestants[0]>();
       const contestantByFirstLastName = new Map<string, typeof allContestants[0]>();
+      const matchedContestantIds = new Set<string>(); // Track which contestants already have photos assigned
       
       allContestants.forEach(c => {
-        const normalized = c.name.toLowerCase().trim();
+        // Normalize: lowercase, trim, and collapse multiple spaces to single space
+        const normalized = c.name.toLowerCase().trim().replace(/\s+/g, ' ');
         contestantByName.set(normalized, c);
         
         // Also create lookup by "FirstName LastName" format (in case PDF has different formatting)
@@ -624,8 +626,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   const nearbyText = textItems.filter((t: any) => {
                     const yDiff = imageY - t.y; // positive if text is below image
                     const xDiff = Math.abs(t.x - imageX);
-                    // Text should be below image (0-100 units) and roughly aligned horizontally
-                    return yDiff > 0 && yDiff < 100 && xDiff < imageWidth + 50;
+                    // Text should be below image (0-150 units) and within the image column width
+                    // Increase tolerance for different PDF layouts
+                    return yDiff > -20 && yDiff < 150 && xDiff < imageWidth + 100;
                   }).sort((a: any, b: any) => b.y - a.y); // Sort by Y descending (closest to image first)
 
                   extractedEntries.push({
@@ -658,12 +661,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const text = textItem.text.trim();
           
           // Skip location-only text (single words that look like suburbs)
-          if (text.split(/\s+/).length === 1 && !contestantByName.has(text.toLowerCase())) {
+          if (text.split(/\s+/).length === 1 && !contestantByName.has(text.toLowerCase().replace(/\s+/g, ' '))) {
             continue;
           }
 
-          // Try exact match first
-          const normalizedText = text.toLowerCase().trim();
+          // Normalize text: lowercase, trim, collapse multiple spaces
+          const normalizedText = text.toLowerCase().trim().replace(/\s+/g, ' ');
           let contestant = contestantByName.get(normalizedText);
           
           // Try first-last name match
@@ -681,9 +684,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
 
-          if (contestant) {
+          // Only use this match if contestant hasn't already been matched to another image
+          if (contestant && !matchedContestantIds.has(contestant.id)) {
             entry.matchedName = text;
             entry.matchedContestant = contestant;
+            matchedContestantIds.add(contestant.id); // Mark as matched to prevent duplicates
             console.log(`[Gallery Import] Matched "${text}" to contestant: ${contestant.name} (ID: ${contestant.id})`);
             break;
           }
