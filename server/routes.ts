@@ -153,6 +153,16 @@ function identifyGroups(contestants: any[]): Map<string, string[]> {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Middleware to handle ngrok skip browser warning via query parameter
+  // This ensures that even if the header isn't sent by the browser, 
+  // we handle the bypass logic server-side.
+  app.use((req, res, next) => {
+    if (req.query['ngrok-skip-browser-warning']) {
+      res.setHeader('ngrok-skip-browser-warning', 'true');
+    }
+    next();
+  });
+
   // Serve uploaded photos as static files
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
