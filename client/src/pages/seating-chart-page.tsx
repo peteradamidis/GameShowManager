@@ -1261,17 +1261,17 @@ export default function SeatingChartPage() {
 
       {/* View Contestant Details Dialog */}
       <Dialog open={!!viewContestantId} onOpenChange={(open) => !open && setViewContestantId(null)}>
-        <DialogContent className="max-w-md" data-testid="dialog-view-contestant">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" data-testid="dialog-view-contestant">
           {(() => {
             const contestant = availableContestants.find((c: any) => c.id === viewContestantId);
             if (!contestant) return <div className="py-8 text-center text-muted-foreground">Contestant not found</div>;
             
             const ratingColors: Record<string, string> = {
-              'A+': 'bg-emerald-500',
-              'A': 'bg-green-500',
-              'B+': 'bg-amber-500',
-              'B': 'bg-orange-500',
-              'C': 'bg-red-500',
+              'A+': 'text-emerald-600 dark:text-emerald-400',
+              'A': 'text-green-600 dark:text-green-400',
+              'B+': 'text-amber-600 dark:text-amber-400',
+              'B': 'text-orange-600 dark:text-orange-400',
+              'C': 'text-red-500 dark:text-red-400',
             };
             
             return (
@@ -1292,92 +1292,128 @@ export default function SeatingChartPage() {
                       </AvatarFallback>
                     </Avatar>
                     
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg truncate">{contestant.name}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline">{contestant.gender}</Badge>
-                        {contestant.age && <Badge variant="outline">Age {contestant.age}</Badge>}
-                        {contestant.auditionRating && (
-                          <Badge className={`${ratingColors[contestant.auditionRating] || 'bg-gray-500'} text-white`}>
-                            {contestant.auditionRating}
+                    {/* Basic Information Grid */}
+                    <div className="flex-1 grid grid-cols-4 gap-x-4 gap-y-2">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Name</label>
+                        <p className="text-sm font-medium">{contestant.name}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Age</label>
+                        <p className="text-sm">{contestant.age || '-'}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Gender</label>
+                        <p className="text-sm">{contestant.gender || '-'}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Status</label>
+                        <Badge variant="outline" className="text-xs">
+                          {contestant.availabilityStatus || 'Unknown'}
+                        </Badge>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Rating</label>
+                        <p className={`text-sm font-semibold ${ratingColors[contestant.auditionRating] || 'text-muted-foreground'}`}>
+                          {contestant.auditionRating || '-'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Player Type</label>
+                        {contestant.playerType ? (
+                          <Badge className={`text-xs py-0 ${
+                            contestant.playerType === 'player' ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800' :
+                            contestant.playerType === 'backup' ? 'bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800' :
+                            'bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800'
+                          }`}>
+                            {contestant.playerType === 'player' ? 'Player' : contestant.playerType === 'backup' ? 'Backup' : 'Partner'}
                           </Badge>
+                        ) : <span className="text-sm text-muted-foreground">-</span>}
+                      </div>
+                      {contestant.attendingWith && (
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground">Attending With</label>
+                          <p className="text-sm">{contestant.attendingWith}</p>
+                        </div>
+                      )}
+                      {contestant.groupId && (
+                        <div className="overflow-hidden">
+                          <label className="text-xs font-medium text-muted-foreground">Group ID</label>
+                          <Badge variant="outline" className="font-mono text-xs max-w-full truncate inline-block py-0" title={contestant.groupId}>
+                            {contestant.groupId}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Contact & Medical in 2 columns */}
+                  <div className="grid grid-cols-2 gap-4 border-t pt-3">
+                    {/* Contact Information */}
+                    <div className="space-y-1">
+                      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Contact</h3>
+                      <div className="space-y-1 text-sm">
+                        {contestant.email && (
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            <span className="truncate">{contestant.email}</span>
+                          </div>
+                        )}
+                        {contestant.phone && (
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            <span>{contestant.phone}</span>
+                          </div>
+                        )}
+                        {contestant.location && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            <span>{contestant.location}</span>
+                          </div>
+                        )}
+                        {contestant.postcode && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Postcode:</span>
+                            <span>{contestant.postcode}</span>
+                            {contestant.state && <span className="text-xs text-muted-foreground">{contestant.state}</span>}
+                          </div>
+                        )}
+                        {!contestant.email && !contestant.phone && !contestant.location && !contestant.postcode && (
+                          <p className="text-muted-foreground italic text-xs">No contact info</p>
                         )}
                       </div>
-                      {contestant.playerType && (
-                        <Badge variant="secondary" className="mt-2 text-xs">
-                          {contestant.playerType === 'player' ? 'Player' : 
-                           contestant.playerType === 'backup' ? 'Backup' : 'Partner'}
-                        </Badge>
-                      )}
+                    </div>
+
+                    {/* Medical Information */}
+                    <div className="space-y-1">
+                      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Medical</h3>
+                      <div className="space-y-1 text-sm">
+                        <div>
+                          <span className="text-xs text-muted-foreground">App: </span>
+                          <span className={contestant.medicalInfo ? '' : 'text-muted-foreground italic'}>
+                            {contestant.medicalInfo || 'None'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-xs text-muted-foreground">Aud: </span>
+                          <span className={contestant.mobilityNotes ? '' : 'text-muted-foreground italic'}>
+                            {contestant.mobilityNotes || 'None'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  
-                  {/* Contact Info */}
-                  <div className="space-y-2 border-t pt-3">
-                    <h4 className="text-sm font-medium text-muted-foreground">Contact</h4>
-                    {contestant.email && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span className="truncate">{contestant.email}</span>
-                      </div>
-                    )}
-                    {contestant.phone && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span>{contestant.phone}</span>
-                      </div>
-                    )}
-                    {contestant.location && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span>{contestant.location}</span>
-                      </div>
-                    )}
-                    {!contestant.email && !contestant.phone && !contestant.location && (
-                      <p className="text-sm text-muted-foreground italic">No contact info available</p>
-                    )}
+
+                  {/* Criminal Record */}
+                  <div className="border-t pt-3">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Criminal Record</h3>
+                    <p className={`text-sm ${contestant.criminalRecord ? '' : 'text-muted-foreground italic'}`}>
+                      {contestant.criminalRecord || 'No criminal record information provided'}
+                    </p>
                   </div>
-                  
-                  {/* Group Info */}
-                  {contestant.attendingWith && (
-                    <div className="space-y-2 border-t pt-3">
-                      <h4 className="text-sm font-medium text-muted-foreground">Group</h4>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Users className="h-4 w-4 text-blue-500" />
-                        <span>Attending with: <strong>{contestant.attendingWith}</strong></span>
-                      </div>
-                      {contestant.groupSize && (
-                        <div className="text-sm text-muted-foreground">
-                          Group size: {contestant.groupSize}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* Notes */}
-                  {(contestant.medicalInfo || contestant.mobilityNotes || contestant.notes) && (
-                    <div className="space-y-2 border-t pt-3">
-                      <h4 className="text-sm font-medium text-muted-foreground">Notes</h4>
-                      {contestant.medicalInfo && (
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Medical:</span> {contestant.medicalInfo}
-                        </div>
-                      )}
-                      {contestant.mobilityNotes && (
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Mobility:</span> {contestant.mobilityNotes}
-                        </div>
-                      )}
-                      {contestant.notes && (
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Other:</span> {contestant.notes}
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
                 
-                <DialogFooter>
+                <DialogFooter className="gap-2 sm:gap-0">
                   <Button variant="outline" onClick={() => setViewContestantId(null)}>
                     Close
                   </Button>
