@@ -627,9 +627,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   const nearbyText = textItems.filter((t: any) => {
                     const yDiff = t.y - imageY; // positive if text is ABOVE image
                     const xDiff = Math.abs(t.x - imageX);
-                    // Text should be above image (within 150 units) and within the image column width
-                    // Also allow slightly below (-30) to handle edge cases
-                    return yDiff > -30 && yDiff < 150 && xDiff < imageWidth + 50;
+                    // Text should be above image (within 150 units) and strictly within the image column
+                    // Use tight horizontal tolerance (half the image width) to avoid cross-column matches
+                    return yDiff > -30 && yDiff < 150 && xDiff < imageWidth * 0.8;
                   }).sort((a: any, b: any) => {
                     // Sort by proximity: closest to image top edge first
                     const aDiff = Math.abs(a.y - imageY);
