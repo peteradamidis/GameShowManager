@@ -1136,7 +1136,7 @@ export default function SeatingChartPage() {
                         <div
                           key={contestant.id}
                           onClick={() => setSelectedContestant(contestant.id)}
-                          className={`flex items-center gap-3 p-2.5 rounded-md cursor-pointer transition-all ${
+                          className={`grid grid-cols-[auto_1fr_auto] items-center gap-3 p-2.5 rounded-md cursor-pointer transition-all ${
                             isSelected 
                               ? 'bg-primary text-primary-foreground shadow-sm' 
                               : 'hover:bg-muted'
@@ -1144,7 +1144,7 @@ export default function SeatingChartPage() {
                           data-testid={`contestant-card-${contestant.id}`}
                         >
                           {/* Rating indicator */}
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
                             contestant.auditionRating 
                               ? ratingColors[contestant.auditionRating] || 'bg-gray-500 text-white'
                               : 'bg-muted text-muted-foreground'
@@ -1152,27 +1152,31 @@ export default function SeatingChartPage() {
                             {contestant.auditionRating || '?'}
                           </div>
                           
-                          <div className="flex-1 min-w-0 overflow-hidden">
+                          {/* Info section - constrained to available space */}
+                          <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className={`font-medium truncate`}>
+                              <span className="font-medium truncate">
                                 {contestant.name}
                               </span>
                               {hasGroup && (
                                 <Users className={`h-3.5 w-3.5 flex-shrink-0 ${isSelected ? 'text-primary-foreground/70' : 'text-blue-500'}`} />
                               )}
+                              {isSelected && (
+                                <Check className="h-4 w-4 flex-shrink-0" />
+                              )}
                             </div>
                             <div className={`text-xs truncate ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                               {contestant.gender === "Female" ? "F" : "M"}
-                              {contestant.age && ` | Age ${contestant.age}`}
+                              {contestant.age && ` | ${contestant.age}yo`}
                               {hasGroup && ` | ${contestant.attendingWith}`}
                             </div>
                           </div>
                           
-                          {/* View button */}
+                          {/* View button - always visible */}
                           <Button
                             size="sm"
                             variant={isSelected ? "secondary" : "outline"}
-                            className="h-7 px-2 flex-shrink-0"
+                            className="h-7 px-2"
                             onClick={(e) => {
                               e.stopPropagation();
                               setViewContestantId(contestant.id);
@@ -1182,10 +1186,6 @@ export default function SeatingChartPage() {
                             <Eye className="h-3.5 w-3.5 mr-1" />
                             View
                           </Button>
-                          
-                          {isSelected && (
-                            <Check className="h-5 w-5 flex-shrink-0" />
-                          )}
                         </div>
                       );
                     })
