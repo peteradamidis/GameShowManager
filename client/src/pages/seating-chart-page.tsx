@@ -1174,17 +1174,16 @@ export default function SeatingChartPage() {
                           
                           {/* View button - always visible */}
                           <Button
-                            size="sm"
+                            size="icon"
                             variant={isSelected ? "secondary" : "outline"}
-                            className="h-7 px-2"
+                            className="h-7 w-7"
                             onClick={(e) => {
                               e.stopPropagation();
                               setViewContestantId(contestant.id);
                             }}
                             data-testid={`button-view-contestant-${contestant.id}`}
                           >
-                            <Eye className="h-3.5 w-3.5 mr-1" />
-                            View
+                            <Eye className="h-4 w-4" />
                           </Button>
                         </div>
                       );
