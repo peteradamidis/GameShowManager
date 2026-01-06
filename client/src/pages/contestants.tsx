@@ -1,5 +1,6 @@
 import { ContestantTable, Contestant, getDistanceFromDocklands } from "@/components/contestant-table";
 import { ImportExcelDialog } from "@/components/import-excel-dialog";
+import { ImportGalleryDialog } from "@/components/import-gallery-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -824,9 +825,10 @@ export default function Contestants() {
             )}
           </div>
         </div>
-        {/* Import button - always visible */}
+        {/* Import buttons - always visible */}
         <div className="flex gap-2 justify-end">
           <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
+          <ImportGalleryDialog />
           {selectedContestants.length > 0 && (
             <Button 
               variant="destructive"

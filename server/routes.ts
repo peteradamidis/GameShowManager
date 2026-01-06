@@ -61,6 +61,19 @@ function getBaseUrl(req?: Request): string {
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+// PDF upload configuration with size limit (for gallery imports)
+const pdfUpload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit for gallery PDFs
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'));
+    }
+  }
+});
+
 // Photo upload configuration - store on disk
 const photoStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -425,6 +438,318 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Photo generation error:", error);
       res.status(500).json({ error: "Failed to generate photos" });
+    }
+  });
+
+  // Import photos from Cast It Reach Gallery PDF
+  app.post("/api/contestants/import-gallery", (req, res, next) => {
+    pdfUpload.single("file")(req, res, (err: any) => {
+      if (err) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ error: "PDF file too large. Maximum size is 50MB." });
+        }
+        if (err.message === 'Only PDF files are allowed') {
+          return res.status(400).json({ error: "Only PDF files are allowed." });
+        }
+        console.error("PDF upload error:", err);
+        return res.status(400).json({ error: err.message || "File upload failed" });
+      }
+      next();
+    });
+  }, async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No PDF file uploaded" });
+      }
+
+      console.log(`[Gallery Import] Processing PDF: ${req.file.originalname}, size: ${req.file.buffer.length} bytes`);
+
+      // Dynamic import of pdfjs-dist (ESM module)
+      const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
+      const { createCanvas } = await import('canvas');
+
+      // Load the PDF
+      const pdfData = new Uint8Array(req.file.buffer);
+      const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+      
+      console.log(`[Gallery Import] PDF has ${pdf.numPages} pages`);
+
+      // Get all contestants for name matching
+      const allContestants = await storage.getContestants();
+      console.log(`[Gallery Import] Found ${allContestants.length} contestants in database`);
+
+      // Create name lookup maps (case-insensitive, trimmed)
+      const contestantByName = new Map<string, typeof allContestants[0]>();
+      const contestantByFirstLastName = new Map<string, typeof allContestants[0]>();
+      
+      allContestants.forEach(c => {
+        const normalized = c.name.toLowerCase().trim();
+        contestantByName.set(normalized, c);
+        
+        // Also create lookup by "FirstName LastName" format (in case PDF has different formatting)
+        const parts = c.name.split(/\s+/).filter(p => p.length > 0);
+        if (parts.length >= 2) {
+          // Try first and last only
+          const firstLast = `${parts[0]} ${parts[parts.length - 1]}`.toLowerCase();
+          contestantByFirstLastName.set(firstLast, c);
+        }
+      });
+
+      interface ExtractedEntry {
+        imageData: Buffer;
+        imageName: string;
+        imageY: number;
+        textItems: { text: string; y: number }[];
+        matchedName: string | null;
+        matchedContestant: typeof allContestants[0] | null;
+        page: number;
+      }
+
+      const extractedEntries: ExtractedEntry[] = [];
+      const uploadPath = path.join(process.cwd(), 'uploads', 'photos');
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+      }
+
+      // Process each page
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 1.0 });
+        
+        console.log(`[Gallery Import] Processing page ${pageNum}, dimensions: ${viewport.width}x${viewport.height}`);
+
+        // Get text content with positions
+        const textContent = await page.getTextContent();
+        const textItems = textContent.items.map((item: any) => ({
+          text: item.str,
+          x: item.transform[4],
+          y: item.transform[5],
+          height: item.height
+        })).filter((item: any) => item.text.trim().length > 0);
+
+        // Get operator list to find images
+        const operatorList = await page.getOperatorList();
+        const { fnArray, argsArray } = operatorList;
+
+        // Track transform matrices to get image positions
+        let currentTransform = [1, 0, 0, 1, 0, 0];
+        const transformStack: number[][] = [];
+
+        for (let i = 0; i < fnArray.length; i++) {
+          const op = fnArray[i];
+          const args = argsArray[i];
+
+          // Track transform operations
+          if (op === pdfjsLib.OPS.save) {
+            transformStack.push([...currentTransform]);
+          } else if (op === pdfjsLib.OPS.restore) {
+            if (transformStack.length > 0) {
+              currentTransform = transformStack.pop()!;
+            }
+          } else if (op === pdfjsLib.OPS.transform) {
+            // Multiply matrices
+            const [a, b, c, d, e, f] = args;
+            const [a2, b2, c2, d2, e2, f2] = currentTransform;
+            currentTransform = [
+              a * a2 + b * c2,
+              a * b2 + b * d2,
+              c * a2 + d * c2,
+              c * b2 + d * d2,
+              e * a2 + f * c2 + e2,
+              e * b2 + f * d2 + f2
+            ];
+          }
+
+          // Check for image painting operations
+          if (op === pdfjsLib.OPS.paintImageXObject || op === pdfjsLib.OPS.paintJpegXObject) {
+            const imageName = args[0];
+            
+            // Get image position from current transform
+            const imageX = currentTransform[4];
+            const imageY = currentTransform[5];
+            const imageWidth = Math.abs(currentTransform[0]);
+            const imageHeight = Math.abs(currentTransform[3]);
+
+            // Skip very small images (likely icons/bullets)
+            if (imageWidth < 50 || imageHeight < 50) {
+              continue;
+            }
+
+            console.log(`[Gallery Import] Found image '${imageName}' at (${imageX}, ${imageY}), size: ${imageWidth}x${imageHeight}`);
+
+            // Get the image data
+            try {
+              const image: any = await new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => reject(new Error('Timeout')), 5000);
+                page.objs.get(imageName, (img: any) => {
+                  clearTimeout(timeout);
+                  resolve(img);
+                });
+              });
+
+              if (image && image.width > 0 && image.height > 0) {
+                // Create canvas and draw image
+                const canvas = createCanvas(image.width, image.height);
+                const ctx = canvas.getContext('2d');
+                
+                // Handle different image data formats
+                let imageDataArray: Uint8ClampedArray;
+                if (image.data && image.data.length > 0) {
+                  // Standard format - RGBA data
+                  if (image.data.length === image.width * image.height * 4) {
+                    imageDataArray = new Uint8ClampedArray(image.data);
+                  } else if (image.data.length === image.width * image.height * 3) {
+                    // RGB to RGBA conversion
+                    imageDataArray = new Uint8ClampedArray(image.width * image.height * 4);
+                    for (let j = 0; j < image.width * image.height; j++) {
+                      imageDataArray[j * 4] = image.data[j * 3];
+                      imageDataArray[j * 4 + 1] = image.data[j * 3 + 1];
+                      imageDataArray[j * 4 + 2] = image.data[j * 3 + 2];
+                      imageDataArray[j * 4 + 3] = 255;
+                    }
+                  } else {
+                    console.log(`[Gallery Import] Skipping image '${imageName}' - unexpected data format (${image.data.length} bytes for ${image.width}x${image.height})`);
+                    continue;
+                  }
+
+                  const imgData = ctx.createImageData(image.width, image.height);
+                  imgData.data.set(imageDataArray);
+                  ctx.putImageData(imgData, 0, 0);
+
+                  const buffer = canvas.toBuffer('image/png');
+
+                  // Find text items near this image (below the image, within reasonable distance)
+                  // PDF coordinates: origin at bottom-left, Y increases upward
+                  // Text that appears BELOW the image has a LOWER Y value
+                  const nearbyText = textItems.filter((t: any) => {
+                    const yDiff = imageY - t.y; // positive if text is below image
+                    const xDiff = Math.abs(t.x - imageX);
+                    // Text should be below image (0-100 units) and roughly aligned horizontally
+                    return yDiff > 0 && yDiff < 100 && xDiff < imageWidth + 50;
+                  }).sort((a: any, b: any) => b.y - a.y); // Sort by Y descending (closest to image first)
+
+                  extractedEntries.push({
+                    imageData: buffer,
+                    imageName,
+                    imageY,
+                    textItems: nearbyText,
+                    matchedName: null,
+                    matchedContestant: null,
+                    page: pageNum
+                  });
+                }
+              }
+            } catch (imgError) {
+              console.log(`[Gallery Import] Could not extract image '${imageName}': ${imgError}`);
+            }
+          }
+        }
+      }
+
+      console.log(`[Gallery Import] Extracted ${extractedEntries.length} images from PDF`);
+
+      // Match extracted images to contestants
+      let matchedCount = 0;
+      let unmatchedNames: string[] = [];
+
+      for (const entry of extractedEntries) {
+        // Try to find a name in the text items
+        for (const textItem of entry.textItems) {
+          const text = textItem.text.trim();
+          
+          // Skip location-only text (single words that look like suburbs)
+          if (text.split(/\s+/).length === 1 && !contestantByName.has(text.toLowerCase())) {
+            continue;
+          }
+
+          // Try exact match first
+          const normalizedText = text.toLowerCase().trim();
+          let contestant = contestantByName.get(normalizedText);
+          
+          // Try first-last name match
+          if (!contestant) {
+            contestant = contestantByFirstLastName.get(normalizedText);
+          }
+
+          // Try fuzzy match - check if text contains a contestant name
+          if (!contestant) {
+            for (const [name, c] of contestantByName) {
+              if (normalizedText.includes(name) || name.includes(normalizedText)) {
+                contestant = c;
+                break;
+              }
+            }
+          }
+
+          if (contestant) {
+            entry.matchedName = text;
+            entry.matchedContestant = contestant;
+            console.log(`[Gallery Import] Matched "${text}" to contestant: ${contestant.name} (ID: ${contestant.id})`);
+            break;
+          }
+        }
+
+        if (!entry.matchedContestant && entry.textItems.length > 0) {
+          unmatchedNames.push(entry.textItems.map(t => t.text).join(' | '));
+        }
+      }
+
+      // Save photos for matched contestants
+      const results: { contestantId: string; contestantName: string; photoUrl: string }[] = [];
+      const errors: { name: string; error: string }[] = [];
+
+      for (const entry of extractedEntries) {
+        if (entry.matchedContestant) {
+          try {
+            // Delete old photo if exists
+            if (entry.matchedContestant.photoUrl) {
+              const oldFilePath = path.join(process.cwd(), entry.matchedContestant.photoUrl.replace(/^\//, ''));
+              if (fs.existsSync(oldFilePath)) {
+                fs.unlinkSync(oldFilePath);
+              }
+            }
+
+            // Save new photo
+            const filename = `contestant-gallery-${entry.matchedContestant.id}-${Date.now()}.png`;
+            const filePath = path.join(uploadPath, filename);
+            fs.writeFileSync(filePath, entry.imageData);
+
+            const photoUrl = `/uploads/photos/${filename}`;
+            await storage.updateContestantPhoto(entry.matchedContestant.id, photoUrl);
+
+            results.push({
+              contestantId: entry.matchedContestant.id,
+              contestantName: entry.matchedContestant.name,
+              photoUrl
+            });
+            matchedCount++;
+          } catch (saveError: any) {
+            console.error(`[Gallery Import] Error saving photo for ${entry.matchedContestant.name}:`, saveError);
+            errors.push({
+              name: entry.matchedContestant.name,
+              error: saveError.message
+            });
+          }
+        }
+      }
+
+      console.log(`[Gallery Import] Complete: ${matchedCount} photos imported, ${unmatchedNames.length} unmatched`);
+
+      res.json({
+        message: `Successfully imported ${matchedCount} photos from ${extractedEntries.length} images found in PDF`,
+        imported: matchedCount,
+        totalImages: extractedEntries.length,
+        unmatched: unmatchedNames.slice(0, 20), // Limit to first 20
+        errors: errors.slice(0, 10),
+        results
+      });
+
+    } catch (error: any) {
+      console.error("[Gallery Import] Error:", error);
+      res.status(500).json({ 
+        error: "Failed to import gallery PDF",
+        details: error.message 
+      });
     }
   });
 
