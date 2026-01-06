@@ -198,9 +198,28 @@ export function SeatCard({
               </Tooltip>
             )}
             {seat.mobilityNotes && (
-              <div data-testid={`mobility-icon-${seat.assignmentId}`}>
-                <Plus className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" style={{ strokeWidth: 3 }} />
-              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div data-testid={`mobility-icon-${seat.assignmentId}`}>
+                    <Plus className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" style={{ strokeWidth: 3 }} />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  <p>Has mobility/medical notes</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {seat.age && seat.age >= 70 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div data-testid={`senior-icon-${seat.assignmentId}`}>
+                    <Plus className="h-3 w-3 text-blue-600 dark:text-blue-400 flex-shrink-0" style={{ strokeWidth: 3 }} />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  <p>Age 70+</p>
+                </TooltipContent>
+              </Tooltip>
             )}
           </div>
           <div className="flex items-center gap-1">
