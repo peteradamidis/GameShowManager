@@ -2448,6 +2448,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         meanAge: number;
         ratingCounts: Record<string, number>;
         bundles: string[];
+        reservedSeats: Set<string>; // Seats reserved as empty for PB blocks
+      };
+
+      // Helper function to generate random consecutive seat pairs for PB blocks
+      // Returns 2 pairs of consecutive seats (4 seats total) randomly selected
+      const generateReservedPairs = (): Set<string> => {
+        const reserved = new Set<string>();
+        
+        // Generate all possible consecutive pairs within each row
+        const allPairs: { row: string; start: number }[] = [];
+        for (const row of ROWS) {
+          // A row with 5 seats can have pairs: (1,2), (2,3), (3,4), (4,5)
+          for (let start = 1; start < row.count; start++) {
+            allPairs.push({ row: row.label, start });
+          }
+        }
+        
+        // Shuffle the pairs using Fisher-Yates
+        for (let i = allPairs.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [allPairs[i], allPairs[j]] = [allPairs[j], allPairs[i]];
+        }
+        
+        // Pick 2 non-overlapping pairs
+        const selectedPairs: { row: string; start: number }[] = [];
+        for (const pair of allPairs) {
+          // Check if this pair overlaps with already selected pairs
+          const seat1 = `${pair.row}${pair.start}`;
+          const seat2 = `${pair.row}${pair.start + 1}`;
+          
+          if (!reserved.has(seat1) && !reserved.has(seat2)) {
+            reserved.add(seat1);
+            reserved.add(seat2);
+            selectedPairs.push(pair);
+            
+            if (selectedPairs.length >= 2) break;
+          }
+        }
+        
+        return reserved;
       };
 
       // Reusable scoring type for both groups and solos
@@ -2469,9 +2509,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Only initialize blocks that were selected, accounting for existing assignments
       const blocks: BlockState[] = validBlocks.map(blockNum => {
         const existingCount = existingCountByBlock.get(blockNum) || 0;
+        const blockType = blockTypeMap[blockNum];
+        // PB blocks get 2 random pairs of consecutive empty seats reserved
+        const reservedSeats = blockType === 'PB' ? generateReservedPairs() : new Set<string>();
+        
+        if (blockType === 'PB' && reservedSeats.size > 0) {
+          console.log(`[Auto-assign] Block ${blockNum} (PB) reserved empty seats: ${Array.from(reservedSeats).join(', ')}`);
+        }
+        
         return {
           blockNumber: blockNum,
-          blockType: blockTypeMap[blockNum],
+          blockType,
           seatsUsed: existingCount, // Start with existing assignment count
           femaleCount: 0,
           maleCount: 0,
@@ -2480,6 +2528,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           meanAge: 0,
           ratingCounts: { 'A': 0, 'B+': 0, 'B': 0, 'C': 0 },
           bundles: [],
+          reservedSeats,
         };
       });
       
@@ -2915,13 +2964,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             usedSeats.add(a.seatLabel);
           });
         
-        // For PB blocks, reserve the last 2 adjacent seats in row E (E3 and E4) to ensure 
-        // the 2 empty seats are next to each other in the same row.
-        // Since auto-assign bundles are max size 2 (pairs from attendingWith matching),
-        // E1-E2 still provides 2 consecutive seats for any pair, and rows A-D remain fully available.
-        if (block.blockType === 'PB') {
-          usedSeats.add('E3');
-          usedSeats.add('E4');
+        // Add reserved empty seats for PB blocks (2 random pairs of consecutive seats)
+        if (block.reservedSeats) {
+          block.reservedSeats.forEach(seat => usedSeats.add(seat));
         }
 
         for (const { bundle } of blockAssignments) {
@@ -2981,11 +3026,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .filter(a => a.blockNumber === blockNumber)
           .forEach(a => occupiedSeats.add(a.seatLabel));
         
-        // Reserve E3-E4 for PB blocks
+        // Add reserved empty seats for PB blocks (randomly generated 2 pairs of consecutive seats)
         const block = blocks.find(b => b.blockNumber === blockNumber);
-        if (block?.blockType === 'PB') {
-          occupiedSeats.add('E3');
-          occupiedSeats.add('E4');
+        if (block?.reservedSeats) {
+          block.reservedSeats.forEach(seat => occupiedSeats.add(seat));
         }
         
         // Find first available seat in this block
