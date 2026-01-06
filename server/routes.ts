@@ -158,17 +158,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // This ensures that even if the header isn't sent by the browser, 
   // we handle the bypass logic server-side.
   app.use((req, res, next) => {
-    // If the skip parameter is present in the query, we attempt to set headers 
-    // and also provide a simple interstitial bypass page if it's a browser request
+    // If the skip parameter is present in the query, we serve a tiny bypass page
+    // that sets the required header/cookie via a fetch request and then reloads.
     if (req.query['ngrok-skip-browser-warning'] || req.query['ngrok_skip_browser_warning'] || req.query['bypass_ngrok_browser_warning']) {
-      res.setHeader('ngrok-skip-browser-warning', 'true');
-      
-      // If this is a direct browser navigation (Accepts HTML) and NOT an AJAX request
-      // we can try to serve a tiny script that set the cookie/header and reloads
       const accept = req.headers.accept || '';
-      if (accept.includes('text/html') && !req.xhr && !req.headers['x-requested-with']) {
-        // Only do this once per session or if specifically requested
-        // To be safe, we just let the middleware proceed, but we've set the header for the response
+      // Only serve the bypass page for direct browser navigations (Accepts HTML)
+      // and only if the ngrok header isn't already present in the request
+      if (accept.includes('text/html') && !req.headers['ngrok-skip-browser-warning']) {
+        return res.send(`
+          <html>
+            <head>
+              <title>Loading...</title>
+              <script>
+                fetch(window.location.href, {
+                  headers: { 'ngrok-skip-browser-warning': 'true' }
+                }).then(() => window.location.reload());
+              </script>
+            </head>
+            <body>
+              <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif;">
+                <p>Loading Deal or No Deal...</p>
+              </div>
+            </body>
+          </html>
+        `);
       }
     }
     next();
