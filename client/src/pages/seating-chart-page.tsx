@@ -1166,7 +1166,7 @@ export default function SeatingChartPage() {
                         <div
                           key={contestant.id}
                           onClick={() => setSelectedContestant(contestant.id)}
-                          className={`grid grid-cols-[auto_auto_1fr_auto] items-center gap-2 p-2 rounded-md cursor-pointer transition-all ${
+                          className={`grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 p-2 rounded-md cursor-pointer transition-all ${
                             isSelected 
                               ? 'bg-primary text-primary-foreground shadow-sm' 
                               : 'hover:bg-muted'
@@ -1182,15 +1182,6 @@ export default function SeatingChartPage() {
                               <User className="h-4 w-4 text-muted-foreground" />
                             </AvatarFallback>
                           </Avatar>
-                          
-                          {/* Rating indicator */}
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                            contestant.auditionRating 
-                              ? ratingColors[contestant.auditionRating] || 'bg-gray-500 text-white'
-                              : 'bg-muted text-muted-foreground'
-                          }`}>
-                            {contestant.auditionRating || '?'}
-                          </div>
                           
                           {/* Info section - constrained to available space */}
                           <div className="min-w-0">
@@ -1210,6 +1201,15 @@ export default function SeatingChartPage() {
                               {contestant.age && ` | ${contestant.age}yo`}
                               {hasGroup && ` | ${contestant.attendingWith}`}
                             </div>
+                          </div>
+                          
+                          {/* Rating indicator - moved to right */}
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                            contestant.auditionRating 
+                              ? ratingColors[contestant.auditionRating] || 'bg-gray-500 text-white'
+                              : 'bg-muted text-muted-foreground'
+                          }`}>
+                            {contestant.auditionRating || '?'}
                           </div>
                           
                           {/* View button - always visible */}
