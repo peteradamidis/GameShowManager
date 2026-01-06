@@ -620,16 +620,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
                   const buffer = canvas.toBuffer('image/png');
 
-                  // Find text items near this image (below the image, within reasonable distance)
+                  // Find text items near this image (ABOVE the image in the PDF layout)
                   // PDF coordinates: origin at bottom-left, Y increases upward
-                  // Text that appears BELOW the image has a LOWER Y value
+                  // Text that appears ABOVE the image has a HIGHER Y value
+                  // So textY > imageY means text is above the image
                   const nearbyText = textItems.filter((t: any) => {
-                    const yDiff = imageY - t.y; // positive if text is below image
+                    const yDiff = t.y - imageY; // positive if text is ABOVE image
                     const xDiff = Math.abs(t.x - imageX);
-                    // Text should be below image (0-150 units) and within the image column width
-                    // Increase tolerance for different PDF layouts
-                    return yDiff > -20 && yDiff < 150 && xDiff < imageWidth + 100;
-                  }).sort((a: any, b: any) => b.y - a.y); // Sort by Y descending (closest to image first)
+                    // Text should be above image (within 150 units) and within the image column width
+                    // Also allow slightly below (-30) to handle edge cases
+                    return yDiff > -30 && yDiff < 150 && xDiff < imageWidth + 50;
+                  }).sort((a: any, b: any) => {
+                    // Sort by proximity: closest to image top edge first
+                    const aDiff = Math.abs(a.y - imageY);
+                    const bDiff = Math.abs(b.y - imageY);
+                    return aDiff - bDiff;
+                  });
 
                   extractedEntries.push({
                     imageData: buffer,
