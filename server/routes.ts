@@ -4534,6 +4534,154 @@ ${finalEmailFooter}`;
     }
   });
 
+  // Webhook endpoint to receive availability responses from Microsoft Forms via Power Automate
+  app.post("/api/webhooks/availability-response", async (req, res) => {
+    try {
+      console.log("[Availability Webhook] Received response:", JSON.stringify(req.body, null, 2));
+      
+      // Verify webhook secret (optional but recommended)
+      const webhookSecret = await storage.getSystemConfig('forms_webhook_secret');
+      const providedSecret = req.headers['x-webhook-secret'] || req.body.webhookSecret;
+      
+      if (webhookSecret && webhookSecret !== providedSecret) {
+        console.warn("[Availability Webhook] Invalid or missing webhook secret");
+        return res.status(401).json({ error: "Invalid webhook secret" });
+      }
+      
+      // Extract form response data - flexible field mapping
+      const responseData = {
+        contestantName: req.body.contestantName || req.body.name || req.body.Name || req.body["Contestant Name"] || req.body["Your Name"] || "",
+        contestantEmail: req.body.contestantEmail || req.body.email || req.body.Email || req.body["Email Address"] || req.body["Your Email"] || "",
+        availableDates: req.body.availableDates || req.body.dates || req.body.Dates || req.body["Available Dates"] || req.body["Which dates are you available?"] || "",
+        response: req.body.response || req.body.Response || req.body.availability || req.body.Availability || "",
+        notes: req.body.notes || req.body.Notes || req.body.questions || req.body.Questions || "",
+      };
+      
+      console.log("[Availability Webhook] Parsed data:", responseData);
+      
+      // Normalize response value
+      let availabilityStatus: 'yes' | 'no' | 'maybe' | 'pending' = 'pending';
+      const responseNormalized = (responseData.response || responseData.availableDates).toLowerCase().trim();
+      
+      if (responseNormalized.includes('yes') || responseNormalized.includes('available') || responseNormalized.includes('all dates')) {
+        availabilityStatus = 'yes';
+      } else if (responseNormalized.includes('no') || responseNormalized.includes('not available') || responseNormalized.includes('none') || responseNormalized.includes('unavailable')) {
+        availabilityStatus = 'no';
+      } else if (responseNormalized.includes('maybe') || responseNormalized.includes('some') || responseNormalized.includes('partial')) {
+        availabilityStatus = 'maybe';
+      } else if (responseNormalized) {
+        // If they provided specific dates, mark as yes
+        availabilityStatus = 'yes';
+      }
+      
+      // Find the contestant by email or name
+      const allContestants = await storage.getContestants();
+      let contestant = null;
+      
+      // Try email match first (more reliable)
+      if (responseData.contestantEmail) {
+        contestant = allContestants.find(c => 
+          c.email?.toLowerCase() === responseData.contestantEmail.toLowerCase()
+        );
+      }
+      
+      // Fall back to name match
+      if (!contestant && responseData.contestantName) {
+        contestant = allContestants.find(c => 
+          c.name.toLowerCase() === responseData.contestantName.toLowerCase()
+        );
+      }
+      
+      if (!contestant) {
+        console.warn("[Availability Webhook] Could not find contestant:", responseData.contestantName, responseData.contestantEmail);
+        return res.status(404).json({ 
+          error: "Contestant not found",
+          searchedName: responseData.contestantName,
+          searchedEmail: responseData.contestantEmail,
+        });
+      }
+      
+      console.log("[Availability Webhook] Found contestant:", contestant.name, contestant.id);
+      
+      // Get all record days and update availability for each
+      const recordDays = await storage.getRecordDays();
+      const updatedDays: string[] = [];
+      
+      // Build notes with submission info
+      const notesWithSource = responseData.notes 
+        ? `${responseData.notes}\n\n(Submitted via Microsoft Forms)`
+        : `Available Dates: ${responseData.availableDates || 'Not specified'}\n(Submitted via Microsoft Forms)`;
+      
+      // If specific dates mentioned, try to match them
+      const datesText = responseData.availableDates.toLowerCase();
+      
+      for (const recordDay of recordDays) {
+        const recordDate = new Date(recordDay.date);
+        const dateStr = recordDate.toLocaleDateString('en-AU', { 
+          weekday: 'long', 
+          day: 'numeric', 
+          month: 'long' 
+        }).toLowerCase();
+        const shortDate = recordDate.toLocaleDateString('en-AU').toLowerCase();
+        const rxNumber = (recordDay.rxNumber || '').toLowerCase();
+        
+        // Check if this date is mentioned in the response
+        let dayStatus = availabilityStatus;
+        
+        if (availabilityStatus === 'yes' && datesText) {
+          // Check if this specific date is mentioned
+          const mentioned = datesText.includes(dateStr) || 
+                           datesText.includes(shortDate) ||
+                           datesText.includes(rxNumber) ||
+                           datesText.includes('all');
+          
+          if (!mentioned && !datesText.includes('all')) {
+            // Date not mentioned, might be a maybe
+            dayStatus = 'maybe';
+          }
+        }
+        
+        // Update availability for this record day
+        await storage.upsertContestantAvailability(
+          contestant.id,
+          recordDay.id,
+          dayStatus,
+          notesWithSource
+        );
+        
+        updatedDays.push(`${recordDay.rxNumber || recordDay.date}: ${dayStatus}`);
+      }
+      
+      // Mark any active availability tokens as used
+      const tokens = await storage.getAvailabilityTokensByContestant(contestant.id);
+      for (const token of tokens) {
+        if (token.status === 'active') {
+          await storage.updateTokenStatus(token.id, 'used');
+        }
+      }
+      
+      console.log("[Availability Webhook] Updated availability:", {
+        contestant: contestant.name,
+        status: availabilityStatus,
+        updatedDays,
+      });
+      
+      // Return success response
+      res.json({
+        success: true,
+        message: `Availability updated for ${contestant.name}`,
+        contestantId: contestant.id,
+        contestantName: contestant.name,
+        availabilityStatus,
+        updatedDays,
+      });
+      
+    } catch (error: any) {
+      console.error("[Availability Webhook] Error processing response:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get webhook configuration info for Power Automate setup
   app.get("/api/webhooks/forms-config", async (req, res) => {
     try {
