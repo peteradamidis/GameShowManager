@@ -6500,6 +6500,375 @@ ${finalEmailFooter}`;
   });
 
   // ==========================================
+  // Email Template Preview Endpoints
+  // ==========================================
+
+  // Dynamic Booking Email Preview
+  app.get("/api/email-preview/booking", async (req, res) => {
+    try {
+      // Get saved template values with fallback defaults
+      const headline = await storage.getSystemConfig('booking_email_headline') || 'Your Booking is Confirmed!';
+      const intro = await storage.getSystemConfig('booking_email_intro') || 'Congratulations! You\'ve secured your spot in the <strong style="color: #8B0000;">Deal or No Deal</strong> studio audience.';
+      const instructions = await storage.getSystemConfig('booking_email_instructions') || 'Please confirm your attendance by clicking the button below. You can also let us know about dietary requirements or ask any questions.';
+      const additionalInstructions = await storage.getSystemConfig('booking_email_additional_instructions') || 'We will be recording multiple episodes on the day. The recording of these shows will take approximately 10 hours. Please be prepared to make yourself available for the full length of time.';
+      const footer = await storage.getSystemConfig('booking_email_footer') || 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.';
+      
+      // Sample data for preview
+      const sampleName = 'Peter';
+      const sampleDate = 'Wednesday, 15 January 2026';
+      const sampleRx = 'RX01';
+      
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Confirmation Email Preview</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5;">
+  <div style="text-align: center; margin-bottom: 20px;">
+    <span style="background: #28a745; color: white; padding: 8px 16px; border-radius: 4px; font-size: 14px;">LIVE PREVIEW - Using Your Saved Template</span>
+  </div>
+  <div style="max-width: 600px; margin: 0 auto; background-color: #2a0a0a;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+      <tr>
+        <td style="padding: 0; line-height: 0; background: linear-gradient(135deg, #8B0000 0%, #5c0000 100%); text-align: center; padding: 30px;">
+          <h2 style="color: #D4AF37; font-size: 28px; margin: 0; letter-spacing: 2px;">DEAL OR NO DEAL</h2>
+          <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 14px;">BANNER IMAGE APPEARS HERE</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+          <h1 style="color: #D4AF37; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+            ${headline}
+          </h1>
+        </td>
+      </tr>
+      <tr>
+        <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+            <tr>
+              <td style="padding: 35px 30px;">
+                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
+                  Hi ${sampleName},
+                </p>
+                <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+                  ${intro}
+                </div>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                        Your Record Day Details
+                      </h2>
+                      <p style="color: #333333; font-size: 15px; margin: 0 0 8px 0;">
+                        <strong>Date:</strong> ${sampleDate}
+                      </p>
+                      <p style="color: #333333; font-size: 15px; margin: 0 0 8px 0;">
+                        <strong>Recording:</strong> ${sampleRx}
+                      </p>
+                      <p style="color: #333333; font-size: 15px; margin: 0;">
+                        <strong>Location:</strong> Docklands Studios Melbourne
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+                <div style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                  ${instructions}
+                </div>
+                <p style="color: #555555; font-size: 14px; text-align: center; margin: 0 0 15px 0; font-weight: bold;">
+                  Please respond by clicking one of the buttons below:
+                </p>
+                <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 15px auto;">
+                  <tr>
+                    <td style="padding: 0 5px;">
+                      <a href="#" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">&#10003; CONFIRM</a>
+                    </td>
+                    <td style="padding: 0 5px;">
+                      <a href="#" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">&#10007; CANNOT ATTEND</a>
+                    </td>
+                  </tr>
+                </table>
+                <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
+                  <tr>
+                    <td style="padding: 0 5px;">
+                      <a href="#" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(13,110,253,0.3);">? QUESTIONS / SPECIAL NEEDS</a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="color: #888888; font-size: 12px; text-align: center; margin: 0 0 20px 0;">
+                  Clicking a button will open your email app with a pre-filled message
+                </p>
+                ${additionalInstructions ? `
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; margin-top: 20px;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 0;">${additionalInstructions.replace(/\n/g, '<br/>')}</p>
+                    </td>
+                  </tr>
+                </table>
+                ` : ''}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 25px 20px; text-align: center;">
+          <p style="color: #D4AF37; font-size: 12px; line-height: 1.5; margin: 0;">
+            ${footer}
+          </p>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>`;
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error: any) {
+      console.error("Error generating booking email preview:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Dynamic Availability Email Preview
+  app.get("/api/email-preview/availability", async (req, res) => {
+    try {
+      // Get saved template values with fallback defaults
+      const subject = await storage.getSystemConfig('availability_email_subject') || 'Deal or No Deal - Availability Confirmation Request';
+      const headline = await storage.getSystemConfig('availability_email_headline') || 'Confirm Your Availability';
+      const intro = await storage.getSystemConfig('availability_email_intro') || "Thank you for registering to be part of the Deal or No Deal audience! We're excited to potentially have you join us for an upcoming recording session.";
+      const instructions = await storage.getSystemConfig('availability_email_instructions') || 'Please click the button below to let us know which recording dates work for you. This helps us plan our audience seating and ensures we can accommodate you on your preferred day.';
+      const footer = await storage.getSystemConfig('availability_email_footer') || 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.';
+      
+      // Sample data for preview
+      const sampleName = 'Peter';
+      
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Availability Email Preview</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5;">
+  <div style="text-align: center; margin-bottom: 20px;">
+    <span style="background: #28a745; color: white; padding: 8px 16px; border-radius: 4px; font-size: 14px;">LIVE PREVIEW - Using Your Saved Template</span>
+    <p style="color: #666; font-size: 12px; margin: 8px 0 0 0;">Subject: ${subject}</p>
+  </div>
+  <div style="max-width: 600px; margin: 0 auto; background-color: #2a0a0a;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+      <tr>
+        <td style="padding: 0; line-height: 0; background: linear-gradient(135deg, #8B0000 0%, #5c0000 100%); text-align: center; padding: 30px;">
+          <h2 style="color: #D4AF37; font-size: 28px; margin: 0; letter-spacing: 2px;">DEAL OR NO DEAL</h2>
+          <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 14px;">BANNER IMAGE APPEARS HERE</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+          <h1 style="color: #D4AF37; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+            ${headline}
+          </h1>
+        </td>
+      </tr>
+      <tr>
+        <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+            <tr>
+              <td style="padding: 35px 30px;">
+                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
+                  Hi ${sampleName},
+                </p>
+                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+                  ${intro}
+                </p>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                        Available Recording Dates
+                      </h2>
+                      <ul style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0; padding-left: 20px;">
+                        <li style="margin-bottom: 6px;">Wednesday, 15 January 2026 <span style="color: #888888;">(RX01)</span></li>
+                        <li style="margin-bottom: 6px;">Thursday, 16 January 2026 <span style="color: #888888;">(RX02)</span></li>
+                        <li style="margin-bottom: 0;">Friday, 17 January 2026 <span style="color: #888888;">(RX03)</span></li>
+                      </ul>
+                    </td>
+                  </tr>
+                </table>
+                <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                  ${instructions}
+                </p>
+                <p style="color: #555555; font-size: 14px; text-align: center; margin: 0 0 15px 0; font-weight: bold;">
+                  Please respond by clicking one of the buttons below:
+                </p>
+                <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 15px auto;">
+                  <tr>
+                    <td style="padding: 0 5px;">
+                      <a href="#" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">&#10003; YES, I'M AVAILABLE</a>
+                    </td>
+                    <td style="padding: 0 5px;">
+                      <a href="#" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">&#10007; NOT AVAILABLE</a>
+                    </td>
+                  </tr>
+                </table>
+                <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
+                  <tr>
+                    <td style="padding: 0 5px;">
+                      <a href="#" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(13,110,253,0.3);">? QUESTIONS / SPECIAL NEEDS</a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="color: #888888; font-size: 12px; text-align: center; margin: 0;">
+                  Clicking a button will open your email app with a pre-filled message
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
+          <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
+            ${footer}
+          </p>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>`;
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error: any) {
+      console.error("Error generating availability email preview:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Dynamic Standby Email Preview
+  app.get("/api/email-preview/standby", async (req, res) => {
+    try {
+      // Get saved template values with fallback defaults
+      const headline = await storage.getSystemConfig('standby_email_headline') || "You're on Our Standby List!";
+      const intro = await storage.getSystemConfig('standby_email_intro') || "You have been added to our standby list for an upcoming Deal or No Deal recording. This means you may be called to attend if a seat becomes available.";
+      const instructions = await storage.getSystemConfig('standby_email_instructions') || "Please confirm your availability as a standby by clicking the button below. We'll be in touch if a spot opens up for you.";
+      const footer = await storage.getSystemConfig('standby_email_footer') || 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.';
+      
+      // Sample data for preview
+      const sampleName = 'Sarah';
+      const sampleDate = 'Wednesday, 15 January 2026';
+      const sampleRx = 'RX01';
+      
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Standby Email Preview</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5;">
+  <div style="text-align: center; margin-bottom: 20px;">
+    <span style="background: #7c3aed; color: white; padding: 8px 16px; border-radius: 4px; font-size: 14px;">LIVE PREVIEW - Using Your Saved Template</span>
+  </div>
+  <div style="max-width: 600px; margin: 0 auto; background-color: #2a0a2a;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+      <tr>
+        <td style="padding: 0; line-height: 0; background: linear-gradient(135deg, #4a1a6e 0%, #2a0a2a 100%); text-align: center; padding: 30px;">
+          <h2 style="color: #c084fc; font-size: 28px; margin: 0; letter-spacing: 2px;">DEAL OR NO DEAL</h2>
+          <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 14px;">BANNER IMAGE APPEARS HERE</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="background: linear-gradient(180deg, #4a1a6e 0%, #2a0a2a 100%); padding: 25px 30px; text-align: center;">
+          <h1 style="color: #c084fc; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+            ${headline}
+          </h1>
+        </td>
+      </tr>
+      <tr>
+        <td style="background-color: #2a0a2a; padding: 0 20px 25px 20px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+            <tr>
+              <td style="padding: 35px 30px;">
+                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
+                  Dear ${sampleName},
+                </p>
+                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
+                  ${intro}
+                </p>
+                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+                  You have been selected as a <strong style="color: #7c3aed;">STANDBY</strong> for the recording on <strong>${sampleDate}</strong> (${sampleRx}).
+                </p>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-radius: 8px; border-left: 5px solid #7c3aed; margin: 0 0 25px 0;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <h2 style="color: #5b21b6; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                        Important Information
+                      </h2>
+                      <ul style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0; padding-left: 20px;">
+                        <li style="margin-bottom: 6px;">As a standby, you are not guaranteed a seat in the studio audience</li>
+                        <li style="margin-bottom: 6px;">You will only be seated if a spot becomes available on the day</li>
+                        <li style="margin-bottom: 0;">If you are not seated, you will be given a fast-track invitation to another upcoming studio day</li>
+                      </ul>
+                    </td>
+                  </tr>
+                </table>
+                <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                  ${instructions}
+                </p>
+                <p style="color: #555555; font-size: 14px; text-align: center; margin: 0 0 15px 0; font-weight: bold;">
+                  Please respond by clicking one of the buttons below:
+                </p>
+                <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 15px auto;">
+                  <tr>
+                    <td style="padding: 0 5px;">
+                      <a href="#" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(124,58,237,0.3);">&#10003; CONFIRM STANDBY</a>
+                    </td>
+                    <td style="padding: 0 5px;">
+                      <a href="#" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">&#10007; DECLINE</a>
+                    </td>
+                  </tr>
+                </table>
+                <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
+                  <tr>
+                    <td style="padding: 0 5px;">
+                      <a href="#" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(13,110,253,0.3);">? QUESTIONS / SPECIAL NEEDS</a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="color: #888888; font-size: 12px; text-align: center; margin: 0;">
+                  Clicking a button will open your email app with a pre-filled message
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="background-color: #2a0a2a; padding: 15px 30px 30px 30px; text-align: center;">
+          <p style="color: #aa88aa; font-size: 11px; line-height: 1.6; margin: 0;">
+            ${footer}
+          </p>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>`;
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error: any) {
+      console.error("Error generating standby email preview:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==========================================
   // Google Sheets Sync Endpoints
   // ==========================================
 

@@ -1464,7 +1464,7 @@ export default function Settings() {
               Email Template Previews
             </CardTitle>
             <CardDescription>
-              View how each type of email will appear to contestants. These previews show the email layout and sample pre-filled response messages.
+              View how each type of email will appear to contestants. Previews use your saved template text with sample contestant data.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -1478,7 +1478,7 @@ export default function Settings() {
                 </div>
                 <Button
                   variant="outline"
-                  onClick={() => window.open('/email-preview.html', '_blank')}
+                  onClick={() => window.open('/api/email-preview/booking', '_blank')}
                   data-testid="button-preview-booking-email"
                 >
                   <Eye className="w-4 h-4 mr-2" />
@@ -1495,7 +1495,7 @@ export default function Settings() {
                 </div>
                 <Button
                   variant="outline"
-                  onClick={() => window.open('/availability-email-preview.html', '_blank')}
+                  onClick={() => window.open('/api/email-preview/availability', '_blank')}
                   data-testid="button-preview-availability-email"
                 >
                   <Eye className="w-4 h-4 mr-2" />
@@ -1512,7 +1512,7 @@ export default function Settings() {
                 </div>
                 <Button
                   variant="outline"
-                  onClick={() => window.open('/standby-email-preview.html', '_blank')}
+                  onClick={() => window.open('/api/email-preview/standby', '_blank')}
                   data-testid="button-preview-standby-email"
                   className="border-purple-300 hover:bg-purple-100 dark:border-purple-700 dark:hover:bg-purple-900/30"
                 >
@@ -1523,7 +1523,7 @@ export default function Settings() {
             </div>
             
             <p className="text-xs text-muted-foreground pt-2">
-              These previews show static examples. Actual emails will include contestant-specific details and working mailto buttons.
+              Previews show your saved template with sample data. Save changes above, then click Preview to see updates.
             </p>
           </CardContent>
         </Card>
