@@ -16,6 +16,14 @@ import {
   availabilityTokens,
   bookingConfirmationTokens
 } from "@shared/schema";
+import { 
+  parseAttendingWith, 
+  normalizeName as sharedNormalizeName,
+  isSoloContestant,
+  getPartnerNames,
+  getNormalizedPartnerNames,
+  attendingWithMentionsName
+} from "@shared/attendingWithParser";
 import { sql } from "drizzle-orm";
 import xlsx from "xlsx";
 import multer from "multer";
@@ -2095,12 +2103,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else if (contestant?.attendingWith) {
           // Method 2: Fall back to name matching within this day's assignments only
           // Only match if there's exactly one person with that name on this day
-          const names = contestant.attendingWith.split(/[,&]/).map(n => n.trim().toLowerCase());
-          for (const name of names) {
-            const matchingIds = nameToIdMapForThisDay.get(name) || [];
-            // Only use if exactly one match (avoid ambiguity with duplicate names)
-            if (matchingIds.length === 1) {
-              attendingWithIds.push(matchingIds[0]);
+          // Use shared parser for consistent parsing
+          const parsedAttending = parseAttendingWith(contestant.attendingWith);
+          if (!parsedAttending.isSolo) {
+            for (const partnerName of parsedAttending.partnerNames) {
+              const normalizedPartnerName = partnerName.toLowerCase().trim();
+              const matchingIds = nameToIdMapForThisDay.get(normalizedPartnerName) || [];
+              // Only use if exactly one match (avoid ambiguity with duplicate names)
+              if (matchingIds.length === 1) {
+                attendingWithIds.push(matchingIds[0]);
+              }
             }
           }
         }
@@ -2270,13 +2282,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Build a name lookup map for matching attendingWith
       // IMPORTANT: If there are duplicate names, we can't reliably match by name alone
-      // Normalize spaces (collapse multiple spaces to single space)
-      const normalizeName = (name: string) => name.toLowerCase().trim().replace(/\s+/g, ' ');
+      // Use shared normalizeName for consistent behavior across the system
       const nameToContestant = new Map<string, typeof available[0]>();
       const duplicateNames = new Set<string>();
       available.forEach(c => {
-        // Use lowercase for case-insensitive matching, normalize spaces
-        const key = normalizeName(c.name);
+        // Use shared normalizeName for case-insensitive matching
+        const key = sharedNormalizeName(c.name);
         if (nameToContestant.has(key)) {
           // Duplicate name detected - mark it so we don't use name-only matching
           duplicateNames.add(key);
@@ -2315,13 +2326,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contestantsWithUnavailablePartners = new Set<string>();
 
       // Helper: Check if person B lists person A (bidirectional verification)
+      // Uses shared parser for consistent partner name extraction
       const listsEachOther = (personA: typeof available[0], personB: typeof available[0]): boolean => {
-        if (!personB.attendingWith) return false;
-        const bListsNames = personB.attendingWith
-          .split(/[,&\n\r]+/)
-          .map((name: string) => normalizeName(name))
-          .filter((name: string) => name.length > 0);
-        return bListsNames.some(name => name === normalizeName(personA.name));
+        // Use shared attendingWithMentionsName for consistent matching
+        return attendingWithMentionsName(personB.attendingWith, personA.name);
       };
 
       // PHASE 1A: First, create groups from existing groupId field (most reliable)
@@ -2342,16 +2350,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Helper function to check if attendingWith indicates a true solo
-      // MOVED BEFORE Phase 1B so it can be used during partner matching
+      // Uses shared isSoloContestant for consistent solo detection across the system
       const isSoloIndicator = (value: string | null | undefined): boolean => {
-        if (!value || !value.trim()) return true;
-        const normalized = value.toLowerCase().trim();
-        // Check for exact match solo indicators (these should match exactly)
-        const exactMatchPatterns = ['-', 'na', 'n/a', 'none', 'solo', 'alone', 'self', 'no one', 'nobody'];
-        if (exactMatchPatterns.includes(normalized)) return true;
-        // Check for patterns that can be contained within the value
-        const containsPatterns = ['by myself', 'attending alone', 'coming alone', 'going alone'];
-        return containsPatterns.some(pattern => normalized.includes(pattern));
+        return isSoloContestant(value);
       };
 
       // PHASE 1B: Find groups based on attendingWith matching (with bidirectional verification for duplicate names)
@@ -2368,14 +2369,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Check if this contestant has an attendingWith value
-        if (contestant.attendingWith && contestant.attendingWith.trim()) {
-          // Split by comma, ampersand, or newline to handle multiple people (e.g., "John, Jane, Bob" or multi-line lists)
-          const attendingWithNames = contestant.attendingWith
-            .split(/[,&\n\r]+/)
-            .map((name: string) => name.toLowerCase().trim())
-            .filter((name: string) => name.length > 0)
-            // IMPORTANT: Filter out contestant's own name to prevent self-matching (handle extra spaces)
-            .filter((name: string) => name.replace(/\s+/g, ' ') !== contestant.name.toLowerCase().trim().replace(/\s+/g, ' '));
+        // Use shared parser to get partner names consistently
+        const parsed = parseAttendingWith(contestant.attendingWith);
+        
+        if (!parsed.isSolo && parsed.partnerNames.length > 0) {
+          // Get normalized partner names, filtering out the contestant's own name
+          const contestantNormalizedName = sharedNormalizeName(contestant.name);
+          const attendingWithNames = parsed.partnerNames
+            .map((name: string) => sharedNormalizeName(name))
+            .filter((name: string) => name !== contestantNormalizedName);
 
           // If all names were filtered out (contestant only listed themselves), skip
           if (attendingWithNames.length === 0) {
@@ -2388,8 +2390,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           let allPartnersFound = true;
 
           for (const name of attendingWithNames) {
-            // Normalize the name for lookup (handles extra spaces, case differences)
-            const normalizedName = normalizeName(name);
+            // Name is already normalized by the shared parser
+            const normalizedName = name;
             const partner = nameToContestant.get(normalizedName);
             if (partner && partner.id !== contestant.id && !groupedContestantIds.has(partner.id)) {
               // For duplicate names, require bidirectional verification
