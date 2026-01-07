@@ -11,6 +11,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { broadcastContestantChange, broadcastSeatingChange } from "@/lib/crossTabSync";
 import { useState, useMemo, useEffect } from "react";
+import { getGroupSizeFromAttendingWith, getPartnerNames, attendingWithMentionsName } from "@shared/attendingWithParser";
 import {
   Dialog,
   DialogContent,
@@ -238,32 +239,29 @@ export default function Contestants() {
     }
     
     // Otherwise, try to find group by matching attendingWith names
+    // Use shared parser functions for consistent partner name extraction
     if (selectedContestant.attendingWith) {
-      // Split by commas, ampersands, and newlines - then normalize spaces
-      const attendingNames = selectedContestant.attendingWith.split(/[,&\n\r]+/).map(n => n.trim().replace(/\s+/g, ' ').toLowerCase()).filter(n => n);
-      const currentName = selectedContestant.name.replace(/\s+/g, ' ').toLowerCase();
+      const partnerNames = getPartnerNames(selectedContestant.attendingWith);
+      
+      // If this is a solo contestant, no group members
+      if (partnerNames.length === 0) {
+        return [];
+      }
       
       // Find people this person is attending with
       const groupMemberSet = new Set<string>([selectedContestant.id]);
       
       contestants.forEach(c => {
         if (c.id === selectedContestant.id) return;
-        const normalizedName = c.name.replace(/\s+/g, ' ').toLowerCase();
         
         // Check if this person's name is in the selected contestant's attendingWith
-        const nameMatch = attendingNames.some(name => normalizedName.includes(name) || name.includes(normalizedName));
-        if (nameMatch) {
+        if (attendingWithMentionsName(selectedContestant.attendingWith, c.name)) {
           groupMemberSet.add(c.id);
         }
         
         // Check if selected contestant's name is in this person's attendingWith
-        if (c.attendingWith) {
-          // Split by commas, ampersands, and newlines - then normalize spaces
-          const theirAttending = c.attendingWith.split(/[,&\n\r]+/).map(n => n.trim().replace(/\s+/g, ' ').toLowerCase()).filter(n => n);
-          const reverseMatch = theirAttending.some(name => currentName.includes(name) || name.includes(currentName));
-          if (reverseMatch) {
-            groupMemberSet.add(c.id);
-          }
+        if (attendingWithMentionsName(c.attendingWith, selectedContestant.name)) {
+          groupMemberSet.add(c.id);
         }
       });
       
@@ -326,26 +324,8 @@ export default function Contestants() {
   }
   if (filterGroupSize !== "all") {
     displayedContestants = displayedContestants.filter(c => {
-      // Calculate group size from attendingWith field (same logic as seating chart)
-      const getGroupSize = (attendingWith: string | null | undefined): number => {
-        if (!attendingWith || !attendingWith.trim()) return 1;
-        
-        // Check for solo indicators (same logic as solo indicator in other components)
-        const normalized = attendingWith.trim().toLowerCase();
-        const soloExactMatches = ['-', 'na', 'n/a', 'none', 'solo', 'alone', 'self', 'no one', 'nobody'];
-        const soloPhrases = ['by myself', 'on my own', 'coming alone', 'attending alone', 'no one else', 'just me'];
-        
-        // Exact match check
-        if (soloExactMatches.includes(normalized)) return 1;
-        
-        // Phrase contains check
-        if (soloPhrases.some(phrase => normalized.includes(phrase))) return 1;
-        
-        // Split by common delimiters and count partners
-        const partners = attendingWith.split(/[,&\n\r]+/).filter(p => p.trim().length > 0);
-        return partners.length + 1; // +1 to include the contestant themselves
-      };
-      const groupSize = getGroupSize(c.attendingWith);
+      // Use shared parser for consistent group size calculation across the system
+      const groupSize = getGroupSizeFromAttendingWith(c.attendingWith);
       if (filterGroupSize === "1") return groupSize === 1;
       if (filterGroupSize === "2") return groupSize === 2;
       if (filterGroupSize === "3+") return groupSize >= 3;

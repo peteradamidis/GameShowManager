@@ -33,6 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getPartnerNames, attendingWithMentionsName, isSoloContestant } from "@shared/attendingWithParser";
 
 export interface Contestant {
   id: string;
@@ -500,9 +501,17 @@ export function ContestantTable({
     }
     
     // Otherwise, try to find group by matching attendingWith names
+    // Use shared parser for consistent partner name extraction
     if (contestantDetails.attendingWith) {
-      const attendingNames = contestantDetails.attendingWith.split(',').map(n => n.trim().toLowerCase());
-      const currentName = contestantDetails.name.toLowerCase();
+      // Check if this is a solo contestant using shared parser
+      if (isSoloContestant(contestantDetails.attendingWith)) {
+        return [];
+      }
+      
+      const partnerNamesList = getPartnerNames(contestantDetails.attendingWith);
+      if (partnerNamesList.length === 0) {
+        return [];
+      }
       
       // Find people this person is attending with
       const groupMemberSet = new Set<string>([contestantDetails.id]);
@@ -511,18 +520,13 @@ export function ContestantTable({
         if (c.id === contestantDetails.id) return;
         
         // Check if this person's name is in the selected contestant's attendingWith
-        const nameMatch = attendingNames.some(name => c.name.toLowerCase().includes(name) || name.includes(c.name.toLowerCase()));
-        if (nameMatch) {
+        if (attendingWithMentionsName(contestantDetails.attendingWith, c.name)) {
           groupMemberSet.add(c.id);
         }
         
         // Check if selected contestant's name is in this person's attendingWith
-        if (c.attendingWith) {
-          const theirAttending = c.attendingWith.split(',').map(n => n.trim().toLowerCase());
-          const reverseMatch = theirAttending.some(name => currentName.includes(name) || name.includes(currentName));
-          if (reverseMatch) {
-            groupMemberSet.add(c.id);
-          }
+        if (attendingWithMentionsName(c.attendingWith, contestantDetails.name)) {
+          groupMemberSet.add(c.id);
         }
       });
       

@@ -14,6 +14,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { broadcastSeatingChange, broadcastRecordDayChange } from "@/lib/crossTabSync";
 import { useState, useMemo, useEffect } from "react";
 import { format } from "date-fns";
+import { getGroupSizeFromAttendingWith, getPartnerNames, attendingWithMentionsName, isSoloContestant } from "@shared/attendingWithParser";
 import {
   Dialog,
   DialogContent,
@@ -198,22 +199,31 @@ export default function SeatingChartPage() {
   }, [assignments, allContestants]);
 
   // Helper to calculate group size from attendingWith field
+  // Uses shared parser for consistent behavior across the system
   const getGroupSize = (attendingWith: string | null | undefined): number => {
-    if (!attendingWith || !attendingWith.trim()) return 1;
-    return attendingWith.split(',').length + 1; // +1 to include the contestant themselves
+    return getGroupSizeFromAttendingWith(attendingWith);
   };
   
   // Helper to find group members for a selected contestant
+  // Uses shared parser for consistent partner name extraction
   const getGroupMembers = (contestantId: string): any[] => {
     const contestant = availableContestants.find((c: any) => c.id === contestantId);
-    if (!contestant || !contestant.attendingWith) return [contestant].filter(Boolean);
+    if (!contestant) return [];
     
-    // Get partner names from attendingWith
-    const partnerNames = contestant.attendingWith.split(',').map((n: string) => n.trim().toLowerCase());
+    // Check if this is a solo contestant
+    if (isSoloContestant(contestant.attendingWith)) {
+      return [contestant];
+    }
     
-    // Find matching available contestants
+    // Get partner names using shared parser
+    const partnerNamesList = getPartnerNames(contestant.attendingWith);
+    if (partnerNamesList.length === 0) {
+      return [contestant];
+    }
+    
+    // Find matching available contestants using shared matching logic
     const partners = availableContestants.filter((c: any) => 
-      partnerNames.includes(c.name?.toLowerCase().trim())
+      c.id !== contestantId && attendingWithMentionsName(contestant.attendingWith, c.name)
     );
     
     return [contestant, ...partners];
