@@ -5,16 +5,210 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail, Download, Database, Clock, RefreshCw, Lock, Server, Send, Eye } from "lucide-react";
+import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail, Download, Database, Clock, RefreshCw, Lock, Server, Send, Eye, ClipboardCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
+// Form Settings Constants and Component
+const AVAILABILITY_DEFAULTS: Record<string, string> = {
+  title: "Availability Check",
+  description: "Please let us know which recording days you're available to attend.",
+  yesLabel: "Yes, I can attend",
+  maybeLabel: "Maybe (unsure, will confirm later)",
+  noLabel: "No, I cannot attend",
+  notesLabel: "Additional Notes (Optional)",
+  notesPlaceholder: "Any comments or special circumstances we should know about?",
+  groupSwitchLabel: "Apply my selections to all group members",
+  submitButtonText: "Submit Availability",
+  successTitle: "Thank You!",
+  successMessage: "Your availability has been recorded successfully. We'll be in touch with more details soon.",
+};
+
+const BOOKING_DEFAULTS: Record<string, string> = {
+  title: "TV Show Booking Confirmation",
+  description: "Please confirm your attendance for the upcoming recording.",
+  attendingWithLabel: "Update \"Attending With\" Information (optional)",
+  attendingWithPlaceholder: "Enter names of people you're attending with",
+  attendingWithHelp: "If your group has changed, please update it here",
+  notesLabel: "Dietary Requirements / Questions (Optional)",
+  notesPlaceholder: "Any dietary requirements, special requests, or questions you have?",
+  confirmButtonText: "Confirm Attendance",
+  declineButtonText: "Cannot Attend",
+  declineReasonRequired: "Please provide a reason for declining the booking",
+  confirmedTitle: "Booking Confirmed!",
+  confirmedMessage: "Thank you for confirming your attendance! We look forward to seeing you at the recording.",
+  declinedTitle: "Booking Cancelled",
+  declinedMessage: "Your booking has been cancelled. If your circumstances change, please contact us.",
+  toastConfirmedTitle: "Booking Confirmed!",
+  toastConfirmedMessage: "Thank you for confirming your attendance!",
+  toastDeclinedTitle: "Booking Cancelled",
+  toastDeclinedMessage: "Your booking has been cancelled and you've been moved to the reschedule list.",
+};
+
+const AVAILABILITY_FIELD_LABELS: Record<string, string> = {
+  title: "Page Title",
+  description: "Welcome Message",
+  yesLabel: "\"Yes\" Option Label",
+  maybeLabel: "\"Maybe\" Option Label",
+  noLabel: "\"No\" Option Label",
+  notesLabel: "Notes Field Label",
+  notesPlaceholder: "Notes Field Placeholder",
+  groupSwitchLabel: "Apply to Group Toggle Label",
+  submitButtonText: "Submit Button Text",
+  successTitle: "Success Message Title",
+  successMessage: "Success Message Body",
+};
+
+const BOOKING_FIELD_LABELS: Record<string, string> = {
+  title: "Page Title",
+  description: "Welcome Message",
+  attendingWithLabel: "Attending With Field Label",
+  attendingWithPlaceholder: "Attending With Placeholder",
+  attendingWithHelp: "Attending With Help Text",
+  notesLabel: "Notes/Questions Field Label",
+  notesPlaceholder: "Notes Field Placeholder",
+  confirmButtonText: "Confirm Button Text",
+  declineButtonText: "Decline Button Text",
+  declineReasonRequired: "Decline Reason Required Message",
+  confirmedTitle: "Confirmation Success Title",
+  confirmedMessage: "Confirmation Success Message",
+  declinedTitle: "Decline Success Title",
+  declinedMessage: "Decline Success Message",
+  toastConfirmedTitle: "Toast Notification: Confirmed Title",
+  toastConfirmedMessage: "Toast Notification: Confirmed Message",
+  toastDeclinedTitle: "Toast Notification: Declined Title",
+  toastDeclinedMessage: "Toast Notification: Declined Message",
+};
+
+type FormConfigEditorProps = {
+  formType: "availability" | "booking";
+  defaults: Record<string, string>;
+  fieldLabels: Record<string, string>;
+};
+
+function FormConfigEditor({ formType, defaults, fieldLabels }: FormConfigEditorProps) {
+  const { toast } = useToast();
+  const [localConfigs, setLocalConfigs] = useState<Record<string, string>>({});
+  const [hasChanges, setHasChanges] = useState(false);
+
+  const { data: savedConfigs, isLoading } = useQuery<Record<string, string>>({
+    queryKey: ["/api/form-configs", formType],
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async (configs: Record<string, string>) => {
+      return await apiRequest("PUT", `/api/form-configs/${formType}`, configs);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Saved",
+        description: `${formType === "availability" ? "Availability" : "Booking"} form settings saved successfully.`,
+      });
+      setHasChanges(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/form-configs", formType] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save form settings",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const getValue = (key: string): string => {
+    if (localConfigs[key] !== undefined) {
+      return localConfigs[key];
+    }
+    if (savedConfigs && savedConfigs[key] !== undefined) {
+      return savedConfigs[key];
+    }
+    return defaults[key] || "";
+  };
+
+  const handleChange = (key: string, value: string) => {
+    setLocalConfigs((prev) => ({ ...prev, [key]: value }));
+    setHasChanges(true);
+  };
+
+  const handleSave = () => {
+    const configsToSave: Record<string, string> = {};
+    for (const key of Object.keys(defaults)) {
+      configsToSave[key] = getValue(key);
+    }
+    saveMutation.mutate(configsToSave);
+  };
+
+  const handleReset = () => {
+    setLocalConfigs({});
+    setHasChanges(false);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 text-center text-muted-foreground">
+        Loading form settings...
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {Object.keys(defaults).map((key) => (
+        <div key={key} className="space-y-2">
+          <Label htmlFor={`${formType}-${key}`}>{fieldLabels[key] || key}</Label>
+          {key.includes("Message") || key.includes("description") || key.includes("Placeholder") ? (
+            <Textarea
+              id={`${formType}-${key}`}
+              data-testid={`textarea-${formType}-${key}`}
+              value={getValue(key)}
+              onChange={(e) => handleChange(key, e.target.value)}
+              rows={3}
+            />
+          ) : (
+            <Input
+              id={`${formType}-${key}`}
+              data-testid={`input-${formType}-${key}`}
+              value={getValue(key)}
+              onChange={(e) => handleChange(key, e.target.value)}
+            />
+          )}
+        </div>
+      ))}
+
+      <Separator />
+
+      <div className="flex gap-3">
+        <Button
+          onClick={handleSave}
+          disabled={!hasChanges || saveMutation.isPending}
+          data-testid={`button-save-${formType}`}
+        >
+          <Save className="w-4 h-4 mr-2" />
+          {saveMutation.isPending ? "Saving..." : "Save Changes"}
+        </Button>
+        <Button
+          variant="outline"
+          onClick={handleReset}
+          disabled={!hasChanges}
+          data-testid={`button-reset-${formType}`}
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Reset
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 interface EmailAsset {
   path: string;
@@ -982,6 +1176,64 @@ export default function Settings() {
             <p className="text-xs text-muted-foreground pt-2">
               These previews show static examples. Actual emails will include contestant-specific details and working mailto buttons.
             </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ClipboardCheck className="w-5 h-5" />
+              Form Settings
+            </CardTitle>
+            <CardDescription>
+              Customize the text and labels shown on public forms sent to contestants.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="availability" className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="availability" data-testid="tab-availability">
+                  <ClipboardCheck className="w-4 h-4 mr-2" />
+                  Availability Form
+                </TabsTrigger>
+                <TabsTrigger value="booking" data-testid="tab-booking">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Booking Form
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="availability">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium">Availability Check Form</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Customize the text shown when contestants respond to availability check emails.
+                    </p>
+                  </div>
+                  <FormConfigEditor
+                    formType="availability"
+                    defaults={AVAILABILITY_DEFAULTS}
+                    fieldLabels={AVAILABILITY_FIELD_LABELS}
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="booking">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium">Booking Confirmation Form</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Customize the text shown when contestants confirm or decline their booking.
+                    </p>
+                  </div>
+                  <FormConfigEditor
+                    formType="booking"
+                    defaults={BOOKING_DEFAULTS}
+                    fieldLabels={BOOKING_FIELD_LABELS}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 

@@ -68,11 +68,6 @@ const menuItems = [
     icon: Trophy,
   },
   {
-    title: "Forms",
-    url: "/forms",
-    icon: FileText,
-  },
-  {
     title: "Settings",
     url: "/settings",
     icon: Settings,
