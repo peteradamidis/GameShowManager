@@ -569,10 +569,31 @@ export default function Settings() {
         </p>
       </div>
 
-      <div className="grid gap-6 max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>Seating Configuration</CardTitle>
+      <Tabs defaultValue="general" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4 max-w-xl">
+          <TabsTrigger value="general" data-testid="tab-general">
+            <Lock className="w-4 h-4 mr-2" />
+            General
+          </TabsTrigger>
+          <TabsTrigger value="email" data-testid="tab-email">
+            <Mail className="w-4 h-4 mr-2" />
+            Email
+          </TabsTrigger>
+          <TabsTrigger value="forms" data-testid="tab-forms">
+            <ClipboardCheck className="w-4 h-4 mr-2" />
+            Forms
+          </TabsTrigger>
+          <TabsTrigger value="backup" data-testid="tab-backup">
+            <Database className="w-4 h-4 mr-2" />
+            Backup
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general">
+          <div className="grid gap-6 max-w-2xl">
+            <Card>
+              <CardHeader>
+                <CardTitle>Seating Configuration</CardTitle>
             <CardDescription>
               Default settings for seating assignments
             </CardDescription>
@@ -749,12 +770,16 @@ export default function Settings() {
             </Form>
           </CardContent>
         </Card>
+          </div>
+        </TabsContent>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Server className="w-5 h-5" />
-              SMTP Email Configuration
+        <TabsContent value="email">
+          <div className="grid gap-6 max-w-2xl">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Server className="w-5 h-5" />
+                  SMTP Email Configuration
             </CardTitle>
             <CardDescription>
               Configure your Outlook/Exchange SMTP server for sending emails
@@ -1181,64 +1206,6 @@ export default function Settings() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ClipboardCheck className="w-5 h-5" />
-              Form Settings
-            </CardTitle>
-            <CardDescription>
-              Customize the text and labels shown on public forms sent to contestants.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="availability" className="space-y-6">
-              <TabsList>
-                <TabsTrigger value="availability" data-testid="tab-availability">
-                  <ClipboardCheck className="w-4 h-4 mr-2" />
-                  Availability Form
-                </TabsTrigger>
-                <TabsTrigger value="booking" data-testid="tab-booking">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Booking Form
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="availability">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium">Availability Check Form</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Customize the text shown when contestants respond to availability check emails.
-                    </p>
-                  </div>
-                  <FormConfigEditor
-                    formType="availability"
-                    defaults={AVAILABILITY_DEFAULTS}
-                    fieldLabels={AVAILABILITY_FIELD_LABELS}
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="booking">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium">Booking Confirmation Form</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Customize the text shown when contestants confirm or decline their booking.
-                    </p>
-                  </div>
-                  <FormConfigEditor
-                    formType="booking"
-                    defaults={BOOKING_DEFAULTS}
-                    fieldLabels={BOOKING_FIELD_LABELS}
-                  />
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
             <CardTitle>Email Assets</CardTitle>
             <CardDescription>
               Upload images and PDFs to use in your booking emails
@@ -1384,13 +1351,77 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+          </div>
+        </TabsContent>
 
-        <BackupSection />
+        <TabsContent value="forms">
+          <div className="grid gap-6 max-w-2xl">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardCheck className="w-5 h-5" />
+                  Form Settings
+                </CardTitle>
+                <CardDescription>
+                  Customize the text and labels shown on public forms sent to contestants.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="availability" className="space-y-6">
+                  <TabsList>
+                    <TabsTrigger value="availability" data-testid="tab-availability-form">
+                      <ClipboardCheck className="w-4 h-4 mr-2" />
+                      Availability Form
+                    </TabsTrigger>
+                    <TabsTrigger value="booking" data-testid="tab-booking-form">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Booking Form
+                    </TabsTrigger>
+                  </TabsList>
 
-        <div className="flex justify-end">
-          <Button data-testid="button-save-settings">Save Settings</Button>
-        </div>
-      </div>
+                  <TabsContent value="availability">
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-medium">Availability Check Form</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Customize the text shown when contestants respond to availability check emails.
+                        </p>
+                      </div>
+                      <FormConfigEditor
+                        formType="availability"
+                        defaults={AVAILABILITY_DEFAULTS}
+                        fieldLabels={AVAILABILITY_FIELD_LABELS}
+                      />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="booking">
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-medium">Booking Confirmation Form</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Customize the text shown when contestants confirm or decline their booking.
+                        </p>
+                      </div>
+                      <FormConfigEditor
+                        formType="booking"
+                        defaults={BOOKING_DEFAULTS}
+                        fieldLabels={BOOKING_FIELD_LABELS}
+                      />
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="backup">
+          <div className="grid gap-6 max-w-2xl">
+            <BackupSection />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
