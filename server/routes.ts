@@ -1,7 +1,21 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage, db } from "./storage";
-import { insertContestantSchema, insertRecordDaySchema, insertSeatAssignmentSchema, seatAssignments, SeatAssignment } from "@shared/schema";
+import { 
+  insertContestantSchema, 
+  insertRecordDaySchema, 
+  insertSeatAssignmentSchema, 
+  seatAssignments, 
+  SeatAssignment,
+  contestants,
+  groups,
+  standbyAssignments,
+  standbyConfirmationTokens,
+  canceledAssignments,
+  contestantAvailability,
+  availabilityTokens,
+  bookingConfirmationTokens
+} from "@shared/schema";
 import { sql } from "drizzle-orm";
 import xlsx from "xlsx";
 import multer from "multer";
@@ -1239,6 +1253,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deleteContestant(req.params.id);
       res.json({ message: "Contestant deleted successfully" });
     } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete ALL contestants (with cascading deletes)
+  app.delete("/api/contestants/all", async (req, res) => {
+    try {
+      // Get all contestants first to count them
+      const allContestants = await storage.getContestants();
+      const count = allContestants.length;
+      
+      if (count === 0) {
+        return res.json({ message: "No contestants to delete", deletedCount: 0 });
+      }
+
+      // Use direct database operations for efficient bulk deletes
+      // Delete related data first (cascade) in proper order for foreign key constraints
+      
+      // 1. Delete all booking confirmation tokens (references seat_assignments)
+      await db.delete(bookingConfirmationTokens);
+      
+      // 2. Delete all seat assignments (references contestants, record_days)
+      await db.delete(seatAssignments);
+      
+      // 3. Delete all standby confirmation tokens (references standby_assignments)
+      await db.delete(standbyConfirmationTokens);
+      
+      // 4. Delete all standby assignments (references contestants, record_days)
+      await db.delete(standbyAssignments);
+      
+      // 5. Delete all canceled assignments (references contestants, record_days)
+      await db.delete(canceledAssignments);
+      
+      // 6. Delete all contestant availability (references contestants, record_days)
+      await db.delete(contestantAvailability);
+      
+      // 7. Delete all availability tokens (references contestants, record_days)
+      await db.delete(availabilityTokens);
+      
+      // 8. Delete all contestants (this will also remove group associations)
+      await db.delete(contestants);
+      
+      // 9. Delete all groups (now safe since no contestants reference them)
+      await db.delete(groups);
+      
+      console.log(`[Delete All] Deleted ${count} contestants and all related data`);
+      res.json({ 
+        message: `Successfully deleted ${count} contestants and all related data`, 
+        deletedCount: count 
+      });
+    } catch (error: any) {
+      console.error("[Delete All] Error:", error);
       res.status(500).json({ error: error.message });
     }
   });

@@ -555,6 +555,38 @@ export default function Contestants() {
     },
   });
 
+  // Delete ALL contestants mutation (with double confirmation)
+  const [deleteAllStep, setDeleteAllStep] = useState<0 | 1 | 2>(0); // 0=closed, 1=first confirm, 2=second confirm
+  const deleteAllContestantsMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('DELETE', '/api/contestants/all', {});
+    },
+    onSuccess: (data: any) => {
+      // Invalidate ALL related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/groups'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/availability'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/booking-confirmations'], exact: false });
+      broadcastContestantChange();
+      setSelectedContestants([]);
+      setDeleteAllStep(0);
+      toast({
+        title: "All contestants deleted",
+        description: data.message || `Deleted ${data.deletedCount} contestants and all related data.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete all contestants",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Fetch occupied seats for the selected record day
   const { data: occupiedSeats = [] } = useQuery({
     queryKey: ['/api/seat-assignments', selectedRecordDay],
@@ -842,6 +874,15 @@ export default function Contestants() {
         <div className="flex gap-2 justify-end">
           <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
           <ImportGalleryDialog />
+          <Button 
+            variant="outline"
+            className="border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
+            onClick={() => setDeleteAllStep(1)}
+            data-testid="button-delete-all-contestants"
+          >
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            Delete All
+          </Button>
           {selectedContestants.length > 0 && (
             <Button 
               variant="destructive"
@@ -1711,6 +1752,76 @@ export default function Contestants() {
           </div>
         </div>
       )}
+
+      {/* Delete ALL Contestants - First Confirmation Dialog */}
+      <Dialog open={deleteAllStep === 1} onOpenChange={(open) => !open && setDeleteAllStep(0)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Delete All Contestants?
+            </DialogTitle>
+            <DialogDescription className="space-y-2">
+              <p>You are about to delete <strong className="text-foreground">{contestants.length} contestants</strong> and all their related data:</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>All seat assignments</li>
+                <li>All standby bookings</li>
+                <li>All availability responses</li>
+                <li>All booking confirmations</li>
+                <li>All groups</li>
+              </ul>
+              <p className="font-medium text-red-600 pt-2">This action cannot be undone.</p>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeleteAllStep(0)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => setDeleteAllStep(2)}
+              data-testid="button-delete-all-first-confirm"
+            >
+              Yes, Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete ALL Contestants - Second (Final) Confirmation Dialog */}
+      <Dialog open={deleteAllStep === 2} onOpenChange={(open) => !open && setDeleteAllStep(0)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Final Confirmation Required
+            </DialogTitle>
+            <DialogDescription className="space-y-3">
+              <p className="text-base font-medium text-foreground">
+                Are you absolutely sure you want to permanently delete all {contestants.length} contestants?
+              </p>
+              <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-800 dark:text-red-300">
+                <p className="font-semibold">This is your final warning!</p>
+                <p>All contestant data will be permanently removed from the system.</p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeleteAllStep(0)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => deleteAllContestantsMutation.mutate()}
+              disabled={deleteAllContestantsMutation.isPending}
+              data-testid="button-delete-all-final-confirm"
+            >
+              {deleteAllContestantsMutation.isPending ? "Deleting..." : "Delete Everything"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
