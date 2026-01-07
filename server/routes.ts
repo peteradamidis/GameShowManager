@@ -3973,45 +3973,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 ${finalEmailInstructions}
               </p>
               
-              <!-- Quick Response Buttons (mailto) -->
+              <!-- Response Buttons (mailto) -->
               <p style="color: #555555; font-size: 14px; text-align: center; margin: 0 0 15px 0; font-weight: bold;">
-                Quick Response:
+                Please respond by clicking one of the buttons below:
               </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 15px auto;">
+                <tr>
+                  <td style="padding: 0 5px;">
+                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`AVAILABLE - ${contestant.name}`)}&body=${encodeURIComponent(`Hi,\n\nI am AVAILABLE for the Deal or No Deal recording dates.\n\nName: ${contestant.name}\n\nAvailable Dates: [Please list which dates work for you, or write "All dates"]\n\nThank you!`)}" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">✓ YES, I'M AVAILABLE</a>
+                  </td>
+                  <td style="padding: 0 5px;">
+                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`NOT AVAILABLE - ${contestant.name}`)}&body=${encodeURIComponent(`Hi,\n\nI am NOT AVAILABLE for the Deal or No Deal recording dates.\n\nName: ${contestant.name}\n\nReason: [Optional - let us know why]\n\nThank you!`)}" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">✗ NOT AVAILABLE</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Questions/Special Needs Button -->
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
                 <tr>
                   <td style="padding: 0 5px;">
-                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`AVAILABLE - ${contestant.name}`)}&body=${encodeURIComponent(`Hi,\n\nI am AVAILABLE for the Deal or No Deal recording dates.\n\nName: ${contestant.name}\n\nThank you!`)}" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">✓ YES, I'M AVAILABLE</a>
-                  </td>
-                  <td style="padding: 0 5px;">
-                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`NOT AVAILABLE - ${contestant.name}`)}&body=${encodeURIComponent(`Hi,\n\nI am NOT AVAILABLE for the Deal or No Deal recording dates.\n\nName: ${contestant.name}\n\nThank you!`)}" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">✗ NOT AVAILABLE</a>
-                  </td>
-                </tr>
-              </table>
-              
-              <p style="color: #888888; font-size: 12px; text-align: center; margin: 0 0 20px 0;">
-                Click a button above to send a quick email response
-              </p>
-              
-              <!-- Divider -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 0 0 20px 0;">
-                <tr>
-                  <td style="border-top: 1px solid #e0e0e0; padding-top: 20px; text-align: center;">
-                    <p style="color: #888888; font-size: 12px; margin: 0;">Or select specific dates below:</p>
-                  </td>
-                </tr>
-              </table>
-              
-              <!-- Gold/Red CTA Button -->
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 25px auto;">
-                <tr>
-                  <td style="background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); border-radius: 8px; box-shadow: 0 4px 10px rgba(139,0,0,0.3);">
-                    <a href="${responseUrl}" target="_blank" style="display: inline-block; padding: 16px 40px; color: #2a0a0a; text-decoration: none; font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px;">${finalEmailButtonText}</a>
+                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`QUESTION - ${contestant.name}`)}&body=${encodeURIComponent(`Hi,\n\nI have a question regarding the Deal or No Deal recording dates.\n\nName: ${contestant.name}\n\nMy question/special needs:\n[Please describe your question or any special requirements]\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(13,110,253,0.3);">? QUESTIONS / SPECIAL NEEDS</a>
                   </td>
                 </tr>
               </table>
               
               <p style="color: #888888; font-size: 12px; text-align: center; margin: 0;">
-                This link will expire in 14 days
+                Clicking a button will open your email app with a pre-filled message
               </p>
             </td>
           </tr>
@@ -5589,6 +5576,10 @@ ${finalEmailFooter}`;
             standbyBannerUrl = standbyBannerUrlConfig;  // External URL
           }
 
+          // Get reply-to email for mailto buttons
+          const smtpConfig = await getSmtpConfig();
+          const standbyReplyToEmail = smtpConfig.fromEmail || 'noreply@example.com';
+
           // Build email content matching booking email style with purple standby theme
           const subject = `Deal or No Deal - Standby Booking for ${formattedDate}`;
           const htmlBody = `<!DOCTYPE html>
@@ -5649,27 +5640,32 @@ ${finalEmailFooter}`;
                 </tr>
               </table>
               
-              <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
-                Please confirm your availability by clicking the button below:
+              <!-- Response Buttons (mailto) -->
+              <p style="color: #555555; font-size: 14px; text-align: center; margin: 0 0 15px 0; font-weight: bold;">
+                Please respond by clicking one of the buttons below:
               </p>
-              
-              <!-- CTA Button -->
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 25px auto;">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 15px auto;">
                 <tr>
-                  <td style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); border-radius: 8px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);">
-                    <a href="${confirmationUrl}" style="display: inline-block; padding: 16px 40px; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: bold; letter-spacing: 1px;">
-                      Confirm Standby Booking
-                    </a>
+                  <td style="padding: 0 5px;">
+                    <a href="mailto:${standbyReplyToEmail}?subject=${encodeURIComponent(`STANDBY CONFIRMED - ${standby.contestant.name} - ${formattedDate}`)}&body=${encodeURIComponent(`Hi,\n\nI CONFIRM my standby booking for Deal or No Deal.\n\nName: ${standby.contestant.name}\nDate: ${formattedDate}\n\nI understand that as a standby I am not guaranteed a seat, and will only be seated if a spot becomes available.\n\nDietary Requirements: [None / Please list any dietary requirements]\n\nThank you!`)}" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(124,58,237,0.3);">✓ CONFIRM STANDBY</a>
+                  </td>
+                  <td style="padding: 0 5px;">
+                    <a href="mailto:${standbyReplyToEmail}?subject=${encodeURIComponent(`STANDBY DECLINED - ${standby.contestant.name} - ${formattedDate}`)}&body=${encodeURIComponent(`Hi,\n\nI am UNABLE to attend as a standby for Deal or No Deal.\n\nName: ${standby.contestant.name}\nDate: ${formattedDate}\n\nReason: [Please provide reason]\n\nThank you!`)}" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">✗ DECLINE</a>
                   </td>
                 </tr>
               </table>
               
-              <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 0 0 15px 0; text-align: center;">
-                If you are no longer available, please click the button above and select "Decline".
-              </p>
+              <!-- Questions/Special Needs Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
+                <tr>
+                  <td style="padding: 0 5px;">
+                    <a href="mailto:${standbyReplyToEmail}?subject=${encodeURIComponent(`STANDBY QUESTION - ${standby.contestant.name} - ${formattedDate}`)}&body=${encodeURIComponent(`Hi,\n\nI have a question regarding my standby booking for Deal or No Deal.\n\nName: ${standby.contestant.name}\nDate: ${formattedDate}\n\nMy question/special needs:\n[Please describe your question or any special requirements]\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(13,110,253,0.3);">? QUESTIONS / SPECIAL NEEDS</a>
+                  </td>
+                </tr>
+              </table>
               
-              <p style="color: #888888; font-size: 13px; line-height: 1.6; margin: 0; text-align: center;">
-                This confirmation link will expire in 7 days.
+              <p style="color: #888888; font-size: 12px; text-align: center; margin: 0;">
+                Clicking a button will open your email app with a pre-filled message
               </p>
             </td>
           </tr>
