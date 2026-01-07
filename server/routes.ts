@@ -4582,14 +4582,14 @@ ${finalEmailFooter}`;
                 ).join('')}
               </div>
               
-              <!-- Quick Response Buttons (mailto) -->
+              <!-- Response Buttons (mailto) -->
               <p style="color: #555555; font-size: 14px; text-align: center; margin: 0 0 15px 0; font-weight: bold;">
-                Quick Response:
+                Please respond by clicking one of the buttons below:
               </p>
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 15px auto;">
                 <tr>
                   <td style="padding: 0 5px;">
-                    <a href="mailto:${bookingReplyToEmail}?subject=${encodeURIComponent(`CONFIRMED - ${contestant.name} - ${recordDate}`)}&body=${encodeURIComponent(`Hi,\n\nI CONFIRM my attendance for Deal or No Deal.\n\nName: ${contestant.name}\nDate: ${recordDate}\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">✓ CONFIRM</a>
+                    <a href="mailto:${bookingReplyToEmail}?subject=${encodeURIComponent(`CONFIRMED - ${contestant.name} - ${recordDate}`)}&body=${encodeURIComponent(`Hi,\n\nI CONFIRM my attendance for Deal or No Deal.\n\nName: ${contestant.name}\nDate: ${recordDate}\n\nDietary Requirements: [None / Please list any dietary requirements]\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">✓ CONFIRM</a>
                   </td>
                   <td style="padding: 0 5px;">
                     <a href="mailto:${bookingReplyToEmail}?subject=${encodeURIComponent(`CANNOT ATTEND - ${contestant.name} - ${recordDate}`)}&body=${encodeURIComponent(`Hi,\n\nI CANNOT ATTEND Deal or No Deal on this date.\n\nName: ${contestant.name}\nDate: ${recordDate}\n\nReason: [Please provide reason]\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">✗ CANNOT ATTEND</a>
@@ -4597,27 +4597,18 @@ ${finalEmailFooter}`;
                 </tr>
               </table>
               
+              <!-- Questions/Special Needs Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
+                <tr>
+                  <td style="padding: 0 5px;">
+                    <a href="mailto:${bookingReplyToEmail}?subject=${encodeURIComponent(`QUESTION - ${contestant.name} - ${recordDate}`)}&body=${encodeURIComponent(`Hi,\n\nI have a question regarding my booking for Deal or No Deal.\n\nName: ${contestant.name}\nDate: ${recordDate}\n\nMy question/special needs:\n[Please describe your question or any special requirements]\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(13,110,253,0.3);">? QUESTIONS / SPECIAL NEEDS</a>
+                  </td>
+                </tr>
+              </table>
+              
               <p style="color: #888888; font-size: 12px; text-align: center; margin: 0 0 20px 0;">
-                Click a button above to send a quick email response
+                Clicking a button will open your email app with a pre-filled message
               </p>
-              
-              <!-- Divider -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 0 0 20px 0;">
-                <tr>
-                  <td style="border-top: 1px solid #e0e0e0; padding-top: 20px; text-align: center;">
-                    <p style="color: #888888; font-size: 12px; margin: 0;">Or use our form for detailed responses:</p>
-                  </td>
-                </tr>
-              </table>
-              
-              <!-- Gold/Red CTA Button -->
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 25px auto;">
-                <tr>
-                  <td style="background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); border-radius: 8px; box-shadow: 0 4px 10px rgba(139,0,0,0.3);">
-                    <a href="${confirmationLink}" target="_blank" style="display: inline-block; padding: 16px 40px; color: #2a0a0a; text-decoration: none; font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px;">${emailButtonText}</a>
-                  </td>
-                </tr>
-              </table>
               
               ${emailAdditionalInstructions ? `
               <!-- Additional Instructions -->
@@ -6131,14 +6122,14 @@ ${finalEmailFooter}`;
                 ).join('')}
               </div>
               
-              <!-- Quick Response Buttons (mailto) -->
+              <!-- Response Buttons (mailto) -->
               <p style="color: #555555; font-size: 14px; text-align: center; margin: 0 0 15px 0; font-weight: bold;">
-                Quick Response:
+                Please respond by clicking one of the buttons below:
               </p>
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 15px auto;">
                 <tr>
                   <td style="padding: 0 5px;">
-                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`CONFIRMED - ${testContestantName} - ${testRecordDate}`)}&body=${encodeURIComponent(`Hi,\n\nI CONFIRM my attendance for Deal or No Deal.\n\nName: ${testContestantName}\nDate: ${testRecordDate}\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">✓ CONFIRM</a>
+                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`CONFIRMED - ${testContestantName} - ${testRecordDate}`)}&body=${encodeURIComponent(`Hi,\n\nI CONFIRM my attendance for Deal or No Deal.\n\nName: ${testContestantName}\nDate: ${testRecordDate}\n\nDietary Requirements: [None / Please list any dietary requirements]\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">✓ CONFIRM</a>
                   </td>
                   <td style="padding: 0 5px;">
                     <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`CANNOT ATTEND - ${testContestantName} - ${testRecordDate}`)}&body=${encodeURIComponent(`Hi,\n\nI CANNOT ATTEND Deal or No Deal on this date.\n\nName: ${testContestantName}\nDate: ${testRecordDate}\n\nReason: [Please provide reason]\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">✗ CANNOT ATTEND</a>
@@ -6146,25 +6137,18 @@ ${finalEmailFooter}`;
                 </tr>
               </table>
               
+              <!-- Questions/Special Needs Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
+                <tr>
+                  <td style="padding: 0 5px;">
+                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`QUESTION - ${testContestantName} - ${testRecordDate}`)}&body=${encodeURIComponent(`Hi,\n\nI have a question regarding my booking for Deal or No Deal.\n\nName: ${testContestantName}\nDate: ${testRecordDate}\n\nMy question/special needs:\n[Please describe your question or any special requirements]\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(13,110,253,0.3);">? QUESTIONS / SPECIAL NEEDS</a>
+                  </td>
+                </tr>
+              </table>
+              
               <p style="color: #888888; font-size: 12px; text-align: center; margin: 0 0 20px 0;">
-                Click a button above to send a quick email response
+                Clicking a button will open your email app with a pre-filled message
               </p>
-              
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 0 0 20px 0;">
-                <tr>
-                  <td style="border-top: 1px solid #e0e0e0; padding-top: 20px; text-align: center;">
-                    <p style="color: #888888; font-size: 12px; margin: 0;">Or use our form for detailed responses:</p>
-                  </td>
-                </tr>
-              </table>
-              
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 25px auto;">
-                <tr>
-                  <td style="background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); border-radius: 8px; box-shadow: 0 4px 10px rgba(139,0,0,0.3);">
-                    <a href="${testConfirmationLink}" target="_blank" style="display: inline-block; padding: 16px 40px; color: #2a0a0a; text-decoration: none; font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px;">${emailButtonText}</a>
-                  </td>
-                </tr>
-              </table>
               
               ${emailAdditionalInstructions ? `
               <div style="margin: 25px 0 0 0;">
