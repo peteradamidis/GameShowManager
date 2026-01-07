@@ -329,7 +329,21 @@ export default function Contestants() {
       // Calculate group size from attendingWith field (same logic as seating chart)
       const getGroupSize = (attendingWith: string | null | undefined): number => {
         if (!attendingWith || !attendingWith.trim()) return 1;
-        return attendingWith.split(',').length + 1; // +1 to include the contestant themselves
+        
+        // Check for solo indicators (same logic as solo indicator in other components)
+        const normalized = attendingWith.trim().toLowerCase();
+        const soloExactMatches = ['-', 'na', 'n/a', 'none', 'solo', 'alone', 'self', 'no one', 'nobody'];
+        const soloPhrases = ['by myself', 'on my own', 'coming alone', 'attending alone', 'no one else', 'just me'];
+        
+        // Exact match check
+        if (soloExactMatches.includes(normalized)) return 1;
+        
+        // Phrase contains check
+        if (soloPhrases.some(phrase => normalized.includes(phrase))) return 1;
+        
+        // Split by common delimiters and count partners
+        const partners = attendingWith.split(/[,&\n\r]+/).filter(p => p.trim().length > 0);
+        return partners.length + 1; // +1 to include the contestant themselves
       };
       const groupSize = getGroupSize(c.attendingWith);
       if (filterGroupSize === "1") return groupSize === 1;
