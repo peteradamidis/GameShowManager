@@ -237,14 +237,26 @@ const passwordChangeSchema = z.object({
 
 type PasswordChangeForm = z.infer<typeof passwordChangeSchema>;
 
-// Default values for email template
+// Default values for email templates
 const EMAIL_TEMPLATE_DEFAULTS = {
+  // Booking email
   booking_email_headline: 'Your Booking is Confirmed!',
   booking_email_intro: 'Congratulations! You\'ve secured your spot in the <strong style="color: #8B0000;">Deal or No Deal</strong> studio audience.',
   booking_email_instructions: 'Please confirm your attendance by clicking the button below. You can also let us know about dietary requirements or ask any questions.',
   booking_email_button_text: 'Confirm Attendance',
   booking_email_additional_instructions: 'We will be recording multiple episodes on the day. The recording of these shows will take approximately 10 hours. Please be prepared to make yourself available for the full length of time.\n\nPlease find attached important information relating to your attendance at the Deal or No Deal recording. Please read this attachment thoroughly and get in touch ASAP should there be any issues.\n\nYou will receive another email closer to your record date with additional paperwork.',
   booking_email_footer: 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.',
+  // Availability email
+  availability_email_subject: 'Deal or No Deal - Availability Confirmation Request',
+  availability_email_headline: 'Confirm Your Availability',
+  availability_email_intro: 'Thank you for registering to be part of the Deal or No Deal audience! We\'re excited to potentially have you join us for an upcoming recording session.',
+  availability_email_instructions: 'Please click the button below to let us know which recording dates work for you. This helps us plan our audience seating and ensures we can accommodate you on your preferred day.',
+  availability_email_footer: 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.',
+  // Standby email  
+  standby_email_headline: 'You\'re on Our Standby List!',
+  standby_email_intro: 'You have been added to our standby list for an upcoming Deal or No Deal recording. This means you may be called to attend if a seat becomes available.',
+  standby_email_instructions: 'Please confirm your availability as a standby by clicking the button below. We\'ll be in touch if a spot opens up for you.',
+  standby_email_footer: 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.',
 };
 
 export default function Settings() {
@@ -253,7 +265,7 @@ export default function Settings() {
   const [senderName, setSenderName] = useState("Deal or No Deal");
   const [senderNameChanged, setSenderNameChanged] = useState(false);
   
-  // Email template state
+  // Booking email template state
   const [emailHeadline, setEmailHeadline] = useState(EMAIL_TEMPLATE_DEFAULTS.booking_email_headline);
   const [emailIntro, setEmailIntro] = useState(EMAIL_TEMPLATE_DEFAULTS.booking_email_intro);
   const [emailInstructions, setEmailInstructions] = useState(EMAIL_TEMPLATE_DEFAULTS.booking_email_instructions);
@@ -261,6 +273,21 @@ export default function Settings() {
   const [emailAdditionalInstructions, setEmailAdditionalInstructions] = useState(EMAIL_TEMPLATE_DEFAULTS.booking_email_additional_instructions);
   const [emailFooter, setEmailFooter] = useState(EMAIL_TEMPLATE_DEFAULTS.booking_email_footer);
   const [emailTemplateChanged, setEmailTemplateChanged] = useState(false);
+  
+  // Availability email template state
+  const [availEmailSubject, setAvailEmailSubject] = useState(EMAIL_TEMPLATE_DEFAULTS.availability_email_subject);
+  const [availEmailHeadline, setAvailEmailHeadline] = useState(EMAIL_TEMPLATE_DEFAULTS.availability_email_headline);
+  const [availEmailIntro, setAvailEmailIntro] = useState(EMAIL_TEMPLATE_DEFAULTS.availability_email_intro);
+  const [availEmailInstructions, setAvailEmailInstructions] = useState(EMAIL_TEMPLATE_DEFAULTS.availability_email_instructions);
+  const [availEmailFooter, setAvailEmailFooter] = useState(EMAIL_TEMPLATE_DEFAULTS.availability_email_footer);
+  const [availTemplateChanged, setAvailTemplateChanged] = useState(false);
+  
+  // Standby email template state
+  const [standbyEmailHeadline, setStandbyEmailHeadline] = useState(EMAIL_TEMPLATE_DEFAULTS.standby_email_headline);
+  const [standbyEmailIntro, setStandbyEmailIntro] = useState(EMAIL_TEMPLATE_DEFAULTS.standby_email_intro);
+  const [standbyEmailInstructions, setStandbyEmailInstructions] = useState(EMAIL_TEMPLATE_DEFAULTS.standby_email_instructions);
+  const [standbyEmailFooter, setStandbyEmailFooter] = useState(EMAIL_TEMPLATE_DEFAULTS.standby_email_footer);
+  const [standbyTemplateChanged, setStandbyTemplateChanged] = useState(false);
   
   // Auto-confirmation PDF state
   const [autoConfirmationPdf, setAutoConfirmationPdf] = useState<string>("");
@@ -270,7 +297,7 @@ export default function Settings() {
     queryKey: ["/api/system-config/email_sender_name"],
   });
   
-  // Fetch saved email template values
+  // Fetch saved booking email template values
   const { data: savedHeadline } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_headline"] });
   const { data: savedIntro } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_intro"] });
   const { data: savedInstructions } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_instructions"] });
@@ -278,6 +305,19 @@ export default function Settings() {
   const { data: savedAdditionalInstructions } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_additional_instructions"] });
   const { data: savedFooter } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_footer"] });
   const { data: savedAutoConfirmationPdf } = useQuery<string | null>({ queryKey: ["/api/system-config/auto_confirmation_pdf_path"] });
+  
+  // Fetch saved availability email template values
+  const { data: savedAvailSubject } = useQuery<string | null>({ queryKey: ["/api/system-config/availability_email_subject"] });
+  const { data: savedAvailHeadline } = useQuery<string | null>({ queryKey: ["/api/system-config/availability_email_headline"] });
+  const { data: savedAvailIntro } = useQuery<string | null>({ queryKey: ["/api/system-config/availability_email_intro"] });
+  const { data: savedAvailInstructions } = useQuery<string | null>({ queryKey: ["/api/system-config/availability_email_instructions"] });
+  const { data: savedAvailFooter } = useQuery<string | null>({ queryKey: ["/api/system-config/availability_email_footer"] });
+  
+  // Fetch saved standby email template values
+  const { data: savedStandbyHeadline } = useQuery<string | null>({ queryKey: ["/api/system-config/standby_email_headline"] });
+  const { data: savedStandbyIntro } = useQuery<string | null>({ queryKey: ["/api/system-config/standby_email_intro"] });
+  const { data: savedStandbyInstructions } = useQuery<string | null>({ queryKey: ["/api/system-config/standby_email_instructions"] });
+  const { data: savedStandbyFooter } = useQuery<string | null>({ queryKey: ["/api/system-config/standby_email_footer"] });
 
   useEffect(() => {
     if (savedSenderName) {
@@ -308,6 +348,37 @@ export default function Settings() {
   useEffect(() => {
     if (savedAutoConfirmationPdf) setAutoConfirmationPdf(savedAutoConfirmationPdf);
   }, [savedAutoConfirmationPdf]);
+  
+  // Load saved availability email template values
+  useEffect(() => {
+    if (savedAvailSubject) setAvailEmailSubject(savedAvailSubject);
+  }, [savedAvailSubject]);
+  useEffect(() => {
+    if (savedAvailHeadline) setAvailEmailHeadline(savedAvailHeadline);
+  }, [savedAvailHeadline]);
+  useEffect(() => {
+    if (savedAvailIntro) setAvailEmailIntro(savedAvailIntro);
+  }, [savedAvailIntro]);
+  useEffect(() => {
+    if (savedAvailInstructions) setAvailEmailInstructions(savedAvailInstructions);
+  }, [savedAvailInstructions]);
+  useEffect(() => {
+    if (savedAvailFooter) setAvailEmailFooter(savedAvailFooter);
+  }, [savedAvailFooter]);
+  
+  // Load saved standby email template values
+  useEffect(() => {
+    if (savedStandbyHeadline) setStandbyEmailHeadline(savedStandbyHeadline);
+  }, [savedStandbyHeadline]);
+  useEffect(() => {
+    if (savedStandbyIntro) setStandbyEmailIntro(savedStandbyIntro);
+  }, [savedStandbyIntro]);
+  useEffect(() => {
+    if (savedStandbyInstructions) setStandbyEmailInstructions(savedStandbyInstructions);
+  }, [savedStandbyInstructions]);
+  useEffect(() => {
+    if (savedStandbyFooter) setStandbyEmailFooter(savedStandbyFooter);
+  }, [savedStandbyFooter]);
 
   const saveSenderNameMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -357,6 +428,52 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_email_button_text"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_email_additional_instructions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_email_footer"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error saving template", description: error.message, variant: "destructive" });
+    },
+  });
+  
+  const saveAvailEmailTemplateMutation = useMutation({
+    mutationFn: async () => {
+      await Promise.all([
+        apiRequest("PUT", "/api/system-config/availability_email_subject", { value: availEmailSubject }),
+        apiRequest("PUT", "/api/system-config/availability_email_headline", { value: availEmailHeadline }),
+        apiRequest("PUT", "/api/system-config/availability_email_intro", { value: availEmailIntro }),
+        apiRequest("PUT", "/api/system-config/availability_email_instructions", { value: availEmailInstructions }),
+        apiRequest("PUT", "/api/system-config/availability_email_footer", { value: availEmailFooter }),
+      ]);
+    },
+    onSuccess: () => {
+      toast({ title: "Availability email template saved", description: "Your changes will apply to all new availability check emails." });
+      setAvailTemplateChanged(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/availability_email_subject"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/availability_email_headline"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/availability_email_intro"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/availability_email_instructions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/availability_email_footer"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error saving template", description: error.message, variant: "destructive" });
+    },
+  });
+  
+  const saveStandbyEmailTemplateMutation = useMutation({
+    mutationFn: async () => {
+      await Promise.all([
+        apiRequest("PUT", "/api/system-config/standby_email_headline", { value: standbyEmailHeadline }),
+        apiRequest("PUT", "/api/system-config/standby_email_intro", { value: standbyEmailIntro }),
+        apiRequest("PUT", "/api/system-config/standby_email_instructions", { value: standbyEmailInstructions }),
+        apiRequest("PUT", "/api/system-config/standby_email_footer", { value: standbyEmailFooter }),
+      ]);
+    },
+    onSuccess: () => {
+      toast({ title: "Standby email template saved", description: "Your changes will apply to all new standby booking emails." });
+      setStandbyTemplateChanged(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/standby_email_headline"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/standby_email_intro"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/standby_email_instructions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/standby_email_footer"] });
     },
     onError: (error: any) => {
       toast({ title: "Error saving template", description: error.message, variant: "destructive" });
@@ -1118,6 +1235,213 @@ export default function Settings() {
                 data-testid="button-save-email-template"
               >
                 {saveEmailTemplateMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Template
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5" />
+              Availability Email Template
+            </CardTitle>
+            <CardDescription>
+              Customize the wording of availability check emails sent to contestants.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="avail-email-subject">Email Subject</Label>
+              <p className="text-xs text-muted-foreground">The subject line of the email</p>
+              <Input
+                id="avail-email-subject"
+                value={availEmailSubject}
+                onChange={(e) => {
+                  setAvailEmailSubject(e.target.value);
+                  setAvailTemplateChanged(true);
+                }}
+                placeholder="Deal or No Deal - Availability Confirmation Request"
+                data-testid="input-avail-email-subject"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="avail-email-headline">Headline</Label>
+              <p className="text-xs text-muted-foreground">The gold title shown below the banner</p>
+              <Input
+                id="avail-email-headline"
+                value={availEmailHeadline}
+                onChange={(e) => {
+                  setAvailEmailHeadline(e.target.value);
+                  setAvailTemplateChanged(true);
+                }}
+                placeholder="Confirm Your Availability"
+                data-testid="input-avail-email-headline"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="avail-email-intro">Introduction Paragraph</Label>
+              <p className="text-xs text-muted-foreground">Shown after "Hi [Name]," - can include HTML for styling</p>
+              <Textarea
+                id="avail-email-intro"
+                value={availEmailIntro}
+                onChange={(e) => {
+                  setAvailEmailIntro(e.target.value);
+                  setAvailTemplateChanged(true);
+                }}
+                placeholder="Thank you for registering..."
+                className="min-h-[80px]"
+                data-testid="input-avail-email-intro"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="avail-email-instructions">Instructions</Label>
+              <p className="text-xs text-muted-foreground">Text before the response buttons</p>
+              <Textarea
+                id="avail-email-instructions"
+                value={availEmailInstructions}
+                onChange={(e) => {
+                  setAvailEmailInstructions(e.target.value);
+                  setAvailTemplateChanged(true);
+                }}
+                placeholder="Please click the button below..."
+                className="min-h-[60px]"
+                data-testid="input-avail-email-instructions"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="avail-email-footer">Footer Message</Label>
+              <p className="text-xs text-muted-foreground">Small text at the bottom - can include HTML</p>
+              <Textarea
+                id="avail-email-footer"
+                value={availEmailFooter}
+                onChange={(e) => {
+                  setAvailEmailFooter(e.target.value);
+                  setAvailTemplateChanged(true);
+                }}
+                placeholder="This is an automated message..."
+                className="min-h-[60px]"
+                data-testid="input-avail-email-footer"
+              />
+            </div>
+            
+            <div className="flex justify-end pt-2">
+              <Button
+                onClick={() => saveAvailEmailTemplateMutation.mutate()}
+                disabled={!availTemplateChanged || saveAvailEmailTemplateMutation.isPending}
+                data-testid="button-save-avail-email-template"
+              >
+                {saveAvailEmailTemplateMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Template
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-purple-200 dark:border-purple-800">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
+              <Mail className="w-5 h-5" />
+              Standby Email Template
+            </CardTitle>
+            <CardDescription>
+              Customize the wording of standby booking emails sent to contestants on the standby list.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="standby-email-headline">Headline</Label>
+              <p className="text-xs text-muted-foreground">The purple title shown below the banner</p>
+              <Input
+                id="standby-email-headline"
+                value={standbyEmailHeadline}
+                onChange={(e) => {
+                  setStandbyEmailHeadline(e.target.value);
+                  setStandbyTemplateChanged(true);
+                }}
+                placeholder="You're on Our Standby List!"
+                data-testid="input-standby-email-headline"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="standby-email-intro">Introduction Paragraph</Label>
+              <p className="text-xs text-muted-foreground">Shown after "Hi [Name]," - can include HTML for styling</p>
+              <Textarea
+                id="standby-email-intro"
+                value={standbyEmailIntro}
+                onChange={(e) => {
+                  setStandbyEmailIntro(e.target.value);
+                  setStandbyTemplateChanged(true);
+                }}
+                placeholder="You have been added to our standby list..."
+                className="min-h-[80px]"
+                data-testid="input-standby-email-intro"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="standby-email-instructions">Instructions</Label>
+              <p className="text-xs text-muted-foreground">Text before the response buttons</p>
+              <Textarea
+                id="standby-email-instructions"
+                value={standbyEmailInstructions}
+                onChange={(e) => {
+                  setStandbyEmailInstructions(e.target.value);
+                  setStandbyTemplateChanged(true);
+                }}
+                placeholder="Please confirm your availability as a standby..."
+                className="min-h-[60px]"
+                data-testid="input-standby-email-instructions"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="standby-email-footer">Footer Message</Label>
+              <p className="text-xs text-muted-foreground">Small text at the bottom - can include HTML</p>
+              <Textarea
+                id="standby-email-footer"
+                value={standbyEmailFooter}
+                onChange={(e) => {
+                  setStandbyEmailFooter(e.target.value);
+                  setStandbyTemplateChanged(true);
+                }}
+                placeholder="This is an automated message..."
+                className="min-h-[60px]"
+                data-testid="input-standby-email-footer"
+              />
+            </div>
+            
+            <div className="flex justify-end pt-2">
+              <Button
+                onClick={() => saveStandbyEmailTemplateMutation.mutate()}
+                disabled={!standbyTemplateChanged || saveStandbyEmailTemplateMutation.isPending}
+                data-testid="button-save-standby-email-template"
+              >
+                {saveStandbyEmailTemplateMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Saving...

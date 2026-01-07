@@ -3845,13 +3845,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bannerUrl = bannerUrlConfig;
       }
       
-      // Default email content values
-      const finalEmailSubject = emailSubject || 'Deal or No Deal - Availability Confirmation Request';
-      const finalEmailHeadline = emailHeadline || 'Confirm Your Availability';
-      const finalEmailIntro = emailIntro || "Thank you for registering to be part of the Deal or No Deal audience! We're excited to potentially have you join us for an upcoming recording session.";
-      const finalEmailInstructions = emailInstructions || "Please click the button below to let us know which recording dates work for you. This helps us plan our audience seating and ensures we can accommodate you on your preferred day.";
+      // Get saved email template values from database, with fallback defaults
+      const savedAvailSubject = await storage.getSystemConfig('availability_email_subject');
+      const savedAvailHeadline = await storage.getSystemConfig('availability_email_headline');
+      const savedAvailIntro = await storage.getSystemConfig('availability_email_intro');
+      const savedAvailInstructions = await storage.getSystemConfig('availability_email_instructions');
+      const savedAvailFooter = await storage.getSystemConfig('availability_email_footer');
+      
+      // Default email content values - use request values, then saved values, then hardcoded defaults
+      const finalEmailSubject = emailSubject || savedAvailSubject || 'Deal or No Deal - Availability Confirmation Request';
+      const finalEmailHeadline = emailHeadline || savedAvailHeadline || 'Confirm Your Availability';
+      const finalEmailIntro = emailIntro || savedAvailIntro || "Thank you for registering to be part of the Deal or No Deal audience! We're excited to potentially have you join us for an upcoming recording session.";
+      const finalEmailInstructions = emailInstructions || savedAvailInstructions || "Please click the button below to let us know which recording dates work for you. This helps us plan our audience seating and ensures we can accommodate you on your preferred day.";
       const finalEmailButtonText = emailButtonText || 'Select My Available Dates';
-      const finalEmailFooter = emailFooter || 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.';
+      const finalEmailFooter = emailFooter || savedAvailFooter || 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.';
 
       for (const contestantId of contestantIds) {
         const contestant = await storage.getContestantById(contestantId);
@@ -5579,6 +5586,18 @@ ${finalEmailFooter}`;
           // Get reply-to email for mailto buttons
           const smtpConfig = await getSmtpConfig();
           const standbyReplyToEmail = smtpConfig.fromEmail || 'noreply@example.com';
+          
+          // Get saved standby email template values from database
+          const savedStandbyHeadline = await storage.getSystemConfig('standby_email_headline');
+          const savedStandbyIntro = await storage.getSystemConfig('standby_email_intro');
+          const savedStandbyInstructions = await storage.getSystemConfig('standby_email_instructions');
+          const savedStandbyFooter = await storage.getSystemConfig('standby_email_footer');
+          
+          // Use saved values with fallback defaults
+          const standbyHeadline = savedStandbyHeadline || "You're on Our Standby List!";
+          const standbyIntro = savedStandbyIntro || "You have been added to our standby list for an upcoming Deal or No Deal recording. This means you may be called to attend if a seat becomes available.";
+          const standbyInstructions = savedStandbyInstructions || "Please confirm your availability as a standby by clicking the button below. We'll be in touch if a spot opens up for you.";
+          const standbyFooterText = savedStandbyFooter || "This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.";
 
           // Build email content matching booking email style with purple standby theme
           const subject = `Deal or No Deal - Standby Booking for ${formattedDate}`;
@@ -5601,7 +5620,7 @@ ${finalEmailFooter}`;
     <tr>
       <td style="background: linear-gradient(180deg, #4a1a6e 0%, #2a0a2a 100%); padding: 25px 30px; text-align: center;">
         <h1 style="color: #c084fc; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-          Standby Invitation
+          ${standbyHeadline}
         </h1>
       </td>
     </tr>
@@ -5617,7 +5636,7 @@ ${finalEmailFooter}`;
               </p>
               
               <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
-                Thank you for your interest in being part of <strong style="color: #8B0000;">Deal or No Deal</strong>!
+                ${standbyIntro}
               </p>
               
               <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
@@ -5639,6 +5658,10 @@ ${finalEmailFooter}`;
                   </td>
                 </tr>
               </table>
+              
+              <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                ${standbyInstructions}
+              </p>
               
               <!-- Response Buttons (mailto) -->
               <p style="color: #555555; font-size: 14px; text-align: center; margin: 0 0 15px 0; font-weight: bold;">
@@ -5677,7 +5700,7 @@ ${finalEmailFooter}`;
     <tr>
       <td style="background-color: #2a0a2a; padding: 15px 30px 30px 30px; text-align: center;">
         <p style="color: #aa88aa; font-size: 11px; line-height: 1.6; margin: 0;">
-          This is an automated message from the Deal or No Deal production team.
+          ${standbyFooterText}
         </p>
       </td>
     </tr>
