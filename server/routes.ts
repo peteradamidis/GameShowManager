@@ -4366,6 +4366,217 @@ ${finalEmailFooter}`;
   });
 
   // ========================================
+  // Microsoft Forms / Power Automate Webhook
+  // ========================================
+
+  // Webhook endpoint to receive booking confirmation responses from Microsoft Forms via Power Automate
+  app.post("/api/webhooks/forms-response", async (req, res) => {
+    try {
+      console.log("[Forms Webhook] Received response:", JSON.stringify(req.body, null, 2));
+      
+      // Verify webhook secret (optional but recommended)
+      const webhookSecret = await storage.getSystemConfig('forms_webhook_secret');
+      const providedSecret = req.headers['x-webhook-secret'] || req.body.webhookSecret;
+      
+      if (webhookSecret && webhookSecret !== providedSecret) {
+        console.warn("[Forms Webhook] Invalid or missing webhook secret");
+        return res.status(401).json({ error: "Invalid webhook secret" });
+      }
+      
+      // Extract form response data
+      // Flexible field mapping - check for various possible field names
+      const responseData = {
+        contestantName: req.body.contestantName || req.body.name || req.body.Name || req.body["Contestant Name"] || "",
+        contestantEmail: req.body.contestantEmail || req.body.email || req.body.Email || req.body["Email Address"] || "",
+        recordDate: req.body.recordDate || req.body.date || req.body.Date || req.body["Recording Date"] || "",
+        response: req.body.response || req.body.Response || req.body.confirmation || req.body.Confirmation || "",
+        dietaryRequirements: req.body.dietaryRequirements || req.body.dietary || req.body.Dietary || req.body["Dietary Requirements"] || "",
+        questions: req.body.questions || req.body.Questions || req.body.notes || req.body.Notes || "",
+        attendingWith: req.body.attendingWith || req.body["Attending With"] || "",
+      };
+      
+      console.log("[Forms Webhook] Parsed data:", responseData);
+      
+      // Normalize response value
+      let confirmationStatus: 'confirmed' | 'declined' | 'pending' = 'pending';
+      const responseNormalized = responseData.response.toLowerCase().trim();
+      
+      if (responseNormalized.includes('confirm') || responseNormalized.includes('yes') || responseNormalized === 'attending') {
+        confirmationStatus = 'confirmed';
+      } else if (responseNormalized.includes('decline') || responseNormalized.includes('no') || responseNormalized.includes('cannot') || responseNormalized.includes("can't")) {
+        confirmationStatus = 'declined';
+      }
+      
+      // Find the contestant by email or name
+      const allContestants = await storage.getContestants();
+      let contestant = null;
+      
+      // Try email match first (more reliable)
+      if (responseData.contestantEmail) {
+        contestant = allContestants.find(c => 
+          c.email?.toLowerCase() === responseData.contestantEmail.toLowerCase()
+        );
+      }
+      
+      // Fall back to name match
+      if (!contestant && responseData.contestantName) {
+        contestant = allContestants.find(c => 
+          c.name.toLowerCase() === responseData.contestantName.toLowerCase()
+        );
+      }
+      
+      if (!contestant) {
+        console.warn("[Forms Webhook] Could not find contestant:", responseData.contestantName, responseData.contestantEmail);
+        return res.status(404).json({ 
+          error: "Contestant not found",
+          searchedName: responseData.contestantName,
+          searchedEmail: responseData.contestantEmail,
+        });
+      }
+      
+      console.log("[Forms Webhook] Found contestant:", contestant.name, contestant.id);
+      
+      // Find the seat assignment for this contestant
+      // If recordDate is provided, match to that specific record day
+      let seatAssignment = null;
+      const allAssignments = await storage.getSeatAssignments();
+      const contestantAssignments = allAssignments.filter(a => a.contestantId === contestant!.id);
+      
+      if (contestantAssignments.length === 0) {
+        return res.status(404).json({ 
+          error: "No seat assignment found for this contestant",
+          contestantId: contestant.id,
+          contestantName: contestant.name,
+        });
+      }
+      
+      // If only one assignment, use it
+      if (contestantAssignments.length === 1) {
+        seatAssignment = contestantAssignments[0];
+      } else if (responseData.recordDate) {
+        // Try to match by date
+        const recordDays = await storage.getRecordDays();
+        const targetDate = new Date(responseData.recordDate).toDateString();
+        
+        for (const assignment of contestantAssignments) {
+          const recordDay = recordDays.find(rd => rd.id === assignment.recordDayId);
+          if (recordDay && new Date(recordDay.date).toDateString() === targetDate) {
+            seatAssignment = assignment;
+            break;
+          }
+        }
+      }
+      
+      // Fall back to most recent assignment
+      if (!seatAssignment) {
+        seatAssignment = contestantAssignments[0];
+      }
+      
+      console.log("[Forms Webhook] Using seat assignment:", seatAssignment.id);
+      
+      // Find or create booking confirmation token for this assignment
+      let tokenRecord = await storage.getBookingConfirmationBySeatAssignment(seatAssignment.id);
+      
+      if (!tokenRecord) {
+        // Create a new token record for tracking
+        const token = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+        
+        tokenRecord = await storage.createBookingConfirmationToken({
+          seatAssignmentId: seatAssignment.id,
+          token,
+          expiresAt,
+          lastSentAt: new Date(),
+          status: 'active',
+          confirmationStatus: 'pending',
+        });
+      }
+      
+      // Build notes from dietary and questions
+      const notesParts = [];
+      if (responseData.dietaryRequirements && responseData.dietaryRequirements.toLowerCase() !== 'none') {
+        notesParts.push(`Dietary Requirements: ${responseData.dietaryRequirements}`);
+      }
+      if (responseData.questions) {
+        notesParts.push(`Questions/Notes: ${responseData.questions}`);
+      }
+      notesParts.push(`(Submitted via Microsoft Forms)`);
+      const notes = notesParts.join('\n\n');
+      
+      // Update the booking confirmation status
+      await storage.updateBookingConfirmation(tokenRecord.id, {
+        confirmationStatus,
+        attendingWith: responseData.attendingWith || null,
+        notes,
+        confirmedAt: new Date(),
+      });
+      
+      console.log("[Forms Webhook] Updated booking confirmation:", {
+        tokenId: tokenRecord.id,
+        status: confirmationStatus,
+        contestant: contestant.name,
+      });
+      
+      // Return success response
+      res.json({
+        success: true,
+        message: `Booking ${confirmationStatus} for ${contestant.name}`,
+        contestantId: contestant.id,
+        contestantName: contestant.name,
+        confirmationStatus,
+        seatAssignmentId: seatAssignment.id,
+      });
+      
+    } catch (error: any) {
+      console.error("[Forms Webhook] Error processing response:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get webhook configuration info for Power Automate setup
+  app.get("/api/webhooks/forms-config", async (req, res) => {
+    try {
+      const baseUrl = getBaseUrl(req);
+      const webhookSecret = await storage.getSystemConfig('forms_webhook_secret');
+      
+      res.json({
+        webhookUrl: `${baseUrl}/api/webhooks/forms-response`,
+        hasSecret: !!webhookSecret,
+        expectedFields: {
+          required: ["contestantName OR contestantEmail", "response"],
+          optional: ["recordDate", "dietaryRequirements", "questions", "attendingWith"],
+          responseValues: {
+            confirmed: ["confirm", "confirmed", "yes", "attending"],
+            declined: ["decline", "declined", "no", "cannot attend", "can't attend"],
+          },
+        },
+      });
+    } catch (error: any) {
+      console.error("Error getting webhook config:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Set webhook secret for security
+  app.post("/api/webhooks/set-secret", async (req, res) => {
+    try {
+      const { secret } = req.body;
+      
+      if (!secret || typeof secret !== 'string' || secret.length < 16) {
+        return res.status(400).json({ error: "Secret must be at least 16 characters" });
+      }
+      
+      await storage.setSystemConfig('forms_webhook_secret', secret);
+      
+      res.json({ success: true, message: "Webhook secret saved" });
+    } catch (error: any) {
+      console.error("Error setting webhook secret:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ========================================
   // Booking Confirmation Routes
   // ========================================
 
