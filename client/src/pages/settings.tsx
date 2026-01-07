@@ -9,7 +9,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail, Download, Database, Clock, RefreshCw, Lock, Server, Send } from "lucide-react";
+import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail, Download, Database, Clock, RefreshCw, Lock, Server, Send, Eye } from "lucide-react";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -911,6 +911,77 @@ export default function Settings() {
                 )}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5" />
+              Email Template Previews
+            </CardTitle>
+            <CardDescription>
+              View how each type of email will appear to contestants. These previews show the email layout and sample pre-filled response messages.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="space-y-1">
+                  <h4 className="font-medium">Booking Confirmation Email</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Sent when a contestant is booked for a recording day
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => window.open('/email-preview.html', '_blank')}
+                  data-testid="button-preview-booking-email"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview
+                </Button>
+              </div>
+              
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="space-y-1">
+                  <h4 className="font-medium">Availability Check Email</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Sent to check if contestants are available for upcoming dates
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => window.open('/availability-email-preview.html', '_blank')}
+                  data-testid="button-preview-availability-email"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview
+                </Button>
+              </div>
+              
+              <div className="flex items-center justify-between p-4 border rounded-lg bg-purple-50 dark:bg-purple-950/20">
+                <div className="space-y-1">
+                  <h4 className="font-medium text-purple-700 dark:text-purple-300">Standby Booking Email</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Sent to contestants assigned as standbys for a recording day
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => window.open('/standby-email-preview.html', '_blank')}
+                  data-testid="button-preview-standby-email"
+                  className="border-purple-300 hover:bg-purple-100 dark:border-purple-700 dark:hover:bg-purple-900/30"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview
+                </Button>
+              </div>
+            </div>
+            
+            <p className="text-xs text-muted-foreground pt-2">
+              These previews show static examples. Actual emails will include contestant-specific details and working mailto buttons.
+            </p>
           </CardContent>
         </Card>
 
