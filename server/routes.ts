@@ -3897,6 +3897,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const responseUrl = appendNgrokSkip(`${baseUrl}/availability/respond/${tokenRecord.token}`);
           
+          // Get reply-to email for mailto buttons
+          const smtpConfig = await getSmtpConfig();
+          const replyToEmail = smtpConfig.fromEmail || 'noreply@example.com';
+          
           // Format record day dates for the email HTML list
           const recordDaysHtml = recordDays
             .filter((rd): rd is NonNullable<typeof recordDays[0]> => rd !== null && rd !== undefined && rd.date !== undefined)
@@ -3968,6 +3972,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
               <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
                 ${finalEmailInstructions}
               </p>
+              
+              <!-- Quick Response Buttons (mailto) -->
+              <p style="color: #555555; font-size: 14px; text-align: center; margin: 0 0 15px 0; font-weight: bold;">
+                Quick Response:
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
+                <tr>
+                  <td style="padding: 0 5px;">
+                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`AVAILABLE - ${contestant.name}`)}&body=${encodeURIComponent(`Hi,\n\nI am AVAILABLE for the Deal or No Deal recording dates.\n\nName: ${contestant.name}\n\nThank you!`)}" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">✓ YES, I'M AVAILABLE</a>
+                  </td>
+                  <td style="padding: 0 5px;">
+                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`NOT AVAILABLE - ${contestant.name}`)}&body=${encodeURIComponent(`Hi,\n\nI am NOT AVAILABLE for the Deal or No Deal recording dates.\n\nName: ${contestant.name}\n\nThank you!`)}" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">✗ NOT AVAILABLE</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #888888; font-size: 12px; text-align: center; margin: 0 0 20px 0;">
+                Click a button above to send a quick email response
+              </p>
+              
+              <!-- Divider -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 0 0 20px 0;">
+                <tr>
+                  <td style="border-top: 1px solid #e0e0e0; padding-top: 20px; text-align: center;">
+                    <p style="color: #888888; font-size: 12px; margin: 0;">Or select specific dates below:</p>
+                  </td>
+                </tr>
+              </table>
               
               <!-- Gold/Red CTA Button -->
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 25px auto;">
@@ -4479,6 +4511,10 @@ ${finalEmailFooter}`;
             const emailAdditionalInstructions = await storage.getSystemConfig('booking_email_additional_instructions') || '';
             const emailFooter = await storage.getSystemConfig('booking_email_footer') || 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.';
             
+            // Get reply-to email for mailto buttons
+            const bookingSmtpConfig = await getSmtpConfig();
+            const bookingReplyToEmail = bookingSmtpConfig.fromEmail || 'noreply@example.com';
+            
             // Professional HTML email template with configurable content
             emailBody = `<!DOCTYPE html>
 <html>
@@ -4545,6 +4581,34 @@ ${finalEmailFooter}`;
                   `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
                 ).join('')}
               </div>
+              
+              <!-- Quick Response Buttons (mailto) -->
+              <p style="color: #555555; font-size: 14px; text-align: center; margin: 0 0 15px 0; font-weight: bold;">
+                Quick Response:
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
+                <tr>
+                  <td style="padding: 0 5px;">
+                    <a href="mailto:${bookingReplyToEmail}?subject=${encodeURIComponent(`CONFIRMED - ${contestant.name} - ${recordDate}`)}&body=${encodeURIComponent(`Hi,\n\nI CONFIRM my attendance for Deal or No Deal.\n\nName: ${contestant.name}\nDate: ${recordDate}\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">✓ CONFIRM</a>
+                  </td>
+                  <td style="padding: 0 5px;">
+                    <a href="mailto:${bookingReplyToEmail}?subject=${encodeURIComponent(`CANNOT ATTEND - ${contestant.name} - ${recordDate}`)}&body=${encodeURIComponent(`Hi,\n\nI CANNOT ATTEND Deal or No Deal on this date.\n\nName: ${contestant.name}\nDate: ${recordDate}\n\nReason: [Please provide reason]\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">✗ CANNOT ATTEND</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #888888; font-size: 12px; text-align: center; margin: 0 0 20px 0;">
+                Click a button above to send a quick email response
+              </p>
+              
+              <!-- Divider -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 0 0 20px 0;">
+                <tr>
+                  <td style="border-top: 1px solid #e0e0e0; padding-top: 20px; text-align: center;">
+                    <p style="color: #888888; font-size: 12px; margin: 0;">Or use our form for detailed responses:</p>
+                  </td>
+                </tr>
+              </table>
               
               <!-- Gold/Red CTA Button -->
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 25px auto;">
