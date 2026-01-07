@@ -6012,6 +6012,203 @@ ${finalEmailFooter}`;
     }
   });
 
+  // Send test booking confirmation email (for previewing the template)
+  app.post("/api/smtp/test-booking-email", requireAuth, async (req, res) => {
+    try {
+      const { toEmail } = req.body;
+      
+      if (!toEmail) {
+        return res.status(400).json({ error: "toEmail is required" });
+      }
+      
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(toEmail)) {
+        return res.status(400).json({ error: "Invalid email address format" });
+      }
+
+      const smtpConfig = await getSmtpConfig();
+      
+      if (!smtpConfig.host || !smtpConfig.fromEmail) {
+        return res.status(400).json({ error: "SMTP is not configured. Please configure SMTP settings first." });
+      }
+
+      // Get configurable text from system config with defaults
+      const bannerUrlConfig = await storage.getSystemConfig('booking_email_banner') || '/email-assets/dond-banner.png';
+      const emailHeadline = await storage.getSystemConfig('booking_email_headline') || 'Your Booking is Confirmed!';
+      const emailIntro = await storage.getSystemConfig('booking_email_intro') || 'Congratulations! You\'ve secured your spot in the <strong style="color: #8B0000;">Deal or No Deal</strong> studio audience.';
+      const emailInstructions = await storage.getSystemConfig('booking_email_instructions') || 'Please confirm your attendance by clicking the button below. You can also let us know about dietary requirements or ask any questions.';
+      const emailButtonText = await storage.getSystemConfig('booking_email_button_text') || 'Confirm Attendance';
+      const emailAdditionalInstructions = await storage.getSystemConfig('booking_email_additional_instructions') || '';
+      const emailFooter = await storage.getSystemConfig('booking_email_footer') || 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.';
+      
+      const replyToEmail = smtpConfig.fromEmail || 'noreply@example.com';
+      
+      // Test data
+      const testContestantName = 'Test Contestant';
+      const testRecordDate = 'Wednesday, 15 January 2026';
+      const testSeatLocation = 'Block 3, Seat 12';
+      const testConfirmationLink = '#test-link';
+      
+      // Prepare banner
+      let bannerUrl = bannerUrlConfig;
+      let bannerAttachment: any = null;
+      const bannerCid = 'booking-banner-image';
+      
+      if (bannerUrlConfig.startsWith('/')) {
+        const bannerPath = path.join(process.cwd(), bannerUrlConfig.replace(/^\//, ''));
+        try {
+          if (fs.existsSync(bannerPath)) {
+            const bannerBuffer = fs.readFileSync(bannerPath);
+            const ext = path.extname(bannerPath).toLowerCase().replace('.', '');
+            const contentType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+            bannerAttachment = {
+              filename: path.basename(bannerPath),
+              content: bannerBuffer,
+              cid: bannerCid,
+              contentType,
+            };
+            bannerUrl = `cid:${bannerCid}`;
+          }
+        } catch (error) {
+          console.warn('Warning: Could not read banner image:', error);
+        }
+      }
+
+      const emailBody = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    <tr>
+      <td style="padding: 0; line-height: 0;">
+        <img src="${bannerUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />
+      </td>
+    </tr>
+    <tr>
+      <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          ${emailHeadline}
+        </h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+          <tr>
+            <td style="padding: 35px 30px;">
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
+                Hi ${testContestantName.split(' ')[0]},
+              </p>
+              
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+                ${emailIntro.split('\n\n').map((paragraph: string) => 
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
+              
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                      Your Record Day Details
+                    </h2>
+                    <p style="color: #333333; font-size: 15px; margin: 0 0 8px 0;">
+                      <strong>Date:</strong> ${testRecordDate}
+                    </p>
+                    <p style="color: #333333; font-size: 15px; margin: 0;">
+                      <strong>Seat:</strong> ${testSeatLocation}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <div style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                ${emailInstructions.split('\n\n').map((paragraph: string) => 
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
+              
+              <!-- Quick Response Buttons (mailto) -->
+              <p style="color: #555555; font-size: 14px; text-align: center; margin: 0 0 15px 0; font-weight: bold;">
+                Quick Response:
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
+                <tr>
+                  <td style="padding: 0 5px;">
+                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`CONFIRMED - ${testContestantName} - ${testRecordDate}`)}&body=${encodeURIComponent(`Hi,\n\nI CONFIRM my attendance for Deal or No Deal.\n\nName: ${testContestantName}\nDate: ${testRecordDate}\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">✓ CONFIRM</a>
+                  </td>
+                  <td style="padding: 0 5px;">
+                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`CANNOT ATTEND - ${testContestantName} - ${testRecordDate}`)}&body=${encodeURIComponent(`Hi,\n\nI CANNOT ATTEND Deal or No Deal on this date.\n\nName: ${testContestantName}\nDate: ${testRecordDate}\n\nReason: [Please provide reason]\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">✗ CANNOT ATTEND</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #888888; font-size: 12px; text-align: center; margin: 0 0 20px 0;">
+                Click a button above to send a quick email response
+              </p>
+              
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 0 0 20px 0;">
+                <tr>
+                  <td style="border-top: 1px solid #e0e0e0; padding-top: 20px; text-align: center;">
+                    <p style="color: #888888; font-size: 12px; margin: 0;">Or use our form for detailed responses:</p>
+                  </td>
+                </tr>
+              </table>
+              
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 25px auto;">
+                <tr>
+                  <td style="background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); border-radius: 8px; box-shadow: 0 4px 10px rgba(139,0,0,0.3);">
+                    <a href="${testConfirmationLink}" target="_blank" style="display: inline-block; padding: 16px 40px; color: #2a0a0a; text-decoration: none; font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px;">${emailButtonText}</a>
+                  </td>
+                </tr>
+              </table>
+              
+              ${emailAdditionalInstructions ? `
+              <div style="margin: 25px 0 0 0;">
+                ${emailAdditionalInstructions.split('\n\n').map((paragraph: string) => 
+                  `<p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
+              ` : ''}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 25px 20px; text-align: center;">
+        <p style="color: #D4AF37; font-size: 12px; line-height: 1.5; margin: 0;">
+          ${emailFooter}
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+      const attachments = bannerAttachment ? [bannerAttachment] : [];
+
+      await sendEmail(
+        toEmail,
+        'TEST: Deal or No Deal - Booking Confirmation',
+        'This is a test booking confirmation email.',
+        emailBody,
+        { 
+          senderName: smtpConfig.fromName || 'Deal or No Deal',
+          attachments 
+        }
+      );
+
+      res.json({ success: true, message: `Test booking confirmation email sent to ${toEmail}` });
+    } catch (error: any) {
+      console.error("Error sending test booking email:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   // ==========================================
   // Adobe Sign SMTP Configuration Endpoints
   // ==========================================
