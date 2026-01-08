@@ -1,0 +1,56 @@
+8bc7727 Update email previews to dynamically show saved template content
+d69b6b7 Add ability to customize email templates for contestant notifications
+31ad180 Organize settings into a tabbed interface for easier navigation
+4d037e5 Move forms tab to a dedicated section within settings
+admin@admins-Mac-mini GameShowManager % git branch
+* main
+admin@admins-Mac-mini GameShowManager % git fetch origin
+git log origin/main --oneline -5
+73186c0 (origin/main, origin/HEAD) Saved progress at the end of the loop
+26e3061 Add ability to send paperwork emails and track receipt status
+aecbcbe Update paperwork management to filter contestants and track invitations
+b3c0720 Make the OTD Notes column longer and expandable
+4ec438f Remove the paperwork on day column from the booking master page
+admin@admins-Mac-mini GameShowManager % git fetch origin
+git log origin/main --oneline -5
+73186c0 (origin/main, origin/HEAD) Saved progress at the end of the loop
+26e3061 Add ability to send paperwork emails and track receipt status
+aecbcbe Update paperwork management to filter contestants and track invitations
+b3c0720 Make the OTD Notes column longer and expandable
+4ec438f Remove the paperwork on day column from the booking master page
+admin@admins-Mac-mini GameShowManager % git push origin main
+To https://github.com/peteradamidis/GameShowManager.git
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'https://github.com/peteradamidis/GameShowManager.git'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. If you want to integrate the remote changes,
+hint: use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+admin@admins-Mac-mini GameShowManager % git status
+
+On branch main
+Your branch is behind 'origin/main' by 17 commits, and can be fast-forwarded.
+  (use "git pull" to update your local branch)
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	deleted:    storage/backups/automatic-backup.json
+	deleted:    storage/backups/automatic-backup.xlsx
+
+no changes added to commit (use "git add" and/or "git commit -a")
+admin@admins-Mac-mini GameShowManager % git add .
+admin@admins-Mac-mini GameShowManager % git commit -m "Your commit message here"
+[main bd67937] Your commit message here
+ 2 files changed, 1594 deletions(-)
+ delete mode 100644 storage/backups/automatic-backup.json
+ delete mode 100644 storage/backups/automatic-backup.xlsx
+admin@admins-Mac-mini GameShowManager % git push origin main
+To https://github.com/peteradamidis/GameShowManager.git
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'https://github.com/peteradamidis/GameShowManager.git'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. If you want to integrate the remote changes,
+hint: use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+admin@admins-Mac-mini GameShowManager % 
