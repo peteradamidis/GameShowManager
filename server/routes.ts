@@ -3736,12 +3736,177 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simple PATCH to update seat assignment fields (for booking responses page)
+  app.patch("/api/seat-assignments/:id", async (req, res) => {
+    try {
+      const { confirmedRsvp, bookingEmailSent, notes } = req.body;
+      
+      const updateData: any = {};
+      if (confirmedRsvp !== undefined) {
+        updateData.confirmedRsvp = confirmedRsvp ? new Date(confirmedRsvp) : null;
+      }
+      if (bookingEmailSent !== undefined) {
+        updateData.bookingEmailSent = bookingEmailSent ? new Date(bookingEmailSent) : null;
+      }
+      if (notes !== undefined) {
+        updateData.notes = notes;
+      }
+      
+      const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, updateData);
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+      
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Cancel seat assignment (move to reschedule)
   app.post("/api/seat-assignments/:id/cancel", async (req, res) => {
     try {
       const { reason } = req.body;
       const canceled = await storage.cancelSeatAssignment(req.params.id, reason);
       res.json(canceled);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Decline booking - mark as declined and optionally move to reschedule
+  app.post("/api/seat-assignments/:id/decline", async (req, res) => {
+    try {
+      const { reason, moveToReschedule = true } = req.body;
+      const declineReason = reason ? `[DECLINED] ${reason}` : "[DECLINED] No reason provided";
+      
+      if (moveToReschedule) {
+        // Move to reschedule list (canceled assignments)
+        const canceled = await storage.cancelSeatAssignment(req.params.id, declineReason);
+        res.json({ moved: true, canceled });
+      } else {
+        // Just mark as declined but keep in place
+        const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, {
+          notes: declineReason,
+          confirmedRsvp: new Date(),
+        });
+        res.json({ moved: false, assignment: updated });
+      }
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Change record date for a seat assignment (move to different day)
+  app.post("/api/seat-assignments/:id/change-date", async (req, res) => {
+    try {
+      const { newRecordDayId } = req.body;
+      
+      if (!newRecordDayId) {
+        return res.status(400).json({ error: "newRecordDayId is required" });
+      }
+      
+      // Get the current assignment with all its data
+      const currentAssignment = await storage.getSeatAssignmentById(req.params.id);
+      if (!currentAssignment) {
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+      
+      // Get the new record day
+      const newRecordDay = await storage.getRecordDayById(newRecordDayId);
+      if (!newRecordDay) {
+        return res.status(404).json({ error: "New record day not found" });
+      }
+      
+      // Find an available seat in the new record day
+      const existingAssignments = await storage.getSeatAssignmentsByRecordDay(newRecordDayId);
+      const occupiedSeats = new Set(existingAssignments.map(a => `${a.blockNumber}-${a.seatLabel}`));
+      
+      // Try to find a seat in the same block/seat first, then any available
+      let newBlock = currentAssignment.blockNumber;
+      let newSeatLabel = currentAssignment.seatLabel;
+      
+      // Check if same seat is available
+      if (occupiedSeats.has(`${newBlock}-${newSeatLabel}`)) {
+        // Get actual seat layout for the seating chart (A1-V1 per block typically)
+        // Use a simpler approach: try seats in same block first, then other blocks
+        const seatLabels = [];
+        for (const letter of ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V']) {
+          seatLabels.push(letter);
+        }
+        
+        let foundSeat = false;
+        
+        // First try same block
+        for (const label of seatLabels) {
+          if (!occupiedSeats.has(`${newBlock}-${label}`)) {
+            newSeatLabel = label;
+            foundSeat = true;
+            break;
+          }
+        }
+        
+        // If not found, try other blocks
+        if (!foundSeat) {
+          for (let block = 1; block <= 7 && !foundSeat; block++) {
+            if (block === newBlock) continue;
+            for (const label of seatLabels) {
+              if (!occupiedSeats.has(`${block}-${label}`)) {
+                newBlock = block;
+                newSeatLabel = label;
+                foundSeat = true;
+                break;
+              }
+            }
+          }
+        }
+        
+        if (!foundSeat) {
+          return res.status(400).json({ error: "No available seats in the new record day" });
+        }
+      }
+      
+      // Delete the current assignment
+      await storage.deleteSeatAssignment(req.params.id);
+      
+      // Create new assignment in the new record day with ALL original data preserved
+      const newAssignment = await storage.createSeatAssignment({
+        recordDayId: newRecordDayId,
+        contestantId: currentAssignment.contestantId,
+        blockNumber: newBlock,
+        seatLabel: newSeatLabel,
+        playerType: currentAssignment.playerType,
+      });
+      
+      // Preserve workflow data from original assignment
+      if (newAssignment) {
+        const workflowData: any = {};
+        
+        // Copy over all workflow fields that had values
+        if (currentAssignment.firstNations) workflowData.firstNations = currentAssignment.firstNations;
+        if (currentAssignment.rating) workflowData.rating = currentAssignment.rating;
+        if (currentAssignment.location) workflowData.location = currentAssignment.location;
+        if (currentAssignment.medicalQuestion) workflowData.medicalQuestion = currentAssignment.medicalQuestion;
+        if (currentAssignment.criminalBankruptcy) workflowData.criminalBankruptcy = currentAssignment.criminalBankruptcy;
+        if (currentAssignment.castingCategory) workflowData.castingCategory = currentAssignment.castingCategory;
+        if (currentAssignment.notes) workflowData.notes = currentAssignment.notes;
+        if (currentAssignment.otdNotes) workflowData.otdNotes = currentAssignment.otdNotes;
+        // Note: Don't copy bookingEmailSent or confirmedRsvp since they were for the old date
+        
+        if (Object.keys(workflowData).length > 0) {
+          await storage.updateSeatAssignmentWorkflow(newAssignment.id, workflowData);
+        }
+      }
+      
+      res.json({
+        message: "Successfully moved to new record day",
+        previousRecordDayId: currentAssignment.recordDayId,
+        newRecordDayId,
+        newBlock,
+        newSeatLabel,
+        assignment: newAssignment,
+      });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
