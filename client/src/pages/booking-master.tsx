@@ -42,7 +42,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Calendar, Mail, Maximize2, Minimize2, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle, FileText, Sparkles, Users } from "lucide-react";
+import { Download, Calendar, Mail, Maximize2, Minimize2, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle, FileText, Sparkles, Users, AlertTriangle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -1166,7 +1166,13 @@ export default function BookingMaster() {
                             {row.assignment && (
                               <Checkbox
                                 checked={!!row.assignment.bookingEmailSent}
-                                onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "bookingEmailSent", row.assignment!.bookingEmailSent)}
+                                disabled={!!row.assignment.bookingEmailSent}
+                                onCheckedChange={() => {
+                                  if (!row.assignment!.bookingEmailSent) {
+                                    handleCheckboxToggle(row.assignment!.id, "bookingEmailSent", row.assignment!.bookingEmailSent);
+                                  }
+                                }}
+                                title={row.assignment.bookingEmailSent ? "Booking email was sent - cannot be unticked" : ""}
                                 data-testid={`checkbox-email-sent-${row.seatId}`}
                               />
                             )}
@@ -1327,6 +1333,41 @@ export default function BookingMaster() {
           </DialogHeader>
           
           <div className="flex-1 overflow-y-auto space-y-4 py-4">
+            {/* RESEND Warning */}
+            {(() => {
+              const selectedRows = bookingRows.filter(row => row.assignment && selectedAssignments.has(row.assignment.id));
+              const resendContestants = selectedRows.filter(row => row.assignment?.bookingEmailSent);
+              const newContestants = selectedRows.filter(row => !row.assignment?.bookingEmailSent);
+              
+              if (resendContestants.length > 0) {
+                return (
+                  <div className="border-2 border-amber-500 rounded-lg p-4 bg-amber-50 dark:bg-amber-950/30 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                      <Label className="text-sm font-bold text-amber-800 dark:text-amber-200">
+                        RESEND WARNING
+                      </Label>
+                    </div>
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      {resendContestants.length === selectedRows.length 
+                        ? `All ${resendContestants.length} selected contestant${resendContestants.length !== 1 ? 's have' : ' has'} already received a booking email. This will be a RESEND.`
+                        : `${resendContestants.length} of ${selectedRows.length} selected contestants have already received a booking email and will receive a RESEND.`
+                      }
+                    </p>
+                    <div className="text-xs text-amber-600 dark:text-amber-400">
+                      <strong>Previously emailed:</strong> {resendContestants.map(r => r.contestant?.name || 'Unknown').join(', ')}
+                    </div>
+                    {newContestants.length > 0 && (
+                      <div className="text-xs text-green-600 dark:text-green-400">
+                        <strong>First-time recipients:</strong> {newContestants.map(r => r.contestant?.name || 'Unknown').join(', ')}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
             {/* Recipients List */}
             <div className="border rounded-lg p-3 bg-blue-50 dark:bg-blue-950/20 space-y-2">
               <Label className="text-sm font-semibold text-blue-900 dark:text-blue-200">
@@ -1337,7 +1378,12 @@ export default function BookingMaster() {
                   .filter(row => row.assignment && selectedAssignments.has(row.assignment.id))
                   .map(row => (
                     <div key={row.assignment!.id} className="text-sm text-slate-700 dark:text-slate-300 flex justify-between gap-3 px-2 py-1">
-                      <span className="font-medium">{row.contestant?.name || 'Unknown'}</span>
+                      <span className="font-medium">
+                        {row.contestant?.name || 'Unknown'}
+                        {row.assignment?.bookingEmailSent && (
+                          <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200">RESEND</span>
+                        )}
+                      </span>
                       <span className="text-xs text-muted-foreground">{row.contestant?.email || 'No email'}</span>
                     </div>
                   ))}

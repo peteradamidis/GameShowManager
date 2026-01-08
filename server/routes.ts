@@ -3528,13 +3528,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'paperworkReceived', 'signedIn'
       ];
       
+      // PROTECTION: Check if bookingEmailSent is being cleared - this is NOT allowed once set
+      // Covers all falsy values: false, null, undefined, 0, "0", ""
+      if ('bookingEmailSent' in req.body) {
+        const bookingEmailValue = req.body.bookingEmailSent;
+        const isTryingToClear = !bookingEmailValue || bookingEmailValue === "0" || bookingEmailValue === 0;
+        if (isTryingToClear) {
+          const existingAssignment = await storage.getSeatAssignmentById(req.params.id);
+          if (existingAssignment?.bookingEmailSent) {
+            return res.status(400).json({ 
+              error: "Cannot clear booking email sent status once set. Booking emails are permanent records." 
+            });
+          }
+        }
+      }
+      
       const workflowFields: any = {};
       for (const [key, value] of Object.entries(req.body)) {
         if (allowedFields.includes(key)) {
           if (timestampFields.includes(key)) {
             if (typeof value === 'boolean') {
+              // Special handling for bookingEmailSent - only allow setting, not clearing
+              if (key === 'bookingEmailSent' && !value) {
+                continue; // Skip clearing bookingEmailSent
+              }
               workflowFields[key] = value ? new Date() : null;
             } else if (value === null || value === undefined) {
+              // Skip clearing bookingEmailSent
+              if (key === 'bookingEmailSent') {
+                continue;
+              }
               workflowFields[key] = null;
             } else if (typeof value === 'string') {
               workflowFields[key] = new Date(value);
@@ -3741,12 +3764,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { confirmedRsvp, bookingEmailSent, notes } = req.body;
       
+      // Check if bookingEmailSent is being cleared - this is NOT allowed once set
+      // Covers all falsy values: false, null, undefined, 0, "0", ""
+      if (bookingEmailSent !== undefined) {
+        const isTryingToClear = !bookingEmailSent || bookingEmailSent === "0" || bookingEmailSent === 0;
+        if (isTryingToClear) {
+          const existingAssignment = await storage.getSeatAssignmentById(req.params.id);
+          if (existingAssignment?.bookingEmailSent) {
+            return res.status(400).json({ 
+              error: "Cannot clear booking email sent status once set. Booking emails are permanent records." 
+            });
+          }
+        }
+      }
+      
       const updateData: any = {};
       if (confirmedRsvp !== undefined) {
         updateData.confirmedRsvp = confirmedRsvp ? new Date(confirmedRsvp) : null;
       }
       if (bookingEmailSent !== undefined) {
-        updateData.bookingEmailSent = bookingEmailSent ? new Date(bookingEmailSent) : null;
+        // Only allow setting, not clearing (additional guard)
+        if (bookingEmailSent) {
+          updateData.bookingEmailSent = new Date(bookingEmailSent);
+        }
       }
       if (notes !== undefined) {
         updateData.notes = notes;
