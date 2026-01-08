@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Mail, Users, CheckCircle, Clock, XCircle, Send, Eye, RefreshCw, Search, Calendar, BarChart3, Edit, RotateCcw, Upload, FileSpreadsheet, AlertCircle } from "lucide-react";
+import { Mail, Users, CheckCircle, Clock, XCircle, Send, RefreshCw, Search, Calendar, BarChart3, Upload, FileSpreadsheet, AlertCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRef } from "react";
 import type { Contestant, RecordDay } from "@shared/schema";
@@ -68,7 +68,6 @@ export default function AvailabilityManagement() {
   const [confirmSendOpen, setConfirmSendOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [emailSubject, setEmailSubject] = useState(DEFAULT_EMAIL_SUBJECT);
   const [emailHeadline, setEmailHeadline] = useState(DEFAULT_EMAIL_HEADLINE);
   const [emailIntro, setEmailIntro] = useState(DEFAULT_EMAIL_INTRO);
@@ -101,19 +100,6 @@ export default function AvailabilityManagement() {
   const { data: statsByDay = [] } = useQuery<StatsByDay[]>({
     queryKey: ["/api/availability/stats-by-day"],
   });
-
-  const resetEmailToDefaults = () => {
-    setEmailSubject(DEFAULT_EMAIL_SUBJECT);
-    setEmailHeadline(DEFAULT_EMAIL_HEADLINE);
-    setEmailIntro(DEFAULT_EMAIL_INTRO);
-    setEmailInstructions(DEFAULT_EMAIL_INSTRUCTIONS);
-    setEmailButtonText(DEFAULT_EMAIL_BUTTON_TEXT);
-    setEmailFooter(DEFAULT_EMAIL_FOOTER);
-    toast({
-      title: "Email Reset",
-      description: "Email content has been reset to defaults.",
-    });
-  };
 
   const sendMutation = useMutation({
     mutationFn: async () => {
@@ -666,10 +652,6 @@ export default function AvailabilityManagement() {
             <Mail className="h-4 w-4" />
             Tracking
           </TabsTrigger>
-          <TabsTrigger value="preview" className="gap-2">
-            <Eye className="h-4 w-4" />
-            Email Preview
-          </TabsTrigger>
         </TabsList>
 
         {/* Tracking Tab */}
@@ -852,191 +834,6 @@ export default function AvailabilityManagement() {
           </Card>
         </TabsContent>
 
-        {/* Email Preview Tab */}
-        <TabsContent value="preview" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div>
-                  <CardTitle>Email Preview</CardTitle>
-                  <CardDescription>
-                    {isEditingEmail ? "Edit the availability email content" : "Preview how the availability check email will appear to contestants"}
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsEditingEmail(!isEditingEmail)}
-                    data-testid="button-toggle-edit-email"
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    {isEditingEmail ? "Preview" : "Edit Email"}
-                  </Button>
-                  {isEditingEmail && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={resetEmailToDefaults}
-                      data-testid="button-reset-email"
-                    >
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      Reset to Defaults
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isEditingEmail ? (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="email-subject">Email Subject</Label>
-                    <Input
-                      id="email-subject"
-                      value={emailSubject}
-                      onChange={(e) => setEmailSubject(e.target.value)}
-                      className="mt-1"
-                      data-testid="input-email-subject"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email-headline">Headline (Gold Banner Text)</Label>
-                    <Input
-                      id="email-headline"
-                      value={emailHeadline}
-                      onChange={(e) => setEmailHeadline(e.target.value)}
-                      className="mt-1"
-                      data-testid="input-email-headline"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email-intro">Introduction Paragraph</Label>
-                    <Textarea
-                      id="email-intro"
-                      value={emailIntro}
-                      onChange={(e) => setEmailIntro(e.target.value)}
-                      className="mt-1"
-                      rows={3}
-                      data-testid="textarea-email-intro"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email-instructions">Instructions (after dates list)</Label>
-                    <Textarea
-                      id="email-instructions"
-                      value={emailInstructions}
-                      onChange={(e) => setEmailInstructions(e.target.value)}
-                      className="mt-1"
-                      rows={3}
-                      data-testid="textarea-email-instructions"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email-button">Button Text</Label>
-                    <Input
-                      id="email-button"
-                      value={emailButtonText}
-                      onChange={(e) => setEmailButtonText(e.target.value)}
-                      className="mt-1"
-                      data-testid="input-email-button"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email-footer">Footer Text</Label>
-                    <Textarea
-                      id="email-footer"
-                      value={emailFooter}
-                      onChange={(e) => setEmailFooter(e.target.value)}
-                      className="mt-1"
-                      rows={2}
-                      data-testid="textarea-email-footer"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="border rounded-lg overflow-hidden" style={{ backgroundColor: '#2a0a0a' }}>
-                  <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-                    <div style={{ background: 'linear-gradient(180deg, #8B0000 0%, #5a0000 100%)', padding: '20px', textAlign: 'center' as const }}>
-                      <h2 style={{ color: '#D4AF37', fontSize: '24px', fontWeight: 'bold', margin: 0, letterSpacing: '2px' }}>
-                        DEAL OR NO DEAL
-                      </h2>
-                    </div>
-                    
-                    <div style={{ background: 'linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%)', padding: '25px 30px', textAlign: 'center' as const }}>
-                      <h1 style={{ color: '#D4AF37', fontSize: '26px', fontWeight: 'bold', margin: 0, letterSpacing: '3px', textTransform: 'uppercase' as const }}>
-                        {emailHeadline}
-                      </h1>
-                    </div>
-                    
-                    <div style={{ backgroundColor: '#2a0a0a', padding: '0 20px 25px 20px' }}>
-                      <div style={{ backgroundColor: '#ffffff', borderRadius: '10px', padding: '35px 30px' }}>
-                        <p style={{ color: '#333333', fontSize: '16px', lineHeight: 1.6, margin: '0 0 18px 0' }}>
-                          Hi <span style={{ color: '#8B0000', fontWeight: 'bold' }}>[Contestant Name]</span>,
-                        </p>
-                        
-                        <p style={{ color: '#333333', fontSize: '16px', lineHeight: 1.6, margin: '0 0 25px 0' }}>
-                          {emailIntro}
-                        </p>
-                        
-                        <div style={{ background: 'linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%)', borderRadius: '8px', borderLeft: '5px solid #D4AF37', padding: '20px', margin: '0 0 25px 0' }}>
-                          <h2 style={{ color: '#8B0000', fontSize: '14px', fontWeight: 'bold', margin: '0 0 12px 0', textTransform: 'uppercase' as const, letterSpacing: '1px' }}>
-                            Available Recording Dates
-                          </h2>
-                          <ul style={{ color: '#444444', fontSize: '15px', lineHeight: 1.7, margin: 0, paddingLeft: '20px' }}>
-                            {recordDays.slice(0, 5).map((day) => (
-                              <li key={day.id}>
-                                {format(new Date(day.date), 'EEEE, MMMM d, yyyy')}
-                                {day.rxNumber && <span style={{ color: '#888888' }}> ({day.rxNumber})</span>}
-                              </li>
-                            ))}
-                            {recordDays.length > 5 && (
-                              <li style={{ color: '#888888' }}>...and {recordDays.length - 5} more dates</li>
-                            )}
-                          </ul>
-                        </div>
-                        
-                        <p style={{ color: '#555555', fontSize: '15px', lineHeight: 1.6, margin: '0 0 25px 0' }}>
-                          {emailInstructions}
-                        </p>
-                        
-                        <div style={{ textAlign: 'center' as const, margin: '0 0 25px 0' }}>
-                          <span style={{ 
-                            display: 'inline-block', 
-                            background: 'linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)', 
-                            borderRadius: '8px', 
-                            padding: '16px 40px', 
-                            color: '#2a0a0a', 
-                            fontWeight: 'bold', 
-                            textTransform: 'uppercase' as const, 
-                            letterSpacing: '1.5px',
-                            fontSize: '15px'
-                          }}>
-                            {emailButtonText}
-                          </span>
-                          <p style={{ color: '#888888', fontSize: '12px', marginTop: '10px' }}>
-                            This link will expire in 14 days
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div style={{ backgroundColor: '#2a0a0a', padding: '15px 30px 30px 30px', textAlign: 'center' as const }}>
-                      <p style={{ color: '#aa8888', fontSize: '11px', lineHeight: 1.6, margin: 0 }}>
-                        {emailFooter}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4">
-                <span className="font-medium">Subject:</span>
-                <span>{emailSubject}</span>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );
