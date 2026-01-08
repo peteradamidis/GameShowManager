@@ -7009,26 +7009,38 @@ ${finalEmailFooter}`;
   // Paperwork Tracking Endpoints
   // ==========================================
 
-  // Get all confirmed contestants pending paperwork
+  // Get all invited contestants for paperwork management
+  // Returns contestants who have been sent a booking email (invited)
+  // Can filter by status: "all", "invited" (not confirmed), "confirmed"
   app.get("/api/paperwork", requireAuth, async (req, res) => {
     try {
-      const { recordDayId } = req.query;
+      const { recordDayId, status } = req.query;
       
-      // Get all seat assignments with confirmed RSVP
+      // Get all seat assignments
       const assignments = await storage.getAllSeatAssignments();
       const contestants = await storage.getContestants();
       const recordDays = await storage.getRecordDays();
       
-      // Filter to confirmed contestants
-      let confirmedAssignments = assignments.filter((a: SeatAssignment) => a.confirmedRsvp);
+      // Filter to invited contestants (those who have been sent a booking email)
+      let filteredAssignments = assignments.filter((a: SeatAssignment) => a.bookingEmailSent);
+      
+      // Filter by status if specified
+      if (status === 'confirmed') {
+        // Only confirmed contestants
+        filteredAssignments = filteredAssignments.filter((a: SeatAssignment) => a.confirmedRsvp);
+      } else if (status === 'invited') {
+        // Only invited but not yet confirmed
+        filteredAssignments = filteredAssignments.filter((a: SeatAssignment) => !a.confirmedRsvp);
+      }
+      // If status is 'all' or not specified, return all invited contestants
       
       // Filter by record day if specified
       if (recordDayId && typeof recordDayId === 'string') {
-        confirmedAssignments = confirmedAssignments.filter((a: SeatAssignment) => a.recordDayId === recordDayId);
+        filteredAssignments = filteredAssignments.filter((a: SeatAssignment) => a.recordDayId === recordDayId);
       }
       
       // Enrich with contestant and record day data
-      const enrichedAssignments = confirmedAssignments.map((a: SeatAssignment) => {
+      const enrichedAssignments = filteredAssignments.map((a: SeatAssignment) => {
         const contestant = contestants.find(c => c.id === a.contestantId);
         const recordDay = recordDays.find(rd => rd.id === a.recordDayId);
         return {
