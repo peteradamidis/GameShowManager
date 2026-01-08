@@ -4531,6 +4531,214 @@ ${finalEmailFooter}`;
   });
 
   // ========================================
+  // Availability Response Excel Import
+  // ========================================
+
+  // Import availability responses from Microsoft Forms Excel export
+  app.post("/api/availability/import", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      // Parse the Excel file
+      const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const rows: any[] = xlsx.utils.sheet_to_json(worksheet, { defval: '' });
+
+      if (rows.length === 0) {
+        return res.status(400).json({ error: "No data found in Excel file" });
+      }
+
+      // Get all contestants and record days for matching
+      const allContestants = await storage.getContestants();
+      const allRecordDays = await storage.getRecordDays();
+
+      // Create lookup maps
+      const contestantsByEmail = new Map<string, typeof allContestants[0]>();
+      const contestantsByPhone = new Map<string, typeof allContestants[0]>();
+      const contestantsByName = new Map<string, typeof allContestants[0]>();
+
+      for (const c of allContestants) {
+        if (c.email) contestantsByEmail.set(c.email.toLowerCase().trim(), c);
+        if (c.phone) contestantsByPhone.set(c.phone.replace(/\D/g, ''), c);
+        contestantsByName.set(c.name.toLowerCase().trim(), c);
+      }
+
+      // Get column headers from the first row
+      const headers = Object.keys(rows[0] || {});
+
+      // Detect column mappings
+      const findColumn = (patterns: string[]) => {
+        return headers.find(h => 
+          patterns.some(p => h.toLowerCase().includes(p.toLowerCase()))
+        );
+      };
+
+      const emailCol = findColumn(['email', 'e-mail', 'email address']);
+      const phoneCol = findColumn(['phone', 'mobile', 'telephone', 'contact number']);
+      const nameCol = findColumn(['name', 'full name', 'contestant']);
+
+      // Find record day columns - look for date patterns or "RX" columns
+      const recordDayColumns: { header: string; recordDay: typeof allRecordDays[0] | null }[] = [];
+      
+      for (const header of headers) {
+        // Skip identifier columns
+        if ([emailCol, phoneCol, nameCol].includes(header)) continue;
+        
+        const headerLower = header.toLowerCase();
+        
+        // Skip common non-date columns
+        if (headerLower.includes('timestamp') || 
+            headerLower.includes('submitted') ||
+            headerLower === 'id' ||
+            headerLower.includes('completion time')) continue;
+        
+        // Try to match to a record day
+        let matchedDay: typeof allRecordDays[0] | null = null;
+        
+        for (const rd of allRecordDays) {
+          const rdDate = new Date(rd.date);
+          
+          // Generate multiple date format strings to match
+          const dateFormats = [
+            rdDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), // "Jan 15"
+            rdDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }), // "January 15"
+            rdDate.toISOString().split('T')[0], // "2026-01-15"
+            rdDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' }), // "1/15"
+            rdDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }), // "15 Jan"
+            rdDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long' }), // "15 January"
+            `${rdDate.getDate()} ${rdDate.toLocaleDateString('en-US', { month: 'short' })}`, // "15 Jan"
+            rdDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), // "Jan 15, 2026"
+          ];
+          
+          // Check if header contains any date format (case-insensitive)
+          const matchesDate = dateFormats.some(dateStr => 
+            headerLower.includes(dateStr.toLowerCase())
+          );
+          
+          // Check for RX number match
+          const matchesRx = rd.rxNumber && headerLower.includes(rd.rxNumber.toLowerCase());
+          
+          if (matchesDate || matchesRx) {
+            matchedDay = rd;
+            break;
+          }
+        }
+        
+        recordDayColumns.push({ header, recordDay: matchedDay });
+      }
+
+      // Process each row
+      const results = {
+        totalRows: rows.length,
+        matched: 0,
+        unmatched: 0,
+        updated: 0,
+        skipped: 0,
+        errors: [] as { row: number; reason: string; data: any }[],
+        columnMappings: {
+          email: emailCol || null,
+          phone: phoneCol || null,
+          name: nameCol || null,
+          recordDays: recordDayColumns.filter(rc => rc.recordDay).map(rc => ({
+            header: rc.header,
+            recordDayId: rc.recordDay!.id,
+            date: rc.recordDay!.date,
+          })),
+          unmatchedColumns: recordDayColumns.filter(rc => !rc.recordDay).map(rc => rc.header),
+        },
+      };
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const rowNum = i + 2; // +2 for 1-indexed and header row
+
+        // Try to find the contestant
+        let contestant: typeof allContestants[0] | undefined;
+
+        // Priority 1: Email
+        if (emailCol && row[emailCol]) {
+          const email = String(row[emailCol]).toLowerCase().trim();
+          contestant = contestantsByEmail.get(email);
+        }
+
+        // Priority 2: Phone
+        if (!contestant && phoneCol && row[phoneCol]) {
+          const phone = String(row[phoneCol]).replace(/\D/g, '');
+          contestant = contestantsByPhone.get(phone);
+        }
+
+        // Priority 3: Name
+        if (!contestant && nameCol && row[nameCol]) {
+          const name = String(row[nameCol]).toLowerCase().trim();
+          contestant = contestantsByName.get(name);
+        }
+
+        if (!contestant) {
+          results.unmatched++;
+          results.errors.push({
+            row: rowNum,
+            reason: 'Could not match to a contestant',
+            data: { email: row[emailCol], phone: row[phoneCol], name: row[nameCol] },
+          });
+          continue;
+        }
+
+        results.matched++;
+
+        // Process availability responses for each record day column
+        for (const rc of recordDayColumns) {
+          if (!rc.recordDay) continue;
+
+          const responseValue = String(row[rc.header]).toLowerCase().trim();
+          if (!responseValue) continue;
+
+          // Normalize the response
+          let normalizedResponse: 'yes' | 'no' | 'maybe' | 'pending' = 'pending';
+          
+          if (responseValue === 'yes' || responseValue === 'y' || responseValue.includes('available') || responseValue.includes('can attend')) {
+            normalizedResponse = 'yes';
+          } else if (responseValue === 'no' || responseValue === 'n' || responseValue.includes('unavailable') || responseValue.includes('cannot')) {
+            normalizedResponse = 'no';
+          } else if (responseValue === 'maybe' || responseValue.includes('maybe') || responseValue.includes('tentative')) {
+            normalizedResponse = 'maybe';
+          }
+
+          if (normalizedResponse !== 'pending') {
+            try {
+              await storage.upsertContestantAvailability(
+                contestant.id,
+                rc.recordDay.id,
+                normalizedResponse
+              );
+              results.updated++;
+            } catch (err: any) {
+              results.errors.push({
+                row: rowNum,
+                reason: `Failed to update availability: ${err.message}`,
+                data: { contestantId: contestant.id, recordDayId: rc.recordDay.id },
+              });
+            }
+          } else {
+            results.skipped++;
+          }
+        }
+      }
+
+      res.json({
+        success: true,
+        message: `Processed ${results.totalRows} rows: ${results.matched} matched, ${results.updated} availability responses updated`,
+        results,
+      });
+    } catch (error: any) {
+      console.error("Error importing availability responses:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ========================================
   // Microsoft Forms / Power Automate Webhook
   // ========================================
 

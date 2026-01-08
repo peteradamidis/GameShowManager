@@ -13,7 +13,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Mail, Users, CheckCircle, Clock, XCircle, Send, Eye, RefreshCw, Search, Calendar, BarChart3, Edit, RotateCcw } from "lucide-react";
+import { Mail, Users, CheckCircle, Clock, XCircle, Send, Eye, RefreshCw, Search, Calendar, BarChart3, Edit, RotateCcw, Upload, FileSpreadsheet, AlertCircle } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useRef } from "react";
 import type { Contestant, RecordDay } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -73,6 +75,12 @@ export default function AvailabilityManagement() {
   const [emailInstructions, setEmailInstructions] = useState(DEFAULT_EMAIL_INSTRUCTIONS);
   const [emailButtonText, setEmailButtonText] = useState(DEFAULT_EMAIL_BUTTON_TEXT);
   const [emailFooter, setEmailFooter] = useState(DEFAULT_EMAIL_FOOTER);
+  
+  // Import functionality
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importResults, setImportResults] = useState<any>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: stats } = useQuery<AvailabilityStats>({
     queryKey: ["/api/availability/status"],
@@ -215,6 +223,56 @@ export default function AvailabilityManagement() {
     !tokens.some(t => t.contestantId === c.id)
   );
 
+  // Handle Excel file import
+  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    setImportResults(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/availability/import', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Import failed');
+      }
+
+      setImportResults(data);
+      
+      // Refresh availability data
+      queryClient.invalidateQueries({ queryKey: ["/api/availability/stats-by-day"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/availability/tokens"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/availability/status"] });
+
+      toast({
+        title: "Import Complete",
+        description: data.message,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Import Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -224,13 +282,158 @@ export default function AvailabilityManagement() {
             Send availability checks and track contestant responses
           </p>
         </div>
-        <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-send-checks">
-              <Send className="w-4 h-4 mr-2" />
-              Send Availability Checks
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          {/* Import from Excel button */}
+          <Dialog open={importDialogOpen} onOpenChange={(open) => {
+            setImportDialogOpen(open);
+            if (!open) setImportResults(null);
+          }}>
+            <DialogTrigger asChild>
+              <Button variant="outline" data-testid="button-import-responses">
+                <Upload className="w-4 h-4 mr-2" />
+                Import Responses
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Import Availability Responses</DialogTitle>
+                <DialogDescription>
+                  Upload an Excel file exported from Microsoft Forms to import availability responses.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                {!importResults ? (
+                  <>
+                    <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                      <FileSpreadsheet className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground mb-4">
+                        Select your Microsoft Forms Excel export file
+                      </p>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".xlsx,.xls,.csv"
+                        onChange={handleFileImport}
+                        className="hidden"
+                        data-testid="input-import-file"
+                      />
+                      <Button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isImporting}
+                        data-testid="button-select-file"
+                      >
+                        {isImporting ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                            Importing...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 mr-2" />
+                            Select File
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <h4 className="font-medium mb-2">Expected Format</h4>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        The Excel file should contain columns for:
+                      </p>
+                      <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                        <li><strong>Email</strong> or <strong>Name</strong> - to identify the contestant</li>
+                        <li><strong>Record Day columns</strong> - with values like "Yes", "No", or "Maybe"</li>
+                      </ul>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Columns with dates (e.g., "Jan 15" or "RX001") will be matched to record days.
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-4 gap-4">
+                      <Card>
+                        <CardContent className="p-4 text-center">
+                          <div className="text-2xl font-bold">{importResults.results?.totalRows || 0}</div>
+                          <div className="text-sm text-muted-foreground">Total Rows</div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="p-4 text-center">
+                          <div className="text-2xl font-bold text-green-600">{importResults.results?.matched || 0}</div>
+                          <div className="text-sm text-muted-foreground">Matched</div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="p-4 text-center">
+                          <div className="text-2xl font-bold text-blue-600">{importResults.results?.updated || 0}</div>
+                          <div className="text-sm text-muted-foreground">Updated</div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="p-4 text-center">
+                          <div className="text-2xl font-bold text-orange-600">{importResults.results?.unmatched || 0}</div>
+                          <div className="text-sm text-muted-foreground">Unmatched</div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {importResults.results?.columnMappings && (
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <h4 className="font-medium mb-2">Column Mappings Detected</h4>
+                        <div className="text-sm space-y-1">
+                          <p><strong>Email Column:</strong> {importResults.results.columnMappings.email || 'Not found'}</p>
+                          <p><strong>Name Column:</strong> {importResults.results.columnMappings.name || 'Not found'}</p>
+                          <p><strong>Phone Column:</strong> {importResults.results.columnMappings.phone || 'Not found'}</p>
+                          <p><strong>Record Days Matched:</strong> {importResults.results.columnMappings.recordDays?.length || 0}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {importResults.results?.errors?.length > 0 && (
+                      <div className="border rounded-lg">
+                        <div className="p-3 bg-orange-50 dark:bg-orange-950/20 border-b flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 text-orange-600" />
+                          <span className="font-medium text-sm">Issues ({importResults.results.errors.length})</span>
+                        </div>
+                        <ScrollArea className="h-40">
+                          <div className="p-2 space-y-1">
+                            {importResults.results.errors.map((err: any, idx: number) => (
+                              <div key={idx} className="text-sm p-2 bg-muted/50 rounded">
+                                <span className="font-medium">Row {err.row}:</span> {err.reason}
+                                {err.data?.email && <span className="text-muted-foreground ml-2">({err.data.email})</span>}
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    )}
+
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => {
+                        setImportResults(null);
+                      }} data-testid="button-import-another">
+                        Import Another File
+                      </Button>
+                      <Button onClick={() => setImportDialogOpen(false)} data-testid="button-close-import">
+                        Done
+                      </Button>
+                    </DialogFooter>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-send-checks">
+                <Send className="w-4 h-4 mr-2" />
+                Send Availability Checks
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
             <DialogHeader>
               <DialogTitle>Send Availability Checks</DialogTitle>
@@ -328,7 +531,8 @@ export default function AvailabilityManagement() {
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
 
         {/* Confirmation Preview Dialog */}
         <Dialog open={confirmSendOpen} onOpenChange={setConfirmSendOpen}>
