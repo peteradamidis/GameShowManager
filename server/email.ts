@@ -344,3 +344,18 @@ export async function testAdobeSignSmtpConnection(): Promise<{ success: boolean;
     return { success: false, error: error.message };
   }
 }
+
+// Send Adobe Sign email with result object (for bulk sending)
+export async function sendAdobeSignEmail(options: {
+  to: string;
+  subject: string;
+  body: string;
+  htmlBody?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    await sendPaperworkEmail(options.to, options.subject, options.body, options.htmlBody);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

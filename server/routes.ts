@@ -7209,6 +7209,106 @@ ${finalEmailFooter}`;
     }
   });
 
+  // Bulk send paperwork emails with Adobe Sign link
+  app.post("/api/paperwork/bulk-send", requireAuth, async (req, res) => {
+    try {
+      const { assignmentIds, adobeSignLink, subject, body } = req.body;
+      
+      if (!assignmentIds || !Array.isArray(assignmentIds)) {
+        return res.status(400).json({ error: "Assignment IDs must be an array" });
+      }
+      
+      if (assignmentIds.length === 0) {
+        return res.status(400).json({ error: "No valid recipients provided. Please select contestants with email addresses." });
+      }
+      
+      if (!adobeSignLink) {
+        return res.status(400).json({ error: "Adobe Sign link is required" });
+      }
+      
+      // Get user info for audit
+      let sentBy = (req.session as any)?.username;
+      if (!sentBy && (req.session as any)?.userId) {
+        const user = await storage.getUserById((req.session as any).userId);
+        sentBy = user?.username || 'System';
+      }
+      sentBy = sentBy || 'System';
+      
+      const contestants = await storage.getContestants();
+      const { sendAdobeSignEmail } = await import("./email");
+      
+      let sent = 0;
+      let failed = 0;
+      const errors: string[] = [];
+      
+      for (const assignmentId of assignmentIds) {
+        try {
+          const assignment = await storage.getSeatAssignmentById(assignmentId);
+          if (!assignment) {
+            failed++;
+            errors.push(`Assignment ${assignmentId} not found`);
+            continue;
+          }
+          
+          const contestant = contestants.find(c => c.id === assignment.contestantId);
+          if (!contestant?.email) {
+            failed++;
+            errors.push(`No email for contestant ${contestant?.name || assignmentId}`);
+            continue;
+          }
+          
+          // Replace placeholders in email body
+          const personalizedBody = body
+            .replace(/{name}/g, contestant.name || 'Contestant')
+            .replace(/{adobe_sign_link}/g, adobeSignLink);
+          
+          // Send email
+          const emailResult = await sendAdobeSignEmail({
+            to: contestant.email,
+            subject: subject || "Deal or No Deal - Required Paperwork",
+            body: personalizedBody,
+          });
+          
+          if (emailResult.success) {
+            // Mark paperwork as sent
+            const now = new Date();
+            await storage.updateSeatAssignmentWorkflow(assignmentId, {
+              paperworkSent: now,
+              paperworkSentBy: sentBy,
+            });
+            
+            // Broadcast update via WebSocket
+            wsManager.broadcastBookingUpdate({
+              type: 'booking-master-update',
+              recordDayId: assignment.recordDayId,
+              assignmentId,
+              field: 'paperworkSent',
+              value: now,
+            });
+            
+            sent++;
+          } else {
+            failed++;
+            errors.push(`Failed to send to ${contestant.email}: ${emailResult.error}`);
+          }
+        } catch (err: any) {
+          failed++;
+          errors.push(`Error processing ${assignmentId}: ${err.message}`);
+        }
+      }
+      
+      res.json({ 
+        success: true,
+        sent,
+        failed,
+        errors: errors.length > 0 ? errors : undefined,
+      });
+    } catch (error: any) {
+      console.error("Error bulk sending paperwork:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // ==========================================
   // System Config Endpoints
   // ==========================================

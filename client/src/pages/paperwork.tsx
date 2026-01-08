@@ -9,6 +9,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
@@ -23,7 +32,10 @@ import {
   Users,
   Calendar,
   Mail,
-  Clock
+  Clock,
+  FileCheck,
+  UserCheck,
+  MailPlus
 } from "lucide-react";
 import type { RecordDay, Contestant, SeatAssignment } from "@shared/schema";
 
@@ -42,35 +54,72 @@ interface AdobeSignConfig {
   hasPassword: boolean;
 }
 
+type StatusFilter = "all" | "invited" | "confirmed";
+
 export default function Paperwork() {
   const { toast } = useToast();
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [searchName, setSearchName] = useState("");
   const [activeTab, setActiveTab] = useState("paperwork");
+  const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
+  const [sendEmailDialogOpen, setSendEmailDialogOpen] = useState(false);
+  const [adobeSignLink, setAdobeSignLink] = useState("");
+  const [emailSubject, setEmailSubject] = useState("Deal or No Deal - Required Paperwork");
+  const [emailBody, setEmailBody] = useState(`Dear {name},
+
+Thank you for confirming your attendance for Deal or No Deal!
+
+Please complete the required paperwork by clicking the Adobe Sign link below:
+
+{adobe_sign_link}
+
+If you have any questions, please don't hesitate to contact us.
+
+Best regards,
+Deal or No Deal Production Team`);
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
     queryKey: ["/api/record-days"],
   });
 
-  const paperworkUrl = selectedRecordDay === "all" 
-    ? "/api/paperwork" 
-    : `/api/paperwork?recordDayId=${selectedRecordDay}`;
+  // Build query URL with filters
+  const buildPaperworkUrl = () => {
+    const params = new URLSearchParams();
+    if (selectedRecordDay !== "all") {
+      params.append("recordDayId", selectedRecordDay);
+    }
+    if (statusFilter !== "all") {
+      params.append("status", statusFilter);
+    }
+    const queryString = params.toString();
+    return queryString ? `/api/paperwork?${queryString}` : "/api/paperwork";
+  };
+
+  const paperworkUrl = buildPaperworkUrl();
     
   const { data: paperworkData = [], isLoading: loadingPaperwork, refetch: refetchPaperwork } = useQuery<PaperworkAssignment[]>({
-    queryKey: [paperworkUrl],
+    queryKey: ["/api/paperwork", selectedRecordDay, statusFilter],
+    queryFn: async () => {
+      const response = await fetch(paperworkUrl, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch paperwork data');
+      return response.json();
+    },
   });
 
   const { data: adobeConfig } = useQuery<AdobeSignConfig>({
     queryKey: ["/api/adobe-sign-smtp/config"],
   });
 
-  const invalidatePaperworkQueries = () => {
-    queryClient.invalidateQueries({
+  const invalidatePaperworkQueries = async () => {
+    await queryClient.invalidateQueries({
       predicate: (query) => {
         const key = query.queryKey[0];
         return typeof key === 'string' && key.startsWith('/api/paperwork');
       },
     });
+    // Also invalidate seat assignments for sync with Booking Master
+    await queryClient.invalidateQueries({ queryKey: ["/api/seat-assignments"] });
   };
 
   const markSentMutation = useMutation({
@@ -129,11 +178,61 @@ export default function Paperwork() {
     },
   });
 
+  const bulkSendPaperworkMutation = useMutation({
+    mutationFn: async (data: { assignmentIds: string[]; adobeSignLink: string; subject: string; body: string }) => {
+      const response = await apiRequest("POST", "/api/paperwork/bulk-send", data);
+      return response.json();
+    },
+    onSuccess: async (data) => {
+      // Handle different outcomes based on actual results
+      if (data.sent === 0) {
+        // No emails were sent - this is a failure, not success
+        toast({ 
+          title: "Failed to send emails", 
+          description: data.errors?.length > 0 
+            ? `All ${data.failed} emails failed: ${data.errors[0]}` 
+            : "No emails were sent",
+          variant: "destructive" 
+        });
+        // Don't close dialog or clear selection - let user retry
+        return;
+      }
+      
+      // At least some emails were sent successfully
+      if (data.failed > 0) {
+        // Partial success
+        toast({ 
+          title: "Paperwork emails partially sent", 
+          description: `Sent to ${data.sent} contestants, ${data.failed} failed`,
+          variant: "default" 
+        });
+      } else {
+        // Full success
+        toast({ 
+          title: "Paperwork emails sent", 
+          description: `Successfully sent to ${data.sent} contestants` 
+        });
+      }
+      
+      // Invalidate and wait for refetch to complete before clearing UI
+      await invalidatePaperworkQueries();
+      setSendEmailDialogOpen(false);
+      setSelectedAssignments(new Set());
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error sending emails", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Filter by search
   const filteredData = paperworkData.filter((item) => {
     if (!searchName) return true;
     return item.contestant?.name?.toLowerCase().includes(searchName.toLowerCase());
   });
 
+  // Stats
+  const invitedCount = filteredData.filter(item => !item.confirmedRsvp).length;
+  const confirmedCount = filteredData.filter(item => item.confirmedRsvp).length;
   const pendingSent = filteredData.filter(item => !item.paperworkSent);
   const pendingReceived = filteredData.filter(item => item.paperworkSent && !item.paperworkReceived);
   const completed = filteredData.filter(item => item.paperworkSent && item.paperworkReceived);
@@ -141,6 +240,52 @@ export default function Paperwork() {
   const sortedRecordDays = [...recordDays].sort((a, b) => 
     new Date(a.date).getTime() - new Date(b.date).getTime()
   );
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedAssignments(new Set(filteredData.map(item => item.id)));
+    } else {
+      setSelectedAssignments(new Set());
+    }
+  };
+
+  const handleSelectAssignment = (assignmentId: string, checked: boolean) => {
+    const newSelected = new Set(selectedAssignments);
+    if (checked) {
+      newSelected.add(assignmentId);
+    } else {
+      newSelected.delete(assignmentId);
+    }
+    setSelectedAssignments(newSelected);
+  };
+
+  const selectedItems = filteredData.filter(item => selectedAssignments.has(item.id));
+  const selectedWithEmail = selectedItems.filter(item => item.contestant?.email);
+  const selectedWithoutEmail = selectedItems.filter(item => !item.contestant?.email);
+
+  const handleSendPaperwork = () => {
+    if (!adobeSignLink) {
+      toast({ title: "Adobe Sign link required", description: "Please enter an Adobe Sign link", variant: "destructive" });
+      return;
+    }
+    
+    if (selectedWithEmail.length === 0) {
+      toast({ 
+        title: "No valid recipients", 
+        description: "None of the selected contestants have email addresses", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
+    const assignmentIds = selectedWithEmail.map(item => item.id);
+    bulkSendPaperworkMutation.mutate({
+      assignmentIds,
+      adobeSignLink,
+      subject: emailSubject,
+      body: emailBody,
+    });
+  };
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -151,7 +296,7 @@ export default function Paperwork() {
             Paperwork Management
           </h1>
           <p className="text-muted-foreground mt-1">
-            Track and manage paperwork for confirmed contestants
+            Track and manage paperwork for invited contestants
           </p>
         </div>
         <Button 
@@ -177,6 +322,7 @@ export default function Paperwork() {
         </TabsList>
 
         <TabsContent value="paperwork" className="space-y-4">
+          {/* Filters Row */}
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex items-center gap-2">
               <Label htmlFor="record-day-filter">Record Day:</Label>
@@ -196,6 +342,20 @@ export default function Paperwork() {
             </div>
 
             <div className="flex items-center gap-2">
+              <Label htmlFor="status-filter">Status:</Label>
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+                <SelectTrigger className="w-[160px]" data-testid="select-status-filter">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Invited</SelectItem>
+                  <SelectItem value="invited">Invited Only</SelectItem>
+                  <SelectItem value="confirmed">Confirmed Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search by name..."
@@ -207,61 +367,126 @@ export default function Paperwork() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-orange-200 dark:border-orange-800">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <Card className="border-blue-200 dark:border-blue-800">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Mail className="h-5 w-5 text-orange-400" />
-                  Pending Send
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-blue-500" />
+                  Invited
                 </CardTitle>
-                <CardDescription>Awaiting paperwork to be sent</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-orange-500" data-testid="text-pending-send-count">
+                <p className="text-2xl font-bold text-blue-600" data-testid="text-invited-count">
+                  {invitedCount}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-green-200 dark:border-green-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <UserCheck className="h-4 w-4 text-green-500" />
+                  Confirmed
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-green-600" data-testid="text-confirmed-count">
+                  {confirmedCount}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-orange-200 dark:border-orange-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <MailPlus className="h-4 w-4 text-orange-400" />
+                  Ready to Send
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-orange-500" data-testid="text-pending-send-count">
                   {pendingSent.length}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-orange-200 dark:border-orange-800">
+            <Card className="border-amber-200 dark:border-amber-800">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-orange-500" />
-                  Pending Return
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-amber-500" />
+                  Awaiting Return
                 </CardTitle>
-                <CardDescription>Awaiting paperwork return</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-orange-600" data-testid="text-pending-return-count">
+                <p className="text-2xl font-bold text-amber-600" data-testid="text-pending-return-count">
                   {pendingReceived.length}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-orange-200 dark:border-orange-800">
+            <Card className="border-teal-200 dark:border-teal-800">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-orange-700 dark:text-orange-400" />
-                  Completed
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <FileCheck className="h-4 w-4 text-teal-600" />
+                  Received
                 </CardTitle>
-                <CardDescription>Paperwork received and logged</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-orange-700 dark:text-orange-400" data-testid="text-completed-count">
+                <p className="text-2xl font-bold text-teal-700" data-testid="text-completed-count">
                   {completed.length}
                 </p>
               </CardContent>
             </Card>
           </div>
 
+          {/* Bulk Actions */}
+          {selectedAssignments.size > 0 && (
+            <Card className="border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-950">
+              <CardContent className="py-3 flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Users className="h-5 w-5 text-orange-600" />
+                  <span className="font-medium">{selectedAssignments.size} contestants selected</span>
+                  <span className="text-muted-foreground">
+                    ({selectedWithEmail.length} with email)
+                  </span>
+                  {selectedWithoutEmail.length > 0 && (
+                    <Badge variant="outline" className="border-amber-500 text-amber-700 dark:text-amber-400">
+                      <XCircle className="h-3 w-3 mr-1" />
+                      {selectedWithoutEmail.length} without email
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setSendEmailDialogOpen(true)}
+                    disabled={selectedWithEmail.length === 0}
+                    data-testid="button-send-paperwork-email"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Send Paperwork Email
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setSelectedAssignments(new Set())}
+                    data-testid="button-clear-selection"
+                  >
+                    Clear Selection
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Main Table */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Confirmed Contestants ({filteredData.length})
+                Invited Contestants ({filteredData.length})
               </CardTitle>
               <CardDescription>
-                Contestants who have confirmed their attendance and need paperwork
+                Contestants who have been sent a booking invitation
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -272,18 +497,25 @@ export default function Paperwork() {
               ) : filteredData.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>No confirmed contestants found</p>
-                  <p className="text-sm">Contestants appear here after they confirm their booking</p>
+                  <p>No invited contestants found</p>
+                  <p className="text-sm">Contestants appear here after they are sent a booking email</p>
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-orange-100 dark:bg-orange-900/20">
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={selectedAssignments.size === filteredData.length && filteredData.length > 0}
+                          onCheckedChange={handleSelectAll}
+                          data-testid="checkbox-select-all"
+                        />
+                      </TableHead>
                       <TableHead className="font-semibold">Name</TableHead>
                       <TableHead className="font-semibold">Record Day</TableHead>
                       <TableHead className="font-semibold">Seat</TableHead>
                       <TableHead className="font-semibold">Email</TableHead>
-                      <TableHead className="font-semibold">Confirmed At</TableHead>
+                      <TableHead className="font-semibold text-center">Booking Status</TableHead>
                       <TableHead className="font-semibold text-center">Paperwork Sent</TableHead>
                       <TableHead className="font-semibold text-center">Paperwork Received</TableHead>
                       <TableHead className="font-semibold">Status</TableHead>
@@ -294,11 +526,18 @@ export default function Paperwork() {
                       <TableRow 
                         key={item.id} 
                         className={`
-                          ${item.paperworkReceived ? 'bg-orange-100/50 dark:bg-orange-900/20' : 
-                            item.paperworkSent ? 'bg-orange-50 dark:bg-orange-900/10' : ''}
+                          ${item.paperworkReceived ? 'bg-teal-50 dark:bg-teal-900/20' : 
+                            item.paperworkSent ? 'bg-amber-50 dark:bg-amber-900/10' : ''}
                         `}
                         data-testid={`row-paperwork-${item.id}`}
                       >
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedAssignments.has(item.id)}
+                            onCheckedChange={(checked) => handleSelectAssignment(item.id, checked === true)}
+                            data-testid={`checkbox-select-${item.id}`}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium">
                           {item.contestant?.name || "Unknown"}
                         </TableCell>
@@ -316,8 +555,18 @@ export default function Paperwork() {
                         <TableCell className="text-sm">
                           {item.contestant?.email || "-"}
                         </TableCell>
-                        <TableCell className="text-sm">
-                          {item.confirmedRsvp ? format(new Date(item.confirmedRsvp), "MMM d, h:mm a") : "-"}
+                        <TableCell className="text-center">
+                          {item.confirmedRsvp ? (
+                            <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Confirmed
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                              <Mail className="h-3 w-3 mr-1" />
+                              Invited
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell className="text-center">
                           <Checkbox
@@ -359,12 +608,12 @@ export default function Paperwork() {
                         </TableCell>
                         <TableCell>
                           {item.paperworkReceived ? (
-                            <Badge className="bg-orange-700 text-white dark:bg-orange-600 dark:text-white">
-                              <CheckCircle className="h-3 w-3 mr-1" />
+                            <Badge className="bg-teal-600 text-white dark:bg-teal-600">
+                              <FileCheck className="h-3 w-3 mr-1" />
                               Complete
                             </Badge>
                           ) : item.paperworkSent ? (
-                            <Badge className="bg-orange-500 text-white dark:bg-orange-500 dark:text-white">
+                            <Badge className="bg-amber-500 text-white dark:bg-amber-500">
                               <Clock className="h-3 w-3 mr-1" />
                               Awaiting Return
                             </Badge>
@@ -388,6 +637,109 @@ export default function Paperwork() {
           <AdobeSignSettings config={adobeConfig} />
         </TabsContent>
       </Tabs>
+
+      {/* Send Paperwork Email Dialog */}
+      <Dialog open={sendEmailDialogOpen} onOpenChange={setSendEmailDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5 text-orange-600" />
+              Send Paperwork Email
+            </DialogTitle>
+            <DialogDescription>
+              Send paperwork email with Adobe Sign link to {selectedWithEmail.length} contestants
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="adobe-sign-link">Adobe Sign Link *</Label>
+              <Input
+                id="adobe-sign-link"
+                placeholder="https://secure.adobesign.com/..."
+                value={adobeSignLink}
+                onChange={(e) => setAdobeSignLink(e.target.value)}
+                data-testid="input-adobe-sign-link"
+              />
+              <p className="text-xs text-muted-foreground">
+                This link will be included in the email sent to contestants
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email-subject">Email Subject</Label>
+              <Input
+                id="email-subject"
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                data-testid="input-email-subject"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email-body">Email Body</Label>
+              <Textarea
+                id="email-body"
+                value={emailBody}
+                onChange={(e) => setEmailBody(e.target.value)}
+                className="min-h-[200px]"
+                data-testid="textarea-email-body"
+              />
+              <p className="text-xs text-muted-foreground">
+                Use {"{name}"} for contestant name, {"{adobe_sign_link}"} for the Adobe Sign link
+              </p>
+            </div>
+
+            {selectedWithoutEmail.length > 0 && (
+              <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-3 rounded-lg">
+                <h4 className="font-medium text-sm mb-2 text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                  <XCircle className="h-4 w-4" />
+                  {selectedWithoutEmail.length} contestant(s) will be skipped (no email)
+                </h4>
+                <div className="max-h-20 overflow-y-auto text-sm space-y-1 text-amber-700 dark:text-amber-300">
+                  {selectedWithoutEmail.map(item => (
+                    <div key={item.id}>{item.contestant?.name || "Unknown"}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="bg-muted p-3 rounded-lg">
+              <h4 className="font-medium text-sm mb-2">Recipients ({selectedWithEmail.length})</h4>
+              {selectedWithEmail.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No contestants with email addresses selected</p>
+              ) : (
+                <div className="max-h-32 overflow-y-auto text-sm space-y-1">
+                  {selectedWithEmail.map(item => (
+                    <div key={item.id} className="flex justify-between">
+                      <span>{item.contestant?.name}</span>
+                      <span className="text-muted-foreground">{item.contestant?.email}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSendEmailDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSendPaperwork}
+              disabled={bulkSendPaperworkMutation.isPending || !adobeSignLink || selectedWithEmail.length === 0}
+              data-testid="button-confirm-send-email"
+            >
+              {bulkSendPaperworkMutation.isPending ? (
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              Send to {selectedWithEmail.length} Contestants
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
