@@ -216,6 +216,7 @@ export default function BookingMaster() {
   const [emailSubject, setEmailSubject] = useState("Deal or No Deal - Booking Confirmation");
   const [selectedAttachments, setSelectedAttachments] = useState<string[]>([]);
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
+  const [expandedOtdNotes, setExpandedOtdNotes] = useState<Set<string>>(new Set());
   const [filterMobilityNotes, setFilterMobilityNotes] = useState(false);
   const [filterMedicalNotes, setFilterMedicalNotes] = useState(false);
   const [isStandbyMode, setIsStandbyMode] = useState(false);
@@ -1217,16 +1218,51 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("otdNotes") && (
-                          <TableCell className="px-2 py-0.5 h-7 bg-[#e8f4f4] dark:bg-[#1a3a3a] border-r border-gray-200 dark:border-gray-700">
+                          <TableCell className="px-2 py-0.5 bg-[#e8f4f4] dark:bg-[#1a3a3a] border-r border-gray-200 dark:border-gray-700">
                             {row.assignment && (
-                              <Input
-                                key={`otd-${row.assignment.id}`}
-                                defaultValue={row.assignment.otdNotes || ""}
-                                onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "otdNotes", e.target.value)}
-                                placeholder=""
-                                className="h-6 text-xs w-36"
-                                data-testid={`input-otd-notes-${row.seatId}`}
-                              />
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => {
+                                      setExpandedOtdNotes(prev => {
+                                        const next = new Set(prev);
+                                        if (next.has(row.assignment!.id)) {
+                                          next.delete(row.assignment!.id);
+                                        } else {
+                                          next.add(row.assignment!.id);
+                                        }
+                                        return next;
+                                      });
+                                    }}
+                                    className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+                                    data-testid={`button-expand-otd-notes-${row.seatId}`}
+                                  >
+                                    <ChevronDown 
+                                      className={`h-4 w-4 transition-transform ${expandedOtdNotes.has(row.assignment.id) ? 'rotate-180' : ''}`}
+                                    />
+                                  </button>
+                                  {!expandedOtdNotes.has(row.assignment.id) && (
+                                    <Input
+                                      key={`otd-${row.assignment.id}`}
+                                      defaultValue={row.assignment.otdNotes || ""}
+                                      onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "otdNotes", e.target.value)}
+                                      placeholder="OTD Notes"
+                                      className="h-6 text-xs min-w-[180px]"
+                                      data-testid={`input-otd-notes-${row.seatId}`}
+                                    />
+                                  )}
+                                </div>
+                                {expandedOtdNotes.has(row.assignment.id) && (
+                                  <Textarea
+                                    key={`otd-expanded-${row.assignment.id}`}
+                                    defaultValue={row.assignment.otdNotes || ""}
+                                    onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "otdNotes", e.target.value)}
+                                    placeholder="OTD Notes"
+                                    className="text-xs min-h-24 resize-none min-w-[180px]"
+                                    data-testid={`textarea-otd-notes-${row.seatId}`}
+                                  />
+                                )}
+                              </div>
                             )}
                           </TableCell>
                         )}
