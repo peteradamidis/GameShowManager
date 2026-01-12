@@ -5634,6 +5634,265 @@ ${finalEmailFooter}`;
     }
   });
 
+  // Send ticket email with PDF after confirmation
+  app.post("/api/seat-assignments/:id/send-ticket", async (req, res) => {
+    try {
+      // Check if email is configured
+      if (!await isEmailAvailable()) {
+        return res.status(503).json({ 
+          code: 'INTEGRATION_DISABLED',
+          error: "Email sending is not available. Please configure SMTP settings in the Settings page." 
+        });
+      }
+
+      const { id } = req.params;
+      
+      // Get seat assignment with contestant and record day data
+      const assignment = await storage.getSeatAssignmentById(id);
+      
+      if (!assignment) {
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+
+      const contestant = await storage.getContestantById(assignment.contestantId);
+      const recordDay = await storage.getRecordDayById(assignment.recordDayId);
+
+      if (!contestant || !recordDay) {
+        return res.status(404).json({ error: "Contestant or record day not found" });
+      }
+
+      if (!contestant.email) {
+        return res.status(400).json({ error: "Contestant has no email address" });
+      }
+
+      // Generate PDF ticket
+      const PDFDocument = (await import('pdfkit')).default;
+      const pdfDoc = new PDFDocument({
+        size: 'A5',
+        layout: 'landscape',
+        margins: { top: 30, bottom: 30, left: 40, right: 40 }
+      });
+
+      const chunks: Buffer[] = [];
+      pdfDoc.on('data', (chunk: Buffer) => chunks.push(chunk));
+      
+      const pdfPromise = new Promise<Buffer>((resolve) => {
+        pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
+      });
+
+      // Format date
+      const recordDate = new Date(recordDay.date).toLocaleDateString('en-AU', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+
+      // Dark maroon background
+      pdfDoc.rect(0, 0, pdfDoc.page.width, pdfDoc.page.height).fill('#2a0a0a');
+      
+      // Gold border
+      pdfDoc.rect(15, 15, pdfDoc.page.width - 30, pdfDoc.page.height - 30)
+        .lineWidth(3)
+        .stroke('#D4AF37');
+      
+      // Inner border
+      pdfDoc.rect(20, 20, pdfDoc.page.width - 40, pdfDoc.page.height - 40)
+        .lineWidth(1)
+        .stroke('#D4AF37');
+      
+      // Title
+      pdfDoc.fillColor('#D4AF37')
+        .fontSize(28)
+        .font('Helvetica-Bold')
+        .text('DEAL OR NO DEAL', 0, 45, { align: 'center' });
+      
+      // Subtitle
+      pdfDoc.fillColor('#ffffff')
+        .fontSize(16)
+        .font('Helvetica')
+        .text('AUDIENCE TICKET', 0, 80, { align: 'center' });
+      
+      // Gold divider
+      pdfDoc.moveTo(100, 105).lineTo(pdfDoc.page.width - 100, 105)
+        .lineWidth(2)
+        .stroke('#D4AF37');
+      
+      // Contestant name
+      pdfDoc.fillColor('#D4AF37')
+        .fontSize(20)
+        .font('Helvetica-Bold')
+        .text(contestant.name.toUpperCase(), 0, 120, { align: 'center' });
+      
+      // Details section
+      const detailsY = 155;
+      const leftCol = 60;
+      const rightCol = pdfDoc.page.width / 2 + 20;
+      
+      // Left column
+      pdfDoc.fillColor('#ffffff')
+        .fontSize(11)
+        .font('Helvetica-Bold')
+        .text('DATE:', leftCol, detailsY);
+      pdfDoc.font('Helvetica')
+        .text(recordDate, leftCol, detailsY + 15);
+      
+      pdfDoc.font('Helvetica-Bold')
+        .text('ARRIVAL TIME:', leftCol, detailsY + 40);
+      pdfDoc.font('Helvetica')
+        .text('7:30 AM', leftCol, detailsY + 55);
+      
+      // Right column
+      pdfDoc.font('Helvetica-Bold')
+        .text('BLOCK:', rightCol, detailsY);
+      pdfDoc.font('Helvetica')
+        .text(`Block ${assignment.blockNumber}`, rightCol, detailsY + 15);
+      
+      pdfDoc.font('Helvetica-Bold')
+        .text('SEAT:', rightCol, detailsY + 40);
+      pdfDoc.font('Helvetica')
+        .text(assignment.seatLabel, rightCol, detailsY + 55);
+      
+      // Location at bottom
+      pdfDoc.fillColor('#aa8888')
+        .fontSize(9)
+        .font('Helvetica')
+        .text('Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008', 0, pdfDoc.page.height - 50, { align: 'center' });
+      
+      // Footer note
+      pdfDoc.fillColor('#888888')
+        .fontSize(8)
+        .text('Please bring this ticket and valid photo ID. Keep this ticket safe - it cannot be replaced.', 0, pdfDoc.page.height - 35, { align: 'center' });
+
+      pdfDoc.end();
+      
+      const pdfBuffer = await pdfPromise;
+      
+      // Create email HTML
+      const emailHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    <tr>
+      <td style="background: linear-gradient(180deg, #4a1a1a 0%, #2a0a0a 100%); padding: 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 28px; font-weight: bold; margin: 0 0 10px 0; letter-spacing: 3px; text-transform: uppercase;">
+          DEAL OR NO DEAL
+        </h1>
+        <p style="color: #ffffff; font-size: 16px; margin: 0;">
+          YOUR TICKET IS ATTACHED
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px;">
+          <tr>
+            <td style="padding: 30px;">
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                Hi ${contestant.name.split(' ')[0]},
+              </p>
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                Thank you for confirming your attendance! Your official ticket is attached to this email as a PDF.
+              </p>
+              
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase;">
+                      Your Booking Details
+                    </h2>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                      <strong style="color: #8B0000;">DATE:</strong> ${recordDate.toUpperCase()}
+                    </p>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30 AM
+                    </p>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                      <strong style="color: #8B0000;">BLOCK:</strong> ${assignment.blockNumber}
+                    </p>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                      <strong style="color: #8B0000;">SEAT:</strong> ${assignment.seatLabel}
+                    </p>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
+                      <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 0 0 20px 0;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0;">
+                      IMPORTANT: Please print or save your ticket. Bring it with you along with valid photo ID.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
+                We look forward to seeing you!
+              </p>
+              <p style="color: #333333; font-size: 15px; margin: 0;">
+                Kind Regards,<br/>
+                <strong>The Deal Or No Deal Team</strong>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
+        <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
+          This is an automated email from the Deal or No Deal production team.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+      // Get sender name from system config
+      const senderNameConfig = await storage.getSystemConfig('email_sender_name');
+      const emailConfig: EmailConfig = {
+        senderName: senderNameConfig || 'Deal or No Deal',
+      };
+
+      // Send email with PDF attachment
+      await sendEmailWithAttachment(
+        contestant.email,
+        'Deal or No Deal - Your Ticket',
+        emailHtml,
+        [{
+          filename: `DOND_Ticket_${contestant.name.replace(/\s+/g, '_')}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        }],
+        emailConfig
+      );
+
+      // Update ticketEmailSent timestamp
+      await storage.updateSeatAssignmentWorkflow(id, {
+        ticketEmailSent: new Date(),
+      });
+
+      res.json({
+        success: true,
+        message: `Ticket email sent to ${contestant.email}`,
+        contestantName: contestant.name,
+        email: contestant.email,
+      });
+    } catch (error: any) {
+      console.error("Error sending ticket email:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get booking confirmation responses for a record day (for viewing dietary requirements, questions, etc.)
   app.get("/api/booking-confirmations/record-day/:recordDayId", async (req, res) => {
     try {
