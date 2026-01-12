@@ -4071,6 +4071,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Store original assignment info for rebooking history
+      const fromRecordDayId = currentAssignment.recordDayId;
+      const fromBlockNumber = currentAssignment.blockNumber;
+      const fromSeatLabel = currentAssignment.seatLabel;
+      
       // Delete the current assignment
       await storage.deleteSeatAssignment(req.params.id);
       
@@ -4101,6 +4106,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (Object.keys(workflowData).length > 0) {
           await storage.updateSeatAssignmentWorkflow(newAssignment.id, workflowData);
         }
+        
+        // Log rebooking history for audit trail
+        await storage.logRebooking({
+          contestantId: currentAssignment.contestantId,
+          fromRecordDayId: fromRecordDayId,
+          fromBlockNumber: fromBlockNumber,
+          fromSeatLabel: fromSeatLabel,
+          toRecordDayId: newRecordDayId,
+          toBlockNumber: newBlock,
+          toSeatLabel: newSeatLabel,
+          reason: 'Date change',
+          rebookedBy: (req as any).user?.username || 'admin',
+        });
       }
       
       res.json({
