@@ -104,6 +104,10 @@ export default function BookingResponses() {
   const [changeDateDialogOpen, setChangeDateDialogOpen] = useState(false);
   const [changeDateAssignment, setChangeDateAssignment] = useState<BookingAssignment | null>(null);
   const [newRecordDayId, setNewRecordDayId] = useState<string>("");
+  
+  // Resend email dialog state
+  const [resendDialogOpen, setResendDialogOpen] = useState(false);
+  const [resendAssignment, setResendAssignment] = useState<BookingAssignment | null>(null);
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
     queryKey: ["/api/record-days"],
@@ -285,6 +289,44 @@ export default function BookingResponses() {
     },
   });
 
+  // Resend booking email mutation (reuses the same endpoint)
+  const resendBookingEmailMutation = useMutation({
+    mutationFn: async (assignmentId: string) => {
+      const response = await apiRequest("POST", "/api/booking-confirmations/send", {
+        seatAssignmentIds: [assignmentId],
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to resend email");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      const results = data.results || [];
+      const successCount = results.filter((r: any) => r.success).length;
+      
+      if (successCount > 0) {
+        toast({ title: "Booking email resent successfully" });
+      } else {
+        toast({ 
+          title: "Failed to resend email",
+          description: results[0]?.error || "Unknown error",
+          variant: "destructive"
+        });
+      }
+      setResendDialogOpen(false);
+      setResendAssignment(null);
+      invalidateBookingQueries();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to resend email", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
   // Use stats from API (computed from record-day-filtered but not status-filtered data)
   const totalCount = stats.total;
   const notSentCount = stats.notSent;
@@ -430,6 +472,17 @@ export default function BookingResponses() {
       return;
     }
     bulkSendBookingEmailMutation.mutate(ids);
+  };
+
+  // Resend email handlers
+  const handleResendClick = (assignment: BookingAssignment) => {
+    setResendAssignment(assignment);
+    setResendDialogOpen(true);
+  };
+
+  const handleResendConfirm = () => {
+    if (!resendAssignment) return;
+    resendBookingEmailMutation.mutate(resendAssignment.id);
   };
 
   const getStatusBadge = (assignment: BookingAssignment) => {
@@ -775,11 +828,26 @@ export default function BookingResponses() {
                       </TableCell>
                       <TableCell className="text-center">
                         {item.bookingEmailSent ? (
-                          <div className="flex items-center justify-center gap-1 text-green-600 dark:text-green-400">
-                            <MailCheck className="h-4 w-4" />
-                            <span className="text-xs">
-                              {format(new Date(item.bookingEmailSent), "MMM d")}
-                            </span>
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                              <MailCheck className="h-4 w-4" />
+                              <span className="text-xs">
+                                {format(new Date(item.bookingEmailSent), "MMM d")}
+                              </span>
+                            </div>
+                            {item.contestant?.email && !isDeclined(item) && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 px-2 text-xs"
+                                onClick={() => handleResendClick(item)}
+                                disabled={resendBookingEmailMutation.isPending}
+                                data-testid={`button-resend-${item.id}`}
+                              >
+                                <RefreshCw className="h-3 w-3 mr-1" />
+                                Resend
+                              </Button>
+                            )}
                           </div>
                         ) : (
                           <span className="text-muted-foreground text-sm">-</span>
@@ -1063,6 +1131,59 @@ export default function BookingResponses() {
               data-testid="button-submit-change-date"
             >
               {changeRecordDateMutation.isPending ? "Moving..." : "Move to New Date"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Resend Booking Email Confirmation Dialog */}
+      <Dialog open={resendDialogOpen} onOpenChange={setResendDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RefreshCw className="h-5 w-5 text-blue-600" />
+              Resend Booking Email
+            </DialogTitle>
+            <DialogDescription>
+              {resendAssignment && (
+                <>
+                  Are you sure you want to resend the booking confirmation email to{" "}
+                  <strong>{resendAssignment.contestant?.name}</strong>?
+                  <br /><br />
+                  This will generate a new confirmation link and send it to{" "}
+                  <strong>{resendAssignment.contestant?.email}</strong>.
+                  The previous confirmation link will be revoked.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setResendDialogOpen(false);
+                setResendAssignment(null);
+              }}
+              data-testid="button-cancel-resend"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleResendConfirm}
+              disabled={resendBookingEmailMutation.isPending}
+              data-testid="button-confirm-resend"
+            >
+              {resendBookingEmailMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Resend Email
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
