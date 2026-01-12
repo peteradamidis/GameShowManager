@@ -1098,7 +1098,7 @@ export default function BookingResponses() {
                       </TableCell>
                       <TableCell className="text-center">
                         {item.bookingEmailSent ? (
-                          <div className="flex items-center justify-center gap-2">
+                          <div className="flex flex-col items-center gap-1">
                             <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
                               <MailCheck className="h-4 w-4" />
                               <span className="text-xs">
