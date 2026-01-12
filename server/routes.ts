@@ -7634,11 +7634,17 @@ ${finalEmailFooter}`;
       const instructions = await storage.getSystemConfig('booking_email_instructions') || 'Please confirm your attendance by clicking the button below. You can also let us know about dietary requirements or ask any questions.';
       const additionalInstructions = await storage.getSystemConfig('booking_email_additional_instructions') || 'We will be recording multiple episodes on the day. The recording of these shows will take approximately 10 hours. Please be prepared to make yourself available for the full length of time.';
       const footer = await storage.getSystemConfig('booking_email_footer') || 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.';
+      const replyToEmail = await storage.getSystemConfig('booking_reply_to_email') || 'bookings@dealornodeal.example.com';
       
       // Sample data for preview
       const sampleName = 'Peter';
       const sampleDate = 'Wednesday, 15 January 2026';
       const sampleRx = 'RX01';
+      
+      // Build mailto links like actual emails
+      const confirmMailto = `mailto:${replyToEmail}?subject=${encodeURIComponent(`CONFIRMED - ${sampleName} - ${sampleDate}`)}&body=${encodeURIComponent(`Hi,\n\nI CONFIRM my attendance for Deal or No Deal.\n\nName: ${sampleName}\nDate: ${sampleDate}\n\nDietary Requirements: [None / Please list any dietary requirements]\n\nThank you!`)}`;
+      const declineMailto = `mailto:${replyToEmail}?subject=${encodeURIComponent(`CANNOT ATTEND - ${sampleName} - ${sampleDate}`)}&body=${encodeURIComponent(`Hi,\n\nI CANNOT ATTEND Deal or No Deal on this date.\n\nName: ${sampleName}\nDate: ${sampleDate}\n\nReason: [Please provide reason]\n\nThank you!`)}`;
+      const questionMailto = `mailto:${replyToEmail}?subject=${encodeURIComponent(`QUESTION - ${sampleName} - ${sampleDate}`)}&body=${encodeURIComponent(`Hi,\n\nI have a question regarding my booking for Deal or No Deal.\n\nName: ${sampleName}\nDate: ${sampleDate}\n\nMy question/special needs:\n[Please describe your question or any special requirements]\n\nThank you!`)}`;
       
       const html = `<!DOCTYPE html>
 <html>
@@ -7704,22 +7710,22 @@ ${finalEmailFooter}`;
                 <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 15px auto;">
                   <tr>
                     <td style="padding: 0 5px;">
-                      <a href="#" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">&#10003; CONFIRM</a>
+                      <a href="${confirmMailto}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">✓ CONFIRM</a>
                     </td>
                     <td style="padding: 0 5px;">
-                      <a href="#" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">&#10007; CANNOT ATTEND</a>
+                      <a href="${declineMailto}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">✗ CANNOT ATTEND</a>
                     </td>
                   </tr>
                 </table>
                 <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
                   <tr>
                     <td style="padding: 0 5px;">
-                      <a href="#" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(13,110,253,0.3);">? QUESTIONS / SPECIAL NEEDS</a>
+                      <a href="${questionMailto}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(13,110,253,0.3);">? QUESTIONS / SPECIAL NEEDS</a>
                     </td>
                   </tr>
                 </table>
                 <p style="color: #888888; font-size: 12px; text-align: center; margin: 0 0 20px 0;">
-                  Clicking a button will open your email app with a pre-filled message
+                  Clicking a button will open your email app with a pre-filled message to: ${replyToEmail}
                 </p>
                 ${additionalInstructions ? `
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; margin-top: 20px;">
