@@ -5830,16 +5830,7 @@ ${finalEmailFooter}`;
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
           <tr>
             <td style="padding: 30px;">
-              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                Hi ${contestant.name.split(' ')[0]},
-              </p>
-              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                ${ticketIntro.split('\n\n').map((paragraph: string) => 
-                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
-                ).join('')}
-              </div>
-              
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 0 0 25px 0;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 0 0 20px 0;">
                 <tr>
                   <td style="padding: 15px;">
                     <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0;">
@@ -5848,6 +5839,15 @@ ${finalEmailFooter}`;
                   </td>
                 </tr>
               </table>
+              
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                Hi ${contestant.name.split(' ')[0]},
+              </p>
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                ${ticketIntro.split('\n\n').map((paragraph: string) => 
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
               
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
                 <tr>
