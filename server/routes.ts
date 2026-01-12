@@ -5675,7 +5675,7 @@ ${finalEmailFooter}`;
           confirmationId: tokenRecord.id,
           direction: 'outbound',
           messageType: 'booking_email',
-          subject: emailSubject || `Studio Invitation - ${recordDate}`,
+          subject: emailSubject || `Studio Invitation - ${recordDateForLog}`,
           body: storedBody,
           sentAt: new Date(),
         });
