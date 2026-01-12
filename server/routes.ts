@@ -5839,6 +5839,16 @@ ${finalEmailFooter}`;
                 ).join('')}
               </div>
               
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0;">
+                      ${ticketImportant}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
                 <tr>
                   <td style="padding: 20px;">
@@ -5856,16 +5866,6 @@ ${finalEmailFooter}`;
                     </p>
                     <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
                       <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
-                    </p>
-                  </td>
-                </tr>
-              </table>
-              
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 0 0 20px 0;">
-                <tr>
-                  <td style="padding: 15px;">
-                    <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0;">
-                      ${ticketImportant}
                     </p>
                   </td>
                 </tr>
