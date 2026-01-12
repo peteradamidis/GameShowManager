@@ -513,7 +513,7 @@ export default function BookingResponses() {
   // Selection helpers
   const selectedItems = filteredData.filter(item => selectedAssignments.has(item.id));
   const selectedPendingConfirmation = selectedItems.filter(item => 
-    !item.confirmedRsvp && !isDeclined(item)
+    !item.confirmedRsvp && !isDeclined(item) && item.bookingEmailSent
   );
   // For sending emails: those not yet sent, have email, and not declined
   const selectedNotSentWithEmail = selectedItems.filter(item => 
@@ -1202,7 +1202,8 @@ export default function BookingResponses() {
                               size="sm"
                               variant="default"
                               onClick={() => handleConfirm(item)}
-                              disabled={confirmMutation.isPending}
+                              disabled={confirmMutation.isPending || !item.bookingEmailSent}
+                              title={!item.bookingEmailSent ? "Invitation must be sent first" : "Confirm booking"}
                               data-testid={`button-confirm-${item.id}`}
                             >
                               <CheckCircle className="h-3 w-3 mr-1" />
@@ -1212,6 +1213,8 @@ export default function BookingResponses() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleDeclineClick(item)}
+                              disabled={!item.bookingEmailSent}
+                              title={!item.bookingEmailSent ? "Invitation must be sent first" : "Decline booking"}
                               data-testid={`button-decline-${item.id}`}
                             >
                               <XCircle className="h-3 w-3 mr-1" />
