@@ -979,11 +979,21 @@ export function ContestantTable({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="space-x-2 flex items-center flex-wrap gap-2">
+                  <TableCell className="space-x-2 flex items-center flex-wrap gap-1">
                     <StatusBadge status={rescheduleContestantIds.has(contestant.id) ? "Reschedule" : contestant.availabilityStatus} />
                     {standbyContestantIds.has(contestant.id) && (
                       <Badge variant="outline" className="border-yellow-300 bg-yellow-500/20 text-yellow-800 dark:border-yellow-700 dark:text-yellow-400">
                         Standby
+                      </Badge>
+                    )}
+                    {contestant.podiumStory && (
+                      <Badge variant="outline" className="border-purple-300 bg-purple-500/20 text-purple-800 dark:border-purple-700 dark:text-purple-400 text-xs px-1.5">
+                        PS
+                      </Badge>
+                    )}
+                    {contestant.availableForStandby && (
+                      <Badge variant="outline" className="border-amber-300 bg-amber-500/20 text-amber-800 dark:border-amber-700 dark:text-amber-400 text-xs px-1.5">
+                        S
                       </Badge>
                     )}
                   </TableCell>
