@@ -5334,10 +5334,6 @@ ${finalEmailFooter}`;
                 ).join('')}
               </div>
               
-              <p style="color: #666666; font-size: 14px; font-style: italic; margin: 0 0 25px 0; padding: 12px; background-color: #f9f9f9; border-radius: 6px;">
-                This invitation does not guarantee a place on the podium, but we wish you the very best of luck and sincerely hope you win some big money!
-              </p>
-              
               <!-- Booking Details Box -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
                 <tr>
@@ -6940,10 +6936,6 @@ ${finalEmailFooter}`;
                 ).join('')}
               </div>
               
-              <p style="color: #666666; font-size: 14px; font-style: italic; margin: 0 0 25px 0; padding: 12px; background-color: #f9f9f9; border-radius: 6px;">
-                This invitation does not guarantee a place on the podium, but we wish you the very best of luck and sincerely hope you win some big money!
-              </p>
-              
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
                 <tr>
                   <td style="padding: 20px;">
@@ -7771,10 +7763,6 @@ ${finalEmailFooter}`;
                 <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                   ${intro}
                 </div>
-                
-                <p style="color: #666666; font-size: 14px; font-style: italic; margin: 0 0 25px 0; padding: 12px; background-color: #f9f9f9; border-radius: 6px;">
-                  This invitation does not guarantee a place on the podium, but we wish you the very best of luck and sincerely hope you win some big money!
-                </p>
                 
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
                   <tr>
