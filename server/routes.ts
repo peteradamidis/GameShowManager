@@ -5611,7 +5611,7 @@ ${finalEmailFooter}`;
 </html>`;
           }
           
-          const subject = emailSubject || `STUDIO INVITATION - ${recordDate}`;
+          const subject = emailSubject || `Studio Invitation - ${recordDate}`;
           
           // Get sender name from system config
           const senderNameConfig = await storage.getSystemConfig('email_sender_name');
@@ -5675,7 +5675,7 @@ ${finalEmailFooter}`;
           confirmationId: tokenRecord.id,
           direction: 'outbound',
           messageType: 'booking_email',
-          subject: emailSubject || `STUDIO INVITATION - ${recordDate}`,
+          subject: emailSubject || `Studio Invitation - ${recordDate}`,
           body: storedBody,
           sentAt: new Date(),
         });
