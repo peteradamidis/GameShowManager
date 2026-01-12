@@ -5635,7 +5635,7 @@ ${finalEmailFooter}`;
   });
 
   // Send ticket email with PDF after confirmation
-  app.post("/api/seat-assignments/:id/send-ticket", async (req, res) => {
+  app.post("/api/seat-assignments/:id/send-ticket", requireAuth, async (req, res) => {
     try {
       // Check if email is configured
       if (!await isEmailAvailable()) {
@@ -5652,6 +5652,11 @@ ${finalEmailFooter}`;
       
       if (!assignment) {
         return res.status(404).json({ error: "Seat assignment not found" });
+      }
+
+      // Require booking to be confirmed before sending ticket
+      if (!assignment.confirmedRsvp) {
+        return res.status(400).json({ error: "Cannot send ticket before booking is confirmed" });
       }
 
       const contestant = await storage.getContestantById(assignment.contestantId);

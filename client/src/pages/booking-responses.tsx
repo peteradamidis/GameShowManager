@@ -38,7 +38,8 @@ import {
   MailPlus,
   LayoutGrid,
   Loader2,
-  Undo2
+  Undo2,
+  Ticket
 } from "lucide-react";
 import type { RecordDay, Contestant, SeatAssignment } from "@shared/schema";
 
@@ -212,6 +213,24 @@ export default function BookingResponses() {
     onError: (error: any) => {
       toast({ 
         title: "Failed to undo decline", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
+  // Mutation for sending ticket email with PDF
+  const sendTicketMutation = useMutation({
+    mutationFn: async (assignmentId: string) => {
+      return apiRequest("POST", `/api/seat-assignments/${assignmentId}/send-ticket`, {});
+    },
+    onSuccess: (_, assignmentId) => {
+      toast({ title: "Ticket sent", description: "Ticket email with PDF has been sent to the contestant" });
+      invalidateBookingQueries();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to send ticket", 
         description: error.message,
         variant: "destructive" 
       });
@@ -807,6 +826,7 @@ export default function BookingResponses() {
                   <TableHead className="font-semibold">Email</TableHead>
                   <TableHead className="font-semibold text-center">Email Sent</TableHead>
                   <TableHead className="font-semibold text-center">Status</TableHead>
+                  <TableHead className="font-semibold text-center">Ticket</TableHead>
                   <TableHead className="font-semibold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -895,6 +915,32 @@ export default function BookingResponses() {
                       </TableCell>
                       <TableCell className="text-center">
                         {getStatusBadge(item)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {isConfirmed ? (
+                          item.ticketEmailSent ? (
+                            <div className="flex items-center justify-center gap-1 text-green-600 dark:text-green-400">
+                              <Ticket className="h-4 w-4" />
+                              <span className="text-xs">
+                                {format(new Date(item.ticketEmailSent), "MMM d")}
+                              </span>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-xs"
+                              onClick={() => sendTicketMutation.mutate(item.id)}
+                              disabled={sendTicketMutation.isPending || !item.contestant?.email}
+                              data-testid={`button-send-ticket-${item.id}`}
+                            >
+                              <Ticket className="h-3 w-3 mr-1" />
+                              Send Ticket
+                            </Button>
+                          )
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         {isDeclined(item) ? (
