@@ -39,13 +39,22 @@ import {
   LayoutGrid,
   Loader2,
   Undo2,
-  Ticket
+  Ticket,
+  History,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
-import type { RecordDay, Contestant, SeatAssignment } from "@shared/schema";
+import type { RecordDay, Contestant, SeatAssignment, RebookingHistory } from "@shared/schema";
 
 interface BookingAssignment extends SeatAssignment {
   contestant: Contestant | null;
   recordDay: RecordDay | null;
+}
+
+interface RebookingHistoryEntry extends RebookingHistory {
+  contestant?: Contestant;
+  fromRecordDay: RecordDay;
+  toRecordDay: RecordDay;
 }
 
 interface BookingTrackerResponse {
@@ -104,6 +113,7 @@ export default function BookingResponses() {
   const [rebookRecordDayId, setRebookRecordDayId] = useState<string>("");
   const [rebookBlock, setRebookBlock] = useState<string>("");
   const [rebookSeat, setRebookSeat] = useState<string>("");
+  const [rebookReason, setRebookReason] = useState<string>("");
   
   const [changeDateDialogOpen, setChangeDateDialogOpen] = useState(false);
   const [changeDateAssignment, setChangeDateAssignment] = useState<BookingAssignment | null>(null);
@@ -112,6 +122,9 @@ export default function BookingResponses() {
   // Resend email dialog state
   const [resendDialogOpen, setResendDialogOpen] = useState(false);
   const [resendAssignment, setResendAssignment] = useState<BookingAssignment | null>(null);
+  
+  // Rebooking history section state
+  const [historyExpanded, setHistoryExpanded] = useState(false);
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
     queryKey: ["/api/record-days"],
@@ -155,6 +168,17 @@ export default function BookingResponses() {
   
   const trackerData = trackerResponse?.assignments || [];
   const stats = trackerResponse?.stats || { total: 0, notSent: 0, awaiting: 0, confirmed: 0, declined: 0 };
+
+  // Query for rebooking history for the selected record day
+  const { data: rebookingHistory = [] } = useQuery<RebookingHistoryEntry[]>({
+    queryKey: ["/api/rebooking-history/record-day", selectedRecordDay],
+    queryFn: async () => {
+      const res = await fetch(`/api/rebooking-history/record-day/${selectedRecordDay}`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch rebooking history');
+      return res.json();
+    },
+    enabled: !!selectedRecordDay,
+  });
 
   // Query for seat assignments on the rebook record day (to show available seats)
   const { data: rebookDayAssignments = [] } = useQuery<SeatAssignment[]>({
@@ -206,7 +230,8 @@ export default function BookingResponses() {
           key.startsWith('/api/seat-assignments') ||
           key.startsWith('/api/paperwork') ||
           key.startsWith('/api/contestants') ||
-          key.startsWith('/api/booking-master')
+          key.startsWith('/api/booking-master') ||
+          key.startsWith('/api/rebooking-history')
         );
       },
     });
@@ -503,33 +528,36 @@ export default function BookingResponses() {
     setRebookRecordDayId("");
     setRebookBlock("");
     setRebookSeat("");
+    setRebookReason("");
     setDeclineDialogOpen(true);
   };
 
-  // Rebook mutation: creates new assignment with specific block/seat, then removes old assignment
+  // Rebook mutation: uses atomic rebook endpoint that logs history
   const rebookMutation = useMutation({
     mutationFn: async ({ 
       oldAssignmentId, 
       contestantId, 
       newRecordDayId, 
       blockNumber, 
-      seatLabel 
+      seatLabel,
+      reason 
     }: { 
       oldAssignmentId: string; 
       contestantId: string;
       newRecordDayId: string; 
       blockNumber: number;
       seatLabel: string;
+      reason?: string;
     }) => {
-      // Create new seat assignment with selected block/seat
-      await apiRequest("POST", "/api/seat-assignments", {
-        recordDayId: newRecordDayId,
+      // Use the atomic rebook endpoint that logs rebooking history
+      await apiRequest("POST", "/api/rebook", {
+        oldAssignmentId,
         contestantId,
+        newRecordDayId,
         blockNumber,
         seatLabel,
+        reason,
       });
-      // Delete the old assignment
-      await apiRequest("DELETE", `/api/seat-assignments/${oldAssignmentId}`, {});
     },
     onSuccess: () => {
       toast({ title: "Contestant rebooked", description: `Moved to Block ${rebookBlock}, Seat ${rebookSeat}` });
@@ -539,6 +567,7 @@ export default function BookingResponses() {
       setRebookRecordDayId("");
       setRebookBlock("");
       setRebookSeat("");
+      setRebookReason("");
       invalidateBookingQueries();
     },
     onError: (error: any) => {
@@ -562,6 +591,7 @@ export default function BookingResponses() {
         newRecordDayId: rebookRecordDayId,
         blockNumber: parseInt(rebookBlock),
         seatLabel: rebookSeat,
+        reason: rebookReason || undefined,
       });
     } else {
       // Use the decline mutation for reschedule
@@ -810,6 +840,77 @@ export default function BookingResponses() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Rebooking History Section */}
+      {rebookingHistory.length > 0 && (
+        <Card className="border-purple-200 dark:border-purple-800">
+          <CardHeader 
+            className="pb-2 cursor-pointer hover-elevate"
+            onClick={() => setHistoryExpanded(!historyExpanded)}
+          >
+            <CardTitle className="text-sm flex items-center gap-2">
+              {historyExpanded ? (
+                <ChevronDown className="h-4 w-4 text-purple-500" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-purple-500" />
+              )}
+              <History className="h-4 w-4 text-purple-500" />
+              Rebooking History ({rebookingHistory.length})
+            </CardTitle>
+          </CardHeader>
+          {historyExpanded && (
+            <CardContent>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {rebookingHistory.map((entry) => {
+                  const isIncoming = entry.toRecordDayId === selectedRecordDay;
+                  const isOutgoing = entry.fromRecordDayId === selectedRecordDay;
+                  
+                  return (
+                    <div 
+                      key={entry.id} 
+                      className={`p-2 rounded-md text-sm border ${
+                        isIncoming 
+                          ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' 
+                          : 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium">{entry.contestant?.name || 'Unknown'}</span>
+                        <Badge variant="outline" className={isIncoming ? 'border-green-500 text-green-700' : 'border-red-500 text-red-700'}>
+                          {isIncoming ? 'Rebooked IN' : 'Rebooked OUT'}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {isIncoming ? (
+                          <>
+                            From: {entry.fromRecordDay?.rxNumber || format(new Date(entry.fromRecordDay?.date), 'MMM d')} 
+                            {' '}Block {entry.fromBlockNumber}, Seat {entry.fromSeatLabel}
+                            {' → '}Block {entry.toBlockNumber}, Seat {entry.toSeatLabel}
+                          </>
+                        ) : (
+                          <>
+                            To: {entry.toRecordDay?.rxNumber || format(new Date(entry.toRecordDay?.date), 'MMM d')}
+                            {' '}Block {entry.toBlockNumber}, Seat {entry.toSeatLabel}
+                            {' (was Block '}{entry.fromBlockNumber}, Seat {entry.fromSeatLabel}{')'}
+                          </>
+                        )}
+                      </div>
+                      {entry.reason && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Reason: {entry.reason}
+                        </div>
+                      )}
+                      <div className="text-xs text-muted-foreground">
+                        {format(new Date(entry.rebookedAt), 'MMM d, yyyy h:mm a')} by {entry.rebookedBy}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      )}
 
       {/* Bulk Actions */}
       {selectedAssignments.size > 0 && (
@@ -1276,6 +1377,18 @@ export default function BookingResponses() {
                     </div>
                   </div>
                 )}
+                
+                {/* Optional reason for rebooking */}
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="rebook-reason">Reason for rebooking (optional)</Label>
+                  <Textarea
+                    id="rebook-reason"
+                    placeholder="e.g., Contestant requested date change, scheduling conflict, etc."
+                    value={rebookReason}
+                    onChange={(e) => setRebookReason(e.target.value)}
+                    data-testid="input-rebook-reason"
+                  />
+                </div>
               </div>
             )}
 

@@ -252,6 +252,17 @@ export interface IStorage {
   logRebooking(data: InsertRebookingHistory): Promise<RebookingHistory>;
   getRebookingHistoryByContestant(contestantId: string): Promise<Array<RebookingHistory & { fromRecordDay: RecordDay; toRecordDay: RecordDay }>>;
   getRebookingHistoryByRecordDay(recordDayId: string): Promise<Array<RebookingHistory & { contestant: Contestant; fromRecordDay: RecordDay; toRecordDay: RecordDay }>>;
+  
+  // Atomic Rebooking (transaction-based)
+  atomicRebook(params: {
+    oldAssignmentId: string;
+    contestantId: string;
+    newRecordDayId: string;
+    blockNumber: number;
+    seatLabel: string;
+    reason?: string;
+    rebookedBy: string;
+  }): Promise<{ newAssignment: SeatAssignment; history: RebookingHistory }>;
 }
 
 export class DbStorage implements IStorage {
@@ -1577,6 +1588,166 @@ export class DbStorage implements IStorage {
     }));
     
     return enriched;
+  }
+
+  // Atomic rebooking with transaction
+  async atomicRebook(params: {
+    oldAssignmentId: string;
+    contestantId: string;
+    newRecordDayId: string;
+    blockNumber: number;
+    seatLabel: string;
+    reason?: string;
+    rebookedBy: string;
+  }): Promise<{ newAssignment: SeatAssignment; history: RebookingHistory }> {
+    if (!pool) {
+      throw new Error("Database pool not available");
+    }
+    
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      // Get the old assignment details within transaction with FOR UPDATE lock
+      const oldAssignmentResult = await client.query(
+        'SELECT * FROM seat_assignments WHERE id = $1 FOR UPDATE',
+        [params.oldAssignmentId]
+      );
+      
+      if (oldAssignmentResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+        throw new Error("Old seat assignment not found");
+      }
+      
+      const oldAssignment = oldAssignmentResult.rows[0];
+      
+      // Verify contestant matches
+      if (oldAssignment.contestant_id !== params.contestantId) {
+        await client.query('ROLLBACK');
+        throw new Error("Contestant ID mismatch");
+      }
+      
+      // Lock the target seat location using advisory lock to prevent concurrent insertions
+      // We acquire an advisory lock on the hash of the target seat location
+      const targetSeatHash = Math.abs(`${params.newRecordDayId}-${params.blockNumber}-${params.seatLabel}`.split('').reduce((a, b) => {
+        a = ((a << 5) - a) + b.charCodeAt(0);
+        return a & a;
+      }, 0));
+      await client.query('SELECT pg_advisory_xact_lock($1)', [targetSeatHash]);
+      
+      // Check if target seat is available (after lock acquired)
+      const seatCheckResult = await client.query(
+        'SELECT id FROM seat_assignments WHERE record_day_id = $1 AND block_number = $2 AND seat_label = $3 FOR UPDATE',
+        [params.newRecordDayId, params.blockNumber, params.seatLabel]
+      );
+      
+      if (seatCheckResult.rows.length > 0) {
+        await client.query('ROLLBACK');
+        throw new Error("Target seat is already occupied");
+      }
+      
+      // Generate new UUID for the seat assignment
+      const newIdResult = await client.query('SELECT gen_random_uuid() as id');
+      const newId = newIdResult.rows[0].id;
+      
+      // Create new seat assignment
+      const insertResult = await client.query(
+        `INSERT INTO seat_assignments (id, record_day_id, contestant_id, block_number, seat_label, created_at)
+         VALUES ($1, $2, $3, $4, $5, NOW())
+         RETURNING *`,
+        [newId, params.newRecordDayId, params.contestantId, params.blockNumber, params.seatLabel]
+      );
+      
+      const newAssignment = insertResult.rows[0];
+      
+      // Generate UUID for rebooking history
+      const historyIdResult = await client.query('SELECT gen_random_uuid() as id');
+      const historyId = historyIdResult.rows[0].id;
+      
+      // Log rebooking history
+      const historyResult = await client.query(
+        `INSERT INTO rebooking_history 
+         (id, contestant_id, from_record_day_id, from_block_number, from_seat_label, 
+          to_record_day_id, to_block_number, to_seat_label, reason, rebooked_by, rebooked_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+         RETURNING *`,
+        [
+          historyId,
+          params.contestantId,
+          oldAssignment.record_day_id,
+          oldAssignment.block_number,
+          oldAssignment.seat_label,
+          params.newRecordDayId,
+          params.blockNumber,
+          params.seatLabel,
+          params.reason || null,
+          params.rebookedBy
+        ]
+      );
+      
+      const history = historyResult.rows[0];
+      
+      // Delete the old assignment
+      await client.query(
+        'DELETE FROM seat_assignments WHERE id = $1',
+        [params.oldAssignmentId]
+      );
+      
+      // Update contestant status
+      await client.query(
+        `UPDATE contestants SET availability_status = 'assigned' WHERE id = $1`,
+        [params.contestantId]
+      );
+      
+      await client.query('COMMIT');
+      
+      // Convert snake_case to camelCase for return
+      return {
+        newAssignment: {
+          id: newAssignment.id,
+          recordDayId: newAssignment.record_day_id,
+          contestantId: newAssignment.contestant_id,
+          blockNumber: newAssignment.block_number,
+          seatLabel: newAssignment.seat_label,
+          createdAt: newAssignment.created_at,
+          notes: newAssignment.notes,
+          originalBlockNumber: newAssignment.original_block_number,
+          originalSeatLabel: newAssignment.original_seat_label,
+          bookingEmailSent: newAssignment.booking_email_sent,
+          ticketEmailSent: newAssignment.ticket_email_sent,
+          confirmedRsvp: newAssignment.confirmed_rsvp,
+          playerType: newAssignment.player_type,
+          rxNumber: newAssignment.rx_number,
+          rxEpNumber: newAssignment.rx_ep_number,
+          caseNumber: newAssignment.case_number,
+          winningMoneyRole: newAssignment.winning_money_role,
+          winningMoneyAmount: newAssignment.winning_money_amount,
+          caseAmount: newAssignment.case_amount,
+          quickCash: newAssignment.quick_cash,
+          bankOfferTaken: newAssignment.bank_offer_taken,
+          spinTheWheel: newAssignment.spin_the_wheel,
+          prize: newAssignment.prize,
+        },
+        history: {
+          id: history.id,
+          contestantId: history.contestant_id,
+          fromRecordDayId: history.from_record_day_id,
+          fromBlockNumber: history.from_block_number,
+          fromSeatLabel: history.from_seat_label,
+          toRecordDayId: history.to_record_day_id,
+          toBlockNumber: history.to_block_number,
+          toSeatLabel: history.to_seat_label,
+          reason: history.reason,
+          rebookedBy: history.rebooked_by,
+          rebookedAt: history.rebooked_at,
+        },
+      };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 }
 

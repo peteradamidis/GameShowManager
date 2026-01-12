@@ -3661,6 +3661,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rebook a contestant from one record day to another (with history logging - atomic transaction)
+  app.post("/api/rebook", requireAuth, async (req, res) => {
+    try {
+      const { 
+        oldAssignmentId, 
+        contestantId, 
+        newRecordDayId, 
+        blockNumber, 
+        seatLabel,
+        reason 
+      } = req.body;
+      
+      // Validate inputs
+      if (!oldAssignmentId || !contestantId || !newRecordDayId || !blockNumber || !seatLabel) {
+        return res.status(400).json({ error: "Missing required fields: oldAssignmentId, contestantId, newRecordDayId, blockNumber, seatLabel" });
+      }
+      
+      // Use atomic rebooking with transaction to ensure consistency
+      const result = await storage.atomicRebook({
+        oldAssignmentId,
+        contestantId,
+        newRecordDayId,
+        blockNumber,
+        seatLabel,
+        reason: reason || undefined,
+        rebookedBy: (req as any).user?.username || 'admin',
+      });
+      
+      res.json({ 
+        success: true, 
+        newAssignment: result.newAssignment,
+        history: result.history,
+        message: "Contestant rebooked successfully" 
+      });
+    } catch (error: any) {
+      console.error("Rebook error:", error);
+      
+      // Return appropriate status codes based on error
+      if (error.message.includes("not found")) {
+        return res.status(404).json({ error: error.message });
+      }
+      if (error.message.includes("mismatch") || error.message.includes("occupied")) {
+        return res.status(409).json({ error: error.message });
+      }
+      
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get rebooking history for a contestant
+  app.get("/api/rebooking-history/contestant/:contestantId", requireAuth, async (req, res) => {
+    try {
+      const history = await storage.getRebookingHistoryByContestant(req.params.contestantId);
+      res.json(history);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get rebooking history for a record day
+  app.get("/api/rebooking-history/record-day/:recordDayId", requireAuth, async (req, res) => {
+    try {
+      const history = await storage.getRebookingHistoryByRecordDay(req.params.recordDayId);
+      res.json(history);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Update player type for a seat assignment
   app.patch("/api/seat-assignments/:id/player-type", async (req, res) => {
     try {
