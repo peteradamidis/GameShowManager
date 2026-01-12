@@ -3839,6 +3839,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Seat assignment not found" });
       }
       
+      // If confirmedRsvp is being set, update contestant status to 'confirmed'
+      if (confirmedRsvp && updateData.confirmedRsvp) {
+        await storage.updateContestantAvailability(updated.contestantId, 'confirmed');
+      }
+      
       res.json(updated);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
