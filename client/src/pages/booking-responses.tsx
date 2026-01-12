@@ -34,7 +34,9 @@ import {
   MailCheck,
   ArrowRightLeft,
   UserCheck,
-  MailPlus
+  MailPlus,
+  LayoutGrid,
+  Loader2
 } from "lucide-react";
 import type { RecordDay, Contestant, SeatAssignment } from "@shared/schema";
 
@@ -59,13 +61,22 @@ type StatusFilter = "all" | "not_sent" | "awaiting" | "confirmed" | "declined";
 export default function BookingResponses() {
   const { toast } = useToast();
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("all");
+  const [selectedBlock, setSelectedBlock] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [searchName, setSearchName] = useState("");
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
   
+  // Send email dialog state
+  const [sendEmailDialogOpen, setSendEmailDialogOpen] = useState(false);
+  
   // Clear selection when filters change to prevent hidden selections
   const handleRecordDayChange = (value: string) => {
     setSelectedRecordDay(value);
+    setSelectedAssignments(new Set());
+  };
+  
+  const handleBlockChange = (value: string) => {
+    setSelectedBlock(value);
     setSelectedAssignments(new Set());
   };
   
@@ -231,6 +242,46 @@ export default function BookingResponses() {
     },
   });
 
+  // Bulk send booking email mutation
+  const bulkSendBookingEmailMutation = useMutation({
+    mutationFn: async (assignmentIds: string[]) => {
+      const response = await apiRequest("POST", "/api/booking-confirmations/send", {
+        seatAssignmentIds: assignmentIds,
+      });
+      // apiRequest returns a Response object, need to parse JSON
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to send emails");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      const results = data.results || [];
+      const successCount = results.filter((r: any) => r.success).length;
+      const failCount = results.filter((r: any) => !r.success).length;
+      
+      if (failCount > 0) {
+        toast({ 
+          title: `Emails sent: ${successCount} success, ${failCount} failed`,
+          description: "Some emails could not be sent",
+          variant: "destructive"
+        });
+      } else {
+        toast({ title: `Booking emails sent to ${successCount} contestant(s)` });
+      }
+      setSelectedAssignments(new Set());
+      setSendEmailDialogOpen(false);
+      invalidateBookingQueries();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to send emails", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
   // Use stats from API (computed from record-day-filtered but not status-filtered data)
   const totalCount = stats.total;
   const notSentCount = stats.notSent;
@@ -241,8 +292,13 @@ export default function BookingResponses() {
   // Helper to check if assignment is declined
   const isDeclined = (a: BookingAssignment) => a.notes?.startsWith('[DECLINED]');
 
-  // Filter by search
+  // Filter by block and search
   const filteredData = trackerData.filter((item) => {
+    // Filter by block
+    if (selectedBlock !== "all" && item.blockNumber !== parseInt(selectedBlock)) {
+      return false;
+    }
+    // Filter by search
     if (!searchName) return true;
     const search = searchName.toLowerCase();
     return (
@@ -255,6 +311,13 @@ export default function BookingResponses() {
   const selectedItems = filteredData.filter(item => selectedAssignments.has(item.id));
   const selectedPendingConfirmation = selectedItems.filter(item => 
     !item.confirmedRsvp && !isDeclined(item)
+  );
+  // For sending emails: those not yet sent, have email, and not declined
+  const selectedNotSentWithEmail = selectedItems.filter(item => 
+    !item.bookingEmailSent && item.contestant?.email && !isDeclined(item)
+  );
+  const selectedNotSentWithoutEmail = selectedItems.filter(item => 
+    !item.bookingEmailSent && !item.contestant?.email && !isDeclined(item)
   );
 
   const handleSelectAll = (checked: boolean | 'indeterminate') => {
@@ -314,6 +377,19 @@ export default function BookingResponses() {
       return;
     }
     bulkConfirmMutation.mutate(ids);
+  };
+
+  const handleSendBookingEmails = () => {
+    const ids = selectedNotSentWithEmail.map(item => item.id);
+    if (ids.length === 0) {
+      toast({ 
+        title: "No valid recipients", 
+        description: "Select contestants who haven't been sent a booking email and have an email address", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    bulkSendBookingEmailMutation.mutate(ids);
   };
 
   const getStatusBadge = (assignment: BookingAssignment) => {
@@ -385,6 +461,23 @@ export default function BookingResponses() {
               {sortedRecordDays.map((rd) => (
                 <SelectItem key={rd.id} value={rd.id}>
                   {format(new Date(rd.date), "MMM d, yyyy")} {rd.rxNumber ? `- ${rd.rxNumber}` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Label htmlFor="block-filter">Block:</Label>
+          <Select value={selectedBlock} onValueChange={handleBlockChange}>
+            <SelectTrigger className="w-[120px]" data-testid="select-block">
+              <SelectValue placeholder="All Blocks" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Blocks</SelectItem>
+              {[1, 2, 3, 4, 5, 6, 7].map((block) => (
+                <SelectItem key={block} value={String(block)}>
+                  Block {block}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -499,14 +592,30 @@ export default function BookingResponses() {
             <div className="flex items-center gap-2 flex-wrap">
               <Users className="h-5 w-5 text-blue-600" />
               <span className="font-medium">{selectedAssignments.size} contestants selected</span>
-              {selectedPendingConfirmation.length < selectedAssignments.size && (
-                <span className="text-muted-foreground">
-                  ({selectedPendingConfirmation.length} pending confirmation)
-                </span>
+              {selectedNotSentWithEmail.length > 0 && (
+                <Badge variant="outline" className="border-gray-500 text-gray-700 dark:text-gray-300">
+                  <Mail className="h-3 w-3 mr-1" />
+                  {selectedNotSentWithEmail.length} ready to send
+                </Badge>
+              )}
+              {selectedNotSentWithoutEmail.length > 0 && (
+                <Badge variant="outline" className="border-amber-500 text-amber-700 dark:text-amber-400">
+                  <XCircle className="h-3 w-3 mr-1" />
+                  {selectedNotSentWithoutEmail.length} without email
+                </Badge>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button
+                onClick={() => setSendEmailDialogOpen(true)}
+                disabled={selectedNotSentWithEmail.length === 0}
+                data-testid="button-send-booking-email"
+              >
+                <Send className="h-4 w-4 mr-2" />
+                Send Booking Email ({selectedNotSentWithEmail.length})
+              </Button>
+              <Button
+                variant="secondary"
                 onClick={handleBulkConfirm}
                 disabled={bulkConfirmMutation.isPending || selectedPendingConfirmation.length === 0}
                 data-testid="button-bulk-confirm"
@@ -685,6 +794,81 @@ export default function BookingResponses() {
           )}
         </CardContent>
       </Card>
+
+      {/* Send Booking Email Dialog */}
+      <Dialog open={sendEmailDialogOpen} onOpenChange={setSendEmailDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5 text-blue-600" />
+              Send Booking Confirmation Emails
+            </DialogTitle>
+            <DialogDescription>
+              Send booking confirmation emails to {selectedNotSentWithEmail.length} contestant(s)
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {selectedNotSentWithoutEmail.length > 0 && (
+              <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-3 rounded-lg">
+                <h4 className="font-medium text-sm mb-2 text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                  <XCircle className="h-4 w-4" />
+                  {selectedNotSentWithoutEmail.length} contestant(s) will be skipped (no email)
+                </h4>
+                <div className="max-h-20 overflow-y-auto text-sm space-y-1 text-amber-700 dark:text-amber-300">
+                  {selectedNotSentWithoutEmail.map(item => (
+                    <div key={item.id}>{item.contestant?.name || "Unknown"}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="bg-muted p-3 rounded-lg">
+              <h4 className="font-medium text-sm mb-2">Recipients ({selectedNotSentWithEmail.length})</h4>
+              {selectedNotSentWithEmail.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No contestants with email addresses selected</p>
+              ) : (
+                <div className="max-h-48 overflow-y-auto text-sm space-y-1">
+                  {selectedNotSentWithEmail.map(item => (
+                    <div key={item.id} className="flex justify-between">
+                      <span>{item.contestant?.name}</span>
+                      <span className="text-muted-foreground">{item.contestant?.email}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Emails will be sent using the booking email template configured in Settings.
+              Each recipient will receive a unique confirmation link.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSendEmailDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSendBookingEmails}
+              disabled={bulkSendBookingEmailMutation.isPending || selectedNotSentWithEmail.length === 0}
+              data-testid="button-confirm-send-email"
+            >
+              {bulkSendBookingEmailMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Send to {selectedNotSentWithEmail.length} Contestant(s)
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Decline Dialog */}
       <Dialog open={declineDialogOpen} onOpenChange={setDeclineDialogOpen}>
