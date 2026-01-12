@@ -1620,6 +1620,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fix contestant status consistency - updates contestants who show 'assigned' but have no seat assignments
+  app.post("/api/contestants/fix-status", requireAuth, async (req, res) => {
+    try {
+      // Get all contestants
+      const allContestants = await storage.getContestants();
+      
+      // Get all seat assignments
+      const allSeatAssignments = await storage.getAllSeatAssignments();
+      const assignedContestantIds = new Set(allSeatAssignments.map(a => a.contestantId));
+      
+      // Get all standby assignments
+      const allStandbys = await storage.getStandbyAssignments();
+      const standbyContestantIds = new Set(allStandbys.map(s => s.contestantId));
+      
+      // Find contestants with 'assigned' status but no actual assignments
+      const orphanedAssigned = allContestants.filter(c => 
+        c.availabilityStatus === 'assigned' && 
+        !assignedContestantIds.has(c.id) &&
+        !standbyContestantIds.has(c.id)
+      );
+      
+      // Update their status to 'available'
+      let fixedCount = 0;
+      for (const contestant of orphanedAssigned) {
+        await storage.updateContestantAvailability(contestant.id, 'available');
+        fixedCount++;
+      }
+      
+      console.log(`[Fix Status] Fixed ${fixedCount} contestants with orphaned 'assigned' status`);
+      
+      res.json({
+        message: `Fixed ${fixedCount} contestants`,
+        fixedCount,
+        fixedContestants: orphanedAssigned.map(c => ({ id: c.id, name: c.name }))
+      });
+    } catch (error: any) {
+      console.error("[Fix Status] Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get all record days
   app.get("/api/record-days", async (req, res) => {
     try {

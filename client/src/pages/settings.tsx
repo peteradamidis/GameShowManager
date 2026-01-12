@@ -1742,6 +1742,7 @@ export default function Settings() {
         <TabsContent value="backup">
           <div className="grid gap-6 max-w-2xl">
             <BackupSection />
+            <DataMaintenanceSection />
           </div>
         </TabsContent>
       </Tabs>
@@ -1994,6 +1995,104 @@ function BackupSection() {
           <p><strong>What's included:</strong> Record days, contestants, groups, seat assignments, standbys, and canceled assignments.</p>
           <p><strong>Storage:</strong> Backups are saved to the server and overwrite the previous backup each hour.</p>
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DataMaintenanceSection() {
+  const [isFixingStatus, setIsFixingStatus] = useState(false);
+  const [fixResult, setFixResult] = useState<{ fixedCount: number; fixedContestants: Array<{ id: string; name: string }> } | null>(null);
+  const { toast } = useToast();
+
+  const handleFixStatus = async () => {
+    setIsFixingStatus(true);
+    setFixResult(null);
+    try {
+      const response = await apiRequest("POST", "/api/contestants/fix-status");
+      const data = await response.json();
+      
+      if (response.ok) {
+        setFixResult({ fixedCount: data.fixedCount, fixedContestants: data.fixedContestants });
+        toast({
+          title: "Status fix completed",
+          description: data.fixedCount > 0 
+            ? `Fixed ${data.fixedCount} contestant(s) with incorrect status.`
+            : "All contestant statuses are already correct.",
+        });
+      } else {
+        throw new Error(data.error || "Fix failed");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Fix failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsFixingStatus(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <RefreshCw className="w-5 h-5" />
+          Data Maintenance
+        </CardTitle>
+        <CardDescription>
+          Fix data inconsistencies and clean up orphaned records.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Fix Contestant Status</p>
+          <p className="text-sm text-muted-foreground">
+            Checks for contestants marked as "assigned" who no longer have seat or standby assignments. 
+            Updates their status to "available" so they appear correctly in the contestant list.
+          </p>
+        </div>
+        
+        <Button 
+          onClick={handleFixStatus} 
+          disabled={isFixingStatus}
+          data-testid="button-fix-status"
+        >
+          {isFixingStatus ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Fixing...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Fix Contestant Status
+            </>
+          )}
+        </Button>
+        
+        {fixResult && (
+          <div className="p-3 rounded-lg bg-muted text-sm">
+            {fixResult.fixedCount === 0 ? (
+              <p className="text-green-600 dark:text-green-400">All contestant statuses are correct.</p>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-amber-600 dark:text-amber-400 font-medium">
+                  Fixed {fixResult.fixedCount} contestant(s):
+                </p>
+                <ul className="list-disc list-inside text-muted-foreground">
+                  {fixResult.fixedContestants.slice(0, 10).map(c => (
+                    <li key={c.id}>{c.name}</li>
+                  ))}
+                  {fixResult.fixedContestants.length > 10 && (
+                    <li>...and {fixResult.fixedContestants.length - 10} more</li>
+                  )}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
