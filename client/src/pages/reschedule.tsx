@@ -319,7 +319,7 @@ export default function ReschedulePage() {
         <CardContent>
           {canceledAssignments.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No canceled contestants</p>
             </div>
           ) : (
@@ -379,12 +379,12 @@ export default function ReschedulePage() {
                     <TableCell>
                       {cancellation.isFromStandby && cancellation.originalAttendanceDate ? (
                         <div className="flex items-center gap-2">
-                          <Calendar className="h-3 w-3 text-muted-foreground" />
+                          <CalendarIcon className="h-3 w-3 text-muted-foreground" />
                           {format(new Date(cancellation.originalAttendanceDate), 'MMM dd, yyyy')}
                         </div>
                       ) : cancellation.recordDay?.date ? (
                         <div className="flex items-center gap-2">
-                          <Calendar className="h-3 w-3 text-muted-foreground" />
+                          <CalendarIcon className="h-3 w-3 text-muted-foreground" />
                           {format(new Date(cancellation.recordDay.date), 'MMM dd, yyyy')}
                         </div>
                       ) : (
