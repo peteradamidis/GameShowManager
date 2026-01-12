@@ -57,8 +57,8 @@ const COLUMN_CONFIG = [
   { id: "email", label: "EMAIL", alwaysVisible: false },
   { id: "attendingWith", label: "ATTENDING WITH", alwaysVisible: false },
   { id: "location", label: "LOCATION", alwaysVisible: false },
-  { id: "medicalQ", label: "MED Q", alwaysVisible: false },
-  { id: "mobilityNotes", label: "MOBILITY / MEDICAL NOTES", alwaysVisible: false },
+  { id: "medicalQ", label: "MEDICAL - APP", alwaysVisible: false },
+  { id: "mobilityNotes", label: "MEDICAL - AUD", alwaysVisible: false },
   { id: "criminal", label: "CRIM / BANK", alwaysVisible: false },
   { id: "castingCategory", label: "CASTING CATEGORY", alwaysVisible: false },
   { id: "notes", label: "NOTES", alwaysVisible: false },
@@ -637,7 +637,7 @@ export default function BookingMaster() {
 
     const headers = [
       "SEAT", "NAME", "MOBILE", "EMAIL", "ATTENDING WITH", "LOCATION", 
-      "MEDICAL Q (Y/N)", "MOBILITY / MEDICAL NOTES", "CRIMINAL / BANKRUPTCY", 
+      "MEDICAL - APP", "MEDICAL - AUD", "CRIMINAL / BANKRUPTCY", 
       "CASTING CATEGORY", "NOTES", "BOOKING EMAIL SENT", "CONFIRMED RSVP", 
       "PAPERWORK SENT", "PAPERWORK ✓", "SIGNED-IN", "OTD NOTES", 
       "STANDBY REPLACEMENT / SWAPS"
@@ -680,7 +680,7 @@ export default function BookingMaster() {
         row.contestant?.email || "",
         row.contestant?.attendingWith || "",
         row.contestant?.location || "",
-        row.assignment?.medicalQuestion || "",
+        row.contestant?.medicalInfo || "",
         row.contestant?.mobilityNotes || "",
         row.contestant?.criminalRecord || "",
         row.assignment?.castingCategory || "",
@@ -707,8 +707,8 @@ export default function BookingMaster() {
       { wch: 25 },  // EMAIL
       { wch: 15 },  // ATTENDING WITH
       { wch: 15 },  // LOCATION
-      { wch: 12 },  // MEDICAL Q (Y/N)
-      { wch: 30 },  // MOBILITY / MEDICAL NOTES
+      { wch: 15 },  // MEDICAL - APP
+      { wch: 15 },  // MEDICAL - AUD
       { wch: 18 },  // CRIMINAL / BANKRUPTCY
       { wch: 15 },  // CASTING CATEGORY
       { wch: 25 },  // NOTES
@@ -850,10 +850,10 @@ export default function BookingMaster() {
           <Button 
             onClick={() => setFilterMobilityNotes(!filterMobilityNotes)}
             variant={filterMobilityNotes ? "default" : "outline"}
-            title={filterMobilityNotes ? "Show all contestants" : "Show only mobility/medical notes"}
+            title={filterMobilityNotes ? "Show all contestants" : "Show only contestants with Medical - AUD notes"}
             data-testid="button-filter-mobility-notes"
           >
-            Show Mobility/Medical Notes
+            Show Medical - AUD
           </Button>
 
           <Button 
@@ -953,7 +953,7 @@ export default function BookingMaster() {
                   {isColumnVisible("email") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 w-48 min-w-[180px] text-white font-semibold border-r border-purple-500 dark:border-purple-700">EMAIL</TableHead>}
                   {isColumnVisible("attendingWith") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 text-white font-semibold border-r border-purple-500 dark:border-purple-700">ATTENDING<br/>WITH</TableHead>}
                   {isColumnVisible("location") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 text-white font-semibold border-r border-purple-500 dark:border-purple-700">LOCATION</TableHead>}
-                  {isColumnVisible("mobilityNotes") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 text-white font-semibold border-r border-purple-500 dark:border-purple-700">MOBILITY /<br/>MEDICAL NOTES</TableHead>}
+                  {isColumnVisible("mobilityNotes") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 text-white font-semibold border-r border-purple-500 dark:border-purple-700">MEDICAL -<br/>AUD</TableHead>}
                   {isColumnVisible("criminal") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 w-20 text-center text-white font-semibold border-r border-purple-500 dark:border-purple-700">CRIMINAL /<br/>BANKRUPTCY</TableHead>}
                   {isColumnVisible("notes") && <TableHead className={`sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 border-r-4 border-r-purple-400 text-white font-semibold ${isFullscreen ? 'min-w-[150px]' : 'min-w-[200px]'}`}>NOTES</TableHead>}
                   {isColumnVisible("emailSent") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">STANDBY<br/>EMAIL<br/>SENT</TableHead>}
@@ -1067,8 +1067,8 @@ export default function BookingMaster() {
                   {isColumnVisible("email") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-48 min-w-[180px] text-white font-semibold border-r border-gray-300 dark:border-gray-600">EMAIL</TableHead>}
                   {isColumnVisible("attendingWith") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold border-r border-gray-300 dark:border-gray-600">ATTENDING<br/>WITH</TableHead>}
                   {isColumnVisible("location") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold border-r border-gray-300 dark:border-gray-600">LOCATION</TableHead>}
-                  {isColumnVisible("medicalQ") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-14 text-center text-white font-semibold border-r border-gray-300 dark:border-gray-600">MEDICAL<br/>Q (Y/N)</TableHead>}
-                  {isColumnVisible("mobilityNotes") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold border-r border-gray-300 dark:border-gray-600">MOBILITY /<br/>MEDICAL NOTES</TableHead>}
+                  {isColumnVisible("medicalQ") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold border-r border-gray-300 dark:border-gray-600">MEDICAL -<br/>APP</TableHead>}
+                  {isColumnVisible("mobilityNotes") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold border-r border-gray-300 dark:border-gray-600">MEDICAL -<br/>AUD</TableHead>}
                   {isColumnVisible("criminal") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-20 text-center text-white font-semibold border-r border-gray-300 dark:border-gray-600">CRIMINAL /<br/>BANKRUPTCY</TableHead>}
                   {isColumnVisible("castingCategory") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold border-r border-gray-300 dark:border-gray-600">CASTING<br/>CATEGORY</TableHead>}
                   {isColumnVisible("notes") && <TableHead className={`sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 border-r-4 border-r-[#1a6b6b] text-white font-semibold ${isFullscreen ? 'min-w-[150px]' : 'min-w-[200px]'}`}>NOTES</TableHead>}
@@ -1135,18 +1135,8 @@ export default function BookingMaster() {
                         {isColumnVisible("attendingWith") && <TableCell className="text-xs py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">{row.contestant?.attendingWith || ""}</TableCell>}
                         {isColumnVisible("location") && <TableCell className="text-xs py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">{row.contestant?.location || ""}</TableCell>}
                         {isColumnVisible("medicalQ") && (
-                          <TableCell className="py-0.5 h-7 w-14 border-r border-gray-200 dark:border-gray-700">
-                            {row.assignment && (
-                              <Input
-                                key={`med-${row.assignment.id}`}
-                                defaultValue={row.assignment.medicalQuestion || ""}
-                                onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "medicalQuestion", e.target.value.toUpperCase())}
-                                placeholder="Y"
-                                className="h-6 text-xs w-10 text-center"
-                                maxLength={1}
-                                data-testid={`input-medical-${row.seatId}`}
-                              />
-                            )}
+                          <TableCell className="text-xs py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
+                            {row.contestant?.medicalInfo || ""}
                           </TableCell>
                         )}
                         {isColumnVisible("mobilityNotes") && (
