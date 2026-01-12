@@ -5384,10 +5384,6 @@ ${finalEmailFooter}`;
                 </tr>
               </table>
               
-              <p style="color: #8B0000; font-size: 14px; text-align: center; margin: 0 0 25px 0; font-weight: bold;">
-                After clicking, your email app will open. Complete the form and press SEND.
-              </p>
-              
               <!-- Required Info Reminder -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
                 <tr>
@@ -6993,10 +6989,6 @@ ${finalEmailFooter}`;
                 </tr>
               </table>
               
-              <p style="color: #8B0000; font-size: 14px; text-align: center; margin: 0 0 25px 0; font-weight: bold;">
-                After clicking, your email app will open. Complete the form and press SEND.
-              </p>
-              
               <!-- Required Info Reminder -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
                 <tr>
@@ -7828,10 +7820,6 @@ ${finalEmailFooter}`;
                     </td>
                   </tr>
                 </table>
-                
-                <p style="color: #8B0000; font-size: 14px; text-align: center; margin: 0 0 25px 0; font-weight: bold;">
-                  After clicking, your email app will open. Complete the form and press SEND.
-                </p>
                 
                 <!-- Required Info Reminder -->
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
