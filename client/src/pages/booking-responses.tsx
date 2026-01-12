@@ -948,15 +948,6 @@ export default function BookingResponses() {
                               <XCircle className="h-3 w-3 mr-1" />
                               Decline
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleChangeDateClick(item)}
-                              data-testid={`button-change-date-${item.id}`}
-                            >
-                              <ArrowRightLeft className="h-3 w-3 mr-1" />
-                              Move
-                            </Button>
                           </div>
                         )}
                       </TableCell>
