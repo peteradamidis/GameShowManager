@@ -3879,6 +3879,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clear confirmed RSVP (undo confirmation)
+  app.delete("/api/seat-assignments/:id/confirmed-rsvp", requireAuth, async (req, res) => {
+    try {
+      const assignment = await storage.getSeatAssignmentById(req.params.id);
+      if (!assignment) {
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+      
+      // Clear the confirmedRsvp field
+      const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, {
+        confirmedRsvp: null as any,
+      });
+      
+      res.json({ success: true, assignment: updated });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Undo decline - restore a declined assignment back to awaiting reply
+  app.post("/api/seat-assignments/:id/undo-decline", requireAuth, async (req, res) => {
+    try {
+      const assignment = await storage.getSeatAssignmentById(req.params.id);
+      if (!assignment) {
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+      
+      // Check if the assignment is actually declined
+      if (!assignment.notes?.startsWith('[DECLINED]')) {
+        return res.status(400).json({ error: "Assignment is not in declined state" });
+      }
+      
+      // Clear the declined note prefix (keep any reason as regular note)
+      let newNotes = assignment.notes.replace(/^\[DECLINED\]\s*/, '');
+      if (newNotes === "No reason provided") {
+        newNotes = "";
+      }
+      
+      const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, {
+        notes: newNotes || null,
+        confirmedRsvp: null as any,
+      });
+      
+      res.json({ success: true, assignment: updated });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Change record date for a seat assignment (move to different day)
   app.post("/api/seat-assignments/:id/change-date", async (req, res) => {
     try {

@@ -37,7 +37,8 @@ import {
   UserCheck,
   MailPlus,
   LayoutGrid,
-  Loader2
+  Loader2,
+  Undo2
 } from "lucide-react";
 import type { RecordDay, Contestant, SeatAssignment } from "@shared/schema";
 
@@ -152,7 +153,9 @@ export default function BookingResponses() {
         return typeof key === 'string' && (
           key.startsWith('/api/booking-tracker') || 
           key.startsWith('/api/seat-assignments') ||
-          key.startsWith('/api/paperwork')
+          key.startsWith('/api/paperwork') ||
+          key.startsWith('/api/contestants') ||
+          key.startsWith('/api/booking-master')
         );
       },
     });
@@ -172,6 +175,43 @@ export default function BookingResponses() {
     onError: (error: any) => {
       toast({ 
         title: "Failed to confirm booking", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
+  // Mutation for undoing confirmation (clearing confirmedRsvp)
+  const undoConfirmMutation = useMutation({
+    mutationFn: async (assignmentId: string) => {
+      return apiRequest("DELETE", `/api/seat-assignments/${assignmentId}/confirmed-rsvp`, {});
+    },
+    onSuccess: () => {
+      toast({ title: "Confirmation cleared", description: "Contestant is now awaiting reply" });
+      invalidateBookingQueries();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to clear confirmation", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
+  // Mutation for undoing decline (restoring from reschedule)
+  const undoDeclineMutation = useMutation({
+    mutationFn: async (assignmentId: string) => {
+      return apiRequest("POST", `/api/seat-assignments/${assignmentId}/undo-decline`, {});
+    },
+    onSuccess: () => {
+      toast({ title: "Decline undone", description: "Contestant is now awaiting reply" });
+      invalidateBookingQueries();
+      queryClient.invalidateQueries({ queryKey: ["/api/canceled-assignments"] });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to undo decline", 
         description: error.message,
         variant: "destructive" 
       });
@@ -858,9 +898,35 @@ export default function BookingResponses() {
                       </TableCell>
                       <TableCell>
                         {isDeclined(item) ? (
-                          <span className="text-sm text-red-600 dark:text-red-400">Moved to reschedule</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-red-600 dark:text-red-400">Declined</span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-xs"
+                              onClick={() => undoDeclineMutation.mutate(item.id)}
+                              disabled={undoDeclineMutation.isPending}
+                              data-testid={`button-undo-decline-${item.id}`}
+                            >
+                              <Undo2 className="h-3 w-3 mr-1" />
+                              Undo
+                            </Button>
+                          </div>
                         ) : isConfirmed ? (
-                          <span className="text-sm text-muted-foreground">Confirmed</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-green-600 dark:text-green-400">Confirmed</span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-xs"
+                              onClick={() => undoConfirmMutation.mutate(item.id)}
+                              disabled={undoConfirmMutation.isPending}
+                              data-testid={`button-undo-confirm-${item.id}`}
+                            >
+                              <Undo2 className="h-3 w-3 mr-1" />
+                              Undo
+                            </Button>
+                          </div>
                         ) : (
                           <div className="flex items-center gap-2">
                             <Button
