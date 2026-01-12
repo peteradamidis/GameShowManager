@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Dialog,
   DialogContent,
@@ -97,6 +98,8 @@ export default function BookingResponses() {
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [declineAssignment, setDeclineAssignment] = useState<BookingAssignment | null>(null);
   const [declineReason, setDeclineReason] = useState("");
+  const [declineAction, setDeclineAction] = useState<"reschedule" | "rebook">("reschedule");
+  const [rebookRecordDayId, setRebookRecordDayId] = useState<string>("");
   
   const [changeDateDialogOpen, setChangeDateDialogOpen] = useState(false);
   const [changeDateAssignment, setChangeDateAssignment] = useState<BookingAssignment | null>(null);
@@ -345,15 +348,52 @@ export default function BookingResponses() {
   const handleDeclineClick = (assignment: BookingAssignment) => {
     setDeclineAssignment(assignment);
     setDeclineReason("");
+    setDeclineAction("reschedule");
+    setRebookRecordDayId("");
     setDeclineDialogOpen(true);
   };
 
+  // Separate mutation for rebook action (to avoid duplicate toasts from the regular change-date mutation)
+  const rebookMutation = useMutation({
+    mutationFn: async ({ assignmentId, newRecordDayId }: { assignmentId: string; newRecordDayId: string }) => {
+      return apiRequest("POST", `/api/seat-assignments/${assignmentId}/change-date`, {
+        newRecordDayId,
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Contestant rebooked", description: "Moved to new record day" });
+      setDeclineDialogOpen(false);
+      setDeclineAssignment(null);
+      setDeclineReason("");
+      setRebookRecordDayId("");
+      invalidateBookingQueries();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to rebook contestant", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
   const handleDeclineSubmit = () => {
     if (!declineAssignment) return;
-    declineMutation.mutate({
-      assignmentId: declineAssignment.id,
-      reason: declineReason,
-    });
+    
+    if (declineAction === "rebook") {
+      // Use the rebook mutation
+      if (!rebookRecordDayId) return;
+      rebookMutation.mutate({
+        assignmentId: declineAssignment.id,
+        newRecordDayId: rebookRecordDayId,
+      });
+    } else {
+      // Use the decline mutation for reschedule
+      declineMutation.mutate({
+        assignmentId: declineAssignment.id,
+        reason: declineReason,
+      });
+    }
   };
 
   const handleChangeDateClick = (assignment: BookingAssignment) => {
@@ -878,36 +918,102 @@ export default function BookingResponses() {
             <DialogDescription>
               {declineAssignment && (
                 <>
-                  Mark <strong>{declineAssignment.contestant?.name}</strong>'s booking as declined.
-                  They will be moved to the reschedule list.
+                  <strong>{declineAssignment.contestant?.name}</strong> cannot attend on this date.
+                  Choose what to do next.
                 </>
               )}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="decline-reason">Reason for decline</Label>
-              <Textarea
-                id="decline-reason"
-                placeholder="e.g., No longer available, scheduling conflict, etc."
-                value={declineReason}
-                onChange={(e) => setDeclineReason(e.target.value)}
-                data-testid="input-decline-reason"
-              />
-            </div>
+            <RadioGroup 
+              value={declineAction} 
+              onValueChange={(v) => setDeclineAction(v as "reschedule" | "rebook")}
+              className="space-y-3"
+            >
+              <div className="flex items-start space-x-3">
+                <RadioGroupItem value="rebook" id="action-rebook" data-testid="radio-rebook" />
+                <div className="grid gap-1.5 leading-none">
+                  <Label htmlFor="action-rebook" className="font-medium cursor-pointer">
+                    Rebook to another day
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Move contestant to a different record day
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <RadioGroupItem value="reschedule" id="action-reschedule" data-testid="radio-reschedule" />
+                <div className="grid gap-1.5 leading-none">
+                  <Label htmlFor="action-reschedule" className="font-medium cursor-pointer">
+                    Move to Reschedule list
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Remove from seating and add to reschedule tab for later
+                  </p>
+                </div>
+              </div>
+            </RadioGroup>
+
+            {/* Rebook: Show record day selector */}
+            {declineAction === "rebook" && (
+              <div className="space-y-2 pt-2 border-t">
+                <Label htmlFor="rebook-day">Select new record day</Label>
+                <Select
+                  value={rebookRecordDayId}
+                  onValueChange={setRebookRecordDayId}
+                >
+                  <SelectTrigger data-testid="select-rebook-record-day">
+                    <SelectValue placeholder="Select record day..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sortedRecordDays
+                      .filter(rd => rd.id !== declineAssignment?.recordDayId)
+                      .map((rd) => (
+                        <SelectItem key={rd.id} value={rd.id}>
+                          {rd.rxNumber ? `${rd.rxNumber} - ` : ""}{format(new Date(rd.date), "EEE, MMM d, yyyy")}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Reschedule: Show reason textarea */}
+            {declineAction === "reschedule" && (
+              <div className="space-y-2 pt-2 border-t">
+                <Label htmlFor="decline-reason">Reason for decline</Label>
+                <Textarea
+                  id="decline-reason"
+                  placeholder="e.g., No longer available, scheduling conflict, etc."
+                  value={declineReason}
+                  onChange={(e) => setDeclineReason(e.target.value)}
+                  data-testid="input-decline-reason"
+                />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeclineDialogOpen(false)}>
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeclineSubmit}
-              disabled={declineMutation.isPending}
-              data-testid="button-submit-decline"
-            >
-              {declineMutation.isPending ? "Processing..." : "Decline & Move to Reschedule"}
-            </Button>
+            {declineAction === "rebook" ? (
+              <Button
+                onClick={handleDeclineSubmit}
+                disabled={!rebookRecordDayId || rebookMutation.isPending}
+                data-testid="button-submit-rebook"
+              >
+                {rebookMutation.isPending ? "Moving..." : "Rebook to New Day"}
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                onClick={handleDeclineSubmit}
+                disabled={declineMutation.isPending}
+                data-testid="button-submit-decline"
+              >
+                {declineMutation.isPending ? "Processing..." : "Move to Reschedule"}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
