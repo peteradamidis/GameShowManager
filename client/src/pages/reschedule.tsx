@@ -447,7 +447,7 @@ export default function ReschedulePage() {
 
       {/* Rebook Dialog */}
       <Dialog open={rebookDialogOpen} onOpenChange={setRebookDialogOpen}>
-        <DialogContent className="max-w-lg" data-testid="dialog-rebook-contestant">
+        <DialogContent className="max-w-sm" data-testid="dialog-rebook-contestant">
           <DialogHeader>
             <DialogTitle>Rebook Contestant</DialogTitle>
             <DialogDescription>
@@ -459,7 +459,7 @@ export default function ReschedulePage() {
             {/* Calendar for date selection */}
             <div>
               <label className="text-sm font-medium mb-2 block">Select Record Day</label>
-              <div className="border rounded-lg p-2">
+              <div className="border rounded-lg p-2 flex justify-center">
                 <CalendarComponent
                   mode="single"
                   selected={selectedCalendarDate}
