@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -63,7 +63,7 @@ type StatusFilter = "all" | "not_sent" | "awaiting" | "confirmed" | "declined";
 
 export default function BookingResponses() {
   const { toast } = useToast();
-  const [selectedRecordDay, setSelectedRecordDay] = useState<string>("all");
+  const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
   const [selectedBlock, setSelectedBlock] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [searchName, setSearchName] = useState("");
@@ -120,10 +120,17 @@ export default function BookingResponses() {
     new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
+  // Set default to first record day when data loads
+  useEffect(() => {
+    if (sortedRecordDays.length > 0 && !selectedRecordDay) {
+      setSelectedRecordDay(sortedRecordDays[0].id);
+    }
+  }, [sortedRecordDays, selectedRecordDay]);
+
   // Build query URL with filters
   const buildTrackerUrl = () => {
     const params = new URLSearchParams();
-    if (selectedRecordDay !== "all") {
+    if (selectedRecordDay) {
       params.append("recordDayId", selectedRecordDay);
     }
     if (statusFilter !== "all") {
@@ -606,10 +613,9 @@ export default function BookingResponses() {
           <Label htmlFor="record-day-filter">Record Day:</Label>
           <Select value={selectedRecordDay} onValueChange={handleRecordDayChange}>
             <SelectTrigger className="w-[200px]" data-testid="select-record-day">
-              <SelectValue placeholder="All Record Days" />
+              <SelectValue placeholder="Select Record Day" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Record Days</SelectItem>
               {sortedRecordDays.map((rd) => (
                 <SelectItem key={rd.id} value={rd.id}>
                   {format(new Date(rd.date), "MMM d, yyyy")} {rd.rxNumber ? `- ${rd.rxNumber}` : ""}
