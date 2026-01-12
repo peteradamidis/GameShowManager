@@ -457,7 +457,7 @@ export default function ReschedulePage() {
 
       {/* Rebook Dialog */}
       <Dialog open={rebookDialogOpen} onOpenChange={setRebookDialogOpen}>
-        <DialogContent className="max-w-sm" data-testid="dialog-rebook-contestant">
+        <DialogContent className="max-w-md" data-testid="dialog-rebook-contestant">
           <DialogHeader>
             <DialogTitle>Rebook Contestant</DialogTitle>
             <DialogDescription>
@@ -465,11 +465,11 @@ export default function ReschedulePage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Calendar for date selection */}
             <div>
-              <label className="text-sm font-medium mb-2 block">Select Record Day</label>
-              <div className="border rounded-lg p-2 flex justify-center">
+              <label className="text-sm font-medium mb-1 block">Select Record Day</label>
+              <div className="border rounded-lg p-1 flex justify-center">
                 <CalendarComponent
                   mode="single"
                   selected={selectedCalendarDate}
@@ -489,7 +489,7 @@ export default function ReschedulePage() {
                 />
               </div>
               {selectedRecordDayDetails && (
-                <div className="mt-2 p-2 bg-muted rounded text-sm">
+                <div className="mt-1 p-1.5 bg-muted rounded text-sm">
                   <span className="font-medium">Selected: </span>
                   {format(parseISO(selectedRecordDayDetails.date.split('T')[0]), 'MMMM d, yyyy')}
                   {selectedRecordDayDetails.rxNumber && (
@@ -501,9 +501,9 @@ export default function ReschedulePage() {
 
             {/* Block and Seat Selection */}
             {selectedRecordDayId && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Block</label>
+                  <label className="text-sm font-medium mb-1 block">Block</label>
                   <Select value={selectedBlock} onValueChange={(val) => { setSelectedBlock(val); setSelectedSeat(""); }}>
                     <SelectTrigger data-testid="select-block">
                       <SelectValue placeholder="Select block" />
@@ -519,7 +519,7 @@ export default function ReschedulePage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Seat</label>
+                  <label className="text-sm font-medium mb-1 block">Seat</label>
                   <Select 
                     value={selectedSeat} 
                     onValueChange={setSelectedSeat}
