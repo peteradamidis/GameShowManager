@@ -5354,27 +5354,16 @@ ${finalEmailFooter}`;
                 </tr>
               </table>
               
-              <!-- ACTION REQUIRED Notice -->
+              <!-- ACTION REQUIRED Notice with Button -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                 <tr>
-                  <td style="padding: 20px; text-align: center;">
+                  <td style="padding: 25px; text-align: center;">
                     <p style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
                       CAN YOU ATTEND?
                     </p>
-                    <p style="color: #ffffff; font-size: 15px; margin: 0 0 8px 0;">
+                    <p style="color: #ffffff; font-size: 15px; margin: 0 0 20px 0;">
                       Please respond YES or NO and confirm the members of your auditioned group who will be attending ASAP.
                     </p>
-                    <p style="color: #ffcccc; font-size: 13px; margin: 0;">
-                      Click the button below - your email app will open with a form to complete.
-                    </p>
-                  </td>
-                </tr>
-              </table>
-              
-              <!-- Single Response Button (mailto) -->
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
-                <tr>
-                  <td style="padding: 0; text-align: center;">
                     <a href="mailto:${bookingReplyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${contestant.name} - ${recordDate}`)}&body=${encodeURIComponent(`Hi,\n\nRegarding my Deal or No Deal booking:\n\nName: ${contestant.name}\nDate: ${recordDate}\n\nCAN YOU ATTEND?\n[ ] YES - I confirm my attendance\n[ ] NO - I cannot attend (Reason: )\n\nGroup members attending with me:\n1. \n2. \n3. \n\n--- REQUIRED INFORMATION (if attending) ---\n\nDo you have any medical conditions?\nAnswer: \n\nDo you have any mobility requirements? (i.e. issues climbing stairs or standing for extended periods)\nAnswer: \n\nEmergency contact name & phone number:\nAnswer: \n\nDietary requirements:\nAnswer: [None / Please list]\n\nThank you!`)}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
                   </td>
                 </tr>
@@ -6955,27 +6944,16 @@ ${finalEmailFooter}`;
                 </tr>
               </table>
               
-              <!-- ACTION REQUIRED Notice -->
+              <!-- ACTION REQUIRED Notice with Button -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                 <tr>
-                  <td style="padding: 20px; text-align: center;">
+                  <td style="padding: 25px; text-align: center;">
                     <p style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
                       CAN YOU ATTEND?
                     </p>
-                    <p style="color: #ffffff; font-size: 15px; margin: 0 0 8px 0;">
+                    <p style="color: #ffffff; font-size: 15px; margin: 0 0 20px 0;">
                       Please respond YES or NO and confirm the members of your auditioned group who will be attending ASAP.
                     </p>
-                    <p style="color: #ffcccc; font-size: 13px; margin: 0;">
-                      Click the button below - your email app will open with a form to complete.
-                    </p>
-                  </td>
-                </tr>
-              </table>
-              
-              <!-- Single Response Button (mailto) -->
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
-                <tr>
-                  <td style="padding: 0; text-align: center;">
                     <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${testContestantName} - ${testRecordDate}`)}&body=${encodeURIComponent(`Hi,\n\nRegarding my Deal or No Deal booking:\n\nName: ${testContestantName}\nDate: ${testRecordDate}\n\nCAN YOU ATTEND?\n[ ] YES - I confirm my attendance\n[ ] NO - I cannot attend (Reason: )\n\nGroup members attending with me:\n1. \n2. \n3. \n\n--- REQUIRED INFORMATION (if attending) ---\n\nDo you have any medical conditions?\nAnswer: \n\nDo you have any mobility requirements? (i.e. issues climbing stairs or standing for extended periods)\nAnswer: \n\nEmergency contact name & phone number:\nAnswer: \n\nDietary requirements:\nAnswer: [None / Please list]\n\nThank you!`)}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
                   </td>
                 </tr>
@@ -7783,27 +7761,16 @@ ${finalEmailFooter}`;
                   </tr>
                 </table>
                 
-                <!-- ACTION REQUIRED Notice -->
+                <!-- ACTION REQUIRED Notice with Button -->
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                   <tr>
-                    <td style="padding: 20px; text-align: center;">
+                    <td style="padding: 25px; text-align: center;">
                       <p style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
                         CAN YOU ATTEND?
                       </p>
-                      <p style="color: #ffffff; font-size: 15px; margin: 0 0 8px 0;">
+                      <p style="color: #ffffff; font-size: 15px; margin: 0 0 20px 0;">
                         Please respond YES or NO and confirm the members of your auditioned group who will be attending ASAP.
                       </p>
-                      <p style="color: #ffcccc; font-size: 13px; margin: 0;">
-                        Click the button below - your email app will open with a form to complete.
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-                
-                <!-- Single Response Button -->
-                <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
-                  <tr>
-                    <td style="padding: 0; text-align: center;">
                       <a href="${replyMailto}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
                     </td>
                   </tr>
