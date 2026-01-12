@@ -6447,7 +6447,7 @@ ${finalEmailFooter}`;
               </div>
               
               <!-- Booking Details Box -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 20px 0;">
                 <tr>
                   <td style="padding: 20px;">
                     <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">
@@ -6466,12 +6466,6 @@ ${finalEmailFooter}`;
                 </tr>
               </table>
               
-              <div style="color: #444444; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
-                ${standbyInstructions.split('\n\n').map((paragraph: string) => 
-                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
-                ).join('')}
-              </div>
-              
               <!-- ACTION REQUIRED Notice with Button -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                 <tr>
@@ -6486,6 +6480,12 @@ ${finalEmailFooter}`;
                   </td>
                 </tr>
               </table>
+              
+              <div style="color: #444444; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                ${standbyInstructions.split('\n\n').map((paragraph: string) => 
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
               
               <!-- Required Info Reminder -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
@@ -8056,7 +8056,7 @@ ${finalEmailFooter}`;
                 </div>
                 
                 <!-- Booking Details Box -->
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 20px 0;">
                   <tr>
                     <td style="padding: 20px;">
                       <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">
@@ -8075,12 +8075,6 @@ ${finalEmailFooter}`;
                   </tr>
                 </table>
                 
-                <div style="color: #444444; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
-                  ${instructions.split('\n\n').map((paragraph: string) => 
-                    `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
-                  ).join('')}
-                </div>
-                
                 <!-- ACTION REQUIRED Notice with Button -->
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                   <tr>
@@ -8095,6 +8089,12 @@ ${finalEmailFooter}`;
                     </td>
                   </tr>
                 </table>
+                
+                <div style="color: #444444; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                  ${instructions.split('\n\n').map((paragraph: string) => 
+                    `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                  ).join('')}
+                </div>
                 
                 <!-- Required Info Reminder -->
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
