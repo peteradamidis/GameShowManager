@@ -5723,6 +5723,12 @@ ${finalEmailFooter}`;
         bannerUrl = bannerUrlConfig;  // External URL
       }
       
+      // Get configurable text from system config with defaults
+      const ticketHeadline = await storage.getSystemConfig('ticket_email_headline') || 'Your Official Ticket';
+      const ticketIntro = await storage.getSystemConfig('ticket_email_intro') || 'Thank you for confirming your attendance! This is your official ticket for the Deal or No Deal recording.';
+      const ticketImportant = await storage.getSystemConfig('ticket_email_important') || 'IMPORTANT INFORMATION is attached in the PDF. Please read it carefully before your record day.';
+      const ticketFooter = await storage.getSystemConfig('ticket_email_footer') || 'This is an automated email from the Deal or No Deal production team.';
+      
       // Create email HTML with banner
       const emailHtml = `<!DOCTYPE html>
 <html>
@@ -5744,7 +5750,7 @@ ${finalEmailFooter}`;
     <tr>
       <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
         <h1 style="color: #D4AF37; font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-          YOUR TICKET IS ATTACHED
+          ${ticketHeadline}
         </h1>
       </td>
     </tr>
@@ -5758,9 +5764,11 @@ ${finalEmailFooter}`;
               <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                 Hi ${contestant.name.split(' ')[0]},
               </p>
-              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                Thank you for confirming your attendance! Your Record Day Information is attached to this email as a PDF.
-              </p>
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                ${ticketIntro.split('\n\n').map((paragraph: string) => 
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
               
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
                 <tr>
@@ -5788,7 +5796,7 @@ ${finalEmailFooter}`;
                 <tr>
                   <td style="padding: 15px;">
                     <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0;">
-                      IMPORTANT: Please read the attached PDF carefully. Bring valid photo ID on the day.
+                      ${ticketImportant}
                     </p>
                   </td>
                 </tr>
@@ -5811,7 +5819,7 @@ ${finalEmailFooter}`;
     <tr>
       <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
         <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
-          This is an automated email from the Deal or No Deal production team.
+          ${ticketFooter}
         </p>
       </td>
     </tr>

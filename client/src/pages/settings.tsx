@@ -11,7 +11,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail, Download, Database, Clock, RefreshCw, Lock, Server, Send, Eye, ClipboardCheck } from "lucide-react";
+import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail, Download, Database, Clock, RefreshCw, Lock, Server, Send, Eye, ClipboardCheck, Ticket } from "lucide-react";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -256,6 +256,11 @@ const EMAIL_TEMPLATE_DEFAULTS = {
   standby_email_intro: 'You have been added to our standby list for an upcoming Deal or No Deal recording. This means you may be called to attend if a seat becomes available.',
   standby_email_instructions: 'Please confirm your availability as a standby by clicking the button below. We\'ll be in touch if a spot opens up for you.',
   standby_email_footer: 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.',
+  // Ticket email
+  ticket_email_headline: 'Your Official Ticket',
+  ticket_email_intro: 'Thank you for confirming your attendance! This is your official ticket for the Deal or No Deal recording.',
+  ticket_email_important: 'IMPORTANT INFORMATION is attached in the PDF. Please read it carefully before your record day.',
+  ticket_email_footer: 'This is an automated email from the Deal or No Deal production team.',
 };
 
 export default function Settings() {
@@ -288,6 +293,13 @@ export default function Settings() {
   const [standbyEmailFooter, setStandbyEmailFooter] = useState(EMAIL_TEMPLATE_DEFAULTS.standby_email_footer);
   const [standbyTemplateChanged, setStandbyTemplateChanged] = useState(false);
   
+  // Ticket email template state
+  const [ticketEmailHeadline, setTicketEmailHeadline] = useState(EMAIL_TEMPLATE_DEFAULTS.ticket_email_headline);
+  const [ticketEmailIntro, setTicketEmailIntro] = useState(EMAIL_TEMPLATE_DEFAULTS.ticket_email_intro);
+  const [ticketEmailImportant, setTicketEmailImportant] = useState(EMAIL_TEMPLATE_DEFAULTS.ticket_email_important);
+  const [ticketEmailFooter, setTicketEmailFooter] = useState(EMAIL_TEMPLATE_DEFAULTS.ticket_email_footer);
+  const [ticketTemplateChanged, setTicketTemplateChanged] = useState(false);
+  
   // Auto-confirmation PDF state
   const [autoConfirmationPdf, setAutoConfirmationPdf] = useState<string>("");
   const [autoConfirmationPdfChanged, setAutoConfirmationPdfChanged] = useState(false);
@@ -317,6 +329,12 @@ export default function Settings() {
   const { data: savedStandbyIntro } = useQuery<string | null>({ queryKey: ["/api/system-config/standby_email_intro"] });
   const { data: savedStandbyInstructions } = useQuery<string | null>({ queryKey: ["/api/system-config/standby_email_instructions"] });
   const { data: savedStandbyFooter } = useQuery<string | null>({ queryKey: ["/api/system-config/standby_email_footer"] });
+  
+  // Fetch saved ticket email template values
+  const { data: savedTicketHeadline } = useQuery<string | null>({ queryKey: ["/api/system-config/ticket_email_headline"] });
+  const { data: savedTicketIntro } = useQuery<string | null>({ queryKey: ["/api/system-config/ticket_email_intro"] });
+  const { data: savedTicketImportant } = useQuery<string | null>({ queryKey: ["/api/system-config/ticket_email_important"] });
+  const { data: savedTicketFooter } = useQuery<string | null>({ queryKey: ["/api/system-config/ticket_email_footer"] });
 
   useEffect(() => {
     if (savedSenderName) {
@@ -378,6 +396,20 @@ export default function Settings() {
   useEffect(() => {
     if (savedStandbyFooter) setStandbyEmailFooter(savedStandbyFooter);
   }, [savedStandbyFooter]);
+  
+  // Load saved ticket email template values
+  useEffect(() => {
+    if (savedTicketHeadline) setTicketEmailHeadline(savedTicketHeadline);
+  }, [savedTicketHeadline]);
+  useEffect(() => {
+    if (savedTicketIntro) setTicketEmailIntro(savedTicketIntro);
+  }, [savedTicketIntro]);
+  useEffect(() => {
+    if (savedTicketImportant) setTicketEmailImportant(savedTicketImportant);
+  }, [savedTicketImportant]);
+  useEffect(() => {
+    if (savedTicketFooter) setTicketEmailFooter(savedTicketFooter);
+  }, [savedTicketFooter]);
 
   const saveSenderNameMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -473,6 +505,29 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/standby_email_intro"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/standby_email_instructions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/standby_email_footer"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error saving template", description: error.message, variant: "destructive" });
+    },
+  });
+  
+  // Ticket email template mutation
+  const saveTicketTemplateMutation = useMutation({
+    mutationFn: async () => {
+      await Promise.all([
+        apiRequest("PUT", "/api/system-config/ticket_email_headline", { value: ticketEmailHeadline }),
+        apiRequest("PUT", "/api/system-config/ticket_email_intro", { value: ticketEmailIntro }),
+        apiRequest("PUT", "/api/system-config/ticket_email_important", { value: ticketEmailImportant }),
+        apiRequest("PUT", "/api/system-config/ticket_email_footer", { value: ticketEmailFooter }),
+      ]);
+    },
+    onSuccess: () => {
+      toast({ title: "Ticket email template saved", description: "Your changes will apply to all new ticket emails." });
+      setTicketTemplateChanged(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/ticket_email_headline"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/ticket_email_intro"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/ticket_email_important"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/ticket_email_footer"] });
     },
     onError: (error: any) => {
       toast({ title: "Error saving template", description: error.message, variant: "destructive" });
@@ -1441,6 +1496,102 @@ export default function Settings() {
                 data-testid="button-save-standby-email-template"
               >
                 {saveStandbyEmailTemplateMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Template
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-amber-200 dark:border-amber-800">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+              <Ticket className="w-5 h-5" />
+              Ticket Email Template
+            </CardTitle>
+            <CardDescription>
+              Customize the wording of ticket emails sent to contestants after they confirm their booking. This email includes the Record Day Information PDF.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="ticket-email-headline">Headline</Label>
+              <p className="text-xs text-muted-foreground">The gold title shown below the banner</p>
+              <Input
+                id="ticket-email-headline"
+                value={ticketEmailHeadline}
+                onChange={(e) => {
+                  setTicketEmailHeadline(e.target.value);
+                  setTicketTemplateChanged(true);
+                }}
+                placeholder="Your Official Ticket"
+                data-testid="input-ticket-email-headline"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="ticket-email-intro">Introduction Paragraph</Label>
+              <p className="text-xs text-muted-foreground">Shown after "Hi [Name]," - can include HTML for styling</p>
+              <Textarea
+                id="ticket-email-intro"
+                value={ticketEmailIntro}
+                onChange={(e) => {
+                  setTicketEmailIntro(e.target.value);
+                  setTicketTemplateChanged(true);
+                }}
+                placeholder="Thank you for confirming your attendance! This is your official ticket..."
+                className="min-h-[80px]"
+                data-testid="input-ticket-email-intro"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="ticket-email-important">Important Notice</Label>
+              <p className="text-xs text-muted-foreground">Yellow warning box text about the PDF attachment</p>
+              <Textarea
+                id="ticket-email-important"
+                value={ticketEmailImportant}
+                onChange={(e) => {
+                  setTicketEmailImportant(e.target.value);
+                  setTicketTemplateChanged(true);
+                }}
+                placeholder="IMPORTANT INFORMATION is attached in the PDF..."
+                className="min-h-[60px]"
+                data-testid="input-ticket-email-important"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="ticket-email-footer">Footer Message</Label>
+              <p className="text-xs text-muted-foreground">Small text at the bottom - can include HTML</p>
+              <Textarea
+                id="ticket-email-footer"
+                value={ticketEmailFooter}
+                onChange={(e) => {
+                  setTicketEmailFooter(e.target.value);
+                  setTicketTemplateChanged(true);
+                }}
+                placeholder="This is an automated email..."
+                className="min-h-[60px]"
+                data-testid="input-ticket-email-footer"
+              />
+            </div>
+            
+            <div className="flex justify-end pt-2">
+              <Button
+                onClick={() => saveTicketTemplateMutation.mutate()}
+                disabled={!ticketTemplateChanged || saveTicketTemplateMutation.isPending}
+                data-testid="button-save-ticket-email-template"
+              >
+                {saveTicketTemplateMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Saving...
