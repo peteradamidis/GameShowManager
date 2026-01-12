@@ -4181,6 +4181,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 ${finalEmailIntro}
               </p>
               
+              <p style="color: #444444; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
+                ${finalEmailInstructions}
+              </p>
+              
               <!-- ACTION REQUIRED Notice with Button -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                 <tr>
@@ -4195,10 +4199,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   </td>
                 </tr>
               </table>
-              
-              <div style="color: #444444; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
-                <p style="margin: 0 0 12px 0;">${finalEmailInstructions}</p>
-              </div>
               
               <!-- What to Expect Box -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
@@ -7953,6 +7953,10 @@ ${finalEmailFooter}`;
                   ${intro}
                 </p>
                 
+                <p style="color: #444444; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
+                  ${instructions}
+                </p>
+                
                 <!-- ACTION REQUIRED Notice with Button -->
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                   <tr>
@@ -7967,10 +7971,6 @@ ${finalEmailFooter}`;
                     </td>
                   </tr>
                 </table>
-                
-                <div style="color: #444444; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
-                  <p style="margin: 0 0 12px 0;">${instructions}</p>
-                </div>
                 
                 <!-- What to Expect Box -->
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
