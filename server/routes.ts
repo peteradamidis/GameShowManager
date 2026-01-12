@@ -5277,9 +5277,9 @@ ${finalEmailFooter}`;
             const emailAdditionalInstructions = await storage.getSystemConfig('booking_email_additional_instructions') || '';
             const emailFooter = await storage.getSystemConfig('booking_email_footer') || 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.';
             
-            // Get reply-to email for mailto buttons
-            const bookingSmtpConfig = await getSmtpConfig();
-            const bookingReplyToEmail = bookingSmtpConfig.fromEmail || 'noreply@example.com';
+            // Get reply-to email for mailto buttons (use dedicated config, fallback to SMTP from email)
+            const bookingReplyToEmail = await storage.getSystemConfig('booking_reply_to_email') || 
+              (await getSmtpConfig()).fromEmail || 'noreply@example.com';
             
             // Professional HTML email template with configurable content - styled like old format
             emailBody = `<!DOCTYPE html>

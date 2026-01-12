@@ -290,10 +290,17 @@ export default function Settings() {
   // Auto-confirmation PDF state
   const [autoConfirmationPdf, setAutoConfirmationPdf] = useState<string>("");
   const [autoConfirmationPdfChanged, setAutoConfirmationPdfChanged] = useState(false);
+  
+  // Booking reply-to email state
+  const [bookingReplyToEmail, setBookingReplyToEmail] = useState<string>("");
+  const [bookingReplyToEmailChanged, setBookingReplyToEmailChanged] = useState(false);
 
   const { data: savedSenderName } = useQuery<string | null>({
     queryKey: ["/api/system-config/email_sender_name"],
   });
+  
+  // Fetch saved booking reply-to email
+  const { data: savedBookingReplyToEmail } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_reply_to_email"] });
   
   // Fetch saved booking email template values
   const { data: savedHeadline } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_headline"] });
@@ -342,6 +349,10 @@ export default function Settings() {
   useEffect(() => {
     if (savedAutoConfirmationPdf) setAutoConfirmationPdf(savedAutoConfirmationPdf);
   }, [savedAutoConfirmationPdf]);
+  
+  useEffect(() => {
+    if (savedBookingReplyToEmail) setBookingReplyToEmail(savedBookingReplyToEmail);
+  }, [savedBookingReplyToEmail]);
   
   // Load saved availability email template values
   useEffect(() => {
@@ -396,6 +407,20 @@ export default function Settings() {
       toast({ title: "Auto-confirmation PDF saved", description: "This PDF will be attached to confirmation emails sent after contestants confirm their booking." });
       setAutoConfirmationPdfChanged(false);
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/auto_confirmation_pdf_path"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+  
+  const saveBookingReplyToEmailMutation = useMutation({
+    mutationFn: async (email: string) => {
+      return await apiRequest("PUT", "/api/system-config/booking_reply_to_email", { value: email });
+    },
+    onSuccess: () => {
+      toast({ title: "Reply-to email saved", description: "This email address will be used in the mailto link when contestants click to reply." });
+      setBookingReplyToEmailChanged(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_reply_to_email"] });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -1126,6 +1151,43 @@ export default function Settings() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2 p-4 bg-muted/50 rounded-lg border">
+              <Label htmlFor="booking-reply-to-email">Reply-To Email Address</Label>
+              <p className="text-xs text-muted-foreground">
+                When contestants click "CLICK HERE TO REPLY", their email app opens with this address as the recipient. This is where responses will be sent.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  id="booking-reply-to-email"
+                  type="email"
+                  value={bookingReplyToEmail}
+                  onChange={(e) => {
+                    setBookingReplyToEmail(e.target.value);
+                    setBookingReplyToEmailChanged(true);
+                  }}
+                  placeholder="bookings@example.com"
+                  data-testid="input-booking-reply-to-email"
+                />
+                <Button
+                  onClick={() => saveBookingReplyToEmailMutation.mutate(bookingReplyToEmail)}
+                  disabled={!bookingReplyToEmailChanged || saveBookingReplyToEmailMutation.isPending}
+                  data-testid="button-save-booking-reply-to-email"
+                >
+                  {saveBookingReplyToEmailMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  Save
+                </Button>
+              </div>
+              {bookingReplyToEmail && (
+                <p className="text-xs text-green-600 mt-1">
+                  Replies will go to: {bookingReplyToEmail}
+                </p>
+              )}
+            </div>
+            
             <div className="space-y-2">
               <Label htmlFor="email-headline">Headline</Label>
               <p className="text-xs text-muted-foreground">The gold title shown below the banner</p>
