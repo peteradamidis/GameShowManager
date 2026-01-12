@@ -4060,7 +4060,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Default email content values - use request values, then saved values, then hardcoded defaults
       const finalEmailSubject = emailSubject || savedAvailSubject || 'Deal or No Deal - Availability Check';
       const finalEmailHeadline = emailHeadline || savedAvailHeadline || 'Availability Check';
-      const finalEmailIntro = emailIntro || savedAvailIntro || "It was great meeting you at your Deal or No Deal audition! We're reaching out to check your availability for upcoming recording dates.";
+      const finalEmailIntro = emailIntro || savedAvailIntro || "Congratulations! Following your successful audition, we'd love to invite you to be part of a Deal or No Deal recording. Please let us know your availability for our upcoming dates.";
       const finalEmailInstructions = emailInstructions || savedAvailInstructions || "Please complete the form as soon as possible so we can allocate recording slots. If you have any questions, please reply to this email.";
       const finalEmailButtonText = emailButtonText || 'Click Here To Respond';
       const finalEmailFooter = emailFooter || savedAvailFooter || 'This is an automated message from the Deal or No Deal production team. Please do not forward this email as it contains a unique response link.';
@@ -4186,13 +4186,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               </p>
               
               <!-- ACTION REQUIRED Notice with Button -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fef3cd; border: 1px solid #d4a937; border-radius: 8px; margin: 0 0 20px 0;">
                 <tr>
                   <td style="padding: 25px; text-align: center;">
-                    <p style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                    <p style="color: #856404; font-size: 22px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
                       ARE YOU AVAILABLE?
                     </p>
-                    <p style="color: #ffffff; font-size: 15px; margin: 0 0 20px 0;">
+                    <p style="color: #664d03; font-size: 15px; margin: 0 0 20px 0;">
                       Please click the button below to complete the availability form for you and your group.
                     </p>
                     <a href="${msFormUrl}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO RESPOND</a>
@@ -7894,7 +7894,7 @@ ${finalEmailFooter}`;
       // Get saved template values with fallback defaults
       const subject = await storage.getSystemConfig('availability_email_subject') || 'Deal or No Deal - Availability Check';
       const headline = await storage.getSystemConfig('availability_email_headline') || 'Availability Check';
-      const intro = await storage.getSystemConfig('availability_email_intro') || "It was great meeting you at your Deal or No Deal audition! We're reaching out to check your availability for upcoming recording dates.";
+      const intro = await storage.getSystemConfig('availability_email_intro') || "Congratulations! Following your successful audition, we'd love to invite you to be part of a Deal or No Deal recording. Please let us know your availability for our upcoming dates.";
       const instructions = await storage.getSystemConfig('availability_email_instructions') || "Please complete the form as soon as possible so we can allocate recording slots. If you have any questions, please reply to this email.";
       const footer = await storage.getSystemConfig('availability_email_footer') || 'This is an automated message from the Deal or No Deal production team. Please do not forward this email as it contains a unique response link.';
       const msFormUrl = await storage.getSystemConfig('availability_form_url') || 'https://forms.office.com/Pages/ResponsePage.aspx?id=ayXN-4f600uQrCY8eucYVbItEwiVLdlEnys-du5SGAxUMFhPMk9JTUFDUThQWDlLRllCOFhaUk5WVS4u';
@@ -7958,13 +7958,13 @@ ${finalEmailFooter}`;
                 </p>
                 
                 <!-- ACTION REQUIRED Notice with Button -->
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fef3cd; border: 1px solid #d4a937; border-radius: 8px; margin: 0 0 20px 0;">
                   <tr>
                     <td style="padding: 25px; text-align: center;">
-                      <p style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                      <p style="color: #856404; font-size: 22px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
                         ARE YOU AVAILABLE?
                       </p>
-                      <p style="color: #ffffff; font-size: 15px; margin: 0 0 20px 0;">
+                      <p style="color: #664d03; font-size: 15px; margin: 0 0 20px 0;">
                         Please click the button below to complete the availability form for you and your group.
                       </p>
                       <a href="${msFormUrl}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO RESPOND</a>
