@@ -4181,20 +4181,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 ${finalEmailIntro}
               </p>
               
-              <!-- Recording Dates Box -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 20px 0;">
-                <tr>
-                  <td style="padding: 20px;">
-                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
-                      Upcoming Recording Dates
-                    </h2>
-                    <ul style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0; padding-left: 20px;">
-                      ${recordDaysHtml}
-                    </ul>
-                  </td>
-                </tr>
-              </table>
-              
               <!-- ACTION REQUIRED Notice with Button -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                 <tr>
@@ -4272,9 +4258,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 IMPORTANT: This is an availability check only. Please complete the form to confirm which recording dates suit you. A booking confirmation will be sent separately.
 
 ${finalEmailIntro}
-
-UPCOMING RECORDING DATES:
-  - ${recordDaysText}
 
 ARE YOU AVAILABLE?
 Please click the link below to complete the availability form for you and your group:
@@ -7969,22 +7952,6 @@ ${finalEmailFooter}`;
                 <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                   ${intro}
                 </p>
-                
-                <!-- Recording Dates Box -->
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 20px 0;">
-                  <tr>
-                    <td style="padding: 20px;">
-                      <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
-                        Upcoming Recording Dates
-                      </h2>
-                      <ul style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0; padding-left: 20px;">
-                        <li style="margin-bottom: 6px;">Wednesday, 15 January 2026 <span style="color: #888888;">(RX01)</span></li>
-                        <li style="margin-bottom: 6px;">Thursday, 16 January 2026 <span style="color: #888888;">(RX02)</span></li>
-                        <li style="margin-bottom: 0;">Friday, 17 January 2026 <span style="color: #888888;">(RX03)</span></li>
-                      </ul>
-                    </td>
-                  </tr>
-                </table>
                 
                 <!-- ACTION REQUIRED Notice with Button -->
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
