@@ -5281,7 +5281,7 @@ ${finalEmailFooter}`;
             const bookingSmtpConfig = await getSmtpConfig();
             const bookingReplyToEmail = bookingSmtpConfig.fromEmail || 'noreply@example.com';
             
-            // Professional HTML email template with configurable content
+            // Professional HTML email template with configurable content - styled like old format
             emailBody = `<!DOCTYPE html>
 <html>
 <head>
@@ -5290,6 +5290,19 @@ ${finalEmailFooter}`;
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    
+    <!-- Urgent Response Request - Top -->
+    <tr>
+      <td style="background-color: #8B0000; padding: 20px 30px; text-align: center;">
+        <p style="color: #ffffff; font-size: 16px; font-weight: bold; margin: 0; line-height: 1.5;">
+          Can you attend? Please respond <span style="color: #D4AF37;">YES</span> or <span style="color: #D4AF37;">NO</span> and confirm the members of your auditioned group who will be attending ASAP.
+        </p>
+        <p style="color: #ffcccc; font-size: 13px; margin: 10px 0 0 0;">
+          Please note: this invitation is for you and the group you auditioned with.
+        </p>
+      </td>
+    </tr>
+    
     <!-- Full-width Banner Image -->
     <tr>
       <td style="padding: 0; line-height: 0;">
@@ -5300,7 +5313,7 @@ ${finalEmailFooter}`;
     <!-- Gold Title Bar -->
     <tr>
       <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
-        <h1 style="color: #D4AF37; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+        <h1 style="color: #D4AF37; font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
           ${emailHeadline}
         </h1>
       </td>
@@ -5316,27 +5329,31 @@ ${finalEmailFooter}`;
                 Hi ${contestant.name.split(' ')[0]},
               </p>
               
-              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                 ${emailIntro.split('\n\n').map((paragraph: string) => 
                   `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
                 ).join('')}
               </div>
               
+              <p style="color: #666666; font-size: 14px; font-style: italic; margin: 0 0 25px 0; padding: 12px; background-color: #f9f9f9; border-radius: 6px;">
+                This invitation does not guarantee a place on the podium, but we wish you the very best of luck and sincerely hope you win some big money!
+              </p>
+              
               <!-- Booking Details Box -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
                 <tr>
                   <td style="padding: 20px;">
-                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
-                      Your Record Day Details
+                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">
+                      We look forward to seeing you on:
                     </h2>
-                    <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
-                      <strong>Date:</strong> ${recordDate}
+                    <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0 0 8px 0;">
+                      <strong style="color: #8B0000;">DATE:</strong> ${recordDate.toUpperCase()}
                     </p>
-                    <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
-                      <strong>Time:</strong> 7:30AM
+                    <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0 0 8px 0;">
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30AM
                     </p>
-                    <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0;">
-                      <strong>Location:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008
+                    <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0;">
+                      <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008
                     </p>
                   </td>
                 </tr>
@@ -5349,43 +5366,69 @@ ${finalEmailFooter}`;
               </div>
               
               <!-- ACTION REQUIRED Notice -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; margin: 0 0 25px 0;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                 <tr>
                   <td style="padding: 20px; text-align: center;">
-                    <p style="color: #856404; font-size: 18px; font-weight: bold; margin: 0 0 10px 0; text-transform: uppercase;">
-                      ACTION REQUIRED
+                    <p style="color: #D4AF37; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
+                      Can you attend? Please respond YES or NO ASAP!
                     </p>
-                    <p style="color: #856404; font-size: 16px; font-weight: bold; margin: 0;">
-                      You MUST click the button below and SEND the email to confirm your attendance.
+                    <p style="color: #ffffff; font-size: 14px; margin: 0;">
+                      Click the button below - your email app will open with a form to complete.
                     </p>
                   </td>
                 </tr>
               </table>
               
               <!-- Single Response Button (mailto) -->
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 15px auto;">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
                 <tr>
                   <td style="padding: 0; text-align: center;">
-                    <a href="mailto:${bookingReplyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${contestant.name} - ${recordDate}`)}&body=${encodeURIComponent(`Hi,\n\nRegarding my Deal or No Deal booking:\n\nName: ${contestant.name}\nDate: ${recordDate}\n\n[ ] I CONFIRM my attendance\n[ ] I CANNOT attend (Reason: )\n[ ] I have a question:\n\nDietary Requirements: [None / Please list any]\n\nThank you!`)}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
+                    <a href="mailto:${bookingReplyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${contestant.name} - ${recordDate}`)}&body=${encodeURIComponent(`Hi,\n\nRegarding my Deal or No Deal booking:\n\nName: ${contestant.name}\nDate: ${recordDate}\n\nCAN YOU ATTEND?\n[ ] YES - I confirm my attendance\n[ ] NO - I cannot attend (Reason: )\n\nGroup members attending with me:\n1. \n2. \n3. \n\n--- REQUIRED INFORMATION (if attending) ---\n\nDo you have any medical conditions?\nAnswer: \n\nDo you have any mobility requirements? (i.e. issues climbing stairs or standing for extended periods)\nAnswer: \n\nEmergency contact name & phone number:\nAnswer: \n\nDietary requirements:\nAnswer: [None / Please list]\n\nThank you!`)}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
                   </td>
                 </tr>
               </table>
               
-              <p style="color: #8B0000; font-size: 14px; text-align: center; margin: 0 0 10px 0; font-weight: bold;">
-                After clicking, your email app will open. Press SEND to confirm.
+              <p style="color: #8B0000; font-size: 14px; text-align: center; margin: 0 0 25px 0; font-weight: bold;">
+                After clicking, your email app will open. Complete the form and press SEND.
               </p>
-              <p style="color: #888888; font-size: 12px; text-align: center; margin: 0 0 20px 0;">
-                Please tick the appropriate box in the email and add any dietary requirements before sending.
-              </p>
+              
+              <!-- Required Info Reminder -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h3 style="color: #333333; font-size: 14px; font-weight: bold; margin: 0 0 12px 0;">
+                      If you will be attending, please provide:
+                    </h3>
+                    <ul style="color: #555555; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
+                      <li>Medical conditions (if any)</li>
+                      <li>Mobility requirements (e.g., issues climbing stairs or standing for extended periods)</li>
+                      <li>Emergency contact name & phone number</li>
+                      <li>Dietary requirements</li>
+                    </ul>
+                  </td>
+                </tr>
+              </table>
               
               ${emailAdditionalInstructions ? `
               <!-- Additional Instructions -->
-              <div style="margin: 25px 0 0 0;">
+              <div style="margin: 0 0 25px 0; padding-top: 20px; border-top: 1px solid #e0e0e0;">
                 ${emailAdditionalInstructions.split('\n\n').map((paragraph: string) => 
                   `<p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
                 ).join('')}
               </div>
               ` : ''}
+              
+              <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">
+                Please ensure you bring your own water bottle.
+              </p>
+              
+              <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
+                We look forward to seeing you on the day!
+              </p>
+              <p style="color: #333333; font-size: 15px; margin: 0;">
+                <strong>Kind Regards,</strong><br/>
+                The Deal Or No Deal Team
+              </p>
             </td>
           </tr>
         </table>
@@ -6866,6 +6909,19 @@ ${finalEmailFooter}`;
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    
+    <!-- Urgent Response Request - Top -->
+    <tr>
+      <td style="background-color: #8B0000; padding: 20px 30px; text-align: center;">
+        <p style="color: #ffffff; font-size: 16px; font-weight: bold; margin: 0; line-height: 1.5;">
+          Can you attend? Please respond <span style="color: #D4AF37;">YES</span> or <span style="color: #D4AF37;">NO</span> and confirm the members of your auditioned group who will be attending ASAP.
+        </p>
+        <p style="color: #ffcccc; font-size: 13px; margin: 10px 0 0 0;">
+          Please note: this invitation is for you and the group you auditioned with.
+        </p>
+      </td>
+    </tr>
+    
     <tr>
       <td style="padding: 0; line-height: 0;">
         <img src="${bannerUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />
@@ -6873,7 +6929,7 @@ ${finalEmailFooter}`;
     </tr>
     <tr>
       <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
-        <h1 style="color: #D4AF37; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+        <h1 style="color: #D4AF37; font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
           ${emailHeadline}
         </h1>
       </td>
@@ -6887,23 +6943,30 @@ ${finalEmailFooter}`;
                 Hi ${testContestantName.split(' ')[0]},
               </p>
               
-              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                 ${emailIntro.split('\n\n').map((paragraph: string) => 
                   `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
                 ).join('')}
               </div>
               
+              <p style="color: #666666; font-size: 14px; font-style: italic; margin: 0 0 25px 0; padding: 12px; background-color: #f9f9f9; border-radius: 6px;">
+                This invitation does not guarantee a place on the podium, but we wish you the very best of luck and sincerely hope you win some big money!
+              </p>
+              
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
                 <tr>
                   <td style="padding: 20px;">
-                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
-                      Your Record Day Details
+                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">
+                      We look forward to seeing you on:
                     </h2>
-                    <p style="color: #333333; font-size: 15px; margin: 0 0 8px 0;">
-                      <strong>Date:</strong> ${testRecordDate}
+                    <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0 0 8px 0;">
+                      <strong style="color: #8B0000;">DATE:</strong> ${testRecordDate.toUpperCase()}
                     </p>
-                    <p style="color: #333333; font-size: 15px; margin: 0;">
-                      <strong>Seat:</strong> ${testSeatLocation}
+                    <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0 0 8px 0;">
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30AM
+                    </p>
+                    <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0;">
+                      <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008
                     </p>
                   </td>
                 </tr>
@@ -6916,50 +6979,76 @@ ${finalEmailFooter}`;
               </div>
               
               <!-- ACTION REQUIRED Notice -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; margin: 0 0 25px 0;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                 <tr>
                   <td style="padding: 20px; text-align: center;">
-                    <p style="color: #856404; font-size: 18px; font-weight: bold; margin: 0 0 10px 0; text-transform: uppercase;">
-                      ACTION REQUIRED
+                    <p style="color: #D4AF37; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
+                      Can you attend? Please respond YES or NO ASAP!
                     </p>
-                    <p style="color: #856404; font-size: 16px; font-weight: bold; margin: 0;">
-                      You MUST click the button below and SEND the email to confirm your attendance.
+                    <p style="color: #ffffff; font-size: 14px; margin: 0;">
+                      Click the button below - your email app will open with a form to complete.
                     </p>
                   </td>
                 </tr>
               </table>
               
               <!-- Single Response Button (mailto) -->
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 15px auto;">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
                 <tr>
                   <td style="padding: 0; text-align: center;">
-                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${testContestantName} - ${testRecordDate}`)}&body=${encodeURIComponent(`Hi,\n\nRegarding my Deal or No Deal booking:\n\nName: ${testContestantName}\nDate: ${testRecordDate}\n\n[ ] I CONFIRM my attendance\n[ ] I CANNOT attend (Reason: )\n[ ] I have a question:\n\nDietary Requirements: [None / Please list any]\n\nThank you!`)}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
+                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${testContestantName} - ${testRecordDate}`)}&body=${encodeURIComponent(`Hi,\n\nRegarding my Deal or No Deal booking:\n\nName: ${testContestantName}\nDate: ${testRecordDate}\n\nCAN YOU ATTEND?\n[ ] YES - I confirm my attendance\n[ ] NO - I cannot attend (Reason: )\n\nGroup members attending with me:\n1. \n2. \n3. \n\n--- REQUIRED INFORMATION (if attending) ---\n\nDo you have any medical conditions?\nAnswer: \n\nDo you have any mobility requirements? (i.e. issues climbing stairs or standing for extended periods)\nAnswer: \n\nEmergency contact name & phone number:\nAnswer: \n\nDietary requirements:\nAnswer: [None / Please list]\n\nThank you!`)}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
                   </td>
                 </tr>
               </table>
               
-              <p style="color: #8B0000; font-size: 14px; text-align: center; margin: 0 0 10px 0; font-weight: bold;">
-                After clicking, your email app will open. Press SEND to confirm.
-              </p>
-              <p style="color: #888888; font-size: 12px; text-align: center; margin: 0 0 20px 0;">
-                Please tick the appropriate box in the email and add any dietary requirements before sending.
+              <p style="color: #8B0000; font-size: 14px; text-align: center; margin: 0 0 25px 0; font-weight: bold;">
+                After clicking, your email app will open. Complete the form and press SEND.
               </p>
               
+              <!-- Required Info Reminder -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h3 style="color: #333333; font-size: 14px; font-weight: bold; margin: 0 0 12px 0;">
+                      If you will be attending, please provide:
+                    </h3>
+                    <ul style="color: #555555; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
+                      <li>Medical conditions (if any)</li>
+                      <li>Mobility requirements (e.g., issues climbing stairs or standing for extended periods)</li>
+                      <li>Emergency contact name & phone number</li>
+                      <li>Dietary requirements</li>
+                    </ul>
+                  </td>
+                </tr>
+              </table>
+              
               ${emailAdditionalInstructions ? `
-              <div style="margin: 25px 0 0 0;">
+              <div style="margin: 0 0 25px 0; padding-top: 20px; border-top: 1px solid #e0e0e0;">
                 ${emailAdditionalInstructions.split('\n\n').map((paragraph: string) => 
                   `<p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
                 ).join('')}
               </div>
               ` : ''}
+              
+              <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">
+                Please ensure you bring your own water bottle.
+              </p>
+              
+              <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
+                We look forward to seeing you on the day!
+              </p>
+              <p style="color: #333333; font-size: 15px; margin: 0;">
+                <strong>Kind Regards,</strong><br/>
+                The Deal Or No Deal Team
+              </p>
             </td>
           </tr>
         </table>
       </td>
     </tr>
     <tr>
-      <td style="padding: 25px 20px; text-align: center;">
-        <p style="color: #D4AF37; font-size: 12px; line-height: 1.5; margin: 0;">
+      <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
+        <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
           ${emailFooter}
         </p>
       </td>
@@ -7646,7 +7735,7 @@ ${finalEmailFooter}`;
       const sampleRx = 'RX01';
       
       // Build single mailto link like actual emails
-      const replyMailto = `mailto:${replyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${sampleName} - ${sampleDate}`)}&body=${encodeURIComponent(`Hi,\n\nRegarding my Deal or No Deal booking:\n\nName: ${sampleName}\nDate: ${sampleDate}\n\n[ ] I CONFIRM my attendance\n[ ] I CANNOT attend (Reason: )\n[ ] I have a question:\n\nDietary Requirements: [None / Please list any]\n\nThank you!`)}`;
+      const replyMailto = `mailto:${replyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${sampleName} - ${sampleDate}`)}&body=${encodeURIComponent(`Hi,\n\nRegarding my Deal or No Deal booking:\n\nName: ${sampleName}\nDate: ${sampleDate}\n\nCAN YOU ATTEND?\n[ ] YES - I confirm my attendance\n[ ] NO - I cannot attend (Reason: )\n\nGroup members attending with me:\n1. \n2. \n3. \n\n--- REQUIRED INFORMATION (if attending) ---\n\nDo you have any medical conditions?\nAnswer: \n\nDo you have any mobility requirements? (i.e. issues climbing stairs or standing for extended periods)\nAnswer: \n\nEmergency contact name & phone number:\nAnswer: \n\nDietary requirements:\nAnswer: [None / Please list]\n\nThank you!`)}`;
       
       const html = `<!DOCTYPE html>
 <html>
@@ -7661,6 +7750,19 @@ ${finalEmailFooter}`;
   </div>
   <div style="max-width: 600px; margin: 0 auto; background-color: #2a0a0a;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+      
+      <!-- Urgent Response Request - Top -->
+      <tr>
+        <td style="background-color: #8B0000; padding: 20px 30px; text-align: center;">
+          <p style="color: #ffffff; font-size: 16px; font-weight: bold; margin: 0; line-height: 1.5;">
+            Can you attend? Please respond <span style="color: #D4AF37;">YES</span> or <span style="color: #D4AF37;">NO</span> and confirm the members of your auditioned group who will be attending ASAP.
+          </p>
+          <p style="color: #ffcccc; font-size: 13px; margin: 10px 0 0 0;">
+            Please note: this invitation is for you and the group you auditioned with.
+          </p>
+        </td>
+      </tr>
+      
       <tr>
         <td style="padding: 0; line-height: 0; background: linear-gradient(135deg, #8B0000 0%, #5c0000 100%); text-align: center; padding: 30px;">
           <h2 style="color: #D4AF37; font-size: 28px; margin: 0; letter-spacing: 2px;">DEAL OR NO DEAL</h2>
@@ -7669,7 +7771,7 @@ ${finalEmailFooter}`;
       </tr>
       <tr>
         <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
-          <h1 style="color: #D4AF37; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          <h1 style="color: #D4AF37; font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
             ${headline}
           </h1>
         </td>
@@ -7682,76 +7784,106 @@ ${finalEmailFooter}`;
                 <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
                   Hi ${sampleName},
                 </p>
-                <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+                <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                   ${intro}
                 </div>
+                
+                <p style="color: #666666; font-size: 14px; font-style: italic; margin: 0 0 25px 0; padding: 12px; background-color: #f9f9f9; border-radius: 6px;">
+                  This invitation does not guarantee a place on the podium, but we wish you the very best of luck and sincerely hope you win some big money!
+                </p>
+                
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
                   <tr>
                     <td style="padding: 20px;">
-                      <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
-                        Your Record Day Details
+                      <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">
+                        We look forward to seeing you on:
                       </h2>
-                      <p style="color: #333333; font-size: 15px; margin: 0 0 8px 0;">
-                        <strong>Date:</strong> ${sampleDate}
+                      <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0 0 8px 0;">
+                        <strong style="color: #8B0000;">DATE:</strong> ${sampleDate.toUpperCase()}
                       </p>
-                      <p style="color: #333333; font-size: 15px; margin: 0 0 8px 0;">
-                        <strong>Recording:</strong> ${sampleRx}
+                      <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0 0 8px 0;">
+                        <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30AM
                       </p>
-                      <p style="color: #333333; font-size: 15px; margin: 0;">
-                        <strong>Location:</strong> Docklands Studios Melbourne
+                      <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0;">
+                        <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008
                       </p>
                     </td>
                   </tr>
                 </table>
+                
                 <div style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
                   ${instructions}
                 </div>
+                
                 <!-- ACTION REQUIRED Notice -->
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; margin: 0 0 25px 0;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                   <tr>
                     <td style="padding: 20px; text-align: center;">
-                      <p style="color: #856404; font-size: 18px; font-weight: bold; margin: 0 0 10px 0; text-transform: uppercase;">
-                        ACTION REQUIRED
+                      <p style="color: #D4AF37; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
+                        Can you attend? Please respond YES or NO ASAP!
                       </p>
-                      <p style="color: #856404; font-size: 16px; font-weight: bold; margin: 0;">
-                        You MUST click the button below and SEND the email to confirm your attendance.
+                      <p style="color: #ffffff; font-size: 14px; margin: 0;">
+                        Click the button below - your email app will open with a form to complete.
                       </p>
                     </td>
                   </tr>
                 </table>
                 
                 <!-- Single Response Button -->
-                <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 15px auto;">
+                <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
                   <tr>
                     <td style="padding: 0; text-align: center;">
-                      <a href="${replyMailto}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
+                      <a href="${replyMailto}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
                     </td>
                   </tr>
                 </table>
                 
-                <p style="color: #8B0000; font-size: 14px; text-align: center; margin: 0 0 10px 0; font-weight: bold;">
-                  After clicking, your email app will open. Press SEND to confirm.
+                <p style="color: #8B0000; font-size: 14px; text-align: center; margin: 0 0 25px 0; font-weight: bold;">
+                  After clicking, your email app will open. Complete the form and press SEND.
                 </p>
-                <p style="color: #888888; font-size: 12px; text-align: center; margin: 0 0 20px 0;">
-                  Please tick the appropriate box in the email and add any dietary requirements before sending.
-                </p>
-                ${additionalInstructions ? `
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; margin-top: 20px;">
+                
+                <!-- Required Info Reminder -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
                   <tr>
                     <td style="padding: 20px;">
-                      <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 0;">${additionalInstructions.replace(/\n/g, '<br/>')}</p>
+                      <h3 style="color: #333333; font-size: 14px; font-weight: bold; margin: 0 0 12px 0;">
+                        If you will be attending, please provide:
+                      </h3>
+                      <ul style="color: #555555; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
+                        <li>Medical conditions (if any)</li>
+                        <li>Mobility requirements (e.g., issues climbing stairs or standing for extended periods)</li>
+                        <li>Emergency contact name & phone number</li>
+                        <li>Dietary requirements</li>
+                      </ul>
                     </td>
                   </tr>
                 </table>
+                
+                ${additionalInstructions ? `
+                <div style="margin: 0 0 25px 0; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                  <p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0;">${additionalInstructions.replace(/\n/g, '<br/>')}</p>
+                </div>
                 ` : ''}
+                
+                <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">
+                  Please ensure you bring your own water bottle.
+                </p>
+                
+                <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
+                  We look forward to seeing you on the day!
+                </p>
+                <p style="color: #333333; font-size: 15px; margin: 0;">
+                  <strong>Kind Regards,</strong><br/>
+                  The Deal Or No Deal Team
+                </p>
               </td>
             </tr>
           </table>
         </td>
       </tr>
       <tr>
-        <td style="padding: 25px 20px; text-align: center;">
-          <p style="color: #D4AF37; font-size: 12px; line-height: 1.5; margin: 0;">
+        <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
+          <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
             ${footer}
           </p>
         </td>
