@@ -68,6 +68,7 @@ export default function SeatingChartPage() {
   const [filterGender, setFilterGender] = useState<string>("all");
   const [filterGroupSize, setFilterGroupSize] = useState<string>("all");
   const [filterAge, setFilterAge] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
   
   // Cancel dialog state
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -311,9 +312,14 @@ export default function SeatingChartPage() {
         }
       }
       
+      // Status filter
+      if (filterStatus !== "all" && c.availabilityStatus !== filterStatus) {
+        return false;
+      }
+      
       return true;
     });
-  }, [availableContestants, contestantSearch, filterRating, filterGender, filterGroupSize, filterAge]);
+  }, [availableContestants, contestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus]);
 
   // Check if record day is locked (RX Day Mode)
   const isLocked = currentRecordDay?.lockedAt != null;
@@ -1150,6 +1156,21 @@ export default function SeatingChartPage() {
                     </Select>
                   </div>
                   
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground text-[10px] font-medium">Status</span>
+                    <Select value={filterStatus} onValueChange={setFilterStatus}>
+                      <SelectTrigger className="h-7 w-[90px] text-xs" data-testid="select-filter-status">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="available">Available</SelectItem>
+                        <SelectItem value="invited">Invited</SelectItem>
+                        <SelectItem value="confirmed">Confirmed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
                   <span className="ml-auto text-muted-foreground self-end pb-1">
                     {filteredContestants.length} found
                   </span>
@@ -1173,13 +1194,25 @@ export default function SeatingChartPage() {
                         'B': 'bg-orange-500 text-white',
                         'C': 'bg-red-500 text-white',
                       };
+                      const statusColors: Record<string, string> = {
+                        'available': 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+                        'invited': 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+                        'confirmed': 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
+                        'assigned': 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
+                      };
+                      const statusLabels: Record<string, string> = {
+                        'available': 'Avail',
+                        'invited': 'Invited',
+                        'confirmed': 'Conf',
+                        'assigned': 'Asgnd',
+                      };
                       const hasGroup = !!contestant.attendingWith;
                       
                       return (
                         <div
                           key={contestant.id}
                           onClick={() => setSelectedContestant(contestant.id)}
-                          className={`grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 p-2 rounded-md cursor-pointer transition-all ${
+                          className={`grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-2 p-2 rounded-md cursor-pointer transition-all ${
                             isSelected 
                               ? 'bg-primary text-primary-foreground shadow-sm' 
                               : 'hover:bg-muted'
@@ -1215,6 +1248,15 @@ export default function SeatingChartPage() {
                               {hasGroup && ` | ${contestant.attendingWith}`}
                             </div>
                           </div>
+                          
+                          {/* Status badge */}
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                            isSelected 
+                              ? 'bg-primary-foreground/20 text-primary-foreground' 
+                              : statusColors[contestant.availabilityStatus] || 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {statusLabels[contestant.availabilityStatus] || contestant.availabilityStatus || '?'}
+                          </span>
                           
                           {/* Rating indicator - moved to right */}
                           <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${
