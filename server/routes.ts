@@ -6388,12 +6388,12 @@ ${finalEmailFooter}`;
           const savedStandbyFooter = await storage.getSystemConfig('standby_email_footer');
           
           // Use saved values with fallback defaults
-          const standbyHeadline = savedStandbyHeadline || "You're on Our Standby List!";
-          const standbyIntro = savedStandbyIntro || "You have been added to our standby list for an upcoming Deal or No Deal recording. This means you may be called to attend if a seat becomes available.";
-          const standbyInstructions = savedStandbyInstructions || "Please confirm your availability as a standby by clicking the button below. We'll be in touch if a spot opens up for you.";
+          const standbyHeadline = savedStandbyHeadline || "You've Been Selected to be a Standby Contestant!";
+          const standbyIntro = savedStandbyIntro || "We enjoyed meeting you at our auditions and would love to invite you to be a STANDBY CONTESTANT on Deal or No Deal. As a standby contestant, you may be selected to join our live studio recording of the show should any positions become available on the day.";
+          const standbyInstructions = savedStandbyInstructions || "If you're selected to participate in studio, you will be required for the full day.\n\nAfter being a Standby Contestant, you are eligible to be FAST-TRACKED into the next available record date to attend a full day in studio. That's double the chances! You must email dond.standby@endemolshine.com.au to be rebooked to return.\n\nPlease find attached important information relating to your attendance at the Deal or No Deal recording. Please read this attachment thoroughly and get in touch ASAP should there be any issues.\n\nYou will receive another email closer to your record date with additional paperwork.";
           const standbyFooterText = savedStandbyFooter || "This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.";
 
-          // Build email content matching booking email style with purple standby theme
+          // Build email content matching booking email style with dark maroon/gold theme
           const subject = `Deal or No Deal - Standby Booking for ${formattedDate}`;
           const htmlBody = `<!DOCTYPE html>
 <html>
@@ -6401,7 +6401,7 @@ ${finalEmailFooter}`;
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a2a;">
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
     <!-- Full-width Banner Image -->
     <tr>
@@ -6410,10 +6410,10 @@ ${finalEmailFooter}`;
       </td>
     </tr>
     
-    <!-- Purple Title Bar for Standby -->
+    <!-- Gold Title Bar -->
     <tr>
-      <td style="background: linear-gradient(180deg, #4a1a6e 0%, #2a0a2a 100%); padding: 25px 30px; text-align: center;">
-        <h1 style="color: #c084fc; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+      <td style="background: linear-gradient(180deg, #4a1a1a 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0; letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
           ${standbyHeadline}
         </h1>
       </td>
@@ -6421,68 +6421,99 @@ ${finalEmailFooter}`;
     
     <!-- Content Card -->
     <tr>
-      <td style="background-color: #2a0a2a; padding: 0 20px 25px 20px;">
+      <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
           <tr>
             <td style="padding: 35px 30px;">
-              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
-                Dear ${standby.contestant.name.split(' ')[0]},
-              </p>
+              <!-- Yellow Warning Notice -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border-radius: 8px; border: 1px solid #ffc107; margin: 0 0 20px 0;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0; line-height: 1.5;">
+                      IMPORTANT: This email is not your ticket. You must follow the instructions below to confirm your attendance. This invitation is for you and the group you auditioned with.
+                    </p>
+                  </td>
+                </tr>
+              </table>
               
               <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
-                ${standbyIntro}
+                Hi ${standby.contestant.name.split(' ')[0]},
               </p>
               
-              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
-                You have been selected as a <strong style="color: #7c3aed;">STANDBY</strong> for the recording on <strong>${formattedDate}</strong>${standby.recordDay.rxNumber ? ` (${standby.recordDay.rxNumber})` : ''}.
-              </p>
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                ${standbyIntro.split('\n\n').map((paragraph: string) => 
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
               
-              <!-- Important Info Box -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-radius: 8px; border-left: 5px solid #7c3aed; margin: 0 0 25px 0;">
+              <!-- Booking Details Box -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
                 <tr>
                   <td style="padding: 20px;">
-                    <h2 style="color: #5b21b6; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
-                      Important Information
+                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">
+                      We look forward to seeing you on:
                     </h2>
-                    <ul style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0; padding-left: 20px;">
-                      <li style="margin-bottom: 6px;">As a standby, you are not guaranteed a seat in the studio audience</li>
-                      <li style="margin-bottom: 6px;">You will only be seated if a spot becomes available on the day</li>
-                      <li style="margin-bottom: 0;">If you are not seated, you will be given a fast-track invitation to another upcoming studio day</li>
+                    <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0 0 8px 0;">
+                      <strong style="color: #8B0000;">DATE:</strong> ${formattedDate.toUpperCase()}
+                    </p>
+                    <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0 0 8px 0;">
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 8:00AM
+                    </p>
+                    <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0;">
+                      <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <div style="color: #444444; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                ${standbyInstructions.split('\n\n').map((paragraph: string) => 
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
+              
+              <!-- ACTION REQUIRED Notice with Button -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
+                <tr>
+                  <td style="padding: 25px; text-align: center;">
+                    <p style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                      CAN YOU ATTEND?
+                    </p>
+                    <p style="color: #ffffff; font-size: 15px; margin: 0 0 20px 0;">
+                      Please RSVP for you and your AUDITIONED group by replying to this email ASAP.
+                    </p>
+                    <a href="mailto:${standbyReplyToEmail}?subject=${encodeURIComponent(`STANDBY RESPONSE - ${standby.contestant.name} - ${formattedDate}`)}&body=${encodeURIComponent(`Hi,\n\nRegarding my Deal or No Deal STANDBY booking:\n\nName: ${standby.contestant.name}\nDate: ${formattedDate}\n\nCAN YOU ATTEND?\n[ ] YES - I confirm my standby attendance\n[ ] NO - I cannot attend (Reason: )\n\nGroup members attending (please provide FULL NAMES):\n1. (Full Name): \n2. (Full Name): \n3. (Full Name): \n\n--- REQUIRED INFORMATION (if attending) ---\n\nDo you have any medical conditions?\nAnswer: \n\nDo you have any mobility requirements? (i.e. issues climbing stairs or standing for a considerable amount of time)\nAnswer: \n\nEmergency contact name & phone number:\nAnswer: \n\nDietary requirements (mark with X):\n[ ] None\n[ ] Vegetarian\n[ ] Vegan\n[ ] Gluten Free\n[ ] Dairy Free\n[ ] Halal\n[ ] Kosher\n[ ] Nut Allergy\n[ ] Other (please specify): \n\nThank you!`)}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Required Info Reminder -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h3 style="color: #333333; font-size: 14px; font-weight: bold; margin: 0 0 12px 0;">
+                      If you will be attending, please provide:
+                    </h3>
+                    <ul style="color: #555555; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
+                      <li>Medical conditions (if any)</li>
+                      <li>Mobility requirements (e.g., issues climbing stairs or standing for a considerable amount of time)</li>
+                      <li>Emergency contact name & phone number</li>
+                      <li>Dietary requirements</li>
                     </ul>
                   </td>
                 </tr>
               </table>
               
-              <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
-                ${standbyInstructions}
+              <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">
+                Please ensure you bring your own water bottle.
               </p>
               
-              <!-- Response Buttons (mailto) -->
-              <p style="color: #555555; font-size: 14px; text-align: center; margin: 0 0 15px 0; font-weight: bold;">
-                Please respond by clicking one of the buttons below:
+              <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
+                We look forward to seeing you on the day!
               </p>
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 15px auto;">
-                <tr>
-                  <td style="padding: 0 5px;">
-                    <a href="mailto:${standbyReplyToEmail}?subject=${encodeURIComponent(`STANDBY CONFIRMED - ${standby.contestant.name} - ${formattedDate}`)}&body=${encodeURIComponent(`Hi,\n\nI CONFIRM my standby booking for Deal or No Deal.\n\nName: ${standby.contestant.name}\nDate: ${formattedDate}\n\nI understand that as a standby I am not guaranteed a seat, and will only be seated if a spot becomes available.\n\nDietary Requirements: [None / Please list any dietary requirements]\n\nThank you!`)}" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(124,58,237,0.3);">✓ CONFIRM STANDBY</a>
-                  </td>
-                  <td style="padding: 0 5px;">
-                    <a href="mailto:${standbyReplyToEmail}?subject=${encodeURIComponent(`STANDBY DECLINED - ${standby.contestant.name} - ${formattedDate}`)}&body=${encodeURIComponent(`Hi,\n\nI am UNABLE to attend as a standby for Deal or No Deal.\n\nName: ${standby.contestant.name}\nDate: ${formattedDate}\n\nReason: [Please provide reason]\n\nThank you!`)}" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">✗ DECLINE</a>
-                  </td>
-                </tr>
-              </table>
-              
-              <!-- Questions/Special Needs Button -->
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
-                <tr>
-                  <td style="padding: 0 5px;">
-                    <a href="mailto:${standbyReplyToEmail}?subject=${encodeURIComponent(`STANDBY QUESTION - ${standby.contestant.name} - ${formattedDate}`)}&body=${encodeURIComponent(`Hi,\n\nI have a question regarding my standby booking for Deal or No Deal.\n\nName: ${standby.contestant.name}\nDate: ${formattedDate}\n\nMy question/special needs:\n[Please describe your question or any special requirements]\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(13,110,253,0.3);">? QUESTIONS / SPECIAL NEEDS</a>
-                  </td>
-                </tr>
-              </table>
-              
-              <p style="color: #888888; font-size: 12px; text-align: center; margin: 0;">
-                Clicking a button will open your email app with a pre-filled message
+              <p style="color: #333333; font-size: 15px; margin: 0;">
+                Kind Regards,<br/>
+                <strong>The Deal Or No Deal Team</strong>
               </p>
             </td>
           </tr>
@@ -6492,8 +6523,8 @@ ${finalEmailFooter}`;
     
     <!-- Footer -->
     <tr>
-      <td style="background-color: #2a0a2a; padding: 15px 30px 30px 30px; text-align: center;">
-        <p style="color: #aa88aa; font-size: 11px; line-height: 1.6; margin: 0;">
+      <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
+        <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
           ${standbyFooterText}
         </p>
       </td>
@@ -7955,15 +7986,22 @@ ${finalEmailFooter}`;
   app.get("/api/email-preview/standby", async (req, res) => {
     try {
       // Get saved template values with fallback defaults
-      const headline = await storage.getSystemConfig('standby_email_headline') || "You're on Our Standby List!";
-      const intro = await storage.getSystemConfig('standby_email_intro') || "You have been added to our standby list for an upcoming Deal or No Deal recording. This means you may be called to attend if a seat becomes available.";
-      const instructions = await storage.getSystemConfig('standby_email_instructions') || "Please confirm your availability as a standby by clicking the button below. We'll be in touch if a spot opens up for you.";
+      const headline = await storage.getSystemConfig('standby_email_headline') || "You've Been Selected to be a Standby Contestant!";
+      const intro = await storage.getSystemConfig('standby_email_intro') || "We enjoyed meeting you at our auditions and would love to invite you to be a STANDBY CONTESTANT on Deal or No Deal. As a standby contestant, you may be selected to join our live studio recording of the show should any positions become available on the day.";
+      const instructions = await storage.getSystemConfig('standby_email_instructions') || "If you're selected to participate in studio, you will be required for the full day.\n\nAfter being a Standby Contestant, you are eligible to be FAST-TRACKED into the next available record date to attend a full day in studio. That's double the chances! You must email dond.standby@endemolshine.com.au to be rebooked to return.\n\nPlease find attached important information relating to your attendance at the Deal or No Deal recording. Please read this attachment thoroughly and get in touch ASAP should there be any issues.\n\nYou will receive another email closer to your record date with additional paperwork.";
       const footer = await storage.getSystemConfig('standby_email_footer') || 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.';
       
+      // Get reply-to email
+      const smtpConfig = await getSmtpConfig();
+      const replyToEmail = smtpConfig.fromEmail || 'noreply@example.com';
+      
       // Sample data for preview
-      const sampleName = 'Sarah';
+      const sampleName = 'Sarah Johnson';
       const sampleDate = 'Wednesday, 15 January 2026';
       const sampleRx = 'RX01';
+      
+      // Build mailto link
+      const replyMailto = `mailto:${replyToEmail}?subject=${encodeURIComponent(`STANDBY RESPONSE - ${sampleName} - ${sampleDate}`)}&body=${encodeURIComponent(`Hi,\n\nRegarding my Deal or No Deal STANDBY booking:\n\nName: ${sampleName}\nDate: ${sampleDate}\n\nCAN YOU ATTEND?\n[ ] YES - I confirm my standby attendance\n[ ] NO - I cannot attend (Reason: )\n\nGroup members attending (please provide FULL NAMES):\n1. (Full Name): \n2. (Full Name): \n3. (Full Name): \n\n--- REQUIRED INFORMATION (if attending) ---\n\nDo you have any medical conditions?\nAnswer: \n\nDo you have any mobility requirements? (i.e. issues climbing stairs or standing for a considerable amount of time)\nAnswer: \n\nEmergency contact name & phone number:\nAnswer: \n\nDietary requirements (mark with X):\n[ ] None\n[ ] Vegetarian\n[ ] Vegan\n[ ] Gluten Free\n[ ] Dairy Free\n[ ] Halal\n[ ] Kosher\n[ ] Nut Allergy\n[ ] Other (please specify): \n\nThank you!`)}`;
       
       const html = `<!DOCTYPE html>
 <html>
@@ -7974,76 +8012,117 @@ ${finalEmailFooter}`;
 </head>
 <body style="margin: 0; padding: 20px; font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5;">
   <div style="text-align: center; margin-bottom: 20px;">
-    <span style="background: #7c3aed; color: white; padding: 8px 16px; border-radius: 4px; font-size: 14px;">LIVE PREVIEW - Using Your Saved Template</span>
+    <span style="background: #8B0000; color: white; padding: 8px 16px; border-radius: 4px; font-size: 14px;">LIVE PREVIEW - Standby Email Template</span>
   </div>
-  <div style="max-width: 600px; margin: 0 auto; background-color: #2a0a2a;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #2a0a0a;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
       <tr>
-        <td style="padding: 0; line-height: 0; background: linear-gradient(135deg, #4a1a6e 0%, #2a0a2a 100%); text-align: center; padding: 30px;">
-          <h2 style="color: #c084fc; font-size: 28px; margin: 0; letter-spacing: 2px;">DEAL OR NO DEAL</h2>
+        <td style="padding: 0; line-height: 0; background: linear-gradient(135deg, #4a1a1a 0%, #2a0a0a 100%); text-align: center; padding: 30px;">
+          <h2 style="color: #D4AF37; font-size: 28px; margin: 0; letter-spacing: 2px;">DEAL OR NO DEAL</h2>
           <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 14px;">BANNER IMAGE APPEARS HERE</p>
         </td>
       </tr>
       <tr>
-        <td style="background: linear-gradient(180deg, #4a1a6e 0%, #2a0a2a 100%); padding: 25px 30px; text-align: center;">
-          <h1 style="color: #c084fc; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+        <td style="background: linear-gradient(180deg, #4a1a1a 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+          <h1 style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0; letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
             ${headline}
           </h1>
         </td>
       </tr>
       <tr>
-        <td style="background-color: #2a0a2a; padding: 0 20px 25px 20px;">
+        <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
             <tr>
               <td style="padding: 35px 30px;">
+                <!-- Yellow Warning Notice -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border-radius: 8px; border: 1px solid #ffc107; margin: 0 0 20px 0;">
+                  <tr>
+                    <td style="padding: 15px;">
+                      <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0; line-height: 1.5;">
+                        IMPORTANT: This email is not your ticket. You must follow the instructions below to confirm your attendance. This invitation is for you and the group you auditioned with.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+                
                 <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
-                  Dear ${sampleName},
+                  Hi ${sampleName.split(' ')[0]},
                 </p>
-                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
-                  ${intro}
-                </p>
-                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
-                  You have been selected as a <strong style="color: #7c3aed;">STANDBY</strong> for the recording on <strong>${sampleDate}</strong> (${sampleRx}).
-                </p>
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-radius: 8px; border-left: 5px solid #7c3aed; margin: 0 0 25px 0;">
+                
+                <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                  ${intro.split('\n\n').map((paragraph: string) => 
+                    `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                  ).join('')}
+                </div>
+                
+                <!-- Booking Details Box -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
                   <tr>
                     <td style="padding: 20px;">
-                      <h2 style="color: #5b21b6; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
-                        Important Information
+                      <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">
+                        We look forward to seeing you on:
                       </h2>
-                      <ul style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0; padding-left: 20px;">
-                        <li style="margin-bottom: 6px;">As a standby, you are not guaranteed a seat in the studio audience</li>
-                        <li style="margin-bottom: 6px;">You will only be seated if a spot becomes available on the day</li>
-                        <li style="margin-bottom: 0;">If you are not seated, you will be given a fast-track invitation to another upcoming studio day</li>
+                      <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0 0 8px 0;">
+                        <strong style="color: #8B0000;">DATE:</strong> ${sampleDate.toUpperCase()}
+                      </p>
+                      <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0 0 8px 0;">
+                        <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 8:00AM
+                      </p>
+                      <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0;">
+                        <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+                
+                <div style="color: #444444; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                  ${instructions.split('\n\n').map((paragraph: string) => 
+                    `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                  ).join('')}
+                </div>
+                
+                <!-- ACTION REQUIRED Notice with Button -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
+                  <tr>
+                    <td style="padding: 25px; text-align: center;">
+                      <p style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                        CAN YOU ATTEND?
+                      </p>
+                      <p style="color: #ffffff; font-size: 15px; margin: 0 0 20px 0;">
+                        Please RSVP for you and your AUDITIONED group by replying to this email ASAP.
+                      </p>
+                      <a href="${replyMailto}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
+                    </td>
+                  </tr>
+                </table>
+                
+                <!-- Required Info Reminder -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <h3 style="color: #333333; font-size: 14px; font-weight: bold; margin: 0 0 12px 0;">
+                        If you will be attending, please provide:
+                      </h3>
+                      <ul style="color: #555555; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
+                        <li>Medical conditions (if any)</li>
+                        <li>Mobility requirements (e.g., issues climbing stairs or standing for a considerable amount of time)</li>
+                        <li>Emergency contact name & phone number</li>
+                        <li>Dietary requirements</li>
                       </ul>
                     </td>
                   </tr>
                 </table>
-                <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
-                  ${instructions}
+                
+                <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">
+                  Please ensure you bring your own water bottle.
                 </p>
-                <p style="color: #555555; font-size: 14px; text-align: center; margin: 0 0 15px 0; font-weight: bold;">
-                  Please respond by clicking one of the buttons below:
+                
+                <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
+                  We look forward to seeing you on the day!
                 </p>
-                <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 15px auto;">
-                  <tr>
-                    <td style="padding: 0 5px;">
-                      <a href="#" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(124,58,237,0.3);">&#10003; CONFIRM STANDBY</a>
-                    </td>
-                    <td style="padding: 0 5px;">
-                      <a href="#" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">&#10007; DECLINE</a>
-                    </td>
-                  </tr>
-                </table>
-                <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
-                  <tr>
-                    <td style="padding: 0 5px;">
-                      <a href="#" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(13,110,253,0.3);">? QUESTIONS / SPECIAL NEEDS</a>
-                    </td>
-                  </tr>
-                </table>
-                <p style="color: #888888; font-size: 12px; text-align: center; margin: 0;">
-                  Clicking a button will open your email app with a pre-filled message
+                <p style="color: #333333; font-size: 15px; margin: 0;">
+                  Kind Regards,<br/>
+                  <strong>The Deal Or No Deal Team</strong>
                 </p>
               </td>
             </tr>
@@ -8051,8 +8130,8 @@ ${finalEmailFooter}`;
         </td>
       </tr>
       <tr>
-        <td style="background-color: #2a0a2a; padding: 15px 30px 30px 30px; text-align: center;">
-          <p style="color: #aa88aa; font-size: 11px; line-height: 1.6; margin: 0;">
+        <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
+          <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
             ${footer}
           </p>
         </td>
