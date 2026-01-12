@@ -5414,8 +5414,8 @@ ${finalEmailFooter}`;
                 We look forward to seeing you on the day!
               </p>
               <p style="color: #333333; font-size: 15px; margin: 0;">
-                <strong>Kind Regards,</strong><br/>
-                The Deal Or No Deal Team
+                Kind Regards,<br/>
+                <strong>The Deal Or No Deal Team</strong>
               </p>
             </td>
           </tr>
@@ -7014,8 +7014,8 @@ ${finalEmailFooter}`;
                 We look forward to seeing you on the day!
               </p>
               <p style="color: #333333; font-size: 15px; margin: 0;">
-                <strong>Kind Regards,</strong><br/>
-                The Deal Or No Deal Team
+                Kind Regards,<br/>
+                <strong>The Deal Or No Deal Team</strong>
               </p>
             </td>
           </tr>
@@ -7840,8 +7840,8 @@ ${finalEmailFooter}`;
                   We look forward to seeing you on the day!
                 </p>
                 <p style="color: #333333; font-size: 15px; margin: 0;">
-                  <strong>Kind Regards,</strong><br/>
-                  The Deal Or No Deal Team
+                  Kind Regards,<br/>
+                  <strong>The Deal Or No Deal Team</strong>
                 </p>
               </td>
             </tr>
