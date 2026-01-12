@@ -1939,8 +1939,8 @@ export default function Contestants() {
               <Link className="h-5 w-5" />
               Link Contestants Together
             </DialogTitle>
-            <DialogDescription className="space-y-2">
-              <p>You are about to manually link these <strong className="text-foreground">{selectedContestants.length} contestants</strong> into a group:</p>
+            <DialogDescription>
+              You are about to manually link these <strong className="text-foreground">{selectedContestants.length} contestants</strong> into a group:
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-60 overflow-y-auto space-y-2 py-2">
@@ -1984,10 +1984,12 @@ export default function Contestants() {
               <Unlink className="h-5 w-5" />
               Unlink Contestant from Group
             </DialogTitle>
-            <DialogDescription>
-              {selectedContestantsForLinking[0] && (
-                <p>Remove <strong className="text-foreground">{selectedContestantsForLinking[0].name}</strong> from their group?</p>
-              )}
+            <DialogDescription asChild>
+              <div>
+                {selectedContestantsForLinking[0] && (
+                  <span>Remove <strong className="text-foreground">{selectedContestantsForLinking[0].name}</strong> from their group?</span>
+                )}
+              </div>
             </DialogDescription>
           </DialogHeader>
           {selectedContestantGroupForUnlink.length > 0 && (

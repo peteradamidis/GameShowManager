@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2026-01-12T14:27:15.853Z",
+  "exportedAt": "2026-01-12T14:31:36.228Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -175,56 +175,7 @@
         "createdAt": "2025-11-27T11:34:23.272Z"
       }
     ],
-    "contestants": [
-      {
-        "id": "test-link-a",
-        "name": "Alice Test",
-        "age": 28,
-        "gender": "Female",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "alice@test.com",
-        "phone": "555-1001",
-        "location": null,
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": null,
-        "auditionRating": null,
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "availableForStandby": false,
-        "createdAt": "2026-01-12T14:26:46.700Z"
-      },
-      {
-        "id": "test-link-b",
-        "name": "Bob Test",
-        "age": 32,
-        "gender": "Male",
-        "groupId": null,
-        "availabilityStatus": "available",
-        "attendingWith": null,
-        "email": "bob@test.com",
-        "phone": "555-1002",
-        "location": null,
-        "postcode": null,
-        "state": null,
-        "medicalInfo": null,
-        "mobilityNotes": null,
-        "criminalRecord": null,
-        "photoUrl": null,
-        "auditionRating": null,
-        "playerType": null,
-        "groupSize": null,
-        "podiumStory": false,
-        "availableForStandby": false,
-        "createdAt": "2026-01-12T14:26:46.803Z"
-      }
-    ],
+    "contestants": [],
     "groups": [
       {
         "id": "f25a6094-c1a5-4eb4-a709-1cc3d9b3ab5e",
@@ -442,7 +393,7 @@
   },
   "counts": {
     "recordDays": 17,
-    "contestants": 2,
+    "contestants": 0,
     "groups": 5,
     "seatAssignments": 0,
     "standbys": 0,
