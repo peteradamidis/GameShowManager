@@ -7046,6 +7046,101 @@ ${finalEmailFooter}`;
   });
 
   // ==========================================
+  // Booking Tracker Endpoints (for Booking Responses page)
+  // ==========================================
+  
+  // Get all seat assignments for booking response tracking
+  // Similar to paperwork endpoint but shows ALL assigned contestants
+  // Can filter by status: "all", "not_sent", "awaiting", "confirmed", "declined"
+  // Also returns counts for stats cards (computed from record-day-filtered but not status-filtered data)
+  app.get("/api/booking-tracker", requireAuth, async (req, res) => {
+    try {
+      const { recordDayId, status } = req.query;
+      
+      // Get all seat assignments
+      const assignments = await storage.getAllSeatAssignments();
+      const contestants = await storage.getContestants();
+      const recordDays = await storage.getRecordDays();
+      
+      // Start with all assignments
+      let recordDayFilteredAssignments = [...assignments];
+      
+      // Filter by record day if specified (for both data and stats)
+      if (recordDayId && typeof recordDayId === 'string' && recordDayId !== 'all') {
+        recordDayFilteredAssignments = recordDayFilteredAssignments.filter((a: SeatAssignment) => a.recordDayId === recordDayId);
+      }
+      
+      // Helper to check if assignment is declined (notes start with [DECLINED])
+      const isDeclined = (a: SeatAssignment) => a.notes?.startsWith('[DECLINED]');
+      
+      // Calculate stats from record-day-filtered data (before status filtering)
+      const stats = {
+        total: recordDayFilteredAssignments.length,
+        notSent: recordDayFilteredAssignments.filter((a: SeatAssignment) => !a.bookingEmailSent && !isDeclined(a)).length,
+        awaiting: recordDayFilteredAssignments.filter((a: SeatAssignment) => 
+          a.bookingEmailSent && !a.confirmedRsvp && !isDeclined(a)
+        ).length,
+        confirmed: recordDayFilteredAssignments.filter((a: SeatAssignment) => 
+          a.confirmedRsvp && !isDeclined(a)
+        ).length,
+        declined: recordDayFilteredAssignments.filter((a: SeatAssignment) => isDeclined(a)).length,
+      };
+      
+      // Now filter by status for the data results
+      let statusFilteredAssignments = [...recordDayFilteredAssignments];
+      if (status && typeof status === 'string' && status !== 'all') {
+        if (status === 'not_sent') {
+          // Booking email not sent (and not declined)
+          statusFilteredAssignments = statusFilteredAssignments.filter((a: SeatAssignment) => 
+            !a.bookingEmailSent && !isDeclined(a)
+          );
+        } else if (status === 'awaiting') {
+          // Email sent but not confirmed (and not declined)
+          statusFilteredAssignments = statusFilteredAssignments.filter((a: SeatAssignment) => 
+            a.bookingEmailSent && !a.confirmedRsvp && !isDeclined(a)
+          );
+        } else if (status === 'confirmed') {
+          // Confirmed attendance (and not declined)
+          statusFilteredAssignments = statusFilteredAssignments.filter((a: SeatAssignment) => 
+            a.confirmedRsvp && !isDeclined(a)
+          );
+        } else if (status === 'declined') {
+          // Declined (moved to reschedule)
+          statusFilteredAssignments = statusFilteredAssignments.filter((a: SeatAssignment) => isDeclined(a));
+        }
+      }
+      
+      // Enrich with contestant and record day data
+      const enrichedAssignments = statusFilteredAssignments.map((a: SeatAssignment) => {
+        const contestant = contestants.find(c => c.id === a.contestantId);
+        const recordDay = recordDays.find(rd => rd.id === a.recordDayId);
+        return {
+          ...a,
+          contestant: contestant || null,
+          recordDay: recordDay || null,
+        };
+      });
+      
+      // Sort by record day date, then block, then seat
+      enrichedAssignments.sort((a: any, b: any) => {
+        const dateA = a.recordDay?.date ? new Date(a.recordDay.date).getTime() : 0;
+        const dateB = b.recordDay?.date ? new Date(b.recordDay.date).getTime() : 0;
+        if (dateA !== dateB) return dateA - dateB;
+        if (a.blockNumber !== b.blockNumber) return a.blockNumber - b.blockNumber;
+        return (a.seatLabel || '').localeCompare(b.seatLabel || '');
+      });
+      
+      res.json({
+        assignments: enrichedAssignments,
+        stats,
+      });
+    } catch (error: any) {
+      console.error("Error getting booking tracker data:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==========================================
   // Paperwork Tracking Endpoints
   // ==========================================
 

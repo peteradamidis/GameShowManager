@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -17,62 +18,39 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { format } from "date-fns";
 import { 
-  Calendar, 
+  Mail, 
+  Send, 
   CheckCircle, 
   XCircle, 
-  Clock, 
-  Mail,
-  MailCheck,
   RefreshCw,
-  ArrowRightLeft,
   Search,
-  Filter,
   Users,
-  ExternalLink
+  Calendar,
+  Clock,
+  MailCheck,
+  ArrowRightLeft,
+  UserCheck,
+  MailPlus
 } from "lucide-react";
-import { format } from "date-fns";
+import type { RecordDay, Contestant, SeatAssignment } from "@shared/schema";
 
-interface RecordDay {
-  id: string;
-  date: string;
-  rxNumber?: string;
-  totalSeats: number;
-  status: string;
+interface BookingAssignment extends SeatAssignment {
+  contestant: Contestant | null;
+  recordDay: RecordDay | null;
 }
 
-interface SeatAssignment {
-  id: string;
-  recordDayId: string;
-  contestantId: string;
-  blockNumber: number;
-  seatLabel: string;
-  bookingEmailSent: string | null;
-  confirmedRsvp: string | null;
-  notes: string | null;
-  contestant: {
-    id: string;
-    name: string;
-    email?: string;
-    phone?: string;
-    location?: string;
-    photoUrl?: string;
+interface BookingTrackerResponse {
+  assignments: BookingAssignment[];
+  stats: {
+    total: number;
+    notSent: number;
+    awaiting: number;
+    confirmed: number;
+    declined: number;
   };
 }
 
@@ -80,28 +58,87 @@ type StatusFilter = "all" | "not_sent" | "awaiting" | "confirmed" | "declined";
 
 export default function BookingResponses() {
   const { toast } = useToast();
-  const [selectedRecordDay, setSelectedRecordDay] = useState<string | null>(null);
+  const [selectedRecordDay, setSelectedRecordDay] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchName, setSearchName] = useState("");
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
+  
+  // Clear selection when filters change to prevent hidden selections
+  const handleRecordDayChange = (value: string) => {
+    setSelectedRecordDay(value);
+    setSelectedAssignments(new Set());
+  };
+  
+  const handleStatusFilterChange = (value: StatusFilter) => {
+    setStatusFilter(value);
+    setSelectedAssignments(new Set());
+  };
+  
+  const handleSearchChange = (value: string) => {
+    setSearchName(value);
+    // Only clear selection if search becomes more restrictive
+    if (value.length > searchName.length) {
+      setSelectedAssignments(new Set());
+    }
+  };
   
   // Dialog states
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
-  const [declineAssignment, setDeclineAssignment] = useState<SeatAssignment | null>(null);
+  const [declineAssignment, setDeclineAssignment] = useState<BookingAssignment | null>(null);
   const [declineReason, setDeclineReason] = useState("");
   
   const [changeDateDialogOpen, setChangeDateDialogOpen] = useState(false);
-  const [changeDateAssignment, setChangeDateAssignment] = useState<SeatAssignment | null>(null);
+  const [changeDateAssignment, setChangeDateAssignment] = useState<BookingAssignment | null>(null);
   const [newRecordDayId, setNewRecordDayId] = useState<string>("");
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
     queryKey: ["/api/record-days"],
   });
 
-  const { data: assignments = [], isLoading } = useQuery<SeatAssignment[]>({
-    queryKey: ["/api/seat-assignments/record-day", selectedRecordDay],
-    enabled: !!selectedRecordDay,
+  // Sort record days by date
+  const sortedRecordDays = [...recordDays].sort((a, b) => 
+    new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+
+  // Build query URL with filters
+  const buildTrackerUrl = () => {
+    const params = new URLSearchParams();
+    if (selectedRecordDay !== "all") {
+      params.append("recordDayId", selectedRecordDay);
+    }
+    if (statusFilter !== "all") {
+      params.append("status", statusFilter);
+    }
+    const queryString = params.toString();
+    return queryString ? `/api/booking-tracker?${queryString}` : "/api/booking-tracker";
+  };
+
+  const trackerUrl = buildTrackerUrl();
+    
+  const { data: trackerResponse, isLoading: loadingTracker, refetch: refetchTracker } = useQuery<BookingTrackerResponse>({
+    queryKey: ["/api/booking-tracker", selectedRecordDay, statusFilter],
+    queryFn: async () => {
+      const response = await fetch(trackerUrl, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch booking tracker data');
+      return response.json();
+    },
   });
+  
+  const trackerData = trackerResponse?.assignments || [];
+  const stats = trackerResponse?.stats || { total: 0, notSent: 0, awaiting: 0, confirmed: 0, declined: 0 };
+
+  const invalidateBookingQueries = async () => {
+    await queryClient.invalidateQueries({
+      predicate: (query) => {
+        const key = query.queryKey[0];
+        return typeof key === 'string' && (
+          key.startsWith('/api/booking-tracker') || 
+          key.startsWith('/api/seat-assignments') ||
+          key.startsWith('/api/paperwork')
+        );
+      },
+    });
+  };
 
   // Mutation for confirming a booking
   const confirmMutation = useMutation({
@@ -112,7 +149,7 @@ export default function BookingResponses() {
     },
     onSuccess: () => {
       toast({ title: "Booking confirmed" });
-      queryClient.invalidateQueries({ queryKey: ["/api/seat-assignments"] });
+      invalidateBookingQueries();
     },
     onError: (error: any) => {
       toast({ 
@@ -135,7 +172,7 @@ export default function BookingResponses() {
       setDeclineDialogOpen(false);
       setDeclineAssignment(null);
       setDeclineReason("");
-      queryClient.invalidateQueries({ queryKey: ["/api/seat-assignments"] });
+      invalidateBookingQueries();
       queryClient.invalidateQueries({ queryKey: ["/api/canceled-assignments"] });
     },
     onError: (error: any) => {
@@ -159,7 +196,7 @@ export default function BookingResponses() {
       setChangeDateDialogOpen(false);
       setChangeDateAssignment(null);
       setNewRecordDayId("");
-      queryClient.invalidateQueries({ queryKey: ["/api/seat-assignments"] });
+      invalidateBookingQueries();
     },
     onError: (error: any) => {
       toast({ 
@@ -183,7 +220,7 @@ export default function BookingResponses() {
     onSuccess: (_, variables) => {
       toast({ title: `${variables.length} bookings confirmed` });
       setSelectedAssignments(new Set());
-      queryClient.invalidateQueries({ queryKey: ["/api/seat-assignments"] });
+      invalidateBookingQueries();
     },
     onError: (error: any) => {
       toast({ 
@@ -194,80 +231,55 @@ export default function BookingResponses() {
     },
   });
 
-  const getStatus = (assignment: SeatAssignment): "not_sent" | "awaiting" | "confirmed" | "declined" => {
-    if (assignment.confirmedRsvp) {
-      // Check if it was a decline (stored in notes with specific pattern)
-      if (assignment.notes?.startsWith("[DECLINED]")) {
-        return "declined";
-      }
-      return "confirmed";
-    }
-    if (assignment.bookingEmailSent) {
-      return "awaiting";
-    }
-    return "not_sent";
-  };
+  // Use stats from API (computed from record-day-filtered but not status-filtered data)
+  const totalCount = stats.total;
+  const notSentCount = stats.notSent;
+  const awaitingCount = stats.awaiting;
+  const confirmedCount = stats.confirmed;
+  const declinedCount = stats.declined;
+  
+  // Helper to check if assignment is declined
+  const isDeclined = (a: BookingAssignment) => a.notes?.startsWith('[DECLINED]');
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "confirmed":
-        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-0"><CheckCircle className="h-3 w-3 mr-1" />Confirmed</Badge>;
-      case "declined":
-        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-0"><XCircle className="h-3 w-3 mr-1" />Declined</Badge>;
-      case "awaiting":
-        return <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-0"><Clock className="h-3 w-3 mr-1" />Awaiting Reply</Badge>;
-      default:
-        return <Badge variant="outline" className="text-muted-foreground"><Mail className="h-3 w-3 mr-1" />Not Sent</Badge>;
-    }
-  };
+  // Filter by search
+  const filteredData = trackerData.filter((item) => {
+    if (!searchName) return true;
+    const search = searchName.toLowerCase();
+    return (
+      item.contestant?.name?.toLowerCase().includes(search) ||
+      item.contestant?.email?.toLowerCase().includes(search)
+    );
+  });
 
-  const counts = {
-    all: assignments.length,
-    not_sent: assignments.filter(a => !a.bookingEmailSent).length,
-    awaiting: assignments.filter(a => a.bookingEmailSent && !a.confirmedRsvp).length,
-    confirmed: assignments.filter(a => a.confirmedRsvp && !a.notes?.startsWith("[DECLINED]")).length,
-    declined: assignments.filter(a => a.notes?.startsWith("[DECLINED]")).length,
-  };
+  // Selection helpers
+  const selectedItems = filteredData.filter(item => selectedAssignments.has(item.id));
+  const selectedPendingConfirmation = selectedItems.filter(item => 
+    !item.confirmedRsvp && !isDeclined(item)
+  );
 
-  const filteredAssignments = assignments
-    .filter(a => {
-      if (statusFilter === "all") return true;
-      return getStatus(a) === statusFilter;
-    })
-    .filter(a => {
-      if (!searchQuery) return true;
-      const search = searchQuery.toLowerCase();
-      return (
-        a.contestant.name.toLowerCase().includes(search) ||
-        a.contestant.email?.toLowerCase().includes(search) ||
-        a.seatLabel.toLowerCase().includes(search)
-      );
-    })
-    .sort((a, b) => a.blockNumber - b.blockNumber || a.seatLabel.localeCompare(b.seatLabel));
-
-  const toggleSelectAll = () => {
-    if (selectedAssignments.size === filteredAssignments.length) {
+  const handleSelectAll = (checked: boolean | 'indeterminate') => {
+    if (checked === true) {
+      setSelectedAssignments(new Set(filteredData.map(item => item.id)));
+    } else {
       setSelectedAssignments(new Set());
-    } else {
-      setSelectedAssignments(new Set(filteredAssignments.map(a => a.id)));
     }
   };
 
-  const toggleSelectAssignment = (id: string) => {
+  const handleSelectItem = (id: string, checked: boolean | 'indeterminate') => {
     const newSelected = new Set(selectedAssignments);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
+    if (checked === true) {
       newSelected.add(id);
+    } else {
+      newSelected.delete(id);
     }
     setSelectedAssignments(newSelected);
   };
 
-  const handleConfirm = (assignment: SeatAssignment) => {
+  const handleConfirm = (assignment: BookingAssignment) => {
     confirmMutation.mutate(assignment.id);
   };
 
-  const handleDeclineClick = (assignment: SeatAssignment) => {
+  const handleDeclineClick = (assignment: BookingAssignment) => {
     setDeclineAssignment(assignment);
     setDeclineReason("");
     setDeclineDialogOpen(true);
@@ -281,7 +293,7 @@ export default function BookingResponses() {
     });
   };
 
-  const handleChangeDateClick = (assignment: SeatAssignment) => {
+  const handleChangeDateClick = (assignment: BookingAssignment) => {
     setChangeDateAssignment(assignment);
     setNewRecordDayId("");
     setChangeDateDialogOpen(true);
@@ -296,237 +308,350 @@ export default function BookingResponses() {
   };
 
   const handleBulkConfirm = () => {
-    const ids = Array.from(selectedAssignments);
-    if (ids.length === 0) return;
+    const ids = selectedPendingConfirmation.map(item => item.id);
+    if (ids.length === 0) {
+      toast({ title: "No pending confirmations selected", description: "Select contestants who haven't been confirmed yet", variant: "destructive" });
+      return;
+    }
     bulkConfirmMutation.mutate(ids);
   };
 
-  const selectedRecordDayData = recordDays.find(rd => rd.id === selectedRecordDay);
+  const getStatusBadge = (assignment: BookingAssignment) => {
+    // Check for declined first (takes priority)
+    if (isDeclined(assignment)) {
+      return (
+        <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-0">
+          <XCircle className="h-3 w-3 mr-1" />
+          Declined
+        </Badge>
+      );
+    }
+    if (assignment.confirmedRsvp) {
+      return (
+        <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-0">
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Confirmed
+        </Badge>
+      );
+    }
+    if (assignment.bookingEmailSent) {
+      return (
+        <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-0">
+          <Clock className="h-3 w-3 mr-1" />
+          Awaiting Reply
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="text-muted-foreground">
+        <Mail className="h-3 w-3 mr-1" />
+        Not Sent
+      </Badge>
+    );
+  };
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col">
-      <div className="flex items-center justify-between pb-4 border-b">
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold" data-testid="page-title">Booking Responses</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Mail className="h-8 w-8 text-blue-600" />
+            Booking Responses
+          </h1>
+          <p className="text-muted-foreground mt-1">
             Track and manage contestant booking confirmations
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Calendar className="h-5 w-5 text-muted-foreground" />
-          <Select
-            value={selectedRecordDay || ""}
-            onValueChange={(value) => {
-              setSelectedRecordDay(value || null);
-              setSelectedAssignments(new Set());
-            }}
-          >
-            <SelectTrigger className="w-[280px]" data-testid="select-record-day">
-              <SelectValue placeholder="Select record day..." />
+        <Button 
+          variant="outline" 
+          onClick={() => refetchTracker()}
+          data-testid="button-refresh-tracker"
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
+      </div>
+
+      {/* Filters Row */}
+      <div className="flex flex-wrap gap-4 items-center">
+        <div className="flex items-center gap-2">
+          <Label htmlFor="record-day-filter">Record Day:</Label>
+          <Select value={selectedRecordDay} onValueChange={handleRecordDayChange}>
+            <SelectTrigger className="w-[200px]" data-testid="select-record-day">
+              <SelectValue placeholder="All Record Days" />
             </SelectTrigger>
             <SelectContent>
-              {recordDays.map((rd) => (
+              <SelectItem value="all">All Record Days</SelectItem>
+              {sortedRecordDays.map((rd) => (
                 <SelectItem key={rd.id} value={rd.id}>
-                  {rd.rxNumber ? `${rd.rxNumber} - ` : ""}{format(new Date(rd.date), "EEE, MMM d, yyyy")}
+                  {format(new Date(rd.date), "MMM d, yyyy")} {rd.rxNumber ? `- ${rd.rxNumber}` : ""}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {selectedRecordDay && (
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={() => {
-                queryClient.invalidateQueries({ queryKey: ["/api/seat-assignments/record-day", selectedRecordDay] });
-              }}
-              data-testid="button-refresh"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Label htmlFor="status-filter">Status:</Label>
+          <Select value={statusFilter} onValueChange={(v) => handleStatusFilterChange(v as StatusFilter)}>
+            <SelectTrigger className="w-[160px]" data-testid="select-status-filter">
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Assigned</SelectItem>
+              <SelectItem value="not_sent">Not Sent</SelectItem>
+              <SelectItem value="awaiting">Awaiting Reply</SelectItem>
+              <SelectItem value="confirmed">Confirmed</SelectItem>
+              <SelectItem value="declined">Declined</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name..."
+            value={searchName}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="w-[200px]"
+            data-testid="input-search-name"
+          />
         </div>
       </div>
 
-      {!selectedRecordDay ? (
-        <div className="flex-1 flex items-center justify-center text-muted-foreground">
-          <div className="text-center">
-            <Mail className="h-16 w-16 mx-auto mb-4 opacity-50" />
-            <p className="text-lg">Select a record day to view bookings</p>
-          </div>
-        </div>
-      ) : isLoading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : assignments.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center text-muted-foreground">
-          <div className="text-center">
-            <Users className="h-16 w-16 mx-auto mb-4 opacity-50" />
-            <p className="text-lg">No contestants assigned to this day</p>
-            <p className="text-sm">Assign contestants from the Seating Chart</p>
-          </div>
-        </div>
-      ) : (
-        <div className="flex-1 flex flex-col overflow-hidden mt-4">
-          {/* Filters and Actions Bar */}
-          <div className="flex items-center justify-between gap-4 mb-4">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge 
-                variant={statusFilter === "all" ? "default" : "outline"} 
-                className="cursor-pointer"
-                onClick={() => setStatusFilter("all")}
-                data-testid="filter-all"
-              >
-                All ({counts.all})
-              </Badge>
-              <Badge 
-                variant={statusFilter === "not_sent" ? "default" : "outline"} 
-                className="cursor-pointer"
-                onClick={() => setStatusFilter("not_sent")}
-                data-testid="filter-not-sent"
-              >
-                <Mail className="h-3 w-3 mr-1" />
-                Not Sent ({counts.not_sent})
-              </Badge>
-              <Badge 
-                variant={statusFilter === "awaiting" ? "default" : "outline"} 
-                className="cursor-pointer"
-                onClick={() => setStatusFilter("awaiting")}
-                data-testid="filter-awaiting"
-              >
-                <Clock className="h-3 w-3 mr-1" />
-                Awaiting ({counts.awaiting})
-              </Badge>
-              <Badge 
-                variant={statusFilter === "confirmed" ? "default" : "outline"} 
-                className="cursor-pointer"
-                onClick={() => setStatusFilter("confirmed")}
-                data-testid="filter-confirmed"
-              >
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Confirmed ({counts.confirmed})
-              </Badge>
-              <Badge 
-                variant={statusFilter === "declined" ? "default" : "outline"} 
-                className="cursor-pointer"
-                onClick={() => setStatusFilter("declined")}
-                data-testid="filter-declined"
-              >
-                <XCircle className="h-3 w-3 mr-1" />
-                Declined ({counts.declined})
-              </Badge>
-            </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <Card className="border-blue-200 dark:border-blue-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Users className="h-4 w-4 text-blue-500" />
+              Total Assigned
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-blue-600" data-testid="text-total-count">
+              {totalCount}
+            </p>
+          </CardContent>
+        </Card>
 
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search contestants..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 w-[200px]"
-                  data-testid="input-search"
-                />
-              </div>
-              {selectedAssignments.size > 0 && (
-                <Button
-                  onClick={handleBulkConfirm}
-                  disabled={bulkConfirmMutation.isPending}
-                  data-testid="button-bulk-confirm"
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Confirm Selected ({selectedAssignments.size})
-                </Button>
+        <Card className="border-gray-200 dark:border-gray-700">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <MailPlus className="h-4 w-4 text-gray-500" />
+              Not Sent
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-gray-600" data-testid="text-not-sent-count">
+              {notSentCount}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-amber-200 dark:border-amber-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Clock className="h-4 w-4 text-amber-500" />
+              Awaiting Reply
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-amber-600" data-testid="text-awaiting-count">
+              {awaitingCount}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-green-200 dark:border-green-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <UserCheck className="h-4 w-4 text-green-500" />
+              Confirmed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-green-600" data-testid="text-confirmed-count">
+              {confirmedCount}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-red-200 dark:border-red-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <XCircle className="h-4 w-4 text-red-500" />
+              Declined
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-red-600" data-testid="text-declined-count">
+              {declinedCount}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Bulk Actions */}
+      {selectedAssignments.size > 0 && (
+        <Card className="border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950">
+          <CardContent className="py-3 flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Users className="h-5 w-5 text-blue-600" />
+              <span className="font-medium">{selectedAssignments.size} contestants selected</span>
+              {selectedPendingConfirmation.length < selectedAssignments.size && (
+                <span className="text-muted-foreground">
+                  ({selectedPendingConfirmation.length} pending confirmation)
+                </span>
               )}
             </div>
-          </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleBulkConfirm}
+                disabled={bulkConfirmMutation.isPending || selectedPendingConfirmation.length === 0}
+                data-testid="button-bulk-confirm"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Confirm Selected ({selectedPendingConfirmation.length})
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setSelectedAssignments(new Set())}
+                data-testid="button-clear-selection"
+              >
+                Clear Selection
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-          {/* Table */}
-          <ScrollArea className="flex-1 border rounded-lg">
+      {/* Main Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Assigned Contestants ({filteredData.length})
+          </CardTitle>
+          <CardDescription>
+            All contestants assigned to record days with booking status
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingTracker ? (
+            <div className="flex items-center justify-center py-8">
+              <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : filteredData.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Mail className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p>No assigned contestants found</p>
+              <p className="text-sm">Assign contestants from the Seating Chart</p>
+            </div>
+          ) : (
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-blue-100 dark:bg-blue-900/20">
                   <TableHead className="w-12">
                     <Checkbox
-                      checked={selectedAssignments.size === filteredAssignments.length && filteredAssignments.length > 0}
-                      onCheckedChange={toggleSelectAll}
+                      checked={selectedAssignments.size === filteredData.length && filteredData.length > 0}
+                      onCheckedChange={handleSelectAll}
                       data-testid="checkbox-select-all"
                     />
                   </TableHead>
-                  <TableHead>Contestant</TableHead>
-                  <TableHead className="w-24">Block</TableHead>
-                  <TableHead className="w-24">Seat</TableHead>
-                  <TableHead className="w-36">Email Status</TableHead>
-                  <TableHead className="w-40">Response Status</TableHead>
-                  <TableHead className="w-64">Actions</TableHead>
+                  <TableHead className="font-semibold">Name</TableHead>
+                  <TableHead className="font-semibold">Record Day</TableHead>
+                  <TableHead className="font-semibold">Seat</TableHead>
+                  <TableHead className="font-semibold">Email</TableHead>
+                  <TableHead className="font-semibold text-center">Email Sent</TableHead>
+                  <TableHead className="font-semibold text-center">Status</TableHead>
+                  <TableHead className="font-semibold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAssignments.map((assignment) => {
-                  const status = getStatus(assignment);
-                  const isSelected = selectedAssignments.has(assignment.id);
-
+                {filteredData.map((item) => {
+                  const isSelected = selectedAssignments.has(item.id);
+                  const isConfirmed = !!item.confirmedRsvp;
+                  
                   return (
                     <TableRow 
-                      key={assignment.id}
-                      className={isSelected ? "bg-accent/50" : ""}
-                      data-testid={`row-assignment-${assignment.id}`}
+                      key={item.id}
+                      className={isSelected ? "bg-blue-50 dark:bg-blue-900/10" : ""}
+                      data-testid={`row-assignment-${item.id}`}
                     >
                       <TableCell>
                         <Checkbox
                           checked={isSelected}
-                          onCheckedChange={() => toggleSelectAssignment(assignment.id)}
-                          data-testid={`checkbox-${assignment.id}`}
+                          onCheckedChange={(checked) => handleSelectItem(item.id, checked)}
+                          data-testid={`checkbox-${item.id}`}
                         />
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
-                            {assignment.contestant.photoUrl && (
-                              <AvatarImage src={assignment.contestant.photoUrl} alt={assignment.contestant.name} />
+                            {item.contestant?.photoUrl && (
+                              <AvatarImage src={item.contestant.photoUrl} alt={item.contestant?.name || ''} />
                             )}
                             <AvatarFallback className="text-xs">
-                              {assignment.contestant.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                              {(item.contestant?.name || '?').split(' ').map(n => n[0]).join('').slice(0, 2)}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <div className="font-medium">{assignment.contestant.name}</div>
-                            {assignment.contestant.email && (
-                              <div className="text-xs text-muted-foreground">{assignment.contestant.email}</div>
-                            )}
-                          </div>
+                          <span className="font-medium">{item.contestant?.name || 'Unknown'}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center">{assignment.blockNumber}</TableCell>
-                      <TableCell className="text-center font-medium">{assignment.seatLabel}</TableCell>
                       <TableCell>
-                        {assignment.bookingEmailSent ? (
-                          <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <span>
+                            {item.recordDay?.date 
+                              ? format(new Date(item.recordDay.date), "MMM d, yyyy") 
+                              : "Unknown"}
+                          </span>
+                          {item.recordDay?.rxNumber && (
+                            <Badge variant="outline" className="ml-1 text-xs">
+                              {item.recordDay.rxNumber}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          Block {item.blockNumber} - {item.seatLabel}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground">
+                          {item.contestant?.email || "No email"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {item.bookingEmailSent ? (
+                          <div className="flex items-center justify-center gap-1 text-green-600 dark:text-green-400">
                             <MailCheck className="h-4 w-4" />
                             <span className="text-xs">
-                              {format(new Date(assignment.bookingEmailSent), "MMM d")}
+                              {format(new Date(item.bookingEmailSent), "MMM d")}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground text-sm">Not sent</span>
+                          <span className="text-muted-foreground text-sm">-</span>
                         )}
                       </TableCell>
-                      <TableCell>
-                        {getStatusBadge(status)}
+                      <TableCell className="text-center">
+                        {getStatusBadge(item)}
                       </TableCell>
                       <TableCell>
-                        {status === "confirmed" || status === "declined" ? (
-                          <span className="text-sm text-muted-foreground">
-                            {status === "confirmed" ? "Confirmed" : "Moved to reschedule"}
-                          </span>
+                        {isDeclined(item) ? (
+                          <span className="text-sm text-red-600 dark:text-red-400">Moved to reschedule</span>
+                        ) : isConfirmed ? (
+                          <span className="text-sm text-muted-foreground">Confirmed</span>
                         ) : (
                           <div className="flex items-center gap-2">
                             <Button
                               size="sm"
                               variant="default"
-                              onClick={() => handleConfirm(assignment)}
+                              onClick={() => handleConfirm(item)}
                               disabled={confirmMutation.isPending}
-                              data-testid={`button-confirm-${assignment.id}`}
+                              data-testid={`button-confirm-${item.id}`}
                             >
                               <CheckCircle className="h-3 w-3 mr-1" />
                               Confirm
@@ -534,8 +659,8 @@ export default function BookingResponses() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleDeclineClick(assignment)}
-                              data-testid={`button-decline-${assignment.id}`}
+                              onClick={() => handleDeclineClick(item)}
+                              data-testid={`button-decline-${item.id}`}
                             >
                               <XCircle className="h-3 w-3 mr-1" />
                               Decline
@@ -543,11 +668,11 @@ export default function BookingResponses() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleChangeDateClick(assignment)}
-                              data-testid={`button-change-date-${assignment.id}`}
+                              onClick={() => handleChangeDateClick(item)}
+                              data-testid={`button-change-date-${item.id}`}
                             >
                               <ArrowRightLeft className="h-3 w-3 mr-1" />
-                              Change Date
+                              Move
                             </Button>
                           </div>
                         )}
@@ -557,26 +682,9 @@ export default function BookingResponses() {
                 })}
               </TableBody>
             </Table>
-          </ScrollArea>
-
-          {/* Summary Bar */}
-          <div className="mt-4 p-3 bg-muted/50 rounded-lg flex items-center justify-between">
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span><strong>{counts.confirmed}</strong> confirmed</span>
-              <span><strong>{counts.awaiting}</strong> awaiting reply</span>
-              <span><strong>{counts.not_sent}</strong> not sent</span>
-              <span><strong>{counts.declined}</strong> declined</span>
-            </div>
-            {selectedRecordDayData && (
-              <div className="text-sm">
-                <strong>{selectedRecordDayData.rxNumber || format(new Date(selectedRecordDayData.date), "MMM d, yyyy")}</strong>
-                {" - "}
-                <span className="text-muted-foreground">{assignments.length} contestants assigned</span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* Decline Dialog */}
       <Dialog open={declineDialogOpen} onOpenChange={setDeclineDialogOpen}>
@@ -586,7 +694,7 @@ export default function BookingResponses() {
             <DialogDescription>
               {declineAssignment && (
                 <>
-                  Mark <strong>{declineAssignment.contestant.name}</strong>'s booking as declined.
+                  Mark <strong>{declineAssignment.contestant?.name}</strong>'s booking as declined.
                   They will be moved to the reschedule list.
                 </>
               )}
@@ -628,7 +736,7 @@ export default function BookingResponses() {
             <DialogDescription>
               {changeDateAssignment && (
                 <>
-                  Move <strong>{changeDateAssignment.contestant.name}</strong> to a different record day.
+                  Move <strong>{changeDateAssignment.contestant?.name}</strong> to a different record day.
                 </>
               )}
             </DialogDescription>
@@ -644,8 +752,8 @@ export default function BookingResponses() {
                   <SelectValue placeholder="Select record day..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {recordDays
-                    .filter(rd => rd.id !== selectedRecordDay)
+                  {sortedRecordDays
+                    .filter(rd => rd.id !== changeDateAssignment?.recordDayId)
                     .map((rd) => (
                       <SelectItem key={rd.id} value={rd.id}>
                         {rd.rxNumber ? `${rd.rxNumber} - ` : ""}{format(new Date(rd.date), "EEE, MMM d, yyyy")}
