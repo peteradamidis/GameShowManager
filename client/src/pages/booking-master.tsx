@@ -213,6 +213,15 @@ export default function BookingMaster() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sharePointDialogOpen, setSharePointDialogOpen] = useState(false);
   const [emailPreviewOpen, setEmailPreviewOpen] = useState(false);
+  
+  // Untick confirmation dialog state
+  const [untickConfirmOpen, setUntickConfirmOpen] = useState(false);
+  const [untickPending, setUntickPending] = useState<{
+    assignmentId: string;
+    field: string;
+    fieldLabel: string;
+    contestantName: string;
+  } | null>(null);
   const [emailSubject, setEmailSubject] = useState("Deal or No Deal - Booking Confirmation");
   const [selectedAttachments, setSelectedAttachments] = useState<string[]>([]);
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
@@ -517,9 +526,56 @@ export default function BookingMaster() {
     }, 500);
   };
 
+  // Field labels for confirmation dialog
+  const getFieldLabel = (field: string): string => {
+    const labels: Record<string, string> = {
+      confirmedRsvp: "RSVP Confirmed",
+      paperworkSent: "Paperwork Sent",
+      paperworkReceived: "Paperwork Received",
+      signedIn: "Signed In",
+    };
+    return labels[field] || field;
+  };
+
+  // Get contestant name from assignment ID
+  const getContestantNameForAssignment = (assignmentId: string): string => {
+    const row = bookingRows.find(r => r.assignment?.id === assignmentId);
+    return row?.contestant?.name || "Unknown Contestant";
+  };
+
   const handleCheckboxToggle = (assignmentId: string, field: string, currentValue: any) => {
     const newValue = !currentValue;
-    handleFieldUpdate(assignmentId, field, newValue);
+    
+    // If unticking (currentValue is truthy), show confirmation dialog
+    if (currentValue) {
+      setUntickPending({
+        assignmentId,
+        field,
+        fieldLabel: getFieldLabel(field),
+        contestantName: getContestantNameForAssignment(assignmentId),
+      });
+      setUntickConfirmOpen(true);
+    } else {
+      // Ticking on - proceed directly
+      handleFieldUpdate(assignmentId, field, newValue);
+    }
+  };
+
+  const handleConfirmUntick = () => {
+    if (untickPending) {
+      handleFieldUpdate(untickPending.assignmentId, untickPending.field, false);
+      toast({ 
+        title: `${untickPending.fieldLabel} unticked`,
+        description: `Cleared for ${untickPending.contestantName}`
+      });
+    }
+    setUntickConfirmOpen(false);
+    setUntickPending(null);
+  };
+
+  const handleCancelUntick = () => {
+    setUntickConfirmOpen(false);
+    setUntickPending(null);
   };
 
   const handleSelectAssignment = (assignmentId: string, checked: boolean) => {
@@ -1482,6 +1538,36 @@ export default function BookingMaster() {
                   Send to {selectedAssignments.size} Contestant{selectedAssignments.size !== 1 ? 's' : ''}
                 </>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Untick Confirmation Dialog */}
+      <Dialog open={untickConfirmOpen} onOpenChange={setUntickConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Confirm Untick
+            </DialogTitle>
+            <DialogDescription>
+              You are about to untick <strong>{untickPending?.fieldLabel}</strong> for{" "}
+              <strong>{untickPending?.contestantName}</strong>.
+              <br /><br />
+              This will clear this workflow step. Are you sure you want to continue?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={handleCancelUntick} data-testid="button-cancel-untick">
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleConfirmUntick}
+              data-testid="button-confirm-untick"
+            >
+              Yes, Untick
             </Button>
           </DialogFooter>
         </DialogContent>

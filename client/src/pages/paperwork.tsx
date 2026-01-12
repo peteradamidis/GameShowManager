@@ -35,7 +35,8 @@ import {
   Clock,
   FileCheck,
   UserCheck,
-  MailPlus
+  MailPlus,
+  AlertTriangle
 } from "lucide-react";
 import type { RecordDay, Contestant, SeatAssignment } from "@shared/schema";
 
@@ -65,6 +66,15 @@ export default function Paperwork() {
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
   const [sendEmailDialogOpen, setSendEmailDialogOpen] = useState(false);
   const [adobeSignLink, setAdobeSignLink] = useState("");
+  
+  // Untick confirmation dialog state
+  const [untickConfirmOpen, setUntickConfirmOpen] = useState(false);
+  const [untickPending, setUntickPending] = useState<{
+    itemId: string;
+    field: "paperworkSent" | "paperworkReceived";
+    fieldLabel: string;
+    contestantName: string;
+  } | null>(null);
   const [emailSubject, setEmailSubject] = useState("Deal or No Deal - Required Paperwork");
   const [emailBody, setEmailBody] = useState(`Dear {name},
 
@@ -177,6 +187,54 @@ Deal or No Deal Production Team`);
       toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
+
+  // Get contestant name for an assignment
+  const getContestantName = (itemId: string): string => {
+    const item = paperworkData.find(p => p.id === itemId);
+    return item?.contestant?.name || "Unknown Contestant";
+  };
+
+  // Handler for checkbox changes that require confirmation when unticking
+  const handlePaperworkCheckbox = (
+    item: PaperworkAssignment, 
+    field: "paperworkSent" | "paperworkReceived", 
+    checked: boolean
+  ) => {
+    if (checked) {
+      // Ticking on - proceed directly
+      if (field === "paperworkSent") {
+        markSentMutation.mutate(item.id);
+      } else {
+        markReceivedMutation.mutate(item.id);
+      }
+    } else {
+      // Unticking - show confirmation
+      setUntickPending({
+        itemId: item.id,
+        field,
+        fieldLabel: field === "paperworkSent" ? "Paperwork Sent" : "Paperwork Received",
+        contestantName: item.contestant?.name || "Unknown Contestant",
+      });
+      setUntickConfirmOpen(true);
+    }
+  };
+
+  const handleConfirmUntick = () => {
+    if (untickPending) {
+      if (untickPending.field === "paperworkSent") {
+        clearSentMutation.mutate(untickPending.itemId);
+      } else {
+        clearReceivedMutation.mutate(untickPending.itemId);
+      }
+    }
+    setUntickConfirmOpen(false);
+    setUntickPending(null);
+  };
+
+  const handleCancelUntick = () => {
+    setUntickConfirmOpen(false);
+    setUntickPending(null);
+  };
 
   const bulkSendPaperworkMutation = useMutation({
     mutationFn: async (data: { assignmentIds: string[]; adobeSignLink: string; subject: string; body: string }) => {
@@ -571,13 +629,7 @@ Deal or No Deal Production Team`);
                         <TableCell className="text-center">
                           <Checkbox
                             checked={!!item.paperworkSent}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                markSentMutation.mutate(item.id);
-                              } else {
-                                clearSentMutation.mutate(item.id);
-                              }
-                            }}
+                            onCheckedChange={(checked) => handlePaperworkCheckbox(item, "paperworkSent", checked === true)}
                             disabled={markSentMutation.isPending || clearSentMutation.isPending}
                             data-testid={`checkbox-sent-${item.id}`}
                           />
@@ -590,13 +642,7 @@ Deal or No Deal Production Team`);
                         <TableCell className="text-center">
                           <Checkbox
                             checked={!!item.paperworkReceived}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                markReceivedMutation.mutate(item.id);
-                              } else {
-                                clearReceivedMutation.mutate(item.id);
-                              }
-                            }}
+                            onCheckedChange={(checked) => handlePaperworkCheckbox(item, "paperworkReceived", checked === true)}
                             disabled={!item.paperworkSent || markReceivedMutation.isPending || clearReceivedMutation.isPending}
                             data-testid={`checkbox-received-${item.id}`}
                           />
@@ -736,6 +782,36 @@ Deal or No Deal Production Team`);
                 <Send className="h-4 w-4 mr-2" />
               )}
               Send to {selectedWithEmail.length} Contestants
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Untick Confirmation Dialog */}
+      <Dialog open={untickConfirmOpen} onOpenChange={setUntickConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Confirm Untick
+            </DialogTitle>
+            <DialogDescription>
+              You are about to untick <strong>{untickPending?.fieldLabel}</strong> for{" "}
+              <strong>{untickPending?.contestantName}</strong>.
+              <br /><br />
+              This will clear this workflow step. Are you sure you want to continue?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={handleCancelUntick} data-testid="button-cancel-untick">
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleConfirmUntick}
+              data-testid="button-confirm-untick"
+            >
+              Yes, Untick
             </Button>
           </DialogFooter>
         </DialogContent>
