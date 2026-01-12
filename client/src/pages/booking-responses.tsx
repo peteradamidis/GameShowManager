@@ -102,6 +102,8 @@ export default function BookingResponses() {
   const [declineReason, setDeclineReason] = useState("");
   const [declineAction, setDeclineAction] = useState<"reschedule" | "rebook">("reschedule");
   const [rebookRecordDayId, setRebookRecordDayId] = useState<string>("");
+  const [rebookBlock, setRebookBlock] = useState<string>("");
+  const [rebookSeat, setRebookSeat] = useState<string>("");
   
   const [changeDateDialogOpen, setChangeDateDialogOpen] = useState(false);
   const [changeDateAssignment, setChangeDateAssignment] = useState<BookingAssignment | null>(null);
@@ -153,6 +155,47 @@ export default function BookingResponses() {
   
   const trackerData = trackerResponse?.assignments || [];
   const stats = trackerResponse?.stats || { total: 0, notSent: 0, awaiting: 0, confirmed: 0, declined: 0 };
+
+  // Query for seat assignments on the rebook record day (to show available seats)
+  const { data: rebookDayAssignments = [] } = useQuery<SeatAssignment[]>({
+    queryKey: ["/api/seat-assignments", { recordDayId: rebookRecordDayId }],
+    queryFn: async () => {
+      const res = await fetch(`/api/seat-assignments?recordDayId=${rebookRecordDayId}`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch seat assignments');
+      return res.json();
+    },
+    enabled: !!rebookRecordDayId,
+  });
+
+  // Seat structure for the seating chart
+  const SEAT_ROWS = [
+    { label: 'A', count: 5 },
+    { label: 'B', count: 5 },
+    { label: 'C', count: 4 },
+    { label: 'D', count: 4 },
+    { label: 'E', count: 4 },
+  ];
+
+  // Calculate available seats for the selected rebook block
+  const rebookAvailableSeats = rebookBlock ? (() => {
+    const blockNum = parseInt(rebookBlock);
+    const occupied = new Set(
+      rebookDayAssignments
+        .filter((a: SeatAssignment) => a.blockNumber === blockNum)
+        .map((a: SeatAssignment) => a.seatLabel)
+    );
+    
+    const allSeats: string[] = [];
+    SEAT_ROWS.forEach(row => {
+      for (let i = 1; i <= row.count; i++) {
+        const seatLabel = `${row.label}${i}`;
+        if (!occupied.has(seatLabel)) {
+          allSeats.push(seatLabel);
+        }
+      }
+    });
+    return allSeats;
+  })() : [];
 
   const invalidateBookingQueries = async () => {
     await queryClient.invalidateQueries({
@@ -458,22 +501,44 @@ export default function BookingResponses() {
     setDeclineReason("");
     setDeclineAction("reschedule");
     setRebookRecordDayId("");
+    setRebookBlock("");
+    setRebookSeat("");
     setDeclineDialogOpen(true);
   };
 
-  // Separate mutation for rebook action (to avoid duplicate toasts from the regular change-date mutation)
+  // Rebook mutation: creates new assignment with specific block/seat, then removes old assignment
   const rebookMutation = useMutation({
-    mutationFn: async ({ assignmentId, newRecordDayId }: { assignmentId: string; newRecordDayId: string }) => {
-      return apiRequest("POST", `/api/seat-assignments/${assignmentId}/change-date`, {
-        newRecordDayId,
+    mutationFn: async ({ 
+      oldAssignmentId, 
+      contestantId, 
+      newRecordDayId, 
+      blockNumber, 
+      seatLabel 
+    }: { 
+      oldAssignmentId: string; 
+      contestantId: string;
+      newRecordDayId: string; 
+      blockNumber: number;
+      seatLabel: string;
+    }) => {
+      // Create new seat assignment with selected block/seat
+      await apiRequest("POST", "/api/seat-assignments", {
+        recordDayId: newRecordDayId,
+        contestantId,
+        blockNumber,
+        seatLabel,
       });
+      // Delete the old assignment
+      await apiRequest("DELETE", `/api/seat-assignments/${oldAssignmentId}`, {});
     },
     onSuccess: () => {
-      toast({ title: "Contestant rebooked", description: "Moved to new record day" });
+      toast({ title: "Contestant rebooked", description: `Moved to Block ${rebookBlock}, Seat ${rebookSeat}` });
       setDeclineDialogOpen(false);
       setDeclineAssignment(null);
       setDeclineReason("");
       setRebookRecordDayId("");
+      setRebookBlock("");
+      setRebookSeat("");
       invalidateBookingQueries();
     },
     onError: (error: any) => {
@@ -489,11 +554,14 @@ export default function BookingResponses() {
     if (!declineAssignment) return;
     
     if (declineAction === "rebook") {
-      // Use the rebook mutation
-      if (!rebookRecordDayId) return;
+      // Require record day, block, and seat for rebook
+      if (!rebookRecordDayId || !rebookBlock || !rebookSeat) return;
       rebookMutation.mutate({
-        assignmentId: declineAssignment.id,
+        oldAssignmentId: declineAssignment.id,
+        contestantId: declineAssignment.contestantId,
         newRecordDayId: rebookRecordDayId,
+        blockNumber: parseInt(rebookBlock),
+        seatLabel: rebookSeat,
       });
     } else {
       // Use the decline mutation for reschedule
@@ -1131,27 +1199,83 @@ export default function BookingResponses() {
               </div>
             </RadioGroup>
 
-            {/* Rebook: Show record day selector */}
+            {/* Rebook: Show record day, block, and seat selectors */}
             {declineAction === "rebook" && (
-              <div className="space-y-2 pt-2 border-t">
-                <Label htmlFor="rebook-day">Select new record day</Label>
-                <Select
-                  value={rebookRecordDayId}
-                  onValueChange={setRebookRecordDayId}
-                >
-                  <SelectTrigger data-testid="select-rebook-record-day">
-                    <SelectValue placeholder="Select record day..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sortedRecordDays
-                      .filter(rd => rd.id !== declineAssignment?.recordDayId)
-                      .map((rd) => (
-                        <SelectItem key={rd.id} value={rd.id}>
-                          {rd.rxNumber ? `${rd.rxNumber} - ` : ""}{format(new Date(rd.date), "EEE, MMM d, yyyy")}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-4 pt-2 border-t">
+                <div className="space-y-2">
+                  <Label htmlFor="rebook-day">Select new record day</Label>
+                  <Select
+                    value={rebookRecordDayId}
+                    onValueChange={(val) => {
+                      setRebookRecordDayId(val);
+                      setRebookBlock("");
+                      setRebookSeat("");
+                    }}
+                  >
+                    <SelectTrigger data-testid="select-rebook-record-day">
+                      <SelectValue placeholder="Select record day..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sortedRecordDays
+                        .filter(rd => rd.id !== declineAssignment?.recordDayId)
+                        .map((rd) => (
+                          <SelectItem key={rd.id} value={rd.id}>
+                            {rd.rxNumber ? `${rd.rxNumber} - ` : ""}{format(new Date(rd.date), "EEE, MMM d, yyyy")}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Block and Seat Selection */}
+                {rebookRecordDayId && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Block</Label>
+                      <Select 
+                        value={rebookBlock} 
+                        onValueChange={(val) => { 
+                          setRebookBlock(val); 
+                          setRebookSeat(""); 
+                        }}
+                      >
+                        <SelectTrigger data-testid="select-rebook-block">
+                          <SelectValue placeholder="Select block" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[1, 2, 3, 4, 5, 6, 7].map((block) => (
+                            <SelectItem key={block} value={String(block)}>
+                              Block {block}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Seat</Label>
+                      <Select 
+                        value={rebookSeat} 
+                        onValueChange={setRebookSeat}
+                        disabled={!rebookBlock}
+                      >
+                        <SelectTrigger data-testid="select-rebook-seat">
+                          <SelectValue placeholder={rebookBlock ? "Select seat" : "Select block first"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {rebookAvailableSeats.length === 0 ? (
+                            <SelectItem value="none" disabled>No available seats</SelectItem>
+                          ) : (
+                            rebookAvailableSeats.map((seat) => (
+                              <SelectItem key={seat} value={seat}>
+                                {seat}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1176,7 +1300,7 @@ export default function BookingResponses() {
             {declineAction === "rebook" ? (
               <Button
                 onClick={handleDeclineSubmit}
-                disabled={!rebookRecordDayId || rebookMutation.isPending}
+                disabled={!rebookRecordDayId || !rebookBlock || !rebookSeat || rebookMutation.isPending}
                 data-testid="button-submit-rebook"
               >
                 {rebookMutation.isPending ? "Moving..." : "Rebook to New Day"}
