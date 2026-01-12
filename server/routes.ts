@@ -1772,7 +1772,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if contestant is DNU-rated (Do Not Use)
-      const contestant = await storage.getContestant(contestantId);
+      const contestant = await storage.getContestantById(contestantId);
       if (contestant?.auditionRating?.toUpperCase().trim() === 'DNU') {
         return res.status(400).json({ error: "Cannot seat a DNU-rated contestant (Do Not Use)" });
       }
@@ -1845,7 +1845,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if any contestant is DNU-rated (Do Not Use)
       for (const contestantId of contestantIds) {
-        const contestant = await storage.getContestant(contestantId);
+        const contestant = await storage.getContestantById(contestantId);
         if (contestant?.auditionRating?.toUpperCase().trim() === 'DNU') {
           return res.status(400).json({ error: `Cannot seat ${contestant.name} - they are DNU-rated (Do Not Use)` });
         }
