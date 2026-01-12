@@ -24,7 +24,7 @@ import {
   getNormalizedPartnerNames,
   attendingWithMentionsName
 } from "@shared/attendingWithParser";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import xlsx from "xlsx";
 import multer from "multer";
 import crypto from "crypto";
@@ -1238,6 +1238,145 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const updated = await storage.updateContestant(req.params.id, body);
       res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Manual group linking - Create new group and link selected contestants
+  app.post("/api/groups/manual", async (req, res) => {
+    try {
+      const { contestantIds } = req.body;
+      
+      if (!contestantIds || !Array.isArray(contestantIds) || contestantIds.length < 2) {
+        return res.status(400).json({ error: "At least 2 contestant IDs are required to form a group" });
+      }
+      
+      // Verify all contestants exist
+      const contestants = await Promise.all(
+        contestantIds.map((id: string) => storage.getContestantById(id))
+      );
+      
+      const invalidIds = contestantIds.filter((id: string, index: number) => !contestants[index]);
+      if (invalidIds.length > 0) {
+        return res.status(404).json({ error: `Contestants not found: ${invalidIds.join(', ')}` });
+      }
+      
+      // Check if any contestants are already in groups
+      const alreadyGrouped = contestants.filter(c => c?.groupId);
+      if (alreadyGrouped.length > 0) {
+        return res.status(400).json({ 
+          error: `Some contestants are already in groups: ${alreadyGrouped.map(c => c?.name).join(', ')}. Please unlink them first.` 
+        });
+      }
+      
+      // Create a new group with a unique reference number
+      const refNumber = `MANUAL-${Date.now().toString(36).toUpperCase()}`;
+      const group = await storage.createGroup({ referenceNumber: refNumber });
+      
+      // Link all contestants to the new group
+      await Promise.all(
+        contestantIds.map((id: string) => storage.updateContestant(id, { groupId: group.id }))
+      );
+      
+      // Get updated contestants
+      const updatedContestants = await Promise.all(
+        contestantIds.map((id: string) => storage.getContestantById(id))
+      );
+      
+      res.json({ 
+        success: true, 
+        group, 
+        contestants: updatedContestants,
+        message: `Successfully linked ${contestantIds.length} contestants into group ${refNumber}`
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Add contestant to existing group
+  app.post("/api/contestants/:id/link-to-group", async (req, res) => {
+    try {
+      const { groupId } = req.body;
+      
+      if (!groupId) {
+        return res.status(400).json({ error: "groupId is required" });
+      }
+      
+      const contestant = await storage.getContestantById(req.params.id);
+      if (!contestant) {
+        return res.status(404).json({ error: "Contestant not found" });
+      }
+      
+      if (contestant.groupId) {
+        return res.status(400).json({ error: "Contestant is already in a group. Unlink them first." });
+      }
+      
+      const group = await storage.getGroupById(groupId);
+      if (!group) {
+        return res.status(404).json({ error: "Group not found" });
+      }
+      
+      const updated = await storage.updateContestant(req.params.id, { groupId });
+      res.json({ success: true, contestant: updated });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Remove contestant from their group
+  app.post("/api/contestants/:id/unlink-group", async (req, res) => {
+    try {
+      const contestant = await storage.getContestantById(req.params.id);
+      if (!contestant) {
+        return res.status(404).json({ error: "Contestant not found" });
+      }
+      
+      if (!contestant.groupId) {
+        return res.status(400).json({ error: "Contestant is not in a group" });
+      }
+      
+      const oldGroupId = contestant.groupId;
+      
+      // Remove contestant from group
+      const updated = await storage.updateContestant(req.params.id, { groupId: null });
+      
+      // Check if the group is now empty and delete it if so
+      const allContestants = await storage.getContestants();
+      const remainingMembers = allContestants.filter(c => c.groupId === oldGroupId);
+      
+      if (remainingMembers.length === 0) {
+        // Group is empty, delete it
+        await db.delete(groups).where(eq(groups.id, oldGroupId));
+      } else if (remainingMembers.length === 1) {
+        // Only one member left, unlink them too (a group needs at least 2 members)
+        await storage.updateContestant(remainingMembers[0].id, { groupId: null });
+        await db.delete(groups).where(eq(groups.id, oldGroupId));
+      }
+      
+      res.json({ 
+        success: true, 
+        contestant: updated,
+        message: `${contestant.name} has been removed from their group.`
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get contestants in a specific group
+  app.get("/api/groups/:id/contestants", async (req, res) => {
+    try {
+      const group = await storage.getGroupById(req.params.id);
+      if (!group) {
+        return res.status(404).json({ error: "Group not found" });
+      }
+      
+      const allContestants = await storage.getContestants();
+      const groupMembers = allContestants.filter(c => c.groupId === req.params.id);
+      
+      res.json({ group, contestants: groupMembers });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

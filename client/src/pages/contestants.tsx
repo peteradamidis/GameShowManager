@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2, Users, AlertTriangle, RefreshCw } from "lucide-react";
+import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2, Users, AlertTriangle, RefreshCw, Link, Unlink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -138,6 +138,8 @@ export default function Contestants() {
   const [deleteConfirmStep, setDeleteConfirmStep] = useState<1 | 2>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [unlinkDialogOpen, setUnlinkDialogOpen] = useState(false);
   
   const ITEMS_PER_PAGE = 50;
 
@@ -280,6 +282,27 @@ export default function Contestants() {
   const showBookWithGroupButton = selectedContestants.length === 1 && 
     selectedContestantGroupMembers.length > 1 && 
     !selectedContestantAssignment;
+
+  // Check if selected contestants can be linked (2+ contestants, none already in a group)
+  const selectedContestantsForLinking = useMemo(() => {
+    return selectedContestants.map(id => contestants.find(c => c.id === id)).filter(Boolean) as Contestant[];
+  }, [selectedContestants, contestants]);
+
+  const canLinkSelected = selectedContestants.length >= 2 && 
+    selectedContestantsForLinking.every(c => !c.groupId);
+
+  // Check if a single selected contestant can be unlinked (has a groupId)
+  const canUnlinkSelected = selectedContestants.length === 1 && 
+    selectedContestantsForLinking.length === 1 && 
+    !!selectedContestantsForLinking[0]?.groupId;
+
+  // Get group members for unlink preview
+  const selectedContestantGroupForUnlink = useMemo(() => {
+    if (selectedContestants.length !== 1) return [];
+    const selected = selectedContestantsForLinking[0];
+    if (!selected?.groupId) return [];
+    return contestants.filter(c => c.groupId === selected.groupId);
+  }, [selectedContestants, selectedContestantsForLinking, contestants]);
 
   // Get unique values for filter dropdowns
   const uniqueGenders = Array.from(new Set(contestants.map(c => c.gender).filter(Boolean)));
@@ -575,6 +598,58 @@ export default function Contestants() {
     onError: (error: Error) => {
       toast({
         title: "Failed to delete all contestants",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Manual group linking mutation
+  const linkContestantsMutation = useMutation({
+    mutationFn: async (contestantIds: string[]) => {
+      const res = await apiRequest('POST', '/api/groups/manual', { contestantIds });
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/groups'], exact: false });
+      broadcastContestantChange();
+      setSelectedContestants([]);
+      setLinkDialogOpen(false);
+      toast({
+        title: "Contestants linked",
+        description: data.message || `Successfully linked ${data.contestants?.length || 0} contestants into a group.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to link contestants",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Unlink contestant from group mutation
+  const unlinkContestantMutation = useMutation({
+    mutationFn: async (contestantId: string) => {
+      const res = await apiRequest('POST', `/api/contestants/${contestantId}/unlink-group`, {});
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/groups'], exact: false });
+      broadcastContestantChange();
+      setSelectedContestants([]);
+      setUnlinkDialogOpen(false);
+      toast({
+        title: "Contestant unlinked",
+        description: data.message || "Contestant has been removed from their group.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to unlink contestant",
         description: error.message,
         variant: "destructive",
       });
@@ -1725,6 +1800,28 @@ export default function Contestants() {
                     <UserCheck className="h-4 w-4 mr-2" />
                     Book as Standby
                   </Button>
+                  {canLinkSelected && (
+                    <Button 
+                      variant="outline"
+                      className="border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-300 dark:hover:bg-purple-950"
+                      onClick={() => setLinkDialogOpen(true)}
+                      data-testid="floating-button-link-contestants"
+                    >
+                      <Link className="h-4 w-4 mr-2" />
+                      Link Together
+                    </Button>
+                  )}
+                  {canUnlinkSelected && (
+                    <Button 
+                      variant="outline"
+                      className="border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-950"
+                      onClick={() => setUnlinkDialogOpen(true)}
+                      data-testid="floating-button-unlink-contestant"
+                    >
+                      <Unlink className="h-4 w-4 mr-2" />
+                      Unlink from Group
+                    </Button>
+                  )}
                   {showBookWithGroupButton && (
                     <Button 
                       className="bg-slate-200/80 hover:bg-slate-300/80 text-slate-900"
@@ -1829,6 +1926,118 @@ export default function Contestants() {
               data-testid="button-delete-all-final-confirm"
             >
               {deleteAllContestantsMutation.isPending ? "Deleting..." : "Delete Everything"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manual Link Contestants Dialog */}
+      <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-purple-700 dark:text-purple-400">
+              <Link className="h-5 w-5" />
+              Link Contestants Together
+            </DialogTitle>
+            <DialogDescription className="space-y-2">
+              <p>You are about to manually link these <strong className="text-foreground">{selectedContestants.length} contestants</strong> into a group:</p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-60 overflow-y-auto space-y-2 py-2">
+            {selectedContestantsForLinking.map(c => (
+              <div key={c.id} className="flex items-center gap-3 p-2 rounded-md bg-muted/50">
+                <Avatar className="h-8 w-8">
+                  {c.photoUrl && <AvatarImage src={c.photoUrl} alt={c.name} />}
+                  <AvatarFallback>{c.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{c.name}</p>
+                  <p className="text-xs text-muted-foreground">{c.gender}, {c.age}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Once linked, these contestants will be treated as a group and can be booked together.
+          </p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setLinkDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+              onClick={() => linkContestantsMutation.mutate(selectedContestants)}
+              disabled={linkContestantsMutation.isPending}
+              data-testid="button-confirm-link"
+            >
+              {linkContestantsMutation.isPending ? "Linking..." : "Link Contestants"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unlink Contestant Dialog */}
+      <Dialog open={unlinkDialogOpen} onOpenChange={setUnlinkDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-orange-700 dark:text-orange-400">
+              <Unlink className="h-5 w-5" />
+              Unlink Contestant from Group
+            </DialogTitle>
+            <DialogDescription>
+              {selectedContestantsForLinking[0] && (
+                <p>Remove <strong className="text-foreground">{selectedContestantsForLinking[0].name}</strong> from their group?</p>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedContestantGroupForUnlink.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Current group members:</p>
+              <div className="max-h-40 overflow-y-auto space-y-2">
+                {selectedContestantGroupForUnlink.map(c => (
+                  <div 
+                    key={c.id} 
+                    className={`flex items-center gap-3 p-2 rounded-md ${c.id === selectedContestants[0] ? 'bg-orange-100 dark:bg-orange-950 border border-orange-300 dark:border-orange-700' : 'bg-muted/50'}`}
+                  >
+                    <Avatar className="h-8 w-8">
+                      {c.photoUrl && <AvatarImage src={c.photoUrl} alt={c.name} />}
+                      <AvatarFallback>{c.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{c.name}</p>
+                      <p className="text-xs text-muted-foreground">{c.gender}, {c.age}</p>
+                    </div>
+                    {c.id === selectedContestants[0] && (
+                      <Badge variant="outline" className="border-orange-400 text-orange-700 dark:text-orange-400">
+                        Will be unlinked
+                      </Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {selectedContestantGroupForUnlink.length === 2 && (
+                <p className="text-sm text-muted-foreground italic">
+                  Note: The remaining member will also be unlinked since groups require at least 2 members.
+                </p>
+              )}
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setUnlinkDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              className="bg-orange-600 hover:bg-orange-700"
+              onClick={() => {
+                if (selectedContestants[0]) {
+                  unlinkContestantMutation.mutate(selectedContestants[0]);
+                }
+              }}
+              disabled={unlinkContestantMutation.isPending}
+              data-testid="button-confirm-unlink"
+            >
+              {unlinkContestantMutation.isPending ? "Unlinking..." : "Unlink Contestant"}
             </Button>
           </DialogFooter>
         </DialogContent>

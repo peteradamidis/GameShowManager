@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2026-01-12T14:01:39.608Z",
+  "exportedAt": "2026-01-12T14:27:15.853Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -175,7 +175,56 @@
         "createdAt": "2025-11-27T11:34:23.272Z"
       }
     ],
-    "contestants": [],
+    "contestants": [
+      {
+        "id": "test-link-a",
+        "name": "Alice Test",
+        "age": 28,
+        "gender": "Female",
+        "groupId": null,
+        "availabilityStatus": "available",
+        "attendingWith": null,
+        "email": "alice@test.com",
+        "phone": "555-1001",
+        "location": null,
+        "postcode": null,
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": null,
+        "playerType": null,
+        "groupSize": null,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2026-01-12T14:26:46.700Z"
+      },
+      {
+        "id": "test-link-b",
+        "name": "Bob Test",
+        "age": 32,
+        "gender": "Male",
+        "groupId": null,
+        "availabilityStatus": "available",
+        "attendingWith": null,
+        "email": "bob@test.com",
+        "phone": "555-1002",
+        "location": null,
+        "postcode": null,
+        "state": null,
+        "medicalInfo": null,
+        "mobilityNotes": null,
+        "criminalRecord": null,
+        "photoUrl": null,
+        "auditionRating": null,
+        "playerType": null,
+        "groupSize": null,
+        "podiumStory": false,
+        "availableForStandby": false,
+        "createdAt": "2026-01-12T14:26:46.803Z"
+      }
+    ],
     "groups": [
       {
         "id": "f25a6094-c1a5-4eb4-a709-1cc3d9b3ab5e",
@@ -191,6 +240,16 @@
         "id": "8c760df8-0e51-4b27-b1cb-0754c8b03595",
         "referenceNumber": "AUTO-MK2NF2KE-kuoa",
         "createdAt": "2026-01-06T13:52:03.568Z"
+      },
+      {
+        "id": "632fede5-4c1f-4f47-8a24-f4c94563915f",
+        "referenceNumber": "MANUAL-MKB8V43C",
+        "createdAt": "2026-01-12T14:14:33.386Z"
+      },
+      {
+        "id": "d5513a17-247e-49c4-be46-eca3c0aa0c4c",
+        "referenceNumber": "MANUAL-MKB952R9",
+        "createdAt": "2026-01-12T14:22:18.216Z"
       }
     ],
     "seatAssignments": [],
@@ -383,8 +442,8 @@
   },
   "counts": {
     "recordDays": 17,
-    "contestants": 0,
-    "groups": 3,
+    "contestants": 2,
+    "groups": 5,
     "seatAssignments": 0,
     "standbys": 0,
     "blockTypes": 26,
