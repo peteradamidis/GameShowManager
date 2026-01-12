@@ -5313,10 +5313,6 @@ ${finalEmailFooter}`;
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
           <tr>
             <td style="padding: 35px 30px;">
-              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
-                Hi ${contestant.name.split(' ')[0]},
-              </p>
-              
               <!-- Important Notice -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 0 0 20px 0;">
                 <tr>
@@ -5327,6 +5323,10 @@ ${finalEmailFooter}`;
                   </td>
                 </tr>
               </table>
+              
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
+                Hi ${contestant.name.split(' ')[0]},
+              </p>
               
               <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                 ${emailIntro.split('\n\n').map((paragraph: string) => 
@@ -6923,10 +6923,6 @@ ${finalEmailFooter}`;
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
           <tr>
             <td style="padding: 35px 30px;">
-              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
-                Hi ${testContestantName.split(' ')[0]},
-              </p>
-              
               <!-- Important Notice -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 0 0 20px 0;">
                 <tr>
@@ -6937,6 +6933,10 @@ ${finalEmailFooter}`;
                   </td>
                 </tr>
               </table>
+              
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
+                Hi ${testContestantName.split(' ')[0]},
+              </p>
               
               <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                 ${emailIntro.split('\n\n').map((paragraph: string) => 
@@ -7761,10 +7761,6 @@ ${finalEmailFooter}`;
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
             <tr>
               <td style="padding: 35px 30px;">
-                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
-                  Hi ${sampleName},
-                </p>
-                
                 <!-- Important Notice -->
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 0 0 20px 0;">
                   <tr>
@@ -7775,6 +7771,10 @@ ${finalEmailFooter}`;
                     </td>
                   </tr>
                 </table>
+                
+                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
+                  Hi ${sampleName},
+                </p>
                 
                 <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                   ${intro}
