@@ -5291,18 +5291,6 @@ ${finalEmailFooter}`;
 <body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
     
-    <!-- Urgent Response Request - Top -->
-    <tr>
-      <td style="background-color: #8B0000; padding: 20px 30px; text-align: center;">
-        <p style="color: #ffffff; font-size: 16px; font-weight: bold; margin: 0; line-height: 1.5;">
-          Can you attend? Please respond <span style="color: #D4AF37;">YES</span> or <span style="color: #D4AF37;">NO</span> and confirm the members of your auditioned group who will be attending ASAP.
-        </p>
-        <p style="color: #ffcccc; font-size: 13px; margin: 10px 0 0 0;">
-          Please note: this invitation is for you and the group you auditioned with.
-        </p>
-      </td>
-    </tr>
-    
     <!-- Full-width Banner Image -->
     <tr>
       <td style="padding: 0; line-height: 0;">
@@ -5359,18 +5347,12 @@ ${finalEmailFooter}`;
                 </tr>
               </table>
               
-              <div style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
-                ${emailInstructions.split('\n\n').map((paragraph: string) => 
-                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
-                ).join('')}
-              </div>
-              
               <!-- ACTION REQUIRED Notice -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                 <tr>
                   <td style="padding: 20px; text-align: center;">
                     <p style="color: #D4AF37; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
-                      Can you attend? Please respond YES or NO ASAP!
+                      Can you attend? Please respond YES or NO and confirm the members of your auditioned group who will be attending ASAP.
                     </p>
                     <p style="color: #ffffff; font-size: 14px; margin: 0;">
                       Click the button below - your email app will open with a form to complete.
@@ -6910,18 +6892,6 @@ ${finalEmailFooter}`;
 <body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
     
-    <!-- Urgent Response Request - Top -->
-    <tr>
-      <td style="background-color: #8B0000; padding: 20px 30px; text-align: center;">
-        <p style="color: #ffffff; font-size: 16px; font-weight: bold; margin: 0; line-height: 1.5;">
-          Can you attend? Please respond <span style="color: #D4AF37;">YES</span> or <span style="color: #D4AF37;">NO</span> and confirm the members of your auditioned group who will be attending ASAP.
-        </p>
-        <p style="color: #ffcccc; font-size: 13px; margin: 10px 0 0 0;">
-          Please note: this invitation is for you and the group you auditioned with.
-        </p>
-      </td>
-    </tr>
-    
     <tr>
       <td style="padding: 0; line-height: 0;">
         <img src="${bannerUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />
@@ -6972,18 +6942,12 @@ ${finalEmailFooter}`;
                 </tr>
               </table>
               
-              <div style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
-                ${emailInstructions.split('\n\n').map((paragraph: string) => 
-                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
-                ).join('')}
-              </div>
-              
               <!-- ACTION REQUIRED Notice -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                 <tr>
                   <td style="padding: 20px; text-align: center;">
                     <p style="color: #D4AF37; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
-                      Can you attend? Please respond YES or NO ASAP!
+                      Can you attend? Please respond YES or NO and confirm the members of your auditioned group who will be attending ASAP.
                     </p>
                     <p style="color: #ffffff; font-size: 14px; margin: 0;">
                       Click the button below - your email app will open with a form to complete.
@@ -7751,18 +7715,6 @@ ${finalEmailFooter}`;
   <div style="max-width: 600px; margin: 0 auto; background-color: #2a0a0a;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
       
-      <!-- Urgent Response Request - Top -->
-      <tr>
-        <td style="background-color: #8B0000; padding: 20px 30px; text-align: center;">
-          <p style="color: #ffffff; font-size: 16px; font-weight: bold; margin: 0; line-height: 1.5;">
-            Can you attend? Please respond <span style="color: #D4AF37;">YES</span> or <span style="color: #D4AF37;">NO</span> and confirm the members of your auditioned group who will be attending ASAP.
-          </p>
-          <p style="color: #ffcccc; font-size: 13px; margin: 10px 0 0 0;">
-            Please note: this invitation is for you and the group you auditioned with.
-          </p>
-        </td>
-      </tr>
-      
       <tr>
         <td style="padding: 0; line-height: 0; background: linear-gradient(135deg, #8B0000 0%, #5c0000 100%); text-align: center; padding: 30px;">
           <h2 style="color: #D4AF37; font-size: 28px; margin: 0; letter-spacing: 2px;">DEAL OR NO DEAL</h2>
@@ -7811,16 +7763,12 @@ ${finalEmailFooter}`;
                   </tr>
                 </table>
                 
-                <div style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
-                  ${instructions}
-                </div>
-                
                 <!-- ACTION REQUIRED Notice -->
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                   <tr>
                     <td style="padding: 20px; text-align: center;">
                       <p style="color: #D4AF37; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
-                        Can you attend? Please respond YES or NO ASAP!
+                        Can you attend? Please respond YES or NO and confirm the members of your auditioned group who will be attending ASAP.
                       </p>
                       <p style="color: #ffffff; font-size: 14px; margin: 0;">
                         Click the button below - your email app will open with a form to complete.
