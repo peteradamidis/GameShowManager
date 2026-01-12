@@ -1,0 +1,108 @@
+DATABASE_URL=postgresql://admin@localhost:5432/contestant_db
+PORT=5000
+SESSION_SECRET=TVZWNptDDPrJJXt2uSpvvsQxDFSXHWHiygKwrOgFmH0=
+admin@admins-Mac-mini GameShowManager % ls -la | grep -E ".env|package.json"
+-rw-r--r--    1 admin  staff     173 12 Jan 12:08 .env
+-rw-r--r--    1 admin  staff    1732 15 Dec 10:38 .env.example
+-rw-r--r--    1 admin  staff    4336  8 Jan 00:23 package.json
+admin@admins-Mac-mini GameShowManager % admin@admins-Mac-mini GameShowManager % nano .env
+admin@admins-Mac-mini GameShowManager % pwd
+/Users/admin/projects/GameShowManager
+admin@admins-Mac-mini GameShowManager % ls -la .env
+cat .env
+-rw-r--r--  1 admin  staff  173 12 Jan 12:08 .env
+BASE_URL=https://dond.endemolshine.com.au
+DATABASE_URL=postgresql://admin@localhost:5432/contestant_db
+PORT=5000
+SESSION_SECRET=TVZWNptDDPrJJXt2uSpvvsQxDFSXHWHiygKwrOgFmH0=
+admin@admins-Mac-mini GameShowManager % ls -la | grep -E ".env|package.json"
+-rw-r--r--    1 admin  staff     173 12 Jan 12:08 .env
+-rw-r--r--    1 admin  staff    1732 15 Dec 10:38 .env.example
+-rw-r--r--    1 admin  staff    4336  8 Jan 00:23 package.json
+admin@admins-Mac-mini GameShowManager %
+
+admin@admins-Mac-mini GameShowManager % nano ecosystem.config.js
+admin@admins-Mac-mini GameShowManager % pm2 start ecosystem.config.js
+[PM2][ERROR] File ecosystem.config.js malformated
+ReferenceError: module is not defined in ES module scope
+This file is being treated as an ES module because it has a '.js' file extension and '/Users/admin/projects/GameShowManager/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+    at file:///Users/admin/projects/GameShowManager/ecosystem.config.js:1:1
+    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:437:37)
+    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:389:47)
+    at loadESMFromCJS (node:internal/modules/cjs/loader:1363:24)
+    at Module._compile (node:internal/modules/cjs/loader:1503:5)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at require (node:internal/modules/helpers:182:18)
+admin@admins-Mac-mini GameShowManager % pm2 save
+[PM2] Saving current process list...
+[PM2] Successfully saved in /Users/admin/.pm2/dump.pm2
+admin@admins-Mac-mini GameShowManager % pm2 logs gameshow --lines 30
+[TAILING] Tailing last 30 lines for [gameshow] process (change the value with --lines option)
+/Users/admin/.pm2/logs/gameshow-error.log last 30 lines:
+0|gameshow |     at trim_prefix (/Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:328:13)
+0|gameshow |     at /Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:286:9
+0|gameshow |     at Function.process_params (/Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:346:12)
+0|gameshow |     at next (/Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:280:10)
+0|gameshow |     at <anonymous> (/Users/admin/projects/GameShowManager/server/index.ts:81:3)
+0|gameshow |     at Layer.handle [as handle_request] (/Users/admin/projects/GameShowManager/node_modules/express/lib/router/layer.js:95:5)
+0|gameshow |     at trim_prefix (/Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:328:13)
+0|gameshow |     at /Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:286:9
+0|gameshow |     at Function.process_params (/Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:346:12)
+0|gameshow |     at next (/Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:280:10)
+0|gameshow |     at session (/Users/admin/projects/GameShowManager/node_modules/express-session/index.js:487:7)
+0|gameshow |     at Layer.handle [as handle_request] (/Users/admin/projects/GameShowManager/node_modules/express/lib/router/layer.js:95:5)
+0|gameshow |     at trim_prefix (/Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:328:13)
+0|gameshow |     at /Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:286:9
+0|gameshow |     at Function.process_params (/Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:346:12)
+0|gameshow |     at next (/Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:280:10)
+0|gameshow |     at urlencodedParser (/Users/admin/projects/GameShowManager/node_modules/body-parser/lib/types/urlencoded.js:85:7)
+0|gameshow |     at Layer.handle [as handle_request] (/Users/admin/projects/GameShowManager/node_modules/express/lib/router/layer.js:95:5)
+0|gameshow |     at trim_prefix (/Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:328:13)
+0|gameshow |     at /Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:286:9
+0|gameshow |     at Function.process_params (/Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:346:12)
+0|gameshow |     at next (/Users/admin/projects/GameShowManager/node_modules/express/lib/router/index.js:280:10)
+0|gameshow |     at /Users/admin/projects/GameShowManager/node_modules/body-parser/lib/read.js:137:5
+0|gameshow |     at AsyncResource.runInAsyncScope (node:async_hooks:206:9)
+0|gameshow |     at invokeCallback (/Users/admin/projects/GameShowManager/node_modules/raw-body/index.js:238:16)
+0|gameshow |     at done (/Users/admin/projects/GameShowManager/node_modules/raw-body/index.js:227:7)
+0|gameshow |     at IncomingMessage.onEnd (/Users/admin/projects/GameShowManager/node_modules/raw-body/index.js:287:7)
+0|gameshow |     at IncomingMessage.emit (node:events:524:28)
+0|gameshow |     at endReadableNT (node:internal/streams/readable:1698:12)
+0|gameshow |     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+
+/Users/admin/.pm2/logs/gameshow-out.log last 30 lines:
+0|gameshow | Step 1: Database initialized
+0|gameshow | Step 1.5: Checking for default admin user...
+0|gameshow | Step 2: Registering routes...
+0|gameshow | WebSocket server initialized on /ws
+0|gameshow | Step 2: Routes registered
+0|gameshow | Step 3: Setting up static serving...
+0|gameshow | Step 3: Static serving ready
+0|gameshow | Starting server on port 5000...
+0|gameshow | 12:09:51 PM [express] serving on port 5000
+0|gameshow | Step 5: Warming up database connection...
+0|gameshow |   DB Warmup: No pool available
+0|gameshow | [Backup] Starting automatic backup scheduler (every 1 hour)
+0|gameshow | 12:10:25 PM [express] GET /api/auth/check 304 in 1ms :: {"authenticated":false}
+0|gameshow | 12:10:26 PM [express] POST /api/auth/login 500 in 11ms :: {"error":"Login failed"}
+0|gameshow | 12:10:27 PM [express] POST /api/auth/login 500 in 2ms :: {"error":"Login failed"}
+0|gameshow | 12:10:27 PM [express] POST /api/auth/login 500 in 1ms :: {"error":"Login failed"}
+0|gameshow | 12:10:31 PM [express] POST /api/auth/login 500 in 1ms :: {"error":"Login failed"}
+0|gameshow | 12:11:59 PM [express] POST /api/auth/login 500 in 4ms :: {"error":"Login failed"}
+0|gameshow | 12:11:59 PM [express] POST /api/auth/login 500 in 5ms :: {"error":"Login failed"}
+0|gameshow | 12:13:26 PM [express] GET /api/auth/check 304 in 1ms :: {"authenticated":false}
+0|gameshow | 12:13:27 PM [express] POST /api/auth/login 500 in 4ms :: {"error":"Login failed"}
+0|gameshow | 12:13:28 PM [express] POST /api/auth/login 500 in 3ms :: {"error":"Login failed"}
+0|gameshow | 12:13:33 PM [express] POST /api/auth/login 500 in 3ms :: {"error":"Login failed"}
+0|gameshow | 12:13:38 PM [express] POST /api/auth/login 500 in 3ms :: {"error":"Login failed"}
+0|gameshow | 12:15:54 PM [express] GET /api/auth/check 304 in 1ms :: {"authenticated":false}
+0|gameshow | 12:15:55 PM [express] POST /api/auth/login 500 in 2ms :: {"error":"Login failed"}
+0|gameshow | 12:16:17 PM [express] POST /api/auth/login 500 in 3ms :: {"error":"Login failed"}
+0|gameshow | 12:17:28 PM [express] POST /api/auth/login 500 in 3ms :: {"error":"Login failed"}
+0|gameshow | 12:17:51 PM [express] GET /api/auth/check 200 in 0ms :: {"authenticated":false}
+0|gameshow | 12:18:25 PM [express] GET /api/auth/check 200 in 1ms :: {"authenticated":false}
+
+
