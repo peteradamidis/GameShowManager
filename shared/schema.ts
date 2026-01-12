@@ -291,6 +291,32 @@ export const insertStandbyConfirmationTokenSchema = createInsertSchema(standbyCo
   createdAt: true,
 });
 
+// Rebooking History table - tracks when contestants are moved between record days
+export const rebookingHistory = pgTable("rebooking_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contestantId: varchar("contestant_id").references(() => contestants.id).notNull(),
+  // From (original) details
+  fromRecordDayId: varchar("from_record_day_id").references(() => recordDays.id).notNull(),
+  fromBlockNumber: integer("from_block_number").notNull(),
+  fromSeatLabel: text("from_seat_label").notNull(),
+  // To (new) details
+  toRecordDayId: varchar("to_record_day_id").references(() => recordDays.id).notNull(),
+  toBlockNumber: integer("to_block_number").notNull(),
+  toSeatLabel: text("to_seat_label").notNull(),
+  // Metadata
+  reason: text("reason"), // Optional reason for the rebook
+  rebookedBy: text("rebooked_by"), // User who performed the rebook
+  rebookedAt: timestamp("rebooked_at").defaultNow().notNull(),
+});
+
+export const insertRebookingHistorySchema = createInsertSchema(rebookingHistory).omit({
+  id: true,
+  rebookedAt: true,
+});
+
+export type InsertRebookingHistory = z.infer<typeof insertRebookingHistorySchema>;
+export type RebookingHistory = typeof rebookingHistory.$inferSelect;
+
 // Types
 export type InsertGroup = z.infer<typeof insertGroupSchema>;
 export type Group = typeof groups.$inferSelect;

@@ -16,6 +16,7 @@ import {
   systemConfig,
   formConfigurations,
   users,
+  rebookingHistory,
   type Contestant,
   type InsertContestant,
   type Group,
@@ -43,6 +44,8 @@ import {
   type SystemConfig,
   type User,
   type InsertUser,
+  type RebookingHistory,
+  type InsertRebookingHistory,
 } from "@shared/schema";
 import { eq, and, sql, inArray } from "drizzle-orm";
 
@@ -244,6 +247,11 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined>;
   updateUsername(id: string, newUsername: string): Promise<User | undefined>;
+  
+  // Rebooking History
+  logRebooking(data: InsertRebookingHistory): Promise<RebookingHistory>;
+  getRebookingHistoryByContestant(contestantId: string): Promise<Array<RebookingHistory & { fromRecordDay: RecordDay; toRecordDay: RecordDay }>>;
+  getRebookingHistoryByRecordDay(recordDayId: string): Promise<Array<RebookingHistory & { contestant: Contestant; fromRecordDay: RecordDay; toRecordDay: RecordDay }>>;
 }
 
 export class DbStorage implements IStorage {
@@ -1496,6 +1504,79 @@ export class DbStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updated;
+  }
+
+  // Rebooking History
+  async logRebooking(data: InsertRebookingHistory): Promise<RebookingHistory> {
+    const [created] = await getDb().insert(rebookingHistory).values(data).returning();
+    return created;
+  }
+
+  async getRebookingHistoryByContestant(contestantId: string): Promise<Array<RebookingHistory & { fromRecordDay: RecordDay; toRecordDay: RecordDay }>> {
+    const fromRd = getDb()
+      .select()
+      .from(recordDays)
+      .as('from_rd');
+    const toRd = getDb()
+      .select()
+      .from(recordDays)
+      .as('to_rd');
+    
+    const results = await getDb()
+      .select({
+        history: rebookingHistory,
+        fromRecordDay: recordDays,
+      })
+      .from(rebookingHistory)
+      .leftJoin(recordDays, eq(rebookingHistory.fromRecordDayId, recordDays.id))
+      .where(eq(rebookingHistory.contestantId, contestantId));
+    
+    // Need to fetch toRecordDay separately and merge
+    const enriched = await Promise.all(results.map(async (r) => {
+      const [toRecordDay] = await getDb()
+        .select()
+        .from(recordDays)
+        .where(eq(recordDays.id, r.history.toRecordDayId));
+      return {
+        ...r.history,
+        fromRecordDay: r.fromRecordDay!,
+        toRecordDay: toRecordDay,
+      };
+    }));
+    
+    return enriched;
+  }
+
+  async getRebookingHistoryByRecordDay(recordDayId: string): Promise<Array<RebookingHistory & { contestant: Contestant; fromRecordDay: RecordDay; toRecordDay: RecordDay }>> {
+    // Get history where this record day was either the from or to
+    const results = await getDb()
+      .select({
+        history: rebookingHistory,
+        contestant: contestants,
+        fromRecordDay: recordDays,
+      })
+      .from(rebookingHistory)
+      .leftJoin(contestants, eq(rebookingHistory.contestantId, contestants.id))
+      .leftJoin(recordDays, eq(rebookingHistory.fromRecordDayId, recordDays.id))
+      .where(
+        sql`${rebookingHistory.fromRecordDayId} = ${recordDayId} OR ${rebookingHistory.toRecordDayId} = ${recordDayId}`
+      );
+    
+    // Fetch toRecordDay separately and merge
+    const enriched = await Promise.all(results.map(async (r) => {
+      const [toRecordDay] = await getDb()
+        .select()
+        .from(recordDays)
+        .where(eq(recordDays.id, r.history.toRecordDayId));
+      return {
+        ...r.history,
+        contestant: r.contestant!,
+        fromRecordDay: r.fromRecordDay!,
+        toRecordDay: toRecordDay,
+      };
+    }));
+    
+    return enriched;
   }
 }
 
