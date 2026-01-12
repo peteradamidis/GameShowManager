@@ -4058,12 +4058,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const savedAvailFooter = await storage.getSystemConfig('availability_email_footer');
       
       // Default email content values - use request values, then saved values, then hardcoded defaults
-      const finalEmailSubject = emailSubject || savedAvailSubject || 'Deal or No Deal - Availability Confirmation Request';
-      const finalEmailHeadline = emailHeadline || savedAvailHeadline || 'Confirm Your Availability';
-      const finalEmailIntro = emailIntro || savedAvailIntro || "Thank you for registering to be part of the Deal or No Deal audience! We're excited to potentially have you join us for an upcoming recording session.";
-      const finalEmailInstructions = emailInstructions || savedAvailInstructions || "Please click the button below to let us know which recording dates work for you. This helps us plan our audience seating and ensures we can accommodate you on your preferred day.";
-      const finalEmailButtonText = emailButtonText || 'Select My Available Dates';
-      const finalEmailFooter = emailFooter || savedAvailFooter || 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.';
+      const finalEmailSubject = emailSubject || savedAvailSubject || 'Deal or No Deal - Availability Check';
+      const finalEmailHeadline = emailHeadline || savedAvailHeadline || 'Availability Check';
+      const finalEmailIntro = emailIntro || savedAvailIntro || "It was great meeting you at your Deal or No Deal audition! We're reaching out to check your availability for upcoming recording dates.";
+      const finalEmailInstructions = emailInstructions || savedAvailInstructions || "Please complete the form as soon as possible so we can allocate recording slots. If you have any questions, please reply to this email.";
+      const finalEmailButtonText = emailButtonText || 'Click Here To Respond';
+      const finalEmailFooter = emailFooter || savedAvailFooter || 'This is an automated message from the Deal or No Deal production team. Please do not forward this email as it contains a unique response link.';
 
       for (const contestantId of contestantIds) {
         const contestant = await storage.getContestantById(contestantId);
@@ -4128,7 +4128,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             })
             .join('');
 
-          // Create professional HTML email template matching booking email aesthetic
+          // Get Microsoft Form URL from system config
+          const msFormUrl = await storage.getSystemConfig('availability_form_url') || 'https://forms.office.com/Pages/ResponsePage.aspx?id=ayXN-4f600uQrCY8eucYVbItEwiVLdlEnys-du5SGAxUMFhPMk9JTUFDUThQWDlLRllCOFhaUk5WVS4u';
+          
+          // Create professional HTML email template matching booking/standby email aesthetic
           const htmlEmailContent = `<!DOCTYPE html>
 <html>
 <head>
@@ -4146,8 +4149,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     <!-- Gold Title Bar -->
     <tr>
-      <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
-        <h1 style="color: #D4AF37; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+      <td style="background: linear-gradient(180deg, #4a1a1a 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0; letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
           ${finalEmailHeadline}
         </h1>
       </td>
@@ -4159,20 +4162,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
           <tr>
             <td style="padding: 35px 30px;">
+              <!-- Yellow Warning Notice -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border-radius: 8px; border: 1px solid #ffc107; margin: 0 0 20px 0;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0; line-height: 1.5;">
+                      IMPORTANT: This is an availability check only. Please complete the form below to confirm which recording dates suit you. A booking confirmation will be sent separately.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
               <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
                 Hi ${contestant.name.split(' ')[0]},
               </p>
               
-              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                 ${finalEmailIntro}
               </p>
               
               <!-- Recording Dates Box -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 20px 0;">
                 <tr>
                   <td style="padding: 20px;">
                     <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
-                      Available Recording Dates
+                      Upcoming Recording Dates
                     </h2>
                     <ul style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0; padding-left: 20px;">
                       ${recordDaysHtml}
@@ -4181,36 +4195,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 </tr>
               </table>
               
-              <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
-                ${finalEmailInstructions}
-              </p>
-              
-              <!-- Response Buttons (mailto) -->
-              <p style="color: #555555; font-size: 14px; text-align: center; margin: 0 0 15px 0; font-weight: bold;">
-                Please respond by clicking one of the buttons below:
-              </p>
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 15px auto;">
+              <!-- ACTION REQUIRED Notice with Button -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                 <tr>
-                  <td style="padding: 0 5px;">
-                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`AVAILABLE - ${contestant.name}`)}&body=${encodeURIComponent(`Hi,\n\nI am AVAILABLE for the Deal or No Deal recording dates.\n\nName: ${contestant.name}\n\nAvailable Dates: [Please list which dates work for you, or write "All dates"]\n\nThank you!`)}" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">✓ YES, I'M AVAILABLE</a>
-                  </td>
-                  <td style="padding: 0 5px;">
-                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`NOT AVAILABLE - ${contestant.name}`)}&body=${encodeURIComponent(`Hi,\n\nI am NOT AVAILABLE for the Deal or No Deal recording dates.\n\nName: ${contestant.name}\n\nReason: [Optional - let us know why]\n\nThank you!`)}" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">✗ NOT AVAILABLE</a>
+                  <td style="padding: 25px; text-align: center;">
+                    <p style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                      ARE YOU AVAILABLE?
+                    </p>
+                    <p style="color: #ffffff; font-size: 15px; margin: 0 0 20px 0;">
+                      Please click the button below to complete the availability form for you and your group.
+                    </p>
+                    <a href="${msFormUrl}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO RESPOND</a>
                   </td>
                 </tr>
               </table>
               
-              <!-- Questions/Special Needs Button -->
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
+              <div style="color: #444444; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                <p style="margin: 0 0 12px 0;">${finalEmailInstructions}</p>
+              </div>
+              
+              <!-- What to Expect Box -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
                 <tr>
-                  <td style="padding: 0 5px;">
-                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`QUESTION - ${contestant.name}`)}&body=${encodeURIComponent(`Hi,\n\nI have a question regarding the Deal or No Deal recording dates.\n\nName: ${contestant.name}\n\nMy question/special needs:\n[Please describe your question or any special requirements]\n\nThank you!`)}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(13,110,253,0.3);">? QUESTIONS / SPECIAL NEEDS</a>
+                  <td style="padding: 20px;">
+                    <h3 style="color: #333333; font-size: 14px; font-weight: bold; margin: 0 0 12px 0;">
+                      What happens next?
+                    </h3>
+                    <ul style="color: #555555; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
+                      <li>Complete the availability form with your preferred dates</li>
+                      <li>Our team will review responses and allocate recording slots</li>
+                      <li>You will receive a separate booking confirmation email</li>
+                      <li>Final booking details will include arrival time and location</li>
+                    </ul>
                   </td>
                 </tr>
               </table>
               
-              <p style="color: #888888; font-size: 12px; text-align: center; margin: 0;">
-                Clicking a button will open your email app with a pre-filled message
+              <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
+                We look forward to hearing from you!
+              </p>
+              <p style="color: #333333; font-size: 15px; margin: 0;">
+                Kind Regards,<br/>
+                <strong>The Deal Or No Deal Team</strong>
               </p>
             </td>
           </tr>
@@ -4241,18 +4267,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }))
             .join('\n  - ');
             
-          const plainTextContent = `Hi ${contestant.name},
+          const plainTextContent = `Hi ${contestant.name.split(' ')[0]},
+
+IMPORTANT: This is an availability check only. Please complete the form to confirm which recording dates suit you. A booking confirmation will be sent separately.
 
 ${finalEmailIntro}
 
-Available Recording Dates:
+UPCOMING RECORDING DATES:
   - ${recordDaysText}
+
+ARE YOU AVAILABLE?
+Please click the link below to complete the availability form for you and your group:
+${msFormUrl}
 
 ${finalEmailInstructions}
 
-Click here to select your available dates: ${responseUrl}
+WHAT HAPPENS NEXT?
+- Complete the availability form with your preferred dates
+- Our team will review responses and allocate recording slots
+- You will receive a separate booking confirmation email
+- Final booking details will include arrival time and location
 
-This link will expire in 14 days.
+We look forward to hearing from you!
+
+Kind Regards,
+The Deal Or No Deal Team
 
 ${finalEmailFooter}`;
 
@@ -7870,11 +7909,12 @@ ${finalEmailFooter}`;
   app.get("/api/email-preview/availability", async (req, res) => {
     try {
       // Get saved template values with fallback defaults
-      const subject = await storage.getSystemConfig('availability_email_subject') || 'Deal or No Deal - Availability Confirmation Request';
-      const headline = await storage.getSystemConfig('availability_email_headline') || 'Confirm Your Availability';
-      const intro = await storage.getSystemConfig('availability_email_intro') || "Thank you for registering to be part of the Deal or No Deal audience! We're excited to potentially have you join us for an upcoming recording session.";
-      const instructions = await storage.getSystemConfig('availability_email_instructions') || 'Please click the button below to let us know which recording dates work for you. This helps us plan our audience seating and ensures we can accommodate you on your preferred day.';
-      const footer = await storage.getSystemConfig('availability_email_footer') || 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.';
+      const subject = await storage.getSystemConfig('availability_email_subject') || 'Deal or No Deal - Availability Check';
+      const headline = await storage.getSystemConfig('availability_email_headline') || 'Availability Check';
+      const intro = await storage.getSystemConfig('availability_email_intro') || "It was great meeting you at your Deal or No Deal audition! We're reaching out to check your availability for upcoming recording dates.";
+      const instructions = await storage.getSystemConfig('availability_email_instructions') || "Please complete the form as soon as possible so we can allocate recording slots. If you have any questions, please reply to this email.";
+      const footer = await storage.getSystemConfig('availability_email_footer') || 'This is an automated message from the Deal or No Deal production team. Please do not forward this email as it contains a unique response link.';
+      const msFormUrl = await storage.getSystemConfig('availability_form_url') || 'https://forms.office.com/Pages/ResponsePage.aspx?id=ayXN-4f600uQrCY8eucYVbItEwiVLdlEnys-du5SGAxUMFhPMk9JTUFDUThQWDlLRllCOFhaUk5WVS4u';
       
       // Sample data for preview
       const sampleName = 'Peter';
@@ -7900,8 +7940,8 @@ ${finalEmailFooter}`;
         </td>
       </tr>
       <tr>
-        <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
-          <h1 style="color: #D4AF37; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+        <td style="background: linear-gradient(180deg, #4a1a1a 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+          <h1 style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0; letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
             ${headline}
           </h1>
         </td>
@@ -7911,17 +7951,31 @@ ${finalEmailFooter}`;
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
             <tr>
               <td style="padding: 35px 30px;">
+                <!-- Yellow Warning Notice -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border-radius: 8px; border: 1px solid #ffc107; margin: 0 0 20px 0;">
+                  <tr>
+                    <td style="padding: 15px;">
+                      <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0; line-height: 1.5;">
+                        IMPORTANT: This is an availability check only. Please complete the form below to confirm which recording dates suit you. A booking confirmation will be sent separately.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+                
                 <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
                   Hi ${sampleName},
                 </p>
-                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+                
+                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                   ${intro}
                 </p>
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+                
+                <!-- Recording Dates Box -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 20px 0;">
                   <tr>
                     <td style="padding: 20px;">
                       <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
-                        Available Recording Dates
+                        Upcoming Recording Dates
                       </h2>
                       <ul style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0; padding-left: 20px;">
                         <li style="margin-bottom: 6px;">Wednesday, 15 January 2026 <span style="color: #888888;">(RX01)</span></li>
@@ -7931,31 +7985,49 @@ ${finalEmailFooter}`;
                     </td>
                   </tr>
                 </table>
-                <p style="color: #555555; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
-                  ${instructions}
-                </p>
-                <p style="color: #555555; font-size: 14px; text-align: center; margin: 0 0 15px 0; font-weight: bold;">
-                  Please respond by clicking one of the buttons below:
-                </p>
-                <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 15px auto;">
+                
+                <!-- ACTION REQUIRED Notice with Button -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                   <tr>
-                    <td style="padding: 0 5px;">
-                      <a href="#" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">&#10003; YES, I'M AVAILABLE</a>
-                    </td>
-                    <td style="padding: 0 5px;">
-                      <a href="#" style="display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">&#10007; NOT AVAILABLE</a>
+                    <td style="padding: 25px; text-align: center;">
+                      <p style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                        ARE YOU AVAILABLE?
+                      </p>
+                      <p style="color: #ffffff; font-size: 15px; margin: 0 0 20px 0;">
+                        Please click the button below to complete the availability form for you and your group.
+                      </p>
+                      <a href="${msFormUrl}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO RESPOND</a>
                     </td>
                   </tr>
                 </table>
-                <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 20px auto;">
+                
+                <div style="color: #444444; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                  <p style="margin: 0 0 12px 0;">${instructions}</p>
+                </div>
+                
+                <!-- What to Expect Box -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
                   <tr>
-                    <td style="padding: 0 5px;">
-                      <a href="#" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; box-shadow: 0 2px 6px rgba(13,110,253,0.3);">? QUESTIONS / SPECIAL NEEDS</a>
+                    <td style="padding: 20px;">
+                      <h3 style="color: #333333; font-size: 14px; font-weight: bold; margin: 0 0 12px 0;">
+                        What happens next?
+                      </h3>
+                      <ul style="color: #555555; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
+                        <li>Complete the availability form with your preferred dates</li>
+                        <li>Our team will review responses and allocate recording slots</li>
+                        <li>You will receive a separate booking confirmation email</li>
+                        <li>Final booking details will include arrival time and location</li>
+                      </ul>
                     </td>
                   </tr>
                 </table>
-                <p style="color: #888888; font-size: 12px; text-align: center; margin: 0;">
-                  Clicking a button will open your email app with a pre-filled message
+                
+                <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
+                  We look forward to hearing from you!
+                </p>
+                <p style="color: #333333; font-size: 15px; margin: 0;">
+                  Kind Regards,<br/>
+                  <strong>The Deal Or No Deal Team</strong>
                 </p>
               </td>
             </tr>

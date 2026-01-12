@@ -246,11 +246,11 @@ const EMAIL_TEMPLATE_DEFAULTS = {
   booking_email_additional_instructions: 'We will be recording multiple episodes on the day. The recording of these shows will take approximately 10 hours. Please be prepared to make yourself available for the full length of time.\n\nPlease find attached important information relating to your attendance at the Deal or No Deal recording. Please read this attachment thoroughly and get in touch ASAP should there be any issues.\n\nYou will receive another email closer to your record date with additional paperwork.',
   booking_email_footer: 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.',
   // Availability email
-  availability_email_subject: 'Deal or No Deal - Availability Confirmation Request',
-  availability_email_headline: 'Confirm Your Availability',
-  availability_email_intro: 'Thank you for registering to be part of the Deal or No Deal audience! We\'re excited to potentially have you join us for an upcoming recording session.',
-  availability_email_instructions: 'Please click the button below to let us know which recording dates work for you. This helps us plan our audience seating and ensures we can accommodate you on your preferred day.',
-  availability_email_footer: 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.',
+  availability_email_subject: 'Deal or No Deal - Availability Check',
+  availability_email_headline: 'Availability Check',
+  availability_email_intro: 'It was great meeting you at your Deal or No Deal audition! We\'re reaching out to check your availability for upcoming recording dates.',
+  availability_email_instructions: 'Please complete the form as soon as possible so we can allocate recording slots. If you have any questions, please reply to this email.',
+  availability_email_footer: 'This is an automated message from the Deal or No Deal production team. Please do not forward this email as it contains a unique response link.',
   // Standby email  
   standby_email_headline: 'You\'re on Our Standby List!',
   standby_email_intro: 'You have been added to our standby list for an upcoming Deal or No Deal recording. This means you may be called to attend if a seat becomes available.',
@@ -278,6 +278,7 @@ export default function Settings() {
   const [availEmailIntro, setAvailEmailIntro] = useState(EMAIL_TEMPLATE_DEFAULTS.availability_email_intro);
   const [availEmailInstructions, setAvailEmailInstructions] = useState(EMAIL_TEMPLATE_DEFAULTS.availability_email_instructions);
   const [availEmailFooter, setAvailEmailFooter] = useState(EMAIL_TEMPLATE_DEFAULTS.availability_email_footer);
+  const [availFormUrl, setAvailFormUrl] = useState('https://forms.office.com/Pages/ResponsePage.aspx?id=ayXN-4f600uQrCY8eucYVbItEwiVLdlEnys-du5SGAxUMFhPMk9JTUFDUThQWDlLRllCOFhaUk5WVS4u');
   const [availTemplateChanged, setAvailTemplateChanged] = useState(false);
   
   // Standby email template state
@@ -309,6 +310,7 @@ export default function Settings() {
   const { data: savedAvailIntro } = useQuery<string | null>({ queryKey: ["/api/system-config/availability_email_intro"] });
   const { data: savedAvailInstructions } = useQuery<string | null>({ queryKey: ["/api/system-config/availability_email_instructions"] });
   const { data: savedAvailFooter } = useQuery<string | null>({ queryKey: ["/api/system-config/availability_email_footer"] });
+  const { data: savedAvailFormUrl } = useQuery<string | null>({ queryKey: ["/api/system-config/availability_form_url"] });
   
   // Fetch saved standby email template values
   const { data: savedStandbyHeadline } = useQuery<string | null>({ queryKey: ["/api/system-config/standby_email_headline"] });
@@ -359,6 +361,9 @@ export default function Settings() {
   useEffect(() => {
     if (savedAvailFooter) setAvailEmailFooter(savedAvailFooter);
   }, [savedAvailFooter]);
+  useEffect(() => {
+    if (savedAvailFormUrl) setAvailFormUrl(savedAvailFormUrl);
+  }, [savedAvailFormUrl]);
   
   // Load saved standby email template values
   useEffect(() => {
@@ -434,6 +439,7 @@ export default function Settings() {
         apiRequest("PUT", "/api/system-config/availability_email_intro", { value: availEmailIntro }),
         apiRequest("PUT", "/api/system-config/availability_email_instructions", { value: availEmailInstructions }),
         apiRequest("PUT", "/api/system-config/availability_email_footer", { value: availEmailFooter }),
+        apiRequest("PUT", "/api/system-config/availability_form_url", { value: availFormUrl }),
       ]);
     },
     onSuccess: () => {
@@ -444,6 +450,7 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/availability_email_intro"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/availability_email_instructions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/availability_email_footer"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/availability_form_url"] });
     },
     onError: (error: any) => {
       toast({ title: "Error saving template", description: error.message, variant: "destructive" });
@@ -1297,6 +1304,21 @@ export default function Settings() {
                 placeholder="Please click the button below..."
                 className="min-h-[60px]"
                 data-testid="input-avail-email-instructions"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="avail-form-url">Microsoft Form URL</Label>
+              <p className="text-xs text-muted-foreground">The URL for the Microsoft Form that contestants will be directed to</p>
+              <Input
+                id="avail-form-url"
+                value={availFormUrl}
+                onChange={(e) => {
+                  setAvailFormUrl(e.target.value);
+                  setAvailTemplateChanged(true);
+                }}
+                placeholder="https://forms.office.com/..."
+                data-testid="input-avail-form-url"
               />
             </div>
             
