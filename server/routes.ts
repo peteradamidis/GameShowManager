@@ -5317,6 +5317,17 @@ ${finalEmailFooter}`;
                 Hi ${contestant.name.split(' ')[0]},
               </p>
               
+              <!-- Important Notice -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 0 0 20px 0;">
+                <tr>
+                  <td style="padding: 12px 15px;">
+                    <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0; line-height: 1.5;">
+                      IMPORTANT: This email is not your ticket. You must follow the instructions below to confirm your attendance and obtain your tickets.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
               <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                 ${emailIntro.split('\n\n').map((paragraph: string) => 
                   `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
@@ -6916,6 +6927,17 @@ ${finalEmailFooter}`;
                 Hi ${testContestantName.split(' ')[0]},
               </p>
               
+              <!-- Important Notice -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 0 0 20px 0;">
+                <tr>
+                  <td style="padding: 12px 15px;">
+                    <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0; line-height: 1.5;">
+                      IMPORTANT: This email is not your ticket. You must follow the instructions below to confirm your attendance and obtain your tickets.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
               <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                 ${emailIntro.split('\n\n').map((paragraph: string) => 
                   `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
@@ -7742,6 +7764,18 @@ ${finalEmailFooter}`;
                 <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
                   Hi ${sampleName},
                 </p>
+                
+                <!-- Important Notice -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 0 0 20px 0;">
+                  <tr>
+                    <td style="padding: 12px 15px;">
+                      <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0; line-height: 1.5;">
+                        IMPORTANT: This email is not your ticket. You must follow the instructions below to confirm your attendance and obtain your tickets.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+                
                 <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                   ${intro}
                 </div>
