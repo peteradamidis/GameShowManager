@@ -5675,21 +5675,6 @@ ${finalEmailFooter}`;
         return res.status(400).json({ error: "Contestant has no email address" });
       }
 
-      // Generate PDF ticket
-      const PDFDocument = (await import('pdfkit')).default;
-      const pdfDoc = new PDFDocument({
-        size: 'A5',
-        layout: 'landscape',
-        margins: { top: 30, bottom: 30, left: 40, right: 40 }
-      });
-
-      const chunks: Buffer[] = [];
-      pdfDoc.on('data', (chunk: Buffer) => chunks.push(chunk));
-      
-      const pdfPromise = new Promise<Buffer>((resolve) => {
-        pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
-      });
-
       // Format date
       const recordDate = new Date(recordDay.date).toLocaleDateString('en-AU', { 
         weekday: 'long', 
@@ -5698,87 +5683,47 @@ ${finalEmailFooter}`;
         day: 'numeric' 
       });
 
-      // Dark maroon background
-      pdfDoc.rect(0, 0, pdfDoc.page.width, pdfDoc.page.height).fill('#2a0a0a');
-      
-      // Gold border
-      pdfDoc.rect(15, 15, pdfDoc.page.width - 30, pdfDoc.page.height - 30)
-        .lineWidth(3)
-        .stroke('#D4AF37');
-      
-      // Inner border
-      pdfDoc.rect(20, 20, pdfDoc.page.width - 40, pdfDoc.page.height - 40)
-        .lineWidth(1)
-        .stroke('#D4AF37');
-      
-      // Title
-      pdfDoc.fillColor('#D4AF37')
-        .fontSize(28)
-        .font('Helvetica-Bold')
-        .text('DEAL OR NO DEAL', 0, 45, { align: 'center' });
-      
-      // Subtitle
-      pdfDoc.fillColor('#ffffff')
-        .fontSize(16)
-        .font('Helvetica')
-        .text('AUDIENCE TICKET', 0, 80, { align: 'center' });
-      
-      // Gold divider
-      pdfDoc.moveTo(100, 105).lineTo(pdfDoc.page.width - 100, 105)
-        .lineWidth(2)
-        .stroke('#D4AF37');
-      
-      // Contestant name
-      pdfDoc.fillColor('#D4AF37')
-        .fontSize(20)
-        .font('Helvetica-Bold')
-        .text(contestant.name.toUpperCase(), 0, 120, { align: 'center' });
-      
-      // Details section
-      const detailsY = 155;
-      const leftCol = 60;
-      const rightCol = pdfDoc.page.width / 2 + 20;
-      
-      // Left column
-      pdfDoc.fillColor('#ffffff')
-        .fontSize(11)
-        .font('Helvetica-Bold')
-        .text('DATE:', leftCol, detailsY);
-      pdfDoc.font('Helvetica')
-        .text(recordDate, leftCol, detailsY + 15);
-      
-      pdfDoc.font('Helvetica-Bold')
-        .text('ARRIVAL TIME:', leftCol, detailsY + 40);
-      pdfDoc.font('Helvetica')
-        .text('7:30 AM', leftCol, detailsY + 55);
-      
-      // Right column
-      pdfDoc.font('Helvetica-Bold')
-        .text('BLOCK:', rightCol, detailsY);
-      pdfDoc.font('Helvetica')
-        .text(`Block ${assignment.blockNumber}`, rightCol, detailsY + 15);
-      
-      pdfDoc.font('Helvetica-Bold')
-        .text('SEAT:', rightCol, detailsY + 40);
-      pdfDoc.font('Helvetica')
-        .text(assignment.seatLabel, rightCol, detailsY + 55);
-      
-      // Location at bottom
-      pdfDoc.fillColor('#aa8888')
-        .fontSize(9)
-        .font('Helvetica')
-        .text('Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008', 0, pdfDoc.page.height - 50, { align: 'center' });
-      
-      // Footer note
-      pdfDoc.fillColor('#888888')
-        .fontSize(8)
-        .text('Please bring this ticket and valid photo ID. Keep this ticket safe - it cannot be replaced.', 0, pdfDoc.page.height - 35, { align: 'center' });
+      // Read the static PDF file for attachment
+      const pdfPath = path.join(process.cwd(), 'server', 'assets', 'Contestant_Information.pdf');
+      let pdfBuffer: Buffer;
+      try {
+        pdfBuffer = fs.readFileSync(pdfPath);
+      } catch (error) {
+        console.error("Error reading PDF file:", error);
+        return res.status(500).json({ error: "Contestant information PDF not found" });
+      }
 
-      pdfDoc.end();
+      // Prepare banner image for CID embedding
+      const ticketBannerCid = 'ticket-banner-image';
+      let ticketBannerBuffer: Buffer | null = null;
+      let ticketBannerContentType = 'image/png';
+      let ticketBannerFilename = 'dond_banner.png';
+      let bannerUrl = '';
       
-      const pdfBuffer = await pdfPromise;
+      // Get banner URL from system config or use default
+      const bannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
       
-      // Create email HTML
+      // Prepare banner for CID embedding
+      bannerUrl = `cid:${ticketBannerCid}`;
+      
+      if (bannerUrlConfig.startsWith('/')) {
+        const bannerPath = path.join(process.cwd(), bannerUrlConfig.replace(/^\//, ''));
+        try {
+          if (fs.existsSync(bannerPath)) {
+            ticketBannerBuffer = fs.readFileSync(bannerPath);
+            const ext = path.extname(bannerPath).toLowerCase().replace('.', '');
+            ticketBannerContentType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+            ticketBannerFilename = path.basename(bannerPath);
+          }
+        } catch (error) {
+          console.warn(`Warning: Could not read banner image at ${bannerPath}:`, error);
+          bannerUrl = bannerUrlConfig;  // Fallback to URL
+        }
+      } else {
+        bannerUrl = bannerUrlConfig;  // External URL
+      }
+      
+      // Create email HTML with banner
       const emailHtml = `<!DOCTYPE html>
 <html>
 <head>
@@ -5787,26 +5732,34 @@ ${finalEmailFooter}`;
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    
+    <!-- Full-width Banner Image -->
     <tr>
-      <td style="background: linear-gradient(180deg, #4a1a1a 0%, #2a0a0a 100%); padding: 30px; text-align: center;">
-        <h1 style="color: #D4AF37; font-size: 28px; font-weight: bold; margin: 0 0 10px 0; letter-spacing: 3px; text-transform: uppercase;">
-          DEAL OR NO DEAL
-        </h1>
-        <p style="color: #ffffff; font-size: 16px; margin: 0;">
-          YOUR TICKET IS ATTACHED
-        </p>
+      <td style="padding: 0; line-height: 0;">
+        <img src="${bannerUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />
       </td>
     </tr>
+    
+    <!-- Gold Title Bar -->
+    <tr>
+      <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          YOUR TICKET IS ATTACHED
+        </h1>
+      </td>
+    </tr>
+    
+    <!-- Content Card -->
     <tr>
       <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
           <tr>
             <td style="padding: 30px;">
               <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                 Hi ${contestant.name.split(' ')[0]},
               </p>
               <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                Thank you for confirming your attendance! Your official ticket is attached to this email as a PDF.
+                Thank you for confirming your attendance! Your Record Day Information is attached to this email as a PDF.
               </p>
               
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
@@ -5824,9 +5777,6 @@ ${finalEmailFooter}`;
                     <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
                       <strong style="color: #8B0000;">BLOCK:</strong> ${assignment.blockNumber}
                     </p>
-                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
-                      <strong style="color: #8B0000;">SEAT:</strong> ${assignment.seatLabel}
-                    </p>
                     <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
                       <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
                     </p>
@@ -5838,7 +5788,7 @@ ${finalEmailFooter}`;
                 <tr>
                   <td style="padding: 15px;">
                     <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0;">
-                      IMPORTANT: Please print or save your ticket. Bring it with you along with valid photo ID.
+                      IMPORTANT: Please read the attached PDF carefully. Bring valid photo ID on the day.
                     </p>
                   </td>
                 </tr>
@@ -5856,6 +5806,8 @@ ${finalEmailFooter}`;
         </table>
       </td>
     </tr>
+    
+    <!-- Footer -->
     <tr>
       <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
         <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
@@ -5873,16 +5825,29 @@ ${finalEmailFooter}`;
         senderName: senderNameConfig || 'Deal or No Deal',
       };
 
-      // Send email with PDF attachment
+      // Build attachments array
+      const attachments: any[] = [{
+        filename: 'Record_Day_Information.pdf',
+        content: pdfBuffer,
+        contentType: 'application/pdf'
+      }];
+      
+      // Add banner as CID attachment if available
+      if (ticketBannerBuffer) {
+        attachments.push({
+          filename: ticketBannerFilename,
+          content: ticketBannerBuffer,
+          contentType: ticketBannerContentType,
+          cid: ticketBannerCid
+        });
+      }
+
+      // Send email with PDF attachment and banner
       await sendEmailWithAttachment(
         contestant.email,
-        'Deal or No Deal - Your Ticket',
+        'Deal or No Deal - Record Day Information',
         emailHtml,
-        [{
-          filename: `DOND_Ticket_${contestant.name.replace(/\s+/g, '_')}.pdf`,
-          content: pdfBuffer,
-          contentType: 'application/pdf'
-        }],
+        attachments,
         emailConfig
       );
 
