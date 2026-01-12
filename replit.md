@@ -35,6 +35,7 @@ Do not make changes to the file `Y`.
 - **Mobility/Access Notes Indicator:** Visually highlights contestants with mobility notes on the seating chart.
 - **Booking Master Page:** A comprehensive workflow tracking system with inline editing, checkbox tracking, and real-time WebSocket-based synchronization for collaborative use. Includes a responses panel to view booking confirmation details and facilitate follow-ups.
 - **Standby Seating System:** Allows drag-and-drop assignment of standbys to any empty seats on the seating chart. Only works in RX Mode (locked day). The Standbys panel appears next to Block 7 with amber styling when the day is locked.
+- **Rebooking History Tracking:** Full audit trail of contestant rebookings with atomic transaction support using PostgreSQL advisory locks. Tracks from/to record days, block/seat positions, optional reason, timestamp, and user. Displayed in Booking Responses page with collapsible sections.
 
 ### Feature Specifications
 - **Contestant Management:** Profiles, search, filtering by status, gender, rating, etc.
