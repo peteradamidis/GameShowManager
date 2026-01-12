@@ -119,9 +119,13 @@ export default function BookingResponses() {
   const [changeDateAssignment, setChangeDateAssignment] = useState<BookingAssignment | null>(null);
   const [newRecordDayId, setNewRecordDayId] = useState<string>("");
   
-  // Resend email dialog state
+  // Resend booking email dialog state
   const [resendDialogOpen, setResendDialogOpen] = useState(false);
   const [resendAssignment, setResendAssignment] = useState<BookingAssignment | null>(null);
+  
+  // Resend ticket email dialog state
+  const [resendTicketDialogOpen, setResendTicketDialogOpen] = useState(false);
+  const [resendTicketAssignment, setResendTicketAssignment] = useState<BookingAssignment | null>(null);
   
   // Rebooking history section state
   const [historyExpanded, setHistoryExpanded] = useState(false);
@@ -306,6 +310,26 @@ export default function BookingResponses() {
     onError: (error: any) => {
       toast({ 
         title: "Failed to send ticket", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
+  // Mutation for resending ticket email (with force flag to bypass already-sent check)
+  const resendTicketMutation = useMutation({
+    mutationFn: async (assignmentId: string) => {
+      return apiRequest("POST", `/api/seat-assignments/${assignmentId}/send-ticket`, { resend: true });
+    },
+    onSuccess: () => {
+      toast({ title: "Ticket resent", description: "Ticket email with PDF has been resent to the contestant" });
+      setResendTicketDialogOpen(false);
+      setResendTicketAssignment(null);
+      invalidateBookingQueries();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to resend ticket", 
         description: error.message,
         variant: "destructive" 
       });
@@ -647,6 +671,17 @@ export default function BookingResponses() {
   const handleResendConfirm = () => {
     if (!resendAssignment) return;
     resendBookingEmailMutation.mutate(resendAssignment.id);
+  };
+
+  // Resend ticket email handlers
+  const handleResendTicketClick = (assignment: BookingAssignment) => {
+    setResendTicketAssignment(assignment);
+    setResendTicketDialogOpen(true);
+  };
+
+  const handleResendTicketConfirm = () => {
+    if (!resendTicketAssignment) return;
+    resendTicketMutation.mutate(resendTicketAssignment.id);
   };
 
   const getStatusBadge = (assignment: BookingAssignment) => {
@@ -1094,11 +1129,24 @@ export default function BookingResponses() {
                       <TableCell className="text-center">
                         {isConfirmed ? (
                           item.ticketEmailSent ? (
-                            <div className="flex items-center justify-center gap-1 text-green-600 dark:text-green-400">
-                              <Ticket className="h-4 w-4" />
-                              <span className="text-xs">
-                                {format(new Date(item.ticketEmailSent), "MMM d")}
-                              </span>
+                            <div className="flex flex-col items-center gap-1">
+                              <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                                <Ticket className="h-4 w-4" />
+                                <span className="text-xs">
+                                  {format(new Date(item.ticketEmailSent), "MMM d")}
+                                </span>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 px-2 text-xs"
+                                onClick={() => handleResendTicketClick(item)}
+                                disabled={resendTicketMutation.isPending}
+                                data-testid={`button-resend-ticket-${item.id}`}
+                              >
+                                <RefreshCw className="h-3 w-3 mr-1" />
+                                Resend
+                              </Button>
                             </div>
                           ) : (
                             <Button
@@ -1528,6 +1576,58 @@ export default function BookingResponses() {
                 <>
                   <Send className="h-4 w-4 mr-2" />
                   Resend Email
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Resend Ticket Email Confirmation Dialog */}
+      <Dialog open={resendTicketDialogOpen} onOpenChange={setResendTicketDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Ticket className="h-5 w-5 text-amber-600" />
+              Resend Ticket Email
+            </DialogTitle>
+            <DialogDescription>
+              {resendTicketAssignment && (
+                <>
+                  Are you sure you want to resend the ticket email to{" "}
+                  <strong>{resendTicketAssignment.contestant?.name}</strong>?
+                  <br /><br />
+                  This will send another copy of the ticket email with PDF attachment to{" "}
+                  <strong>{resendTicketAssignment.contestant?.email}</strong>.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setResendTicketDialogOpen(false);
+                setResendTicketAssignment(null);
+              }}
+              data-testid="button-cancel-resend-ticket"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleResendTicketConfirm}
+              disabled={resendTicketMutation.isPending}
+              data-testid="button-confirm-resend-ticket"
+            >
+              {resendTicketMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Ticket className="h-4 w-4 mr-2" />
+                  Resend Ticket
                 </>
               )}
             </Button>
