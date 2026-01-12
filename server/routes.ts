@@ -7494,6 +7494,9 @@ ${finalEmailFooter}`;
       const contestants = await storage.getContestants();
       const recordDays = await storage.getRecordDays();
       
+      // Get canceled assignments (for declined count)
+      const canceledAssignments = await storage.getCanceledAssignments();
+      
       // Start with all assignments
       let recordDayFilteredAssignments = [...assignments];
       
@@ -7502,8 +7505,19 @@ ${finalEmailFooter}`;
         recordDayFilteredAssignments = recordDayFilteredAssignments.filter((a: SeatAssignment) => a.recordDayId === recordDayId);
       }
       
-      // Helper to check if assignment is declined (notes start with [DECLINED])
+      // Filter canceled assignments by record day for declined count
+      let recordDayFilteredCanceled = [...canceledAssignments];
+      if (recordDayId && typeof recordDayId === 'string' && recordDayId !== 'all') {
+        recordDayFilteredCanceled = recordDayFilteredCanceled.filter((a: any) => a.recordDayId === recordDayId);
+      }
+      
+      // Helper to check if assignment is declined (notes/reason start with [DECLINED])
       const isDeclined = (a: SeatAssignment) => a.notes?.startsWith('[DECLINED]');
+      const isCanceledDeclined = (a: any) => a.reason?.startsWith('[DECLINED]');
+      
+      // Count declined from both active assignments and canceled assignments
+      const declinedFromActive = recordDayFilteredAssignments.filter((a: SeatAssignment) => isDeclined(a)).length;
+      const declinedFromCanceled = recordDayFilteredCanceled.filter((a: any) => isCanceledDeclined(a)).length;
       
       // Calculate stats from record-day-filtered data (before status filtering)
       const stats = {
@@ -7515,7 +7529,7 @@ ${finalEmailFooter}`;
         confirmed: recordDayFilteredAssignments.filter((a: SeatAssignment) => 
           a.confirmedRsvp && !isDeclined(a)
         ).length,
-        declined: recordDayFilteredAssignments.filter((a: SeatAssignment) => isDeclined(a)).length,
+        declined: declinedFromActive + declinedFromCanceled,
       };
       
       // Now filter by status for the data results
