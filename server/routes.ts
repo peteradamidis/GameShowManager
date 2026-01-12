@@ -5351,10 +5351,13 @@ ${finalEmailFooter}`;
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                 <tr>
                   <td style="padding: 20px; text-align: center;">
-                    <p style="color: #D4AF37; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
-                      Can you attend? Please respond YES or NO and confirm the members of your auditioned group who will be attending ASAP.
+                    <p style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                      CAN YOU ATTEND?
                     </p>
-                    <p style="color: #ffffff; font-size: 14px; margin: 0;">
+                    <p style="color: #ffffff; font-size: 15px; margin: 0 0 8px 0;">
+                      Please respond YES or NO and confirm the members of your auditioned group who will be attending ASAP.
+                    </p>
+                    <p style="color: #ffcccc; font-size: 13px; margin: 0;">
                       Click the button below - your email app will open with a form to complete.
                     </p>
                   </td>
@@ -6946,10 +6949,13 @@ ${finalEmailFooter}`;
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                 <tr>
                   <td style="padding: 20px; text-align: center;">
-                    <p style="color: #D4AF37; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
-                      Can you attend? Please respond YES or NO and confirm the members of your auditioned group who will be attending ASAP.
+                    <p style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                      CAN YOU ATTEND?
                     </p>
-                    <p style="color: #ffffff; font-size: 14px; margin: 0;">
+                    <p style="color: #ffffff; font-size: 15px; margin: 0 0 8px 0;">
+                      Please respond YES or NO and confirm the members of your auditioned group who will be attending ASAP.
+                    </p>
+                    <p style="color: #ffcccc; font-size: 13px; margin: 0;">
                       Click the button below - your email app will open with a form to complete.
                     </p>
                   </td>
@@ -7767,10 +7773,13 @@ ${finalEmailFooter}`;
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #8B0000; border-radius: 8px; margin: 0 0 20px 0;">
                   <tr>
                     <td style="padding: 20px; text-align: center;">
-                      <p style="color: #D4AF37; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
-                        Can you attend? Please respond YES or NO and confirm the members of your auditioned group who will be attending ASAP.
+                      <p style="color: #D4AF37; font-size: 24px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                        CAN YOU ATTEND?
                       </p>
-                      <p style="color: #ffffff; font-size: 14px; margin: 0;">
+                      <p style="color: #ffffff; font-size: 15px; margin: 0 0 8px 0;">
+                        Please respond YES or NO and confirm the members of your auditioned group who will be attending ASAP.
+                      </p>
+                      <p style="color: #ffcccc; font-size: 13px; margin: 0;">
                         Click the button below - your email app will open with a form to complete.
                       </p>
                     </td>
