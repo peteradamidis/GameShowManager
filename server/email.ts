@@ -302,7 +302,8 @@ export async function sendPaperworkEmail(
   subject: string, 
   body: string, 
   htmlBody?: string,
-  config?: EmailConfig
+  config?: EmailConfig,
+  attachments?: EmailAttachment[]
 ): Promise<boolean> {
   try {
     const transport = await getAdobeSignTransporter();
@@ -312,6 +313,14 @@ export async function sendPaperworkEmail(
     const domain = extractDomain(smtpConfig.fromEmail);
     const messageId = generateMessageId(domain);
     
+    // Convert attachments to nodemailer format (supports both regular and CID-embedded attachments)
+    const nodemailerAttachments = attachments?.map(att => ({
+      filename: att.filename,
+      content: att.content,
+      contentType: att.contentType,
+      ...(att.cid ? { cid: att.cid, contentDisposition: 'inline' as const } : {}),
+    })) || [];
+    
     await transport.sendMail({
       from: `${senderName} <${smtpConfig.fromEmail}>`,
       to,
@@ -320,6 +329,7 @@ export async function sendPaperworkEmail(
       text: body,
       html: htmlBody || body,
       messageId,
+      attachments: nodemailerAttachments,
       headers: {
         'X-Priority': '3',
         'X-Mailer': 'Deal-or-No-Deal-Paperwork-System',

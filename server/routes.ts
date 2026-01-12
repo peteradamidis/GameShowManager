@@ -7275,7 +7275,35 @@ ${finalEmailFooter}`;
       sentBy = sentBy || 'System';
       
       const contestants = await storage.getContestants();
-      const { sendAdobeSignEmail } = await import("./email");
+      const { sendPaperworkEmail, getAdobeSignSmtpConfig } = await import("./email");
+      
+      // Get paperwork email template settings
+      const paperworkHeadline = await storage.getSystemConfig('paperwork_email_headline') || 'Important Paperwork Required';
+      const paperworkFooter = await storage.getSystemConfig('paperwork_email_footer') || 'This is an automated message from the Deal or No Deal production team.';
+      
+      // Get banner image configuration
+      const bannerUrlConfig = await storage.getSystemConfig('booking_email_banner_url') || '/uploads/banners/dond-banner.png';
+      let bannerUrl = bannerUrlConfig;
+      let bannerBuffer: Buffer | null = null;
+      let bannerContentType = 'image/png';
+      let bannerFilename = 'dond-banner.png';
+      const bannerCid = 'paperwork-banner-image';
+      
+      // Try to load banner from local file
+      if (bannerUrlConfig.startsWith('/')) {
+        const bannerPath = path.join(process.cwd(), bannerUrlConfig.replace(/^\//, ''));
+        try {
+          if (fs.existsSync(bannerPath)) {
+            bannerBuffer = fs.readFileSync(bannerPath);
+            const ext = path.extname(bannerPath).toLowerCase().replace('.', '');
+            bannerContentType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+            bannerFilename = path.basename(bannerPath);
+            bannerUrl = `cid:${bannerCid}`;
+          }
+        } catch (error) {
+          console.warn('Warning: Could not read banner image for paperwork email:', error);
+        }
+      }
       
       let sent = 0;
       let failed = 0;
@@ -7297,17 +7325,132 @@ ${finalEmailFooter}`;
             continue;
           }
           
-          // Replace placeholders in email body
+          // Get record day info for context
+          const recordDay = await storage.getRecordDay(assignment.recordDayId);
+          const formattedDate = recordDay?.date 
+            ? new Date(recordDay.date).toLocaleDateString('en-AU', { 
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
+              })
+            : 'your upcoming recording';
+          
+          // Replace placeholders in email body (for plain text version)
           const personalizedBody = body
             .replace(/{name}/g, contestant.name || 'Contestant')
             .replace(/{adobe_sign_link}/g, adobeSignLink);
           
-          // Send email
-          const emailResult = await sendAdobeSignEmail({
-            to: contestant.email,
-            subject: subject || "Deal or No Deal - Required Paperwork",
-            body: personalizedBody,
-          });
+          // Generate styled HTML email matching booking email format
+          const firstName = (contestant.name || 'Contestant').split(' ')[0];
+          const htmlBody = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    <!-- Full-width Banner Image -->
+    <tr>
+      <td style="padding: 0; line-height: 0;">
+        <img src="${bannerUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />
+      </td>
+    </tr>
+    
+    <!-- Gold Title Bar -->
+    <tr>
+      <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          ${paperworkHeadline}
+        </h1>
+      </td>
+    </tr>
+    
+    <!-- Content Card -->
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+          <tr>
+            <td style="padding: 35px 30px;">
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
+                Dear ${firstName},
+              </p>
+              
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 18px 0;">
+                Thank you for confirming your attendance for Deal or No Deal on <strong>${formattedDate}</strong>!
+              </p>
+              
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+                Before the recording, we need you to complete some important paperwork. Please click the button below to access and sign the required documents.
+              </p>
+              
+              <!-- Important Info Box -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">
+                      Please Complete Before Your Recording
+                    </h2>
+                    <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0;">
+                      Your paperwork must be completed and signed before you can participate in the recording. Please complete this as soon as possible.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Adobe Sign Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 25px auto;">
+                <tr>
+                  <td style="padding: 0;">
+                    <a href="${adobeSignLink}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #D4AF37 0%, #B8962E 100%); color: #2a0a0a; text-decoration: none; font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 6px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">COMPLETE PAPERWORK</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #888888; font-size: 12px; text-align: center; margin: 0 0 20px 0;">
+                If the button doesn't work, copy and paste this link into your browser:<br/>
+                <a href="${adobeSignLink}" style="color: #8B0000; word-break: break-all;">${adobeSignLink}</a>
+              </p>
+              
+              <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 0;">
+                If you have any questions about the paperwork, please don't hesitate to contact us.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    
+    <!-- Footer -->
+    <tr>
+      <td style="padding: 25px 20px; text-align: center;">
+        <p style="color: #D4AF37; font-size: 12px; line-height: 1.5; margin: 0;">
+          ${paperworkFooter}
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+          
+          // Prepare attachments with CID-embedded banner
+          const attachments: { filename: string; content: Buffer; contentType: string; cid?: string }[] = [];
+          if (bannerBuffer) {
+            attachments.push({
+              filename: bannerFilename,
+              content: bannerBuffer,
+              contentType: bannerContentType,
+              cid: bannerCid,
+            });
+          }
+          
+          // Send email with HTML styling and banner attachment
+          const emailResult: { success: boolean; error?: string } = await sendPaperworkEmail(
+            contestant.email,
+            subject || "Deal or No Deal - Required Paperwork",
+            personalizedBody,
+            htmlBody,
+            undefined, // config
+            attachments.length > 0 ? attachments : undefined
+          ).then(() => ({ success: true })).catch((err: any) => ({ success: false, error: err.message }));
           
           if (emailResult.success) {
             // Mark paperwork as sent
