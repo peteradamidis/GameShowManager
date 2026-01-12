@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2, Users, AlertTriangle } from "lucide-react";
+import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2, Users, AlertTriangle, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -804,11 +804,28 @@ export default function Contestants() {
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">Contestants</h1>
-            <p className="text-muted-foreground">
-              Manage auditioned applicants and their availability
-            </p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h1 className="text-2xl font-semibold">Contestants</h1>
+              <p className="text-muted-foreground">
+                Manage auditioned applicants and their availability
+              </p>
+            </div>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => {
+                refetchContestants();
+                queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'] });
+                toast({ title: "Refreshed", description: "Contestant data has been refreshed" });
+              }}
+              title="Refresh contestant data"
+              data-testid="button-refresh-contestants"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
           </div>
           {/* Booking action buttons - grouped together */}
           <div className="flex gap-2">
