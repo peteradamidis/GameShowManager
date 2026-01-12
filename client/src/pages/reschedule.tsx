@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,16 +30,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, User, Mail, Phone, MapPin, Users, Heart, AlertTriangle, Pencil, X, Save, Trash2 } from "lucide-react";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Calendar as CalendarIcon, User, Mail, Phone, MapPin, Users, Heart, AlertTriangle, Pencil, X, Save, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { format } from "date-fns";
+import { format, isSameDay, parseISO } from "date-fns";
+
+const SEAT_ROWS = [
+  { label: 'A', count: 5 },
+  { label: 'B', count: 5 },
+  { label: 'C', count: 4 },
+  { label: 'D', count: 4 },
+  { label: 'E', count: 4 },
+];
 
 export default function ReschedulePage() {
   const { toast } = useToast();
   const [rebookDialogOpen, setRebookDialogOpen] = useState(false);
   const [selectedCancellation, setSelectedCancellation] = useState<any>(null);
   const [selectedRecordDayId, setSelectedRecordDayId] = useState<string>("");
+  const [selectedBlock, setSelectedBlock] = useState<string>("");
+  const [selectedSeat, setSelectedSeat] = useState<string>("");
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedContestant, setSelectedContestant] = useState<any>(null);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -129,61 +140,103 @@ export default function ReschedulePage() {
     queryKey: ['/api/record-days'],
   });
 
+  // Fetch occupied seats for the selected record day
+  const { data: occupiedSeats = [] } = useQuery({
+    queryKey: ['/api/seat-assignments', selectedRecordDayId],
+    enabled: !!selectedRecordDayId,
+    queryFn: async () => {
+      const response = await fetch(`/api/seat-assignments/${selectedRecordDayId}`);
+      if (!response.ok) {
+        if (response.status === 404) return [];
+        throw new Error('Failed to fetch seat assignments');
+      }
+      return response.json();
+    },
+  });
+
+  // Generate available seats for selected block
+  const availableSeats = selectedBlock ? (() => {
+    const blockNum = parseInt(selectedBlock);
+    const occupied = new Set(
+      occupiedSeats
+        .filter((a: any) => a.blockNumber === blockNum)
+        .map((a: any) => a.seatLabel)
+    );
+    
+    const allSeats: string[] = [];
+    SEAT_ROWS.forEach(row => {
+      for (let i = 1; i <= row.count; i++) {
+        const seatLabel = `${row.label}${i}`;
+        if (!occupied.has(seatLabel)) {
+          allSeats.push(seatLabel);
+        }
+      }
+    });
+    return allSeats;
+  })() : [];
+
+  // Create a map of dates to record days for the calendar
+  const recordDayDates = useMemo(() => {
+    const dateMap = new Map<string, any>();
+    recordDays.forEach((day: any) => {
+      const dateStr = day.date.split('T')[0];
+      dateMap.set(dateStr, day);
+    });
+    return dateMap;
+  }, [recordDays]);
+
+  // Get the selected record day details
+  const selectedRecordDayDetails = useMemo(() => {
+    return recordDays.find((day: any) => day.id === selectedRecordDayId);
+  }, [recordDays, selectedRecordDayId]);
+
+  // Get the currently selected date for the calendar
+  const selectedCalendarDate = useMemo(() => {
+    if (!selectedRecordDayDetails) return undefined;
+    const dateStr = selectedRecordDayDetails.date.split('T')[0];
+    return parseISO(dateStr);
+  }, [selectedRecordDayDetails]);
+
+  // Determine which dates have record days
+  const recordDayDatesList = useMemo(() => {
+    return recordDays.map((day: any) => parseISO(day.date.split('T')[0]));
+  }, [recordDays]);
+
+  // Handle calendar date selection
+  const handleCalendarSelect = (date: Date | undefined) => {
+    if (!date) {
+      setSelectedRecordDayId("");
+      setSelectedBlock("");
+      setSelectedSeat("");
+      return;
+    }
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const recordDay = recordDayDates.get(dateStr);
+    if (recordDay) {
+      setSelectedRecordDayId(recordDay.id);
+      setSelectedBlock("");
+      setSelectedSeat("");
+    }
+  };
+
   const handleRebook = (cancellation: any) => {
     setSelectedCancellation(cancellation);
     setSelectedRecordDayId("");
+    setSelectedBlock("");
+    setSelectedSeat("");
     setRebookDialogOpen(true);
   };
 
   const handleConfirmRebook = async () => {
-    if (!selectedCancellation || !selectedRecordDayId) return;
+    if (!selectedCancellation || !selectedRecordDayId || !selectedBlock || !selectedSeat) return;
 
     try {
-      // Fetch existing assignments to find an available seat
-      const response = await fetch(`/api/seat-assignments/${selectedRecordDayId}`);
-      const assignments = response.ok ? await response.json() : [];
-
-      // Find first available seat
-      let foundSeat = null;
-      const SEAT_ROWS = [
-        { label: 'A', count: 5 },
-        { label: 'B', count: 5 },
-        { label: 'C', count: 4 },
-        { label: 'D', count: 4 },
-        { label: 'E', count: 4 },
-      ];
-
-      for (let blockNum = 1; blockNum <= 7 && !foundSeat; blockNum++) {
-        for (const row of SEAT_ROWS) {
-          for (let seatNum = 1; seatNum <= row.count; seatNum++) {
-            const seatLabel = `${row.label}${seatNum}`;
-            const isOccupied = assignments.some((a: any) => 
-              a.blockNumber === blockNum && a.seatLabel === seatLabel
-            );
-            if (!isOccupied) {
-              foundSeat = { blockNumber: blockNum, seatLabel };
-              break;
-            }
-          }
-          if (foundSeat) break;
-        }
-      }
-
-      if (!foundSeat) {
-        toast({
-          title: "No available seats",
-          description: "The selected record day has no available seats.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Create new seat assignment
+      // Create new seat assignment with selected block and seat
       await apiRequest('POST', '/api/seat-assignments', {
         recordDayId: selectedRecordDayId,
         contestantId: selectedCancellation.contestantId,
-        blockNumber: foundSeat.blockNumber,
-        seatLabel: foundSeat.seatLabel,
+        blockNumber: parseInt(selectedBlock),
+        seatLabel: selectedSeat,
       });
 
       // Delete cancellation record after successful assignment
@@ -200,7 +253,7 @@ export default function ReschedulePage() {
 
       toast({
         title: "Contestant rebooked",
-        description: `${selectedCancellation.contestant.name} has been assigned to Block ${foundSeat.blockNumber}, Seat ${foundSeat.seatLabel}.`,
+        description: `${selectedCancellation.contestant.name} has been assigned to Block ${selectedBlock}, Seat ${selectedSeat}.`,
       });
 
       setRebookDialogOpen(false);
@@ -394,31 +447,92 @@ export default function ReschedulePage() {
 
       {/* Rebook Dialog */}
       <Dialog open={rebookDialogOpen} onOpenChange={setRebookDialogOpen}>
-        <DialogContent data-testid="dialog-rebook-contestant">
+        <DialogContent className="max-w-lg" data-testid="dialog-rebook-contestant">
           <DialogHeader>
             <DialogTitle>Rebook Contestant</DialogTitle>
             <DialogDescription>
-              Assign {selectedCancellation?.contestant?.name} to a new record day
+              Assign {selectedCancellation?.contestant?.name} to a new record day and seat
             </DialogDescription>
           </DialogHeader>
 
-          <div className="py-4">
-            <label className="text-sm font-medium mb-2 block">Record Day</label>
-            <Select value={selectedRecordDayId} onValueChange={setSelectedRecordDayId}>
-              <SelectTrigger data-testid="select-record-day">
-                <SelectValue placeholder="Select a record day" />
-              </SelectTrigger>
-              <SelectContent>
-                {recordDays.map((day: any) => (
-                  <SelectItem key={day.id} value={day.id}>
-                    {format(new Date(day.date), 'MMMM dd, yyyy')} - {day.status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground mt-2">
-              Contestant will be assigned to the first available seat
-            </p>
+          <div className="space-y-4">
+            {/* Calendar for date selection */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Select Record Day</label>
+              <div className="border rounded-lg p-2">
+                <CalendarComponent
+                  mode="single"
+                  selected={selectedCalendarDate}
+                  onSelect={handleCalendarSelect}
+                  modifiers={{
+                    recordDay: recordDayDatesList,
+                  }}
+                  modifiersStyles={{
+                    recordDay: {
+                      fontWeight: 'bold',
+                      backgroundColor: 'hsl(var(--primary) / 0.1)',
+                      borderRadius: '50%',
+                    }
+                  }}
+                  disabled={(date) => !recordDayDatesList.some(rd => isSameDay(rd, date))}
+                  data-testid="calendar-record-day"
+                />
+              </div>
+              {selectedRecordDayDetails && (
+                <div className="mt-2 p-2 bg-muted rounded text-sm">
+                  <span className="font-medium">Selected: </span>
+                  {format(parseISO(selectedRecordDayDetails.date.split('T')[0]), 'MMMM d, yyyy')}
+                  {selectedRecordDayDetails.rxNumber && (
+                    <span className="text-muted-foreground"> ({selectedRecordDayDetails.rxNumber})</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Block and Seat Selection */}
+            {selectedRecordDayId && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Block</label>
+                  <Select value={selectedBlock} onValueChange={(val) => { setSelectedBlock(val); setSelectedSeat(""); }}>
+                    <SelectTrigger data-testid="select-block">
+                      <SelectValue placeholder="Select block" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 5, 6, 7].map((block) => (
+                        <SelectItem key={block} value={String(block)}>
+                          Block {block}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Seat</label>
+                  <Select 
+                    value={selectedSeat} 
+                    onValueChange={setSelectedSeat}
+                    disabled={!selectedBlock}
+                  >
+                    <SelectTrigger data-testid="select-seat">
+                      <SelectValue placeholder={selectedBlock ? "Select seat" : "Select block first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableSeats.length === 0 ? (
+                        <SelectItem value="none" disabled>No available seats</SelectItem>
+                      ) : (
+                        availableSeats.map((seat) => (
+                          <SelectItem key={seat} value={seat}>
+                            {seat}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
@@ -431,7 +545,7 @@ export default function ReschedulePage() {
             </Button>
             <Button
               onClick={handleConfirmRebook}
-              disabled={!selectedRecordDayId}
+              disabled={!selectedRecordDayId || !selectedBlock || !selectedSeat}
               data-testid="button-confirm-rebook"
             >
               Confirm Rebook
