@@ -1,0 +1,61 @@
+
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/Users/admin/projects/GameShowManager/drizzle.config.ts'
+Using 'pg' driver for database querying
+[✓] Pulling schema from database...
+[✓] Changes applied
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [all](ids: [ 0 ])
+[PM2] [gameshow](0) ✓
+┌────┬─────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name        │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ gameshow    │ default     │ N/A     │ fork    │ 17198    │ 0s     │ 13   │ online    │ 0%       │ 1.2mb    │ admin    │ disabled │
+└────┴─────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+admin@admins-Mac-mini GameShowManager %   
+admin@admins-Mac-mini GameShowManager % git pull origin main
+pm2 restart all
+remote: Enumerating objects: 15, done.
+remote: Counting objects: 100% (15/15), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 9 (delta 6), reused 9 (delta 6), pack-reused 0 (from 0)
+Unpacking objects: 100% (9/9), 1.25 KiB | 49.00 KiB/s, done.
+From https://github.com/peteradamidis/GameShowManager
+ * branch            main       -> FETCH_HEAD
+   5c722d3..ba2189a  main       -> origin/main
+Updating 5c722d3..ba2189a
+error: Your local changes to the following files would be overwritten by merge:
+	storage/backups/automatic-backup.json
+Please commit your changes or stash them before you merge.
+Aborting
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [all](ids: [ 0 ])
+[PM2] [gameshow](0) ✓
+┌────┬─────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name        │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ gameshow    │ default     │ N/A     │ fork    │ 17396    │ 0s     │ 14   │ online    │ 0%       │ 1.3mb    │ admin    │ disabled │
+└────┴─────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+admin@admins-Mac-mini GameShowManager % npm install pdfkit
+pm2 restart all
+npm warn deprecated jpeg-exif@1.1.4: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+npm error code EACCES
+npm error syscall mkdir
+npm error path /Users/admin/.npm/_cacache/index-v5/54/dd
+npm error errno -13
+npm error
+npm error Your cache folder contains root-owned files, due to a bug in
+npm error previous versions of npm which has since been addressed.
+npm error
+npm error To permanently fix this problem, please run:
+npm error   sudo chown -R 501:20 "/Users/admin/.npm"
+npm error A complete log of this run can be found in: /Users/admin/.npm/_logs/2026-01-12T11_44_44_006Z-debug-0.log
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [all](ids: [ 0 ])
+[PM2] [gameshow](0) ✓
+┌────┬─────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name        │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ gameshow    │ default     │ N/A     │ fork    │ 17598    │ 0s     │ 15   │ online    │ 0%       │ 1.2mb    │ admin    │ disabled │
+└────┴─────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+admin@admins-Mac-mini GameShowManager % 
