@@ -524,6 +524,7 @@ export class DbStorage implements IStorage {
       playerType: workflowFields.playerType,
       bookingEmailSent: workflowFields.bookingEmailSent,
       confirmedRsvp: workflowFields.confirmedRsvp,
+      ticketEmailSent: workflowFields.ticketEmailSent,
       paperworkSent: workflowFields.paperworkSent,
       paperworkReceived: workflowFields.paperworkReceived,
       signedIn: workflowFields.signedIn,
