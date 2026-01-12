@@ -335,6 +335,7 @@ export default function ReschedulePage() {
                   <TableHead>Original Seat</TableHead>
                   <TableHead>Added At</TableHead>
                   <TableHead>Reason</TableHead>
+                  <TableHead>Moved By</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -409,6 +410,15 @@ export default function ReschedulePage() {
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
                       {cancellation.reason || '—'}
+                    </TableCell>
+                    <TableCell>
+                      {cancellation.movedBy ? (
+                        <Badge variant="outline" className="font-mono">
+                          {cancellation.movedBy}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">

@@ -850,7 +850,7 @@ export class DbStorage implements IStorage {
     });
   }
 
-  async cancelSeatAssignment(id: string, reason?: string): Promise<CanceledAssignment> {
+  async cancelSeatAssignment(id: string, reason?: string, movedBy?: string): Promise<CanceledAssignment> {
     return await db.transaction(async (tx) => {
       const [assignment] = await tx
         .select()
@@ -869,6 +869,7 @@ export class DbStorage implements IStorage {
           blockNumber: assignment.blockNumber,
           seatLabel: assignment.seatLabel,
           reason,
+          movedBy,
           // Carry over paperwork status for rescheduling
           paperworkSent: assignment.paperworkSent,
           paperworkReceived: assignment.paperworkReceived,
@@ -897,6 +898,7 @@ export class DbStorage implements IStorage {
         seatLabel: canceledAssignments.seatLabel,
         canceledAt: canceledAssignments.canceledAt,
         reason: canceledAssignments.reason,
+        movedBy: canceledAssignments.movedBy,
         isFromStandby: canceledAssignments.isFromStandby,
         originalAttendanceDate: canceledAssignments.originalAttendanceDate,
         contestant: contestants,
@@ -918,6 +920,7 @@ export class DbStorage implements IStorage {
         blockNumber: data.blockNumber ?? null,
         seatLabel: data.seatLabel ?? null,
         reason: data.reason ?? null,
+        movedBy: data.movedBy ?? null,
         isFromStandby: data.isFromStandby ?? false,
         originalAttendanceDate: data.originalAttendanceDate ?? null,
       })

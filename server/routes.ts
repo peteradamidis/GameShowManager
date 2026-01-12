@@ -3933,12 +3933,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Decline booking - mark as declined and optionally move to reschedule
   app.post("/api/seat-assignments/:id/decline", async (req, res) => {
     try {
-      const { reason, moveToReschedule = true } = req.body;
+      const { reason, moveToReschedule = true, movedBy } = req.body;
       const declineReason = reason ? `[DECLINED] ${reason}` : "[DECLINED] No reason provided";
       
       if (moveToReschedule) {
         // Move to reschedule list (canceled assignments)
-        const canceled = await storage.cancelSeatAssignment(req.params.id, declineReason);
+        const canceled = await storage.cancelSeatAssignment(req.params.id, declineReason, movedBy);
         res.json({ moved: true, canceled });
       } else {
         // Just mark as declined but keep in place

@@ -110,6 +110,7 @@ export default function BookingResponses() {
   const [declineAssignment, setDeclineAssignment] = useState<BookingAssignment | null>(null);
   const [declineReason, setDeclineReason] = useState("");
   const [declineAction, setDeclineAction] = useState<"reschedule" | "rebook">("reschedule");
+  const [declineMovedBy, setDeclineMovedBy] = useState("");
   const [rebookRecordDayId, setRebookRecordDayId] = useState<string>("");
   const [rebookBlock, setRebookBlock] = useState<string>("");
   const [rebookSeat, setRebookSeat] = useState<string>("");
@@ -338,9 +339,10 @@ export default function BookingResponses() {
 
   // Mutation for declining a booking (moves to reschedule)
   const declineMutation = useMutation({
-    mutationFn: async ({ assignmentId, reason }: { assignmentId: string; reason: string }) => {
+    mutationFn: async ({ assignmentId, reason, movedBy }: { assignmentId: string; reason: string; movedBy?: string }) => {
       return apiRequest("POST", `/api/seat-assignments/${assignmentId}/decline`, {
         reason,
+        movedBy,
       });
     },
     onSuccess: () => {
@@ -348,6 +350,7 @@ export default function BookingResponses() {
       setDeclineDialogOpen(false);
       setDeclineAssignment(null);
       setDeclineReason("");
+      setDeclineMovedBy("");
       invalidateBookingQueries();
       queryClient.invalidateQueries({ queryKey: ["/api/canceled-assignments"] });
     },
@@ -549,6 +552,7 @@ export default function BookingResponses() {
     setDeclineAssignment(assignment);
     setDeclineReason("");
     setDeclineAction("reschedule");
+    setDeclineMovedBy("");
     setRebookRecordDayId("");
     setRebookBlock("");
     setRebookSeat("");
@@ -588,6 +592,7 @@ export default function BookingResponses() {
       setDeclineDialogOpen(false);
       setDeclineAssignment(null);
       setDeclineReason("");
+      setDeclineMovedBy("");
       setRebookRecordDayId("");
       setRebookBlock("");
       setRebookSeat("");
@@ -622,6 +627,7 @@ export default function BookingResponses() {
       declineMutation.mutate({
         assignmentId: declineAssignment.id,
         reason: declineReason,
+        movedBy: declineMovedBy,
       });
     }
   };
@@ -1443,17 +1449,32 @@ export default function BookingResponses() {
               </div>
             )}
 
-            {/* Reschedule: Show reason textarea */}
+            {/* Reschedule: Show reason textarea and producer initials */}
             {declineAction === "reschedule" && (
-              <div className="space-y-2 pt-2 border-t">
-                <Label htmlFor="decline-reason">Reason for decline</Label>
-                <Textarea
-                  id="decline-reason"
-                  placeholder="e.g., No longer available, scheduling conflict, etc."
-                  value={declineReason}
-                  onChange={(e) => setDeclineReason(e.target.value)}
-                  data-testid="input-decline-reason"
-                />
+              <div className="space-y-4 pt-2 border-t">
+                <div className="space-y-2">
+                  <Label htmlFor="decline-reason">Reason for decline</Label>
+                  <Textarea
+                    id="decline-reason"
+                    placeholder="e.g., No longer available, scheduling conflict, etc."
+                    value={declineReason}
+                    onChange={(e) => setDeclineReason(e.target.value)}
+                    data-testid="input-decline-reason"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="decline-moved-by">Your Initials</Label>
+                  <Input
+                    id="decline-moved-by"
+                    placeholder="e.g., JD"
+                    value={declineMovedBy}
+                    onChange={(e) => setDeclineMovedBy(e.target.value.toUpperCase())}
+                    maxLength={5}
+                    className="w-24"
+                    data-testid="input-decline-moved-by"
+                  />
+                  <p className="text-xs text-muted-foreground">For tracking who processed this decline</p>
+                </div>
               </div>
             )}
           </div>

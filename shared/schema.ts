@@ -131,6 +131,7 @@ export const canceledAssignments = pgTable("canceled_assignments", {
   seatLabel: text("seat_label"),
   canceledAt: timestamp("canceled_at").defaultNow().notNull(),
   reason: text("reason"),
+  movedBy: text("moved_by"), // Producer initials who moved to reschedule
   isFromStandby: boolean("is_from_standby").default(false), // True if this came from standby tab
   originalAttendanceDate: timestamp("original_attendance_date"), // Date standby originally attended
   // Carry over paperwork status when rescheduling
