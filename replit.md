@@ -36,6 +36,7 @@ Do not make changes to the file `Y`.
 - **Booking Master Page:** A comprehensive workflow tracking system with inline editing, checkbox tracking, and real-time WebSocket-based synchronization for collaborative use. Includes a responses panel to view booking confirmation details and facilitate follow-ups.
 - **Standby Seating System:** Allows drag-and-drop assignment of standbys to any empty seats on the seating chart. Only works in RX Mode (locked day). The Standbys panel appears next to Block 7 with amber styling when the day is locked.
 - **Rebooking History Tracking:** Full audit trail of contestant rebookings with atomic transaction support using PostgreSQL advisory locks. Tracks from/to record days, block/seat positions, optional reason, timestamp, and user. Displayed in Booking Responses page with collapsible sections.
+- **Manual Group Linking:** When automatic group detection fails (contestants with different surnames, typos in "Attending With" data, etc.), producers can manually link 2+ contestants into a group via the Contestants page. Select multiple ungrouped contestants to see the purple "Link Together" button, or select a grouped contestant to see the orange "Unlink from Group" button. Groups auto-delete when reduced to less than 2 members.
 
 ### Feature Specifications
 - **Contestant Management:** Profiles, search, filtering by status, gender, rating, etc.
