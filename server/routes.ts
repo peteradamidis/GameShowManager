@@ -5882,6 +5882,11 @@ ${finalEmailFooter}`;
                 </tr>
               </table>
               
+              <!-- Disclaimer Notice -->
+              <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0; font-style: italic;">
+                While this invitation doesn't guarantee you'll play the game, it does bring you closer to being that lucky person. Some audience members may have the opportunity to open a case, however this isn't guaranteed. We're really looking forward to welcoming you for a fun and truly unique day at Deal or No Deal.
+              </p>
+              
               <!-- Required Info Reminder -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
                 <tr>
@@ -7740,6 +7745,11 @@ ${finalEmailFooter}`;
                 </tr>
               </table>
               
+              <!-- Disclaimer Notice -->
+              <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0; font-style: italic;">
+                While this invitation doesn't guarantee you'll play the game, it does bring you closer to being that lucky person. Some audience members may have the opportunity to open a case, however this isn't guaranteed. We're really looking forward to welcoming you for a fun and truly unique day at Deal or No Deal.
+              </p>
+              
               <!-- Required Info Reminder -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
                 <tr>
@@ -8585,6 +8595,11 @@ ${finalEmailFooter}`;
                     </td>
                   </tr>
                 </table>
+                
+                <!-- Disclaimer Notice -->
+                <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0; font-style: italic;">
+                  While this invitation doesn't guarantee you'll play the game, it does bring you closer to being that lucky person. Some audience members may have the opportunity to open a case, however this isn't guaranteed. We're really looking forward to welcoming you for a fun and truly unique day at Deal or No Deal.
+                </p>
                 
                 <!-- Required Info Reminder -->
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
