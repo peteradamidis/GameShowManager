@@ -5884,14 +5884,14 @@ ${finalEmailFooter}`;
               
               ${emailAdditionalInstructions ? `
               <!-- Additional Instructions -->
-              <div style="margin: 0 0 25px 0; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+              <div style="margin: 20px 0 25px 0; padding-top: 20px; border-top: 1px solid #e0e0e0;">
                 ${emailAdditionalInstructions.split('\n\n').map((paragraph: string) => 
                   `<p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
                 ).join('')}
               </div>
               ` : ''}
               
-              <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">
+              <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 20px 0;">
                 Please ensure you bring your own water bottle.
               </p>
               
@@ -7720,14 +7720,14 @@ ${finalEmailFooter}`;
               </table>
               
               ${emailAdditionalInstructions ? `
-              <div style="margin: 0 0 25px 0; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+              <div style="margin: 20px 0 25px 0; padding-top: 20px; border-top: 1px solid #e0e0e0;">
                 ${emailAdditionalInstructions.split('\n\n').map((paragraph: string) => 
                   `<p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
                 ).join('')}
               </div>
               ` : ''}
               
-              <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">
+              <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 20px 0;">
                 Please ensure you bring your own water bottle.
               </p>
               
@@ -8551,12 +8551,12 @@ ${finalEmailFooter}`;
                 </table>
                 
                 ${additionalInstructions ? `
-                <div style="margin: 0 0 25px 0; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                <div style="margin: 20px 0 25px 0; padding-top: 20px; border-top: 1px solid #e0e0e0;">
                   <p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0;">${additionalInstructions.replace(/\n/g, '<br/>')}</p>
                 </div>
                 ` : ''}
                 
-                <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">
+                <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 20px 0;">
                   Please ensure you bring your own water bottle.
                 </p>
                 
