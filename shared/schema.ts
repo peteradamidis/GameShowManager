@@ -212,6 +212,7 @@ export const standbyAssignments = pgTable("standby_assignments", {
   contestantId: varchar("contestant_id").references(() => contestants.id).notNull(),
   recordDayId: varchar("record_day_id").references(() => recordDays.id).notNull(),
   status: standbyStatusEnum("status").default('pending').notNull(),
+  priority: integer("priority").default(0), // Lower number = higher priority (1 = first in line)
   standbyEmailSent: timestamp("standby_email_sent"),
   confirmedAt: timestamp("confirmed_at"),
   notes: text("notes"),

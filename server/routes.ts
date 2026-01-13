@@ -6989,6 +6989,29 @@ ${finalEmailFooter}`;
     }
   });
 
+  // Update standby priorities (reorder standbys)
+  app.post("/api/standbys/reorder", async (req, res) => {
+    try {
+      const { recordDayId, orderedIds } = req.body;
+      
+      if (!recordDayId || !Array.isArray(orderedIds)) {
+        return res.status(400).json({ error: "recordDayId and orderedIds array are required" });
+      }
+      
+      // Update each standby with its new priority
+      const updates = await Promise.all(
+        orderedIds.map((id: string, index: number) => 
+          storage.updateStandbyAssignment(id, { priority: index + 1 })
+        )
+      );
+      
+      res.json({ message: "Standby priorities updated", updated: updates.length });
+    } catch (error: any) {
+      console.error("Error updating standby priorities:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Move a standby to the reschedule tab
   app.post("/api/standbys/:id/move-to-reschedule", async (req, res) => {
     try {
