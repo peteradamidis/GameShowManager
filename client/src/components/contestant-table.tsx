@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar, AlertTriangle, Users, CalendarPlus } from "lucide-react";
+import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar, AlertTriangle, Users, CalendarPlus, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -472,6 +472,13 @@ export function ContestantTable({
   const [groupPreviewOpen, setGroupPreviewOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmContestantId, setDeleteConfirmContestantId] = useState<string | null>(null);
+  
+  // Sorting state: column name and direction (asc, desc, or null for original order)
+  type SortDirection = 'asc' | 'desc' | null;
+  type SortColumn = 'status' | 'auditionRating' | 'age' | 'name' | 'phone' | 'email' | 'attendingWith' | 'groupSize' | 'location' | 'medicalInfo' | 'mobilityNotes' | 'criminalRecord' | null;
+  const [sortColumn, setSortColumn] = useState<SortColumn>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tableFileInputRef = useRef<HTMLInputElement>(null);
   const contentScrollRef = useRef<HTMLDivElement>(null);
@@ -858,13 +865,118 @@ export function ContestantTable({
         );
       });
 
+  // Handle column header click for sorting (cycles: asc → desc → original)
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn !== column) {
+      // New column clicked - start with ascending
+      setSortColumn(column);
+      setSortDirection('asc');
+    } else if (sortDirection === 'asc') {
+      // Same column, was ascending - switch to descending
+      setSortDirection('desc');
+    } else if (sortDirection === 'desc') {
+      // Same column, was descending - reset to original order
+      setSortColumn(null);
+      setSortDirection(null);
+    } else {
+      // Was null, start with ascending
+      setSortDirection('asc');
+    }
+  };
+
+  // Get sort icon for a column
+  const getSortIcon = (column: SortColumn) => {
+    if (sortColumn !== column) {
+      return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
+    }
+    if (sortDirection === 'asc') {
+      return <ArrowUp className="ml-1 h-3 w-3" />;
+    }
+    if (sortDirection === 'desc') {
+      return <ArrowDown className="ml-1 h-3 w-3" />;
+    }
+    return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
+  };
+
+  // Sort the filtered contestants
+  const sortedContestants = useMemo(() => {
+    if (!sortColumn || !sortDirection) {
+      return filteredContestants;
+    }
+
+    return [...filteredContestants].sort((a, b) => {
+      let aVal: any;
+      let bVal: any;
+
+      switch (sortColumn) {
+        case 'status':
+          aVal = a.availabilityStatus || '';
+          bVal = b.availabilityStatus || '';
+          break;
+        case 'auditionRating':
+          // Sort ratings: A+ > A > B > C > D > DNU > P > empty
+          const ratingOrder: Record<string, number> = { 'A+': 1, 'A': 2, 'B': 3, 'C': 4, 'D': 5, 'DNU': 6, 'P': 7 };
+          aVal = ratingOrder[a.auditionRating || ''] || 99;
+          bVal = ratingOrder[b.auditionRating || ''] || 99;
+          break;
+        case 'age':
+          aVal = a.age || 0;
+          bVal = b.age || 0;
+          break;
+        case 'name':
+          aVal = (a.name || '').toLowerCase();
+          bVal = (b.name || '').toLowerCase();
+          break;
+        case 'phone':
+          aVal = (a.phone || '').toLowerCase();
+          bVal = (b.phone || '').toLowerCase();
+          break;
+        case 'email':
+          aVal = (a.email || '').toLowerCase();
+          bVal = (b.email || '').toLowerCase();
+          break;
+        case 'attendingWith':
+          aVal = (a.attendingWith || '').toLowerCase();
+          bVal = (b.attendingWith || '').toLowerCase();
+          break;
+        case 'groupSize':
+          aVal = a.groupSize || 0;
+          bVal = b.groupSize || 0;
+          break;
+        case 'location':
+          aVal = (a.location || '').toLowerCase();
+          bVal = (b.location || '').toLowerCase();
+          break;
+        case 'medicalInfo':
+          aVal = (a.medicalInfo || '').toLowerCase();
+          bVal = (b.medicalInfo || '').toLowerCase();
+          break;
+        case 'mobilityNotes':
+          aVal = (a.mobilityNotes || '').toLowerCase();
+          bVal = (b.mobilityNotes || '').toLowerCase();
+          break;
+        case 'criminalRecord':
+          aVal = (a.criminalRecord || '').toLowerCase();
+          bVal = (b.criminalRecord || '').toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      // Compare values
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredContestants, sortColumn, sortDirection]);
+
   const handleToggleAll = () => {
     if (!onSelectionChange) return;
     
-    if (selectedIds.length === filteredContestants.length) {
+    if (selectedIds.length === sortedContestants.length) {
       onSelectionChange([]);
     } else {
-      onSelectionChange(filteredContestants.map(c => c.id));
+      onSelectionChange(sortedContestants.map(c => c.id));
     }
   };
 
@@ -883,7 +995,7 @@ export function ContestantTable({
     setDetailDialogOpen(true);
   };
 
-  const allSelected = filteredContestants.length > 0 && selectedIds.length === filteredContestants.length;
+  const allSelected = sortedContestants.length > 0 && selectedIds.length === sortedContestants.length;
 
   return (
     <div className="space-y-4">
@@ -919,22 +1031,94 @@ export function ContestantTable({
                 </TableHead>
               )}
               <TableHead className="w-16">Photo</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Audition Rating</TableHead>
-              <TableHead>Age</TableHead>
-              <TableHead className="min-w-[150px]">Name</TableHead>
-              <TableHead>Mobile</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Attending With</TableHead>
-              <TableHead>Group Size</TableHead>
-              <TableHead>City</TableHead>
-              <TableHead className="max-w-[150px]">Medical - App</TableHead>
-              <TableHead className="max-w-[150px]">Medical - Aud</TableHead>
-              <TableHead className="max-w-[150px]">Criminal</TableHead>
+              <TableHead 
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('status')}
+                data-testid="sort-status"
+              >
+                <div className="flex items-center">Status{getSortIcon('status')}</div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('auditionRating')}
+                data-testid="sort-audition-rating"
+              >
+                <div className="flex items-center">Audition Rating{getSortIcon('auditionRating')}</div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('age')}
+                data-testid="sort-age"
+              >
+                <div className="flex items-center">Age{getSortIcon('age')}</div>
+              </TableHead>
+              <TableHead 
+                className="min-w-[150px] cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('name')}
+                data-testid="sort-name"
+              >
+                <div className="flex items-center">Name{getSortIcon('name')}</div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('phone')}
+                data-testid="sort-mobile"
+              >
+                <div className="flex items-center">Mobile{getSortIcon('phone')}</div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('email')}
+                data-testid="sort-email"
+              >
+                <div className="flex items-center">Email{getSortIcon('email')}</div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('attendingWith')}
+                data-testid="sort-attending-with"
+              >
+                <div className="flex items-center">Attending With{getSortIcon('attendingWith')}</div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('groupSize')}
+                data-testid="sort-group-size"
+              >
+                <div className="flex items-center">Group Size{getSortIcon('groupSize')}</div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('location')}
+                data-testid="sort-city"
+              >
+                <div className="flex items-center">City{getSortIcon('location')}</div>
+              </TableHead>
+              <TableHead 
+                className="max-w-[150px] cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('medicalInfo')}
+                data-testid="sort-medical-app"
+              >
+                <div className="flex items-center">Medical - App{getSortIcon('medicalInfo')}</div>
+              </TableHead>
+              <TableHead 
+                className="max-w-[150px] cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('mobilityNotes')}
+                data-testid="sort-medical-aud"
+              >
+                <div className="flex items-center">Medical - Aud{getSortIcon('mobilityNotes')}</div>
+              </TableHead>
+              <TableHead 
+                className="max-w-[150px] cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort('criminalRecord')}
+                data-testid="sort-criminal"
+              >
+                <div className="flex items-center">Criminal{getSortIcon('criminalRecord')}</div>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredContestants.map((contestant) => {
+            {sortedContestants.map((contestant) => {
               const seatAssignment = seatAssignmentMap.get(contestant.id);
               const isUploadingThis = uploadingContestantId === contestant.id && uploadPhotoMutation.isPending;
               return (
