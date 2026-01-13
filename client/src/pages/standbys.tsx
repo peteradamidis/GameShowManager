@@ -512,7 +512,7 @@ export default function StandbysPage() {
 
       {/* Email Preview Dialog */}
       <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" data-testid="dialog-email-preview">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-email-preview">
           <DialogHeader>
             <DialogTitle>Send Standby Booking Emails</DialogTitle>
             <DialogDescription>
@@ -521,7 +521,7 @@ export default function StandbysPage() {
           </DialogHeader>
 
           {previewData && (
-            <div className="flex-1 overflow-y-auto space-y-4 py-2">
+            <div className="space-y-4 py-2">
               <div className="flex items-center justify-between py-2 px-3 bg-muted rounded-md">
                 <span className="text-sm font-medium">Recipients with email</span>
                 <Badge variant="secondary">{previewData.withEmail}</Badge>
