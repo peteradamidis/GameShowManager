@@ -73,6 +73,7 @@ const COLUMN_CONFIG = [
   { id: "rsvp", label: "RSVP", alwaysVisible: false },
   { id: "paperSent", label: "PAPER SENT", alwaysVisible: false },
   { id: "paperReceived", label: "PAPER ✓", alwaysVisible: false },
+  { id: "otdHardCopy", label: "OTD PAPER WORK", alwaysVisible: false },
   { id: "signedIn", label: "SIGNED IN", alwaysVisible: false },
   { id: "otdNotes", label: "OTD NOTES", alwaysVisible: false },
   { id: "standby", label: "STANDBY / SWAPS", alwaysVisible: false },
@@ -97,6 +98,7 @@ const DEFAULT_VISIBLE_COLUMNS: Record<ColumnId, boolean> = {
   rsvp: true,
   paperSent: true,
   paperReceived: true,
+  otdHardCopy: true,
   signedIn: true,
   otdNotes: true,
   standby: true,
@@ -235,6 +237,7 @@ export default function BookingMaster() {
   const [expandedOtdNotes, setExpandedOtdNotes] = useState<Set<string>>(new Set());
   const [filterMedicalNotes, setFilterMedicalNotes] = useState(false);
   const [filterConfirmedOnly, setFilterConfirmedOnly] = useState(false);
+  const [filterPaperworkNotReceived, setFilterPaperworkNotReceived] = useState(false);
   const [isStandbyMode, setIsStandbyMode] = useState(false);
   // Use refs instead of state for pending text updates to avoid re-renders
   const pendingTextUpdatesRef = useRef<Record<string, string>>({});
@@ -499,6 +502,10 @@ export default function BookingMaster() {
     if (filterConfirmedOnly && !row.assignment?.confirmedRsvp) {
       return false;
     }
+    // Filter to only show those with paperwork NOT received (when confirmed filter is active)
+    if (filterConfirmedOnly && filterPaperworkNotReceived && row.assignment?.paperworkReceived) {
+      return false;
+    }
     return true;
   });
 
@@ -539,6 +546,7 @@ export default function BookingMaster() {
       confirmedRsvp: "RSVP Confirmed",
       paperworkSent: "Paperwork Sent",
       paperworkReceived: "Paperwork Received",
+      paperworkOnDay: "OTD Paperwork",
       signedIn: "Signed In",
     };
     return labels[field] || field;
@@ -646,7 +654,7 @@ export default function BookingMaster() {
       "SEAT", "NAME", "MOBILE", "EMAIL", "ATTENDING WITH", "LOCATION", 
       "MEDICAL - APP", "MEDICAL - AUD", "CRIMINAL / BANKRUPTCY", 
       "CASTING CATEGORY", "NOTES", "BOOKING EMAIL SENT", "CONFIRMED RSVP", 
-      "PAPERWORK SENT", "PAPERWORK ✓", "SIGNED-IN", "OTD NOTES", 
+      "PAPERWORK SENT", "PAPERWORK ✓", "OTD PAPER WORK", "SIGNED-IN", "OTD NOTES", 
       "STANDBY REPLACEMENT / SWAPS"
     ];
 
@@ -696,6 +704,7 @@ export default function BookingMaster() {
         row.assignment?.confirmedRsvp ? "✓" : "",
         row.assignment?.paperworkSent ? "✓" : "",
         row.assignment?.paperworkReceived ? "✓" : "",
+        row.assignment?.paperworkOnDay ? "✓" : "",
         row.assignment?.signedIn ? "✓" : "",
         row.assignment?.otdNotes || "",
         standbySwapsValue,
@@ -723,6 +732,7 @@ export default function BookingMaster() {
       { wch: 12 },  // CONFIRMED RSVP
       { wch: 14 },  // PAPERWORK SENT
       { wch: 12 },  // PAPERWORK ✓
+      { wch: 14 },  // OTD PAPER WORK
       { wch: 10 },  // SIGNED-IN
       { wch: 20 },  // OTD NOTES
       { wch: 25 },  // STANDBY REPLACEMENT / SWAPS
@@ -782,13 +792,28 @@ export default function BookingMaster() {
           </DropdownMenu>
           
           <Button 
-            onClick={() => setFilterConfirmedOnly(!filterConfirmedOnly)}
+            onClick={() => {
+              setFilterConfirmedOnly(!filterConfirmedOnly);
+              if (filterConfirmedOnly) setFilterPaperworkNotReceived(false); // Reset secondary filter when turning off
+            }}
             variant={filterConfirmedOnly ? "default" : "outline"}
             title={filterConfirmedOnly ? "Show all contestants" : "Show only confirmed RSVP"}
             data-testid="button-filter-confirmed"
           >
             Confirmed Only
           </Button>
+
+          {filterConfirmedOnly && (
+            <Button 
+              onClick={() => setFilterPaperworkNotReceived(!filterPaperworkNotReceived)}
+              variant={filterPaperworkNotReceived ? "default" : "outline"}
+              className={filterPaperworkNotReceived ? "bg-orange-600 hover:bg-orange-700" : "border-orange-400 text-orange-700 hover:bg-orange-50 dark:border-orange-600 dark:text-orange-400"}
+              title={filterPaperworkNotReceived ? "Show all confirmed" : "Show only those without paperwork received"}
+              data-testid="button-filter-paperwork-not-received"
+            >
+              Paperwork Not Received
+            </Button>
+          )}
 
           <Button 
             onClick={() => setFilterMedicalNotes(!filterMedicalNotes)}
@@ -1000,6 +1025,7 @@ export default function BookingMaster() {
                   {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">CONFIRM<br/>ED RSVP</TableHead>}
                   {isColumnVisible("paperSent") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">PAPER<br/>WORK<br/>SENT</TableHead>}
                   {isColumnVisible("paperReceived") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">PAPER<br/>WORK<br/>RECEIVED<br/>& LOGGED</TableHead>}
+                  {isColumnVisible("otdHardCopy") && <TableHead className="sticky top-0 bg-[#f59e0b] dark:bg-[#b45309] z-50 text-[10px] py-1 px-2 text-center w-14 text-white font-semibold border-r border-gray-300 dark:border-gray-600">OTD<br/>PAPER<br/>WORK</TableHead>}
                   {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-[#a8d4a8] dark:bg-[#2a5a3a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">SIGNED<br/>IN</TableHead>}
                   {isColumnVisible("otdNotes") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">OTD<br/>NOTES</TableHead>}
                   {isColumnVisible("standby") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center text-[#00363a] dark:text-white font-semibold">STANDBY /<br/>SWAPS</TableHead>}
@@ -1177,6 +1203,18 @@ export default function BookingMaster() {
                                 checked={!!row.assignment.paperworkReceived}
                                 onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "paperworkReceived", row.assignment!.paperworkReceived)}
                                 data-testid={`checkbox-paperwork-received-${row.seatId}`}
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("otdHardCopy") && (
+                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-[#fef3c7] dark:bg-[#78350f] border-r border-gray-200 dark:border-gray-700">
+                            {row.assignment && (
+                              <Checkbox
+                                checked={!!row.assignment.paperworkOnDay}
+                                onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "paperworkOnDay", row.assignment!.paperworkOnDay)}
+                                className="border-orange-600 data-[state=checked]:bg-orange-600 data-[state=checked]:border-orange-600"
+                                data-testid={`checkbox-otd-paperwork-${row.seatId}`}
                               />
                             )}
                           </TableCell>
