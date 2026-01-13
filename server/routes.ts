@@ -5902,10 +5902,8 @@ ${finalEmailFooter}`;
                 Please ensure you bring your own water bottle.
               </p>
               
-              <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
-                We look forward to seeing you on the day!
-              </p>
               <p style="color: #333333; font-size: 15px; margin: 0;">
+                We look forward to seeing you on the day!<br/>
                 Kind Regards,<br/>
                 <strong>The Deal Or No Deal Team</strong>
               </p>
@@ -7248,10 +7246,8 @@ ${finalEmailFooter}`;
                 Please ensure you bring your own water bottle.
               </p>
               
-              <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
-                We look forward to seeing you on the day!
-              </p>
               <p style="color: #333333; font-size: 15px; margin: 0;">
+                We look forward to seeing you on the day!<br/>
                 Kind Regards,<br/>
                 <strong>The Deal Or No Deal Team</strong>
               </p>
@@ -7749,10 +7745,8 @@ ${finalEmailFooter}`;
                 Please ensure you bring your own water bottle.
               </p>
               
-              <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
-                We look forward to seeing you on the day!
-              </p>
               <p style="color: #333333; font-size: 15px; margin: 0;">
+                We look forward to seeing you on the day!<br/>
                 Kind Regards,<br/>
                 <strong>The Deal Or No Deal Team</strong>
               </p>
@@ -8587,10 +8581,8 @@ ${finalEmailFooter}`;
                   Please ensure you bring your own water bottle.
                 </p>
                 
-                <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
-                  We look forward to seeing you on the day!
-                </p>
                 <p style="color: #333333; font-size: 15px; margin: 0;">
+                  We look forward to seeing you on the day!<br/>
                   Kind Regards,<br/>
                   <strong>The Deal Or No Deal Team</strong>
                 </p>
@@ -8931,10 +8923,8 @@ ${finalEmailFooter}`;
                   Please ensure you bring your own water bottle.
                 </p>
                 
-                <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
-                  We look forward to seeing you on the day!
-                </p>
                 <p style="color: #333333; font-size: 15px; margin: 0;">
+                  We look forward to seeing you on the day!<br/>
                   Kind Regards,<br/>
                   <strong>The Deal Or No Deal Team</strong>
                 </p>
