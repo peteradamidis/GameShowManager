@@ -593,7 +593,7 @@ export default function AvailabilityManagement() {
                 <h4 className="text-sm font-medium">Email Preview</h4>
                 <div className="border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
                   <iframe 
-                    src="/api/email-preview/availability"
+                    src={`/api/email-preview/availability${selectedRecordDays.size > 0 ? `?recordDayId=${Array.from(selectedRecordDays)[0]}` : ''}`}
                     className="w-full h-[250px] border-0"
                     title="Availability Email Preview"
                     data-testid="iframe-availability-email-preview"

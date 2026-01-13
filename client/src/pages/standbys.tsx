@@ -559,7 +559,7 @@ export default function StandbysPage() {
                 <p className="text-sm font-medium">Email Preview</p>
                 <div className="border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
                   <iframe 
-                    src="/api/email-preview/standby"
+                    src={`/api/email-preview/standby${selectedRecordDayId ? `?recordDayId=${selectedRecordDayId}` : ''}`}
                     className="w-full h-[300px] border-0"
                     title="Standby Email Preview"
                     data-testid="iframe-standby-email-preview"

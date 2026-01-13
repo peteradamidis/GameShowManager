@@ -8629,6 +8629,25 @@ ${finalEmailFooter}`;
       const footer = await storage.getSystemConfig('availability_email_footer') || 'This is an automated message from the Deal or No Deal production team. Please do not forward this email as it contains a unique response link.';
       const msFormUrl = await storage.getSystemConfig('availability_form_url') || 'https://forms.office.com/Pages/ResponsePage.aspx?id=ayXN-4f600uQrCY8eucYVbItEwiVLdlEnys-du5SGAxUMFhPMk9JTUFDUThQWDlLRllCOFhaUk5WVS4u';
       
+      // Get record day data if provided
+      const recordDayId = req.query.recordDayId as string | undefined;
+      let sampleDate = '';
+      let sampleRx = '';
+      
+      if (recordDayId) {
+        try {
+          const recordDay = await storage.getRecordDayById(recordDayId);
+          if (recordDay) {
+            const date = new Date(recordDay.date);
+            const options: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+            sampleDate = date.toLocaleDateString('en-AU', options);
+            sampleRx = recordDay.rxNumber || '';
+          }
+        } catch (e) {
+          // Ignore errors, use defaults
+        }
+      }
+      
       // Sample data for preview
       const sampleName = 'Peter';
       
@@ -8769,10 +8788,25 @@ ${finalEmailFooter}`;
       const smtpConfig = await getSmtpConfig();
       const replyToEmail = smtpConfig.fromEmail || 'noreply@example.com';
       
-      // Sample data for preview
-      const sampleName = 'Sarah Johnson';
-      const sampleDate = 'Wednesday, 15 January 2026';
-      const sampleRx = 'RX01';
+      // Get record day data if provided
+      const recordDayId = req.query.recordDayId as string | undefined;
+      let sampleName = 'Sarah Johnson';
+      let sampleDate = 'Wednesday, 15 January 2026';
+      let sampleRx = 'RX01';
+      
+      if (recordDayId) {
+        try {
+          const recordDay = await storage.getRecordDayById(recordDayId);
+          if (recordDay) {
+            const date = new Date(recordDay.date);
+            const options: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+            sampleDate = date.toLocaleDateString('en-AU', options);
+            sampleRx = recordDay.rxNumber || 'RX01';
+          }
+        } catch (e) {
+          // Ignore errors, use defaults
+        }
+      }
       
       // Build mailto link
       const replyMailto = `mailto:${replyToEmail}?subject=${encodeURIComponent(`STANDBY RESPONSE - ${sampleName} - ${sampleDate}`)}&body=${encodeURIComponent(`Hi Deal or No Deal Team,\n\nRegarding my Deal or No Deal STANDBY booking:\n\nName: ${sampleName}\nDate: ${sampleDate}\n\nCAN YOU ATTEND? (mark with X)\n[ ] YES - I confirm my standby attendance\n[ ] NO - I cannot attend (Reason: )\n\nGroup members attending (please provide FULL NAMES):\n1. (Full Name):\n2. (Full Name):\n3. (Full Name):\n\n--- REQUIRED INFORMATION (if attending) ---\n\nDo you have any medical conditions?\nIf yes, please describe:\n\nDo you have any mobility requirements? (i.e. issues climbing stairs or standing for extended periods)\nAnswer:\n\nEmergency contact name & phone number:\nAnswer:\n\nDietary requirements (mark with X):\n[ ] Vegetarian\n[ ] Vegan\n[ ] Gluten Free\n[ ] Dairy Free\n\nPlease note that all our meals are nut-free. If your dietary requirements fall outside the options, we won't be able to cater to them, so we kindly ask that you bring your own meals.\n\nThank you!`)}`;
