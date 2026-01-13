@@ -401,6 +401,7 @@ export default function BookingMaster() {
       queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/paperwork'], exact: false });
       broadcastBookingChange(selectedRecordDay);
     },
   });

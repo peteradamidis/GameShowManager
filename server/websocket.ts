@@ -12,6 +12,7 @@ interface BookingMasterUpdate {
 interface ConnectedClient {
   ws: WebSocket;
   recordDayId?: string;
+  subscribeAll?: boolean;
   authenticated: boolean;
 }
 
@@ -54,8 +55,22 @@ class WebSocketManager {
             // Only allow subscription if client appears authenticated
             if (client.authenticated || hasSession) {
               client.recordDayId = data.recordDayId;
+              client.subscribeAll = false;
               client.authenticated = true;
               console.log('Client subscribed to record day:', data.recordDayId);
+            } else {
+              console.log('Subscription rejected - no session');
+              ws.send(JSON.stringify({ type: 'error', message: 'Unauthorized' }));
+            }
+          }
+          
+          // Client subscribing to all updates (for Paperwork Tracker)
+          if (data.type === 'subscribe-all') {
+            if (client.authenticated || hasSession) {
+              client.subscribeAll = true;
+              client.recordDayId = undefined;
+              client.authenticated = true;
+              console.log('Client subscribed to all updates');
             } else {
               console.log('Subscription rejected - no session');
               ws.send(JSON.stringify({ type: 'error', message: 'Unauthorized' }));
@@ -101,7 +116,7 @@ class WebSocketManager {
     return cookies;
   }
 
-  // Broadcast a booking master update to all clients watching that record day
+  // Broadcast a booking master update to all clients watching that record day or subscribed to all
   broadcastBookingUpdate(update: BookingMasterUpdate) {
     if (!this.wss) return;
 
@@ -110,8 +125,8 @@ class WebSocketManager {
 
     this.clients.forEach((client) => {
       if (client.ws.readyState === WebSocket.OPEN && client.authenticated) {
-        // Send to clients watching this specific record day
-        if (client.recordDayId === update.recordDayId) {
+        // Send to clients watching this specific record day OR subscribed to all updates
+        if (client.recordDayId === update.recordDayId || client.subscribeAll) {
           client.ws.send(message);
           sentCount++;
         }

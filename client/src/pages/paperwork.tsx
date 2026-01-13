@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { usePaperworkWebSocket } from "@/hooks/use-websocket";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -91,6 +92,9 @@ If you have any questions, please don't hesitate to contact us.
 
 Best regards,
 Deal or No Deal Production Team`);
+
+  // Connect to WebSocket for real-time updates from Booking Master
+  usePaperworkWebSocket();
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
     queryKey: ["/api/record-days"],
@@ -484,7 +488,7 @@ Deal or No Deal Production Team`);
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <Card className="border-blue-200 dark:border-blue-800">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -513,15 +517,29 @@ Deal or No Deal Production Team`);
               </CardContent>
             </Card>
 
+            <Card className="border-orange-200 dark:border-orange-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Send className="h-4 w-4 text-orange-500" />
+                  Ready To Send
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-orange-600" data-testid="text-ready-to-send-count">
+                  {pendingSent.length}
+                </p>
+              </CardContent>
+            </Card>
+
             <Card className="border-amber-200 dark:border-amber-800">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Clock className="h-4 w-4 text-amber-500" />
-                  Paperwork Sent
+                  Awaiting Return
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-amber-600" data-testid="text-pending-return-count">
+                <p className="text-2xl font-bold text-amber-600" data-testid="text-awaiting-return-count">
                   {pendingReceived.length}
                 </p>
               </CardContent>
@@ -531,11 +549,11 @@ Deal or No Deal Production Team`);
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <FileCheck className="h-4 w-4 text-teal-600" />
-                  Received
+                  Complete
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-teal-700" data-testid="text-completed-count">
+                <p className="text-2xl font-bold text-teal-700" data-testid="text-complete-count">
                   {completed.length}
                 </p>
               </CardContent>

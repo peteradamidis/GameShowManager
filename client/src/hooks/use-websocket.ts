@@ -122,6 +122,11 @@ export function useBookingMasterWebSocket(recordDayId: string | null) {
                 });
               }
             );
+            
+            // Also invalidate paperwork queries for cross-page sync
+            if (data.field === 'paperworkSent' || data.field === 'paperworkReceived') {
+              queryClient.invalidateQueries({ queryKey: ['/api/paperwork'], exact: false });
+            }
           }
         } catch (e) {
           console.error('WebSocket message parse error:', e);
@@ -176,6 +181,109 @@ export function useBookingMasterWebSocket(recordDayId: string | null) {
       closeConnection();
     };
   }, [recordDayId, connect, closeConnection]);
+
+  return { isConnected };
+}
+
+// Hook for Paperwork Tracker - listens to all updates and invalidates paperwork queries
+export function usePaperworkWebSocket() {
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const [isConnected, setIsConnected] = useState(false);
+
+  const closeConnection = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = undefined;
+    }
+    if (wsRef.current) {
+      wsRef.current.onclose = null;
+      wsRef.current.onerror = null;
+      wsRef.current.onmessage = null;
+      wsRef.current.onopen = null;
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    setIsConnected(false);
+  }, []);
+
+  const connect = useCallback(() => {
+    closeConnection();
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+
+    try {
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        if (wsRef.current !== ws) {
+          ws.close();
+          return;
+        }
+        console.log('Paperwork WebSocket connected');
+        setIsConnected(true);
+        // Subscribe to all updates (no specific record day)
+        ws.send(JSON.stringify({ type: 'subscribe-all' }));
+      };
+
+      ws.onmessage = (event) => {
+        if (wsRef.current !== ws) return;
+        
+        try {
+          const data: WebSocketMessage = JSON.parse(event.data);
+
+          if (data.type === 'connected') {
+            return;
+          }
+
+          // Invalidate paperwork queries on any relevant update
+          if (data.type === 'booking-master-update') {
+            if (data.field === 'paperworkSent' || data.field === 'paperworkReceived' || 
+                data.field === 'confirmedRsvp' || data.field === 'bookingEmailSent') {
+              queryClient.invalidateQueries({ queryKey: ['/api/paperwork'], exact: false });
+              queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+            }
+          }
+
+          if (data.type === 'refresh') {
+            queryClient.invalidateQueries({ queryKey: ['/api/paperwork'], exact: false });
+            queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+          }
+        } catch (e) {
+          console.error('Paperwork WebSocket message parse error:', e);
+        }
+      };
+
+      ws.onclose = () => {
+        if (wsRef.current !== ws) return;
+        
+        console.log('Paperwork WebSocket disconnected');
+        setIsConnected(false);
+        wsRef.current = null;
+        
+        console.log('Will reconnect in 3 seconds...');
+        reconnectTimeoutRef.current = setTimeout(() => {
+          connect();
+        }, 3000);
+      };
+
+      ws.onerror = (error) => {
+        if (wsRef.current !== ws) return;
+        console.error('Paperwork WebSocket error:', error);
+      };
+    } catch (e) {
+      console.error('Paperwork WebSocket connection error:', e);
+    }
+  }, [closeConnection]);
+
+  useEffect(() => {
+    connect();
+    return () => {
+      closeConnection();
+    };
+  }, [connect, closeConnection]);
 
   return { isConnected };
 }
