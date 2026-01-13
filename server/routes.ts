@@ -5831,7 +5831,7 @@ ${finalEmailFooter}`;
                 <tr>
                   <td style="padding: 12px 15px;">
                     <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0; line-height: 1.5;">
-                      IMPORTANT: This email is not your ticket. You must follow the instructions below to confirm your attendance and obtain your tickets. This invitation is for you and the group you auditioned with.
+                      You must follow the steps below to confirm your attendance and receive tickets for yourself and the group you auditioned with.
                     </p>
                   </td>
                 </tr>
@@ -7180,7 +7180,7 @@ ${finalEmailFooter}`;
                 <tr>
                   <td style="padding: 15px;">
                     <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0; line-height: 1.5;">
-                      IMPORTANT: This email is not your ticket. You must follow the instructions below to confirm your attendance. This invitation is for you and the group you auditioned with.
+                      You must follow the steps below to confirm your attendance and receive tickets for yourself and the group you auditioned with.
                     </p>
                   </td>
                 </tr>
@@ -7690,7 +7690,7 @@ ${finalEmailFooter}`;
                 <tr>
                   <td style="padding: 12px 15px;">
                     <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0; line-height: 1.5;">
-                      IMPORTANT: This email is not your ticket. You must follow the instructions below to confirm your attendance and obtain your tickets. This invitation is for you and the group you auditioned with.
+                      You must follow the steps below to confirm your attendance and receive tickets for yourself and the group you auditioned with.
                     </p>
                   </td>
                 </tr>
@@ -8538,7 +8538,7 @@ ${finalEmailFooter}`;
                   <tr>
                     <td style="padding: 12px 15px;">
                       <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0; line-height: 1.5;">
-                        IMPORTANT: This email is not your ticket. You must follow the instructions below to confirm your attendance and obtain your tickets. This invitation is for you and the group you auditioned with.
+                        You must follow the steps below to confirm your attendance and receive tickets for yourself and the group you auditioned with.
                       </p>
                     </td>
                   </tr>
@@ -8835,7 +8835,7 @@ ${finalEmailFooter}`;
                   <tr>
                     <td style="padding: 15px;">
                       <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0; line-height: 1.5;">
-                        IMPORTANT: This email is not your ticket. You must follow the instructions below to confirm your attendance. This invitation is for you and the group you auditioned with.
+                        You must follow the steps below to confirm your attendance and receive tickets for yourself and the group you auditioned with.
                       </p>
                     </td>
                   </tr>
