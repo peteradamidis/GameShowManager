@@ -13,6 +13,7 @@ export const blockTypeEnum = pgEnum('block_type', ['PB', 'NPB']);
 export const standbyStatusEnum = pgEnum('standby_status', ['pending', 'email_sent', 'confirmed', 'declined', 'seated']);
 export const messageDirectionEnum = pgEnum('message_direction', ['outbound', 'inbound']); // outbound = system to contestant, inbound = contestant to system
 export const playerTypeEnum = pgEnum('player_type', ['player', 'backup', 'player_partner']);
+export const attendanceIssueTypeEnum = pgEnum('attendance_issue_type', ['no_show', 'early_leaver']);
 
 // Groups table
 export const groups = pgTable("groups", {
@@ -45,6 +46,8 @@ export const contestants = pgTable("contestants", {
   podiumStory: boolean("podium_story").default(false), // Has podium story
   availableForStandby: boolean("available_for_standby").default(false), // Marked as available for standby in import
   availabilityNotes: text("availability_notes"), // Free-form availability notes from Excel import
+  noShowCount: integer("no_show_count").default(0), // Number of times contestant was a no-show
+  earlyLeaverCount: integer("early_leaver_count").default(0), // Number of times contestant left early
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -405,3 +408,24 @@ export const insertFormConfigurationSchema = createInsertSchema(formConfiguratio
 
 export type InsertFormConfiguration = z.infer<typeof insertFormConfigurationSchema>;
 export type FormConfiguration = typeof formConfigurations.$inferSelect;
+
+// Attendance Issues table - tracks no-shows and early leavers
+export const attendanceIssues = pgTable("attendance_issues", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contestantId: varchar("contestant_id").references(() => contestants.id).notNull(),
+  recordDayId: varchar("record_day_id").references(() => recordDays.id).notNull(),
+  blockNumber: integer("block_number").notNull(),
+  seatLabel: text("seat_label").notNull(),
+  issueType: attendanceIssueTypeEnum("issue_type").notNull(), // no_show or early_leaver
+  notes: text("notes"), // Optional notes about the incident
+  markedBy: text("marked_by"), // Who marked this (producer initials)
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAttendanceIssueSchema = createInsertSchema(attendanceIssues).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertAttendanceIssue = z.infer<typeof insertAttendanceIssueSchema>;
+export type AttendanceIssue = typeof attendanceIssues.$inferSelect;
