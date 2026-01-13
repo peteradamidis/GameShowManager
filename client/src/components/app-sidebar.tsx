@@ -48,7 +48,7 @@ const menuItems = [
     icon: ClipboardList,
   },
   {
-    title: "Booking Responses",
+    title: "Booking Tracker",
     url: "/booking-responses",
     icon: MessageSquareText,
   },

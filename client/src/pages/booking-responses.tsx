@@ -730,7 +730,7 @@ export default function BookingResponses() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Mail className="h-8 w-8 text-blue-600" />
-            Booking Responses
+            Booking Tracker
           </h1>
           <p className="text-muted-foreground mt-1">
             Track and manage contestant booking confirmations
