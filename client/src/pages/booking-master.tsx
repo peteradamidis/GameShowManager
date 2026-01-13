@@ -859,16 +859,6 @@ export default function BookingMaster() {
           </Button>
 
           <Button 
-            onClick={() => setLocation('/booking-responses')}
-            variant="outline" 
-            size="icon"
-            title="View booking responses"
-            data-testid="button-booking-responses"
-          >
-            <MessageCircle className="h-4 w-4" />
-          </Button>
-
-          <Button 
             onClick={handleToggleFullscreen} 
             variant="outline" 
             size="icon"
