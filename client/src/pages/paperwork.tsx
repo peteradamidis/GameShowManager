@@ -440,63 +440,69 @@ Deal or No Deal Production Team`);
         */}
 
         <TabsContent value="paperwork" className="space-y-4 mt-0">
-          {/* Filters Row */}
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="record-day-filter">Record Day:</Label>
-              <Select value={selectedRecordDay} onValueChange={setSelectedRecordDay}>
-                <SelectTrigger className="w-[200px]" data-testid="select-record-day">
-                  <SelectValue placeholder="All Record Days" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Record Days</SelectItem>
-                  {sortedRecordDays.map((rd) => (
-                    <SelectItem key={rd.id} value={rd.id}>
-                      {format(new Date(rd.date), "MMM d, yyyy")} {rd.rxNumber ? `- ${rd.rxNumber}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Filters - Two Rows */}
+          <div className="space-y-3">
+            {/* Row 1: Record Day + Search */}
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="record-day-filter">Record Day:</Label>
+                <Select value={selectedRecordDay} onValueChange={setSelectedRecordDay}>
+                  <SelectTrigger className="w-[200px]" data-testid="select-record-day">
+                    <SelectValue placeholder="All Record Days" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Record Days</SelectItem>
+                    {sortedRecordDays.map((rd) => (
+                      <SelectItem key={rd.id} value={rd.id}>
+                        {format(new Date(rd.date), "MMM d, yyyy")} {rd.rxNumber ? `- ${rd.rxNumber}` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name..."
+                  value={searchName}
+                  onChange={(e) => setSearchName(e.target.value)}
+                  className="w-[200px]"
+                  data-testid="input-search-name"
+                />
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name..."
-                value={searchName}
-                onChange={(e) => setSearchName(e.target.value)}
-                className="w-[200px]"
-                data-testid="input-search-name"
-              />
-            </div>
+            {/* Row 2: Paperwork Status + Booking Status */}
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="paperwork-status-filter">Paperwork Status:</Label>
+                <Select value={paperworkStatusFilter} onValueChange={(v) => setPaperworkStatusFilter(v as PaperworkStatusFilter)}>
+                  <SelectTrigger className="w-[180px]" data-testid="select-paperwork-status-filter">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="ready_to_send">Ready To Send</SelectItem>
+                    <SelectItem value="awaiting_return">Awaiting Return</SelectItem>
+                    <SelectItem value="complete">Complete</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="flex items-center gap-2">
-              <Label htmlFor="paperwork-status-filter">Paperwork Status:</Label>
-              <Select value={paperworkStatusFilter} onValueChange={(v) => setPaperworkStatusFilter(v as PaperworkStatusFilter)}>
-                <SelectTrigger className="w-[180px]" data-testid="select-paperwork-status-filter">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="ready_to_send">Ready To Send</SelectItem>
-                  <SelectItem value="awaiting_return">Awaiting Return</SelectItem>
-                  <SelectItem value="complete">Complete</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Label htmlFor="status-filter">Booking Status:</Label>
-              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-                <SelectTrigger className="w-[160px]" data-testid="select-status-filter">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Invited</SelectItem>
-                  <SelectItem value="invited">Invited Only</SelectItem>
-                  <SelectItem value="confirmed">Confirmed Only</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="status-filter">Booking Status:</Label>
+                <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+                  <SelectTrigger className="w-[160px]" data-testid="select-status-filter">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Invited</SelectItem>
+                    <SelectItem value="invited">Invited Only</SelectItem>
+                    <SelectItem value="confirmed">Confirmed Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
