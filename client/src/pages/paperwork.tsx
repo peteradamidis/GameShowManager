@@ -36,7 +36,8 @@ import {
   FileCheck,
   UserCheck,
   MailPlus,
-  AlertTriangle
+  AlertTriangle,
+  Copy
 } from "lucide-react";
 import type { RecordDay, Contestant, SeatAssignment } from "@shared/schema";
 
@@ -299,6 +300,28 @@ Deal or No Deal Production Team`);
     new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
+  // Get all emails from filtered data for copy functionality
+  const allEmails = filteredData
+    .map(item => item.contestant?.email)
+    .filter((email): email is string => !!email);
+
+  const handleCopyAllEmails = async () => {
+    if (allEmails.length === 0) {
+      toast({ title: "No emails to copy", variant: "destructive" });
+      return;
+    }
+    
+    try {
+      await navigator.clipboard.writeText(allEmails.join(", "));
+      toast({ 
+        title: "Emails copied!", 
+        description: `${allEmails.length} email addresses copied to clipboard (comma-separated)` 
+      });
+    } catch {
+      toast({ title: "Failed to copy", description: "Please try selecting manually", variant: "destructive" });
+    }
+  };
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedAssignments(new Set(filteredData.map(item => item.id)));
@@ -351,10 +374,10 @@ Deal or No Deal Production Team`);
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <FileText className="h-8 w-8 text-orange-600" />
-            Paperwork Management
+            Paperwork Tracker
           </h1>
           <p className="text-muted-foreground mt-1">
-            Track and manage paperwork for invited contestants
+            Track paperwork status for invited contestants
           </p>
         </div>
         <Button 
@@ -373,10 +396,12 @@ Deal or No Deal Production Team`);
             <FileText className="h-4 w-4 mr-2" />
             Paperwork Tracker
           </TabsTrigger>
+          {/* Email Settings tab hidden - emailing now done via Adobe Sign website
           <TabsTrigger value="settings" data-testid="tab-settings">
             <Settings className="h-4 w-4 mr-2" />
             Email Settings
           </TabsTrigger>
+          */}
         </TabsList>
 
         <TabsContent value="paperwork" className="space-y-4">
@@ -426,7 +451,7 @@ Deal or No Deal Production Team`);
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="border-blue-200 dark:border-blue-800">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -455,25 +480,11 @@ Deal or No Deal Production Team`);
               </CardContent>
             </Card>
 
-            <Card className="border-orange-200 dark:border-orange-800">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <MailPlus className="h-4 w-4 text-orange-400" />
-                  Ready to Send
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-orange-500" data-testid="text-pending-send-count">
-                  {pendingSent.length}
-                </p>
-              </CardContent>
-            </Card>
-
             <Card className="border-amber-200 dark:border-amber-800">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Clock className="h-4 w-4 text-amber-500" />
-                  Awaiting Return
+                  Paperwork Sent
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -498,7 +509,7 @@ Deal or No Deal Production Team`);
             </Card>
           </div>
 
-          {/* Bulk Actions */}
+          {/* Bulk Actions - commented out as emailing is done via Adobe Sign website
           {selectedAssignments.size > 0 && (
             <Card className="border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-950">
               <CardContent className="py-3 flex items-center justify-between flex-wrap gap-2">
@@ -535,17 +546,32 @@ Deal or No Deal Production Team`);
               </CardContent>
             </Card>
           )}
+          */}
 
           {/* Main Table */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Invited Contestants ({filteredData.length})
-              </CardTitle>
-              <CardDescription>
-                Contestants who have been sent a booking invitation
-              </CardDescription>
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Invited Contestants ({filteredData.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Contestants who have been sent a booking invitation
+                  </CardDescription>
+                </div>
+                <Button 
+                  onClick={handleCopyAllEmails}
+                  disabled={allEmails.length === 0}
+                  variant="outline"
+                  className="border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400 dark:hover:bg-orange-900/20"
+                  data-testid="button-copy-all-emails"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy All Emails ({allEmails.length})
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {loadingPaperwork ? (
@@ -562,13 +588,6 @@ Deal or No Deal Production Team`);
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-orange-100 dark:bg-orange-900/20">
-                      <TableHead className="w-12">
-                        <Checkbox
-                          checked={selectedAssignments.size === filteredData.length && filteredData.length > 0}
-                          onCheckedChange={handleSelectAll}
-                          data-testid="checkbox-select-all"
-                        />
-                      </TableHead>
                       <TableHead className="font-semibold">Name</TableHead>
                       <TableHead className="font-semibold">Record Day</TableHead>
                       <TableHead className="font-semibold">Seat</TableHead>
@@ -589,13 +608,6 @@ Deal or No Deal Production Team`);
                         `}
                         data-testid={`row-paperwork-${item.id}`}
                       >
-                        <TableCell>
-                          <Checkbox
-                            checked={selectedAssignments.has(item.id)}
-                            onCheckedChange={(checked) => handleSelectAssignment(item.id, checked === true)}
-                            data-testid={`checkbox-select-${item.id}`}
-                          />
-                        </TableCell>
                         <TableCell className="font-medium">
                           {item.contestant?.name || "Unknown"}
                         </TableCell>
@@ -610,7 +622,11 @@ Deal or No Deal Production Team`);
                             Block {item.blockNumber} - {item.seatLabel}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm">
+                        <TableCell 
+                          className="text-sm font-mono select-all cursor-text"
+                          title="Click to select, then Ctrl+C to copy"
+                          data-testid={`email-${item.id}`}
+                        >
                           {item.contestant?.email || "-"}
                         </TableCell>
                         <TableCell className="text-center">
@@ -661,12 +677,12 @@ Deal or No Deal Production Team`);
                           ) : item.paperworkSent ? (
                             <Badge className="bg-amber-500 text-white dark:bg-amber-500">
                               <Clock className="h-3 w-3 mr-1" />
-                              Awaiting Return
+                              Paperwork Sent
                             </Badge>
                           ) : (
-                            <Badge className="bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                            <Badge className="bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                               <Send className="h-3 w-3 mr-1" />
-                              Ready to Send
+                              Not Sent
                             </Badge>
                           )}
                         </TableCell>

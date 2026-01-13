@@ -53,7 +53,7 @@ const menuItems = [
     icon: MessageSquareText,
   },
   {
-    title: "Paperwork",
+    title: "Paperwork Tracker",
     url: "/paperwork",
     icon: FileText,
   },
