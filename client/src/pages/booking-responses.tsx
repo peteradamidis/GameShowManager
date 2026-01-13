@@ -1457,6 +1457,19 @@ export default function BookingResponses() {
                     data-testid="input-rebook-reason"
                   />
                 </div>
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="rebook-initials">Your Initials <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="rebook-initials"
+                    placeholder="e.g., JD"
+                    value={declineMovedBy}
+                    onChange={(e) => setDeclineMovedBy(e.target.value.toUpperCase())}
+                    maxLength={5}
+                    className="w-24"
+                    data-testid="input-rebook-initials"
+                  />
+                  <p className="text-xs text-muted-foreground">Required for tracking who processed this rebooking</p>
+                </div>
               </div>
             )}
 
@@ -1474,7 +1487,7 @@ export default function BookingResponses() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="decline-moved-by">Your Initials</Label>
+                  <Label htmlFor="decline-moved-by">Your Initials <span className="text-red-500">*</span></Label>
                   <Input
                     id="decline-moved-by"
                     placeholder="e.g., JD"
@@ -1484,7 +1497,7 @@ export default function BookingResponses() {
                     className="w-24"
                     data-testid="input-decline-moved-by"
                   />
-                  <p className="text-xs text-muted-foreground">For tracking who processed this decline</p>
+                  <p className="text-xs text-muted-foreground">Required for tracking who processed this decline</p>
                 </div>
               </div>
             )}
@@ -1496,7 +1509,7 @@ export default function BookingResponses() {
             {declineAction === "rebook" ? (
               <Button
                 onClick={handleDeclineSubmit}
-                disabled={!rebookRecordDayId || !rebookBlock || !rebookSeat || rebookMutation.isPending}
+                disabled={!rebookRecordDayId || !rebookBlock || !rebookSeat || !declineMovedBy.trim() || rebookMutation.isPending}
                 data-testid="button-submit-rebook"
               >
                 {rebookMutation.isPending ? "Moving..." : "Rebook to New Day"}
@@ -1505,7 +1518,7 @@ export default function BookingResponses() {
               <Button
                 variant="destructive"
                 onClick={handleDeclineSubmit}
-                disabled={declineMutation.isPending}
+                disabled={!declineMovedBy.trim() || declineMutation.isPending}
                 data-testid="button-submit-decline"
               >
                 {declineMutation.isPending ? "Processing..." : "Move to Reschedule"}

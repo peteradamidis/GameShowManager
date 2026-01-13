@@ -74,6 +74,7 @@ export default function SeatingChartPage() {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelAssignmentId, setCancelAssignmentId] = useState<string>("");
   const [cancelReason, setCancelReason] = useState<string>("");
+  const [cancelInitials, setCancelInitials] = useState<string>("");
   
   // Reset confirmation dialog state
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
@@ -1535,16 +1536,31 @@ export default function SeatingChartPage() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="py-4 space-y-2">
-            <Label htmlFor="cancel-reason">Reason for cancellation</Label>
-            <Textarea
-              id="cancel-reason"
-              placeholder="Enter reason for cancellation..."
-              value={cancelReason}
-              onChange={(e) => setCancelReason(e.target.value)}
-              className="min-h-[100px]"
-              data-testid="textarea-cancel-reason"
-            />
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="cancel-reason">Reason for cancellation</Label>
+              <Textarea
+                id="cancel-reason"
+                placeholder="Enter reason for cancellation..."
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="min-h-[100px]"
+                data-testid="textarea-cancel-reason"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cancel-initials">Your Initials <span className="text-red-500">*</span></Label>
+              <Input
+                id="cancel-initials"
+                placeholder="e.g., JD"
+                value={cancelInitials}
+                onChange={(e) => setCancelInitials(e.target.value.toUpperCase())}
+                maxLength={5}
+                className="w-24"
+                data-testid="input-cancel-initials"
+              />
+              <p className="text-xs text-muted-foreground">Required for tracking who processed this cancellation</p>
+            </div>
           </div>
 
           <DialogFooter>
@@ -1554,6 +1570,7 @@ export default function SeatingChartPage() {
                 setCancelDialogOpen(false);
                 setCancelAssignmentId("");
                 setCancelReason("");
+                setCancelInitials("");
               }}
               data-testid="button-cancel-dialog-close"
             >
@@ -1562,6 +1579,7 @@ export default function SeatingChartPage() {
             <Button 
               variant="destructive"
               onClick={handleConfirmCancel}
+              disabled={!cancelInitials.trim()}
               data-testid="button-confirm-cancel"
             >
               Confirm Cancel
