@@ -447,17 +447,14 @@ Deal or No Deal Production Team`);
             </div>
 
             <div className="flex items-center gap-2">
-              <Label htmlFor="status-filter">Booking Status:</Label>
-              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-                <SelectTrigger className="w-[160px]" data-testid="select-status-filter">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Invited</SelectItem>
-                  <SelectItem value="invited">Invited Only</SelectItem>
-                  <SelectItem value="confirmed">Confirmed Only</SelectItem>
-                </SelectContent>
-              </Select>
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name..."
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                className="w-[200px]"
+                data-testid="input-search-name"
+              />
             </div>
 
             <div className="flex items-center gap-2">
@@ -476,14 +473,17 @@ Deal or No Deal Production Team`);
             </div>
 
             <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name..."
-                value={searchName}
-                onChange={(e) => setSearchName(e.target.value)}
-                className="w-[200px]"
-                data-testid="input-search-name"
-              />
+              <Label htmlFor="status-filter">Booking Status:</Label>
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+                <SelectTrigger className="w-[160px]" data-testid="select-status-filter">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Invited</SelectItem>
+                  <SelectItem value="invited">Invited Only</SelectItem>
+                  <SelectItem value="confirmed">Confirmed Only</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
