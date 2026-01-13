@@ -8609,7 +8609,8 @@ ${finalEmailFooter}`;
       res.send(html);
     } catch (error: any) {
       console.error("Error generating booking email preview:", error);
-      res.status(500).json({ error: error.message });
+      res.setHeader('Content-Type', 'text/html');
+      res.status(500).send(`<!DOCTYPE html><html><head><title>Preview Error</title></head><body style="font-family: Arial, sans-serif; padding: 40px; text-align: center; background: #fee2e2;"><h2 style="color: #dc2626;">Preview Error</h2><p style="color: #7f1d1d;">${error.message || 'Failed to load preview'}</p></body></html>`);
     }
   });
 
@@ -8746,7 +8747,8 @@ ${finalEmailFooter}`;
       res.send(html);
     } catch (error: any) {
       console.error("Error generating availability email preview:", error);
-      res.status(500).json({ error: error.message });
+      res.setHeader('Content-Type', 'text/html');
+      res.status(500).send(`<!DOCTYPE html><html><head><title>Preview Error</title></head><body style="font-family: Arial, sans-serif; padding: 40px; text-align: center; background: #fee2e2;"><h2 style="color: #dc2626;">Preview Error</h2><p style="color: #7f1d1d;">${error.message || 'Failed to load preview'}</p></body></html>`);
     }
   });
 
@@ -8917,7 +8919,8 @@ ${finalEmailFooter}`;
       res.send(html);
     } catch (error: any) {
       console.error("Error generating standby email preview:", error);
-      res.status(500).json({ error: error.message });
+      res.setHeader('Content-Type', 'text/html');
+      res.status(500).send(`<!DOCTYPE html><html><head><title>Preview Error</title></head><body style="font-family: Arial, sans-serif; padding: 40px; text-align: center; background: #fee2e2;"><h2 style="color: #dc2626;">Preview Error</h2><p style="color: #7f1d1d;">${error.message || 'Failed to load preview'}</p></body></html>`);
     }
   });
 
