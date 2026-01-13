@@ -338,6 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       '/api/availability-response',  // Public form for contestants
       '/api/booking-confirmation',   // Public form for contestants
       '/api/standby-confirmation',   // Public form for contestants
+      '/api/email-preview/',         // Email template previews for iframes
     ];
     
     const isPublicPath = publicPaths.some(path => req.originalUrl.startsWith(path));
