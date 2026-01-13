@@ -2448,15 +2448,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         availableAll = availableAll.filter(c => confirmedContestantIds.has(c.id));
       }
       
-      // Exclude A and A+ (must be manually assigned), DNU (Do Not Use), and P (pending/special) contestants
+      // Exclude A and A+ (must be manually assigned), DNU (Do Not Use), P (pending/special), and podium story contestants
       const aRatedContestants = availableAll.filter(c => c.auditionRating === 'A' || c.auditionRating === 'A+');
       const dnuContestants = availableAll.filter(c => c.auditionRating?.toUpperCase().trim() === 'DNU');
       const pContestants = availableAll.filter(c => c.auditionRating?.toUpperCase().trim() === 'P');
+      const podiumStoryContestants = availableAll.filter(c => c.podiumStory === true);
       const available = availableAll.filter(c => 
         c.auditionRating !== 'A' &&
         c.auditionRating !== 'A+' && 
         c.auditionRating?.toUpperCase().trim() !== 'DNU' &&
-        c.auditionRating?.toUpperCase().trim() !== 'P'
+        c.auditionRating?.toUpperCase().trim() !== 'P' &&
+        c.podiumStory !== true
       );
 
       if (available.length === 0) {
