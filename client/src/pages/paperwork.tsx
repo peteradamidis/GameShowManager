@@ -57,11 +57,13 @@ interface AdobeSignConfig {
 }
 
 type StatusFilter = "all" | "invited" | "confirmed";
+type PaperworkStatusFilter = "all" | "ready_to_send" | "awaiting_return" | "complete";
 
 export default function Paperwork() {
   const { toast } = useToast();
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [paperworkStatusFilter, setPaperworkStatusFilter] = useState<PaperworkStatusFilter>("all");
   const [searchName, setSearchName] = useState("");
   const [activeTab, setActiveTab] = useState("paperwork");
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
@@ -283,10 +285,25 @@ Deal or No Deal Production Team`);
     },
   });
 
-  // Filter by search
+  // Filter by search and paperwork status
   const filteredData = paperworkData.filter((item) => {
-    if (!searchName) return true;
-    return item.contestant?.name?.toLowerCase().includes(searchName.toLowerCase());
+    // Filter by name search
+    if (searchName && !item.contestant?.name?.toLowerCase().includes(searchName.toLowerCase())) {
+      return false;
+    }
+    // Filter by paperwork status
+    if (paperworkStatusFilter !== "all") {
+      if (paperworkStatusFilter === "ready_to_send" && item.paperworkSent) {
+        return false;
+      }
+      if (paperworkStatusFilter === "awaiting_return" && (!item.paperworkSent || item.paperworkReceived)) {
+        return false;
+      }
+      if (paperworkStatusFilter === "complete" && (!item.paperworkSent || !item.paperworkReceived)) {
+        return false;
+      }
+    }
+    return true;
   });
 
   // Stats
@@ -426,7 +443,7 @@ Deal or No Deal Production Team`);
             </div>
 
             <div className="flex items-center gap-2">
-              <Label htmlFor="status-filter">Status:</Label>
+              <Label htmlFor="status-filter">Booking Status:</Label>
               <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
                 <SelectTrigger className="w-[160px]" data-testid="select-status-filter">
                   <SelectValue placeholder="All" />
@@ -435,6 +452,21 @@ Deal or No Deal Production Team`);
                   <SelectItem value="all">All Invited</SelectItem>
                   <SelectItem value="invited">Invited Only</SelectItem>
                   <SelectItem value="confirmed">Confirmed Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Label htmlFor="paperwork-status-filter">Paperwork Status:</Label>
+              <Select value={paperworkStatusFilter} onValueChange={(v) => setPaperworkStatusFilter(v as PaperworkStatusFilter)}>
+                <SelectTrigger className="w-[180px]" data-testid="select-paperwork-status-filter">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="ready_to_send">Ready To Send</SelectItem>
+                  <SelectItem value="awaiting_return">Awaiting Return</SelectItem>
+                  <SelectItem value="complete">Complete</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -596,7 +628,7 @@ Deal or No Deal Production Team`);
                       <TableHead className="font-semibold text-center">Booking Status</TableHead>
                       <TableHead className="font-semibold text-center">Paperwork Sent</TableHead>
                       <TableHead className="font-semibold text-center">Paperwork Received</TableHead>
-                      <TableHead className="font-semibold">Status</TableHead>
+                      <TableHead className="font-semibold">Paperwork Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -678,12 +710,12 @@ Deal or No Deal Production Team`);
                           ) : item.paperworkSent ? (
                             <Badge className="bg-amber-500 text-white dark:bg-amber-500">
                               <Clock className="h-3 w-3 mr-1" />
-                              Paperwork Sent
+                              Awaiting Return
                             </Badge>
                           ) : (
-                            <Badge className="bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                            <Badge className="bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
                               <Send className="h-3 w-3 mr-1" />
-                              Not Sent
+                              Ready To Send
                             </Badge>
                           )}
                         </TableCell>
