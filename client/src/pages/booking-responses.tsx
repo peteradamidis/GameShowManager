@@ -38,7 +38,6 @@ import {
   MailPlus,
   LayoutGrid,
   Loader2,
-  Undo2,
   Ticket,
   History,
   ChevronDown,
@@ -130,6 +129,11 @@ export default function BookingResponses() {
   
   // Rebooking history section state
   const [historyExpanded, setHistoryExpanded] = useState(false);
+  
+  // Cancel confirmation dialog state
+  const [cancelConfirmDialogOpen, setCancelConfirmDialogOpen] = useState(false);
+  const [cancelConfirmAssignment, setCancelConfirmAssignment] = useState<BookingAssignment | null>(null);
+  const [cancelConfirmType, setCancelConfirmType] = useState<"confirm" | "decline">("confirm");
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
     queryKey: ["/api/record-days"],
@@ -1026,6 +1030,7 @@ export default function BookingResponses() {
               <p className="text-sm">Assign contestants from the Seating Chart</p>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-blue-100 dark:bg-blue-900/20">
@@ -1179,12 +1184,16 @@ export default function BookingResponses() {
                               size="sm"
                               variant="outline"
                               className="h-6 px-2 text-xs"
-                              onClick={() => undoDeclineMutation.mutate(item.id)}
+                              onClick={() => {
+                                setCancelConfirmAssignment(item);
+                                setCancelConfirmType("decline");
+                                setCancelConfirmDialogOpen(true);
+                              }}
                               disabled={undoDeclineMutation.isPending}
-                              data-testid={`button-undo-decline-${item.id}`}
+                              data-testid={`button-cancel-decline-${item.id}`}
                             >
-                              <Undo2 className="h-3 w-3 mr-1" />
-                              Undo
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Cancel
                             </Button>
                           </div>
                         ) : isConfirmed ? (
@@ -1194,12 +1203,16 @@ export default function BookingResponses() {
                               size="sm"
                               variant="outline"
                               className="h-6 px-2 text-xs"
-                              onClick={() => undoConfirmMutation.mutate(item.id)}
+                              onClick={() => {
+                                setCancelConfirmAssignment(item);
+                                setCancelConfirmType("confirm");
+                                setCancelConfirmDialogOpen(true);
+                              }}
                               disabled={undoConfirmMutation.isPending}
-                              data-testid={`button-undo-confirm-${item.id}`}
+                              data-testid={`button-cancel-confirm-${item.id}`}
                             >
-                              <Undo2 className="h-3 w-3 mr-1" />
-                              Undo
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Cancel
                             </Button>
                           </div>
                         ) : (
@@ -1234,6 +1247,7 @@ export default function BookingResponses() {
                 })}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -1677,6 +1691,67 @@ export default function BookingResponses() {
                   <Ticket className="h-4 w-4 mr-2" />
                   Resend Ticket
                 </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Confirmation Dialog */}
+      <Dialog open={cancelConfirmDialogOpen} onOpenChange={setCancelConfirmDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <XCircle className="h-5 w-5 text-amber-600" />
+              {cancelConfirmType === "confirm" ? "Cancel Confirmation" : "Cancel Decline"}
+            </DialogTitle>
+            <DialogDescription>
+              {cancelConfirmAssignment && (
+                <>
+                  Are you sure you want to {cancelConfirmType === "confirm" ? "cancel the confirmation" : "cancel the decline"} for{" "}
+                  <strong>{cancelConfirmAssignment.contestant?.name}</strong>?
+                  <br /><br />
+                  {cancelConfirmType === "confirm" 
+                    ? "This will reset their status back to awaiting reply."
+                    : "This will restore them from the reschedule list and set their status back to awaiting reply."}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setCancelConfirmDialogOpen(false);
+                setCancelConfirmAssignment(null);
+              }}
+              data-testid="button-close-cancel-confirm"
+            >
+              Go Back
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (cancelConfirmAssignment) {
+                  if (cancelConfirmType === "confirm") {
+                    undoConfirmMutation.mutate(cancelConfirmAssignment.id);
+                  } else {
+                    undoDeclineMutation.mutate(cancelConfirmAssignment.id);
+                  }
+                  setCancelConfirmDialogOpen(false);
+                  setCancelConfirmAssignment(null);
+                }
+              }}
+              disabled={undoConfirmMutation.isPending || undoDeclineMutation.isPending}
+              data-testid="button-confirm-cancel-action"
+            >
+              {(undoConfirmMutation.isPending || undoDeclineMutation.isPending) ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "Yes, Cancel"
               )}
             </Button>
           </DialogFooter>
