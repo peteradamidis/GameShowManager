@@ -226,7 +226,6 @@ export default function BookingMaster() {
   const [selectedAttachments, setSelectedAttachments] = useState<string[]>([]);
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const [expandedOtdNotes, setExpandedOtdNotes] = useState<Set<string>>(new Set());
-  const [filterMobilityNotes, setFilterMobilityNotes] = useState(false);
   const [filterMedicalNotes, setFilterMedicalNotes] = useState(false);
   const [isStandbyMode, setIsStandbyMode] = useState(false);
   // Use refs instead of state for pending text updates to avoid re-renders
@@ -484,12 +483,8 @@ export default function BookingMaster() {
     if (searchName.trim() && !row.contestant?.name.toLowerCase().includes(searchName.toLowerCase())) {
       return false;
     }
-    // Filter by mobility/medical notes
-    if (filterMobilityNotes && !row.contestant?.mobilityNotes) {
-      return false;
-    }
-    // Filter by medical information
-    if (filterMedicalNotes && !row.contestant?.medicalInfo) {
+    // Filter by medical information (includes both Medical App and Medical AUD)
+    if (filterMedicalNotes && !row.contestant?.medicalInfo && !row.contestant?.mobilityNotes) {
       return false;
     }
     return true;
@@ -848,18 +843,9 @@ export default function BookingMaster() {
           </Dialog>
           
           <Button 
-            onClick={() => setFilterMobilityNotes(!filterMobilityNotes)}
-            variant={filterMobilityNotes ? "default" : "outline"}
-            title={filterMobilityNotes ? "Show all contestants" : "Show only contestants with Medical - AUD notes"}
-            data-testid="button-filter-mobility-notes"
-          >
-            Show Medical - AUD
-          </Button>
-
-          <Button 
             onClick={() => setFilterMedicalNotes(!filterMedicalNotes)}
             variant={filterMedicalNotes ? "default" : "outline"}
-            title={filterMedicalNotes ? "Show all contestants" : "Show only medical information"}
+            title={filterMedicalNotes ? "Show all contestants" : "Show only contestants with medical notes (App or AUD)"}
             data-testid="button-filter-medical-notes"
           >
             Show Medical Notes
