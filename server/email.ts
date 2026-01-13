@@ -17,6 +17,7 @@ export interface SmtpConfig {
 export interface EmailConfig {
   senderName?: string;
   replyTo?: string;
+  attachments?: EmailAttachment[];
 }
 
 export interface EmailAttachment {
@@ -101,7 +102,7 @@ export async function getSenderEmail(): Promise<string> {
   return config.fromEmail || 'noreply@example.com';
 }
 
-// Send a simple email
+// Send a simple email (with optional attachments)
 export async function sendEmail(
   to: string, 
   subject: string, 
@@ -117,6 +118,14 @@ export async function sendEmail(
     const domain = extractDomain(smtpConfig.fromEmail);
     const messageId = generateMessageId(domain);
     
+    // Convert attachments to nodemailer format if provided
+    const nodemailerAttachments = config?.attachments?.map(att => ({
+      filename: att.filename,
+      content: att.content,
+      contentType: att.contentType,
+      ...(att.cid ? { cid: att.cid, contentDisposition: 'inline' as const } : {}),
+    })) || [];
+    
     await transport.sendMail({
       from: `${senderName} <${smtpConfig.fromEmail}>`,
       to,
@@ -125,6 +134,7 @@ export async function sendEmail(
       text: body,
       html: htmlBody || body,
       messageId,
+      attachments: nodemailerAttachments,
       headers: {
         'X-Priority': '3',
         'X-Mailer': 'Deal-or-No-Deal-Booking-System',
