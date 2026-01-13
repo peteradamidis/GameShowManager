@@ -982,12 +982,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                            "Province", "PROVINCE", "province",
                            "Region", "REGION", "region");
         
-        // Get standby indicator from column (marks if available for standby from import)
-        const standbyValue = getColumnValue(row,
+        // Get standby indicator from Labels column (marks if available for standby from import)
+        // The Labels column can have multiple values, only set standby if it contains "standby"
+        const labelsValue = getColumnValue(row,
+                             "Labels", "LABELS", "labels",
+                             "Label", "LABEL", "label",
                              "Standby", "STANDBY", "standby",
                              "Is Standby", "IS STANDBY", "is standby",
                              "Available for Standby", "AVAILABLE FOR STANDBY", "available for standby",
                              "Backup", "BACKUP", "backup");
+        // Check if labels contain "standby" (case-insensitive)
+        const standbyValue = labelsValue && labelsValue.toString().toLowerCase().includes('standby') ? 'standby' : null;
         
         // Get podium story indicator from column
         const podiumStoryValue = getColumnValue(row,
