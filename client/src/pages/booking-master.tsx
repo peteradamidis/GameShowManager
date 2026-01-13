@@ -1447,17 +1447,20 @@ export default function BookingMaster() {
               />
             </div>
             
-            <div className="border rounded-lg p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="h-4 w-4 text-amber-600" />
-                <span className="font-medium text-amber-800 dark:text-amber-200">Professional Template</span>
+            {/* Email Preview */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Email Preview</Label>
+              <div className="border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
+                <iframe 
+                  src="/api/email-preview/booking"
+                  className="w-full h-[400px] border-0"
+                  title="Booking Email Preview"
+                  data-testid="iframe-email-preview"
+                />
               </div>
-              <p className="text-sm text-amber-700 dark:text-amber-300">
-                Emails will include the Deal or No Deal banner, burgundy background, gold accents, 
-                and automatically show contestant name, recording date, and seat details.
-              </p>
-              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                To edit the email wording, go to Settings &gt; Booking Email Template
+              <p className="text-xs text-muted-foreground">
+                This preview uses sample data. The actual email will include the contestant's name and booking details.
+                To edit the email template, go to Settings &gt; Booking Email Template.
               </p>
             </div>
             
