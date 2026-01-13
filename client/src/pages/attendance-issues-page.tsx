@@ -31,10 +31,7 @@ export default function AttendanceIssuesPage() {
     const matchesType = typeFilter === "all" || issue.issueType === typeFilter;
     const contestant = contestantMap.get(issue.contestantId);
     const matchesSearch = searchQuery === "" || 
-      (contestant && (
-        contestant.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        contestant.lastName?.toLowerCase().includes(searchQuery.toLowerCase())
-      ));
+      (contestant && contestant.name?.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesType && matchesSearch;
   }) || [];
 
@@ -139,7 +136,7 @@ export default function AttendanceIssuesPage() {
                   return (
                     <TableRow key={issue.id} data-testid={`issue-row-${issue.id}`}>
                       <TableCell className="font-medium">
-                        {contestant ? `${contestant.firstName} ${contestant.lastName}` : 'Unknown'}
+                        {contestant ? contestant.name : 'Unknown'}
                         {contestant && (contestant.noShowCount > 0 || contestant.earlyLeaverCount > 0) && (
                           <div className="flex gap-1 mt-1">
                             {contestant.noShowCount > 0 && (
