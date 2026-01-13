@@ -8478,10 +8478,25 @@ ${finalEmailFooter}`;
       const footer = await storage.getSystemConfig('booking_email_footer') || 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.';
       const replyToEmail = await storage.getSystemConfig('booking_reply_to_email') || 'bookings@dealornodeal.example.com';
       
-      // Sample data for preview
-      const sampleName = 'Peter';
-      const sampleDate = 'Wednesday, 15 January 2026';
-      const sampleRx = 'RX01';
+      // Get record day data if provided
+      const recordDayId = req.query.recordDayId as string | undefined;
+      let sampleName = 'Sample Contestant';
+      let sampleDate = 'Wednesday, 15 January 2026';
+      let sampleRx = 'RX EP 1';
+      
+      if (recordDayId) {
+        try {
+          const recordDay = await storage.getRecordDayById(recordDayId);
+          if (recordDay) {
+            const date = new Date(recordDay.date);
+            const options: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+            sampleDate = date.toLocaleDateString('en-AU', options);
+            sampleRx = recordDay.rxNumber || 'RX EP 1';
+          }
+        } catch (e) {
+          // Ignore errors, use defaults
+        }
+      }
       
       // Build single mailto link like actual emails
       const replyMailto = `mailto:${replyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${sampleName} - ${sampleDate}`)}&body=${encodeURIComponent(`Hi,\n\nRegarding my Deal or No Deal booking:\n\nName: ${sampleName}\nDate: ${sampleDate}\n\nCAN YOU ATTEND?\n[ ] YES - I confirm my attendance\n[ ] NO - I cannot attend (Reason: )\n\nGroup members attending (please provide FULL NAMES):\n1. (Full Name): \n2. (Full Name): \n3. (Full Name): \n\n--- REQUIRED INFORMATION (if attending) ---\n\nDo you have any medical conditions?\nAnswer: \n\nDo you have any mobility requirements? (i.e. issues climbing stairs or standing for extended periods)\nAnswer: \n\nEmergency contact name & phone number:\nAnswer: \n\nDietary requirements (mark with X):\n[ ] None\n[ ] Vegetarian\n[ ] Vegan\n[ ] Gluten Free\n[ ] Dairy Free\n[ ] Halal\n[ ] Kosher\n[ ] Nut Allergy\n[ ] Other (please specify): \n\nThank you!`)}`;

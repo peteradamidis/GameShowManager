@@ -1292,7 +1292,7 @@ export default function BookingResponses() {
                 <span className="text-sm font-medium">Email Preview</span>
               </div>
               <iframe
-                src="/api/email-preview/booking"
+                src={`/api/email-preview/booking${selectedRecordDay ? `?recordDayId=${selectedRecordDay}` : ''}`}
                 className="w-full h-[300px] bg-white"
                 title="Booking Email Preview"
               />
