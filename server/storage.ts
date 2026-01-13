@@ -452,18 +452,32 @@ export class DbStorage implements IStorage {
   // Seat Assignments
   async createSeatAssignment(assignment: InsertSeatAssignment): Promise<SeatAssignment> {
     // Use transaction to atomically create assignment and update contestant status
-    return await db.transaction(async (tx) => {
-      // Create the seat assignment
-      const [created] = await tx.insert(seatAssignments).values(assignment).returning();
-      
-      // Update contestant status to 'assigned'
-      await tx
-        .update(contestants)
-        .set({ availabilityStatus: 'assigned' })
-        .where(eq(contestants.id, assignment.contestantId));
-      
-      return created;
-    });
+    try {
+      return await db.transaction(async (tx) => {
+        // Create the seat assignment
+        const [created] = await tx.insert(seatAssignments).values(assignment).returning();
+        
+        // Update contestant status to 'assigned'
+        await tx
+          .update(contestants)
+          .set({ availabilityStatus: 'assigned' })
+          .where(eq(contestants.id, assignment.contestantId));
+        
+        return created;
+      });
+    } catch (error: any) {
+      // Check for unique constraint violation (PostgreSQL error code 23505)
+      if (error.code === '23505') {
+        if (error.constraint?.includes('seat_per_day') || error.message?.includes('seat_per_day')) {
+          throw new Error('SEAT_CONFLICT: This seat is already occupied by another contestant');
+        }
+        if (error.constraint?.includes('contestant_per_day') || error.message?.includes('contestant_per_day')) {
+          throw new Error('CONTESTANT_CONFLICT: This contestant is already assigned to this record day');
+        }
+        throw new Error('CONFLICT: A duplicate assignment already exists');
+      }
+      throw error;
+    }
   }
 
   async getSeatAssignmentById(id: string): Promise<SeatAssignment | undefined> {

@@ -2005,6 +2005,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(assignment);
     } catch (error: any) {
+      // Handle conflict errors from database constraints
+      if (error.message?.startsWith('SEAT_CONFLICT:')) {
+        return res.status(409).json({ error: 'This seat was just taken by another user. Please refresh and try a different seat.' });
+      }
+      if (error.message?.startsWith('CONTESTANT_CONFLICT:')) {
+        return res.status(409).json({ error: 'This contestant was just assigned by another user. Please refresh.' });
+      }
+      if (error.message?.startsWith('CONFLICT:')) {
+        return res.status(409).json({ error: 'A conflict occurred. Another user may have made changes. Please refresh and try again.' });
+      }
       res.status(500).json({ error: error.message });
     }
   });
@@ -2134,6 +2144,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         seats: seatLabels.map((seat, i) => ({ seat, block: blockNumber }))
       });
     } catch (error: any) {
+      // Handle conflict errors from database constraints
+      if (error.message?.startsWith('SEAT_CONFLICT:')) {
+        return res.status(409).json({ error: 'A seat was just taken by another user. Please refresh and try again.' });
+      }
+      if (error.message?.startsWith('CONTESTANT_CONFLICT:')) {
+        return res.status(409).json({ error: 'A contestant was just assigned by another user. Please refresh.' });
+      }
+      if (error.message?.startsWith('CONFLICT:')) {
+        return res.status(409).json({ error: 'A conflict occurred. Another user may have made changes. Please refresh and try again.' });
+      }
       res.status(500).json({ error: error.message });
     }
   });
@@ -3594,6 +3614,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           })).filter(b => b.seats > 0)
         });
       } catch (persistError: any) {
+        // Handle conflict errors from database constraints
+        if (persistError.message?.startsWith('SEAT_CONFLICT:') || persistError.message?.startsWith('CONTESTANT_CONFLICT:') || persistError.message?.startsWith('CONFLICT:')) {
+          // Cleanup any created assignments before returning conflict error
+          for (const assignment of createdAssignments) {
+            try {
+              await storage.deleteSeatAssignment(assignment.id);
+            } catch (cleanupError) {
+              console.error("Cleanup error:", cleanupError);
+            }
+          }
+          return res.status(409).json({ error: 'A conflict occurred during auto-assignment. Another user may have made changes. Please refresh and try again.' });
+        }
+        
         console.error("Persistence error, attempting cleanup:", persistError);
         for (const assignment of createdAssignments) {
           try {
@@ -4441,6 +4474,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         assignment: newAssignment,
       });
     } catch (error: any) {
+      // Handle conflict errors from database constraints
+      if (error.message?.startsWith('SEAT_CONFLICT:')) {
+        return res.status(409).json({ error: 'This seat was just taken by another user. Please refresh and try a different seat.' });
+      }
+      if (error.message?.startsWith('CONTESTANT_CONFLICT:')) {
+        return res.status(409).json({ error: 'This contestant was just assigned by another user. Please refresh.' });
+      }
+      if (error.message?.startsWith('CONFLICT:')) {
+        return res.status(409).json({ error: 'A conflict occurred. Another user may have made changes. Please refresh and try again.' });
+      }
       res.status(500).json({ error: error.message });
     }
   });
@@ -4510,6 +4553,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         assignment: newAssignment,
       });
     } catch (error: any) {
+      // Handle conflict errors from database constraints
+      if (error.message?.startsWith('SEAT_CONFLICT:')) {
+        return res.status(409).json({ error: 'This seat was just taken by another user. Please refresh and try a different seat.' });
+      }
+      if (error.message?.startsWith('CONTESTANT_CONFLICT:')) {
+        return res.status(409).json({ error: 'This contestant was just assigned by another user. Please refresh.' });
+      }
+      if (error.message?.startsWith('CONFLICT:')) {
+        return res.status(409).json({ error: 'A conflict occurred. Another user may have made changes. Please refresh and try again.' });
+      }
       res.status(500).json({ error: error.message });
     }
   });
