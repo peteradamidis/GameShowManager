@@ -512,7 +512,7 @@ export default function StandbysPage() {
 
       {/* Email Preview Dialog */}
       <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
-        <DialogContent className="max-w-lg" data-testid="dialog-email-preview">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" data-testid="dialog-email-preview">
           <DialogHeader>
             <DialogTitle>Send Standby Booking Emails</DialogTitle>
             <DialogDescription>
@@ -521,7 +521,7 @@ export default function StandbysPage() {
           </DialogHeader>
 
           {previewData && (
-            <div className="space-y-4">
+            <div className="flex-1 overflow-y-auto space-y-4 py-2">
               <div className="flex items-center justify-between py-2 px-3 bg-muted rounded-md">
                 <span className="text-sm font-medium">Recipients with email</span>
                 <Badge variant="secondary">{previewData.withEmail}</Badge>
@@ -553,13 +553,20 @@ export default function StandbysPage() {
                 </Table>
               </div>
 
-              <div className="text-sm text-muted-foreground">
-                <p className="font-medium mb-1">Email will include:</p>
-                <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li>Confirmation that they are a STANDBY (not guaranteed seat)</li>
-                  <li>Information about fast-track if not seated</li>
-                  <li>Link to confirm or decline</li>
-                </ul>
+              {/* Email Preview */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Email Preview</p>
+                <div className="border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
+                  <iframe 
+                    src="/api/email-preview/standby"
+                    className="w-full h-[300px] border-0"
+                    title="Standby Email Preview"
+                    data-testid="iframe-standby-email-preview"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Preview uses sample data. Actual emails will include recipient's name and booking details.
+                </p>
               </div>
             </div>
           )}

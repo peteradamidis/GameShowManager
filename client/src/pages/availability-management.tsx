@@ -551,7 +551,7 @@ export default function AvailabilityManagement() {
 
         {/* Confirmation Preview Dialog */}
         <Dialog open={confirmSendOpen} onOpenChange={setConfirmSendOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Mail className="h-5 w-5" />
@@ -562,7 +562,7 @@ export default function AvailabilityManagement() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4">
+            <div className="flex-1 overflow-y-auto space-y-4 py-2">
               <div className="bg-muted p-4 rounded-md">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-primary">{selectedContestants?.size || 0}</div>
@@ -586,6 +586,22 @@ export default function AvailabilityManagement() {
                     })}
                   </div>
                 </ScrollArea>
+              </div>
+
+              {/* Email Preview */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Email Preview</h4>
+                <div className="border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
+                  <iframe 
+                    src="/api/email-preview/availability"
+                    className="w-full h-[250px] border-0"
+                    title="Availability Email Preview"
+                    data-testid="iframe-availability-email-preview"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Preview uses sample data. Actual emails will include recipient's name and selected dates.
+                </p>
               </div>
             </div>
 
