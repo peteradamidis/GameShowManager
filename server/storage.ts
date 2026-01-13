@@ -468,12 +468,36 @@ export class DbStorage implements IStorage {
     } catch (error: any) {
       // Check for unique constraint violation (PostgreSQL error code 23505)
       if (error.code === '23505') {
-        if (error.constraint?.includes('seat_per_day') || error.message?.includes('seat_per_day')) {
+        // Log the error for debugging (helps identify unexpected constraint names)
+        console.log('Unique constraint violation detected:', {
+          code: error.code,
+          constraint: error.constraint,
+          detail: error.detail,
+          message: error.message
+        });
+        
+        // Check for seat conflict - the constraint includes block_number and seat_label
+        // Constraint name: seat_assignments_record_day_id_block_number_seat_label_key
+        const constraintName = error.constraint || '';
+        const errorDetail = error.detail || '';
+        
+        if (constraintName.includes('block_number') && constraintName.includes('seat_label')) {
           throw new Error('SEAT_CONFLICT: This seat is already occupied by another contestant');
         }
-        if (error.constraint?.includes('contestant_per_day') || error.message?.includes('contestant_per_day')) {
+        if (errorDetail.includes('block_number') || errorDetail.includes('seat_label')) {
+          throw new Error('SEAT_CONFLICT: This seat is already occupied by another contestant');
+        }
+        
+        // Check for contestant conflict - contestant already assigned to this record day
+        // Constraint name: seat_assignments_record_day_id_contestant_id_key
+        if (constraintName.includes('contestant_id')) {
           throw new Error('CONTESTANT_CONFLICT: This contestant is already assigned to this record day');
         }
+        if (errorDetail.includes('contestant_id')) {
+          throw new Error('CONTESTANT_CONFLICT: This contestant is already assigned to this record day');
+        }
+        
+        // Fallback for any other unique constraint violation
         throw new Error('CONFLICT: A duplicate assignment already exists');
       }
       throw error;
