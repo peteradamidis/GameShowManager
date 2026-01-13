@@ -213,9 +213,18 @@ const ROWS = [
   { label: "E", count: 4 },
 ];
 
+const RECORD_DAY_STORAGE_KEY = 'booking-master-selected-day';
+
 export default function BookingMaster() {
   const [, setLocation] = useLocation();
-  const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
+  const [selectedRecordDay, setSelectedRecordDay] = useState<string>(() => {
+    // Load from localStorage on initial render
+    try {
+      return localStorage.getItem(RECORD_DAY_STORAGE_KEY) || "";
+    } catch {
+      return "";
+    }
+  });
   const [searchName, setSearchName] = useState<string>("");
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
   const [confirmSendOpen, setConfirmSendOpen] = useState(false);
@@ -269,6 +278,17 @@ export default function BookingMaster() {
     }
   }, [visibleColumns]);
 
+  // Save selected record day to localStorage when it changes
+  useEffect(() => {
+    if (selectedRecordDay) {
+      try {
+        localStorage.setItem(RECORD_DAY_STORAGE_KEY, selectedRecordDay);
+      } catch (e) {
+        console.error("Failed to save selected record day:", e);
+      }
+    }
+  }, [selectedRecordDay]);
+
   const toggleColumnVisibility = (columnId: ColumnId) => {
     const column = COLUMN_CONFIG.find(c => c.id === columnId);
     if (column?.alwaysVisible) return; // Can't hide always-visible columns
@@ -284,6 +304,22 @@ export default function BookingMaster() {
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
     queryKey: ["/api/record-days"],
   });
+
+  // Validate stored record day exists in available record days
+  useEffect(() => {
+    if (recordDays.length > 0 && selectedRecordDay) {
+      const exists = recordDays.some(rd => rd.id === selectedRecordDay);
+      if (!exists) {
+        // Stored record day no longer exists, clear it
+        setSelectedRecordDay("");
+        try {
+          localStorage.removeItem(RECORD_DAY_STORAGE_KEY);
+        } catch (e) {
+          console.error("Failed to clear invalid record day:", e);
+        }
+      }
+    }
+  }, [recordDays, selectedRecordDay]);
 
   const { data: assignments = [], isLoading: loadingAssignments } = useQuery<SeatAssignment[]>({
     queryKey: ['/api/seat-assignments', selectedRecordDay],
