@@ -390,21 +390,22 @@ Deal or No Deal Production Team`);
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      {/* Tabs structure preserved but hidden - emailing now done via Adobe Sign website */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="hidden-tabs">
+        {/* TabsList hidden since only one tab remains
         <TabsList>
           <TabsTrigger value="paperwork" data-testid="tab-paperwork">
             <FileText className="h-4 w-4 mr-2" />
             Paperwork Tracker
           </TabsTrigger>
-          {/* Email Settings tab hidden - emailing now done via Adobe Sign website
           <TabsTrigger value="settings" data-testid="tab-settings">
             <Settings className="h-4 w-4 mr-2" />
             Email Settings
           </TabsTrigger>
-          */}
         </TabsList>
+        */}
 
-        <TabsContent value="paperwork" className="space-y-4">
+        <TabsContent value="paperwork" className="space-y-4 mt-0">
           {/* Filters Row */}
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex items-center gap-2">
