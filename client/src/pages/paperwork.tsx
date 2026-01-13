@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { usePaperworkWebSocket } from "@/hooks/use-websocket";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,15 +61,94 @@ type StatusFilter = "all" | "invited" | "confirmed";
 type PaperworkStatusFilter = "all" | "ready_to_send" | "awaiting_return" | "complete";
 type BlockFilter = "all" | "1" | "2" | "3" | "4" | "5" | "6" | "7";
 
+const PAPERWORK_TRACKER_STORAGE_KEY = 'paperwork-tracker-state';
+
+interface PaperworkTrackerState {
+  selectedRecordDay: string;
+  statusFilter: StatusFilter;
+  paperworkStatusFilter: PaperworkStatusFilter;
+  blockFilter: BlockFilter;
+  activeTab: string;
+}
+
 export default function Paperwork() {
   const { toast } = useToast();
-  const [selectedRecordDay, setSelectedRecordDay] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [paperworkStatusFilter, setPaperworkStatusFilter] = useState<PaperworkStatusFilter>("all");
-  const [blockFilter, setBlockFilter] = useState<BlockFilter>("all");
+  
+  // Initialize state from localStorage
+  const [selectedRecordDay, setSelectedRecordDay] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(PAPERWORK_TRACKER_STORAGE_KEY);
+      if (saved) {
+        const state: PaperworkTrackerState = JSON.parse(saved);
+        return state.selectedRecordDay || "all";
+      }
+    } catch {}
+    return "all";
+  });
+  
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(() => {
+    try {
+      const saved = localStorage.getItem(PAPERWORK_TRACKER_STORAGE_KEY);
+      if (saved) {
+        const state: PaperworkTrackerState = JSON.parse(saved);
+        return state.statusFilter || "all";
+      }
+    } catch {}
+    return "all";
+  });
+  
+  const [paperworkStatusFilter, setPaperworkStatusFilter] = useState<PaperworkStatusFilter>(() => {
+    try {
+      const saved = localStorage.getItem(PAPERWORK_TRACKER_STORAGE_KEY);
+      if (saved) {
+        const state: PaperworkTrackerState = JSON.parse(saved);
+        return state.paperworkStatusFilter || "all";
+      }
+    } catch {}
+    return "all";
+  });
+  
+  const [blockFilter, setBlockFilter] = useState<BlockFilter>(() => {
+    try {
+      const saved = localStorage.getItem(PAPERWORK_TRACKER_STORAGE_KEY);
+      if (saved) {
+        const state: PaperworkTrackerState = JSON.parse(saved);
+        return state.blockFilter || "all";
+      }
+    } catch {}
+    return "all";
+  });
+  
   const [searchName, setSearchName] = useState("");
-  const [activeTab, setActiveTab] = useState("paperwork");
+  
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const saved = localStorage.getItem(PAPERWORK_TRACKER_STORAGE_KEY);
+      if (saved) {
+        const state: PaperworkTrackerState = JSON.parse(saved);
+        return state.activeTab || "paperwork";
+      }
+    } catch {}
+    return "paperwork";
+  });
+  
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
+  
+  // Save state to localStorage when filters change
+  useEffect(() => {
+    try {
+      const state: PaperworkTrackerState = {
+        selectedRecordDay,
+        statusFilter,
+        paperworkStatusFilter,
+        blockFilter,
+        activeTab,
+      };
+      localStorage.setItem(PAPERWORK_TRACKER_STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      console.error("Failed to save paperwork tracker state:", e);
+    }
+  }, [selectedRecordDay, statusFilter, paperworkStatusFilter, blockFilter, activeTab]);
   const [sendEmailDialogOpen, setSendEmailDialogOpen] = useState(false);
   const [adobeSignLink, setAdobeSignLink] = useState("");
   

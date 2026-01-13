@@ -69,13 +69,67 @@ interface BookingTrackerResponse {
 
 type StatusFilter = "all" | "not_sent" | "awaiting" | "confirmed" | "declined";
 
+const BOOKING_TRACKER_STORAGE_KEY = 'booking-tracker-state';
+
+interface BookingTrackerState {
+  selectedRecordDay: string;
+  selectedBlock: string;
+  statusFilter: StatusFilter;
+}
+
 export default function BookingResponses() {
   const { toast } = useToast();
-  const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
-  const [selectedBlock, setSelectedBlock] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  
+  // Initialize state from localStorage
+  const [selectedRecordDay, setSelectedRecordDay] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(BOOKING_TRACKER_STORAGE_KEY);
+      if (saved) {
+        const state: BookingTrackerState = JSON.parse(saved);
+        return state.selectedRecordDay || "";
+      }
+    } catch {}
+    return "";
+  });
+  
+  const [selectedBlock, setSelectedBlock] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(BOOKING_TRACKER_STORAGE_KEY);
+      if (saved) {
+        const state: BookingTrackerState = JSON.parse(saved);
+        return state.selectedBlock || "all";
+      }
+    } catch {}
+    return "all";
+  });
+  
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(() => {
+    try {
+      const saved = localStorage.getItem(BOOKING_TRACKER_STORAGE_KEY);
+      if (saved) {
+        const state: BookingTrackerState = JSON.parse(saved);
+        return state.statusFilter || "all";
+      }
+    } catch {}
+    return "all";
+  });
+  
   const [searchName, setSearchName] = useState("");
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
+  
+  // Save state to localStorage when filters change
+  useEffect(() => {
+    try {
+      const state: BookingTrackerState = {
+        selectedRecordDay,
+        selectedBlock,
+        statusFilter,
+      };
+      localStorage.setItem(BOOKING_TRACKER_STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      console.error("Failed to save booking tracker state:", e);
+    }
+  }, [selectedRecordDay, selectedBlock, statusFilter]);
   
   // Send email dialog state
   const [sendEmailDialogOpen, setSendEmailDialogOpen] = useState(false);
