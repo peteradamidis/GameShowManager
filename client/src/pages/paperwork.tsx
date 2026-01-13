@@ -289,7 +289,7 @@ Deal or No Deal Production Team`);
     },
   });
 
-  // Filter by search and paperwork status
+  // Filter by search and paperwork status, then sort for stable ordering
   const filteredData = paperworkData.filter((item) => {
     // Filter by name search
     if (searchName && !item.contestant?.name?.toLowerCase().includes(searchName.toLowerCase())) {
@@ -308,6 +308,19 @@ Deal or No Deal Production Team`);
       }
     }
     return true;
+  }).sort((a, b) => {
+    // Sort by record day date first, then by block, then by seat for stable ordering
+    const dateA = a.recordDay?.date ? new Date(a.recordDay.date).getTime() : 0;
+    const dateB = b.recordDay?.date ? new Date(b.recordDay.date).getTime() : 0;
+    if (dateA !== dateB) return dateA - dateB;
+    
+    const blockA = a.blockNumber ?? 0;
+    const blockB = b.blockNumber ?? 0;
+    if (blockA !== blockB) return blockA - blockB;
+    
+    const seatA = a.seatLabel ?? '';
+    const seatB = b.seatLabel ?? '';
+    return seatA.localeCompare(seatB);
   });
 
   // Stats
