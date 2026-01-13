@@ -1,0 +1,84 @@
+│ 0  │ gameshow    │ default     │ N/A     │ fork    │ 40800    │ 0s     │ 48   │ online    │ 0%       │ 1.2mb    │ admin    │ disabled │
+└────┴─────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+admin@admins-Mac-mini GameShowManager % git pull origin main
+pm2 restart all
+From https://github.com/peteradamidis/GameShowManager
+ * branch            main       -> FETCH_HEAD
+error: Your local changes to the following files would be overwritten by merge:
+	storage/backups/automatic-backup.json
+Please commit your changes or stash them before you merge.
+Aborting
+Merge with strategy ort failed.
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [all](ids: [ 0 ])
+[PM2] [gameshow](0) ✓
+┌────┬─────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name        │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ gameshow    │ default     │ N/A     │ fork    │ 40982    │ 0s     │ 49   │ online    │ 0%       │ 1.2mb    │ admin    │ disabled │
+└────┴─────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+admin@admins-Mac-mini GameShowManager % git pull origin main
+pm2 restart all
+From https://github.com/peteradamidis/GameShowManager
+ * branch            main       -> FETCH_HEAD
+hint: Waiting for your editor to close the file... 
+Merge branch 'main' of https://github.com/peteradamidis/GameShowManager
+# Please enter a commit message to explain why this merge is necessary,
+# especially if it merges an updated upstream into a topic branch.
+#
+# Lines starting with '#' will be ignored, and an empty message aborts
+# the commit.
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+~                                                                                                                                                                                                                          
+"~/projects/GameShowManager/.git/MERGE_MSG" 6L, 298B                
