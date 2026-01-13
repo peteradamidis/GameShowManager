@@ -4884,13 +4884,13 @@ ${finalEmailFooter}`;
       for (const recordDay of recordDays) {
         const availability = await storage.getAvailabilityByRecordDay(recordDay.id);
         
+        // Simplified stats: available (yes), not available (no), pending
         const stats = {
           recordDayId: recordDay.id,
           date: recordDay.date,
           rxNumber: recordDay.rxNumber,
-          yes: availability.filter(a => a.responseValue === 'yes').length,
-          maybe: availability.filter(a => a.responseValue === 'maybe').length,
-          no: availability.filter(a => a.responseValue === 'no').length,
+          available: availability.filter(a => a.responseValue === 'yes').length,
+          notAvailable: availability.filter(a => a.responseValue === 'no').length,
           pending: availability.filter(a => a.responseValue === 'pending').length,
           total: availability.length,
         };

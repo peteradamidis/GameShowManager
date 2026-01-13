@@ -1212,12 +1212,11 @@ export default function Contestants() {
                     setFilterResponseValue(value);
                   }}>
                     <SelectTrigger data-testid="select-filter-response">
-                      <SelectValue placeholder="Yes" />
+                      <SelectValue placeholder="Available" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="yes">Yes</SelectItem>
-                      <SelectItem value="maybe">Maybe</SelectItem>
-                      <SelectItem value="no">No</SelectItem>
+                      <SelectItem value="yes">Available</SelectItem>
+                      <SelectItem value="no">Not Available</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="all">All responses</SelectItem>
                     </SelectContent>
@@ -1320,7 +1319,7 @@ export default function Contestants() {
           )}
           {filterRecordDayId && (
             <Badge variant="outline">
-              Availability: {new Date(recordDays.find((d: any) => d.id === filterRecordDayId)?.date).toLocaleDateString()} ({filterResponseValue === "all" ? "all" : filterResponseValue})
+              Availability: {new Date(recordDays.find((d: any) => d.id === filterRecordDayId)?.date).toLocaleDateString()} ({filterResponseValue === "all" ? "all" : filterResponseValue === "yes" ? "available" : filterResponseValue === "no" ? "not available" : "pending"})
             </Badge>
           )}
           {filterStandbyStatus !== "all" && (

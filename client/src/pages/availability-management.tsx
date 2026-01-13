@@ -46,9 +46,8 @@ type StatsByDay = {
   recordDayId: string;
   date: string;
   rxNumber: string | null;
-  yes: number;
-  maybe: number;
-  no: number;
+  available: number;
+  notAvailable: number;
   pending: number;
   total: number;
 };
@@ -807,13 +806,10 @@ export default function AvailabilityManagement() {
                         <TableHead>Record Day</TableHead>
                         <TableHead>Episode</TableHead>
                         <TableHead className="text-center">
-                          <span className="text-green-600">Yes</span>
+                          <span className="text-green-600">Available</span>
                         </TableHead>
                         <TableHead className="text-center">
-                          <span className="text-yellow-600">Maybe</span>
-                        </TableHead>
-                        <TableHead className="text-center">
-                          <span className="text-red-600">No</span>
+                          <span className="text-red-600">Not Available</span>
                         </TableHead>
                         <TableHead className="text-center">Pending</TableHead>
                         <TableHead className="text-center">Total</TableHead>
@@ -833,17 +829,12 @@ export default function AvailabilityManagement() {
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 min-w-[40px]">
-                              {day.yes}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 min-w-[40px]">
-                              {day.maybe}
+                              {day.available}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge className="bg-red-500/10 text-red-700 dark:text-red-400 min-w-[40px]">
-                              {day.no}
+                              {day.notAvailable}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
