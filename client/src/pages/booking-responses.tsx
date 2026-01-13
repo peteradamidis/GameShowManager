@@ -1286,6 +1286,17 @@ export default function BookingResponses() {
               Emails will be sent using the booking email template configured in Settings.
               Each recipient will receive a unique confirmation link.
             </p>
+            
+            <div className="border rounded-lg overflow-hidden">
+              <div className="bg-muted px-3 py-2 border-b">
+                <span className="text-sm font-medium">Email Preview</span>
+              </div>
+              <iframe
+                src="/api/email-preview/booking"
+                className="w-full h-[300px] bg-white"
+                title="Booking Email Preview"
+              />
+            </div>
           </div>
 
           <DialogFooter>
