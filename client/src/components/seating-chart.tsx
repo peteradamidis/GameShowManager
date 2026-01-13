@@ -30,7 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
-import { Link2, AlertTriangle } from "lucide-react";
+import { Link2, AlertTriangle, ChevronUp, ChevronDown } from "lucide-react";
 
 // Pending swap operation type
 interface PendingSwap {
@@ -46,6 +46,7 @@ interface StandbyData {
   contestantId: string;
   recordDayId: string;
   status: string;
+  priority?: number;
   contestant: {
     id: string;
     name: string;
@@ -149,9 +150,19 @@ function DraggableDroppableSeat({
 function DraggableStandby({
   standby,
   isLocked,
+  priorityIndex,
+  onMoveUp,
+  onMoveDown,
+  isFirst,
+  isLast,
 }: {
   standby: StandbyData;
   isLocked?: boolean;
+  priorityIndex: number;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `standby-${standby.id}`,
@@ -170,17 +181,48 @@ function DraggableStandby({
   return (
     <div
       ref={setNodeRef}
-      {...attributes}
-      {...listeners}
       className={`p-2 border rounded-md ${isDragging ? 'opacity-50' : ''} ${
         isLocked 
-          ? 'cursor-grab hover:bg-muted/50 border-amber-500/50 bg-amber-50 dark:bg-amber-950/20' 
-          : 'cursor-not-allowed opacity-60 border-muted'
+          ? 'border-amber-500/50 bg-amber-50 dark:bg-amber-950/20' 
+          : 'border-muted'
       }`}
       data-testid={`standby-item-${standby.id}`}
     >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-2">
+        {/* Priority number */}
+        <div className="flex flex-col items-center gap-0.5">
+          <button
+            onClick={(e) => { e.stopPropagation(); onMoveUp?.(); }}
+            disabled={isFirst}
+            className={`p-0.5 rounded hover:bg-muted/80 ${isFirst ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`}
+            data-testid={`standby-move-up-${standby.id}`}
+            title="Move up in priority"
+          >
+            <ChevronUp className="h-3 w-3" />
+          </button>
+          <span 
+            className="w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center"
+            title={`Priority ${priorityIndex}`}
+          >
+            {priorityIndex}
+          </span>
+          <button
+            onClick={(e) => { e.stopPropagation(); onMoveDown?.(); }}
+            disabled={isLast}
+            className={`p-0.5 rounded hover:bg-muted/80 ${isLast ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`}
+            data-testid={`standby-move-down-${standby.id}`}
+            title="Move down in priority"
+          >
+            <ChevronDown className="h-3 w-3" />
+          </button>
+        </div>
+        
+        {/* Drag handle and content */}
+        <div 
+          {...attributes}
+          {...listeners}
+          className={`flex-1 min-w-0 ${isLocked ? 'cursor-grab hover:bg-muted/50' : 'cursor-not-allowed opacity-60'}`}
+        >
           <p className="font-medium text-sm truncate">{standby.contestant.name}</p>
           <div className="flex items-center gap-1 mt-0.5">
             <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
@@ -193,6 +235,7 @@ function DraggableStandby({
             )}
           </div>
         </div>
+        
         <Badge 
           variant="secondary" 
           className={`text-[10px] h-5 ${
@@ -522,6 +565,43 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
 
   const handleBlockTypeChange = (blockNumber: number, newType: 'PB' | 'NPB') => {
     updateBlockTypeMutation.mutate({ blockNumber, blockType: newType });
+  };
+
+  // Standby reorder handler
+  const handleStandbyReorder = async (
+    standbyId: string, 
+    fromIndex: number, 
+    toIndex: number, 
+    currentList: StandbyData[]
+  ) => {
+    if (toIndex < 0 || toIndex >= currentList.length) return;
+    
+    // Create new ordered list
+    const newOrder = [...currentList];
+    const [moved] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, moved);
+    
+    // Send reorder request
+    try {
+      await apiRequest('POST', '/api/standbys/reorder', {
+        recordDayId,
+        orderedIds: newOrder.map(s => s.id),
+      });
+      
+      // Invalidate standbys query to refresh
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys/record-day', recordDayId] });
+      
+      toast({
+        title: "Priority updated",
+        description: `${moved.contestant.name} moved to priority ${toIndex + 1}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to update priority",
+        description: error?.message || "Could not update standby priority",
+        variant: "destructive",
+      });
+    }
   };
 
   // Update blocks when initialSeats changes (after data loads from API)
@@ -967,11 +1047,17 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     <div className="space-y-2 max-h-[300px] overflow-y-auto">
                       {standbys
                         .filter(s => s.status !== 'seated')
-                        .map((standby) => (
+                        .sort((a, b) => (a.priority || 999) - (b.priority || 999))
+                        .map((standby, idx, arr) => (
                           <DraggableStandby
                             key={standby.id}
                             standby={standby}
                             isLocked={isLocked}
+                            priorityIndex={idx + 1}
+                            isFirst={idx === 0}
+                            isLast={idx === arr.length - 1}
+                            onMoveUp={() => handleStandbyReorder(standby.id, idx, idx - 1, arr)}
+                            onMoveDown={() => handleStandbyReorder(standby.id, idx, idx + 1, arr)}
                           />
                         ))}
                     </div>
