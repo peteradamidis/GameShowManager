@@ -84,6 +84,8 @@ function DraggableDroppableSeat({
   onWinningMoneyClick,
   onRemoveWinningMoney,
   onReturnToStandby,
+  onNoShow,
+  onEarlyLeaver,
 }: {
   seat: SeatData;
   blockIndex: number;
@@ -230,6 +232,8 @@ function SeatingBlock({
   onWinningMoneyClick,
   onRemoveWinningMoney,
   onReturnToStandby,
+  onNoShow,
+  onEarlyLeaver,
   blockType,
   onBlockTypeChange,
 }: { 
@@ -460,7 +464,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, isLocked = false, standbys = [], onStandbySeated }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, isLocked = false, standbys = [], onStandbySeated }: SeatingChartProps) {
   const [blocks, setBlocks] = useState<SeatData[][]>(
     initialSeats || Array(7).fill(null).map((_, blockIdx) => 
       generateBlockSeats(recordDayId, blockIdx)
