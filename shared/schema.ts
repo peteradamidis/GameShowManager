@@ -44,6 +44,7 @@ export const contestants = pgTable("contestants", {
   groupSize: integer("group_size"), // Group size (1 = solo, 2+ = group), null = undefined
   podiumStory: boolean("podium_story").default(false), // Has podium story
   availableForStandby: boolean("available_for_standby").default(false), // Marked as available for standby in import
+  availabilityNotes: text("availability_notes"), // Free-form availability notes from Excel import
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

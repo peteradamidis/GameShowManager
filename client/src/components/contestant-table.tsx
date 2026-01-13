@@ -1300,16 +1300,30 @@ export function ContestantTable({
                         />
                       </div>
                     </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="edit-criminal" className="text-xs">Criminal Record</Label>
-                      <Textarea
-                        id="edit-criminal"
-                        value={editFormData.criminalRecord || ''}
-                        onChange={(e) => handleEditFormChange('criminalRecord', e.target.value)}
-                        rows={2}
-                        data-testid="input-edit-criminal"
-                        className="text-xs"
-                      />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-criminal" className="text-xs">Criminal Record</Label>
+                        <Textarea
+                          id="edit-criminal"
+                          value={editFormData.criminalRecord || ''}
+                          onChange={(e) => handleEditFormChange('criminalRecord', e.target.value)}
+                          rows={2}
+                          data-testid="input-edit-criminal"
+                          className="text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-availability" className="text-xs">Availability</Label>
+                        <Textarea
+                          id="edit-availability"
+                          value={editFormData.availabilityNotes || ''}
+                          onChange={(e) => handleEditFormChange('availabilityNotes', e.target.value)}
+                          rows={2}
+                          data-testid="input-edit-availability"
+                          className="text-xs"
+                          placeholder="Enter availability notes..."
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1535,12 +1549,20 @@ export function ContestantTable({
                   </div>
                 </div>
 
-                {/* Criminal Record - Compact */}
-                <div>
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Criminal Record</h3>
-                  <p className={`text-sm ${contestantDetails.criminalRecord ? '' : 'text-muted-foreground italic'}`}>
-                    {contestantDetails.criminalRecord || 'No criminal record information provided'}
-                  </p>
+                {/* Criminal Record & Availability - 2 columns */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Criminal Record</h3>
+                    <p className={`text-sm ${contestantDetails.criminalRecord ? '' : 'text-muted-foreground italic'}`}>
+                      {contestantDetails.criminalRecord || 'No information provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Availability</h3>
+                    <p className={`text-sm ${contestantDetails.availabilityNotes ? '' : 'text-muted-foreground italic'}`}>
+                      {contestantDetails.availabilityNotes || 'No availability notes'}
+                    </p>
+                  </div>
                 </div>
                   </div>
                 )}

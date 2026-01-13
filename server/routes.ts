@@ -995,6 +995,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                              "PodiumStory", "PODIUMSTORY", "podiumstory",
                              "PS", "Has Story", "HAS STORY", "has story");
         
+        // Get availability notes from column
+        const availabilityNotesValue = getColumnValue(row,
+                             "Availability", "AVAILABILITY", "availability",
+                             "Availability Notes", "AVAILABILITY NOTES", "availability notes",
+                             "Available", "AVAILABLE", "available",
+                             "Avail", "AVAIL", "avail",
+                             "Schedule", "SCHEDULE", "schedule");
+        
         return {
           name: nameValue.toString().trim(),
           age: isNaN(parsedAge) ? 0 : parsedAge,
@@ -1005,6 +1013,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           state: stateValue ? stateValue.toString().trim() : undefined,
           availableForStandby: standbyValue ? standbyValue.toString().trim().toLowerCase() === 'standby' : false,
           podiumStory: podiumStoryValue ? ['yes', 'y', 'true', '1', 'x'].includes(podiumStoryValue.toString().trim().toLowerCase()) : false,
+          availabilityNotes: availabilityNotesValue ? availabilityNotesValue.toString().trim() : undefined,
           // Handle GROUP ID column or Attending With column
           groupIdFromFile: row["GROUP ID"] || row["Group ID"] || row["group id"] || row["Group"] || row["GROUP"] || null,
           attendingWith: row["ATTENDING WITH"] || row["Attending With"] || row["attending with"] || 
@@ -1166,6 +1175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           availabilityStatus: "available",
           availableForStandby: row.availableForStandby,
           podiumStory: row.podiumStory,
+          availabilityNotes: row.availabilityNotes,
         });
         createdContestants.push(contestant);
         
