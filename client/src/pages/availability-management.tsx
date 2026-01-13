@@ -67,6 +67,7 @@ export default function AvailabilityManagement() {
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
   const [confirmSendOpen, setConfirmSendOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sendDialogSearch, setSendDialogSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [emailSubject, setEmailSubject] = useState(DEFAULT_EMAIL_SUBJECT);
   const [emailHeadline, setEmailHeadline] = useState(DEFAULT_EMAIL_HEADLINE);
@@ -208,6 +209,21 @@ export default function AvailabilityManagement() {
   const contestantsNotSent = contestants.filter(c => 
     !tokens.some(t => t.contestantId === c.id)
   );
+
+  // Filter contestants with emails for the send dialog (with search)
+  const contestantsWithEmail = contestants.filter(c => c.email);
+  const filteredContestantsForSend = contestantsWithEmail.filter(c =>
+    sendDialogSearch === "" ||
+    c.name.toLowerCase().includes(sendDialogSearch.toLowerCase()) ||
+    (c.email && c.email.toLowerCase().includes(sendDialogSearch.toLowerCase()))
+  );
+
+  // Auto-select all record days when dialog opens
+  useEffect(() => {
+    if (sendDialogOpen && recordDays.length > 0 && selectedRecordDays.size === 0) {
+      setSelectedRecordDays(new Set(recordDays.map(rd => rd.id)));
+    }
+  }, [sendDialogOpen, recordDays]);
 
   // Handle Excel file import
   const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -413,107 +429,121 @@ export default function AvailabilityManagement() {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
+          <Dialog open={sendDialogOpen} onOpenChange={(open) => {
+            setSendDialogOpen(open);
+            if (!open) {
+              setSendDialogSearch("");
+            }
+          }}>
             <DialogTrigger asChild>
               <Button data-testid="button-send-checks">
                 <Send className="w-4 h-4 mr-2" />
                 Send Availability Checks
               </Button>
             </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Send Availability Checks</DialogTitle>
               <DialogDescription>
-                Select contestants and record days to send availability check emails.
+                Select contestants to send availability check emails
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold">Select Record Days</h3>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={selectAllRecordDays} data-testid="button-select-all-days">
-                      Select All
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={clearRecordDaySelection} data-testid="button-clear-days">
-                      Clear
-                    </Button>
-                  </div>
+            <div className="space-y-4">
+              {/* Search and quick actions */}
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name or email..."
+                    value={sendDialogSearch}
+                    onChange={(e) => setSendDialogSearch(e.target.value)}
+                    className="pl-8"
+                    data-testid="input-search-contestants"
+                  />
                 </div>
-                <div className="border rounded-md p-4 space-y-2 max-h-40 overflow-auto">
-                  {recordDays?.map((day) => (
-                    <div key={day.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`day-${day.id}`}
-                        checked={selectedRecordDays.has(day.id)}
-                        onCheckedChange={() => toggleRecordDay(day.id)}
-                        data-testid={`checkbox-day-${day.id}`}
-                      />
-                      <label
-                        htmlFor={`day-${day.id}`}
-                        className="text-sm font-medium leading-none cursor-pointer flex-1"
-                      >
-                        {format(new Date(day.date), 'EEE, MMM d, yyyy')}
-                        {day.rxNumber && <span className="text-muted-foreground ml-2">({day.rxNumber})</span>}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  {selectedRecordDays.size} day{selectedRecordDays.size !== 1 ? 's' : ''} selected
-                </p>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => setSelectedContestants(new Set(filteredContestantsForSend.map(c => c.id)))}
+                  data-testid="button-select-all-contestants"
+                >
+                  All
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={clearContestantSelection}
+                  data-testid="button-clear-contestants"
+                >
+                  None
+                </Button>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold">Select Contestants</h3>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={selectAllContestants} data-testid="button-select-all-contestants">
-                      Select All
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={clearContestantSelection} data-testid="button-clear-contestants">
-                      Clear
-                    </Button>
-                  </div>
+              {/* Info badge */}
+              {contestantsWithEmail.length < contestants.length && (
+                <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 rounded-md">
+                  <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span>Showing {contestantsWithEmail.length} of {contestants.length} contestants (only those with email addresses)</span>
                 </div>
-                <div className="border rounded-md p-4 space-y-2 max-h-60 overflow-auto">
-                  {contestants?.map((contestant) => (
-                    <div key={contestant.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`contestant-${contestant.id}`}
-                        checked={selectedContestants.has(contestant.id)}
-                        onCheckedChange={() => toggleContestant(contestant.id)}
-                        data-testid={`checkbox-contestant-${contestant.id}`}
-                      />
-                      <label
-                        htmlFor={`contestant-${contestant.id}`}
-                        className="text-sm font-medium leading-none cursor-pointer flex-1"
-                      >
-                        {contestant.name} 
-                        <span className="text-muted-foreground ml-1">
-                          ({contestant.age}, {contestant.gender})
-                        </span>
-                      </label>
+              )}
+
+              {/* Contestant list */}
+              <ScrollArea className="h-[280px] border rounded-md">
+                <div className="p-2 space-y-1">
+                  {filteredContestantsForSend.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                      {sendDialogSearch ? "No contestants match your search" : "No contestants with email addresses"}
                     </div>
-                  ))}
+                  ) : (
+                    filteredContestantsForSend.map((contestant) => (
+                      <div 
+                        key={contestant.id} 
+                        className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors ${
+                          selectedContestants.has(contestant.id) 
+                            ? 'bg-primary/10' 
+                            : 'hover:bg-muted/50'
+                        }`}
+                        onClick={() => toggleContestant(contestant.id)}
+                      >
+                        <Checkbox
+                          id={`contestant-${contestant.id}`}
+                          checked={selectedContestants.has(contestant.id)}
+                          onCheckedChange={() => toggleContestant(contestant.id)}
+                          data-testid={`checkbox-contestant-${contestant.id}`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium truncate">{contestant.name}</div>
+                          <div className="text-xs text-muted-foreground truncate">{contestant.email}</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  {selectedContestants.size} contestant{selectedContestants.size !== 1 ? 's' : ''} selected
-                </p>
+              </ScrollArea>
+
+              {/* Selection count */}
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {selectedContestants.size} selected
+                </span>
+                {selectedContestants.size > 0 && (
+                  <Badge variant="secondary">{selectedContestants.size} email{selectedContestants.size !== 1 ? 's' : ''} will be sent</Badge>
+                )}
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="gap-2 sm:gap-0">
               <Button variant="outline" onClick={() => setSendDialogOpen(false)} data-testid="button-cancel-send">
                 Cancel
               </Button>
               <Button
                 onClick={() => setConfirmSendOpen(true)}
-                disabled={selectedContestants.size === 0 || selectedRecordDays.size === 0}
+                disabled={selectedContestants.size === 0}
                 data-testid="button-confirm-send"
               >
-                {`Review & Send to ${selectedContestants.size} Contestant${selectedContestants.size !== 1 ? 's' : ''}`}
+                <Mail className="h-4 w-4 mr-2" />
+                Send to {selectedContestants.size} Contestant{selectedContestants.size !== 1 ? 's' : ''}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -522,55 +552,45 @@ export default function AvailabilityManagement() {
 
         {/* Confirmation Preview Dialog */}
         <Dialog open={confirmSendOpen} onOpenChange={setConfirmSendOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Confirm Sending Availability Checks</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Confirm Send
+              </DialogTitle>
               <DialogDescription>
-                Please review the details below before sending
+                You're about to send availability check emails
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold mb-2">Record Days</h3>
-                <div className="bg-muted p-3 rounded-md space-y-1">
-                  {recordDays && Array.from(selectedRecordDays).map(dayId => {
-                    const day = recordDays.find((d: any) => d.id === dayId);
-                    return (
-                      <div key={dayId} className="text-sm">
-                        {day && format(new Date(day.date), 'EEE, MMM d, yyyy')}
-                        {day?.rxNumber && <span className="text-muted-foreground ml-2">({day.rxNumber})</span>}
-                      </div>
-                    );
-                  })}
+            <div className="space-y-4">
+              <div className="bg-muted p-4 rounded-md">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary">{selectedContestants?.size || 0}</div>
+                  <div className="text-sm text-muted-foreground">contestant{(selectedContestants?.size || 0) !== 1 ? 's' : ''} will receive an email</div>
                 </div>
               </div>
 
+              {/* Recipient preview */}
               <div>
-                <h3 className="font-semibold mb-2">Recipients ({selectedContestants?.size || 0})</h3>
-                <div className="bg-muted p-3 rounded-md max-h-48 overflow-auto space-y-1">
-                  {contestants && Array.from(selectedContestants).map(contestantId => {
-                    const contestant = contestants.find((c: any) => c.id === contestantId);
-                    return (
-                      <div key={contestantId} className="text-sm">
-                        <div className="font-medium">{contestant?.name}</div>
-                        <div className="text-muted-foreground text-xs">
-                          {contestant?.email || 'No email'} • {contestant?.age}, {contestant?.gender}
+                <h4 className="text-sm font-medium mb-2">Recipients</h4>
+                <ScrollArea className="h-[120px] border rounded-md">
+                  <div className="p-2 space-y-1">
+                    {contestants && Array.from(selectedContestants).map(contestantId => {
+                      const contestant = contestants.find((c: any) => c.id === contestantId);
+                      return (
+                        <div key={contestantId} className="text-xs flex justify-between items-center py-1">
+                          <span className="font-medium">{contestant?.name}</span>
+                          <span className="text-muted-foreground truncate ml-2">{contestant?.email}</span>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-3 rounded-md">
-                <p className="text-sm text-amber-900 dark:text-amber-100">
-                  {selectedContestants?.size || 0} availability checks will be sent via Gmail to the recipients listed above.
-                </p>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="gap-2 sm:gap-0">
               <Button variant="outline" onClick={() => setConfirmSendOpen(false)} data-testid="button-cancel-confirm">
                 Cancel
               </Button>
@@ -579,7 +599,17 @@ export default function AvailabilityManagement() {
                 disabled={sendMutation.isPending}
                 data-testid="button-final-send"
               >
-                {sendMutation.isPending ? "Sending..." : "Yes, Send Availability Checks"}
+                {sendMutation.isPending ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Send Emails
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
