@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users } from "lucide-react";
+import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock } from "lucide-react";
 
 // Helper function to check if a medical field has meaningful content (not NA/N/A/empty)
 const hasMeaningfulMedicalNote = (value: string | undefined | null): boolean => {
@@ -59,6 +59,8 @@ interface SeatCardProps {
   onWinningMoneyClick?: (assignmentId: string) => void;
   onRemoveWinningMoney?: (assignmentId: string) => void;
   onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
+  onNoShow?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
+  onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
 }
 
 const groupColors = [
@@ -95,6 +97,8 @@ export function SeatCard({
   onWinningMoneyClick,
   onRemoveWinningMoney,
   onReturnToStandby,
+  onNoShow,
+  onEarlyLeaver,
 }: SeatCardProps) {
   const isEmpty = !seat.contestantName;
   
@@ -438,6 +442,38 @@ export function SeatCard({
                     <Undo2 className="h-3 w-3 mr-1" />
                     Return to Standby
                   </Button>
+                )}
+                {isRXDayLocked && seat.contestantId && (
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-400 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const seatLabel = seat.id.split('-').pop() || '';
+                        onNoShow?.(seat.assignmentId!, seat.contestantId!, blockIndex + 1, seatLabel);
+                      }}
+                      data-testid={`button-no-show-${seat.assignmentId}`}
+                    >
+                      <UserX className="h-3 w-3 mr-1" />
+                      No Show
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-400 border-orange-300 dark:border-orange-700 hover:bg-orange-100 dark:hover:bg-orange-900"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const seatLabel = seat.id.split('-').pop() || '';
+                        onEarlyLeaver?.(seat.assignmentId!, seat.contestantId!, blockIndex + 1, seatLabel);
+                      }}
+                      data-testid={`button-early-leaver-${seat.assignmentId}`}
+                    >
+                      <Clock className="h-3 w-3 mr-1" />
+                      Early Leaver
+                    </Button>
+                  </div>
                 )}
                 <div className="flex gap-2">
                   <Button

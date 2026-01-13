@@ -820,6 +820,76 @@ export default function SeatingChartPage() {
     }
   };
 
+  // Handle marking a contestant as No-Show
+  const handleNoShow = async (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => {
+    if (!confirm("Mark this contestant as a No-Show? This will remove them from the seat and record the issue.")) {
+      return;
+    }
+    
+    try {
+      await apiRequest('POST', '/api/attendance-issues', {
+        contestantId,
+        recordDayId,
+        blockNumber,
+        seatLabel,
+        issueType: 'no_show',
+        markedBy: 'producer', // TODO: Get actual user
+      });
+      
+      // Refresh queries
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/attendance-issues'] });
+      broadcastSeatingChange(recordDayId);
+      
+      toast({
+        title: "No-Show recorded",
+        description: "Contestant has been marked as a no-show and removed from the seat.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to record no-show",
+        description: error?.message || "Could not mark contestant as no-show.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle marking a contestant as Early Leaver
+  const handleEarlyLeaver = async (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => {
+    if (!confirm("Mark this contestant as an Early Leaver? This will remove them from the seat and record the issue.")) {
+      return;
+    }
+    
+    try {
+      await apiRequest('POST', '/api/attendance-issues', {
+        contestantId,
+        recordDayId,
+        blockNumber,
+        seatLabel,
+        issueType: 'early_leaver',
+        markedBy: 'producer', // TODO: Get actual user
+      });
+      
+      // Refresh queries
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/attendance-issues'] });
+      broadcastSeatingChange(recordDayId);
+      
+      toast({
+        title: "Early leaver recorded",
+        description: "Contestant has been marked as an early leaver and removed from the seat.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to record early leaver",
+        description: error?.message || "Could not mark contestant as early leaver.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleWinningMoneyClick = (assignmentId: string) => {
     setSelectedAssignmentId(assignmentId);
     setWinningMoneyModalOpen(true);
@@ -1051,6 +1121,8 @@ export default function SeatingChartPage() {
           onWinningMoneyClick={isLocked ? handleWinningMoneyClick : undefined}
           onRemoveWinningMoney={isLocked ? handleRemoveWinningMoney : undefined}
           onReturnToStandby={handleReturnToStandby}
+          onNoShow={isLocked ? handleNoShow : undefined}
+          onEarlyLeaver={isLocked ? handleEarlyLeaver : undefined}
           isLocked={isLocked}
           standbys={standbys}
           onStandbySeated={() => {

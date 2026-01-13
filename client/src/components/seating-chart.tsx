@@ -65,6 +65,8 @@ interface SeatingChartProps {
   onWinningMoneyClick?: (assignmentId: string) => void;
   onRemoveWinningMoney?: (assignmentId: string) => void;
   onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
+  onNoShow?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
+  onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   isLocked?: boolean; // RX Day Mode - when true, use tracked swap endpoint
   standbys?: StandbyData[]; // Standbys for this record day
   onStandbySeated?: () => void; // Callback when standby is seated
@@ -94,6 +96,8 @@ function DraggableDroppableSeat({
   onWinningMoneyClick?: (assignmentId: string) => void;
   onRemoveWinningMoney?: (assignmentId: string) => void;
   onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
+  onNoShow?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
+  onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
 }) {
   // Make occupied seats draggable
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
@@ -132,6 +136,8 @@ function DraggableDroppableSeat({
         onWinningMoneyClick={onWinningMoneyClick}
         onRemoveWinningMoney={onRemoveWinningMoney}
         onReturnToStandby={onReturnToStandby}
+        onNoShow={onNoShow}
+        onEarlyLeaver={onEarlyLeaver}
       />
     </div>
   );
@@ -239,6 +245,8 @@ function SeatingBlock({
   onWinningMoneyClick?: (assignmentId: string) => void;
   onRemoveWinningMoney?: (assignmentId: string) => void;
   onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
+  onNoShow?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
+  onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   blockType?: 'PB' | 'NPB';
   onBlockTypeChange?: (blockNumber: number, newType: 'PB' | 'NPB') => void;
 }) {
@@ -362,6 +370,8 @@ function SeatingBlock({
                           onWinningMoneyClick={onWinningMoneyClick}
                           onRemoveWinningMoney={onRemoveWinningMoney}
                           onReturnToStandby={onReturnToStandby}
+                          onNoShow={onNoShow}
+                          onEarlyLeaver={onEarlyLeaver}
                         />
                         {/* Horizontal link to next seat in same row */}
                         {hasLinkToNext && (
@@ -850,6 +860,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onWinningMoneyClick={onWinningMoneyClick}
                   onRemoveWinningMoney={onRemoveWinningMoney}
                   onReturnToStandby={onReturnToStandby}
+                  onNoShow={onNoShow}
+                  onEarlyLeaver={onEarlyLeaver}
                   blockType={blockTypeMap[idx + 1]}
                   onBlockTypeChange={handleBlockTypeChange}
                 />
@@ -886,6 +898,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     onWinningMoneyClick={onWinningMoneyClick}
                     onRemoveWinningMoney={onRemoveWinningMoney}
                     onReturnToStandby={onReturnToStandby}
+                    onNoShow={onNoShow}
+                    onEarlyLeaver={onEarlyLeaver}
                     blockType={blockTypeMap[originalIdx + 1]}
                     onBlockTypeChange={handleBlockTypeChange}
                   />
@@ -915,6 +929,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onWinningMoneyClick={onWinningMoneyClick}
                   onRemoveWinningMoney={onRemoveWinningMoney}
                   onReturnToStandby={onReturnToStandby}
+                  onNoShow={onNoShow}
+                  onEarlyLeaver={onEarlyLeaver}
                   blockType={blockTypeMap[7]}
                   onBlockTypeChange={handleBlockTypeChange}
                 />
