@@ -808,11 +808,6 @@ export default function AvailabilityManagement() {
                         <TableHead className="text-center">
                           <span className="text-green-600">Available</span>
                         </TableHead>
-                        <TableHead className="text-center">
-                          <span className="text-red-600">Not Available</span>
-                        </TableHead>
-                        <TableHead className="text-center">Pending</TableHead>
-                        <TableHead className="text-center">Total</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -831,19 +826,6 @@ export default function AvailabilityManagement() {
                             <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 min-w-[40px]">
                               {day.available}
                             </Badge>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge className="bg-red-500/10 text-red-700 dark:text-red-400 min-w-[40px]">
-                              {day.notAvailable}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge variant="outline" className="min-w-[40px]">
-                              {day.pending}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-center font-medium">
-                            {day.total}
                           </TableCell>
                         </TableRow>
                       ))}
