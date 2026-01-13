@@ -231,16 +231,12 @@ export default function ReschedulePage() {
     if (!selectedCancellation || !selectedRecordDayId || !selectedBlock || !selectedSeat) return;
 
     try {
-      // Create new seat assignment with selected block and seat
-      await apiRequest('POST', '/api/seat-assignments', {
+      // Use dedicated rebook endpoint that preserves paperwork status
+      await apiRequest('POST', `/api/canceled-assignments/${selectedCancellation.id}/rebook`, {
         recordDayId: selectedRecordDayId,
-        contestantId: selectedCancellation.contestantId,
         blockNumber: parseInt(selectedBlock),
         seatLabel: selectedSeat,
       });
-
-      // Delete cancellation record after successful assignment
-      await apiRequest('DELETE', `/api/canceled-assignments/${selectedCancellation.id}`, {});
 
       // Invalidate ALL related queries for consistent state across tabs
       await Promise.all([

@@ -4474,6 +4474,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rebook from reschedule - carries over paperwork status
+  app.post("/api/canceled-assignments/:id/rebook", async (req, res) => {
+    try {
+      const { recordDayId, blockNumber, seatLabel } = req.body;
+
+      if (!recordDayId || !blockNumber || !seatLabel) {
+        return res.status(400).json({ error: "recordDayId, blockNumber, and seatLabel are required" });
+      }
+
+      // Get the canceled assignment to copy paperwork status
+      const canceledAssignments = await storage.getCanceledAssignments();
+      const canceled = canceledAssignments.find(c => c.id === req.params.id);
+
+      if (!canceled) {
+        return res.status(404).json({ error: "Canceled assignment not found" });
+      }
+
+      // Create new seat assignment with paperwork status carried over
+      const newAssignment = await storage.createSeatAssignment({
+        recordDayId,
+        contestantId: canceled.contestantId,
+        blockNumber,
+        seatLabel,
+        // Carry over paperwork status from canceled assignment
+        paperworkSent: canceled.paperworkSent || undefined,
+        paperworkReceived: canceled.paperworkReceived || undefined,
+      });
+
+      // Delete the canceled assignment
+      await storage.deleteCanceledAssignment(req.params.id);
+
+      res.json({
+        message: "Contestant rebooked with paperwork status preserved",
+        assignment: newAssignment,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Availability Management Routes
 
   // Generate tokens and send availability check emails
