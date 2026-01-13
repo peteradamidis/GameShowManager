@@ -8445,6 +8445,10 @@ ${finalEmailFooter}`;
 
   // Dynamic Booking Email Preview
   app.get("/api/email-preview/booking", async (req, res) => {
+    // Allow iframe embedding from same origin
+    res.removeHeader('X-Frame-Options');
+    res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+    
     try {
       // Get saved template values with fallback defaults
       const headline = await storage.getSystemConfig('booking_email_headline') || 'Your Booking is Confirmed!';
@@ -8611,6 +8615,10 @@ ${finalEmailFooter}`;
 
   // Dynamic Availability Email Preview
   app.get("/api/email-preview/availability", async (req, res) => {
+    // Allow iframe embedding from same origin
+    res.removeHeader('X-Frame-Options');
+    res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+    
     try {
       // Get saved template values with fallback defaults
       const subject = await storage.getSystemConfig('availability_email_subject') || 'Deal or No Deal - Availability Check';
@@ -8744,6 +8752,10 @@ ${finalEmailFooter}`;
 
   // Dynamic Standby Email Preview
   app.get("/api/email-preview/standby", async (req, res) => {
+    // Allow iframe embedding from same origin
+    res.removeHeader('X-Frame-Options');
+    res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+    
     try {
       // Get saved template values with fallback defaults
       const headline = await storage.getSystemConfig('standby_email_headline') || "You've Been Selected to be a Standby Contestant!";
