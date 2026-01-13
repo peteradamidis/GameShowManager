@@ -2856,19 +2856,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // PB blocks: max 18 seats, NPB blocks: fill completely (22 seats)
         let feasibleBlocks = blocks.filter((block) => {
           const maxSeats = block.blockType === 'NPB' ? MAX_NPB_SEATS : MAX_PB_SEATS;
-          // Check capacity
+          // Check capacity only - demographic balancing is done via scoring, not hard rejection
           if (block.seatsUsed + bundle.size > maxSeats) return false;
-          
-          // CONSTRAINT: No block should exceed 70% female
-          // But only apply this constraint when block already has some assignments
-          // to allow initial placements of all-female groups
-          const newFemaleCount = block.femaleCount + bundle.femaleCount;
-          const newMaleCount = block.maleCount + bundle.maleCount;
-          const newTotal = newFemaleCount + newMaleCount;
-          const newFemaleRatio = newTotal > 0 ? newFemaleCount / newTotal : 0;
-          // Only enforce 70% limit if block already has at least 4 people assigned
-          // This allows initial group placements without being overly restrictive
-          if (block.seatsUsed >= 4 && newFemaleRatio > 0.70) return false;
           
           // CONSTRAINT: NPB blocks can ONLY have B and C ratings (no A or B+)
           if (block.blockType === 'NPB') {
@@ -3018,9 +3007,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For each unassigned solo, find a block with available capacity
       for (const solo of unassignedSoloBundles) {
         // C-rated solos can ONLY go to NPB blocks (with max 6 C-rated per NPB block)
+        // All other solos can go to any block with capacity - no demographic rejection
         let eligibleBlocks = blocks.filter(block => {
           const maxSeats = block.blockType === 'NPB' ? MAX_NPB_SEATS : MAX_PB_SEATS;
           if (block.seatsUsed + 1 > maxSeats) return false;
+          
+          // NPB blocks can ONLY have B and C ratings (no A or B+)
+          if (block.blockType === 'NPB') {
+            const hasAOrBPlus = solo.ratingCounts['A'] > 0 || solo.ratingCounts['B+'] > 0;
+            if (hasAOrBPlus) return false;
+          }
           
           if (solo.hasCRating) {
             if (block.blockType !== 'NPB') return false;
@@ -3362,6 +3358,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // PHASE 4C: BACKFILL - Fill ALL remaining empty seats (except reserved gaps) with TRUE SOLO contestants only
+      // Groups are preserved - we only backfill individuals who were originally identified as solos in Phase 1
+      // This ensures we never break groups by placing members separately
+      const placedContestantIdsAfterCleanup = new Set(plan.map(p => p.contestant.id));
+      
+      // Get IDs of all contestants who were part of any bundle (including groups)
+      // We track this to ensure we never backfill a group member individually
+      const allBundledContestantIds = new Set<string>();
+      bundles.forEach(b => {
+        if (b.size > 1) {
+          // This is a group - mark all members as bundled
+          b.contestants.forEach(c => allBundledContestantIds.add(c.id));
+        }
+      });
+      
+      // Get remaining SOLO contestants only - those who:
+      // 1. Were originally identified as solo bundles (size 1)
+      // 2. Are NOT part of any multi-person group
+      // 3. Don't have unavailable partners
+      const remainingSolos = available.filter(c => {
+        // Already placed
+        if (placedContestantIdsAfterCleanup.has(c.id)) return false;
+        // Has unavailable partner (they can't be assigned without their partner)
+        if (contestantsWithUnavailablePartners.has(c.id)) return false;
+        // Was part of a multi-person bundle (group) - skip to preserve group integrity
+        if (allBundledContestantIds.has(c.id)) return false;
+        return true;
+      });
+      
+      console.log(`[Auto-assign] BACKFILL: ${remainingSolos.length} solo contestants remaining to place`);
+      
+      // For each block, find empty non-reserved seats and fill them with solos
+      for (const block of blocks) {
+        // Build set of all occupied seats in this block
+        const occupiedSeatsInBlock = new Set<string>();
+        plan
+          .filter(p => p.blockNumber === block.blockNumber)
+          .forEach(p => occupiedSeatsInBlock.add(p.seatLabel));
+        
+        existingAssignments
+          .filter(a => a.blockNumber === block.blockNumber)
+          .forEach(a => occupiedSeatsInBlock.add(a.seatLabel));
+        
+        // Add reserved empty seats for PB blocks (these stay empty intentionally)
+        if (block.reservedSeats) {
+          block.reservedSeats.forEach(seat => occupiedSeatsInBlock.add(seat));
+        }
+        
+        // Determine max seats for this block type
+        const maxSeats = block.blockType === 'NPB' ? MAX_NPB_SEATS : MAX_PB_SEATS;
+        
+        // Find all empty seats in this block
+        const emptySeats: string[] = [];
+        for (const row of ROWS) {
+          for (let i = 1; i <= row.count; i++) {
+            const seatLabel = `${row.label}${i}`;
+            if (!occupiedSeatsInBlock.has(seatLabel)) {
+              emptySeats.push(seatLabel);
+            }
+          }
+        }
+        
+        // Fill empty seats with remaining solo contestants (respecting rating constraints)
+        for (const seatLabel of emptySeats) {
+          // Check block capacity
+          const currentInBlock = plan.filter(p => p.blockNumber === block.blockNumber).length + 
+                                existingAssignments.filter(a => a.blockNumber === block.blockNumber).length;
+          if (currentInBlock >= maxSeats) break;
+          
+          // Find a suitable solo contestant for this block
+          const contestantIdx = remainingSolos.findIndex(c => {
+            // Check rating constraints
+            const isAOrBPlus = c.auditionRating === 'A' || c.auditionRating === 'B+';
+            const isCRated = c.auditionRating === 'C';
+            
+            // NPB blocks can ONLY have B and C ratings
+            if (block.blockType === 'NPB' && isAOrBPlus) return false;
+            
+            // C-rated can ONLY go to NPB blocks
+            if (isCRated && block.blockType !== 'NPB') return false;
+            
+            // Check C-rated limit per NPB block
+            if (isCRated && block.blockType === 'NPB') {
+              const currentCCount = block.ratingCounts['C'];
+              if (currentCCount >= MAX_C_PER_NPB) return false;
+            }
+            
+            return true;
+          });
+          
+          if (contestantIdx !== -1) {
+            const contestant = remainingSolos[contestantIdx];
+            plan.push({
+              contestant,
+              blockNumber: block.blockNumber,
+              seatLabel,
+            });
+            occupiedSeatsInBlock.add(seatLabel);
+            
+            // Update block state
+            block.seatsUsed += 1;
+            if (contestant.gender === 'Female') block.femaleCount += 1;
+            if (contestant.gender === 'Male') block.maleCount += 1;
+            block.totalAge += contestant.age;
+            block.ageCount += 1;
+            block.meanAge = block.ageCount > 0 ? block.totalAge / block.ageCount : 0;
+            if (contestant.auditionRating && block.ratingCounts.hasOwnProperty(contestant.auditionRating)) {
+              block.ratingCounts[contestant.auditionRating] += 1;
+            }
+            
+            // Update global state
+            globalFemaleCount += contestant.gender === 'Female' ? 1 : 0;
+            globalMaleCount += contestant.gender === 'Male' ? 1 : 0;
+            globalTotalAge += contestant.age;
+            globalAgeCount += 1;
+            if (contestant.auditionRating && globalRatingCounts.hasOwnProperty(contestant.auditionRating)) {
+              globalRatingCounts[contestant.auditionRating] += 1;
+            }
+            
+            // Remove from remaining solos
+            remainingSolos.splice(contestantIdx, 1);
+            
+            console.log(`[Auto-assign] BACKFILL: Placed solo ${contestant.name} in Block ${block.blockNumber} seat ${seatLabel}`);
+          }
+        }
+      }
+      
+      console.log(`[Auto-assign] BACKFILL complete: ${remainingSolos.length} solo contestants still unplaced`);
+      
+      // Update final counts after backfill
+      const totalAssignedAfterBackfill = globalFemaleCount + globalMaleCount;
+      const finalFemaleRatioAfterBackfill = totalAssignedAfterBackfill > 0 ? globalFemaleCount / totalAssignedAfterBackfill : 0;
+
       // PHASE 5: Persist the plan to database with transaction-like semantics
       // First, deduplicate the plan by contestantId (keep first occurrence)
       const seenContestantIds = new Set<string>();
@@ -3414,7 +3543,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         res.json({
-          message: `Assigned ${totalAssigned} contestants to seats`,
+          message: `Assigned ${createdAssignments.length} contestants to seats`,
           assignments: createdAssignments,
           skippedAPlusCount: aPlusContestants.length,
           skippedAPlusNames: aPlusContestants.map(c => c.name),
@@ -3422,9 +3551,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           demographics: {
             femaleCount: globalFemaleCount,
             maleCount: globalMaleCount,
-            femalePercentage: (finalFemaleRatio * 100).toFixed(1),
+            femalePercentage: (finalFemaleRatioAfterBackfill * 100).toFixed(1),
             targetRange: "60-70%",
-            meetsTarget: finalFemaleRatio >= TARGET_FEMALE_MIN && finalFemaleRatio <= TARGET_FEMALE_MAX,
+            meetsTarget: finalFemaleRatioAfterBackfill >= TARGET_FEMALE_MIN && finalFemaleRatioAfterBackfill <= TARGET_FEMALE_MAX,
             warning: !poolMeetsRequirements ? `Available pool has ${(poolFemaleRatio * 100).toFixed(1)}% female, outside target range` : undefined,
           },
           ratingDistribution: globalRatingCounts,
