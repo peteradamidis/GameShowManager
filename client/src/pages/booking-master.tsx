@@ -234,6 +234,7 @@ export default function BookingMaster() {
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const [expandedOtdNotes, setExpandedOtdNotes] = useState<Set<string>>(new Set());
   const [filterMedicalNotes, setFilterMedicalNotes] = useState(false);
+  const [filterConfirmedOnly, setFilterConfirmedOnly] = useState(false);
   const [isStandbyMode, setIsStandbyMode] = useState(false);
   // Use refs instead of state for pending text updates to avoid re-renders
   const pendingTextUpdatesRef = useRef<Record<string, string>>({});
@@ -492,6 +493,10 @@ export default function BookingMaster() {
     }
     // Filter by medical information (includes both Medical App and Medical AUD, excludes NA/N/A)
     if (filterMedicalNotes && !hasMeaningfulMedicalNote(row.contestant?.medicalInfo) && !hasMeaningfulMedicalNote(row.contestant?.mobilityNotes)) {
+      return false;
+    }
+    // Filter to only show confirmed RSVP
+    if (filterConfirmedOnly && !row.assignment?.confirmedRsvp) {
       return false;
     }
     return true;
@@ -776,6 +781,15 @@ export default function BookingMaster() {
             </DropdownMenuContent>
           </DropdownMenu>
           
+          <Button 
+            onClick={() => setFilterConfirmedOnly(!filterConfirmedOnly)}
+            variant={filterConfirmedOnly ? "default" : "outline"}
+            title={filterConfirmedOnly ? "Show all contestants" : "Show only confirmed RSVP"}
+            data-testid="button-filter-confirmed"
+          >
+            Confirmed Only
+          </Button>
+
           <Button 
             onClick={() => setFilterMedicalNotes(!filterMedicalNotes)}
             variant={filterMedicalNotes ? "default" : "outline"}
