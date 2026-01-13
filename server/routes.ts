@@ -2426,11 +2426,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         availableAll = availableAll.filter(c => confirmedContestantIds.has(c.id));
       }
       
-      // Exclude A+ (must be manually assigned), DNU (Do Not Use), and P (pending/special) contestants
-      const aPlusContestants = availableAll.filter(c => c.auditionRating === 'A+');
+      // Exclude A and A+ (must be manually assigned), DNU (Do Not Use), and P (pending/special) contestants
+      const aRatedContestants = availableAll.filter(c => c.auditionRating === 'A' || c.auditionRating === 'A+');
       const dnuContestants = availableAll.filter(c => c.auditionRating?.toUpperCase().trim() === 'DNU');
       const pContestants = availableAll.filter(c => c.auditionRating?.toUpperCase().trim() === 'P');
       const available = availableAll.filter(c => 
+        c.auditionRating !== 'A' &&
         c.auditionRating !== 'A+' && 
         c.auditionRating?.toUpperCase().trim() !== 'DNU' &&
         c.auditionRating?.toUpperCase().trim() !== 'P'
@@ -2438,8 +2439,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (available.length === 0) {
         return res.status(400).json({ 
-          error: "No available contestants to assign (A+ contestants must be manually assigned)",
-          skippedAPlusCount: aPlusContestants.length
+          error: "No available contestants to assign (A and A+ contestants must be manually assigned)",
+          skippedACount: aRatedContestants.length
         });
       }
 
@@ -2534,7 +2535,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const groupIdEntries = Array.from(groupIdToContestants.entries());
       for (const [gId, members] of groupIdEntries) {
         // Filter out A+ rated contestants
-        const eligibleMembers = members.filter((m: typeof available[0]) => m.auditionRating !== 'A+');
+        const eligibleMembers = members.filter((m: typeof available[0]) => m.auditionRating !== 'A' && m.auditionRating !== 'A+');
         if (eligibleMembers.length > 1) {
           const groupId = `dbgroup-${gId}`;
           groupMap.set(groupId, eligibleMembers);
@@ -2602,8 +2603,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               }
               
-              // Only add if not A+ rated (A+ must be manually assigned)
-              if (partner.auditionRating !== 'A+') {
+              // Only add if not A or A+ rated (they must be manually assigned)
+              if (partner.auditionRating !== 'A' && partner.auditionRating !== 'A+') {
                 groupMembers.push(partner);
                 hasNonAPlusPartners = true;
               } else {
@@ -3545,8 +3546,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({
           message: `Assigned ${createdAssignments.length} contestants to seats`,
           assignments: createdAssignments,
-          skippedAPlusCount: aPlusContestants.length,
-          skippedAPlusNames: aPlusContestants.map(c => c.name),
+          skippedACount: aRatedContestants.length,
+          skippedANames: aRatedContestants.map(c => c.name),
           skippedBundles: skippedBundles.length > 0 ? skippedBundles : undefined,
           demographics: {
             femaleCount: globalFemaleCount,
