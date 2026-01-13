@@ -165,7 +165,8 @@ export default function StandbysPage() {
   // Preview emails mutation
   const previewEmailsMutation = useMutation({
     mutationFn: async (standbyIds: string[]) => {
-      return apiRequest('POST', '/api/standbys/preview-emails', { standbyIds });
+      const res = await apiRequest('POST', '/api/standbys/preview-emails', { standbyIds });
+      return res.json();
     },
     onSuccess: (data: any) => {
       setPreviewData(data);
