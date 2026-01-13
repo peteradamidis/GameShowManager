@@ -1,0 +1,43 @@
+admin@admins-Mac-mini GameShowManager % git pull origin main
+pm2 restart all
+remote: Enumerating objects: 74, done.
+remote: Counting objects: 100% (74/74), done.
+remote: Compressing objects: 100% (10/10), done.
+remote: Total 63 (delta 45), reused 63 (delta 45), pack-reused 0 (from 0)
+Unpacking objects: 100% (63/63), 8.71 KiB | 86.00 KiB/s, done.
+From https://github.com/peteradamidis/GameShowManager
+ * branch            main       -> FETCH_HEAD
+   456bef2..795b885  main       -> origin/main
+Updating 456bef2..795b885
+error: Your local changes to the following files would be overwritten by merge:
+	storage/backups/automatic-backup.json
+	storage/backups/automatic-backup.xlsx
+Please commit your changes or stash them before you merge.
+Aborting
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [all](ids: [ 0 ])
+[PM2] [gameshow](0) ✓
+┌────┬─────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name        │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ gameshow    │ default     │ N/A     │ fork    │ 44606    │ 0s     │ 60   │ online    │ 0%       │ 1.1mb    │ admin    │ disabled │
+└────┴─────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+admin@admins-Mac-mini GameShowManager % git pull origin main
+From https://github.com/peteradamidis/GameShowManager
+ * branch            main       -> FETCH_HEAD
+Updating 456bef2..795b885
+error: Your local changes to the following files would be overwritten by merge:
+	storage/backups/automatic-backup.json
+	storage/backups/automatic-backup.xlsx
+Please commit your changes or stash them before you merge.
+Aborting
+admin@admins-Mac-mini GameShowManager % pm2 restart all
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [all](ids: [ 0 ])
+[PM2] [gameshow](0) ✓
+┌────┬─────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name        │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ gameshow    │ default     │ N/A     │ fork    │ 44725    │ 0s     │ 61   │ online    │ 0%       │ 1.2mb    │ admin    │ disabled │
+└────┴─────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+admin@admins-Mac-mini GameShowManager % 
