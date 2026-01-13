@@ -740,10 +740,11 @@ Deal or No Deal Production Team`);
                   disabled={allEmails.length === 0}
                   variant="outline"
                   className="border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400 dark:hover:bg-orange-900/20"
+                  title="Copy emails of all currently visible contestants to clipboard"
                   data-testid="button-copy-all-emails"
                 >
                   <Copy className="h-4 w-4 mr-2" />
-                  Copy All Emails ({allEmails.length})
+                  Copy Visible Emails ({allEmails.length})
                 </Button>
               </div>
             </CardHeader>

@@ -845,7 +845,7 @@ export default function BookingMaster() {
               <Button 
                 onClick={() => {
                   const emails = bookingRows
-                    .filter(row => row.assignment?.confirmedRsvp && row.contestant?.email)
+                    .filter(row => row.contestant?.email)
                     .map(row => row.contestant!.email!)
                     .filter((email, index, self) => self.indexOf(email) === index);
                   if (emails.length > 0) {
@@ -857,11 +857,11 @@ export default function BookingMaster() {
                 }}
                 variant="outline"
                 className="border-green-400 text-green-700 hover:bg-green-50 dark:border-green-600 dark:text-green-400"
-                title="Copy all confirmed contestant emails to clipboard"
+                title="Copy emails of all currently visible contestants to clipboard"
                 data-testid="button-copy-all-emails"
               >
                 <Copy className="h-4 w-4 mr-2" />
-                Copy All Emails
+                Copy Visible Emails ({bookingRows.filter(r => r.contestant?.email).length})
               </Button>
               <Button 
                 onClick={() => setFilterPaperworkNotSent(!filterPaperworkNotSent)}
