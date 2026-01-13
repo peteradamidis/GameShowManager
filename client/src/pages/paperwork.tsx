@@ -59,12 +59,14 @@ interface AdobeSignConfig {
 
 type StatusFilter = "all" | "invited" | "confirmed";
 type PaperworkStatusFilter = "all" | "ready_to_send" | "awaiting_return" | "complete";
+type BlockFilter = "all" | "1" | "2" | "3" | "4" | "5" | "6" | "7";
 
 export default function Paperwork() {
   const { toast } = useToast();
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [paperworkStatusFilter, setPaperworkStatusFilter] = useState<PaperworkStatusFilter>("all");
+  const [blockFilter, setBlockFilter] = useState<BlockFilter>("all");
   const [searchName, setSearchName] = useState("");
   const [activeTab, setActiveTab] = useState("paperwork");
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
@@ -289,10 +291,14 @@ Deal or No Deal Production Team`);
     },
   });
 
-  // Filter by search and paperwork status, then sort for stable ordering
+  // Filter by search, block, and paperwork status, then sort for stable ordering
   const filteredData = paperworkData.filter((item) => {
     // Filter by name search
     if (searchName && !item.contestant?.name?.toLowerCase().includes(searchName.toLowerCase())) {
+      return false;
+    }
+    // Filter by block
+    if (blockFilter !== "all" && item.blockNumber !== parseInt(blockFilter)) {
       return false;
     }
     // Filter by paperwork status
@@ -473,8 +479,27 @@ Deal or No Deal Production Team`);
               </div>
             </div>
 
-            {/* Row 2: Paperwork Status + Booking Status */}
+            {/* Row 2: Block + Paperwork Status + Booking Status */}
             <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="block-filter">Block:</Label>
+                <Select value={blockFilter} onValueChange={(v) => setBlockFilter(v as BlockFilter)}>
+                  <SelectTrigger className="w-[120px]" data-testid="select-block-filter">
+                    <SelectValue placeholder="All Blocks" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Blocks</SelectItem>
+                    <SelectItem value="1">Block 1</SelectItem>
+                    <SelectItem value="2">Block 2</SelectItem>
+                    <SelectItem value="3">Block 3</SelectItem>
+                    <SelectItem value="4">Block 4</SelectItem>
+                    <SelectItem value="5">Block 5</SelectItem>
+                    <SelectItem value="6">Block 6</SelectItem>
+                    <SelectItem value="7">Block 7</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="flex items-center gap-2">
                 <Label htmlFor="paperwork-status-filter">Paperwork Status:</Label>
                 <Select value={paperworkStatusFilter} onValueChange={(v) => setPaperworkStatusFilter(v as PaperworkStatusFilter)}>
