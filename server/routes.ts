@@ -1036,19 +1036,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
           location: row.ADDRESS || row.Address || row.address || 
                    row.CITY || row.City || row.city ||
                    row["Location"] || row["LOCATION"] || null,
-          medicalInfo: row["MEDICAL CONDITIONS"] || row["Medical Conditions"] || row["medical conditions"] ||
-                       row["Health Conditions"] || row["HEALTH CONDITIONS"] || null,
-          mobilityNotes: getColumnValue(row,
+          medicalInfo: (() => {
+            const val = row["MEDICAL CONDITIONS"] || row["Medical Conditions"] || row["medical conditions"] ||
+                       row["Health Conditions"] || row["HEALTH CONDITIONS"] || null;
+            if (!val) return null;
+            const trimmed = val.toString().trim().toLowerCase();
+            return (trimmed === 'n/a' || trimmed === 'na' || trimmed === 'none' || trimmed === '-') ? null : val;
+          })(),
+          mobilityNotes: (() => {
+            const val = getColumnValue(row,
                          "Mobility Access/Medical Notes", "MOBILITY ACCESS/MEDICAL NOTES",
                          "Mobility/Access/Medical Notes", "MOBILITY/ACCESS/MEDICAL NOTES",
                          "Mobility/Access/Medical notes", "mobility/access/medical notes",
-                         "CO Mobility/Acc", "CO MOBILITY/ACC"),
-          criminalRecord: getColumnValue(row,
+                         "CO Mobility/Acc", "CO MOBILITY/ACC");
+            if (!val) return null;
+            const trimmed = val.toString().trim().toLowerCase();
+            return (trimmed === 'n/a' || trimmed === 'na' || trimmed === 'none' || trimmed === '-') ? null : val;
+          })(),
+          criminalRecord: (() => {
+            const val = getColumnValue(row,
                           "Criminal Rec", "CRIMINAL REC",
                           "Criminal Record", "CRIMINAL RECORD", "criminal record",
                           "Criminal", "CRIMINAL",
                           "Background", "BACKGROUND",
-                          "Background Check", "BACKGROUND CHECK"),
+                          "Background Check", "BACKGROUND CHECK");
+            if (!val) return null;
+            const trimmed = val.toString().trim().toLowerCase();
+            return (trimmed === 'n/a' || trimmed === 'na' || trimmed === 'none' || trimmed === '-') ? null : val;
+          })(),
         };
       }).filter((row): row is NonNullable<typeof row> => row !== null);
 
