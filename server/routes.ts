@@ -9552,6 +9552,83 @@ ${finalEmailFooter}`;
     }
   });
 
+  // =============================================
+  // Attendance Issues (No-Shows and Early Leavers)
+  // =============================================
+
+  // Get all attendance issues
+  app.get("/api/attendance-issues", async (req, res) => {
+    try {
+      const issues = await storage.getAttendanceIssues();
+      res.json(issues);
+    } catch (error: any) {
+      console.error("Error fetching attendance issues:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get attendance issues for a specific record day
+  app.get("/api/attendance-issues/record-day/:recordDayId", async (req, res) => {
+    try {
+      const { recordDayId } = req.params;
+      const issues = await storage.getAttendanceIssuesByRecordDay(recordDayId);
+      res.json(issues);
+    } catch (error: any) {
+      console.error("Error fetching attendance issues for record day:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Mark a contestant as no-show or early leaver
+  app.post("/api/attendance-issues", async (req, res) => {
+    try {
+      const { contestantId, recordDayId, blockNumber, seatLabel, issueType, notes, markedBy } = req.body;
+      
+      if (!contestantId || !recordDayId || !blockNumber || !seatLabel || !issueType) {
+        return res.status(400).json({ error: "Missing required fields: contestantId, recordDayId, blockNumber, seatLabel, issueType" });
+      }
+      
+      if (!['no_show', 'early_leaver'].includes(issueType)) {
+        return res.status(400).json({ error: "issueType must be 'no_show' or 'early_leaver'" });
+      }
+      
+      const issue = await storage.createAttendanceIssue({
+        contestantId,
+        recordDayId,
+        blockNumber,
+        seatLabel,
+        issueType,
+        notes,
+        markedBy,
+      });
+      
+      // Broadcast the change for real-time updates
+      wsManager.broadcast({
+        type: 'attendance-issue',
+        recordDayId,
+        issueType,
+        contestantId,
+      });
+      
+      res.json(issue);
+    } catch (error: any) {
+      console.error("Error creating attendance issue:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete/undo an attendance issue
+  app.delete("/api/attendance-issues/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteAttendanceIssue(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting attendance issue:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize WebSocket server for real-time updates

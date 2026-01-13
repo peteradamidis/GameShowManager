@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2026-01-13T12:52:44.132Z",
+  "exportedAt": "2026-01-13T13:04:06.650Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -199,6 +199,8 @@
         "podiumStory": false,
         "availableForStandby": false,
         "availabilityNotes": null,
+        "noShowCount": 0,
+        "earlyLeaverCount": 0,
         "createdAt": "2026-01-13T03:41:16.376Z"
       },
       {
@@ -224,6 +226,8 @@
         "podiumStory": false,
         "availableForStandby": false,
         "availabilityNotes": null,
+        "noShowCount": 0,
+        "earlyLeaverCount": 0,
         "createdAt": "2026-01-13T03:41:16.481Z"
       }
     ],

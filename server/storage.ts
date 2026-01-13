@@ -17,6 +17,7 @@ import {
   formConfigurations,
   users,
   rebookingHistory,
+  attendanceIssues,
   type Contestant,
   type InsertContestant,
   type Group,
@@ -46,6 +47,8 @@ import {
   type InsertUser,
   type RebookingHistory,
   type InsertRebookingHistory,
+  type AttendanceIssue,
+  type InsertAttendanceIssue,
 } from "@shared/schema";
 import { eq, and, sql, inArray } from "drizzle-orm";
 
@@ -263,6 +266,12 @@ export interface IStorage {
     reason?: string;
     rebookedBy: string;
   }): Promise<{ newAssignment: SeatAssignment; history: RebookingHistory }>;
+  
+  // Attendance Issues (No-Shows and Early Leavers)
+  createAttendanceIssue(issue: InsertAttendanceIssue): Promise<AttendanceIssue>;
+  getAttendanceIssues(): Promise<Array<AttendanceIssue & { contestant: Contestant; recordDay: RecordDay }>>;
+  getAttendanceIssuesByRecordDay(recordDayId: string): Promise<Array<AttendanceIssue & { contestant: Contestant }>>;
+  deleteAttendanceIssue(id: string): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -1791,6 +1800,101 @@ export class DbStorage implements IStorage {
     } finally {
       client.release();
     }
+  }
+
+  // Attendance Issues (No-Shows and Early Leavers)
+  async createAttendanceIssue(issue: InsertAttendanceIssue): Promise<AttendanceIssue> {
+    return await db.transaction(async (tx) => {
+      // Create the attendance issue
+      const [created] = await tx.insert(attendanceIssues).values(issue).returning();
+      
+      // Increment the appropriate counter on the contestant
+      if (issue.issueType === 'no_show') {
+        await tx
+          .update(contestants)
+          .set({ noShowCount: sql`COALESCE(${contestants.noShowCount}, 0) + 1` })
+          .where(eq(contestants.id, issue.contestantId));
+      } else if (issue.issueType === 'early_leaver') {
+        await tx
+          .update(contestants)
+          .set({ earlyLeaverCount: sql`COALESCE(${contestants.earlyLeaverCount}, 0) + 1` })
+          .where(eq(contestants.id, issue.contestantId));
+      }
+      
+      // Delete the seat assignment to free up the seat
+      await tx.delete(seatAssignments).where(
+        and(
+          eq(seatAssignments.contestantId, issue.contestantId),
+          eq(seatAssignments.recordDayId, issue.recordDayId)
+        )
+      );
+      
+      return created;
+    });
+  }
+
+  async getAttendanceIssues(): Promise<Array<AttendanceIssue & { contestant: Contestant; recordDay: RecordDay }>> {
+    const results = await db
+      .select({
+        issue: attendanceIssues,
+        contestant: contestants,
+        recordDay: recordDays,
+      })
+      .from(attendanceIssues)
+      .leftJoin(contestants, eq(attendanceIssues.contestantId, contestants.id))
+      .leftJoin(recordDays, eq(attendanceIssues.recordDayId, recordDays.id))
+      .orderBy(sql`${attendanceIssues.createdAt} DESC`);
+
+    return results.map(r => ({
+      ...r.issue,
+      contestant: r.contestant!,
+      recordDay: r.recordDay!,
+    }));
+  }
+
+  async getAttendanceIssuesByRecordDay(recordDayId: string): Promise<Array<AttendanceIssue & { contestant: Contestant }>> {
+    const results = await db
+      .select({
+        issue: attendanceIssues,
+        contestant: contestants,
+      })
+      .from(attendanceIssues)
+      .leftJoin(contestants, eq(attendanceIssues.contestantId, contestants.id))
+      .where(eq(attendanceIssues.recordDayId, recordDayId))
+      .orderBy(sql`${attendanceIssues.createdAt} DESC`);
+
+    return results.map(r => ({
+      ...r.issue,
+      contestant: r.contestant!,
+    }));
+  }
+
+  async deleteAttendanceIssue(id: string): Promise<void> {
+    // First get the issue to know which counter to decrement
+    const [issue] = await db
+      .select()
+      .from(attendanceIssues)
+      .where(eq(attendanceIssues.id, id));
+    
+    if (!issue) return;
+    
+    await db.transaction(async (tx) => {
+      // Decrement the appropriate counter on the contestant
+      if (issue.issueType === 'no_show') {
+        await tx
+          .update(contestants)
+          .set({ noShowCount: sql`GREATEST(COALESCE(${contestants.noShowCount}, 0) - 1, 0)` })
+          .where(eq(contestants.id, issue.contestantId));
+      } else if (issue.issueType === 'early_leaver') {
+        await tx
+          .update(contestants)
+          .set({ earlyLeaverCount: sql`GREATEST(COALESCE(${contestants.earlyLeaverCount}, 0) - 1, 0)` })
+          .where(eq(contestants.id, issue.contestantId));
+      }
+      
+      // Delete the attendance issue
+      await tx.delete(attendanceIssues).where(eq(attendanceIssues.id, id));
+    });
   }
 }
 
