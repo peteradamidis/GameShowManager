@@ -5882,9 +5882,11 @@ ${finalEmailFooter}`;
                 </tr>
               </table>
               
-              <!-- Disclaimer Notice -->
-              <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0; font-style: italic;">
-                While this invitation doesn't guarantee you'll play the game, it does bring you closer to being that lucky person. Some audience members may have the opportunity to open a case, however this isn't guaranteed. We're really looking forward to welcoming you for a fun and truly unique day at Deal or No Deal.
+              <p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 15px 0;">
+                While this invitation doesn't guarantee you'll play the game, it does bring you closer to being that lucky person.
+              </p>
+              <p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;">
+                Some audience members may have the opportunity to open a case, however this isn't guaranteed.
               </p>
               
               ${emailAdditionalInstructions ? `
@@ -7728,9 +7730,11 @@ ${finalEmailFooter}`;
                 </tr>
               </table>
               
-              <!-- Disclaimer Notice -->
-              <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0; font-style: italic;">
-                While this invitation doesn't guarantee you'll play the game, it does bring you closer to being that lucky person. Some audience members may have the opportunity to open a case, however this isn't guaranteed. We're really looking forward to welcoming you for a fun and truly unique day at Deal or No Deal.
+              <p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 15px 0;">
+                While this invitation doesn't guarantee you'll play the game, it does bring you closer to being that lucky person.
+              </p>
+              <p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;">
+                Some audience members may have the opportunity to open a case, however this isn't guaranteed.
               </p>
               
               ${emailAdditionalInstructions ? `
@@ -8566,9 +8570,11 @@ ${finalEmailFooter}`;
                   </tr>
                 </table>
                 
-                <!-- Disclaimer Notice -->
-                <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0; font-style: italic;">
-                  While this invitation doesn't guarantee you'll play the game, it does bring you closer to being that lucky person. Some audience members may have the opportunity to open a case, however this isn't guaranteed. We're really looking forward to welcoming you for a fun and truly unique day at Deal or No Deal.
+                <p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 15px 0;">
+                  While this invitation doesn't guarantee you'll play the game, it does bring you closer to being that lucky person.
+                </p>
+                <p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;">
+                  Some audience members may have the opportunity to open a case, however this isn't guaranteed.
                 </p>
                 
                 ${additionalInstructions ? `
