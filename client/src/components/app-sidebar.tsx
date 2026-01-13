@@ -1,4 +1,4 @@
-import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList, UserCheck, MessageSquareText, FileText, Trophy } from "lucide-react";
+import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList, UserCheck, MessageSquareText, FileText, Trophy, AlertTriangle } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -66,6 +66,11 @@ const menuItems = [
     title: "Winners",
     url: "/winners",
     icon: Trophy,
+  },
+  {
+    title: "Attendance Issues",
+    url: "/attendance-issues",
+    icon: AlertTriangle,
   },
   {
     title: "Settings",
