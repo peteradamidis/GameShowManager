@@ -674,7 +674,7 @@ Deal or No Deal Production Team`);
                           </Badge>
                         </TableCell>
                         <TableCell 
-                          className="text-sm font-mono select-all cursor-text"
+                          className="text-sm select-all cursor-text"
                           title="Click to select, then Ctrl+C to copy"
                           data-testid={`email-${item.id}`}
                         >
