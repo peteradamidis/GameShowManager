@@ -49,7 +49,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Calendar, Mail, Maximize2, Minimize2, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle, FileText, Sparkles, Users, AlertTriangle } from "lucide-react";
+import { Download, Calendar, Mail, Maximize2, Minimize2, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle, FileText, Sparkles, Users, AlertTriangle, Copy } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -237,7 +237,7 @@ export default function BookingMaster() {
   const [expandedOtdNotes, setExpandedOtdNotes] = useState<Set<string>>(new Set());
   const [filterMedicalNotes, setFilterMedicalNotes] = useState(false);
   const [filterConfirmedOnly, setFilterConfirmedOnly] = useState(false);
-  const [filterPaperworkNotReceived, setFilterPaperworkNotReceived] = useState(false);
+  const [filterPaperworkNotSent, setFilterPaperworkNotSent] = useState(false);
   const [isStandbyMode, setIsStandbyMode] = useState(false);
   // Use refs instead of state for pending text updates to avoid re-renders
   const pendingTextUpdatesRef = useRef<Record<string, string>>({});
@@ -503,8 +503,8 @@ export default function BookingMaster() {
     if (filterConfirmedOnly && !row.assignment?.confirmedRsvp) {
       return false;
     }
-    // Filter to only show those with paperwork NOT received (when confirmed filter is active)
-    if (filterConfirmedOnly && filterPaperworkNotReceived && row.assignment?.paperworkReceived) {
+    // Filter to only show those with paperwork NOT sent (when confirmed filter is active)
+    if (filterConfirmedOnly && filterPaperworkNotSent && row.assignment?.paperworkSent) {
       return false;
     }
     return true;
@@ -795,7 +795,7 @@ export default function BookingMaster() {
           <Button 
             onClick={() => {
               setFilterConfirmedOnly(!filterConfirmedOnly);
-              if (filterConfirmedOnly) setFilterPaperworkNotReceived(false); // Reset secondary filter when turning off
+              if (filterConfirmedOnly) setFilterPaperworkNotSent(false); // Reset secondary filter when turning off
             }}
             variant={filterConfirmedOnly ? "default" : "outline"}
             title={filterConfirmedOnly ? "Show all contestants" : "Show only confirmed RSVP"}
@@ -805,15 +805,38 @@ export default function BookingMaster() {
           </Button>
 
           {filterConfirmedOnly && (
-            <Button 
-              onClick={() => setFilterPaperworkNotReceived(!filterPaperworkNotReceived)}
-              variant={filterPaperworkNotReceived ? "default" : "outline"}
-              className={filterPaperworkNotReceived ? "bg-orange-600 hover:bg-orange-700" : "border-orange-400 text-orange-700 hover:bg-orange-50 dark:border-orange-600 dark:text-orange-400"}
-              title={filterPaperworkNotReceived ? "Show all confirmed" : "Show only those without paperwork received"}
-              data-testid="button-filter-paperwork-not-received"
-            >
-              Paperwork Not Received
-            </Button>
+            <>
+              <Button 
+                onClick={() => {
+                  const emails = bookingRows
+                    .filter(row => row.assignment?.confirmedRsvp && row.contestant?.email)
+                    .map(row => row.contestant!.email!)
+                    .filter((email, index, self) => self.indexOf(email) === index);
+                  if (emails.length > 0) {
+                    navigator.clipboard.writeText(emails.join("; "));
+                    toast({ title: `Copied ${emails.length} email${emails.length !== 1 ? 's' : ''} to clipboard` });
+                  } else {
+                    toast({ title: "No emails to copy", variant: "destructive" });
+                  }
+                }}
+                variant="outline"
+                className="border-green-400 text-green-700 hover:bg-green-50 dark:border-green-600 dark:text-green-400"
+                title="Copy all confirmed contestant emails to clipboard"
+                data-testid="button-copy-all-emails"
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copy All Emails
+              </Button>
+              <Button 
+                onClick={() => setFilterPaperworkNotSent(!filterPaperworkNotSent)}
+                variant={filterPaperworkNotSent ? "default" : "outline"}
+                className={filterPaperworkNotSent ? "bg-orange-600 hover:bg-orange-700" : "border-orange-400 text-orange-700 hover:bg-orange-50 dark:border-orange-600 dark:text-orange-400"}
+                title={filterPaperworkNotSent ? "Show all confirmed" : "Show only those without paperwork sent"}
+                data-testid="button-filter-paperwork-not-sent"
+              >
+                Paperwork Not Sent
+              </Button>
+            </>
           )}
 
           <Button 
