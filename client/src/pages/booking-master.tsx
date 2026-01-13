@@ -4,6 +4,13 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useBookingMasterWebSocket } from "@/hooks/use-websocket";
 import { broadcastBookingChange, broadcastSeatingChange } from "@/lib/crossTabSync";
+
+// Helper function to check if a medical field has meaningful content (not NA/N/A/empty)
+const hasMeaningfulMedicalNote = (value: string | undefined | null): boolean => {
+  if (!value) return false;
+  const trimmed = value.trim().toUpperCase();
+  return trimmed !== '' && trimmed !== 'NA' && trimmed !== 'N/A' && trimmed !== 'N / A';
+};
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -483,8 +490,8 @@ export default function BookingMaster() {
     if (searchName.trim() && !row.contestant?.name.toLowerCase().includes(searchName.toLowerCase())) {
       return false;
     }
-    // Filter by medical information (includes both Medical App and Medical AUD)
-    if (filterMedicalNotes && !row.contestant?.medicalInfo && !row.contestant?.mobilityNotes) {
+    // Filter by medical information (includes both Medical App and Medical AUD, excludes NA/N/A)
+    if (filterMedicalNotes && !hasMeaningfulMedicalNote(row.contestant?.medicalInfo) && !hasMeaningfulMedicalNote(row.contestant?.mobilityNotes)) {
       return false;
     }
     return true;

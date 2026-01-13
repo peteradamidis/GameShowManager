@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users } from "lucide-react";
+
+// Helper function to check if a medical field has meaningful content (not NA/N/A/empty)
+const hasMeaningfulMedicalNote = (value: string | undefined | null): boolean => {
+  if (!value) return false;
+  const trimmed = value.trim().toUpperCase();
+  return trimmed !== '' && trimmed !== 'NA' && trimmed !== 'N/A' && trimmed !== 'N / A';
+};
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import {
@@ -197,7 +204,7 @@ export function SeatCard({
                 </TooltipContent>
               </Tooltip>
             )}
-            {seat.mobilityNotes && (
+            {hasMeaningfulMedicalNote(seat.mobilityNotes) && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div data-testid={`mobility-icon-${seat.assignmentId}`}>
@@ -324,14 +331,14 @@ export function SeatCard({
                   </div>
                 )}
 
-                {contestantDetails.medicalInfo && (
+                {hasMeaningfulMedicalNote(contestantDetails.medicalInfo) && (
                   <div className="text-sm">
                     <label className="text-xs font-medium text-muted-foreground">Medical Info</label>
                     <p className="text-xs">{contestantDetails.medicalInfo}</p>
                   </div>
                 )}
 
-                {contestantDetails.mobilityNotes && (
+                {hasMeaningfulMedicalNote(contestantDetails.mobilityNotes) && (
                   <div className="text-sm">
                     <label className="text-xs font-medium text-muted-foreground">Mobility/Access Notes</label>
                     <p className="text-xs">{contestantDetails.mobilityNotes}</p>
