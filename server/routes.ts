@@ -3540,39 +3540,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return true;
         };
         
-        // PHASE 1: Place B+ contestants in front rows (A, B)
-        while (frontRowSeats.length > 0 && solosPlacedInBlock < MAX_SOLOS_PER_BLOCK) {
-          const currentInBlock = plan.filter(p => p.blockNumber === block.blockNumber).length + 
-                                existingAssignments.filter(a => a.blockNumber === block.blockNumber).length;
-          if (currentInBlock >= maxSeats) break;
+        // Different placement logic for PB vs NPB blocks
+        if (block.blockType === 'NPB') {
+          // NPB: B → front rows, C → back rows
           
-          // Find a B+ contestant
-          const bPlusIdx = remainingSolos.findIndex(c => c.auditionRating === 'B+' && isEligibleForBlock(c));
-          if (bPlusIdx !== -1) {
-            const contestant = remainingSolos[bPlusIdx];
-            const seatLabel = frontRowSeats.shift()!;
-            placeSoloInSeat(contestant, seatLabel);
-            remainingSolos.splice(bPlusIdx, 1);
-          } else {
-            break; // No more B+ contestants available
+          // PHASE 1: Place B contestants in front rows (A, B)
+          while (frontRowSeats.length > 0 && solosPlacedInBlock < MAX_SOLOS_PER_BLOCK) {
+            const currentInBlock = plan.filter(p => p.blockNumber === block.blockNumber).length + 
+                                  existingAssignments.filter(a => a.blockNumber === block.blockNumber).length;
+            if (currentInBlock >= maxSeats) break;
+            
+            const bIdx = remainingSolos.findIndex(c => c.auditionRating === 'B' && isEligibleForBlock(c));
+            if (bIdx !== -1) {
+              const contestant = remainingSolos[bIdx];
+              const seatLabel = frontRowSeats.shift()!;
+              placeSoloInSeat(contestant, seatLabel);
+              remainingSolos.splice(bIdx, 1);
+            } else {
+              break;
+            }
           }
-        }
-        
-        // PHASE 2: Place B contestants in back rows (D, E)
-        while (backRowSeats.length > 0 && solosPlacedInBlock < MAX_SOLOS_PER_BLOCK) {
-          const currentInBlock = plan.filter(p => p.blockNumber === block.blockNumber).length + 
-                                existingAssignments.filter(a => a.blockNumber === block.blockNumber).length;
-          if (currentInBlock >= maxSeats) break;
           
-          // Find a B contestant
-          const bIdx = remainingSolos.findIndex(c => c.auditionRating === 'B' && isEligibleForBlock(c));
-          if (bIdx !== -1) {
-            const contestant = remainingSolos[bIdx];
-            const seatLabel = backRowSeats.shift()!;
-            placeSoloInSeat(contestant, seatLabel);
-            remainingSolos.splice(bIdx, 1);
-          } else {
-            break; // No more B contestants available
+          // PHASE 2: Place C contestants in back rows (D, E)
+          while (backRowSeats.length > 0 && solosPlacedInBlock < MAX_SOLOS_PER_BLOCK) {
+            const currentInBlock = plan.filter(p => p.blockNumber === block.blockNumber).length + 
+                                  existingAssignments.filter(a => a.blockNumber === block.blockNumber).length;
+            if (currentInBlock >= maxSeats) break;
+            
+            const cIdx = remainingSolos.findIndex(c => c.auditionRating === 'C' && isEligibleForBlock(c));
+            if (cIdx !== -1) {
+              const contestant = remainingSolos[cIdx];
+              const seatLabel = backRowSeats.shift()!;
+              placeSoloInSeat(contestant, seatLabel);
+              remainingSolos.splice(cIdx, 1);
+            } else {
+              break;
+            }
+          }
+        } else {
+          // PB: B+ → front rows, B → back rows
+          
+          // PHASE 1: Place B+ contestants in front rows (A, B)
+          while (frontRowSeats.length > 0 && solosPlacedInBlock < MAX_SOLOS_PER_BLOCK) {
+            const currentInBlock = plan.filter(p => p.blockNumber === block.blockNumber).length + 
+                                  existingAssignments.filter(a => a.blockNumber === block.blockNumber).length;
+            if (currentInBlock >= maxSeats) break;
+            
+            const bPlusIdx = remainingSolos.findIndex(c => c.auditionRating === 'B+' && isEligibleForBlock(c));
+            if (bPlusIdx !== -1) {
+              const contestant = remainingSolos[bPlusIdx];
+              const seatLabel = frontRowSeats.shift()!;
+              placeSoloInSeat(contestant, seatLabel);
+              remainingSolos.splice(bPlusIdx, 1);
+            } else {
+              break;
+            }
+          }
+          
+          // PHASE 2: Place B contestants in back rows (D, E)
+          while (backRowSeats.length > 0 && solosPlacedInBlock < MAX_SOLOS_PER_BLOCK) {
+            const currentInBlock = plan.filter(p => p.blockNumber === block.blockNumber).length + 
+                                  existingAssignments.filter(a => a.blockNumber === block.blockNumber).length;
+            if (currentInBlock >= maxSeats) break;
+            
+            const bIdx = remainingSolos.findIndex(c => c.auditionRating === 'B' && isEligibleForBlock(c));
+            if (bIdx !== -1) {
+              const contestant = remainingSolos[bIdx];
+              const seatLabel = backRowSeats.shift()!;
+              placeSoloInSeat(contestant, seatLabel);
+              remainingSolos.splice(bIdx, 1);
+            } else {
+              break;
+            }
           }
         }
         
