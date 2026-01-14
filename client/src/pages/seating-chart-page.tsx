@@ -1134,7 +1134,7 @@ export default function SeatingChartPage() {
 
       {/* Assign Contestant to Empty Seat Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[95vh] flex flex-col gap-4" data-testid="dialog-assign-contestant-to-seat">
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[95vh] flex flex-col gap-4 overflow-hidden" data-testid="dialog-assign-contestant-to-seat">
           <DialogHeader className="pb-2">
             <DialogTitle className="flex items-center gap-2">
               Assign to Block {selectedBlock}, Seat {selectedSeat}
@@ -1165,7 +1165,7 @@ export default function SeatingChartPage() {
                   />
                 </div>
                 
-                <div className="flex items-end gap-3 text-xs">
+                <div className="flex flex-wrap items-end gap-2 text-xs">
                   <div className="flex flex-col gap-1">
                     <span className="text-muted-foreground text-[10px] font-medium">Rating</span>
                     <Select value={filterRating} onValueChange={setFilterRating}>
