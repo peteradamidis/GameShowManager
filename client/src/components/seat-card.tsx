@@ -35,6 +35,7 @@ export interface SeatData {
   auditionRating?: string; // A+, A, B+, B, C
   medicalQuestion?: string; // Y/N from booking master
   mobilityNotes?: string; // Mobility/Access/Medical notes
+  medicalInfo?: string; // Medical info from contestant profile
   playerType?: "player" | "backup" | "player_partner"; // PLAYER, BACKUP, PLAYER_PARTNER
   originalBlockNumber?: number; // RX Day Mode - original position before swap
   originalSeatLabel?: string; // RX Day Mode - original seat label before swap
@@ -208,7 +209,7 @@ export function SeatCard({
                 </TooltipContent>
               </Tooltip>
             )}
-            {hasMeaningfulMedicalNote(seat.mobilityNotes) && (
+            {(hasMeaningfulMedicalNote(seat.mobilityNotes) || hasMeaningfulMedicalNote(seat.medicalInfo)) && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div data-testid={`mobility-icon-${seat.assignmentId}`}>

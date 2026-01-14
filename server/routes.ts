@@ -2406,6 +2406,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           auditionRating: contestant?.auditionRating,
           attendingWith: attendingWithId,
           mobilityNotes: contestant?.mobilityNotes,
+          medicalInfo: contestant?.medicalInfo,
           wasStandby: seatedStandbyContestantIds.has(assignment.contestantId),
         };
       });

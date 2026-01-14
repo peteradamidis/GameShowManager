@@ -448,6 +448,7 @@ export default function SeatingChartPage() {
             winningMoneyRole: assignment.winningMoneyRole,
             winningMoneyAmount: assignment.winningMoneyAmount,
             mobilityNotes: assignment.mobilityNotes,
+            medicalInfo: assignment.medicalInfo,
             wasStandby: assignment.wasStandby,
           };
         }
