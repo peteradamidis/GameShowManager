@@ -4076,6 +4076,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Swap all contestants between two blocks
+  app.post("/api/record-days/:id/blocks/swap", async (req, res) => {
+    try {
+      const recordDayId = req.params.id;
+      const { sourceBlock, targetBlock } = req.body;
+      
+      // Validate block numbers
+      const sourceNum = parseInt(sourceBlock);
+      const targetNum = parseInt(targetBlock);
+      
+      if (isNaN(sourceNum) || sourceNum < 1 || sourceNum > 7) {
+        return res.status(400).json({ error: "Source block number must be between 1 and 7" });
+      }
+      
+      if (isNaN(targetNum) || targetNum < 1 || targetNum > 7) {
+        return res.status(400).json({ error: "Target block number must be between 1 and 7" });
+      }
+      
+      if (sourceNum === targetNum) {
+        return res.status(400).json({ error: "Source and target blocks must be different" });
+      }
+      
+      // Check record day exists
+      const recordDay = await storage.getRecordDay(recordDayId);
+      if (!recordDay) {
+        return res.status(404).json({ error: "Record day not found" });
+      }
+      
+      const result = await storage.swapBlocks(recordDayId, sourceNum, targetNum);
+      
+      res.json({
+        message: `Swapped ${result.swappedCount} contestants between Block ${sourceNum} and Block ${targetNum}`,
+        ...result
+      });
+    } catch (error: any) {
+      console.error("Block swap error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Lock record day for RX Day Mode
   app.post("/api/record-days/:id/lock", async (req, res) => {
     try {

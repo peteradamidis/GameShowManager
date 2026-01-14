@@ -176,6 +176,11 @@ export interface IStorage {
     newBlockNumber: number,
     newSeatLabel: string
   ): Promise<SeatAssignment>;
+  swapBlocks(
+    recordDayId: string,
+    blockA: number,
+    blockB: number
+  ): Promise<{ swappedCount: number; blockAAssignments: SeatAssignment[]; blockBAssignments: SeatAssignment[] }>;
   cancelSeatAssignment(id: string, reason?: string): Promise<CanceledAssignment>;
   
   // Canceled Assignments
@@ -896,6 +901,65 @@ export class DbStorage implements IStorage {
         .returning();
 
       return updated;
+    });
+  }
+
+  async swapBlocks(
+    recordDayId: string,
+    blockA: number,
+    blockB: number
+  ): Promise<{ swappedCount: number; blockAAssignments: SeatAssignment[]; blockBAssignments: SeatAssignment[] }> {
+    return await db.transaction(async (tx) => {
+      // Get all assignments for both blocks with row-level locks
+      const blockAAssignments = await tx
+        .select()
+        .from(seatAssignments)
+        .where(
+          and(
+            eq(seatAssignments.recordDayId, recordDayId),
+            eq(seatAssignments.blockNumber, blockA)
+          )
+        )
+        .for('update');
+
+      const blockBAssignments = await tx
+        .select()
+        .from(seatAssignments)
+        .where(
+          and(
+            eq(seatAssignments.recordDayId, recordDayId),
+            eq(seatAssignments.blockNumber, blockB)
+          )
+        )
+        .for('update');
+
+      // Move block A assignments to block B
+      for (const assignment of blockAAssignments) {
+        await tx
+          .update(seatAssignments)
+          .set({ blockNumber: blockB })
+          .where(eq(seatAssignments.id, assignment.id));
+      }
+
+      // Move block B assignments to block A
+      for (const assignment of blockBAssignments) {
+        await tx
+          .update(seatAssignments)
+          .set({ blockNumber: blockA })
+          .where(eq(seatAssignments.id, assignment.id));
+      }
+
+      const totalSwapped = blockAAssignments.length + blockBAssignments.length;
+
+      // Return updated assignments with swapped block numbers
+      const updatedBlockAAssignments = blockAAssignments.map(a => ({ ...a, blockNumber: blockB }));
+      const updatedBlockBAssignments = blockBAssignments.map(a => ({ ...a, blockNumber: blockA }));
+
+      return {
+        swappedCount: totalSwapped,
+        blockAAssignments: updatedBlockAAssignments,
+        blockBAssignments: updatedBlockBAssignments
+      };
     });
   }
 

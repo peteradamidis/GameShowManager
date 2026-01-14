@@ -2,7 +2,7 @@ import { SeatingChart } from "@/components/seating-chart";
 import { WinningMoneyModal } from "@/components/winning-money-modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check, Eye, User, Mail, Phone, MapPin } from "lucide-react";
+import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check, Eye, User, Mail, Phone, MapPin, ArrowLeftRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -111,6 +111,12 @@ export default function SeatingChartPage() {
   // Producer state
   const [selectedProducer, setSelectedProducer] = useState<string>("");
   const [producerUpdating, setProducerUpdating] = useState(false);
+  
+  // Swap blocks dialog state
+  const [swapBlocksDialogOpen, setSwapBlocksDialogOpen] = useState(false);
+  const [swapSourceBlock, setSwapSourceBlock] = useState<string>("");
+  const [swapTargetBlock, setSwapTargetBlock] = useState<string>("");
+  const [isSwappingBlocks, setIsSwappingBlocks] = useState(false);
   
   // Get record day ID from query parameter, localStorage, or fetch first available
   const searchParams = new URLSearchParams(window.location.search);
@@ -368,6 +374,36 @@ export default function SeatingChartPage() {
       toast({
         title: "Unlock failed",
         description: error?.message || "Could not unlock record day.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Swap blocks mutation
+  const swapBlocksMutation = useMutation({
+    mutationFn: async ({ sourceBlock, targetBlock }: { sourceBlock: number; targetBlock: number }) => {
+      return await apiRequest('POST', `/api/record-days/${recordDayId}/blocks/swap`, {
+        sourceBlock,
+        targetBlock,
+      });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+      broadcastSeatingChange(recordDayId);
+      setSwapBlocksDialogOpen(false);
+      setSwapSourceBlock("");
+      setSwapTargetBlock("");
+      setIsSwappingBlocks(false);
+      toast({
+        title: "Blocks Swapped",
+        description: data.message || "All contestants have been swapped between the selected blocks.",
+      });
+    },
+    onError: (error: any) => {
+      setIsSwappingBlocks(false);
+      toast({
+        title: "Swap failed",
+        description: error?.message || "Could not swap blocks.",
         variant: "destructive",
       });
     },
@@ -661,6 +697,39 @@ export default function SeatingChartPage() {
         ? prev.filter(b => b !== blockNum)
         : [...prev, blockNum].sort()
     );
+  };
+
+  // Handle swap blocks action
+  const handleSwapBlocks = () => {
+    if (!swapSourceBlock || !swapTargetBlock) {
+      toast({
+        title: "Select both blocks",
+        description: "Please select both source and target blocks to swap.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const sourceNum = parseInt(swapSourceBlock);
+    const targetNum = parseInt(swapTargetBlock);
+    
+    if (sourceNum === targetNum) {
+      toast({
+        title: "Same block selected",
+        description: "Source and target blocks must be different.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSwappingBlocks(true);
+    swapBlocksMutation.mutate({ sourceBlock: sourceNum, targetBlock: targetNum });
+  };
+
+  // Get block occupancy counts for swap dialog
+  const getBlockOccupancy = (blockNum: number): number => {
+    if (!seats || !seats[blockNum - 1]) return 0;
+    return seats[blockNum - 1].filter((s: SeatData) => s.contestantName).length;
   };
 
   const handleEmptySeatClick = (blockNumber: number, seatLabel: string) => {
@@ -1099,6 +1168,16 @@ export default function SeatingChartPage() {
                   Lock for RX Day
                 </>
               )}
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setSwapBlocksDialogOpen(true)} 
+              title="Swap all contestants between two blocks"
+              data-testid="button-swap-blocks"
+              className="text-muted-foreground"
+            >
+              <ArrowLeftRight className="h-4 w-4" />
             </Button>
             <Button variant="outline" onClick={() => setResetDialogOpen(true)} data-testid="button-reset-seating">
               <RotateCcw className="h-4 w-4 mr-2" />
@@ -1688,6 +1767,96 @@ export default function SeatingChartPage() {
         blockNumber={currentAssignment?.blockNumber}
         assignments={assignments}
       />
+
+      {/* Swap Blocks Dialog */}
+      <Dialog open={swapBlocksDialogOpen} onOpenChange={(open) => {
+        if (!isSwappingBlocks) {
+          setSwapBlocksDialogOpen(open);
+          if (!open) {
+            setSwapSourceBlock("");
+            setSwapTargetBlock("");
+          }
+        }
+      }}>
+        <DialogContent data-testid="dialog-swap-blocks">
+          <DialogHeader>
+            <div className="flex items-center justify-center mb-4">
+              <ArrowLeftRight className="h-10 w-10 text-blue-600 dark:text-blue-400" />
+            </div>
+            <DialogTitle>Swap Blocks</DialogTitle>
+            <DialogDescription>
+              Swap all contestants between two blocks. Everyone in Block A will move to Block B (same seats), and vice versa.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="source-block">From Block</Label>
+                <Select value={swapSourceBlock} onValueChange={setSwapSourceBlock}>
+                  <SelectTrigger id="source-block" data-testid="select-source-block">
+                    <SelectValue placeholder="Select block" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6, 7].map(blockNum => (
+                      <SelectItem key={blockNum} value={String(blockNum)} disabled={swapTargetBlock === String(blockNum)}>
+                        Block {blockNum} ({getBlockOccupancy(blockNum)}/22)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="target-block">To Block</Label>
+                <Select value={swapTargetBlock} onValueChange={setSwapTargetBlock}>
+                  <SelectTrigger id="target-block" data-testid="select-target-block">
+                    <SelectValue placeholder="Select block" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6, 7].map(blockNum => (
+                      <SelectItem key={blockNum} value={String(blockNum)} disabled={swapSourceBlock === String(blockNum)}>
+                        Block {blockNum} ({getBlockOccupancy(blockNum)}/22)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {swapSourceBlock && swapTargetBlock && (
+              <div className="p-3 bg-muted rounded-md text-sm">
+                <p className="font-medium mb-1">Preview:</p>
+                <p>
+                  Block {swapSourceBlock} ({getBlockOccupancy(parseInt(swapSourceBlock))} contestants) 
+                  {" "}will swap with{" "}
+                  Block {swapTargetBlock} ({getBlockOccupancy(parseInt(swapTargetBlock))} contestants)
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setSwapBlocksDialogOpen(false);
+                setSwapSourceBlock("");
+                setSwapTargetBlock("");
+              }}
+              disabled={isSwappingBlocks}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSwapBlocks}
+              disabled={!swapSourceBlock || !swapTargetBlock || swapSourceBlock === swapTargetBlock || isSwappingBlocks}
+              data-testid="button-confirm-swap-blocks"
+            >
+              {isSwappingBlocks ? "Swapping..." : "Swap Blocks"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Reset Confirmation Dialog */}
       <Dialog open={resetDialogOpen} onOpenChange={handleResetDialogClose}>
