@@ -877,7 +877,7 @@ export default function BookingResponses() {
             <SelectContent>
               {sortedRecordDays.map((rd) => (
                 <SelectItem key={rd.id} value={rd.id}>
-                  {format(new Date(rd.date), "MMM d, yyyy")} {rd.rxNumber ? `- ${rd.rxNumber}` : ""}
+                  {format(new Date(rd.date), "EEE, MMM d, yyyy")} {rd.rxNumber ? `- ${rd.rxNumber}` : ""}
                 </SelectItem>
               ))}
             </SelectContent>

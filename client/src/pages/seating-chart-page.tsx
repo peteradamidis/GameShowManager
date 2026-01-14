@@ -1116,7 +1116,7 @@ export default function SeatingChartPage() {
             {currentRecordDay && (
               <Badge variant="secondary">
                 {currentRecordDay.rxNumber && `${currentRecordDay.rxNumber} - `}
-                {format(new Date(currentRecordDay.date), "MMMM d, yyyy")}
+                {format(new Date(currentRecordDay.date), "EEE, MMMM d, yyyy")}
               </Badge>
             )}
           </div>

@@ -154,7 +154,7 @@ export default function RecordDays() {
 
       return {
         id: day.id,
-        date: new Date(day.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+        date: new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }),
         rxNumber: day.rxNumber,
         totalSeats: day.totalSeats || 154,
         filledSeats,

@@ -910,7 +910,7 @@ export default function BookingMaster() {
           <SelectContent>
             {recordDays.map((day) => (
               <SelectItem key={day.id} value={day.id} data-testid={`option-record-day-${day.id}`}>
-                {format(new Date(day.date), "MMMM d, yyyy")}
+                {format(new Date(day.date), "EEE, MMMM d, yyyy")}
               </SelectItem>
             ))}
           </SelectContent>
