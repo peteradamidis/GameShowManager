@@ -787,6 +787,212 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Preview import - check for duplicates before actually importing
+  app.post("/api/contestants/import-preview", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      let rawData: any[];
+      
+      try {
+        const workbook = xlsx.read(req.file.buffer, { 
+          type: "buffer",
+          cellFormula: false,
+          cellStyles: false 
+        });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        
+        const allRows = xlsx.utils.sheet_to_json(sheet, { header: 1, defval: "" }) as any[];
+        
+        if (!allRows || allRows.length === 0) {
+          return res.status(400).json({ error: "The uploaded file is empty or has no data rows." });
+        }
+        
+        let headerRowIndex = 0;
+        for (let i = 0; i < allRows.length; i++) {
+          const row = allRows[i] as any[];
+          const hasContent = row.some(cell => cell && cell.toString().trim() !== "");
+          if (hasContent) {
+            headerRowIndex = i;
+            break;
+          }
+        }
+        
+        const headers = (allRows[headerRowIndex] as any[])
+          .map((h: any) => h ? h.toString().trim() : "")
+          .filter(h => h !== "");
+        
+        const dataRows = allRows.slice(headerRowIndex + 1);
+        
+        rawData = dataRows.map((row: any[]) => {
+          const obj: any = {};
+          headers.forEach((header, index) => {
+            if (row[index] !== undefined && row[index] !== null) {
+              obj[header] = row[index];
+            }
+          });
+          return obj;
+        }).filter(row => Object.keys(row).length > 0 && Object.values(row).some(v => v !== "" && v !== null && v !== undefined));
+        
+      } catch (parseError: any) {
+        console.error("Excel parse error:", parseError);
+        return res.status(400).json({ 
+          error: "Could not parse Excel file. Please ensure you're uploading a valid .xlsx or .xls file exported from Cast It Reach." 
+        });
+      }
+      
+      if (!rawData || rawData.length === 0) {
+        return res.status(400).json({ error: "The uploaded file is empty or has no data rows." });
+      }
+
+      // Extract basic info from each row for duplicate checking
+      const importedContestants = rawData.map((row: any) => {
+        const nameValue = row.NAME || row.Name || row.name || row["Full Name"] || row["FULL NAME"] || null;
+        if (!nameValue || nameValue.toString().trim() === '') return null;
+        
+        const emailValue = row.EMAIL || row.Email || row.email || row["E-mail"] || row["E-MAIL"] || 
+                 row["Email Address"] || row["EMAIL ADDRESS"] || null;
+        
+        const rawPhone = row.PHONE || row.Phone || row.phone || 
+               row.MOBILE || row.Mobile || row.mobile ||
+               row["Phone Number"] || row["PHONE NUMBER"] ||
+               row["Mobile Number"] || row["MOBILE NUMBER"] ||
+               row["Contact"] || row["CONTACT"] || null;
+        const phoneValue = rawPhone ? (rawPhone.toString().trim().startsWith('4') ? '0' + rawPhone.toString().trim() : rawPhone.toString().trim()) : null;
+        
+        return {
+          name: nameValue.toString().trim(),
+          email: emailValue ? emailValue.toString().trim().toLowerCase() : null,
+          phone: phoneValue,
+        };
+      }).filter((row): row is NonNullable<typeof row> => row !== null);
+
+      // Get existing contestants
+      const existingContestants = await storage.getContestants();
+      
+      // Normalize function for phone comparison
+      const normalizePhone = (phone: string | null): string | null => {
+        if (!phone) return null;
+        // Remove all non-digits
+        return phone.replace(/\D/g, '');
+      };
+      
+      // Build lookup maps for existing contestants
+      const existingByName = new Map<string, typeof existingContestants[0]>();
+      const existingByEmail = new Map<string, typeof existingContestants[0]>();
+      const existingByPhone = new Map<string, typeof existingContestants[0]>();
+      
+      existingContestants.forEach((c: any) => {
+        if (c.name) existingByName.set(c.name.toLowerCase().trim(), c);
+        if (c.email) existingByEmail.set(c.email.toLowerCase().trim(), c);
+        const normalizedPhone = normalizePhone(c.phone);
+        if (normalizedPhone && normalizedPhone.length >= 8) existingByPhone.set(normalizedPhone, c);
+      });
+
+      // Check for duplicates
+      interface DuplicateInfo {
+        importName: string;
+        importEmail: string | null;
+        importPhone: string | null;
+        matchType: 'exact_name' | 'email' | 'phone';
+        existingContestant: {
+          id: string;
+          name: string;
+          email: string | null;
+          phone: string | null;
+        };
+      }
+      
+      const duplicates: DuplicateInfo[] = [];
+      const uniqueContestants: typeof importedContestants = [];
+      const seenInImport = new Set<string>();
+      
+      for (const contestant of importedContestants) {
+        const normalizedName = contestant.name.toLowerCase().trim();
+        const normalizedPhone = normalizePhone(contestant.phone);
+        
+        // Check for exact name match
+        const nameMatch = existingByName.get(normalizedName);
+        if (nameMatch) {
+          duplicates.push({
+            importName: contestant.name,
+            importEmail: contestant.email,
+            importPhone: contestant.phone,
+            matchType: 'exact_name',
+            existingContestant: {
+              id: nameMatch.id,
+              name: nameMatch.name,
+              email: nameMatch.email,
+              phone: nameMatch.phone,
+            }
+          });
+          continue;
+        }
+        
+        // Check for email match
+        if (contestant.email) {
+          const emailMatch = existingByEmail.get(contestant.email);
+          if (emailMatch) {
+            duplicates.push({
+              importName: contestant.name,
+              importEmail: contestant.email,
+              importPhone: contestant.phone,
+              matchType: 'email',
+              existingContestant: {
+                id: emailMatch.id,
+                name: emailMatch.name,
+                email: emailMatch.email,
+                phone: emailMatch.phone,
+              }
+            });
+            continue;
+          }
+        }
+        
+        // Check for phone match
+        if (normalizedPhone && normalizedPhone.length >= 8) {
+          const phoneMatch = existingByPhone.get(normalizedPhone);
+          if (phoneMatch) {
+            duplicates.push({
+              importName: contestant.name,
+              importEmail: contestant.email,
+              importPhone: contestant.phone,
+              matchType: 'phone',
+              existingContestant: {
+                id: phoneMatch.id,
+                name: phoneMatch.name,
+                email: phoneMatch.email,
+                phone: phoneMatch.phone,
+              }
+            });
+            continue;
+          }
+        }
+        
+        // Check for duplicates within the import file itself
+        if (seenInImport.has(normalizedName)) {
+          continue; // Skip duplicate within same file
+        }
+        seenInImport.add(normalizedName);
+        
+        uniqueContestants.push(contestant);
+      }
+
+      res.json({
+        totalInFile: importedContestants.length,
+        uniqueCount: uniqueContestants.length,
+        duplicateCount: duplicates.length,
+        duplicates: duplicates,
+      });
+    } catch (error: any) {
+      console.error("Import preview error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Import contestants from Excel
   app.post("/api/contestants/import", upload.single("file"), async (req, res) => {
     try {
@@ -1163,6 +1369,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         existingContestants.map((c: any) => c.email?.toLowerCase().trim()).filter(Boolean)
       );
       
+      // Normalize phone function - remove all non-digits
+      const normalizePhone = (phone: string | null | undefined): string | null => {
+        if (!phone) return null;
+        const normalized = phone.toString().replace(/\D/g, '');
+        return normalized.length >= 8 ? normalized : null;
+      };
+      
+      // Build phone lookup
+      const existingPhones = new Set(
+        existingContestants.map((c: any) => normalizePhone(c.phone)).filter(Boolean)
+      );
+      
       // Create contestants, skipping duplicates and DNU-rated contestants
       const createdContestants = [];
       const skippedDuplicates = [];
@@ -1171,6 +1389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const row of data as any[]) {
         const normalizedName = row.name?.toLowerCase().trim();
         const normalizedEmail = row.email?.toLowerCase().trim();
+        const normalizedPhone = normalizePhone(row.phone);
         
         // Skip contestants with DNU (Do Not Use) rating
         if (row.auditionRating && row.auditionRating.toString().toUpperCase().trim() === 'DNU') {
@@ -1178,14 +1397,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           continue;
         }
         
-        // Check for duplicate by name (exact match) or email
+        // Check for duplicate by name (exact match), email, or phone
         const isDuplicateName = normalizedName && existingNames.has(normalizedName);
         const isDuplicateEmail = normalizedEmail && existingEmails.has(normalizedEmail);
+        const isDuplicatePhone = normalizedPhone && existingPhones.has(normalizedPhone);
         
-        if (isDuplicateName || isDuplicateEmail) {
+        if (isDuplicateName || isDuplicateEmail || isDuplicatePhone) {
           skippedDuplicates.push({
             name: row.name,
-            reason: isDuplicateName ? 'Name already exists' : 'Email already exists'
+            reason: isDuplicateName ? 'Name already exists' : (isDuplicateEmail ? 'Email already exists' : 'Phone already exists')
           });
           continue;
         }
@@ -1216,6 +1436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Add to existing sets to prevent duplicates within same import
         if (normalizedName) existingNames.add(normalizedName);
         if (normalizedEmail) existingEmails.add(normalizedEmail);
+        if (normalizedPhone) existingPhones.add(normalizedPhone);
       }
 
       let message = `Successfully imported ${createdContestants.length} contestants`;

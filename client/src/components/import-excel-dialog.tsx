@@ -9,8 +9,30 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Upload, FileSpreadsheet } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle, Users, Mail, Phone, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+interface DuplicateInfo {
+  importName: string;
+  importEmail: string | null;
+  importPhone: string | null;
+  matchType: 'exact_name' | 'email' | 'phone';
+  existingContestant: {
+    id: string;
+    name: string;
+    email: string | null;
+    phone: string | null;
+  };
+}
+
+interface PreviewData {
+  totalInFile: number;
+  uniqueCount: number;
+  duplicateCount: number;
+  duplicates: DuplicateInfo[];
+}
 
 interface ImportExcelDialogProps {
   onImport?: (file: File) => void;
@@ -20,6 +42,9 @@ export function ImportExcelDialog({ onImport }: ImportExcelDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [step, setStep] = useState<'select' | 'preview' | 'importing'>('select');
+  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const { toast } = useToast();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -54,89 +79,244 @@ export function ImportExcelDialog({ onImport }: ImportExcelDialogProps) {
     }
   };
 
+  const handleCheckDuplicates = async () => {
+    if (!selectedFile) return;
+    
+    setIsLoadingPreview(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      
+      const response = await fetch('/api/contestants/import-preview', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin',
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Preview failed');
+      }
+      
+      const data = await response.json();
+      setPreviewData(data);
+      setStep('preview');
+    } catch (error: any) {
+      toast({
+        title: "Preview failed",
+        description: error.message || "Could not analyze file for duplicates",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingPreview(false);
+    }
+  };
+
   const handleImport = () => {
-    alert('Import button clicked! File: ' + (selectedFile?.name || 'none'));
     if (selectedFile) {
-      console.log('[ImportDialog] handleImport called with file:', selectedFile.name);
-      console.log('[ImportDialog] onImport function exists:', !!onImport);
       if (onImport) {
         onImport(selectedFile);
-      } else {
-        console.error('[ImportDialog] onImport is undefined!');
-        alert('ERROR: onImport function is undefined!');
       }
       toast({
         title: "Import started",
         description: `Processing ${selectedFile.name}...`,
       });
-      setOpen(false);
-      setSelectedFile(null);
-    } else {
-      console.log('[ImportDialog] handleImport called but no file selected');
+      handleClose();
+    }
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedFile(null);
+    setStep('select');
+    setPreviewData(null);
+  };
+
+  const getMatchTypeLabel = (matchType: string) => {
+    switch (matchType) {
+      case 'exact_name': return 'Same Name';
+      case 'email': return 'Same Email';
+      case 'phone': return 'Same Phone';
+      default: return matchType;
+    }
+  };
+
+  const getMatchTypeIcon = (matchType: string) => {
+    switch (matchType) {
+      case 'exact_name': return <Users className="h-3 w-3" />;
+      case 'email': return <Mail className="h-3 w-3" />;
+      case 'phone': return <Phone className="h-3 w-3" />;
+      default: return null;
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen) handleClose();
+      else setOpen(true);
+    }}>
       <DialogTrigger asChild>
         <Button data-testid="button-import-data">
           <Upload className="h-4 w-4 mr-2" />
           Import Data
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Import Contestant Data</DialogTitle>
+          <DialogTitle>
+            {step === 'select' && "Import Contestant Data"}
+            {step === 'preview' && "Import Preview - Duplicate Check"}
+          </DialogTitle>
           <DialogDescription>
-            Upload an Excel file exported from Cast It Reach with auditioned applicants.
+            {step === 'select' && "Upload an Excel file exported from Cast It Reach with auditioned applicants."}
+            {step === 'preview' && "Review potential duplicates before importing."}
           </DialogDescription>
         </DialogHeader>
-        <div
-          className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-            isDragging
-              ? "border-primary bg-primary/5"
-              : "border-border"
-          }`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          {selectedFile ? (
-            <div className="space-y-2">
-              <FileSpreadsheet className="h-12 w-12 mx-auto text-green-500" />
-              <p className="font-medium">{selectedFile.name}</p>
-              <p className="text-sm text-muted-foreground">
-                {(selectedFile.size / 1024).toFixed(2)} KB
-              </p>
+
+        {step === 'select' && (
+          <div
+            className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
+              isDragging
+                ? "border-primary bg-primary/5"
+                : "border-border"
+            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {selectedFile ? (
+              <div className="space-y-2">
+                <FileSpreadsheet className="h-12 w-12 mx-auto text-green-500" />
+                <p className="font-medium">{selectedFile.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {(selectedFile.size / 1024).toFixed(2)} KB
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
+                <p className="font-medium">Drop Excel file here</p>
+                <p className="text-sm text-muted-foreground">or click to browse</p>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="file-upload"
+                  data-testid="input-file-upload"
+                />
+                <label htmlFor="file-upload">
+                  <Button variant="outline" size="sm" asChild>
+                    <span>Browse Files</span>
+                  </Button>
+                </label>
+              </div>
+            )}
+          </div>
+        )}
+
+        {step === 'preview' && previewData && (
+          <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="p-3 rounded-lg border bg-muted/50">
+                <p className="text-2xl font-bold">{previewData.totalInFile}</p>
+                <p className="text-sm text-muted-foreground">Total in file</p>
+              </div>
+              <div className="p-3 rounded-lg border bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
+                <p className="text-2xl font-bold text-green-700 dark:text-green-400">{previewData.uniqueCount}</p>
+                <p className="text-sm text-green-600 dark:text-green-500">New contestants</p>
+              </div>
+              <div className="p-3 rounded-lg border bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
+                <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{previewData.duplicateCount}</p>
+                <p className="text-sm text-amber-600 dark:text-amber-500">Duplicates found</p>
+              </div>
             </div>
-          ) : (
-            <div className="space-y-2">
-              <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
-              <p className="font-medium">Drop Excel file here</p>
-              <p className="text-sm text-muted-foreground">or click to browse</p>
-              <input
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileSelect}
-                className="hidden"
-                id="file-upload"
-                data-testid="input-file-upload"
-              />
-              <label htmlFor="file-upload">
-                <Button variant="outline" size="sm" asChild>
-                  <span>Browse Files</span>
-                </Button>
-              </label>
-            </div>
+
+            {previewData.duplicateCount > 0 ? (
+              <div className="flex-1 overflow-hidden flex flex-col">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  <span className="text-sm font-medium">Potential Duplicates (will be skipped)</span>
+                </div>
+                <ScrollArea className="flex-1 border rounded-lg">
+                  <div className="p-2 space-y-2">
+                    {previewData.duplicates.map((dup, index) => (
+                      <div key={index} className="p-3 rounded border bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{dup.importName}</p>
+                            <div className="text-xs text-muted-foreground space-y-0.5 mt-1">
+                              {dup.importEmail && <p className="truncate">Email: {dup.importEmail}</p>}
+                              {dup.importPhone && <p>Phone: {dup.importPhone}</p>}
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="gap-1 shrink-0 bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700">
+                            {getMatchTypeIcon(dup.matchType)}
+                            {getMatchTypeLabel(dup.matchType)}
+                          </Badge>
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-amber-200 dark:border-amber-800">
+                          <p className="text-xs text-muted-foreground mb-1">Matches existing contestant:</p>
+                          <p className="text-sm font-medium">{dup.existingContestant.name}</p>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {dup.existingContestant.email && <span className="mr-3">Email: {dup.existingContestant.email}</span>}
+                            {dup.existingContestant.phone && <span>Phone: {dup.existingContestant.phone}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 p-4 rounded-lg border bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <span className="text-green-700 dark:text-green-400">No duplicates found! All contestants are new.</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <DialogFooter className="mt-4">
+          {step === 'select' && (
+            <>
+              <Button variant="outline" onClick={handleClose} data-testid="button-cancel">
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleCheckDuplicates} 
+                disabled={!selectedFile || isLoadingPreview} 
+                data-testid="button-check-duplicates"
+              >
+                {isLoadingPreview ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Checking...
+                  </>
+                ) : (
+                  <>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    Check for Duplicates
+                  </>
+                )}
+              </Button>
+            </>
           )}
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)} data-testid="button-cancel">
-            Cancel
-          </Button>
-          <Button onClick={handleImport} disabled={!selectedFile} data-testid="button-process-import">
-            Process & Import
-          </Button>
+          {step === 'preview' && (
+            <>
+              <Button variant="outline" onClick={() => setStep('select')} data-testid="button-back">
+                Back
+              </Button>
+              <Button 
+                onClick={handleImport} 
+                disabled={previewData?.uniqueCount === 0}
+                data-testid="button-process-import"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Import {previewData?.uniqueCount || 0} New Contestants
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
