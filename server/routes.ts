@@ -3441,9 +3441,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`[Auto-assign] BACKFILL: ${remainingSolos.length} solo contestants remaining to place`);
       
-      // Limit solos per block to fill gaps without dominating
-      // 8 allows filling remaining seats after groups are placed
-      const MAX_SOLOS_PER_BLOCK = 8;
+      // Limit solos per block to 2-4 to fill gaps (not dominate)
+      const MAX_SOLOS_PER_BLOCK = 4;
       
       // For each block, find empty non-reserved seats and fill them with solos
       for (const block of blocks) {
@@ -3550,7 +3549,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      console.log(`[Auto-assign] BACKFILL complete: ${remainingSolos.length} solo contestants still unplaced`);
+      console.log(`[Auto-assign] SOLO BACKFILL complete: ${remainingSolos.length} solo contestants still unplaced`);
+      
+      // PHASE 4B: GROUP BACKFILL - Fill remaining gaps with unplaced groups
+      // Get unplaced groups (size 2-4) that weren't assigned in the initial phase
+      const placedContestantIdsAfterSoloBackfill = new Set<string>();
+      plan.forEach(p => placedContestantIdsAfterSoloBackfill.add(p.contestant.id));
+      
+      const unplacedGroups = bundles.filter(b => {
+        // Only consider groups of size 2-4
+        if (b.size < 2 || b.size > 4) return false;
+        // Check if ALL members are unplaced
+        return b.contestants.every(c => !placedContestantIdsAfterSoloBackfill.has(c.id));
+      });
+      
+      // Sort by size descending (prefer larger groups first to maximize seat fill)
+      unplacedGroups.sort((a, b) => b.size - a.size);
+      
+      console.log(`[Auto-assign] GROUP BACKFILL: ${unplacedGroups.length} unplaced groups available (sizes: ${unplacedGroups.map(g => g.size).join(', ')})`);
+      
+      // For each block, find contiguous empty seat segments and try to fit groups
+      for (const block of blocks) {
+        // Rebuild occupied seats set for this block
+        const occupiedSeatsInBlock = new Set<string>();
+        plan
+          .filter(p => p.blockNumber === block.blockNumber)
+          .forEach(p => occupiedSeatsInBlock.add(p.seatLabel));
+        existingAssignments
+          .filter(a => a.blockNumber === block.blockNumber)
+          .forEach(a => occupiedSeatsInBlock.add(a.seatLabel));
+        
+        // Add reserved seats
+        if (block.reservedSeats) {
+          block.reservedSeats.forEach(seat => occupiedSeatsInBlock.add(seat));
+        }
+        
+        // Find contiguous empty seat segments (groups must sit together)
+        const allSeatsInOrder: string[] = [];
+        for (const row of ROWS) {
+          for (let i = 1; i <= row.count; i++) {
+            allSeatsInOrder.push(`${row.label}${i}`);
+          }
+        }
+        
+        // Find contiguous runs of empty seats
+        const emptySegments: string[][] = [];
+        let currentSegment: string[] = [];
+        for (const seat of allSeatsInOrder) {
+          if (!occupiedSeatsInBlock.has(seat)) {
+            currentSegment.push(seat);
+          } else {
+            if (currentSegment.length > 0) {
+              emptySegments.push(currentSegment);
+              currentSegment = [];
+            }
+          }
+        }
+        if (currentSegment.length > 0) {
+          emptySegments.push(currentSegment);
+        }
+        
+        // Try to fit unplaced groups into empty segments
+        for (const segment of emptySegments) {
+          if (segment.length < 2) continue; // Need at least 2 seats for a group
+          
+          // Find a group that fits this segment
+          const groupIdx = unplacedGroups.findIndex(g => {
+            if (g.size > segment.length) return false;
+            
+            // Check rating constraints for all group members
+            const allEligible = g.contestants.every(c => {
+              const isAOrBPlus = c.auditionRating === 'A' || c.auditionRating === 'B+';
+              const isCRated = c.auditionRating === 'C';
+              
+              // NPB blocks can ONLY have B and C ratings
+              if (block.blockType === 'NPB' && isAOrBPlus) return false;
+              
+              // C-rated can ONLY go to NPB blocks
+              if (isCRated && block.blockType !== 'NPB') return false;
+              
+              return true;
+            });
+            
+            return allEligible;
+          });
+          
+          if (groupIdx !== -1) {
+            const group = unplacedGroups[groupIdx];
+            
+            // Place all group members in consecutive seats
+            for (let i = 0; i < group.size; i++) {
+              const contestant = group.contestants[i];
+              const seatLabel = segment[i];
+              
+              plan.push({
+                contestant,
+                blockNumber: block.blockNumber,
+                seatLabel,
+              });
+              occupiedSeatsInBlock.add(seatLabel);
+              
+              // Update block state
+              block.seatsUsed += 1;
+              if (contestant.gender === 'Female') block.femaleCount += 1;
+              if (contestant.gender === 'Male') block.maleCount += 1;
+              block.totalAge += contestant.age;
+              block.ageCount += 1;
+              
+              // Update global state
+              globalFemaleCount += contestant.gender === 'Female' ? 1 : 0;
+              globalMaleCount += contestant.gender === 'Male' ? 1 : 0;
+              globalTotalAge += contestant.age;
+              globalAgeCount += 1;
+              if (contestant.auditionRating && globalRatingCounts.hasOwnProperty(contestant.auditionRating)) {
+                globalRatingCounts[contestant.auditionRating] += 1;
+              }
+            }
+            
+            // Remove the placed seats from segment for next iteration
+            segment.splice(0, group.size);
+            
+            // Remove group from unplaced list
+            unplacedGroups.splice(groupIdx, 1);
+            
+            console.log(`[Auto-assign] GROUP BACKFILL: Placed group of ${group.size} (${group.contestants.map(c => c.name).join(', ')}) in Block ${block.blockNumber}`);
+          }
+        }
+      }
+      
+      console.log(`[Auto-assign] GROUP BACKFILL complete: ${unplacedGroups.length} groups still unplaced`);
       
       // Update final counts after backfill
       const totalAssignedAfterBackfill = globalFemaleCount + globalMaleCount;
