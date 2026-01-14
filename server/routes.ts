@@ -1049,7 +1049,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                        row["Health Conditions"] || row["HEALTH CONDITIONS"] || null;
             if (!val) return null;
             const trimmed = val.toString().trim().toLowerCase();
-            return (trimmed === 'n/a' || trimmed === 'na' || trimmed === 'none' || trimmed === '-') ? null : val;
+            return (trimmed === 'n/a' || trimmed === 'na' || trimmed === 'none' || trimmed === '-' || trimmed === 'no' || trimmed === 'n') ? null : val;
           })(),
           mobilityNotes: (() => {
             const val = getColumnValue(row,
