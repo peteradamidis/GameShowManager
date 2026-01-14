@@ -2521,6 +2521,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { label: "D", count: 4 },
         { label: "E", count: 4 },
       ];
+      
+      // Helper to generate seat labels - blocks 4, 5, 6 have reversed numbering (1-5 from right to left)
+      const getSeatLabel = (rowLabel: string, visualPosition: number, rowCount: number, blockNumber: number): string => {
+        // For blocks 4, 5, 6 (1-indexed), reverse the numbering
+        // Visual position 1 (leftmost) gets the highest number
+        const isReversedBlock = blockNumber >= 4 && blockNumber <= 6;
+        const seatNumber = isReversedBlock ? (rowCount - visualPosition + 1) : visualPosition;
+        return `${rowLabel}${seatNumber}`;
+      };
 
       // Rating weights for balancing (higher = more desirable to spread)
       const RATING_ORDER = ['A', 'B+', 'B', 'C'];
@@ -3243,8 +3252,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           let startPos = -1;
           
           for (let pos = positionInRow; pos < row.count; pos++) {
-            const seatLabel = `${row.label}${pos + 1}`;
-            if (usedSeats.has(seatLabel)) {
+            const checkLabel = getSeatLabel(row.label, pos + 1, row.count, blockNumber);
+            if (usedSeats.has(checkLabel)) {
               // Hit an occupied seat, reset count
               consecutiveEmpty = 0;
               startPos = -1;
@@ -3254,7 +3263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               if (consecutiveEmpty >= bundleSize) {
                 // Found enough consecutive empty seats!
                 for (let i = 0; i < bundleSize; i++) {
-                  const assignedLabel = `${row.label}${startPos + i + 1}`;
+                  const assignedLabel = getSeatLabel(row.label, startPos + i + 1, row.count, blockNumber);
                   seatLabels.push(assignedLabel);
                   usedSeats.add(assignedLabel);
                 }
@@ -3278,8 +3287,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Count consecutive empty seats in this row from the start
           for (let pos = 0; pos < row.count; pos++) {
-            const seat = `${row.label}${pos + 1}`;
-            if (usedSeats.has(seat)) {
+            const checkSeat = getSeatLabel(row.label, pos + 1, row.count, blockNumber);
+            if (usedSeats.has(checkSeat)) {
               consecutiveEmpty = 0;
               firstEmptyPos = -1;
             } else {
@@ -3289,7 +3298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // Found enough consecutive empty seats!
                 positionInRow = firstEmptyPos;
                 for (let i = 0; i < bundleSize; i++) {
-                  const seatLabel = `${row.label}${positionInRow + 1}`;
+                  const seatLabel = getSeatLabel(row.label, positionInRow + 1, row.count, blockNumber);
                   seatLabels.push(seatLabel);
                   usedSeats.add(seatLabel);
                   positionInRow++;
@@ -3401,7 +3410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         for (const row of ROWS) {
           if (placed) break;
           for (let i = 1; i <= row.count; i++) {
-            const seatLabel = `${row.label}${i}`;
+            const seatLabel = getSeatLabel(row.label, i, row.count, blockNumber);
             if (!occupiedSeats.has(seatLabel)) {
               plan.push({
                 contestant: solo,
@@ -3484,7 +3493,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         for (const row of ROWS) {
           for (let i = 1; i <= row.count; i++) {
-            const seatLabel = `${row.label}${i}`;
+            const seatLabel = getSeatLabel(row.label, i, row.count, block.blockNumber);
             if (!occupiedSeatsInBlock.has(seatLabel)) {
               if (row.label === 'A' || row.label === 'B') {
                 frontRowSeats.push(seatLabel);

@@ -495,12 +495,18 @@ function calculateBlockStats(block: SeatData[]) {
 }
 
 // Generate seat IDs based on the row structure
+// For blocks 4, 5, 6 (indices 3, 4, 5), seat numbering is reversed (1-5 from right to left)
 function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   const seats: SeatData[] = [];
+  const reverseNumbering = blockIdx >= 3 && blockIdx <= 5; // Blocks 4, 5, 6
+  
   SEAT_ROWS.forEach(row => {
     for (let i = 1; i <= row.count; i++) {
+      // For reversed blocks, seat 1 is on the right (visually last), seat 5 is on the left (visually first)
+      // So visual position i gets label (count - i + 1)
+      const seatNumber = reverseNumbering ? (row.count - i + 1) : i;
       seats.push({
-        id: `${recordDayId}-block${blockIdx}-${row.label}${i}`,
+        id: `${recordDayId}-block${blockIdx}-${row.label}${seatNumber}`,
       });
     }
   });
