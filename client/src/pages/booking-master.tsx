@@ -527,9 +527,14 @@ export default function BookingMaster() {
 
   const allBookingRows = selectedRecordDay ? generateAllSeats() : [];
   const bookingRows = allBookingRows.filter(row => {
-    // Filter by name search
-    if (searchName.trim() && !row.contestant?.name.toLowerCase().includes(searchName.toLowerCase())) {
-      return false;
+    // Filter by name search - searches both name and attending with columns
+    if (searchName.trim()) {
+      const searchLower = searchName.toLowerCase();
+      const nameMatch = row.contestant?.name.toLowerCase().includes(searchLower);
+      const attendingWithMatch = row.contestant?.attendingWith?.toLowerCase().includes(searchLower);
+      if (!nameMatch && !attendingWithMatch) {
+        return false;
+      }
     }
     // Filter by medical information (includes both Medical App and Medical AUD, excludes NA/N/A)
     if (filterMedicalNotes && !hasMeaningfulMedicalNote(row.contestant?.medicalInfo) && !hasMeaningfulMedicalNote(row.contestant?.mobilityNotes)) {
