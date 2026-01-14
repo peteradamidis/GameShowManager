@@ -1138,9 +1138,15 @@ export default function BookingResponses() {
                         </div>
                       </TableCell>
                       <TableCell className="py-1 max-w-[130px]">
-                        <span className="text-xs text-muted-foreground truncate block" title={item.contestant?.attendingWith || ""}>
-                          {item.contestant?.attendingWith || "-"}
-                        </span>
+                        {item.contestant?.attendingWith ? (
+                          <div className="flex flex-col text-xs text-muted-foreground">
+                            {item.contestant.attendingWith.split(/[,&]/).map((name, idx) => (
+                              <span key={idx} className="truncate" title={name.trim()}>{name.trim()}</span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                       <TableCell className="py-1">
                         <div className="flex flex-col text-xs">
