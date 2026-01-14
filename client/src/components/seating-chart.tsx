@@ -304,10 +304,91 @@ function SeatingBlock({
 }) {
   const stats = calculateBlockStats(block);
 
+  // Calculate which seats have separated group members
+  // A seat is "separated" if the contestant has a group (via attendingWith or groupId)
+  // but none of their group members are in adjacent seats
+  const seatsWithSeparationInfo = block.map((seat, idx) => {
+    // Only check occupied seats that have group information
+    if (!seat.contestantId) return seat;
+    
+    const hasGroup = seat.attendingWith || seat.groupId;
+    if (!hasGroup) return seat;
+    
+    // Get group member IDs (from attendingWith - comma-separated, or groupId for same-group matching)
+    const attendingWithIds = seat.attendingWith 
+      ? seat.attendingWith.split(',').map(id => id.trim()).filter(Boolean)
+      : [];
+    
+    // Find all group members in this block
+    const groupMembersInBlock = block.filter(s => 
+      s.contestantId && 
+      s.contestantId !== seat.contestantId &&
+      (
+        // Check if this seat is attending with that contestant
+        attendingWithIds.includes(s.contestantId) ||
+        // Check if that contestant is attending with this seat
+        (s.attendingWith && s.attendingWith.split(',').map(id => id.trim()).includes(seat.contestantId!)) ||
+        // Check if they share the same groupId
+        (seat.groupId && s.groupId && seat.groupId === s.groupId)
+      )
+    );
+    
+    // If no group members in this block at all, this contestant is separated
+    if (groupMembersInBlock.length === 0 && (attendingWithIds.length > 0 || seat.groupId)) {
+      return { ...seat, isGroupSeparated: true };
+    }
+    
+    // If there are group members, check if any are adjacent
+    // Adjacent means: same row (left or right), or same column in adjacent row
+    const getRowAndCol = (seatIndex: number) => {
+      let cumulative = 0;
+      for (let rowIdx = 0; rowIdx < SEAT_ROWS.length; rowIdx++) {
+        if (seatIndex < cumulative + SEAT_ROWS[rowIdx].count) {
+          return { row: rowIdx, col: seatIndex - cumulative };
+        }
+        cumulative += SEAT_ROWS[rowIdx].count;
+      }
+      return null;
+    };
+    
+    const myPos = getRowAndCol(idx);
+    if (!myPos) return seat;
+    
+    // Check if any group member is adjacent
+    let hasAdjacentGroupMember = false;
+    
+    for (const member of groupMembersInBlock) {
+      const memberIdx = block.findIndex(s => s.contestantId === member.contestantId);
+      if (memberIdx === -1) continue;
+      
+      const memberPos = getRowAndCol(memberIdx);
+      if (!memberPos) continue;
+      
+      // Check horizontal adjacency (same row, adjacent column)
+      if (memberPos.row === myPos.row && Math.abs(memberPos.col - myPos.col) === 1) {
+        hasAdjacentGroupMember = true;
+        break;
+      }
+      
+      // Check vertical adjacency (adjacent row, same or ±1 column for staggered layout)
+      if (Math.abs(memberPos.row - myPos.row) === 1 && Math.abs(memberPos.col - myPos.col) <= 1) {
+        hasAdjacentGroupMember = true;
+        break;
+      }
+    }
+    
+    // Mark as separated if has group members but none are adjacent
+    if (groupMembersInBlock.length > 0 && !hasAdjacentGroupMember) {
+      return { ...seat, isGroupSeparated: true };
+    }
+    
+    return seat;
+  });
+
   // Organize seats by row
   let seatIdx = 0;
   const seatsByRow = SEAT_ROWS.map(row => {
-    const rowSeats = block.slice(seatIdx, seatIdx + row.count);
+    const rowSeats = seatsWithSeparationInfo.slice(seatIdx, seatIdx + row.count);
     seatIdx += row.count;
     return { ...row, seats: rowSeats };
   });
