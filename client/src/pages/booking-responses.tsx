@@ -1137,8 +1137,8 @@ export default function BookingResponses() {
                           <span className="font-medium text-xs">{item.contestant?.name || 'Unknown'}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="py-1">
-                        <span className="text-xs text-muted-foreground">
+                      <TableCell className="py-1 max-w-[80px]">
+                        <span className="text-xs text-muted-foreground truncate block" title={item.contestant?.attendingWith || ""}>
                           {item.contestant?.attendingWith || "-"}
                         </span>
                       </TableCell>
