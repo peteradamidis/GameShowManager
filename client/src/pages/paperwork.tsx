@@ -532,7 +532,7 @@ Deal or No Deal Production Team`);
               <div className="flex items-center gap-2">
                 <Label htmlFor="record-day-filter">Record Day:</Label>
                 <Select value={selectedRecordDay} onValueChange={setSelectedRecordDay}>
-                  <SelectTrigger className="w-[200px]" data-testid="select-record-day">
+                  <SelectTrigger className="w-[280px]" data-testid="select-record-day">
                     <SelectValue placeholder="All Record Days" />
                   </SelectTrigger>
                   <SelectContent>

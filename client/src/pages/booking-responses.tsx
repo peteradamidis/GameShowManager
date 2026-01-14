@@ -809,7 +809,7 @@ export default function BookingResponses() {
         <div className="flex items-center gap-2">
           <Label htmlFor="record-day-filter">Record Day:</Label>
           <Select value={selectedRecordDay} onValueChange={handleRecordDayChange}>
-            <SelectTrigger className="w-[200px]" data-testid="select-record-day">
+            <SelectTrigger className="w-[280px]" data-testid="select-record-day">
               <SelectValue placeholder="Select Record Day" />
             </SelectTrigger>
             <SelectContent>
