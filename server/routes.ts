@@ -3466,85 +3466,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Determine max seats for this block type
         const maxSeats = block.blockType === 'NPB' ? MAX_NPB_SEATS : MAX_PB_SEATS;
         
-        // Find all empty seats in this block
-        const emptySeats: string[] = [];
+        // Find all empty seats in this block, separated by row position
+        // Front rows (A, B) for B+ contestants, back rows (D, E) for B contestants
+        const frontRowSeats: string[] = []; // Rows A, B
+        const middleRowSeats: string[] = []; // Row C
+        const backRowSeats: string[] = []; // Rows D, E
+        
         for (const row of ROWS) {
           for (let i = 1; i <= row.count; i++) {
             const seatLabel = `${row.label}${i}`;
             if (!occupiedSeatsInBlock.has(seatLabel)) {
-              emptySeats.push(seatLabel);
+              if (row.label === 'A' || row.label === 'B') {
+                frontRowSeats.push(seatLabel);
+              } else if (row.label === 'C') {
+                middleRowSeats.push(seatLabel);
+              } else {
+                backRowSeats.push(seatLabel);
+              }
             }
           }
         }
         
-        // Fill empty seats with remaining solo contestants (respecting rating constraints)
-        for (const seatLabel of emptySeats) {
-          // Check if we've hit the solo limit for this block
+        // Helper function to place a solo contestant in a specific seat
+        const placeSoloInSeat = (contestant: typeof remainingSolos[0], seatLabel: string) => {
+          plan.push({
+            contestant,
+            blockNumber: block.blockNumber,
+            seatLabel,
+          });
+          occupiedSeatsInBlock.add(seatLabel);
+          
+          // Update block state
+          block.seatsUsed += 1;
+          if (contestant.gender === 'Female') block.femaleCount += 1;
+          if (contestant.gender === 'Male') block.maleCount += 1;
+          block.totalAge += contestant.age;
+          block.ageCount += 1;
+          block.meanAge = block.ageCount > 0 ? block.totalAge / block.ageCount : 0;
+          if (contestant.auditionRating && block.ratingCounts.hasOwnProperty(contestant.auditionRating)) {
+            block.ratingCounts[contestant.auditionRating] += 1;
+          }
+          
+          // Update global state
+          globalFemaleCount += contestant.gender === 'Female' ? 1 : 0;
+          globalMaleCount += contestant.gender === 'Male' ? 1 : 0;
+          globalTotalAge += contestant.age;
+          globalAgeCount += 1;
+          if (contestant.auditionRating && globalRatingCounts.hasOwnProperty(contestant.auditionRating)) {
+            globalRatingCounts[contestant.auditionRating] += 1;
+          }
+          
+          solosPlacedInBlock++;
+          console.log(`[Auto-assign] BACKFILL: Placed solo ${contestant.name} (${contestant.auditionRating}) in Block ${block.blockNumber} seat ${seatLabel} (${solosPlacedInBlock}/${MAX_SOLOS_PER_BLOCK})`);
+        };
+        
+        // Helper to check if contestant is eligible for this block
+        const isEligibleForBlock = (c: typeof remainingSolos[0]) => {
+          const isAOrBPlus = c.auditionRating === 'A' || c.auditionRating === 'B+';
+          const isCRated = c.auditionRating === 'C';
+          
+          // NPB blocks can ONLY have B and C ratings
+          if (block.blockType === 'NPB' && isAOrBPlus) return false;
+          
+          // C-rated can ONLY go to NPB blocks
+          if (isCRated && block.blockType !== 'NPB') return false;
+          
+          // Check C-rated limit per NPB block
+          if (isCRated && block.blockType === 'NPB') {
+            const currentCCount = block.ratingCounts['C'];
+            if (currentCCount >= MAX_C_PER_NPB) return false;
+          }
+          
+          return true;
+        };
+        
+        // PHASE 1: Place B+ contestants in front rows (A, B)
+        while (frontRowSeats.length > 0 && solosPlacedInBlock < MAX_SOLOS_PER_BLOCK) {
+          const currentInBlock = plan.filter(p => p.blockNumber === block.blockNumber).length + 
+                                existingAssignments.filter(a => a.blockNumber === block.blockNumber).length;
+          if (currentInBlock >= maxSeats) break;
+          
+          // Find a B+ contestant
+          const bPlusIdx = remainingSolos.findIndex(c => c.auditionRating === 'B+' && isEligibleForBlock(c));
+          if (bPlusIdx !== -1) {
+            const contestant = remainingSolos[bPlusIdx];
+            const seatLabel = frontRowSeats.shift()!;
+            placeSoloInSeat(contestant, seatLabel);
+            remainingSolos.splice(bPlusIdx, 1);
+          } else {
+            break; // No more B+ contestants available
+          }
+        }
+        
+        // PHASE 2: Place B contestants in back rows (D, E)
+        while (backRowSeats.length > 0 && solosPlacedInBlock < MAX_SOLOS_PER_BLOCK) {
+          const currentInBlock = plan.filter(p => p.blockNumber === block.blockNumber).length + 
+                                existingAssignments.filter(a => a.blockNumber === block.blockNumber).length;
+          if (currentInBlock >= maxSeats) break;
+          
+          // Find a B contestant
+          const bIdx = remainingSolos.findIndex(c => c.auditionRating === 'B' && isEligibleForBlock(c));
+          if (bIdx !== -1) {
+            const contestant = remainingSolos[bIdx];
+            const seatLabel = backRowSeats.shift()!;
+            placeSoloInSeat(contestant, seatLabel);
+            remainingSolos.splice(bIdx, 1);
+          } else {
+            break; // No more B contestants available
+          }
+        }
+        
+        // PHASE 3: Fill remaining seats with any eligible contestants (middle rows and leftovers)
+        const remainingSeats = [...middleRowSeats, ...frontRowSeats, ...backRowSeats];
+        for (const seatLabel of remainingSeats) {
           if (solosPlacedInBlock >= MAX_SOLOS_PER_BLOCK) {
             console.log(`[Auto-assign] Block ${block.blockNumber}: Solo limit reached (${MAX_SOLOS_PER_BLOCK})`);
             break;
           }
           
-          // Check block capacity
           const currentInBlock = plan.filter(p => p.blockNumber === block.blockNumber).length + 
                                 existingAssignments.filter(a => a.blockNumber === block.blockNumber).length;
           if (currentInBlock >= maxSeats) break;
           
-          // Find a suitable solo contestant for this block
-          const contestantIdx = remainingSolos.findIndex(c => {
-            // Check rating constraints
-            const isAOrBPlus = c.auditionRating === 'A' || c.auditionRating === 'B+';
-            const isCRated = c.auditionRating === 'C';
-            
-            // NPB blocks can ONLY have B and C ratings
-            if (block.blockType === 'NPB' && isAOrBPlus) return false;
-            
-            // C-rated can ONLY go to NPB blocks
-            if (isCRated && block.blockType !== 'NPB') return false;
-            
-            // Check C-rated limit per NPB block
-            if (isCRated && block.blockType === 'NPB') {
-              const currentCCount = block.ratingCounts['C'];
-              if (currentCCount >= MAX_C_PER_NPB) return false;
-            }
-            
-            return true;
-          });
-          
+          const contestantIdx = remainingSolos.findIndex(c => isEligibleForBlock(c));
           if (contestantIdx !== -1) {
             const contestant = remainingSolos[contestantIdx];
-            plan.push({
-              contestant,
-              blockNumber: block.blockNumber,
-              seatLabel,
-            });
-            occupiedSeatsInBlock.add(seatLabel);
-            
-            // Update block state
-            block.seatsUsed += 1;
-            if (contestant.gender === 'Female') block.femaleCount += 1;
-            if (contestant.gender === 'Male') block.maleCount += 1;
-            block.totalAge += contestant.age;
-            block.ageCount += 1;
-            block.meanAge = block.ageCount > 0 ? block.totalAge / block.ageCount : 0;
-            if (contestant.auditionRating && block.ratingCounts.hasOwnProperty(contestant.auditionRating)) {
-              block.ratingCounts[contestant.auditionRating] += 1;
-            }
-            
-            // Update global state
-            globalFemaleCount += contestant.gender === 'Female' ? 1 : 0;
-            globalMaleCount += contestant.gender === 'Male' ? 1 : 0;
-            globalTotalAge += contestant.age;
-            globalAgeCount += 1;
-            if (contestant.auditionRating && globalRatingCounts.hasOwnProperty(contestant.auditionRating)) {
-              globalRatingCounts[contestant.auditionRating] += 1;
-            }
-            
-            // Remove from remaining solos
+            placeSoloInSeat(contestant, seatLabel);
             remainingSolos.splice(contestantIdx, 1);
-            solosPlacedInBlock++;
-            
-            console.log(`[Auto-assign] BACKFILL: Placed solo ${contestant.name} in Block ${block.blockNumber} seat ${seatLabel} (${solosPlacedInBlock}/${MAX_SOLOS_PER_BLOCK})`);
           }
         }
       }
