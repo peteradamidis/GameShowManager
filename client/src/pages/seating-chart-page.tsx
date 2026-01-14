@@ -1169,6 +1169,14 @@ export default function SeatingChartPage() {
                 </>
               )}
             </Button>
+            <Button variant="outline" onClick={() => setResetDialogOpen(true)} data-testid="button-reset-seating">
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset
+            </Button>
+            <Button variant="outline" onClick={() => setAutoAssignDialogOpen(true)} data-testid="button-auto-assign">
+              <Wand2 className="h-4 w-4 mr-2" />
+              Auto-Assign Seats
+            </Button>
             <Button 
               variant="ghost" 
               size="icon"
@@ -1178,14 +1186,6 @@ export default function SeatingChartPage() {
               className="text-muted-foreground"
             >
               <ArrowLeftRight className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" onClick={() => setResetDialogOpen(true)} data-testid="button-reset-seating">
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reset
-            </Button>
-            <Button variant="outline" onClick={() => setAutoAssignDialogOpen(true)} data-testid="button-auto-assign">
-              <Wand2 className="h-4 w-4 mr-2" />
-              Auto-Assign Seats
             </Button>
           </div>
         </div>
