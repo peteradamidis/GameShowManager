@@ -1137,7 +1137,7 @@ export default function BookingResponses() {
                           <span className="font-medium text-xs">{item.contestant?.name || 'Unknown'}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="py-1 max-w-[130px]">
+                      <TableCell className="py-1 max-w-[160px]">
                         {item.contestant?.attendingWith ? (
                           <div className="flex flex-col text-xs text-muted-foreground">
                             {item.contestant.attendingWith.split(/[,&]/).map((name, idx) => (
