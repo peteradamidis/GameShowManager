@@ -29,7 +29,7 @@ export function RecordDayCard({ recordDay, onViewSeating, onEdit, onDelete, onSe
           <div className="space-y-1 min-w-0 flex-1">
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5 flex-shrink-0" />
-              <span className="truncate">{recordDay.date}</span>
+              <span className="truncate text-base">{recordDay.date}</span>
             </CardTitle>
             <CardDescription>
               {recordDay.rxNumber || "Record Day"}
