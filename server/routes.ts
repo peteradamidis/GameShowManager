@@ -3441,8 +3441,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`[Auto-assign] BACKFILL: ${remainingSolos.length} solo contestants remaining to place`);
       
+      // Limit solos per block to 2-4 to fill gaps (not dominate)
+      const MAX_SOLOS_PER_BLOCK = 4;
+      
       // For each block, find empty non-reserved seats and fill them with solos
       for (const block of blocks) {
+        // Track how many solos we place in this block
+        let solosPlacedInBlock = 0;
         // Build set of all occupied seats in this block
         const occupiedSeatsInBlock = new Set<string>();
         plan
@@ -3474,6 +3479,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Fill empty seats with remaining solo contestants (respecting rating constraints)
         for (const seatLabel of emptySeats) {
+          // Check if we've hit the solo limit for this block
+          if (solosPlacedInBlock >= MAX_SOLOS_PER_BLOCK) {
+            console.log(`[Auto-assign] Block ${block.blockNumber}: Solo limit reached (${MAX_SOLOS_PER_BLOCK})`);
+            break;
+          }
+          
           // Check block capacity
           const currentInBlock = plan.filter(p => p.blockNumber === block.blockNumber).length + 
                                 existingAssignments.filter(a => a.blockNumber === block.blockNumber).length;
@@ -3531,8 +3542,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Remove from remaining solos
             remainingSolos.splice(contestantIdx, 1);
+            solosPlacedInBlock++;
             
-            console.log(`[Auto-assign] BACKFILL: Placed solo ${contestant.name} in Block ${block.blockNumber} seat ${seatLabel}`);
+            console.log(`[Auto-assign] BACKFILL: Placed solo ${contestant.name} in Block ${block.blockNumber} seat ${seatLabel} (${solosPlacedInBlock}/${MAX_SOLOS_PER_BLOCK})`);
           }
         }
       }
