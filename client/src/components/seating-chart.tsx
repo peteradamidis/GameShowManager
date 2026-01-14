@@ -78,6 +78,7 @@ function DraggableDroppableSeat({
   blockIndex,
   seatIndex,
   isOver,
+  isGlobalDragging,
   isRXDayLocked,
   onEmptySeatClick,
   onRemove,
@@ -92,6 +93,7 @@ function DraggableDroppableSeat({
   blockIndex: number;
   seatIndex: number;
   isOver: boolean;
+  isGlobalDragging?: boolean;
   isRXDayLocked?: boolean;
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
   onRemove?: (assignmentId: string) => void;
@@ -132,6 +134,7 @@ function DraggableDroppableSeat({
         blockIndex={blockIndex}
         seatIndex={seatIndex}
         isDragging={isDragging}
+        isGlobalDragging={isGlobalDragging}
         isRXDayLocked={isRXDayLocked}
         onEmptySeatClick={onEmptySeatClick}
         onRemove={onRemove}
@@ -268,6 +271,7 @@ function SeatingBlock({
   blockLabel,
   reverseRows = false,
   overId,
+  isGlobalDragging,
   isRXDayLocked,
   onEmptySeatClick,
   onRemove,
@@ -285,6 +289,7 @@ function SeatingBlock({
   blockLabel: string;
   reverseRows?: boolean;
   overId: string | null;
+  isGlobalDragging?: boolean;
   isRXDayLocked?: boolean;
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
   onRemove?: (assignmentId: string) => void;
@@ -410,6 +415,7 @@ function SeatingBlock({
                           blockIndex={blockIndex}
                           seatIndex={absoluteSeatIdx}
                           isOver={overId === seat.id}
+                          isGlobalDragging={isGlobalDragging}
                           isRXDayLocked={isRXDayLocked}
                           onEmptySeatClick={onEmptySeatClick}
                           onRemove={onRemove}
@@ -988,6 +994,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   blockLabel={`Block ${idx + 1} (Top)`}
                   reverseRows={true}
                   overId={overId}
+                  isGlobalDragging={!!activeId}
                   isRXDayLocked={isLocked}
                   onEmptySeatClick={handleEmptySeatClick}
                   onRemove={onRemove}
@@ -1026,6 +1033,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     blockLabel={`Block ${originalIdx + 1} (Bottom)`}
                     reverseRows={false}
                     overId={overId}
+                    isGlobalDragging={!!activeId}
                     isRXDayLocked={isLocked}
                     onEmptySeatClick={handleEmptySeatClick}
                     onRemove={onRemove}
@@ -1057,6 +1065,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   blockLabel="Block 7 (Standing)"
                   reverseRows={true}
                   overId={overId}
+                  isGlobalDragging={!!activeId}
                   isRXDayLocked={isLocked}
                   onEmptySeatClick={handleEmptySeatClick}
                   onRemove={onRemove}

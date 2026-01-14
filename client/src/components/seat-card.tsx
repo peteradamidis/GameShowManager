@@ -54,6 +54,7 @@ interface SeatCardProps {
   blockIndex: number;
   seatIndex: number;
   isDragging?: boolean;
+  isGlobalDragging?: boolean; // True when ANY seat is being dragged - disables hover cards
   isRXDayLocked?: boolean;
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
   onRemove?: (assignmentId: string) => void;
@@ -92,6 +93,7 @@ export function SeatCard({
   blockIndex, 
   seatIndex, 
   isDragging = false, 
+  isGlobalDragging = false,
   isRXDayLocked = false,
   onEmptySeatClick, 
   onRemove, 
@@ -263,8 +265,8 @@ export function SeatCard({
     </Card>
   );
 
-  // Wrap occupied seats with HoverCard for details
-  if (!isEmpty) {
+  // Wrap occupied seats with HoverCard for details (disabled during drag)
+  if (!isEmpty && !isGlobalDragging) {
     return (
       <HoverCard openDelay={200} closeDelay={100}>
         <HoverCardTrigger asChild>

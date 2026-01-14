@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2026-01-14T13:27:14.974Z",
+  "exportedAt": "2026-01-14T13:35:36.484Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -13124,6 +13124,13 @@
         "createdAt": "2025-11-28T13:29:38.963Z"
       },
       {
+        "id": "4024cdf1-46c9-4af4-b451-6e106c607a2e",
+        "recordDayId": "59f9cd94-162d-413c-9797-5a881676a706",
+        "blockNumber": 1,
+        "blockType": "PB",
+        "createdAt": "2026-01-14T13:28:39.585Z"
+      },
+      {
         "id": "badc1981-587e-4ebe-a4ca-d09f25a98a6b",
         "recordDayId": "eec54567-3e21-424c-8d62-28772c0a6c25",
         "blockNumber": 1,
@@ -13146,7 +13153,7 @@
     "groups": 128,
     "seatAssignments": 20,
     "standbys": 0,
-    "blockTypes": 26,
+    "blockTypes": 27,
     "canceledAssignments": 0
   }
 }
