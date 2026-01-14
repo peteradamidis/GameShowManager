@@ -1018,7 +1018,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           postcode: postcodeValue ? postcodeValue.toString().trim() : undefined,
           state: stateValue ? stateValue.toString().trim() : undefined,
           availableForStandby: standbyValue ? standbyValue.toString().trim().toLowerCase() === 'standby' : false,
-          podiumStory: podiumStoryValue ? ['yes', 'y', 'true', '1', 'x'].includes(podiumStoryValue.toString().trim().toLowerCase()) : false,
+          podiumStory: (() => {
+            if (!podiumStoryValue) return false;
+            const val = podiumStoryValue.toString().trim().toLowerCase();
+            // Check for "podium story" value or common true values
+            if (val === 'podium story' || val === 'podiumstory' || val === 'ps') return true;
+            if (['yes', 'y', 'true', '1', 'x'].includes(val)) return true;
+            return false;
+          })(),
           availabilityNotes: availabilityNotesValue ? availabilityNotesValue.toString().trim() : undefined,
           // Handle GROUP ID column or Attending With column
           groupIdFromFile: row["GROUP ID"] || row["Group ID"] || row["group id"] || row["Group"] || row["GROUP"] || null,
