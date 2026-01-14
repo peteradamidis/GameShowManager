@@ -535,6 +535,11 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     queryKey: ['/api/record-days', recordDayId, 'block-types'],
   });
 
+  // Fetch block configuration status (5 PB + 2 NPB required)
+  const { data: blockConfigStatus } = useQuery<{complete: boolean; pbCount: number; npbCount: number}>({
+    queryKey: ['/api/record-days', recordDayId, 'block-config-status'],
+  });
+
   // Create a map of block number to block type
   const blockTypeMap: Record<number, 'PB' | 'NPB'> = {};
   if (blockTypesData) {
@@ -542,6 +547,22 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
       blockTypeMap[bt.blockNumber] = bt.blockType as 'PB' | 'NPB';
     });
   }
+
+  // Check if blocks are fully configured
+  const isBlockConfigComplete = blockConfigStatus?.complete ?? false;
+
+  // Wrap onEmptySeatClick to check block config
+  const handleEmptySeatClick = (blockNumber: number, seatLabel: string) => {
+    if (!isBlockConfigComplete) {
+      toast({
+        title: "Block configuration required",
+        description: "You must configure all 7 blocks (5 PB + 2 NPB) before booking seats.",
+        variant: "destructive",
+      });
+      return;
+    }
+    onEmptySeatClick?.(blockNumber, seatLabel);
+  };
 
   // Mutation to update block type
   const updateBlockTypeMutation = useMutation({
@@ -555,6 +576,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/record-days', recordDayId, 'block-types'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/record-days', recordDayId, 'block-config-status'] });
       toast({
         title: "Block type updated",
         description: "The block type has been saved.",
@@ -931,6 +953,29 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
       onDragEnd={handleDragEnd}
     >
         <div className="space-y-8">
+          {/* Block Configuration Warning */}
+          {!isBlockConfigComplete && (
+            <div className="bg-amber-50 dark:bg-amber-950 border border-amber-300 dark:border-amber-700 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                <div className="space-y-2">
+                  <h4 className="font-medium text-amber-800 dark:text-amber-200">
+                    Block Configuration Required
+                  </h4>
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
+                    You must select exactly <strong>5 Playing Blocks (PB)</strong> and <strong>2 Non-Playing Blocks (NPB)</strong> before you can book seats.
+                  </p>
+                  <p className="text-sm text-amber-600 dark:text-amber-400">
+                    Current: {blockConfigStatus?.pbCount ?? 0} PB, {blockConfigStatus?.npbCount ?? 0} NPB
+                    {(blockConfigStatus?.pbCount ?? 0) + (blockConfigStatus?.npbCount ?? 0) < 7 && (
+                      <span> — Click the block type badges below to configure each block</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Circular Seating Area */}
           <div className="space-y-6">
             {/* Top Row - 3 Blocks (rows reversed: A at bottom, E at top) */}
@@ -944,7 +989,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   reverseRows={true}
                   overId={overId}
                   isRXDayLocked={isLocked}
-                  onEmptySeatClick={onEmptySeatClick}
+                  onEmptySeatClick={handleEmptySeatClick}
                   onRemove={onRemove}
                   onCancel={onCancel}
                   onWinningMoneyClick={onWinningMoneyClick}
@@ -982,7 +1027,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     reverseRows={false}
                     overId={overId}
                     isRXDayLocked={isLocked}
-                    onEmptySeatClick={onEmptySeatClick}
+                    onEmptySeatClick={handleEmptySeatClick}
                     onRemove={onRemove}
                     onCancel={onCancel}
                     onWinningMoneyClick={onWinningMoneyClick}
@@ -1013,7 +1058,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   reverseRows={true}
                   overId={overId}
                   isRXDayLocked={isLocked}
-                  onEmptySeatClick={onEmptySeatClick}
+                  onEmptySeatClick={handleEmptySeatClick}
                   onRemove={onRemove}
                   onCancel={onCancel}
                   onWinningMoneyClick={onWinningMoneyClick}

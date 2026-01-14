@@ -218,6 +218,8 @@ export interface IStorage {
   // Block Types (PB/NPB)
   getBlockTypesByRecordDay(recordDayId: string): Promise<BlockType[]>;
   upsertBlockType(recordDayId: string, blockNumber: number, blockType: 'PB' | 'NPB'): Promise<BlockType>;
+  upsertBlockTypes(recordDayId: string, configs: Array<{blockNumber: number, blockType: 'PB' | 'NPB'}>): Promise<BlockType[]>;
+  isBlockConfigurationComplete(recordDayId: string): Promise<{complete: boolean; pbCount: number; npbCount: number}>;
   
   // Standby Assignments
   createStandbyAssignment(assignment: InsertStandbyAssignment): Promise<StandbyAssignment>;
@@ -1369,6 +1371,24 @@ export class DbStorage implements IStorage {
         .returning();
       return created;
     }
+  }
+
+  async upsertBlockTypes(recordDayId: string, configs: Array<{blockNumber: number, blockType: 'PB' | 'NPB'}>): Promise<BlockType[]> {
+    const results: BlockType[] = [];
+    for (const config of configs) {
+      const result = await this.upsertBlockType(recordDayId, config.blockNumber, config.blockType);
+      results.push(result);
+    }
+    return results;
+  }
+
+  async isBlockConfigurationComplete(recordDayId: string): Promise<{complete: boolean; pbCount: number; npbCount: number}> {
+    const blockConfigs = await this.getBlockTypesByRecordDay(recordDayId);
+    const pbCount = blockConfigs.filter(b => b.blockType === 'PB').length;
+    const npbCount = blockConfigs.filter(b => b.blockType === 'NPB').length;
+    // Complete when we have exactly 5 PB and 2 NPB (7 total blocks configured)
+    const complete = pbCount === 5 && npbCount === 2;
+    return { complete, pbCount, npbCount };
   }
 
   // Standby Assignments

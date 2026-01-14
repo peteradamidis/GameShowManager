@@ -1952,6 +1952,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
+      // Check block configuration is complete (5 PB + 2 NPB)
+      const blockConfig = await storage.isBlockConfigurationComplete(recordDayId);
+      if (!blockConfig.complete) {
+        return res.status(400).json({ 
+          error: "Block configuration incomplete. You must select 5 Playing Blocks (PB) and 2 Non-Playing Blocks (NPB) before booking seats.",
+          code: "BLOCK_CONFIG_INCOMPLETE",
+          current: { pbCount: blockConfig.pbCount, npbCount: blockConfig.npbCount }
+        });
+      }
+
       // Validate playerType if provided
       if (playerType && !['player', 'backup', 'player_partner'].includes(playerType)) {
         return res.status(400).json({ error: "Invalid player type" });
@@ -2033,6 +2043,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!recordDayId || !contestantIds || !blockNumber || !startingSeat) {
         return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Check block configuration is complete (5 PB + 2 NPB)
+      const blockConfig = await storage.isBlockConfigurationComplete(recordDayId);
+      if (!blockConfig.complete) {
+        return res.status(400).json({ 
+          error: "Block configuration incomplete. You must select 5 Playing Blocks (PB) and 2 Non-Playing Blocks (NPB) before booking seats.",
+          code: "BLOCK_CONFIG_INCOMPLETE",
+          current: { pbCount: blockConfig.pbCount, npbCount: blockConfig.npbCount }
+        });
       }
 
       if (!Array.isArray(contestantIds) || contestantIds.length < 2 || contestantIds.length > 4) {
@@ -2439,6 +2459,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!recordDayId) {
         return res.status(400).json({ error: "recordDayId is required" });
+      }
+
+      // Check block configuration is complete (5 PB + 2 NPB)
+      const blockConfig = await storage.isBlockConfigurationComplete(recordDayId);
+      if (!blockConfig.complete) {
+        return res.status(400).json({ 
+          error: "Block configuration incomplete. You must select 5 Playing Blocks (PB) and 2 Non-Playing Blocks (NPB) before auto-assigning seats.",
+          code: "BLOCK_CONFIG_INCOMPLETE",
+          current: { pbCount: blockConfig.pbCount, npbCount: blockConfig.npbCount }
+        });
       }
 
       // Validate selected blocks if provided
@@ -3991,6 +4021,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const updated = await storage.upsertBlockType(recordDayId, blockNum, blockType);
       res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Batch update all block types for a record day
+  app.put("/api/record-days/:id/block-types", async (req, res) => {
+    try {
+      const recordDayId = req.params.id;
+      const { blocks } = req.body;
+      
+      // Validate input
+      if (!Array.isArray(blocks) || blocks.length !== 7) {
+        return res.status(400).json({ error: "Must provide exactly 7 block configurations" });
+      }
+      
+      // Validate each block
+      for (const block of blocks) {
+        if (!block.blockNumber || block.blockNumber < 1 || block.blockNumber > 7) {
+          return res.status(400).json({ error: "Each block must have a valid blockNumber (1-7)" });
+        }
+        if (!['PB', 'NPB'].includes(block.blockType)) {
+          return res.status(400).json({ error: "Each block must have blockType 'PB' or 'NPB'" });
+        }
+      }
+      
+      // Count PB and NPB
+      const pbCount = blocks.filter((b: any) => b.blockType === 'PB').length;
+      const npbCount = blocks.filter((b: any) => b.blockType === 'NPB').length;
+      
+      if (pbCount !== 5 || npbCount !== 2) {
+        return res.status(400).json({ 
+          error: "Must have exactly 5 Playing Blocks (PB) and 2 Non-Playing Blocks (NPB)",
+          current: { pbCount, npbCount }
+        });
+      }
+      
+      const updated = await storage.upsertBlockTypes(recordDayId, blocks);
+      res.json({ message: "Block configuration saved", blocks: updated });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Check if block configuration is complete for a record day
+  app.get("/api/record-days/:id/block-config-status", async (req, res) => {
+    try {
+      const recordDayId = req.params.id;
+      const status = await storage.isBlockConfigurationComplete(recordDayId);
+      res.json(status);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
