@@ -5989,6 +5989,7 @@ ${finalEmailFooter}`;
   // ========================================
 
   // Send booking confirmation emails for selected seat assignments
+  // Uses parallel batch processing to avoid gateway timeout on large sends
   app.post("/api/booking-confirmations/send", async (req, res) => {
     try {
       // Check if email is configured
@@ -6008,128 +6009,152 @@ ${finalEmailFooter}`;
       // Get base URL for email links
       const baseUrl = getBaseUrl(req);
 
-      const results = [];
+      // Pre-load shared data once (banner, config, attachments) to avoid repeated I/O
+      const [
+        bannerUrlConfig,
+        emailHeadline,
+        emailIntro,
+        emailInstructions,
+        emailButtonText,
+        emailAdditionalInstructions,
+        emailFooter,
+        bookingReplyToEmail,
+        senderNameConfig,
+        smtpConfig,
+      ] = await Promise.all([
+        storage.getSystemConfig('email_banner_url'),
+        storage.getSystemConfig('booking_email_headline'),
+        storage.getSystemConfig('booking_email_intro'),
+        storage.getSystemConfig('booking_email_instructions'),
+        storage.getSystemConfig('booking_email_button_text'),
+        storage.getSystemConfig('booking_email_additional_instructions'),
+        storage.getSystemConfig('booking_email_footer'),
+        storage.getSystemConfig('booking_reply_to_email'),
+        storage.getSystemConfig('email_sender_name'),
+        getSmtpConfig(),
+      ]);
 
-      for (const seatAssignmentId of seatAssignmentIds) {
-        // Get seat assignment with contestant and record day data
-        const assignment = await storage.getSeatAssignmentById(seatAssignmentId);
-        
-        if (!assignment) {
-          results.push({
-            seatAssignmentId,
-            success: false,
-            error: "Seat assignment not found",
-          });
-          continue;
-        }
+      // Prepare shared config values
+      const sharedConfig = {
+        bannerUrlConfig: bannerUrlConfig || `/uploads/branding/dond_banner.png`,
+        emailHeadline: emailHeadline || 'Your Booking is Confirmed!',
+        emailIntro: emailIntro || 'Congratulations! You\'ve secured your spot in the <strong style="color: #8B0000;">Deal or No Deal</strong> studio audience.',
+        emailInstructions: emailInstructions || 'Please confirm your attendance by clicking the button below. You can also let us know about dietary requirements or ask any questions.',
+        emailButtonText: emailButtonText || 'Confirm Attendance',
+        emailAdditionalInstructions: emailAdditionalInstructions || '',
+        emailFooter: emailFooter || 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.',
+        bookingReplyToEmail: bookingReplyToEmail || smtpConfig.fromEmail || 'noreply@example.com',
+        senderName: senderNameConfig || 'Deal or No Deal',
+      };
 
-        const contestant = await storage.getContestantById(assignment.contestantId);
-        const recordDay = await storage.getRecordDayById(assignment.recordDayId);
-
-        if (!contestant || !recordDay) {
-          results.push({
-            seatAssignmentId,
-            success: false,
-            error: "Contestant or record day not found",
-          });
-          continue;
-        }
-
-        if (!contestant.email) {
-          results.push({
-            seatAssignmentId,
-            success: false,
-            error: "Contestant has no email address",
-          });
-          continue;
-        }
-
-        // Check for existing token and revoke it
-        const existingToken = await storage.getBookingConfirmationBySeatAssignment(seatAssignmentId);
-        if (existingToken) {
-          await storage.revokeBookingConfirmationToken(seatAssignmentId);
-        }
-
-        // Generate cryptographically strong token
-        const token = crypto.randomBytes(32).toString('hex');
-        
-        // Token expires in 7 days
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7);
-
-        // Create token record
-        const tokenRecord = await storage.createBookingConfirmationToken({
-          seatAssignmentId,
-          token,
-          expiresAt,
-          lastSentAt: new Date(),
-          status: 'active',
-          confirmationStatus: 'pending',
-        });
-
-        // Generate response URL
-        const responseUrl = appendNgrokSkip(`${baseUrl}/booking-confirmation/${token}`);
-
-        // Send booking confirmation email via Gmail
+      // Pre-load banner image once
+      let sharedBannerBuffer: Buffer | null = null;
+      let sharedBannerContentType = 'image/png';
+      let sharedBannerFilename = 'dond_banner.png';
+      if (sharedConfig.bannerUrlConfig.startsWith('/')) {
+        const bannerPath = path.join(process.cwd(), sharedConfig.bannerUrlConfig.replace(/^\//, ''));
         try {
-          const confirmationLink = appendNgrokSkip(`${baseUrl}/booking-confirmation/${token}`);
-          const recordDate = new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+          if (fs.existsSync(bannerPath)) {
+            sharedBannerBuffer = fs.readFileSync(bannerPath);
+            const ext = path.extname(bannerPath).toLowerCase().replace('.', '');
+            sharedBannerContentType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+            sharedBannerFilename = path.basename(bannerPath);
+          }
+        } catch (error) {
+          console.warn(`Warning: Could not read banner image at ${bannerPath}:`, error);
+        }
+      }
+
+      // Pre-load PDF attachments once
+      const sharedAttachments: { content: Buffer; contentType: string; filename: string }[] = [];
+      if (attachmentPaths && Array.isArray(attachmentPaths) && attachmentPaths.length > 0) {
+        const objectStorageService = new ObjectStorageService();
+        for (const attachmentPath of attachmentPaths) {
+          try {
+            const { buffer, contentType, filename } = await objectStorageService.getObjectAsBuffer(attachmentPath);
+            sharedAttachments.push({ content: buffer, contentType, filename });
+          } catch (attachErr: any) {
+            console.error(`Failed to load attachment ${attachmentPath}:`, attachErr.message);
+          }
+        }
+      }
+
+      // Helper function to process a single seat assignment
+      const processAssignment = async (seatAssignmentId: string): Promise<{
+        seatAssignmentId: string;
+        success: boolean;
+        contestantName?: string;
+        email?: string;
+        responseUrl?: string;
+        error?: string;
+      }> => {
+        try {
+          // Get seat assignment with contestant and record day data
+          const assignment = await storage.getSeatAssignmentById(seatAssignmentId);
           
-          // Prepare banner image for CID embedding (declare outside if/else so available for attachments)
-          let bookingBannerCid = 'booking-banner-image';
-          let bookingBannerBuffer: Buffer | null = null;
-          let bookingBannerContentType = 'image/png';
-          let bookingBannerFilename = 'dond_banner.png';
-          let bannerUrl = '';
+          if (!assignment) {
+            return { seatAssignmentId, success: false, error: "Seat assignment not found" };
+          }
+
+          const contestant = await storage.getContestantById(assignment.contestantId);
+          const recordDay = await storage.getRecordDayById(assignment.recordDayId);
+
+          if (!contestant || !recordDay) {
+            return { seatAssignmentId, success: false, error: "Contestant or record day not found" };
+          }
+
+          if (!contestant.email) {
+            return { seatAssignmentId, success: false, error: "Contestant has no email address" };
+          }
+
+          // Check for existing token and revoke it
+          const existingToken = await storage.getBookingConfirmationBySeatAssignment(seatAssignmentId);
+          if (existingToken) {
+            await storage.revokeBookingConfirmationToken(seatAssignmentId);
+          }
+
+          // Generate cryptographically strong token
+          const token = crypto.randomBytes(32).toString('hex');
           
-          // Use custom email body if provided, otherwise use default HTML template
-          let emailBody: string;
-          if (customEmailBody) {
-            // Replace placeholders in custom email body
-            emailBody = customEmailBody
-              .replace(/\{\{name\}\}/g, contestant.name)
-              .replace(/\{\{date\}\}/g, recordDate)
-              .replace(/\{\{block\}\}/g, String(assignment.blockNumber))
-              .replace(/\{\{seat\}\}/g, assignment.seatLabel)
-              .replace(/\{\{confirmationLink\}\}/g, confirmationLink);
-          } else {
-            // Get banner URL from system config or use default
-            const bannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
+          // Token expires in 7 days
+          const expiresAt = new Date();
+          expiresAt.setDate(expiresAt.getDate() + 7);
+
+          // Create token record
+          const tokenRecord = await storage.createBookingConfirmationToken({
+            seatAssignmentId,
+            token,
+            expiresAt,
+            lastSentAt: new Date(),
+            status: 'active',
+            confirmationStatus: 'pending',
+          });
+
+          // Generate response URL
+          const responseUrl = appendNgrokSkip(`${baseUrl}/booking-confirmation/${token}`);
+
+          // Send booking confirmation email
+          try {
+            const confirmationLink = appendNgrokSkip(`${baseUrl}/booking-confirmation/${token}`);
+            const recordDate = new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             
-            // Prepare banner for CID embedding
-            bannerUrl = `cid:${bookingBannerCid}`;
+            // Prepare banner for CID embedding - use pre-loaded shared data
+            const bookingBannerCid = 'booking-banner-image';
+            let bannerUrl = sharedBannerBuffer ? `cid:${bookingBannerCid}` : sharedConfig.bannerUrlConfig;
             
-            if (bannerUrlConfig.startsWith('/')) {
-              const bannerPath = path.join(process.cwd(), bannerUrlConfig.replace(/^\//, ''));
-              try {
-                if (fs.existsSync(bannerPath)) {
-                  bookingBannerBuffer = fs.readFileSync(bannerPath);
-                  const ext = path.extname(bannerPath).toLowerCase().replace('.', '');
-                  bookingBannerContentType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
-                  bookingBannerFilename = path.basename(bannerPath);
-                }
-              } catch (error) {
-                console.warn(`Warning: Could not read banner image at ${bannerPath}:`, error);
-                bannerUrl = bannerUrlConfig;  // Fallback to URL
-              }
+            // Use custom email body if provided, otherwise use default HTML template
+            let emailBody: string;
+            if (customEmailBody) {
+              // Replace placeholders in custom email body
+              emailBody = customEmailBody
+                .replace(/\{\{name\}\}/g, contestant.name)
+                .replace(/\{\{date\}\}/g, recordDate)
+                .replace(/\{\{block\}\}/g, String(assignment.blockNumber))
+                .replace(/\{\{seat\}\}/g, assignment.seatLabel)
+                .replace(/\{\{confirmationLink\}\}/g, confirmationLink);
             } else {
-              bannerUrl = bannerUrlConfig;  // External URL
-            }
-            
-            // Get configurable text from system config with defaults
-            const emailHeadline = await storage.getSystemConfig('booking_email_headline') || 'Your Booking is Confirmed!';
-            const emailIntro = await storage.getSystemConfig('booking_email_intro') || 'Congratulations! You\'ve secured your spot in the <strong style="color: #8B0000;">Deal or No Deal</strong> studio audience.';
-            const emailInstructions = await storage.getSystemConfig('booking_email_instructions') || 'Please confirm your attendance by clicking the button below. You can also let us know about dietary requirements or ask any questions.';
-            const emailButtonText = await storage.getSystemConfig('booking_email_button_text') || 'Confirm Attendance';
-            const emailAdditionalInstructions = await storage.getSystemConfig('booking_email_additional_instructions') || '';
-            const emailFooter = await storage.getSystemConfig('booking_email_footer') || 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.';
-            
-            // Get reply-to email for mailto buttons (use dedicated config, fallback to SMTP from email)
-            const bookingReplyToEmail = await storage.getSystemConfig('booking_reply_to_email') || 
-              (await getSmtpConfig()).fromEmail || 'noreply@example.com';
-            
-            // Professional HTML email template with configurable content - styled like old format
-            emailBody = `<!DOCTYPE html>
+              // Professional HTML email template with pre-loaded config values
+              emailBody = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -6149,7 +6174,7 @@ ${finalEmailFooter}`;
     <tr>
       <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
         <h1 style="color: #D4AF37; font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-          ${emailHeadline}
+          ${sharedConfig.emailHeadline}
         </h1>
       </td>
     </tr>
@@ -6176,7 +6201,7 @@ ${finalEmailFooter}`;
               </p>
               
               <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                ${emailIntro.split('\n\n').map((paragraph: string) => 
+                ${sharedConfig.emailIntro.split('\n\n').map((paragraph: string) => 
                   `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
                 ).join('')}
               </div>
@@ -6211,15 +6236,15 @@ ${finalEmailFooter}`;
                     <p style="color: #ffffff; font-size: 15px; margin: 0 0 20px 0;">
                       Please respond YES or NO and confirm the members of your auditioned group who will be attending ASAP.
                     </p>
-                    <a href="mailto:${bookingReplyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${contestant.name} - ${recordDate}`)}&body=${`Hi%20Deal%20or%20No%20Deal%20Team,%0D%0A%0D%0AName%3A%20${encodeURIComponent(contestant.name)}%0D%0ADate%3A%20${encodeURIComponent(recordDate)}%0D%0A%0D%0ACAN%20YOU%20ATTEND%3F%20%28mark%20with%20X%29%0D%0A%5B%20%5D%20YES%20-%20I%20confirm%20my%20attendance%0D%0A%5B%20%5D%20NO%20-%20I%20cannot%20attend%20%28Reason%3A%20%29%0D%0A%0D%0AGroup%20members%20attending%20%28please%20provide%20FULL%20NAMES%29%3A%0D%0ANote%20-%20group%20members%20must%20have%20attended%20an%20audition.%0D%0A%0D%0A---%20REQUIRED%20INFORMATION%20%28if%20attending%29%20---%0D%0A%0D%0ADo%20you%20have%20any%20medical%20conditions%3F%0D%0AIf%20yes%2C%20please%20describe%3A%0D%0A%0D%0ADo%20you%20have%20any%20mobility%20requirements%3F%20%28i.e.%20issues%20climbing%20stairs%20or%20standing%20for%20extended%20periods%29%0D%0AAnswer%3A%0D%0A%0D%0AEmergency%20contact%20name%20%26%20phone%20number%3A%0D%0AAnswer%3A%0D%0A%0D%0ADietary%20requirements%20%28mark%20with%20X%29%3A%0D%0A%5B%20%5D%20Vegetarian%0D%0A%5B%20%5D%20Vegan%0D%0A%5B%20%5D%20Gluten%20Free%0D%0A%5B%20%5D%20Dairy%20Free%0D%0A%0D%0APlease%20note%20that%20all%20our%20meals%20are%20nut-free.%20If%20your%20dietary%20requirements%20fall%20outside%20the%20options%2C%20we%20won%27t%20be%20able%20to%20cater%20to%20them%2C%20so%20we%20kindly%20ask%20that%20you%20bring%20your%20own%20meals.%0D%0A%0D%0AThank%20you.`}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
+                    <a href="mailto:${sharedConfig.bookingReplyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${contestant.name} - ${recordDate}`)}&body=${`Hi%20Deal%20or%20No%20Deal%20Team,%0D%0A%0D%0AName%3A%20${encodeURIComponent(contestant.name)}%0D%0ADate%3A%20${encodeURIComponent(recordDate)}%0D%0A%0D%0ACAN%20YOU%20ATTEND%3F%20%28mark%20with%20X%29%0D%0A%5B%20%5D%20YES%20-%20I%20confirm%20my%20attendance%0D%0A%5B%20%5D%20NO%20-%20I%20cannot%20attend%20%28Reason%3A%20%29%0D%0A%0D%0AGroup%20members%20attending%20%28please%20provide%20FULL%20NAMES%29%3A%0D%0ANote%20-%20group%20members%20must%20have%20attended%20an%20audition.%0D%0A%0D%0A---%20REQUIRED%20INFORMATION%20%28if%20attending%29%20---%0D%0A%0D%0ADo%20you%20have%20any%20medical%20conditions%3F%0D%0AIf%20yes%2C%20please%20describe%3A%0D%0A%0D%0ADo%20you%20have%20any%20mobility%20requirements%3F%20%28i.e.%20issues%20climbing%20stairs%20or%20standing%20for%20extended%20periods%29%0D%0AAnswer%3A%0D%0A%0D%0AEmergency%20contact%20name%20%26%20phone%20number%3A%0D%0AAnswer%3A%0D%0A%0D%0ADietary%20requirements%20%28mark%20with%20X%29%3A%0D%0A%5B%20%5D%20Vegetarian%0D%0A%5B%20%5D%20Vegan%0D%0A%5B%20%5D%20Gluten%20Free%0D%0A%5B%20%5D%20Dairy%20Free%0D%0A%0D%0APlease%20note%20that%20all%20our%20meals%20are%20nut-free.%20If%20your%20dietary%20requirements%20fall%20outside%20the%20options%2C%20we%20won%27t%20be%20able%20to%20cater%20to%20them%2C%20so%20we%20kindly%20ask%20that%20you%20bring%20your%20own%20meals.%0D%0A%0D%0AThank%20you.`}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
                   </td>
                 </tr>
               </table>
               
-              ${emailAdditionalInstructions ? `
+              ${sharedConfig.emailAdditionalInstructions ? `
               <!-- Additional Instructions -->
               <div style="margin: 20px 0 25px 0; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-                ${emailAdditionalInstructions.split('\n\n').map((paragraph: string) => 
+                ${sharedConfig.emailAdditionalInstructions.split('\n\n').map((paragraph: string) => 
                   `<p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
                 ).join('')}
               </div>
@@ -6244,99 +6269,106 @@ ${finalEmailFooter}`;
     <tr>
       <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
         <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
-          ${emailFooter}
+          ${sharedConfig.emailFooter}
         </p>
       </td>
     </tr>
   </table>
 </body>
 </html>`;
-          }
-          
-          const subject = emailSubject || `Studio Invitation - ${recordDate}`;
-          
-          // Get sender name from system config
-          const senderNameConfig = await storage.getSystemConfig('email_sender_name');
-          const emailConfig: EmailConfig = {
-            senderName: senderNameConfig || 'Deal or No Deal',
-          };
-          
-          // Prepare attachments including CID-embedded banner image
-          const allAttachments: { filename: string; content: Buffer; contentType: string; cid?: string }[] = [];
-          
-          // Add CID-embedded banner image if available (for non-custom email bodies)
-          if (!customEmailBody && bookingBannerBuffer) {
-            allAttachments.push({
-              filename: bookingBannerFilename,
-              content: bookingBannerBuffer,
-              contentType: bookingBannerContentType,
-              cid: bookingBannerCid,
-            });
-          }
-          
-          // Add PDF attachments if specified
-          if (attachmentPaths && Array.isArray(attachmentPaths) && attachmentPaths.length > 0) {
-            const objectStorageService = new ObjectStorageService();
-            
-            for (const attachmentPath of attachmentPaths) {
-              try {
-                const { buffer, contentType, filename } = await objectStorageService.getObjectAsBuffer(attachmentPath);
-                allAttachments.push({ content: buffer, contentType, filename });
-              } catch (attachErr: any) {
-                console.error(`Failed to load attachment ${attachmentPath}:`, attachErr.message);
-              }
             }
-          }
-          
-          // Send email with attachments (CID banner and/or PDFs)
-          if (allAttachments.length > 0) {
-            await sendEmailWithAttachment(contestant.email, subject, emailBody, allAttachments, emailConfig);
-          } else {
-            await sendEmail(contestant.email, subject, emailBody, undefined, emailConfig);
+            
+            const subject = emailSubject || `Studio Invitation - ${recordDate}`;
+            
+            const emailConfig: EmailConfig = {
+              senderName: sharedConfig.senderName,
+            };
+            
+            // Prepare attachments - use pre-loaded shared data
+            const allAttachments: { filename: string; content: Buffer; contentType: string; cid?: string }[] = [];
+            
+            // Add CID-embedded banner image if available (for non-custom email bodies)
+            if (!customEmailBody && sharedBannerBuffer) {
+              allAttachments.push({
+                filename: sharedBannerFilename,
+                content: sharedBannerBuffer,
+                contentType: sharedBannerContentType,
+                cid: bookingBannerCid,
+              });
+            }
+            
+            // Add pre-loaded PDF attachments
+            for (const att of sharedAttachments) {
+              allAttachments.push({ content: att.content, contentType: att.contentType, filename: att.filename });
+            }
+            
+            // Send email with attachments (CID banner and/or PDFs)
+            if (allAttachments.length > 0) {
+              await sendEmailWithAttachment(contestant.email, subject, emailBody, allAttachments, emailConfig);
+            } else {
+              await sendEmail(contestant.email, subject, emailBody, undefined, emailConfig);
+            }
+
+            // Create a booking message record for this initial email
+            const recordDateForLog = recordDate;
+            const storedBody = customEmailBody
+              ? customEmailBody
+                  .replace(/\{\{name\}\}/g, contestant.name)
+                  .replace(/\{\{date\}\}/g, recordDateForLog)
+                  .replace(/\{\{block\}\}/g, String(assignment.blockNumber))
+                  .replace(/\{\{seat\}\}/g, assignment.seatLabel)
+                  .replace(/\{\{confirmationLink\}\}/g, confirmationLink)
+              : `Hi ${contestant.name},\n\nYou have been booked for Deal or No Deal on ${recordDateForLog}.\nSeat: Block ${assignment.blockNumber}, ${assignment.seatLabel}\n\nPlease confirm your attendance using the link provided.`;
+            
+            await storage.createBookingMessage({
+              confirmationId: tokenRecord.id,
+              direction: 'outbound',
+              messageType: 'booking_email',
+              subject: emailSubject || `Studio Invitation - ${recordDateForLog}`,
+              body: storedBody,
+              sentAt: new Date(),
+            });
+
+            // Update bookingEmailSent timestamp
+            await storage.updateSeatAssignmentWorkflow(seatAssignmentId, {
+              bookingEmailSent: new Date(),
+            });
+
+            // Update contestant status to 'invited'
+            await storage.updateContestantAvailability(assignment.contestantId, 'invited');
+
+            return {
+              seatAssignmentId,
+              success: true,
+              contestantName: contestant.name,
+              email: contestant.email,
+              responseUrl,
+            };
+          } catch (emailError: any) {
+            console.error(`Failed to send booking confirmation email to ${contestant.email}:`, emailError.message);
+            return { seatAssignmentId, success: false, error: `Email send failed: ${emailError.message}` };
           }
         } catch (error: any) {
-          console.error(`Failed to send booking confirmation email to ${contestant.email}:`, error.message);
+          console.error(`Error processing assignment ${seatAssignmentId}:`, error.message);
+          return { seatAssignmentId, success: false, error: error.message };
         }
+      };
 
-        // Create a booking message record for this initial email
-        const recordDateForLog = new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const confirmationLinkForLog = appendNgrokSkip(`${baseUrl}/booking-confirmation/${token}`);
-        let storedBody: string;
-        if (customEmailBody) {
-          storedBody = customEmailBody
-            .replace(/\{\{name\}\}/g, contestant.name)
-            .replace(/\{\{date\}\}/g, recordDateForLog)
-            .replace(/\{\{block\}\}/g, String(assignment.blockNumber))
-            .replace(/\{\{seat\}\}/g, assignment.seatLabel)
-            .replace(/\{\{confirmationLink\}\}/g, confirmationLinkForLog);
-        } else {
-          storedBody = `Hi ${contestant.name},\n\nYou have been booked for Deal or No Deal on ${recordDateForLog}.\nSeat: Block ${assignment.blockNumber}, ${assignment.seatLabel}\n\nPlease confirm your attendance using the link provided.`;
-        }
-        
-        await storage.createBookingMessage({
-          confirmationId: tokenRecord.id,
-          direction: 'outbound',
-          messageType: 'booking_email',
-          subject: emailSubject || `Studio Invitation - ${recordDateForLog}`,
-          body: storedBody,
-          sentAt: new Date(),
-        });
+      // Process emails in parallel batches of 5 to avoid SMTP overload while staying under timeout
+      const BATCH_SIZE = 5;
+      const results: {
+        seatAssignmentId: string;
+        success: boolean;
+        contestantName?: string;
+        email?: string;
+        responseUrl?: string;
+        error?: string;
+      }[] = [];
 
-        // Update bookingEmailSent timestamp
-        await storage.updateSeatAssignmentWorkflow(seatAssignmentId, {
-          bookingEmailSent: new Date(),
-        });
-
-        // Update contestant status to 'invited'
-        await storage.updateContestantAvailability(assignment.contestantId, 'invited');
-
-        results.push({
-          seatAssignmentId,
-          success: true,
-          contestantName: contestant.name,
-          email: contestant.email,
-          responseUrl,
-        });
+      for (let i = 0; i < seatAssignmentIds.length; i += BATCH_SIZE) {
+        const batch = seatAssignmentIds.slice(i, i + BATCH_SIZE);
+        const batchResults = await Promise.all(batch.map(processAssignment));
+        results.push(...batchResults);
       }
 
       res.json({
