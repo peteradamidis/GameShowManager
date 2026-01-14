@@ -1257,7 +1257,7 @@ export default function BookingResponses() {
                               data-testid={`button-cancel-decline-${item.id}`}
                             >
                               <XCircle className="h-2.5 w-2.5 mr-0.5" />
-                              Undo
+                              Cancel
                             </Button>
                           </div>
                         ) : isConfirmed ? (
@@ -1275,7 +1275,7 @@ export default function BookingResponses() {
                               data-testid={`button-cancel-confirm-${item.id}`}
                             >
                               <XCircle className="h-2.5 w-2.5 mr-0.5" />
-                              Undo
+                              Cancel
                             </Button>
                           </div>
                         ) : (
