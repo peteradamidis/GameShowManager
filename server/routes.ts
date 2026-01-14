@@ -1036,11 +1036,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                          row["With"] || row["WITH"] || null,
           email: row.EMAIL || row.Email || row.email || row["E-mail"] || row["E-MAIL"] || 
                  row["Email Address"] || row["EMAIL ADDRESS"] || null,
-          phone: row.PHONE || row.Phone || row.phone || 
-                 row.MOBILE || row.Mobile || row.mobile ||
-                 row["Phone Number"] || row["PHONE NUMBER"] ||
-                 row["Mobile Number"] || row["MOBILE NUMBER"] ||
-                 row["Contact"] || row["CONTACT"] || null,
+          phone: (() => {
+            const rawPhone = row.PHONE || row.Phone || row.phone || 
+                   row.MOBILE || row.Mobile || row.mobile ||
+                   row["Phone Number"] || row["PHONE NUMBER"] ||
+                   row["Mobile Number"] || row["MOBILE NUMBER"] ||
+                   row["Contact"] || row["CONTACT"] || null;
+            if (!rawPhone) return null;
+            // Normalize phone number: add leading 0 if starts with 4 (Australian mobile)
+            const phoneStr = rawPhone.toString().trim();
+            return phoneStr.startsWith('4') ? '0' + phoneStr : phoneStr;
+          })(),
           location: row.ADDRESS || row.Address || row.address || 
                    row.CITY || row.City || row.city ||
                    row["Location"] || row["LOCATION"] || null,
