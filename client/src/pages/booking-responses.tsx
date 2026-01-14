@@ -134,6 +134,9 @@ export default function BookingResponses() {
   // Send email dialog state
   const [sendEmailDialogOpen, setSendEmailDialogOpen] = useState(false);
   
+  // Send ticket email dialog state
+  const [sendTicketDialogOpen, setSendTicketDialogOpen] = useState(false);
+  
   // Clear selection when filters change to prevent hidden selections
   const handleRecordDayChange = (value: string) => {
     setSelectedRecordDay(value);
@@ -508,6 +511,44 @@ export default function BookingResponses() {
     },
   });
 
+  // Bulk send ticket email mutation
+  const bulkSendTicketEmailMutation = useMutation({
+    mutationFn: async (assignmentIds: string[]) => {
+      const response = await apiRequest("POST", "/api/seat-assignments/bulk-send-ticket", {
+        seatAssignmentIds: assignmentIds,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to send ticket emails");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      const successCount = data.successCount || 0;
+      const failCount = data.failCount || 0;
+      
+      if (failCount > 0) {
+        toast({ 
+          title: `Ticket emails sent: ${successCount} success, ${failCount} failed`,
+          description: "Some emails could not be sent",
+          variant: "destructive"
+        });
+      } else {
+        toast({ title: `Ticket emails sent to ${successCount} contestant(s)` });
+      }
+      setSelectedAssignments(new Set());
+      setSendTicketDialogOpen(false);
+      invalidateBookingQueries();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to send ticket emails", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
   // Resend booking email mutation (reuses the same endpoint)
   const resendBookingEmailMutation = useMutation({
     mutationFn: async (assignmentId: string) => {
@@ -582,6 +623,14 @@ export default function BookingResponses() {
   );
   const selectedNotSentWithoutEmail = selectedItems.filter(item => 
     !item.bookingEmailSent && !item.contestant?.email && !isDeclined(item)
+  );
+  
+  // For ticket emails: confirmed but ticket not yet sent, with email
+  const selectedConfirmedWithoutTicket = selectedItems.filter(item => 
+    item.confirmedRsvp && !item.ticketEmailSent && item.contestant?.email && !isDeclined(item)
+  );
+  const selectedConfirmedWithoutTicketNoEmail = selectedItems.filter(item => 
+    item.confirmedRsvp && !item.ticketEmailSent && !item.contestant?.email && !isDeclined(item)
   );
 
   const handleSelectAll = (checked: boolean | 'indeterminate') => {
@@ -724,6 +773,19 @@ export default function BookingResponses() {
       return;
     }
     bulkSendBookingEmailMutation.mutate(ids);
+  };
+
+  const handleSendTicketEmails = () => {
+    const ids = selectedConfirmedWithoutTicket.map(item => item.id);
+    if (ids.length === 0) {
+      toast({ 
+        title: "No valid recipients", 
+        description: "Select confirmed contestants who haven't been sent a ticket email and have an email address", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    bulkSendTicketEmailMutation.mutate(ids);
   };
 
   // Resend email handlers
@@ -1030,6 +1092,12 @@ export default function BookingResponses() {
                   {selectedNotSentWithoutEmail.length} without email
                 </Badge>
               )}
+              {selectedConfirmedWithoutTicket.length > 0 && (
+                <Badge variant="outline" className="border-green-500 text-green-700 dark:text-green-400">
+                  <Ticket className="h-3 w-3 mr-1" />
+                  {selectedConfirmedWithoutTicket.length} ready for ticket
+                </Badge>
+              )}
             </div>
             <div className="flex gap-2 flex-wrap">
               <Button
@@ -1039,6 +1107,15 @@ export default function BookingResponses() {
               >
                 <Send className="h-4 w-4 mr-2" />
                 Send Booking Email ({selectedNotSentWithEmail.length})
+              </Button>
+              <Button
+                onClick={() => setSendTicketDialogOpen(true)}
+                disabled={selectedConfirmedWithoutTicket.length === 0}
+                className="bg-green-600 hover:bg-green-700 text-white"
+                data-testid="button-send-ticket-email"
+              >
+                <Ticket className="h-4 w-4 mr-2" />
+                Send Ticket Email ({selectedConfirmedWithoutTicket.length})
               </Button>
               <Button
                 variant="secondary"
@@ -1396,6 +1473,92 @@ export default function BookingResponses() {
                 <>
                   <Send className="h-4 w-4 mr-2" />
                   Send to {selectedNotSentWithEmail.length} Contestant(s)
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Ticket Email Dialog */}
+      <Dialog open={sendTicketDialogOpen} onOpenChange={setSendTicketDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Ticket className="h-5 w-5 text-green-600" />
+              Send Ticket Emails
+            </DialogTitle>
+            <DialogDescription>
+              Send ticket emails with PDF attachment to {selectedConfirmedWithoutTicket.length} confirmed contestant(s)
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {selectedConfirmedWithoutTicketNoEmail.length > 0 && (
+              <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-3 rounded-lg">
+                <h4 className="font-medium text-sm mb-2 text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                  <XCircle className="h-4 w-4" />
+                  {selectedConfirmedWithoutTicketNoEmail.length} contestant(s) will be skipped (no email)
+                </h4>
+                <div className="max-h-20 overflow-y-auto text-sm space-y-1 text-amber-700 dark:text-amber-300">
+                  {selectedConfirmedWithoutTicketNoEmail.map(item => (
+                    <div key={item.id}>{item.contestant?.name || "Unknown"}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="bg-muted p-3 rounded-lg">
+              <h4 className="font-medium text-sm mb-2">Recipients ({selectedConfirmedWithoutTicket.length})</h4>
+              {selectedConfirmedWithoutTicket.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No confirmed contestants with email addresses selected</p>
+              ) : (
+                <div className="max-h-48 overflow-y-auto text-sm space-y-1">
+                  {selectedConfirmedWithoutTicket.map(item => (
+                    <div key={item.id} className="flex justify-between">
+                      <span>{item.contestant?.name}</span>
+                      <span className="text-muted-foreground">{item.contestant?.email}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Each recipient will receive a ticket email with the Record Day Information PDF attached.
+            </p>
+            
+            <div className="border rounded-lg overflow-hidden">
+              <div className="bg-muted px-3 py-2 border-b">
+                <span className="text-sm font-medium">Email Preview</span>
+              </div>
+              <iframe
+                src={`/api/email-preview/ticket${selectedRecordDay ? `?recordDayId=${selectedRecordDay}` : ''}`}
+                className="w-full h-[300px] bg-white"
+                title="Ticket Email Preview"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSendTicketDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSendTicketEmails}
+              disabled={bulkSendTicketEmailMutation.isPending || selectedConfirmedWithoutTicket.length === 0}
+              className="bg-green-600 hover:bg-green-700"
+              data-testid="button-confirm-send-ticket-email"
+            >
+              {bulkSendTicketEmailMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Ticket className="h-4 w-4 mr-2" />
+                  Send to {selectedConfirmedWithoutTicket.length} Contestant(s)
                 </>
               )}
             </Button>

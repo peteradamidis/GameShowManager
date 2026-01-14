@@ -6631,6 +6631,268 @@ ${finalEmailFooter}`;
     }
   });
 
+  // Bulk send ticket emails for multiple confirmed seat assignments
+  app.post("/api/seat-assignments/bulk-send-ticket", requireAuth, async (req, res) => {
+    try {
+      // Check if email is configured
+      if (!await isEmailAvailable()) {
+        return res.status(503).json({ 
+          code: 'INTEGRATION_DISABLED',
+          error: "Email sending is not available. Please configure SMTP settings in the Settings page." 
+        });
+      }
+
+      const { seatAssignmentIds } = req.body;
+      
+      if (!Array.isArray(seatAssignmentIds) || seatAssignmentIds.length === 0) {
+        return res.status(400).json({ error: "Must provide at least one seat assignment ID" });
+      }
+
+      // Pre-load shared resources once
+      const pdfPath = path.join(process.cwd(), 'server', 'assets', 'Contestant_Information.pdf');
+      let pdfBuffer: Buffer;
+      try {
+        pdfBuffer = fs.readFileSync(pdfPath);
+      } catch (error) {
+        console.error("Error reading PDF file:", error);
+        return res.status(500).json({ error: "Contestant information PDF not found" });
+      }
+
+      // Prepare banner image buffer once
+      const ticketBannerCid = 'ticket-banner-image';
+      let ticketBannerBuffer: Buffer | null = null;
+      let ticketBannerContentType = 'image/png';
+      let ticketBannerFilename = 'dond_banner.png';
+      
+      const bannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
+      
+      if (bannerUrlConfig.startsWith('/')) {
+        const bannerPath = path.join(process.cwd(), bannerUrlConfig.replace(/^\//, ''));
+        try {
+          if (fs.existsSync(bannerPath)) {
+            ticketBannerBuffer = fs.readFileSync(bannerPath);
+            const ext = path.extname(bannerPath).toLowerCase().replace('.', '');
+            ticketBannerContentType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+            ticketBannerFilename = path.basename(bannerPath);
+          }
+        } catch (error) {
+          console.warn(`Warning: Could not read banner image:`, error);
+        }
+      }
+
+      // Get configurable text from system config with defaults (load once)
+      const ticketHeadline = await storage.getSystemConfig('ticket_email_headline') || 'Your Official Ticket';
+      const ticketIntro = await storage.getSystemConfig('ticket_email_intro') || 'Thank you for confirming your attendance! This is your official ticket for the Deal or No Deal recording.';
+      const ticketImportant = await storage.getSystemConfig('ticket_email_important') || 'IMPORTANT INFORMATION is attached in the PDF. Please read it carefully before your record day.';
+      const ticketFooter = await storage.getSystemConfig('ticket_email_footer') || 'This is an automated email from the Deal or No Deal production team.';
+      const senderNameConfig = await storage.getSystemConfig('email_sender_name');
+      
+      const emailConfig: EmailConfig = {
+        senderName: senderNameConfig || 'Deal or No Deal',
+      };
+
+      // Process a single assignment
+      const processAssignment = async (assignmentId: string) => {
+        try {
+          const assignment = await storage.getSeatAssignmentById(assignmentId);
+          
+          if (!assignment) {
+            return { seatAssignmentId: assignmentId, success: false, error: "Assignment not found" };
+          }
+
+          if (!assignment.confirmedRsvp) {
+            return { seatAssignmentId: assignmentId, success: false, error: "Booking not confirmed" };
+          }
+
+          const contestant = await storage.getContestantById(assignment.contestantId);
+          const recordDay = await storage.getRecordDayById(assignment.recordDayId);
+
+          if (!contestant || !recordDay) {
+            return { seatAssignmentId: assignmentId, success: false, error: "Contestant or record day not found" };
+          }
+
+          if (!contestant.email) {
+            return { seatAssignmentId: assignmentId, success: false, error: "No email address", contestantName: contestant.name };
+          }
+
+          // Format date
+          const recordDate = new Date(recordDay.date).toLocaleDateString('en-AU', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          });
+
+          // Determine banner URL
+          let bannerUrl = ticketBannerBuffer ? `cid:${ticketBannerCid}` : bannerUrlConfig;
+
+          // Create email HTML
+          const emailHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    
+    <tr>
+      <td style="padding: 0; line-height: 0;">
+        <img src="${bannerUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />
+      </td>
+    </tr>
+    
+    <tr>
+      <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          ${ticketHeadline}
+        </h1>
+      </td>
+    </tr>
+    
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+          <tr>
+            <td style="padding: 30px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 0 0 20px 0;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0;">
+                      ${ticketImportant}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                Hi ${contestant.name.split(' ')[0]},
+              </p>
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                ${ticketIntro.split('\n\n').map((paragraph: string) => 
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
+              
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase;">
+                      Your Booking Details
+                    </h2>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                      <strong style="color: #8B0000;">DATE:</strong> ${recordDate.toUpperCase()}
+                    </p>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30 AM
+                    </p>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
+                      <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
+                We look forward to seeing you!
+              </p>
+              <p style="color: #333333; font-size: 15px; margin: 0;">
+                Kind Regards,<br/>
+                <strong>The Deal Or No Deal Team</strong>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
+        <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
+          ${ticketFooter}
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+          // Build attachments array
+          const attachments: any[] = [{
+            filename: 'Record_Day_Information.pdf',
+            content: pdfBuffer,
+            contentType: 'application/pdf'
+          }];
+          
+          if (ticketBannerBuffer) {
+            attachments.push({
+              filename: ticketBannerFilename,
+              content: ticketBannerBuffer,
+              contentType: ticketBannerContentType,
+              cid: ticketBannerCid
+            });
+          }
+
+          // Send email
+          await sendEmailWithAttachment(
+            contestant.email,
+            'Deal or No Deal - Record Day Information',
+            emailHtml,
+            attachments,
+            emailConfig
+          );
+
+          // Update ticketEmailSent timestamp
+          await storage.updateSeatAssignmentWorkflow(assignmentId, {
+            ticketEmailSent: new Date(),
+          });
+
+          return {
+            seatAssignmentId: assignmentId,
+            success: true,
+            contestantName: contestant.name,
+            email: contestant.email,
+          };
+        } catch (error: any) {
+          return {
+            seatAssignmentId: assignmentId,
+            success: false,
+            error: error.message,
+          };
+        }
+      };
+
+      // Process in batches to avoid overloading
+      const BATCH_SIZE = 5;
+      const results: {
+        seatAssignmentId: string;
+        success: boolean;
+        contestantName?: string;
+        email?: string;
+        error?: string;
+      }[] = [];
+
+      for (let i = 0; i < seatAssignmentIds.length; i += BATCH_SIZE) {
+        const batch = seatAssignmentIds.slice(i, i + BATCH_SIZE);
+        const batchResults = await Promise.all(batch.map(processAssignment));
+        results.push(...batchResults);
+      }
+
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.filter(r => !r.success).length;
+
+      res.json({
+        message: `Sent ${successCount} ticket email(s)${failCount > 0 ? `, ${failCount} failed` : ''}`,
+        results,
+        successCount,
+        failCount,
+      });
+    } catch (error: any) {
+      console.error("Error sending bulk ticket emails:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get booking confirmation responses for a record day (for viewing dietary requirements, questions, etc.)
   app.get("/api/booking-confirmations/record-day/:recordDayId", async (req, res) => {
     try {
@@ -8990,6 +9252,147 @@ ${finalEmailFooter}`;
       res.send(html);
     } catch (error: any) {
       console.error("Error generating booking email preview:", error);
+      res.setHeader('Content-Type', 'text/html');
+      res.status(500).send(`<!DOCTYPE html><html><head><title>Preview Error</title></head><body style="font-family: Arial, sans-serif; padding: 40px; text-align: center; background: #fee2e2;"><h2 style="color: #dc2626;">Preview Error</h2><p style="color: #7f1d1d;">${error.message || 'Failed to load preview'}</p></body></html>`);
+    }
+  });
+
+  // Dynamic Ticket Email Preview
+  app.get("/api/email-preview/ticket", async (req, res) => {
+    // Allow iframe embedding from same origin
+    res.removeHeader('X-Frame-Options');
+    res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+    
+    try {
+      // Get configurable text from system config with defaults
+      const ticketHeadline = await storage.getSystemConfig('ticket_email_headline') || 'Your Official Ticket';
+      const ticketIntro = await storage.getSystemConfig('ticket_email_intro') || 'Thank you for confirming your attendance! This is your official ticket for the Deal or No Deal recording.';
+      const ticketImportant = await storage.getSystemConfig('ticket_email_important') || 'IMPORTANT INFORMATION is attached in the PDF. Please read it carefully before your record day.';
+      const ticketFooter = await storage.getSystemConfig('ticket_email_footer') || 'This is an automated email from the Deal or No Deal production team.';
+      
+      // Get record day data if provided
+      const recordDayId = req.query.recordDayId as string | undefined;
+      let sampleDate = 'Wednesday, 15 January 2026';
+      
+      if (recordDayId) {
+        try {
+          const recordDay = await storage.getRecordDayById(recordDayId);
+          if (recordDay) {
+            const date = new Date(recordDay.date);
+            sampleDate = date.toLocaleDateString('en-AU', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            });
+          }
+        } catch (e) {
+          // Ignore errors, use defaults
+        }
+      }
+      
+      const sampleName = 'Sample Contestant';
+      
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ticket Email Preview</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5;">
+  <div style="text-align: center; margin-bottom: 20px;">
+    <span style="background: #28a745; color: white; padding: 8px 16px; border-radius: 4px; font-size: 14px;">LIVE PREVIEW - Using Your Saved Template</span>
+    <p style="color: #666; font-size: 12px; margin: 8px 0 0 0;">Attachment: Record_Day_Information.pdf</p>
+  </div>
+  <div style="max-width: 600px; margin: 0 auto; background-color: #2a0a0a;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+      
+      <tr>
+        <td style="padding: 0; line-height: 0; background: linear-gradient(135deg, #8B0000 0%, #5c0000 100%); text-align: center; padding: 30px;">
+          <h2 style="color: #D4AF37; font-size: 28px; margin: 0; letter-spacing: 2px;">DEAL OR NO DEAL</h2>
+          <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 14px;">BANNER IMAGE APPEARS HERE</p>
+        </td>
+      </tr>
+      
+      <tr>
+        <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+          <h1 style="color: #D4AF37; font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+            ${ticketHeadline}
+          </h1>
+        </td>
+      </tr>
+      
+      <tr>
+        <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+            <tr>
+              <td style="padding: 30px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 0 0 20px 0;">
+                  <tr>
+                    <td style="padding: 15px;">
+                      <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0;">
+                        ${ticketImportant}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+                
+                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                  Hi ${sampleName.split(' ')[0]},
+                </p>
+                <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                  ${ticketIntro}
+                </div>
+                
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase;">
+                        Your Booking Details
+                      </h2>
+                      <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                        <strong style="color: #8B0000;">DATE:</strong> ${sampleDate.toUpperCase()}
+                      </p>
+                      <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                        <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30 AM
+                      </p>
+                      <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
+                        <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+                
+                <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
+                  We look forward to seeing you!
+                </p>
+                <p style="color: #333333; font-size: 15px; margin: 0;">
+                  Kind Regards,<br/>
+                  <strong>The Deal Or No Deal Team</strong>
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      
+      <tr>
+        <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
+          <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
+            ${ticketFooter}
+          </p>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>`;
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error: any) {
+      console.error("Error generating ticket email preview:", error);
       res.setHeader('Content-Type', 'text/html');
       res.status(500).send(`<!DOCTYPE html><html><head><title>Preview Error</title></head><body style="font-family: Arial, sans-serif; padding: 40px; text-align: center; background: #fee2e2;"><h2 style="color: #dc2626;">Preview Error</h2><p style="color: #7f1d1d;">${error.message || 'Failed to load preview'}</p></body></html>`);
     }
