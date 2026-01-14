@@ -1088,21 +1088,22 @@ export default function BookingResponses() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-blue-100 dark:bg-blue-900/20">
-                  <TableHead className="w-12">
+                  <TableHead className="w-8 px-2">
                     <Checkbox
                       checked={selectedAssignments.size === filteredData.length && filteredData.length > 0}
                       onCheckedChange={handleSelectAll}
                       data-testid="checkbox-select-all"
                     />
                   </TableHead>
-                  <TableHead className="font-semibold">Name</TableHead>
-                  <TableHead className="font-semibold">Record Day</TableHead>
-                  <TableHead className="font-semibold">Seat</TableHead>
-                  <TableHead className="font-semibold">Email</TableHead>
-                  <TableHead className="font-semibold text-center">Email Sent</TableHead>
-                  <TableHead className="font-semibold text-center">Status</TableHead>
-                  <TableHead className="font-semibold text-center">Ticket</TableHead>
-                  <TableHead className="font-semibold">Actions</TableHead>
+                  <TableHead className="font-semibold text-xs">Name</TableHead>
+                  <TableHead className="font-semibold text-xs">Attending<br/>With</TableHead>
+                  <TableHead className="font-semibold text-xs whitespace-nowrap">Date /<br/>RX</TableHead>
+                  <TableHead className="font-semibold text-xs">Seat</TableHead>
+                  <TableHead className="font-semibold text-xs">Email</TableHead>
+                  <TableHead className="font-semibold text-xs text-center">Sent</TableHead>
+                  <TableHead className="font-semibold text-xs text-center">Status</TableHead>
+                  <TableHead className="font-semibold text-xs text-center">Ticket</TableHead>
+                  <TableHead className="font-semibold text-xs">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1123,93 +1124,97 @@ export default function BookingResponses() {
                           data-testid={`checkbox-${item.id}`}
                         />
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
+                      <TableCell className="py-1">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
                             {item.contestant?.photoUrl && (
                               <AvatarImage src={item.contestant.photoUrl} alt={item.contestant?.name || ''} />
                             )}
-                            <AvatarFallback className="text-xs">
+                            <AvatarFallback className="text-[10px]">
                               {(item.contestant?.name || '?').split(' ').map(n => n[0]).join('').slice(0, 2)}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="font-medium">{item.contestant?.name || 'Unknown'}</span>
+                          <span className="font-medium text-xs">{item.contestant?.name || 'Unknown'}</span>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <TableCell className="py-1">
+                        <span className="text-xs text-muted-foreground">
+                          {item.contestant?.attendingWith || "-"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-1">
+                        <div className="flex flex-col text-xs">
                           <span>
                             {item.recordDay?.date 
-                              ? format(new Date(item.recordDay.date), "MMM d, yyyy") 
-                              : "Unknown"}
+                              ? format(new Date(item.recordDay.date), "MMM d") 
+                              : "-"}
                           </span>
                           {item.recordDay?.rxNumber && (
-                            <Badge variant="outline" className="ml-1 text-xs">
+                            <span className="text-muted-foreground text-[10px]">
                               {item.recordDay.rxNumber}
-                            </Badge>
+                            </span>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">
-                          Block {item.blockNumber} - {item.seatLabel}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground">
-                          {item.contestant?.email || "No email"}
+                      <TableCell className="py-1">
+                        <span className="text-xs font-mono">
+                          {item.blockNumber}-{item.seatLabel}
                         </span>
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="py-1">
+                        <span className="text-xs text-muted-foreground truncate max-w-[120px] block">
+                          {item.contestant?.email || "-"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center py-1 px-2">
                         {item.bookingEmailSent ? (
-                          <div className="flex flex-col items-center gap-1">
+                          <div className="flex flex-col items-center gap-0.5">
                             <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                              <MailCheck className="h-4 w-4" />
-                              <span className="text-xs">
-                                {format(new Date(item.bookingEmailSent), "MMM d")}
+                              <MailCheck className="h-3 w-3" />
+                              <span className="text-[10px]">
+                                {format(new Date(item.bookingEmailSent), "M/d")}
                               </span>
                             </div>
                             {item.contestant?.email && !isDeclined(item) && (
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-6 px-2 text-xs"
+                                className="h-5 px-1.5 text-[10px]"
                                 onClick={() => handleResendClick(item)}
                                 disabled={resendBookingEmailMutation.isPending}
                                 data-testid={`button-resend-${item.id}`}
                               >
-                                <RefreshCw className="h-3 w-3 mr-1" />
+                                <RefreshCw className="h-2.5 w-2.5 mr-0.5" />
                                 Resend
                               </Button>
                             )}
                           </div>
                         ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
+                          <span className="text-muted-foreground text-xs">-</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center py-1 px-2">
                         {getStatusBadge(item)}
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center py-1 px-2">
                         {isConfirmed ? (
                           item.ticketEmailSent ? (
-                            <div className="flex flex-col items-center gap-1">
+                            <div className="flex flex-col items-center gap-0.5">
                               <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                                <Ticket className="h-4 w-4" />
-                                <span className="text-xs">
-                                  {format(new Date(item.ticketEmailSent), "MMM d")}
+                                <Ticket className="h-3 w-3" />
+                                <span className="text-[10px]">
+                                  {format(new Date(item.ticketEmailSent), "M/d")}
                                 </span>
                               </div>
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-6 px-2 text-xs"
+                                className="h-5 px-1.5 text-[10px]"
                                 onClick={() => handleResendTicketClick(item)}
                                 disabled={resendTicketMutation.isPending}
                                 data-testid={`button-resend-ticket-${item.id}`}
                               >
-                                <RefreshCw className="h-3 w-3 mr-1" />
+                                <RefreshCw className="h-2.5 w-2.5 mr-0.5" />
                                 Resend
                               </Button>
                             </div>
@@ -1217,27 +1222,26 @@ export default function BookingResponses() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-6 px-2 text-xs"
+                              className="h-5 px-1.5 text-[10px]"
                               onClick={() => sendTicketMutation.mutate(item.id)}
                               disabled={sendTicketMutation.isPending || !item.contestant?.email}
                               data-testid={`button-send-ticket-${item.id}`}
                             >
-                              <Ticket className="h-3 w-3 mr-1" />
-                              Send Ticket
+                              <Ticket className="h-2.5 w-2.5 mr-0.5" />
+                              Send
                             </Button>
                           )
                         ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
+                          <span className="text-muted-foreground text-xs">-</span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="py-1 px-2">
                         {isDeclined(item) ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-red-600 dark:text-red-400">Declined</span>
+                          <div className="flex items-center gap-1">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-6 px-2 text-xs"
+                              className="h-5 px-1.5 text-[10px]"
                               onClick={() => {
                                 setCancelConfirmAssignment(item);
                                 setCancelConfirmType("decline");
@@ -1246,17 +1250,16 @@ export default function BookingResponses() {
                               disabled={undoDeclineMutation.isPending}
                               data-testid={`button-cancel-decline-${item.id}`}
                             >
-                              <XCircle className="h-3 w-3 mr-1" />
-                              Cancel
+                              <XCircle className="h-2.5 w-2.5 mr-0.5" />
+                              Undo
                             </Button>
                           </div>
                         ) : isConfirmed ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-green-600 dark:text-green-400">Confirmed</span>
+                          <div className="flex items-center gap-1">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-6 px-2 text-xs"
+                              className="h-5 px-1.5 text-[10px]"
                               onClick={() => {
                                 setCancelConfirmAssignment(item);
                                 setCancelConfirmType("confirm");
@@ -1265,33 +1268,35 @@ export default function BookingResponses() {
                               disabled={undoConfirmMutation.isPending}
                               data-testid={`button-cancel-confirm-${item.id}`}
                             >
-                              <XCircle className="h-3 w-3 mr-1" />
-                              Cancel
+                              <XCircle className="h-2.5 w-2.5 mr-0.5" />
+                              Undo
                             </Button>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
                             <Button
                               size="sm"
                               variant="default"
+                              className="h-5 px-1.5 text-[10px]"
                               onClick={() => handleConfirm(item)}
                               disabled={confirmMutation.isPending || !item.bookingEmailSent}
                               title={!item.bookingEmailSent ? "Invitation must be sent first" : "Confirm booking"}
                               data-testid={`button-confirm-${item.id}`}
                             >
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Confirm
+                              <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
+                              OK
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
+                              className="h-5 px-1.5 text-[10px]"
                               onClick={() => handleDeclineClick(item)}
                               disabled={!item.bookingEmailSent}
                               title={!item.bookingEmailSent ? "Invitation must be sent first" : "Decline booking"}
                               data-testid={`button-decline-${item.id}`}
                             >
-                              <XCircle className="h-3 w-3 mr-1" />
-                              Decline
+                              <XCircle className="h-2.5 w-2.5 mr-0.5" />
+                              No
                             </Button>
                           </div>
                         )}
