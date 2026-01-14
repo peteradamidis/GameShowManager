@@ -3441,8 +3441,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`[Auto-assign] BACKFILL: ${remainingSolos.length} solo contestants remaining to place`);
       
-      // Limit solos per block to 2-4 to fill gaps (not dominate)
-      const MAX_SOLOS_PER_BLOCK = 4;
+      // Limit solos per block to fill gaps without dominating
+      // 8 allows filling remaining seats after groups are placed
+      const MAX_SOLOS_PER_BLOCK = 8;
       
       // For each block, find empty non-reserved seats and fill them with solos
       for (const block of blocks) {
