@@ -6,11 +6,12 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock } from "lucide-react";
 
-// Helper function to check if a medical field has meaningful content (not NA/N/A/empty)
+// Helper function to check if a medical field has meaningful content (not NA/N/A/No/None/empty)
 const hasMeaningfulMedicalNote = (value: string | undefined | null): boolean => {
   if (!value) return false;
   const trimmed = value.trim().toUpperCase();
-  return trimmed !== '' && trimmed !== 'NA' && trimmed !== 'N/A' && trimmed !== 'N / A';
+  const ignoredValues = ['', 'NA', 'N/A', 'N / A', 'NO', 'N', 'NONE', '-'];
+  return !ignoredValues.includes(trimmed);
 };
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
