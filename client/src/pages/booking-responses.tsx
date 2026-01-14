@@ -1284,7 +1284,7 @@ export default function BookingResponses() {
                               data-testid={`button-confirm-${item.id}`}
                             >
                               <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
-                              OK
+                              Confirm
                             </Button>
                             <Button
                               size="sm"
@@ -1296,7 +1296,7 @@ export default function BookingResponses() {
                               data-testid={`button-decline-${item.id}`}
                             >
                               <XCircle className="h-2.5 w-2.5 mr-0.5" />
-                              No
+                              Decline
                             </Button>
                           </div>
                         )}
