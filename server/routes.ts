@@ -2433,6 +2433,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         onlyConfirmedAvailability?: boolean;
       };
 
+      console.log(`[Auto-assign] Request body:`, JSON.stringify(req.body));
+      console.log(`[Auto-assign] selectedBlocks:`, selectedBlocks);
+
       if (!recordDayId) {
         return res.status(400).json({ error: "recordDayId is required" });
       }
@@ -2441,6 +2444,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validBlocks = selectedBlocks && Array.isArray(selectedBlocks) && selectedBlocks.length > 0
         ? selectedBlocks.filter(b => b >= 1 && b <= 7)
         : [1, 2, 3, 4, 5, 6, 7]; // Default to all blocks
+      
+      console.log(`[Auto-assign] validBlocks after filtering:`, validBlocks);
 
       if (validBlocks.length === 0) {
         return res.status(400).json({ error: "No valid blocks selected" });
