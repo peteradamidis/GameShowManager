@@ -31,8 +31,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
 import { Link2, AlertTriangle, ChevronUp, ChevronDown, User } from "lucide-react";
-import hostImage from "@/assets/host-grant.png";
-import hostSideImage from "@/assets/host.png";
 import stageBackdropImage from "@/assets/stage-backdrop.png";
 
 // Photo-only seat for Podium Visualiser mode
@@ -1178,12 +1176,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
             <div className="relative flex items-center justify-center py-6">
               <div className={`border-2 border-dashed border-primary text-center ${isPodiumVisualizerMode ? 'rounded-full px-16 py-12' : 'rounded-lg px-12 py-8'}`}>
                 {isPodiumVisualizerMode ? (
-                  <img 
-                    src={hostImage} 
-                    alt="Host" 
-                    className="h-44 object-contain mx-auto"
-                    data-testid="host-image"
-                  />
+                  <p className="text-lg font-semibold text-primary">STAGE</p>
                 ) : (
                   <>
                     <p className="text-lg font-semibold text-primary">STAGE</p>
@@ -1192,24 +1185,14 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 )}
               </div>
               {isPodiumVisualizerMode ? (
-                <>
-                  <div className="absolute right-0 flex items-end justify-center" style={{ height: '100%' }}>
-                    <img 
-                      src={hostSideImage} 
-                      alt="Host" 
-                      className="h-auto max-h-full object-contain"
-                      style={{ maxHeight: '400px' }}
-                    />
-                  </div>
-                  <div className="absolute flex items-center justify-center" style={{ right: '-220px', height: '100%' }}>
-                    <img 
-                      src={stageBackdropImage} 
-                      alt="Stage Backdrop" 
-                      className="object-contain"
-                      style={{ maxHeight: '320px', transform: 'rotate(90deg)' }}
-                    />
-                  </div>
-                </>
+                <div className="absolute flex items-center justify-center" style={{ right: '-140px', height: '100%' }}>
+                  <img 
+                    src={stageBackdropImage} 
+                    alt="Stage Backdrop" 
+                    className="object-contain"
+                    style={{ maxHeight: '200px', transform: 'rotate(90deg)' }}
+                  />
+                </div>
               ) : (
                 <div className="absolute right-0 border-2 border-dashed border-muted-foreground rounded-lg px-2 py-6 flex items-center justify-center">
                   <p className="text-sm font-semibold text-muted-foreground tracking-widest" style={{ writingMode: 'vertical-rl' }}>PODIUM</p>
