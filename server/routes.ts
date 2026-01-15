@@ -4924,10 +4924,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Cancel seat assignment (move to reschedule)
+  // If contestant was confirmed, set their status to 'invited' (not 'available')
   app.post("/api/seat-assignments/:id/cancel", async (req, res) => {
     try {
       const { reason } = req.body;
+      
+      // Get the assignment first to check if contestant was confirmed
+      const assignment = await storage.getSeatAssignmentById(req.params.id);
+      if (!assignment) {
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+      
+      // Check if the contestant was confirmed (has confirmedRsvp set)
+      const wasConfirmed = !!assignment.confirmedRsvp;
+      
       const canceled = await storage.cancelSeatAssignment(req.params.id, reason);
+      
+      // If they were confirmed, override status to 'invited' instead of 'available'
+      if (wasConfirmed) {
+        await storage.updateContestantAvailability(canceled.contestantId, 'invited');
+      }
+      
       res.json(canceled);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
