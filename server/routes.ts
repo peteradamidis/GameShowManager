@@ -2701,6 +2701,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           medicalInfo: contestant?.medicalInfo,
           wasStandby: seatedStandbyContestantIds.has(assignment.contestantId),
           photoUrl: contestant?.photoUrl,
+          contestantLocation: contestant?.location,
         };
       });
 

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock } from "lucide-react";
+import { getDistanceFromDocklands } from "@/components/contestant-table";
 
 // Helper function to check if a medical field has meaningful content (not NA/N/A/No/None/empty)
 const hasMeaningfulMedicalNote = (value: string | undefined | null): boolean => {
@@ -48,6 +49,7 @@ export interface SeatData {
   wasStandby?: boolean; // True if contestant was seated from standby list
   isGroupSeparated?: boolean; // True if contestant has a partner/group member not sitting adjacent
   photoUrl?: string; // Contestant photo URL for podium visualiser
+  contestantLocation?: string; // Contestant's location for 60km distance check
 }
 
 interface SeatCardProps {
@@ -237,6 +239,27 @@ export function SeatCard({
                 </TooltipContent>
               </Tooltip>
             )}
+            {(() => {
+              const distanceInfo = getDistanceFromDocklands(seat.contestantLocation);
+              if (distanceInfo?.isOver60km) {
+                return (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span 
+                        className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-yellow-200/70 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400 text-[9px] font-bold flex-shrink-0" 
+                        data-testid={`distance-icon-${seat.assignmentId}`}
+                      >
+                        !
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      <p>{distanceInfo.distance}km from Docklands (over 60km)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              }
+              return null;
+            })()}
           </div>
           <div className="flex items-center gap-1">
             {seat.playerType && (
