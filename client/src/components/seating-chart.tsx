@@ -1145,7 +1145,32 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
           )}
 
           {/* Circular Seating Area */}
-          <div className="space-y-6">
+          <div className="relative">
+            {/* Podium Set Image - Left Side (only in visualizer mode) */}
+            {isPodiumVisualizerMode && (
+              <div className="absolute left-0 top-0 bottom-0 flex items-center" style={{ left: '-180px', width: '160px' }}>
+                <img 
+                  src={podiumSetImage} 
+                  alt="Podium Set" 
+                  className="w-full object-contain"
+                  style={{ transform: 'rotate(-90deg)' }}
+                />
+              </div>
+            )}
+            
+            {/* Stage Backdrop Image - Right Side (only in visualizer mode) */}
+            {isPodiumVisualizerMode && (
+              <div className="absolute right-0 top-0 bottom-0 flex items-center" style={{ right: '-180px', width: '160px' }}>
+                <img 
+                  src={stageBackdropImage} 
+                  alt="Stage Backdrop" 
+                  className="w-full object-contain"
+                  style={{ transform: 'rotate(90deg)' }}
+                />
+              </div>
+            )}
+            
+            <div className="space-y-6">
             {/* Top Row - 3 Blocks (rows reversed: A at bottom, E at top) */}
             <div className="grid grid-cols-3 gap-4">
               {topBlocks.map((block, idx) => (
@@ -1175,32 +1200,13 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
 
             {/* Center Stage Indicator with Podium */}
             <div className="relative flex items-center justify-center py-6">
-              {isPodiumVisualizerMode && (
-                <div className="absolute flex items-center justify-center" style={{ left: '-140px', height: '100%' }}>
-                  <img 
-                    src={podiumSetImage} 
-                    alt="Podium Set" 
-                    className="object-contain"
-                    style={{ maxHeight: '200px', transform: 'rotate(-90deg)' }}
-                  />
-                </div>
-              )}
               {!isPodiumVisualizerMode && (
                 <div className="border-2 border-dashed border-primary text-center rounded-lg px-12 py-8">
                   <p className="text-lg font-semibold text-primary">STAGE</p>
                   <p className="text-xs text-muted-foreground mt-1">Performance Area</p>
                 </div>
               )}
-              {isPodiumVisualizerMode ? (
-                <div className="absolute flex items-center justify-center" style={{ right: '-140px', height: '100%' }}>
-                  <img 
-                    src={stageBackdropImage} 
-                    alt="Stage Backdrop" 
-                    className="object-contain"
-                    style={{ maxHeight: '200px', transform: 'rotate(90deg)' }}
-                  />
-                </div>
-              ) : (
+              {!isPodiumVisualizerMode && (
                 <div className="absolute right-0 border-2 border-dashed border-muted-foreground rounded-lg px-2 py-6 flex items-center justify-center">
                   <p className="text-sm font-semibold text-muted-foreground tracking-widest" style={{ writingMode: 'vertical-rl' }}>PODIUM</p>
                 </div>
@@ -1235,6 +1241,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   />
                 );
               })}
+            </div>
             </div>
           </div>
 
