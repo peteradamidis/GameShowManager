@@ -499,6 +499,8 @@ export default function SeatingChartPage() {
             mobilityNotes: assignment.mobilityNotes,
             medicalInfo: assignment.medicalInfo,
             wasStandby: assignment.wasStandby,
+            photoUrl: assignment.photoUrl,
+            contestantLocation: assignment.contestantLocation,
           };
         }
       }
