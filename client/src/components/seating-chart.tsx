@@ -1145,8 +1145,20 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
           )}
 
           {/* Circular Seating Area */}
-          <div>
-            <div className="space-y-6">
+          <div className={isPodiumVisualizerMode ? "flex items-center gap-4" : ""}>
+            {/* Podium Set Image - Far Left (only in visualizer mode) */}
+            {isPodiumVisualizerMode && (
+              <div className="flex-shrink-0 flex items-center justify-center" style={{ width: '200px' }}>
+                <img 
+                  src={podiumSetImage} 
+                  alt="Podium Set" 
+                  className="object-contain"
+                  style={{ height: '200px', transform: 'rotate(-90deg)' }}
+                />
+              </div>
+            )}
+            
+            <div className={`space-y-6 ${isPodiumVisualizerMode ? 'flex-1' : ''}`}>
             {/* Top Row - 3 Blocks (rows reversed: A at bottom, E at top) */}
             <div className="grid grid-cols-3 gap-4">
               {topBlocks.map((block, idx) => (
@@ -1176,25 +1188,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
 
             {/* Center Stage Indicator with Podium */}
             <div className="relative flex items-center justify-center py-6">
-              {isPodiumVisualizerMode ? (
-                <div className="flex items-center justify-center gap-8 w-full">
-                  {/* Podium Set Image - Left */}
-                  <img 
-                    src={podiumSetImage} 
-                    alt="Podium Set" 
-                    className="object-contain"
-                    style={{ height: '180px', transform: 'rotate(-90deg)' }}
-                  />
-                  
-                  {/* Stage Backdrop Image - Right */}
-                  <img 
-                    src={stageBackdropImage} 
-                    alt="Stage Backdrop" 
-                    className="object-contain"
-                    style={{ height: '180px', transform: 'rotate(90deg)' }}
-                  />
-                </div>
-              ) : (
+              {!isPodiumVisualizerMode && (
                 <>
                   <div className="border-2 border-dashed border-primary text-center rounded-lg px-12 py-8">
                     <p className="text-lg font-semibold text-primary">STAGE</p>
@@ -1237,6 +1231,18 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
               })}
             </div>
             </div>
+            
+            {/* Stage Backdrop Image - Far Right (only in visualizer mode) */}
+            {isPodiumVisualizerMode && (
+              <div className="flex-shrink-0 flex items-center justify-center" style={{ width: '200px' }}>
+                <img 
+                  src={stageBackdropImage} 
+                  alt="Stage Backdrop" 
+                  className="object-contain"
+                  style={{ height: '200px', transform: 'rotate(90deg)' }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Standing Block and Standbys - Side by Side */}
