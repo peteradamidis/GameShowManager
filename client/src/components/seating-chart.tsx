@@ -1145,20 +1145,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
           )}
 
           {/* Circular Seating Area */}
-          <div className={isPodiumVisualizerMode ? "flex items-center gap-4" : ""}>
-            {/* Podium Set Image - Far Left (only in visualizer mode) */}
-            {isPodiumVisualizerMode && (
-              <div className="flex-shrink-0 flex items-center justify-center" style={{ width: '200px' }}>
-                <img 
-                  src={podiumSetImage} 
-                  alt="Podium Set" 
-                  className="object-contain"
-                  style={{ height: '200px', transform: 'rotate(-90deg)' }}
-                />
-              </div>
-            )}
-            
-            <div className={`space-y-6 ${isPodiumVisualizerMode ? 'flex-1' : ''}`}>
+          <div>
+            <div className="space-y-6">
             {/* Top Row - 3 Blocks (rows reversed: A at bottom, E at top) */}
             <div className="grid grid-cols-3 gap-4">
               {topBlocks.map((block, idx) => (
@@ -1187,15 +1175,40 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
             </div>
 
             {/* Center Stage Indicator with Podium */}
-            <div className="relative flex items-center justify-center py-6">
-              {!isPodiumVisualizerMode && (
+            <div className="relative flex items-center justify-between py-6">
+              {isPodiumVisualizerMode ? (
                 <>
+                  {/* Podium Set Image - Left Edge */}
+                  <div className="flex items-center justify-start">
+                    <img 
+                      src={podiumSetImage} 
+                      alt="Podium Set" 
+                      className="object-contain"
+                      style={{ height: '180px', transform: 'rotate(-90deg)' }}
+                    />
+                  </div>
+                  
+                  {/* Stage Backdrop Image - Right Edge */}
+                  <div className="flex items-center justify-end">
+                    <img 
+                      src={stageBackdropImage} 
+                      alt="Stage Backdrop" 
+                      className="object-contain"
+                      style={{ height: '180px', transform: 'rotate(90deg)' }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex-1" />
                   <div className="border-2 border-dashed border-primary text-center rounded-lg px-12 py-8">
                     <p className="text-lg font-semibold text-primary">STAGE</p>
                     <p className="text-xs text-muted-foreground mt-1">Performance Area</p>
                   </div>
-                  <div className="absolute right-0 border-2 border-dashed border-muted-foreground rounded-lg px-2 py-6 flex items-center justify-center">
-                    <p className="text-sm font-semibold text-muted-foreground tracking-widest" style={{ writingMode: 'vertical-rl' }}>PODIUM</p>
+                  <div className="flex-1 flex justify-end">
+                    <div className="border-2 border-dashed border-muted-foreground rounded-lg px-2 py-6 flex items-center justify-center">
+                      <p className="text-sm font-semibold text-muted-foreground tracking-widest" style={{ writingMode: 'vertical-rl' }}>PODIUM</p>
+                    </div>
                   </div>
                 </>
               )}
@@ -1231,18 +1244,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
               })}
             </div>
             </div>
-            
-            {/* Stage Backdrop Image - Far Right (only in visualizer mode) */}
-            {isPodiumVisualizerMode && (
-              <div className="flex-shrink-0 flex items-center justify-center" style={{ width: '200px' }}>
-                <img 
-                  src={stageBackdropImage} 
-                  alt="Stage Backdrop" 
-                  className="object-contain"
-                  style={{ height: '200px', transform: 'rotate(90deg)' }}
-                />
-              </div>
-            )}
           </div>
 
           {/* Standing Block and Standbys - Side by Side */}
