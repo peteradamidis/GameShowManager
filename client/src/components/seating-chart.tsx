@@ -1199,12 +1199,12 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                       style={{ maxHeight: '400px' }}
                     />
                   </div>
-                  <div className="absolute right-0 flex items-center justify-center" style={{ right: '-180px', height: '100%' }}>
+                  <div className="absolute flex items-center justify-center" style={{ right: '-220px', height: '100%' }}>
                     <img 
-                      src="/assets/podium-set.png" 
-                      alt="Podium Set" 
+                      src="/assets/stage-backdrop.png" 
+                      alt="Stage Backdrop" 
                       className="object-contain"
-                      style={{ maxHeight: '280px', transform: 'rotate(-90deg)' }}
+                      style={{ maxHeight: '320px', transform: 'rotate(90deg)' }}
                     />
                   </div>
                 </>
