@@ -1730,6 +1730,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create temporary contestant (on-the-fly booking before proper audition/import)
+  app.post("/api/contestants/temporary", requireAuth, async (req, res) => {
+    try {
+      const { name, gender, age, phone, email, notes } = req.body;
+      
+      if (!name || !gender) {
+        return res.status(400).json({ error: "Name and gender are required" });
+      }
+      
+      // Validate gender
+      if (!["Male", "Female"].includes(gender)) {
+        return res.status(400).json({ error: "Gender must be 'Male' or 'Female'" });
+      }
+      
+      // Normalize phone number (Australian format)
+      let normalizedPhone = phone;
+      if (phone) {
+        const cleaned = phone.replace(/\D/g, '');
+        if (cleaned.startsWith('4') && cleaned.length >= 9) {
+          normalizedPhone = '0' + cleaned;
+        }
+      }
+      
+      const contestantData = {
+        name: name.trim(),
+        gender,
+        age: age ? parseInt(age, 10) : 0,
+        phone: normalizedPhone || null,
+        email: email?.trim() || null,
+        availabilityNotes: notes?.trim() || null,
+        isTemporary: true,
+        availabilityStatus: 'available' as const,
+        groupSize: 1,
+      };
+      
+      const newContestant = await storage.createContestant(contestantData);
+      console.log(`[Temporary Contestant] Created: ${name} (ID: ${newContestant.id})`);
+      
+      res.status(201).json(newContestant);
+    } catch (error: any) {
+      console.error("[Temporary Contestant] Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Generate fake contestants for testing
   app.post("/api/contestants/generate-fake", async (req, res) => {
     try {
