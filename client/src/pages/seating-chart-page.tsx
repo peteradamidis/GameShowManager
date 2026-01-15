@@ -2,7 +2,7 @@ import { SeatingChart } from "@/components/seating-chart";
 import { WinningMoneyModal } from "@/components/winning-money-modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check, Eye, User, Mail, Phone, MapPin, ArrowLeftRight, Camera } from "lucide-react";
+import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check, Eye, User, Mail, Phone, MapPin, ArrowLeftRight, Camera, UserPlus, Pencil } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -999,7 +999,8 @@ export default function SeatingChartPage() {
 
   // Handler to edit temporary contestant
   const handleEditTempContestant = (contestantId: string) => {
-    const contestant = allContestants.find((c: any) => c.id === contestantId);
+    const contestantsArray = allContestants as any[];
+    const contestant = contestantsArray.find((c: any) => c.id === contestantId);
     if (!contestant || !contestant.isTemporary) return;
     
     setEditingContestantId(contestantId);
