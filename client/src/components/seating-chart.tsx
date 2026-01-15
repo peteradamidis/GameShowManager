@@ -32,6 +32,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
 import { Link2, AlertTriangle, ChevronUp, ChevronDown, User } from "lucide-react";
 import hostImage from "@/assets/host-grant.png";
+import hostSideImage from "@/assets/host.png";
+import stageBackdropImage from "@/assets/stage-backdrop.png";
 
 // Photo-only seat for Podium Visualiser mode
 function PhotoOnlySeat({ seat, seatLabel, blockIndex, seatIndex }: { 
@@ -1193,7 +1195,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 <>
                   <div className="absolute right-0 flex items-end justify-center" style={{ height: '100%' }}>
                     <img 
-                      src="/assets/host.png" 
+                      src={hostSideImage} 
                       alt="Host" 
                       className="h-auto max-h-full object-contain"
                       style={{ maxHeight: '400px' }}
@@ -1201,7 +1203,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   </div>
                   <div className="absolute flex items-center justify-center" style={{ right: '-220px', height: '100%' }}>
                     <img 
-                      src="/assets/stage-backdrop.png" 
+                      src={stageBackdropImage} 
                       alt="Stage Backdrop" 
                       className="object-contain"
                       style={{ maxHeight: '320px', transform: 'rotate(90deg)' }}
