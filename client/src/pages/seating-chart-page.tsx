@@ -74,6 +74,7 @@ export default function SeatingChartPage() {
   const [filterGroupSize, setFilterGroupSize] = useState<string>("all");
   const [filterAge, setFilterAge] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStandby, setFilterStandby] = useState<string>("all");
   
   // Cancel dialog state
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -348,20 +349,20 @@ export default function SeatingChartPage() {
         }
       }
       
-      // Status filter - includes special "standby" option
-      if (filterStatus !== "all") {
-        if (filterStatus === "standby") {
-          // Check if contestant is in the standbys list
-          const isStandby = standbys?.some((s: any) => s.contestantId === c.id);
-          if (!isStandby) return false;
-        } else if (c.availabilityStatus !== filterStatus) {
-          return false;
-        }
+      // Status filter
+      if (filterStatus !== "all" && c.availabilityStatus !== filterStatus) {
+        return false;
+      }
+      
+      // Standby filter (availableForStandby field)
+      if (filterStandby !== "all") {
+        if (filterStandby === "available" && !c.availableForStandby) return false;
+        if (filterStandby === "not_available" && c.availableForStandby) return false;
       }
       
       return true;
     });
-  }, [availableContestants, contestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, standbys]);
+  }, [availableContestants, contestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby]);
 
   // Check if record day is locked (RX Day Mode)
   const isLocked = currentRecordDay?.lockedAt != null;
@@ -1386,7 +1387,20 @@ export default function SeatingChartPage() {
                         <SelectItem value="available">Available</SelectItem>
                         <SelectItem value="invited">Invited</SelectItem>
                         <SelectItem value="confirmed">Confirmed</SelectItem>
-                        <SelectItem value="standby">Standby</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground text-[10px] font-medium">Standby</span>
+                    <Select value={filterStandby} onValueChange={setFilterStandby}>
+                      <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-standby">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="available">Yes</SelectItem>
+                        <SelectItem value="not_available">No</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1427,7 +1441,7 @@ export default function SeatingChartPage() {
                         'assigned': 'Asgnd',
                       };
                       const hasGroup = !!contestant.attendingWith;
-                      const isStandby = standbys?.some((s: any) => s.contestantId === contestant.id);
+                      const isAvailableForStandby = !!contestant.availableForStandby;
                       const hasPodiumStory = !!contestant.podiumStory;
                       
                       return (
@@ -1457,7 +1471,7 @@ export default function SeatingChartPage() {
                               <span className="font-medium text-sm truncate">
                                 {contestant.name}
                               </span>
-                              {isStandby && (
+                              {isAvailableForStandby && (
                                 <span className={`px-1 py-0.5 rounded text-[9px] font-bold flex-shrink-0 ${
                                   isSelected 
                                     ? 'bg-primary-foreground/20 text-primary-foreground' 
