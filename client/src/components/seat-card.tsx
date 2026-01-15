@@ -329,6 +329,9 @@ export function SeatCard({
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">{contestantDetails.age} years old • {contestantDetails.gender}</p>
+                    {contestantDetails.location && (
+                      <p className="text-xs text-muted-foreground">{contestantDetails.location}</p>
+                    )}
                   </div>
                 </div>
 
