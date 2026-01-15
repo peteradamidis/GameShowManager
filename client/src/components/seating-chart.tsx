@@ -32,6 +32,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
 import { Link2, AlertTriangle, ChevronUp, ChevronDown, User } from "lucide-react";
 import stageBackdropImage from "@/assets/stage-backdrop.png";
+import podiumSetImage from "@/assets/podium-set.png";
 
 // Photo-only seat for Podium Visualiser mode
 function PhotoOnlySeat({ seat, seatLabel, blockIndex, seatIndex }: { 
@@ -1174,6 +1175,16 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
 
             {/* Center Stage Indicator with Podium */}
             <div className="relative flex items-center justify-center py-6">
+              {isPodiumVisualizerMode && (
+                <div className="absolute flex items-center justify-center" style={{ left: '-140px', height: '100%' }}>
+                  <img 
+                    src={podiumSetImage} 
+                    alt="Podium Set" 
+                    className="object-contain"
+                    style={{ maxHeight: '200px', transform: 'rotate(-90deg)' }}
+                  />
+                </div>
+              )}
               <div className={`border-2 border-dashed border-primary text-center ${isPodiumVisualizerMode ? 'rounded-full px-16 py-12' : 'rounded-lg px-12 py-8'}`}>
                 {isPodiumVisualizerMode ? (
                   <p className="text-lg font-semibold text-primary">STAGE</p>
