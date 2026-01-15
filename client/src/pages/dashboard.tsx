@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { format, differenceInDays, subDays } from "date-fns";
+import { format, differenceInDays, subDays, startOfWeek, endOfWeek, addWeeks } from "date-fns";
 
 interface Contestant {
   id: string;
@@ -80,18 +80,21 @@ export default function Dashboard() {
   const today = new Date();
   const formattedToday = format(today, "EEEE, MMMM d, yyyy");
 
-  // Calculate deadlines for the first 2 weeks of upcoming record days
+  // Calculate deadlines for the first 2 calendar weeks of upcoming record days
   const INVITATION_LEAD_DAYS = 14; // 2 weeks before record day
   const DUE_SOON_THRESHOLD = 3; // Days before deadline to show "due soon"
-  const TWO_WEEKS_IN_DAYS = 14;
   
   // First, get all future record days sorted by date
   const futureRecordDays = recordDaysData
     .filter(rd => new Date(rd.date) >= today)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   
-  // Find the first upcoming record date to anchor our 2-week window
+  // Find the first upcoming record date and calculate the 2-week calendar window
   const firstRecordDate = futureRecordDays.length > 0 ? new Date(futureRecordDays[0].date) : null;
+  // Start of the week containing the first record date (Monday)
+  const weekStart = firstRecordDate ? startOfWeek(firstRecordDate, { weekStartsOn: 1 }) : null;
+  // End of the second week (Sunday of week 2)
+  const twoWeeksEnd = weekStart ? endOfWeek(addWeeks(weekStart, 1), { weekStartsOn: 1 }) : null;
   
   const deadlineInfos: DeadlineInfo[] = futureRecordDays
     .map(rd => {
@@ -137,11 +140,10 @@ export default function Dashboard() {
         assignedSeats,
       };
     })
-    // Filter to show record days within 2 weeks of the FIRST upcoming record date
+    // Filter to show record days within the first 2 calendar weeks (Mon-Sun, Mon-Sun)
     .filter(d => {
-      if (!firstRecordDate) return false;
-      const daysFromFirstRecord = differenceInDays(d.recordDate, firstRecordDate);
-      return daysFromFirstRecord >= 0 && daysFromFirstRecord <= TWO_WEEKS_IN_DAYS;
+      if (!weekStart || !twoWeeksEnd) return false;
+      return d.recordDate >= weekStart && d.recordDate <= twoWeeksEnd;
     });
 
   // Transform record days to the format expected by RecordDayCard
