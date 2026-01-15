@@ -348,14 +348,20 @@ export default function SeatingChartPage() {
         }
       }
       
-      // Status filter
-      if (filterStatus !== "all" && c.availabilityStatus !== filterStatus) {
-        return false;
+      // Status filter - includes special "standby" option
+      if (filterStatus !== "all") {
+        if (filterStatus === "standby") {
+          // Check if contestant is in the standbys list
+          const isStandby = standbys?.some((s: any) => s.contestantId === c.id);
+          if (!isStandby) return false;
+        } else if (c.availabilityStatus !== filterStatus) {
+          return false;
+        }
       }
       
       return true;
     });
-  }, [availableContestants, contestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus]);
+  }, [availableContestants, contestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, standbys]);
 
   // Check if record day is locked (RX Day Mode)
   const isLocked = currentRecordDay?.lockedAt != null;
@@ -1380,6 +1386,7 @@ export default function SeatingChartPage() {
                         <SelectItem value="available">Available</SelectItem>
                         <SelectItem value="invited">Invited</SelectItem>
                         <SelectItem value="confirmed">Confirmed</SelectItem>
+                        <SelectItem value="standby">Standby</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1420,6 +1427,8 @@ export default function SeatingChartPage() {
                         'assigned': 'Asgnd',
                       };
                       const hasGroup = !!contestant.attendingWith;
+                      const isStandby = standbys?.some((s: any) => s.contestantId === contestant.id);
+                      const hasPodiumStory = !!contestant.podiumStory;
                       
                       return (
                         <div
@@ -1444,10 +1453,28 @@ export default function SeatingChartPage() {
                           
                           {/* Info section - constrained to available space */}
                           <div className="min-w-0">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
                               <span className="font-medium text-sm truncate">
                                 {contestant.name}
                               </span>
+                              {isStandby && (
+                                <span className={`px-1 py-0.5 rounded text-[9px] font-bold flex-shrink-0 ${
+                                  isSelected 
+                                    ? 'bg-primary-foreground/20 text-primary-foreground' 
+                                    : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
+                                }`}>
+                                  S
+                                </span>
+                              )}
+                              {hasPodiumStory && (
+                                <span className={`px-1 py-0.5 rounded text-[9px] font-bold flex-shrink-0 ${
+                                  isSelected 
+                                    ? 'bg-primary-foreground/20 text-primary-foreground' 
+                                    : 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'
+                                }`}>
+                                  PS
+                                </span>
+                              )}
                               {hasGroup && (
                                 <Users className={`h-3.5 w-3.5 flex-shrink-0 ${isSelected ? 'text-primary-foreground/70' : 'text-blue-500'}`} />
                               )}
