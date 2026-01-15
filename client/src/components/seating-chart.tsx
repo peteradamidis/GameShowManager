@@ -1189,7 +1189,16 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   </>
                 )}
               </div>
-              {!isPodiumVisualizerMode && (
+              {isPodiumVisualizerMode ? (
+                <div className="absolute right-0 flex items-end justify-center" style={{ height: '100%' }}>
+                  <img 
+                    src="/assets/host.png" 
+                    alt="Host" 
+                    className="h-auto max-h-full object-contain"
+                    style={{ maxHeight: '200px' }}
+                  />
+                </div>
+              ) : (
                 <div className="absolute right-0 border-2 border-dashed border-muted-foreground rounded-lg px-2 py-6 flex items-center justify-center">
                   <p className="text-sm font-semibold text-muted-foreground tracking-widest" style={{ writingMode: 'vertical-rl' }}>PODIUM</p>
                 </div>
