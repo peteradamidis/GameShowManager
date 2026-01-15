@@ -1184,7 +1184,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                       src={podiumSetImage} 
                       alt="Podium Set" 
                       className="object-contain"
-                      style={{ height: '220px', transform: 'rotate(-90deg)' }}
+                      style={{ height: '260px', transform: 'rotate(-90deg)' }}
                     />
                   </div>
                   
