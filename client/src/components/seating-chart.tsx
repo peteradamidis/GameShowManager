@@ -458,7 +458,14 @@ function SeatingBlock({
       <CardHeader className={isPodiumVisualizerMode ? "pb-1 pt-2" : "pb-3"}>
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-medium">{blockLabel}</CardTitle>
-          {!isPodiumVisualizerMode && (
+          {isPodiumVisualizerMode ? (
+            <Badge 
+              variant={blockType === 'PB' ? 'default' : blockType === 'NPB' ? 'secondary' : 'outline'}
+              className="text-xs font-medium"
+            >
+              {blockType || '—'}
+            </Badge>
+          ) : (
             <Button
               size="sm"
               variant={blockType === 'PB' ? 'default' : blockType === 'NPB' ? 'secondary' : 'outline'}
