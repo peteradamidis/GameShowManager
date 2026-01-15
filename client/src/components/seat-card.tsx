@@ -317,6 +317,7 @@ export function SeatCard({
   // Wrap occupied seats with HoverCard for details (disabled during drag)
   if (!isEmpty && !isGlobalDragging) {
     return (
+      <>
       <HoverCard openDelay={200} closeDelay={100}>
         <HoverCardTrigger asChild>
           {seatContent}
@@ -564,12 +565,6 @@ export function SeatCard({
           </div>
         </HoverCardContent>
       </HoverCard>
-    );
-  }
-
-  return (
-    <>
-      {seatContent}
       <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -594,5 +589,8 @@ export function SeatCard({
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
+    );
+  }
+
+  return seatContent;
 }
