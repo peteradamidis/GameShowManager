@@ -1292,6 +1292,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 blockIndex={0}
                 seatIndex={0}
                 isDragging={true}
+                isGlobalDragging={true}
                 onEmptySeatClick={undefined}
               />
             </div>
