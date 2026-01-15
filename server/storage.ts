@@ -199,6 +199,7 @@ export interface IStorage {
   createContestantAvailability(availability: InsertContestantAvailability): Promise<ContestantAvailability>;
   getContestantAvailability(contestantId: string): Promise<ContestantAvailability[]>;
   getAvailabilityByRecordDay(recordDayId: string): Promise<Array<ContestantAvailability & { contestant: Contestant }>>;
+  getAllAvailabilityResponses(): Promise<ContestantAvailability[]>;
   updateAvailabilityResponse(id: string, responseValue: string, notes?: string): Promise<ContestantAvailability | undefined>;
   upsertContestantAvailability(contestantId: string, recordDayId: string, responseValue: string, notes?: string): Promise<ContestantAvailability>;
   getContestantsAvailableForRecordDay(recordDayId: string): Promise<Contestant[]>;
@@ -1126,6 +1127,10 @@ export class DbStorage implements IStorage {
       ...(row.contestant_availability as ContestantAvailability),
       contestant: row.contestants!,
     }));
+  }
+
+  async getAllAvailabilityResponses(): Promise<ContestantAvailability[]> {
+    return db.select().from(contestantAvailability);
   }
 
   async updateAvailabilityResponse(id: string, responseValue: string, notes?: string): Promise<ContestantAvailability | undefined> {

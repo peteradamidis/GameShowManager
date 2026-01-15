@@ -2479,6 +2479,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all availability responses (for dashboard deadlines)
+  app.get("/api/availability-responses", async (req, res) => {
+    try {
+      const responses = await storage.getAllAvailabilityResponses();
+      res.json(responses);
+    } catch (error: any) {
+      console.error("Error fetching availability responses:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get all seat assignments with winning money data (for Winners page)
   // IMPORTANT: This route MUST be before :recordDayId to avoid "with-winning-money" being captured as a param
   app.get("/api/seat-assignments/with-winning-money", async (req, res) => {
