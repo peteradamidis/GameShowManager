@@ -191,6 +191,11 @@ export default function BookingResponses() {
   const [cancelConfirmDialogOpen, setCancelConfirmDialogOpen] = useState(false);
   const [cancelConfirmAssignment, setCancelConfirmAssignment] = useState<BookingAssignment | null>(null);
   const [cancelConfirmType, setCancelConfirmType] = useState<"confirm" | "decline">("confirm");
+  
+  // No email warning dialog state (for confirm/decline without email sent)
+  const [noEmailWarningOpen, setNoEmailWarningOpen] = useState(false);
+  const [noEmailWarningAssignment, setNoEmailWarningAssignment] = useState<BookingAssignment | null>(null);
+  const [noEmailWarningAction, setNoEmailWarningAction] = useState<"confirm" | "decline">("confirm");
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
     queryKey: ["/api/record-days"],
@@ -652,10 +657,45 @@ export default function BookingResponses() {
   };
 
   const handleConfirm = (assignment: BookingAssignment) => {
+    // If no booking email was sent, show warning dialog first
+    if (!assignment.bookingEmailSent) {
+      setNoEmailWarningAssignment(assignment);
+      setNoEmailWarningAction("confirm");
+      setNoEmailWarningOpen(true);
+      return;
+    }
     confirmMutation.mutate(assignment.id);
+  };
+  
+  const handleConfirmWithoutEmail = () => {
+    if (noEmailWarningAssignment) {
+      if (noEmailWarningAction === "confirm") {
+        confirmMutation.mutate(noEmailWarningAssignment.id);
+      } else {
+        // Open decline dialog
+        setDeclineAssignment(noEmailWarningAssignment);
+        setDeclineReason("");
+        setDeclineAction("reschedule");
+        setDeclineMovedBy("");
+        setRebookRecordDayId("");
+        setRebookBlock("");
+        setRebookSeat("");
+        setRebookReason("");
+        setDeclineDialogOpen(true);
+      }
+    }
+    setNoEmailWarningOpen(false);
+    setNoEmailWarningAssignment(null);
   };
 
   const handleDeclineClick = (assignment: BookingAssignment) => {
+    // If no booking email was sent, show warning dialog first
+    if (!assignment.bookingEmailSent) {
+      setNoEmailWarningAssignment(assignment);
+      setNoEmailWarningAction("decline");
+      setNoEmailWarningOpen(true);
+      return;
+    }
     setDeclineAssignment(assignment);
     setDeclineReason("");
     setDeclineAction("reschedule");
@@ -1362,8 +1402,8 @@ export default function BookingResponses() {
                               variant="default"
                               className="h-5 px-1.5 text-[10px]"
                               onClick={() => handleConfirm(item)}
-                              disabled={confirmMutation.isPending || !item.bookingEmailSent}
-                              title={!item.bookingEmailSent ? "Invitation must be sent first" : "Confirm booking"}
+                              disabled={confirmMutation.isPending}
+                              title="Confirm booking"
                               data-testid={`button-confirm-${item.id}`}
                             >
                               <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
@@ -1374,8 +1414,7 @@ export default function BookingResponses() {
                               variant="outline"
                               className="h-5 px-1.5 text-[10px]"
                               onClick={() => handleDeclineClick(item)}
-                              disabled={!item.bookingEmailSent}
-                              title={!item.bookingEmailSent ? "Invitation must be sent first" : "Decline booking"}
+                              title="Decline booking"
                               data-testid={`button-decline-${item.id}`}
                             >
                               <XCircle className="h-2.5 w-2.5 mr-0.5" />
@@ -1926,6 +1965,58 @@ export default function BookingResponses() {
       </Dialog>
 
       {/* Cancel Confirmation Dialog */}
+      {/* No Email Warning Dialog */}
+      <Dialog open={noEmailWarningOpen} onOpenChange={setNoEmailWarningOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-amber-600" />
+              No Booking Email Sent
+            </DialogTitle>
+            <DialogDescription>
+              {noEmailWarningAssignment && (
+                <>
+                  <strong>{noEmailWarningAssignment.contestant?.name}</strong> has not been sent a booking email yet.
+                  <br /><br />
+                  Are you sure you want to {noEmailWarningAction === "confirm" ? "confirm" : "decline"} their booking?
+                  <br /><br />
+                  <span className="text-muted-foreground text-xs">
+                    This is useful when someone in a group confirms on behalf of another group member.
+                  </span>
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setNoEmailWarningOpen(false);
+                setNoEmailWarningAssignment(null);
+              }}
+              data-testid="button-cancel-no-email-warning"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant={noEmailWarningAction === "confirm" ? "default" : "outline"}
+              onClick={handleConfirmWithoutEmail}
+              disabled={confirmMutation.isPending}
+              data-testid="button-proceed-no-email-warning"
+            >
+              {confirmMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                `Yes, ${noEmailWarningAction === "confirm" ? "Confirm" : "Decline"} Anyway`
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={cancelConfirmDialogOpen} onOpenChange={setCancelConfirmDialogOpen}>
         <DialogContent>
           <DialogHeader>
