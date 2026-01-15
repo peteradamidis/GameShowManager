@@ -47,6 +47,7 @@ export interface SeatData {
   winningMoneyAmount?: number; // RX Day Mode - winning money amount
   wasStandby?: boolean; // True if contestant was seated from standby list
   isGroupSeparated?: boolean; // True if contestant has a partner/group member not sitting adjacent
+  photoUrl?: string; // Contestant photo URL for podium visualiser
 }
 
 interface SeatCardProps {

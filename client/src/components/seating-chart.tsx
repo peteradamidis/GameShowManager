@@ -30,7 +30,53 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
-import { Link2, AlertTriangle, ChevronUp, ChevronDown } from "lucide-react";
+import { Link2, AlertTriangle, ChevronUp, ChevronDown, User } from "lucide-react";
+
+// Photo-only seat for Podium Visualiser mode
+function PhotoOnlySeat({ seat, seatLabel, blockIndex, seatIndex }: { 
+  seat: SeatData; 
+  seatLabel: string;
+  blockIndex: number;
+  seatIndex: number;
+}) {
+  const isEmpty = !seat.contestantName;
+  
+  return (
+    <div 
+      className="aspect-square rounded-lg overflow-hidden bg-muted/30 border border-border flex items-center justify-center"
+      data-testid={`podium-seat-${blockIndex}-${seatIndex}`}
+    >
+      {isEmpty ? (
+        <div className="flex flex-col items-center justify-center text-muted-foreground" data-testid={`seat-empty-${blockIndex}-${seatIndex}`}>
+          <User className="h-4 w-4 opacity-40" />
+          <span className="text-[9px] font-mono mt-1">{seatLabel}</span>
+        </div>
+      ) : (
+        <div className="relative w-full h-full" data-testid={`seat-photo-${seat.contestantId}`}>
+          {seat.photoUrl ? (
+            <img 
+              src={seat.photoUrl} 
+              alt={seat.contestantName || 'Contestant'} 
+              className="w-full h-full object-cover"
+              data-testid={`img-contestant-${seat.contestantId}`}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+              <span className="text-2xl font-bold text-muted-foreground/60" data-testid={`text-initials-${seat.contestantId}`}>
+                {seat.contestantName?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+              </span>
+            </div>
+          )}
+          <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5">
+            <p className="text-[9px] text-white truncate text-center font-medium" data-testid={`text-name-${seat.contestantId}`}>
+              {seat.contestantName?.split(' ')[0]}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Pending swap operation type
 interface PendingSwap {
@@ -71,6 +117,7 @@ interface SeatingChartProps {
   isLocked?: boolean; // RX Day Mode - when true, use tracked swap endpoint
   standbys?: StandbyData[]; // Standbys for this record day
   onStandbySeated?: () => void; // Callback when standby is seated
+  isPodiumVisualizerMode?: boolean; // Show only contestant photos
 }
 
 function DraggableDroppableSeat({
@@ -283,6 +330,7 @@ function SeatingBlock({
   onEarlyLeaver,
   blockType,
   onBlockTypeChange,
+  isPodiumVisualizerMode = false,
 }: { 
   block: SeatData[]; 
   blockIndex: number;
@@ -301,6 +349,7 @@ function SeatingBlock({
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   blockType?: 'PB' | 'NPB';
   onBlockTypeChange?: (blockNumber: number, newType: 'PB' | 'NPB') => void;
+  isPodiumVisualizerMode?: boolean;
 }) {
   const stats = calculateBlockStats(block);
 
@@ -405,65 +454,69 @@ function SeatingBlock({
 
   return (
     <Card data-testid={`block-${blockIndex}`} className="w-full">
-      <CardHeader className="pb-3">
+      <CardHeader className={isPodiumVisualizerMode ? "pb-1 pt-2" : "pb-3"}>
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-medium">{blockLabel}</CardTitle>
-          <Button
-            size="sm"
-            variant={blockType === 'PB' ? 'default' : blockType === 'NPB' ? 'secondary' : 'outline'}
-            className="h-6 px-2 text-xs font-medium"
-            onClick={handleBlockTypeToggle}
-            data-testid={`block-type-toggle-${blockIndex}`}
-          >
-            {blockType || '—'}
-          </Button>
-        </div>
-        <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
-          <div>
-            <span>{stats.total}/22 filled</span>
-          </div>
-          {stats.total > 0 && (
-            <>
-              <div className="flex flex-wrap gap-1">
-                {stats.ratingCounts['A+'] > 0 && (
-                  <Badge className="text-[10px] px-1 py-0 h-4 bg-emerald-500 hover:bg-emerald-600 text-white">
-                    A+:{stats.ratingCounts['A+']}
-                  </Badge>
-                )}
-                {stats.ratingCounts['A'] > 0 && (
-                  <Badge className="text-[10px] px-1 py-0 h-4 bg-green-500 hover:bg-green-600 text-white">
-                    A:{stats.ratingCounts['A']}
-                  </Badge>
-                )}
-                {stats.ratingCounts['B+'] > 0 && (
-                  <Badge className="text-[10px] px-1 py-0 h-4 bg-amber-500 hover:bg-amber-600 text-white">
-                    B+:{stats.ratingCounts['B+']}
-                  </Badge>
-                )}
-                {stats.ratingCounts['B'] > 0 && (
-                  <Badge className="text-[10px] px-1 py-0 h-4 bg-orange-500 hover:bg-orange-600 text-white">
-                    B:{stats.ratingCounts['B']}
-                  </Badge>
-                )}
-                {stats.ratingCounts['C'] > 0 && (
-                  <Badge className="text-[10px] px-1 py-0 h-4 bg-red-500 hover:bg-red-600 text-white">
-                    C:{stats.ratingCounts['C']}
-                  </Badge>
-                )}
-              </div>
-              {stats.avgAge > 0 && (
-                <Badge variant="secondary" className="text-[10px] w-fit">
-                  Age: {stats.minAge}-{stats.maxAge} (avg {stats.avgAge})
-                </Badge>
-              )}
-              <Badge variant="secondary" className="text-[10px] w-fit">
-                {stats.femalePercent}% F
-              </Badge>
-            </>
+          {!isPodiumVisualizerMode && (
+            <Button
+              size="sm"
+              variant={blockType === 'PB' ? 'default' : blockType === 'NPB' ? 'secondary' : 'outline'}
+              className="h-6 px-2 text-xs font-medium"
+              onClick={handleBlockTypeToggle}
+              data-testid={`block-type-toggle-${blockIndex}`}
+            >
+              {blockType || '—'}
+            </Button>
           )}
         </div>
+        {!isPodiumVisualizerMode && (
+          <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+            <div>
+              <span>{stats.total}/22 filled</span>
+            </div>
+            {stats.total > 0 && (
+              <>
+                <div className="flex flex-wrap gap-1">
+                  {stats.ratingCounts['A+'] > 0 && (
+                    <Badge className="text-[10px] px-1 py-0 h-4 bg-emerald-500 hover:bg-emerald-600 text-white">
+                      A+:{stats.ratingCounts['A+']}
+                    </Badge>
+                  )}
+                  {stats.ratingCounts['A'] > 0 && (
+                    <Badge className="text-[10px] px-1 py-0 h-4 bg-green-500 hover:bg-green-600 text-white">
+                      A:{stats.ratingCounts['A']}
+                    </Badge>
+                  )}
+                  {stats.ratingCounts['B+'] > 0 && (
+                    <Badge className="text-[10px] px-1 py-0 h-4 bg-amber-500 hover:bg-amber-600 text-white">
+                      B+:{stats.ratingCounts['B+']}
+                    </Badge>
+                  )}
+                  {stats.ratingCounts['B'] > 0 && (
+                    <Badge className="text-[10px] px-1 py-0 h-4 bg-orange-500 hover:bg-orange-600 text-white">
+                      B:{stats.ratingCounts['B']}
+                    </Badge>
+                  )}
+                  {stats.ratingCounts['C'] > 0 && (
+                    <Badge className="text-[10px] px-1 py-0 h-4 bg-red-500 hover:bg-red-600 text-white">
+                      C:{stats.ratingCounts['C']}
+                    </Badge>
+                  )}
+                </div>
+                {stats.avgAge > 0 && (
+                  <Badge variant="secondary" className="text-[10px] w-fit">
+                    Age: {stats.minAge}-{stats.maxAge} (avg {stats.avgAge})
+                  </Badge>
+                )}
+                <Badge variant="secondary" className="text-[10px] w-fit">
+                  {stats.femalePercent}% F
+                </Badge>
+              </>
+            )}
+          </div>
+        )}
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className={isPodiumVisualizerMode ? "space-y-1 pt-0" : "space-y-2"}>
         {displayRows.map((row, displayIdx) => {
           // Find the original row index in SEAT_ROWS
           const originalRowIdx = SEAT_ROWS.findIndex(r => r.label === row.label);
@@ -471,10 +524,12 @@ function SeatingBlock({
           const nextDisplayRow = displayIdx < displayRows.length - 1 ? displayRows[displayIdx + 1] : null;
           
           return (
-            <div key={row.label} className="space-y-1">
-              <div className="text-xs font-medium text-muted-foreground px-1">
-                Row {row.label}
-              </div>
+            <div key={row.label} className={isPodiumVisualizerMode ? "" : "space-y-1"}>
+              {!isPodiumVisualizerMode && (
+                <div className="text-xs font-medium text-muted-foreground px-1">
+                  Row {row.label}
+                </div>
+              )}
               <div className="relative">
                 <div className="grid gap-1 relative" style={{ gridTemplateColumns: `repeat(${row.count}, minmax(0, 1fr))` }}>
                   {row.seats.map((seat, seatIdxInRow) => {
@@ -488,6 +543,23 @@ function SeatingBlock({
                       ? nextDisplayRow.seats[seatIdxInRow] 
                       : null;
                     const hasVerticalLink = seatBelowInNextRow && shouldShowLink(seat, seatBelowInNextRow);
+                    
+                    // Calculate seat label for display
+                    const seatNumber = seatIdxInRow + 1;
+                    const seatLabel = `${row.label}${seatNumber}`;
+                    
+                    // In Podium Visualiser mode, show only photos
+                    if (isPodiumVisualizerMode) {
+                      return (
+                        <PhotoOnlySeat
+                          key={seat.id}
+                          seat={seat}
+                          seatLabel={seatLabel}
+                          blockIndex={blockIndex}
+                          seatIndex={absoluteSeatIdx}
+                        />
+                      );
+                    }
                     
                     return (
                       <div key={seat.id} className="relative">
@@ -600,7 +672,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, isLocked = false, standbys = [], onStandbySeated }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false }: SeatingChartProps) {
   const [blocks, setBlocks] = useState<SeatData[][]>(
     initialSeats || Array(7).fill(null).map((_, blockIdx) => 
       generateBlockSeats(recordDayId, blockIdx)
@@ -1087,6 +1159,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onEarlyLeaver={onEarlyLeaver}
                   blockType={blockTypeMap[idx + 1]}
                   onBlockTypeChange={handleBlockTypeChange}
+                  isPodiumVisualizerMode={isPodiumVisualizerMode}
                 />
               ))}
             </div>
@@ -1126,6 +1199,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     onEarlyLeaver={onEarlyLeaver}
                     blockType={blockTypeMap[originalIdx + 1]}
                     onBlockTypeChange={handleBlockTypeChange}
+                    isPodiumVisualizerMode={isPodiumVisualizerMode}
                   />
                 );
               })}
@@ -1158,6 +1232,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onEarlyLeaver={onEarlyLeaver}
                   blockType={blockTypeMap[7]}
                   onBlockTypeChange={handleBlockTypeChange}
+                  isPodiumVisualizerMode={isPodiumVisualizerMode}
                 />
               </div>
               

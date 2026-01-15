@@ -2,7 +2,7 @@ import { SeatingChart } from "@/components/seating-chart";
 import { WinningMoneyModal } from "@/components/winning-money-modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check, Eye, User, Mail, Phone, MapPin, ArrowLeftRight } from "lucide-react";
+import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check, Eye, User, Mail, Phone, MapPin, ArrowLeftRight, Camera } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -117,6 +117,9 @@ export default function SeatingChartPage() {
   const [swapSourceBlock, setSwapSourceBlock] = useState<string>("");
   const [swapTargetBlock, setSwapTargetBlock] = useState<string>("");
   const [isSwappingBlocks, setIsSwappingBlocks] = useState(false);
+  
+  // Podium Visualiser mode - shows only contestant photos
+  const [isPodiumVisualizerMode, setIsPodiumVisualizerMode] = useState(false);
   
   // Get record day ID from query parameter, localStorage, or fetch first available
   const searchParams = new URLSearchParams(window.location.search);
@@ -1187,6 +1190,16 @@ export default function SeatingChartPage() {
             >
               <ArrowLeftRight className="h-4 w-4" />
             </Button>
+            <Button 
+              variant={isPodiumVisualizerMode ? "default" : "ghost"}
+              size="icon"
+              onClick={() => setIsPodiumVisualizerMode(!isPodiumVisualizerMode)} 
+              title={isPodiumVisualizerMode ? "Exit Podium Visualiser" : "Podium Visualiser - Show photos only"}
+              data-testid="button-podium-visualizer"
+              className={isPodiumVisualizerMode ? "bg-violet-600 hover:bg-violet-700 text-white" : "text-muted-foreground"}
+            >
+              <Camera className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
@@ -1214,6 +1227,7 @@ export default function SeatingChartPage() {
             refetch();
             refetchStandbys();
           }}
+          isPodiumVisualizerMode={isPodiumVisualizerMode}
         />
       )}
 
