@@ -31,6 +31,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
 import { Link2, AlertTriangle, ChevronUp, ChevronDown, User } from "lucide-react";
+import hostImage from "@/assets/host-grant.png";
 
 // Photo-only seat for Podium Visualiser mode
 function PhotoOnlySeat({ seat, seatLabel, blockIndex, seatIndex }: { 
@@ -1167,12 +1168,25 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
             {/* Center Stage Indicator with Podium */}
             <div className="relative flex items-center justify-center py-6">
               <div className="border-2 border-dashed border-primary rounded-lg px-12 py-8 text-center">
-                <p className="text-lg font-semibold text-primary">STAGE</p>
-                <p className="text-xs text-muted-foreground mt-1">Performance Area</p>
+                {isPodiumVisualizerMode ? (
+                  <img 
+                    src={hostImage} 
+                    alt="Host" 
+                    className="h-32 object-contain mx-auto"
+                    data-testid="host-image"
+                  />
+                ) : (
+                  <>
+                    <p className="text-lg font-semibold text-primary">STAGE</p>
+                    <p className="text-xs text-muted-foreground mt-1">Performance Area</p>
+                  </>
+                )}
               </div>
-              <div className="absolute right-0 border-2 border-dashed border-muted-foreground rounded-lg px-2 py-6 flex items-center justify-center">
-                <p className="text-sm font-semibold text-muted-foreground tracking-widest" style={{ writingMode: 'vertical-rl' }}>PODIUM</p>
-              </div>
+              {!isPodiumVisualizerMode && (
+                <div className="absolute right-0 border-2 border-dashed border-muted-foreground rounded-lg px-2 py-6 flex items-center justify-center">
+                  <p className="text-sm font-semibold text-muted-foreground tracking-widest" style={{ writingMode: 'vertical-rl' }}>PODIUM</p>
+                </div>
+              )}
             </div>
 
             {/* Bottom Row - 3 Blocks (reordered: 6, 5, 4) */}
