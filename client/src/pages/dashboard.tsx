@@ -42,11 +42,13 @@ interface DeadlineInfo {
   rxNumber?: string | null;
   deadline: Date;
   daysUntilDeadline: number;
+  daysUntilRecordDate: number;
   status: DeadlineStatus;
   invitationsSent: number;
+  confirmedCount: number;
   totalSeats: number;
   seatsAvailable: number;
-  filledSeats: number;
+  assignedSeats: number;
 }
 
 export default function Dashboard() {
@@ -78,24 +80,29 @@ export default function Dashboard() {
   const today = new Date();
   const formattedToday = format(today, "EEEE, MMMM d, yyyy");
 
-  // Calculate deadlines for upcoming record days (next 4 weeks of record days)
+  // Calculate deadlines for upcoming record days within the next 2 weeks
   const INVITATION_LEAD_DAYS = 14; // 2 weeks before record day
   const DUE_SOON_THRESHOLD = 3; // Days before deadline to show "due soon"
+  const TWO_WEEKS_IN_DAYS = 14;
   
   const deadlineInfos: DeadlineInfo[] = recordDaysData
     .map(rd => {
       const recordDate = new Date(rd.date);
       const deadline = subDays(recordDate, INVITATION_LEAD_DAYS);
       const daysUntilDeadline = differenceInDays(deadline, today);
+      const daysUntilRecordDate = differenceInDays(recordDate, today);
       
       // Count invitations sent for this record day (availability responses sent)
       const invitationsForDay = availabilityResponses.filter(ar => ar.recordDayId === rd.id);
       const invitationsSent = invitationsForDay.length;
       
-      // Count filled seats
+      // Count confirmed (availability responses with 'yes')
+      const confirmedCount = invitationsForDay.filter(ar => ar.responseValue === 'yes').length;
+      
+      // Count assigned seats
       const totalSeats = rd.totalSeats || 154;
-      const filledSeats = seatAssignments.filter(sa => sa.recordDayId === rd.id).length;
-      const seatsAvailable = totalSeats - filledSeats;
+      const assignedSeats = seatAssignments.filter(sa => sa.recordDayId === rd.id).length;
+      const seatsAvailable = totalSeats - assignedSeats;
       
       // Determine status
       let status: DeadlineStatus;
@@ -113,19 +120,19 @@ export default function Dashboard() {
         rxNumber: rd.rxNumber,
         deadline,
         daysUntilDeadline,
+        daysUntilRecordDate,
         status,
         invitationsSent,
+        confirmedCount,
         totalSeats,
         seatsAvailable,
-        filledSeats,
+        assignedSeats,
       };
     })
-    // Filter to only show record days in the future or within the past week (for overdue tracking)
-    .filter(d => differenceInDays(d.recordDate, today) >= -7)
-    // Sort by deadline (earliest first)
-    .sort((a, b) => a.deadline.getTime() - b.deadline.getTime())
-    // Limit to next 8 record days
-    .slice(0, 8);
+    // Filter to only show record days within the upcoming 2 weeks (record date is 0-14 days away)
+    .filter(d => d.daysUntilRecordDate >= 0 && d.daysUntilRecordDate <= TWO_WEEKS_IN_DAYS)
+    // Sort by record date (earliest first)
+    .sort((a, b) => a.recordDate.getTime() - b.recordDate.getTime());
 
   // Transform record days to the format expected by RecordDayCard
   const upcomingRecordDays: RecordDay[] = recordDaysData.map(rd => {
@@ -228,15 +235,15 @@ export default function Dashboard() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Mail className="h-5 w-5" />
-            Invitation Deadlines
+            Upcoming Two Weeks
             <span className="text-sm font-normal text-muted-foreground ml-2">
-              (2 weeks before record date)
+              (invites due 2 weeks before record)
             </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {deadlineInfos.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No upcoming deadlines.</p>
+            <p className="text-muted-foreground text-sm">No record days within the next two weeks.</p>
           ) : (
             <div className="space-y-3">
               {deadlineInfos.map((info) => {
@@ -273,8 +280,12 @@ export default function Dashboard() {
                         <span className="font-medium">{info.invitationsSent}</span>
                       </div>
                       <div className="text-sm">
-                        <span className="text-muted-foreground">Filled: </span>
-                        <span className="font-medium">{info.filledSeats}</span>
+                        <span className="text-muted-foreground">Confirmed: </span>
+                        <span className="font-medium">{info.confirmedCount}</span>
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Assigned: </span>
+                        <span className="font-medium">{info.assignedSeats}</span>
                         <span className="text-muted-foreground"> / {info.totalSeats}</span>
                       </div>
                       <Badge 
