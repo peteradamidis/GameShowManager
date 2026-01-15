@@ -561,7 +561,10 @@ function SeatingBlock({
                     const hasVerticalLink = seatBelowInNextRow && shouldShowLink(seat, seatBelowInNextRow);
                     
                     // Calculate seat label for display
-                    const seatNumber = seatIdxInRow + 1;
+                    // For blocks 4, 5, 6 (reverseRows=true), numbers go right to left (5,4,3,2,1 visually but labeled 1,2,3,4,5)
+                    const seatNumber = reverseRows 
+                      ? (row.count - seatIdxInRow)  // Reverse: rightmost is 1, leftmost is 5
+                      : (seatIdxInRow + 1);          // Normal: leftmost is 1, rightmost is 5
                     const seatLabel = `${row.label}${seatNumber}`;
                     
                     // In Podium Visualiser mode, show only photos
