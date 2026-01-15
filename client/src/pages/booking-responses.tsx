@@ -479,17 +479,42 @@ export default function BookingResponses() {
   // Bulk send booking email mutation
   const bulkSendBookingEmailMutation = useMutation({
     mutationFn: async (assignmentIds: string[]) => {
-      const response = await apiRequest("POST", "/api/booking-confirmations/send", {
-        seatAssignmentIds: assignmentIds,
-      });
-      // apiRequest returns a Response object, need to parse JSON
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to send emails");
+      try {
+        const response = await apiRequest("POST", "/api/booking-confirmations/send", {
+          seatAssignmentIds: assignmentIds,
+        });
+        // apiRequest returns a Response object, need to parse JSON
+        if (!response.ok) {
+          // Check for 504 Gateway Timeout - emails are still being sent in background
+          if (response.status === 504) {
+            return { backgroundSending: true, count: assignmentIds.length };
+          }
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to send emails");
+        }
+        return response.json();
+      } catch (error: any) {
+        // Network errors or timeouts may still result in emails being sent
+        if (error.message?.includes('504') || error.message?.includes('timeout') || error.message?.includes('Gateway')) {
+          return { backgroundSending: true, count: assignmentIds.length };
+        }
+        throw error;
       }
-      return response.json();
     },
     onSuccess: (data) => {
+      // Handle background sending case (504 timeout but emails still processing)
+      if (data.backgroundSending) {
+        toast({ 
+          title: "Emails are being sent",
+          description: `${data.count} email(s) are being sent in the background. This may take a few minutes.`
+        });
+        setSelectedAssignments(new Set());
+        setSendEmailDialogOpen(false);
+        // Delay invalidation to give time for emails to be sent
+        setTimeout(() => invalidateBookingQueries(), 5000);
+        return;
+      }
+      
       const results = data.results || [];
       const successCount = results.filter((r: any) => r.success).length;
       const failCount = results.filter((r: any) => !r.success).length;
@@ -508,6 +533,19 @@ export default function BookingResponses() {
       invalidateBookingQueries();
     },
     onError: (error: any) => {
+      // Check if error message suggests a timeout (emails may still be sending)
+      const errorMsg = error.message?.toLowerCase() || '';
+      if (errorMsg.includes('504') || errorMsg.includes('timeout') || errorMsg.includes('gateway')) {
+        toast({ 
+          title: "Emails are being sent",
+          description: "The request timed out but emails are being sent in the background. This may take a few minutes."
+        });
+        setSelectedAssignments(new Set());
+        setSendEmailDialogOpen(false);
+        setTimeout(() => invalidateBookingQueries(), 5000);
+        return;
+      }
+      
       toast({ 
         title: "Failed to send emails", 
         description: error.message,
@@ -519,16 +557,40 @@ export default function BookingResponses() {
   // Bulk send ticket email mutation
   const bulkSendTicketEmailMutation = useMutation({
     mutationFn: async (assignmentIds: string[]) => {
-      const response = await apiRequest("POST", "/api/seat-assignments/bulk-send-ticket", {
-        seatAssignmentIds: assignmentIds,
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to send ticket emails");
+      try {
+        const response = await apiRequest("POST", "/api/seat-assignments/bulk-send-ticket", {
+          seatAssignmentIds: assignmentIds,
+        });
+        if (!response.ok) {
+          // Check for 504 Gateway Timeout - emails are still being sent in background
+          if (response.status === 504) {
+            return { backgroundSending: true, count: assignmentIds.length };
+          }
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to send ticket emails");
+        }
+        return response.json();
+      } catch (error: any) {
+        // Network errors or timeouts may still result in emails being sent
+        if (error.message?.includes('504') || error.message?.includes('timeout') || error.message?.includes('Gateway')) {
+          return { backgroundSending: true, count: assignmentIds.length };
+        }
+        throw error;
       }
-      return response.json();
     },
     onSuccess: (data) => {
+      // Handle background sending case (504 timeout but emails still processing)
+      if (data.backgroundSending) {
+        toast({ 
+          title: "Ticket emails are being sent",
+          description: `${data.count} ticket email(s) are being sent in the background. This may take a few minutes.`
+        });
+        setSelectedAssignments(new Set());
+        setSendTicketDialogOpen(false);
+        setTimeout(() => invalidateBookingQueries(), 5000);
+        return;
+      }
+      
       const successCount = data.successCount || 0;
       const failCount = data.failCount || 0;
       
@@ -546,6 +608,19 @@ export default function BookingResponses() {
       invalidateBookingQueries();
     },
     onError: (error: any) => {
+      // Check if error message suggests a timeout (emails may still be sending)
+      const errorMsg = error.message?.toLowerCase() || '';
+      if (errorMsg.includes('504') || errorMsg.includes('timeout') || errorMsg.includes('gateway')) {
+        toast({ 
+          title: "Ticket emails are being sent",
+          description: "The request timed out but ticket emails are being sent in the background. This may take a few minutes."
+        });
+        setSelectedAssignments(new Set());
+        setSendTicketDialogOpen(false);
+        setTimeout(() => invalidateBookingQueries(), 5000);
+        return;
+      }
+      
       toast({ 
         title: "Failed to send ticket emails", 
         description: error.message,
