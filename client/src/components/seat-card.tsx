@@ -359,10 +359,10 @@ export function SeatCard({
                   </div>
                 )}
 
-                {contestantDetails.phone && (
+                {contestantDetails.availabilityNotes && (
                   <div className="text-sm">
-                    <label className="text-xs font-medium text-muted-foreground">Phone</label>
-                    <p className="text-xs">{contestantDetails.phone}</p>
+                    <label className="text-xs font-medium text-muted-foreground">Availability Notes</label>
+                    <p className="text-xs">{contestantDetails.availabilityNotes}</p>
                   </div>
                 )}
 
