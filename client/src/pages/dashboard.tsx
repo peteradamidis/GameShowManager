@@ -80,12 +80,20 @@ export default function Dashboard() {
   const today = new Date();
   const formattedToday = format(today, "EEEE, MMMM d, yyyy");
 
-  // Calculate deadlines for upcoming record days within the next 2 weeks
+  // Calculate deadlines for the first 2 weeks of upcoming record days
   const INVITATION_LEAD_DAYS = 14; // 2 weeks before record day
   const DUE_SOON_THRESHOLD = 3; // Days before deadline to show "due soon"
   const TWO_WEEKS_IN_DAYS = 14;
   
-  const deadlineInfos: DeadlineInfo[] = recordDaysData
+  // First, get all future record days sorted by date
+  const futureRecordDays = recordDaysData
+    .filter(rd => new Date(rd.date) >= today)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  
+  // Find the first upcoming record date to anchor our 2-week window
+  const firstRecordDate = futureRecordDays.length > 0 ? new Date(futureRecordDays[0].date) : null;
+  
+  const deadlineInfos: DeadlineInfo[] = futureRecordDays
     .map(rd => {
       const recordDate = new Date(rd.date);
       const deadline = subDays(recordDate, INVITATION_LEAD_DAYS);
@@ -129,10 +137,12 @@ export default function Dashboard() {
         assignedSeats,
       };
     })
-    // Filter to only show record days within the upcoming 2 weeks (record date is 0-14 days away)
-    .filter(d => d.daysUntilRecordDate >= 0 && d.daysUntilRecordDate <= TWO_WEEKS_IN_DAYS)
-    // Sort by record date (earliest first)
-    .sort((a, b) => a.recordDate.getTime() - b.recordDate.getTime());
+    // Filter to show record days within 2 weeks of the FIRST upcoming record date
+    .filter(d => {
+      if (!firstRecordDate) return false;
+      const daysFromFirstRecord = differenceInDays(d.recordDate, firstRecordDate);
+      return daysFromFirstRecord >= 0 && daysFromFirstRecord <= TWO_WEEKS_IN_DAYS;
+    });
 
   // Transform record days to the format expected by RecordDayCard
   const upcomingRecordDays: RecordDay[] = recordDaysData.map(rd => {
