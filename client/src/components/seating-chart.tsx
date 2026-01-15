@@ -1190,12 +1190,12 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   </div>
                   
                   {/* Centre Stage Image */}
-                  <div className="flex items-center justify-center">
+                  <div className="flex items-center justify-start flex-1" style={{ marginLeft: '-60px' }}>
                     <img 
                       src={centreStageImage} 
                       alt="Centre Stage" 
                       className="object-contain"
-                      style={{ height: '140px' }}
+                      style={{ height: '200px' }}
                     />
                   </div>
                   
