@@ -1145,27 +1145,15 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
           )}
 
           {/* Circular Seating Area */}
-          <div className="relative">
+          <div className={isPodiumVisualizerMode ? "grid grid-cols-[240px,1fr,240px] gap-4 items-center" : ""}>
             {/* Podium Set Image - Left Side (only in visualizer mode) */}
             {isPodiumVisualizerMode && (
-              <div className="absolute left-0 top-0 bottom-0 flex items-center" style={{ left: '-180px', width: '160px' }}>
+              <div className="flex items-center justify-end h-full">
                 <img 
                   src={podiumSetImage} 
                   alt="Podium Set" 
-                  className="w-full object-contain"
-                  style={{ transform: 'rotate(-90deg)' }}
-                />
-              </div>
-            )}
-            
-            {/* Stage Backdrop Image - Right Side (only in visualizer mode) */}
-            {isPodiumVisualizerMode && (
-              <div className="absolute right-0 top-0 bottom-0 flex items-center" style={{ right: '-180px', width: '160px' }}>
-                <img 
-                  src={stageBackdropImage} 
-                  alt="Stage Backdrop" 
-                  className="w-full object-contain"
-                  style={{ transform: 'rotate(90deg)' }}
+                  className="object-contain"
+                  style={{ maxHeight: '400px', transform: 'rotate(-90deg)', transformOrigin: 'center' }}
                 />
               </div>
             )}
@@ -1243,6 +1231,18 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
               })}
             </div>
             </div>
+            
+            {/* Stage Backdrop Image - Right Side (only in visualizer mode) */}
+            {isPodiumVisualizerMode && (
+              <div className="flex items-center justify-start h-full">
+                <img 
+                  src={stageBackdropImage} 
+                  alt="Stage Backdrop" 
+                  className="object-contain"
+                  style={{ maxHeight: '400px', transform: 'rotate(90deg)', transformOrigin: 'center' }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Standing Block and Standbys - Side by Side */}
