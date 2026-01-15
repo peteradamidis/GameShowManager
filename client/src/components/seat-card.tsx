@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert } from "lucide-react";
+import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert, Pencil } from "lucide-react";
 import { getDistanceFromDocklands } from "@/components/contestant-table";
 
 // Helper function to check if a medical field has meaningful content (not NA/N/A/No/None/empty)
@@ -62,6 +62,7 @@ export interface SeatData {
   photoUrl?: string; // Contestant photo URL for podium visualiser
   contestantLocation?: string; // Contestant's location for 60km distance check
   criminalRecord?: string; // Criminal record notes
+  isTemporary?: boolean; // True if contestant was created as temporary (not from Cast It Reach)
 }
 
 interface SeatCardProps {
@@ -79,6 +80,7 @@ interface SeatCardProps {
   onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
   onNoShow?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
+  onEditTempContestant?: (contestantId: string) => void;
 }
 
 const groupColors = [
@@ -118,6 +120,7 @@ export function SeatCard({
   onReturnToStandby,
   onNoShow,
   onEarlyLeaver,
+  onEditTempContestant,
 }: SeatCardProps) {
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const isEmpty = !seat.contestantName;
@@ -471,6 +474,22 @@ export function SeatCard({
 
             {seat.assignmentId && (
               <div className="space-y-3 pt-3 border-t">
+                {/* Edit button for temporary contestants */}
+                {contestantDetails?.isTemporary && seat.contestantId && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditTempContestant?.(seat.contestantId!);
+                    }}
+                    data-testid={`button-edit-temp-${seat.contestantId}`}
+                  >
+                    <Pencil className="h-3 w-3 mr-1" />
+                    Edit Temporary Contestant
+                  </Button>
+                )}
                 {isRXDayLocked && seat.winningMoneyAmount > 0 && (
                   <Button
                     size="sm"

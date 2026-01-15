@@ -131,6 +131,17 @@ export default function SeatingChartPage() {
   const [tempContestantNotes, setTempContestantNotes] = useState("");
   const [isCreatingTempContestant, setIsCreatingTempContestant] = useState(false);
   
+  // Edit temporary contestant dialog state
+  const [editTempContestantDialogOpen, setEditTempContestantDialogOpen] = useState(false);
+  const [editingContestantId, setEditingContestantId] = useState<string | null>(null);
+  const [editTempName, setEditTempName] = useState("");
+  const [editTempGender, setEditTempGender] = useState<string>("");
+  const [editTempAge, setEditTempAge] = useState("");
+  const [editTempPhone, setEditTempPhone] = useState("");
+  const [editTempEmail, setEditTempEmail] = useState("");
+  const [editTempNotes, setEditTempNotes] = useState("");
+  const [isUpdatingTempContestant, setIsUpdatingTempContestant] = useState(false);
+  
   // Get record day ID from query parameter, localStorage, or fetch first available
   const searchParams = new URLSearchParams(window.location.search);
   const urlRecordDayId = searchParams.get('day');
@@ -986,6 +997,21 @@ export default function SeatingChartPage() {
     setWinningMoneyModalOpen(true);
   };
 
+  // Handler to edit temporary contestant
+  const handleEditTempContestant = (contestantId: string) => {
+    const contestant = allContestants.find((c: any) => c.id === contestantId);
+    if (!contestant || !contestant.isTemporary) return;
+    
+    setEditingContestantId(contestantId);
+    setEditTempName(contestant.name || "");
+    setEditTempGender(contestant.gender || "");
+    setEditTempAge(contestant.age ? String(contestant.age) : "");
+    setEditTempPhone(contestant.phone || "");
+    setEditTempEmail(contestant.email || "");
+    setEditTempNotes(contestant.notes || "");
+    setEditTempContestantDialogOpen(true);
+  };
+
   // Find current winning money data for the selected assignment
   const currentAssignment = assignments?.find((a: any) => a.id === selectedAssignmentId);
   const currentWinningMoneyData = {
@@ -1234,6 +1260,7 @@ export default function SeatingChartPage() {
           onReturnToStandby={handleReturnToStandby}
           onNoShow={isLocked ? handleNoShow : undefined}
           onEarlyLeaver={isLocked ? handleEarlyLeaver : undefined}
+          onEditTempContestant={handleEditTempContestant}
           isLocked={isLocked}
           standbys={standbys}
           onStandbySeated={() => {
@@ -1722,6 +1749,148 @@ export default function SeatingChartPage() {
               data-testid="button-create-temp-contestant"
             >
               {isCreatingTempContestant ? "Creating..." : "Create & Assign to Seat"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Temporary Contestant Dialog */}
+      <Dialog open={editTempContestantDialogOpen} onOpenChange={setEditTempContestantDialogOpen}>
+        <DialogContent className="max-w-md" data-testid="dialog-edit-temp-contestant">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-amber-600" />
+              Edit Temporary Contestant
+            </DialogTitle>
+            <DialogDescription>
+              Update the temporary contestant's information. They will remain marked as temporary until properly imported via Cast It Reach.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Name <span className="text-destructive">*</span></label>
+              <Input
+                value={editTempName}
+                onChange={(e) => setEditTempName(e.target.value)}
+                placeholder="Full name"
+                data-testid="input-edit-temp-name"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Gender <span className="text-destructive">*</span></label>
+              <Select value={editTempGender} onValueChange={setEditTempGender}>
+                <SelectTrigger data-testid="select-edit-temp-gender">
+                  <SelectValue placeholder="Select gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">Age</label>
+                <Input
+                  value={editTempAge}
+                  onChange={(e) => setEditTempAge(e.target.value)}
+                  placeholder="Age"
+                  type="number"
+                  data-testid="input-edit-temp-age"
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">Phone</label>
+                <Input
+                  value={editTempPhone}
+                  onChange={(e) => setEditTempPhone(e.target.value)}
+                  placeholder="Phone number"
+                  data-testid="input-edit-temp-phone"
+                />
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Email</label>
+              <Input
+                value={editTempEmail}
+                onChange={(e) => setEditTempEmail(e.target.value)}
+                placeholder="Email address"
+                type="email"
+                data-testid="input-edit-temp-email"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Notes</label>
+              <Textarea
+                value={editTempNotes}
+                onChange={(e) => setEditTempNotes(e.target.value)}
+                placeholder="Any additional notes..."
+                className="min-h-[60px]"
+                data-testid="textarea-edit-temp-notes"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditTempContestantDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={async () => {
+                if (!editTempName.trim() || !editTempGender || !editingContestantId) {
+                  toast({
+                    variant: "destructive",
+                    title: "Missing required fields",
+                    description: "Name and gender are required.",
+                  });
+                  return;
+                }
+                
+                setIsUpdatingTempContestant(true);
+                try {
+                  await apiRequest("PUT", `/api/contestants/${editingContestantId}`, {
+                    name: editTempName.trim(),
+                    gender: editTempGender,
+                    age: editTempAge ? parseInt(editTempAge) : null,
+                    phone: editTempPhone || null,
+                    email: editTempEmail || null,
+                    notes: editTempNotes || null,
+                  });
+                  
+                  toast({
+                    title: "Contestant updated",
+                    description: `${editTempName.trim()} has been updated.`,
+                  });
+                  
+                  // Refresh data
+                  queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+                  queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+                  broadcastSeatingChange();
+                  
+                  // Close dialog
+                  setEditTempContestantDialogOpen(false);
+                  setEditingContestantId(null);
+                } catch (error: any) {
+                  toast({
+                    variant: "destructive",
+                    title: "Failed to update contestant",
+                    description: error.message,
+                  });
+                } finally {
+                  setIsUpdatingTempContestant(false);
+                }
+              }}
+              disabled={isUpdatingTempContestant || !editTempName.trim() || !editTempGender}
+              className="bg-amber-600 hover:bg-amber-700"
+              data-testid="button-save-temp-contestant"
+            >
+              {isUpdatingTempContestant ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>

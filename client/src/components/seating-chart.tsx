@@ -117,6 +117,7 @@ interface SeatingChartProps {
   onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
   onNoShow?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
+  onEditTempContestant?: (contestantId: string) => void;
   isLocked?: boolean; // RX Day Mode - when true, use tracked swap endpoint
   standbys?: StandbyData[]; // Standbys for this record day
   onStandbySeated?: () => void; // Callback when standby is seated
@@ -138,6 +139,7 @@ function DraggableDroppableSeat({
   onReturnToStandby,
   onNoShow,
   onEarlyLeaver,
+  onEditTempContestant,
 }: {
   seat: SeatData;
   blockIndex: number;
@@ -153,6 +155,7 @@ function DraggableDroppableSeat({
   onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
   onNoShow?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
+  onEditTempContestant?: (contestantId: string) => void;
 }) {
   // Make occupied seats draggable
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
@@ -194,6 +197,7 @@ function DraggableDroppableSeat({
         onReturnToStandby={onReturnToStandby}
         onNoShow={onNoShow}
         onEarlyLeaver={onEarlyLeaver}
+        onEditTempContestant={onEditTempContestant}
       />
     </div>
   );
@@ -331,6 +335,7 @@ function SeatingBlock({
   onReturnToStandby,
   onNoShow,
   onEarlyLeaver,
+  onEditTempContestant,
   blockType,
   onBlockTypeChange,
   isPodiumVisualizerMode = false,
@@ -350,6 +355,7 @@ function SeatingBlock({
   onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
   onNoShow?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
+  onEditTempContestant?: (contestantId: string) => void;
   blockType?: 'PB' | 'NPB';
   onBlockTypeChange?: (blockNumber: number, newType: 'PB' | 'NPB') => void;
   isPodiumVisualizerMode?: boolean;
@@ -588,6 +594,7 @@ function SeatingBlock({
                           onReturnToStandby={onReturnToStandby}
                           onNoShow={onNoShow}
                           onEarlyLeaver={onEarlyLeaver}
+                          onEditTempContestant={onEditTempContestant}
                         />
                         {/* Horizontal link to next seat in same row */}
                         {hasLinkToNext && (
@@ -682,7 +689,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onEditTempContestant, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false }: SeatingChartProps) {
   const [blocks, setBlocks] = useState<SeatData[][]>(
     initialSeats || Array(7).fill(null).map((_, blockIdx) => 
       generateBlockSeats(recordDayId, blockIdx)
@@ -1168,6 +1175,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onReturnToStandby={onReturnToStandby}
                   onNoShow={onNoShow}
                   onEarlyLeaver={onEarlyLeaver}
+                  onEditTempContestant={onEditTempContestant}
                   blockType={blockTypeMap[idx + 1]}
                   onBlockTypeChange={handleBlockTypeChange}
                   isPodiumVisualizerMode={isPodiumVisualizerMode}
@@ -1230,6 +1238,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     onReturnToStandby={onReturnToStandby}
                     onNoShow={onNoShow}
                     onEarlyLeaver={onEarlyLeaver}
+                    onEditTempContestant={onEditTempContestant}
                     blockType={blockTypeMap[originalIdx + 1]}
                     onBlockTypeChange={handleBlockTypeChange}
                     isPodiumVisualizerMode={isPodiumVisualizerMode}
@@ -1264,6 +1273,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onReturnToStandby={onReturnToStandby}
                   onNoShow={onNoShow}
                   onEarlyLeaver={onEarlyLeaver}
+                  onEditTempContestant={onEditTempContestant}
                   blockType={blockTypeMap[7]}
                   onBlockTypeChange={handleBlockTypeChange}
                   isPodiumVisualizerMode={isPodiumVisualizerMode}
