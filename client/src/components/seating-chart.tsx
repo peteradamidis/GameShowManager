@@ -1185,16 +1185,12 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   />
                 </div>
               )}
-              <div className={`border-2 border-dashed border-primary text-center ${isPodiumVisualizerMode ? 'rounded-full px-16 py-12' : 'rounded-lg px-12 py-8'}`}>
-                {isPodiumVisualizerMode ? (
+              {!isPodiumVisualizerMode && (
+                <div className="border-2 border-dashed border-primary text-center rounded-lg px-12 py-8">
                   <p className="text-lg font-semibold text-primary">STAGE</p>
-                ) : (
-                  <>
-                    <p className="text-lg font-semibold text-primary">STAGE</p>
-                    <p className="text-xs text-muted-foreground mt-1">Performance Area</p>
-                  </>
-                )}
-              </div>
+                  <p className="text-xs text-muted-foreground mt-1">Performance Area</p>
+                </div>
+              )}
               {isPodiumVisualizerMode ? (
                 <div className="absolute flex items-center justify-center" style={{ right: '-140px', height: '100%' }}>
                   <img 
