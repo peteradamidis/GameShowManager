@@ -2918,10 +2918,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return attendingWithMentionsName(personB.attendingWith, personA.name);
       };
 
+      // Helper: Check if a contestant has blocking conditions that prevent auto-assignment
+      const hasBlockingCondition = (c: typeof allContestants[0]): { blocked: boolean; reason: string } => {
+        if (c.auditionRating === 'A' || c.auditionRating === 'A+') {
+          return { blocked: true, reason: 'A/A+ rated' };
+        }
+        if (c.auditionRating?.toUpperCase().trim() === 'DNU') {
+          return { blocked: true, reason: 'DNU rated' };
+        }
+        if (c.auditionRating?.toUpperCase().trim() === 'P') {
+          return { blocked: true, reason: 'P rated' };
+        }
+        if (c.podiumStory === true) {
+          return { blocked: true, reason: 'has podium story' };
+        }
+        return { blocked: false, reason: '' };
+      };
+
+      // Build a map of groupId -> ALL contestants in that group (from full list, not just available)
+      const fullGroupIdToContestants = new Map<string, typeof allContestants>();
+      allContestants.forEach(c => {
+        if (c.groupId) {
+          if (!fullGroupIdToContestants.has(c.groupId)) {
+            fullGroupIdToContestants.set(c.groupId, []);
+          }
+          fullGroupIdToContestants.get(c.groupId)!.push(c);
+        }
+      });
+
       // PHASE 1A: First, create groups from existing groupId field (most reliable)
+      // CRITICAL: If ANY member of the group has blocking conditions, skip the ENTIRE group
       const groupIdEntries = Array.from(groupIdToContestants.entries());
       for (const [gId, members] of groupIdEntries) {
-        // Filter out A+ rated contestants
+        // Check ALL members of this group (from full contestant list) for blocking conditions
+        const fullGroupMembers = fullGroupIdToContestants.get(gId) || members;
+        const blockedMember = fullGroupMembers.find(m => hasBlockingCondition(m).blocked);
+        
+        if (blockedMember) {
+          // Entire group is blocked - mark all available members as having unavailable partners
+          const blockReason = hasBlockingCondition(blockedMember);
+          members.forEach((member: typeof available[0]) => {
+            contestantsWithUnavailablePartners.add(member.id);
+          });
+          console.log(`[Auto-assign] Skipping entire group (${members.map((m: typeof available[0]) => m.name).join(', ')}) - member ${blockedMember.name} ${blockReason.reason}`);
+          continue;
+        }
+        
+        // No blocking conditions - check eligibility for auto-assign (already filtered from available)
         const eligibleMembers = members.filter((m: typeof available[0]) => m.auditionRating !== 'A' && m.auditionRating !== 'A+');
         if (eligibleMembers.length > 1) {
           const groupId = `dbgroup-${gId}`;
@@ -2929,9 +2972,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           eligibleMembers.forEach((member: typeof available[0]) => groupedContestantIds.add(member.id));
           console.log(`[Auto-assign] Created group from groupId: ${eligibleMembers.map((m: typeof available[0]) => `${m.name}(${m.auditionRating})`).join(' + ')}`);
         } else if (eligibleMembers.length === 1 && members.length > 1) {
-          // Has a group partner but they're A+ - can't auto-assign
+          // Has a group partner but they're not eligible - can't auto-assign
           contestantsWithUnavailablePartners.add(eligibleMembers[0].id);
-          console.log(`[Auto-assign] Skipping ${eligibleMembers[0].name} - group partner is A+ rated`);
+          console.log(`[Auto-assign] Skipping ${eligibleMembers[0].name} - group partner not eligible`);
         }
       }
 
@@ -2941,8 +2984,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return isSoloContestant(value);
       };
 
+      // Build a full name lookup for ALL contestants (to check blocking conditions on partners)
+      const fullNameToContestant = new Map<string, typeof allContestants[0]>();
+      allContestants.forEach(c => {
+        const key = sharedNormalizeName(c.name);
+        fullNameToContestant.set(key, c);
+      });
+
       // PHASE 1B: Find groups based on attendingWith matching (with bidirectional verification for duplicate names)
-      // BUT: Don't group anyone with an A+ contestant (A+ must be manually assigned)
+      // CRITICAL: If any partner has blocking conditions, the whole group is blocked
       // Track groups to persist after the loop (to avoid async issues)
       const groupsToPersist: { groupMembers: typeof available }[] = [];
       
@@ -2967,6 +3017,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // If all names were filtered out (contestant only listed themselves), skip
           if (attendingWithNames.length === 0) {
+            continue;
+          }
+
+          // First, check if ANY partner in the full contestant list has blocking conditions
+          let hasBlockedPartner = false;
+          let blockedPartnerInfo = '';
+          for (const name of attendingWithNames) {
+            const fullPartner = fullNameToContestant.get(name);
+            if (fullPartner) {
+              const blockCheck = hasBlockingCondition(fullPartner);
+              if (blockCheck.blocked) {
+                hasBlockedPartner = true;
+                blockedPartnerInfo = `${fullPartner.name} ${blockCheck.reason}`;
+                break;
+              }
+            }
+          }
+
+          if (hasBlockedPartner) {
+            // Partner has blocking condition - skip this contestant
+            contestantsWithUnavailablePartners.add(contestant.id);
+            console.log(`[Auto-assign] Skipping ${contestant.name} - partner ${blockedPartnerInfo}`);
             continue;
           }
 
