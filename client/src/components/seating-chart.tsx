@@ -1195,7 +1195,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     src="/assets/host.png" 
                     alt="Host" 
                     className="h-auto max-h-full object-contain"
-                    style={{ maxHeight: '200px' }}
+                    style={{ maxHeight: '320px' }}
                   />
                 </div>
               ) : (
