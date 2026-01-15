@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock } from "lucide-react";
+import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert } from "lucide-react";
 import { getDistanceFromDocklands } from "@/components/contestant-table";
 
 // Helper function to check if a medical field has meaningful content (not NA/N/A/No/None/empty)
@@ -50,6 +50,7 @@ export interface SeatData {
   isGroupSeparated?: boolean; // True if contestant has a partner/group member not sitting adjacent
   photoUrl?: string; // Contestant photo URL for podium visualiser
   contestantLocation?: string; // Contestant's location for 60km distance check
+  criminalRecord?: string; // Criminal record notes
 }
 
 interface SeatCardProps {
@@ -260,6 +261,18 @@ export function SeatCard({
               }
               return null;
             })()}
+            {hasMeaningfulMedicalNote(seat.criminalRecord) && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div data-testid={`criminal-icon-${seat.assignmentId}`}>
+                    <ShieldAlert className="h-3 w-3 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  <p>Has criminal record notes</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
           <div className="flex items-center gap-1">
             {seat.playerType && (

@@ -2702,6 +2702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           wasStandby: seatedStandbyContestantIds.has(assignment.contestantId),
           photoUrl: contestant?.photoUrl,
           contestantLocation: contestant?.location,
+          criminalRecord: contestant?.criminalRecord,
         };
       });
 

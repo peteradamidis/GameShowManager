@@ -501,6 +501,7 @@ export default function SeatingChartPage() {
             wasStandby: assignment.wasStandby,
             photoUrl: assignment.photoUrl,
             contestantLocation: assignment.contestantLocation,
+            criminalRecord: assignment.criminalRecord,
           };
         }
       }
