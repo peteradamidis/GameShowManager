@@ -1145,19 +1145,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
           )}
 
           {/* Circular Seating Area */}
-          <div className={isPodiumVisualizerMode ? "grid grid-cols-[240px,1fr,240px] gap-4 items-center" : ""}>
-            {/* Podium Set Image - Left Side (only in visualizer mode) */}
-            {isPodiumVisualizerMode && (
-              <div className="flex items-center justify-end h-full">
-                <img 
-                  src={podiumSetImage} 
-                  alt="Podium Set" 
-                  className="object-contain"
-                  style={{ maxHeight: '400px', transform: 'rotate(-90deg)', transformOrigin: 'center' }}
-                />
-              </div>
-            )}
-            
+          <div>
             <div className="space-y-6">
             {/* Top Row - 3 Blocks (rows reversed: A at bottom, E at top) */}
             <div className="grid grid-cols-3 gap-4">
@@ -1188,16 +1176,34 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
 
             {/* Center Stage Indicator with Podium */}
             <div className="relative flex items-center justify-center py-6">
-              {!isPodiumVisualizerMode && (
-                <div className="border-2 border-dashed border-primary text-center rounded-lg px-12 py-8">
-                  <p className="text-lg font-semibold text-primary">STAGE</p>
-                  <p className="text-xs text-muted-foreground mt-1">Performance Area</p>
+              {isPodiumVisualizerMode ? (
+                <div className="flex items-center justify-center gap-8 w-full">
+                  {/* Podium Set Image - Left */}
+                  <img 
+                    src={podiumSetImage} 
+                    alt="Podium Set" 
+                    className="object-contain"
+                    style={{ height: '180px', transform: 'rotate(-90deg)' }}
+                  />
+                  
+                  {/* Stage Backdrop Image - Right */}
+                  <img 
+                    src={stageBackdropImage} 
+                    alt="Stage Backdrop" 
+                    className="object-contain"
+                    style={{ height: '180px', transform: 'rotate(90deg)' }}
+                  />
                 </div>
-              )}
-              {!isPodiumVisualizerMode && (
-                <div className="absolute right-0 border-2 border-dashed border-muted-foreground rounded-lg px-2 py-6 flex items-center justify-center">
-                  <p className="text-sm font-semibold text-muted-foreground tracking-widest" style={{ writingMode: 'vertical-rl' }}>PODIUM</p>
-                </div>
+              ) : (
+                <>
+                  <div className="border-2 border-dashed border-primary text-center rounded-lg px-12 py-8">
+                    <p className="text-lg font-semibold text-primary">STAGE</p>
+                    <p className="text-xs text-muted-foreground mt-1">Performance Area</p>
+                  </div>
+                  <div className="absolute right-0 border-2 border-dashed border-muted-foreground rounded-lg px-2 py-6 flex items-center justify-center">
+                    <p className="text-sm font-semibold text-muted-foreground tracking-widest" style={{ writingMode: 'vertical-rl' }}>PODIUM</p>
+                  </div>
+                </>
               )}
             </div>
 
@@ -1231,18 +1237,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
               })}
             </div>
             </div>
-            
-            {/* Stage Backdrop Image - Right Side (only in visualizer mode) */}
-            {isPodiumVisualizerMode && (
-              <div className="flex items-center justify-start h-full">
-                <img 
-                  src={stageBackdropImage} 
-                  alt="Stage Backdrop" 
-                  className="object-contain"
-                  style={{ maxHeight: '400px', transform: 'rotate(90deg)', transformOrigin: 'center' }}
-                />
-              </div>
-            )}
           </div>
 
           {/* Standing Block and Standbys - Side by Side */}
