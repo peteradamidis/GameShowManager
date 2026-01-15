@@ -1174,12 +1174,12 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
 
             {/* Center Stage Indicator with Podium */}
             <div className="relative flex items-center justify-center py-6">
-              <div className="border-2 border-dashed border-primary rounded-lg px-12 py-8 text-center">
+              <div className={`border-2 border-dashed border-primary text-center ${isPodiumVisualizerMode ? 'rounded-full px-16 py-12' : 'rounded-lg px-12 py-8'}`}>
                 {isPodiumVisualizerMode ? (
                   <img 
                     src={hostImage} 
                     alt="Host" 
-                    className="h-32 object-contain mx-auto"
+                    className="h-44 object-contain mx-auto"
                     data-testid="host-image"
                   />
                 ) : (
@@ -1195,7 +1195,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     src="/assets/host.png" 
                     alt="Host" 
                     className="h-auto max-h-full object-contain"
-                    style={{ maxHeight: '320px' }}
+                    style={{ maxHeight: '400px' }}
                   />
                 </div>
               ) : (
