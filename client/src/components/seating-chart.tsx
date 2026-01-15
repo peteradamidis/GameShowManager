@@ -33,7 +33,6 @@ import type { BlockType } from "@shared/schema";
 import { Link2, AlertTriangle, ChevronUp, ChevronDown, User } from "lucide-react";
 import stageBackdropImage from "@/assets/stage-backdrop.png";
 import podiumSetImage from "@/assets/podium-set.png";
-import centreStageImage from "@/assets/centre-stage.png";
 
 // Photo-only seat for Podium Visualiser mode
 function PhotoOnlySeat({ seat, seatLabel, blockIndex, seatIndex }: { 
@@ -1186,16 +1185,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                       alt="Podium Set" 
                       className="object-contain"
                       style={{ height: '260px', transform: 'rotate(-90deg)' }}
-                    />
-                  </div>
-                  
-                  {/* Centre Stage Image */}
-                  <div className="flex items-center justify-start flex-1" style={{ marginLeft: '-60px' }}>
-                    <img 
-                      src={centreStageImage} 
-                      alt="Centre Stage" 
-                      className="object-contain"
-                      style={{ height: '200px' }}
                     />
                   </div>
                   
