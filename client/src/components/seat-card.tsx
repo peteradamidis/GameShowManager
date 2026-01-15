@@ -1,9 +1,20 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert } from "lucide-react";
 import { getDistanceFromDocklands } from "@/components/contestant-table";
 
@@ -108,6 +119,7 @@ export function SeatCard({
   onNoShow,
   onEarlyLeaver,
 }: SeatCardProps) {
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const isEmpty = !seat.contestantName;
   
   // Use standby colors for standbys, then rating-based colors, fallback to group colors if no rating
@@ -526,7 +538,7 @@ export function SeatCard({
                     className="flex-1"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onRemove?.(seat.assignmentId!);
+                      setShowRemoveConfirm(true);
                     }}
                     data-testid={`button-remove-${seat.assignmentId}`}
                   >
@@ -555,5 +567,32 @@ export function SeatCard({
     );
   }
 
-  return seatContent;
+  return (
+    <>
+      {seatContent}
+      <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Contestant from Seat?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove <strong>{seat.contestantName}</strong> from this seat? 
+              They will be returned to the unassigned pool.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onRemove?.(seat.assignmentId!);
+                setShowRemoveConfirm(false);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
 }
