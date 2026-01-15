@@ -2245,14 +2245,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Cannot seat a DNU-rated contestant (Do Not Use)" });
       }
 
-      // Check for duplicate assignments
-      const existingAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
-      
-      // Check if contestant is already seated in this record day
-      const isContestantSeated = existingAssignments.some((a: any) => a.contestantId === contestantId);
-      if (isContestantSeated) {
-        return res.status(409).json({ error: "Contestant is already seated in this record day" });
+      // Check for duplicate assignments - contestant should not be seated in ANY record day
+      const allAssignments = await storage.getAllSeatAssignments();
+      const existingAssignment = allAssignments.find((a: any) => a.contestantId === contestantId);
+      if (existingAssignment) {
+        // Get the record day name for better error message
+        const existingRecordDay = await storage.getRecordDayById(existingAssignment.recordDayId);
+        const dayName = existingRecordDay?.date 
+          ? new Date(existingRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
+          : 'another day';
+        return res.status(409).json({ error: `Contestant is already seated in ${dayName} (Block ${existingAssignment.blockNumber}, Seat ${existingAssignment.seatLabel})` });
       }
+      
+      // Also get assignments for this record day to check seat occupancy
+      const existingAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
       
       // Check if contestant is already a standby for this record day
       const existingStandbys = await storage.getStandbyAssignmentsByRecordDay(recordDayId);
@@ -2379,16 +2385,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Check for duplicate assignments
+      // Check for duplicate assignments - contestant should not be seated in ANY record day
+      const allAssignments = await storage.getAllSeatAssignments();
       const existingAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
       const existingStandbys = await storage.getStandbyAssignmentsByRecordDay(recordDayId);
       
-      // Check if any contestant is already seated or a standby in this record day
+      // Check if any contestant is already seated in ANY record day or a standby in this record day
       for (const contestantId of contestantIds) {
-        const isContestantSeated = existingAssignments.some((a: any) => a.contestantId === contestantId);
-        if (isContestantSeated) {
+        const existingAssignment = allAssignments.find((a: any) => a.contestantId === contestantId);
+        if (existingAssignment) {
           const contestant = await storage.getContestantById(contestantId);
-          return res.status(409).json({ error: `${contestant?.name || 'A contestant'} is already seated in this record day` });
+          const existingRecordDay = await storage.getRecordDayById(existingAssignment.recordDayId);
+          const dayName = existingRecordDay?.date 
+            ? new Date(existingRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
+            : 'another day';
+          return res.status(409).json({ error: `${contestant?.name || 'Contestant'} is already seated in ${dayName} (Block ${existingAssignment.blockNumber}, Seat ${existingAssignment.seatLabel})` });
         }
         
         const standbyAssignment = existingStandbys.find((s: any) => s.contestantId === contestantId);

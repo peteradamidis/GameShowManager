@@ -560,11 +560,25 @@ export class DbStorage implements IStorage {
         // Delete the seat assignment
         await tx.delete(seatAssignments).where(eq(seatAssignments.id, id));
         
-        // Update contestant status back to 'available'
-        await tx
-          .update(contestants)
-          .set({ availabilityStatus: 'available' })
-          .where(eq(contestants.id, assignment.contestantId));
+        // Check if contestant has any OTHER seat assignments remaining
+        const otherAssignments = await tx
+          .select()
+          .from(seatAssignments)
+          .where(eq(seatAssignments.contestantId, assignment.contestantId));
+        
+        // Also check if they're a standby somewhere
+        const existingStandbys = await tx
+          .select()
+          .from(standbyAssignments)
+          .where(eq(standbyAssignments.contestantId, assignment.contestantId));
+        
+        // Only set to 'available' if no other assignments exist
+        if (otherAssignments.length === 0 && existingStandbys.length === 0) {
+          await tx
+            .update(contestants)
+            .set({ availabilityStatus: 'available' })
+            .where(eq(contestants.id, assignment.contestantId));
+        }
       }
     });
   }
