@@ -8519,6 +8519,99 @@ ${finalEmailFooter}`;
     }
   });
 
+  // Standby Attendance History - Get all returning standbys
+  app.get("/api/returning-standbys", async (req, res) => {
+    try {
+      const returningStandbys = await storage.getReturningStandbys();
+      res.json(returningStandbys);
+    } catch (error: any) {
+      console.error("Error fetching returning standbys:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get standby attendance history for a specific record day
+  app.get("/api/standby-attendance/:recordDayId", async (req, res) => {
+    try {
+      const { recordDayId } = req.params;
+      const history = await storage.getStandbyAttendanceHistoryByRecordDay(recordDayId);
+      res.json(history);
+    } catch (error: any) {
+      console.error("Error fetching standby attendance history:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Mark standbys as attended - move them to returning standbys list
+  app.post("/api/standbys/mark-attended", async (req, res) => {
+    try {
+      const { standbyIds, confirmedAttendance } = req.body;
+
+      if (!standbyIds || !Array.isArray(standbyIds) || standbyIds.length === 0) {
+        return res.status(400).json({ error: "standbyIds array is required" });
+      }
+
+      // Get all standbys with their details
+      const allStandbys = await storage.getStandbyAssignments();
+      const selectedStandbys = allStandbys.filter(s => standbyIds.includes(s.id));
+
+      if (selectedStandbys.length === 0) {
+        return res.status(404).json({ error: "No standbys found" });
+      }
+
+      const results = {
+        processed: 0,
+        failed: 0,
+        errors: [] as string[],
+      };
+
+      for (const standby of selectedStandbys) {
+        try {
+          // Get block type for the assigned seat
+          const blockTypes = await storage.getBlockTypesByRecordDay(standby.recordDayId);
+          const seatBlockNumber = standby.assignedToSeat ? parseInt(standby.assignedToSeat.charAt(0)) : null;
+          const blockTypeConfig = seatBlockNumber ? blockTypes.find(bt => bt.blockNumber === seatBlockNumber) : null;
+          const blockType = blockTypeConfig?.blockType || 'PB';
+
+          // Create attendance history record
+          await storage.createStandbyAttendanceHistory({
+            contestantId: standby.contestantId,
+            recordDayId: standby.recordDayId,
+            blockNumber: seatBlockNumber || 1,
+            seatLabel: standby.assignedToSeat?.substring(1) || null,
+            blockType: blockType as 'PB' | 'NPB',
+            confirmedAttendance: confirmedAttendance === true,
+          });
+
+          // Update contestant status to 'returning_standby'
+          await storage.updateContestant(standby.contestantId, {
+            availabilityStatus: 'returning_standby',
+          });
+
+          results.processed++;
+        } catch (error: any) {
+          results.failed++;
+          results.errors.push(`${standby.contestant?.name || 'Unknown'}: ${error.message}`);
+        }
+      }
+
+      // Broadcast update via WebSocket
+      if (selectedStandbys.length > 0) {
+        wsManager.broadcastBookingUpdate({
+          recordDayId: selectedStandbys[0].recordDayId,
+        });
+      }
+
+      res.json({
+        message: `Marked ${results.processed} standbys as attended`,
+        ...results,
+      });
+    } catch (error: any) {
+      console.error("Error marking standbys as attended:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get standby confirmation by token (public endpoint)
   app.get("/api/standby-confirmation/:token", async (req, res) => {
     try {

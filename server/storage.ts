@@ -13,6 +13,7 @@ import {
   blockTypes,
   standbyAssignments,
   standbyConfirmationTokens,
+  standbyAttendanceHistory,
   systemConfig,
   formConfigurations,
   users,
@@ -42,6 +43,8 @@ import {
   type InsertStandbyAssignment,
   type StandbyConfirmationToken,
   type InsertStandbyConfirmationToken,
+  type StandbyAttendanceHistory,
+  type InsertStandbyAttendanceHistory,
   type SystemConfig,
   type User,
   type InsertUser,
@@ -241,6 +244,14 @@ export interface IStorage {
   getStandbyConfirmationByToken(token: string): Promise<StandbyConfirmationToken | undefined>;
   getStandbyConfirmationByAssignment(standbyAssignmentId: string): Promise<StandbyConfirmationToken | undefined>;
   updateStandbyConfirmationToken(id: string, data: Partial<StandbyConfirmationToken>): Promise<StandbyConfirmationToken | undefined>;
+  
+  // Standby Attendance History
+  createStandbyAttendanceHistory(data: InsertStandbyAttendanceHistory): Promise<StandbyAttendanceHistory>;
+  getStandbyAttendanceHistory(): Promise<Array<StandbyAttendanceHistory & { contestant: Contestant; recordDay: RecordDay }>>;
+  getStandbyAttendanceHistoryByRecordDay(recordDayId: string): Promise<Array<StandbyAttendanceHistory & { contestant: Contestant }>>;
+  getStandbyAttendanceHistoryByContestant(contestantId: string): Promise<Array<StandbyAttendanceHistory & { recordDay: RecordDay }>>;
+  getReturningStandbys(): Promise<Array<Contestant & { attendanceHistory: StandbyAttendanceHistory[] }>>;
+  deleteStandbyAttendanceHistory(id: string): Promise<void>;
   
   // System Configuration
   getSystemConfig(key: string): Promise<string | null>;
@@ -1601,6 +1612,95 @@ export class DbStorage implements IStorage {
       .where(eq(standbyConfirmationTokens.id, id))
       .returning();
     return updated;
+  }
+
+  // Standby Attendance History
+  async createStandbyAttendanceHistory(data: InsertStandbyAttendanceHistory): Promise<StandbyAttendanceHistory> {
+    const [created] = await db
+      .insert(standbyAttendanceHistory)
+      .values(data)
+      .returning();
+    return created;
+  }
+
+  async getStandbyAttendanceHistory(): Promise<Array<StandbyAttendanceHistory & { contestant: Contestant; recordDay: RecordDay }>> {
+    const results = await db
+      .select({
+        history: standbyAttendanceHistory,
+        contestant: contestants,
+        recordDay: recordDays,
+      })
+      .from(standbyAttendanceHistory)
+      .innerJoin(contestants, eq(standbyAttendanceHistory.contestantId, contestants.id))
+      .innerJoin(recordDays, eq(standbyAttendanceHistory.recordDayId, recordDays.id));
+    
+    return results.map(r => ({
+      ...r.history,
+      contestant: r.contestant,
+      recordDay: r.recordDay,
+    }));
+  }
+
+  async getStandbyAttendanceHistoryByRecordDay(recordDayId: string): Promise<Array<StandbyAttendanceHistory & { contestant: Contestant }>> {
+    const results = await db
+      .select({
+        history: standbyAttendanceHistory,
+        contestant: contestants,
+      })
+      .from(standbyAttendanceHistory)
+      .innerJoin(contestants, eq(standbyAttendanceHistory.contestantId, contestants.id))
+      .where(eq(standbyAttendanceHistory.recordDayId, recordDayId));
+    
+    return results.map(r => ({
+      ...r.history,
+      contestant: r.contestant,
+    }));
+  }
+
+  async getStandbyAttendanceHistoryByContestant(contestantId: string): Promise<Array<StandbyAttendanceHistory & { recordDay: RecordDay }>> {
+    const results = await db
+      .select({
+        history: standbyAttendanceHistory,
+        recordDay: recordDays,
+      })
+      .from(standbyAttendanceHistory)
+      .innerJoin(recordDays, eq(standbyAttendanceHistory.recordDayId, recordDays.id))
+      .where(eq(standbyAttendanceHistory.contestantId, contestantId));
+    
+    return results.map(r => ({
+      ...r.history,
+      recordDay: r.recordDay,
+    }));
+  }
+
+  async getReturningStandbys(): Promise<Array<Contestant & { attendanceHistory: StandbyAttendanceHistory[] }>> {
+    // Get all contestants with 'returning_standby' status
+    const returningContestants = await db
+      .select()
+      .from(contestants)
+      .where(eq(contestants.availabilityStatus, 'returning_standby'));
+    
+    // Get their attendance history
+    const result = await Promise.all(
+      returningContestants.map(async (contestant) => {
+        const history = await db
+          .select()
+          .from(standbyAttendanceHistory)
+          .where(eq(standbyAttendanceHistory.contestantId, contestant.id));
+        return {
+          ...contestant,
+          attendanceHistory: history,
+        };
+      })
+    );
+    
+    return result;
+  }
+
+  async deleteStandbyAttendanceHistory(id: string): Promise<void> {
+    await db
+      .delete(standbyAttendanceHistory)
+      .where(eq(standbyAttendanceHistory.id, id));
   }
 
   // System Configuration

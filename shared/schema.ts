@@ -4,7 +4,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Enums
-export const availabilityStatusEnum = pgEnum('availability_status', ['available', 'assigned', 'invited', 'confirmed']);
+export const availabilityStatusEnum = pgEnum('availability_status', ['available', 'assigned', 'invited', 'confirmed', 'returning_standby']);
 export const recordDayStatusEnum = pgEnum('record_day_status', ['draft', 'ready', 'invited', 'completed']);
 export const tokenStatusEnum = pgEnum('token_status', ['active', 'expired', 'used', 'revoked']);
 export const responseValueEnum = pgEnum('response_value', ['pending', 'yes', 'no', 'maybe']);
@@ -238,6 +238,22 @@ export const standbyConfirmationTokens = pgTable("standby_confirmation_tokens", 
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Standby Attendance History table - tracks standbys who attended and can return
+export const standbyAttendanceHistory = pgTable("standby_attendance_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contestantId: varchar("contestant_id").references(() => contestants.id).notNull(),
+  recordDayId: varchar("record_day_id").references(() => recordDays.id).notNull(),
+  blockNumber: integer("block_number").notNull(), // Which block they sat in
+  seatLabel: text("seat_label"), // Which seat they sat in
+  blockType: blockTypeEnum("block_type").notNull(), // PB or NPB
+  confirmedAttendance: boolean("confirmed_attendance").default(false), // Did they confirm attendance on the day
+  attendedAt: timestamp("attended_at").defaultNow().notNull(), // When they were marked as attended
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  // One attendance record per contestant per record day
+  uniqueAttendancePerDay: unique().on(table.recordDayId, table.contestantId),
+}));
+
 // Insert schemas
 export const insertGroupSchema = createInsertSchema(groups).omit({
   id: true,
@@ -296,6 +312,12 @@ export const insertStandbyAssignmentSchema = createInsertSchema(standbyAssignmen
 export const insertStandbyConfirmationTokenSchema = createInsertSchema(standbyConfirmationTokens).omit({
   id: true,
   createdAt: true,
+});
+
+export const insertStandbyAttendanceHistorySchema = createInsertSchema(standbyAttendanceHistory).omit({
+  id: true,
+  createdAt: true,
+  attendedAt: true,
 });
 
 // Rebooking History table - tracks when contestants are moved between record days
@@ -360,6 +382,9 @@ export type StandbyAssignment = typeof standbyAssignments.$inferSelect;
 
 export type InsertStandbyConfirmationToken = z.infer<typeof insertStandbyConfirmationTokenSchema>;
 export type StandbyConfirmationToken = typeof standbyConfirmationTokens.$inferSelect;
+
+export type InsertStandbyAttendanceHistory = z.infer<typeof insertStandbyAttendanceHistorySchema>;
+export type StandbyAttendanceHistory = typeof standbyAttendanceHistory.$inferSelect;
 
 // System Configuration table - stores app-wide settings like Google Sheets config
 export const systemConfig = pgTable("system_config", {
