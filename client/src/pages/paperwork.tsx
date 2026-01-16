@@ -63,7 +63,7 @@ interface AdobeSignConfig {
 }
 
 type StatusFilter = "all" | "invited" | "confirmed";
-type PaperworkStatusFilter = "all" | "ready_to_send" | "awaiting_return" | "complete";
+type PaperworkStatusFilter = "all" | "ready_to_send" | "awaiting_return" | "complete" | "new_only";
 type BlockFilter = "all" | "1" | "2" | "3" | "4" | "5" | "6" | "7";
 type ViewMode = "seats" | "standbys";
 
@@ -360,6 +360,19 @@ Deal or No Deal Production Team`);
     setUntickPending(null);
   };
 
+  const bulkMarkCopiedMutation = useMutation({
+    mutationFn: async (assignmentIds: string[]) => {
+      const response = await apiRequest("POST", "/api/paperwork/bulk-mark-copied", { assignmentIds });
+      return response.json();
+    },
+    onSuccess: async (data) => {
+      await invalidatePaperworkQueries();
+    },
+    onError: (error: Error) => {
+      console.error("Failed to mark emails as copied:", error);
+    },
+  });
+
   const bulkSendPaperworkMutation = useMutation({
     mutationFn: async (data: { assignmentIds: string[]; adobeSignLink: string; subject: string; body: string }) => {
       const response = await apiRequest("POST", "/api/paperwork/bulk-send", data);
@@ -427,6 +440,10 @@ Deal or No Deal Production Team`);
       if (paperworkStatusFilter === "complete" && (!item.paperworkSent || !item.paperworkReceived)) {
         return false;
       }
+      // New Only filter: show only items that haven't been copied yet and don't have paperwork sent
+      if (paperworkStatusFilter === "new_only" && (item.emailsCopiedAt || item.paperworkSent)) {
+        return false;
+      }
     }
     return true;
   }).sort((a, b) => {
@@ -460,6 +477,11 @@ Deal or No Deal Production Team`);
     .map(item => item.contestant?.email)
     .filter((email): email is string => !!email);
 
+  // Get IDs of filtered items that have emails (for tracking copied status)
+  const filteredWithEmailIds = filteredData
+    .filter(item => item.contestant?.email)
+    .map(item => item.id);
+
   const handleCopyAllEmails = async () => {
     if (allEmails.length === 0) {
       toast({ title: "No emails to copy", variant: "destructive" });
@@ -468,6 +490,12 @@ Deal or No Deal Production Team`);
     
     try {
       await navigator.clipboard.writeText(allEmails.join(", "));
+      
+      // Mark these assignments as copied for tracking
+      if (filteredWithEmailIds.length > 0) {
+        bulkMarkCopiedMutation.mutate(filteredWithEmailIds);
+      }
+      
       toast({ 
         title: "Emails copied!", 
         description: `${allEmails.length} email addresses copied to clipboard (comma-separated)` 
@@ -639,6 +667,7 @@ Deal or No Deal Production Team`);
                     <SelectItem value="ready_to_send">Ready To Send</SelectItem>
                     <SelectItem value="awaiting_return">Awaiting Return</SelectItem>
                     <SelectItem value="complete">Complete</SelectItem>
+                    <SelectItem value="new_only">New Only (Not Yet Copied)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1007,22 +1036,29 @@ Deal or No Deal Production Team`);
                           )}
                         </TableCell>
                         <TableCell>
-                          {item.paperworkReceived ? (
-                            <Badge className="bg-teal-600 text-white dark:bg-teal-600">
-                              <FileCheck className="h-3 w-3 mr-1" />
-                              Complete
-                            </Badge>
-                          ) : item.paperworkSent ? (
-                            <Badge className="bg-amber-500 text-white dark:bg-amber-500">
-                              <Clock className="h-3 w-3 mr-1" />
-                              Awaiting Return
-                            </Badge>
-                          ) : (
-                            <Badge className="bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                              <Send className="h-3 w-3 mr-1" />
-                              Ready To Send
-                            </Badge>
-                          )}
+                          <div className="flex flex-col gap-1 items-start">
+                            {item.paperworkReceived ? (
+                              <Badge className="bg-teal-600 text-white dark:bg-teal-600">
+                                <FileCheck className="h-3 w-3 mr-1" />
+                                Complete
+                              </Badge>
+                            ) : item.paperworkSent ? (
+                              <Badge className="bg-amber-500 text-white dark:bg-amber-500">
+                                <Clock className="h-3 w-3 mr-1" />
+                                Awaiting Return
+                              </Badge>
+                            ) : item.emailsCopiedAt ? (
+                              <Badge className="bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700">
+                                <Copy className="h-3 w-3 mr-1" />
+                                Copied
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                                <Send className="h-3 w-3 mr-1" />
+                                Ready To Send
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
