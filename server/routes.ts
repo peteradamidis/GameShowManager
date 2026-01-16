@@ -4980,7 +4980,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Simple PATCH to update seat assignment fields (for booking responses page)
   app.patch("/api/seat-assignments/:id", async (req, res) => {
     try {
-      const { confirmedRsvp, bookingEmailSent, notes } = req.body;
+      const { confirmedRsvp, bookingEmailSent, notes, seatNotes, attendingWithOverride } = req.body;
       
       // Check if bookingEmailSent is being cleared - this is NOT allowed once set
       // Covers all falsy values: false, null, undefined, 0, "0", ""
@@ -5009,6 +5009,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (notes !== undefined) {
         updateData.notes = notes;
       }
+      // Seat-level notes and attending with override (for changes after invitations)
+      if (seatNotes !== undefined) {
+        updateData.seatNotes = seatNotes;
+      }
+      if (attendingWithOverride !== undefined) {
+        updateData.attendingWithOverride = attendingWithOverride;
+      }
       
       const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, updateData);
       
@@ -5019,6 +5026,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If confirmedRsvp is being set, update contestant status to 'confirmed'
       if (confirmedRsvp && updateData.confirmedRsvp) {
         await storage.updateContestantAvailability(updated.contestantId, 'confirmed');
+      }
+      
+      // Broadcast updates for seatNotes and attendingWithOverride to sync with Booking Master
+      if (seatNotes !== undefined || attendingWithOverride !== undefined) {
+        wsManager.broadcastBookingUpdate({
+          type: 'booking-master-update',
+          recordDayId: updated.recordDayId,
+          assignmentId: req.params.id,
+          field: seatNotes !== undefined ? 'seatNotes' : 'attendingWithOverride',
+          value: seatNotes !== undefined ? seatNotes : attendingWithOverride,
+        });
       }
       
       res.json(updated);
