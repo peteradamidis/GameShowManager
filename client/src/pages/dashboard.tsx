@@ -25,13 +25,7 @@ interface SeatAssignment {
   id: string;
   recordDayId: string;
   contestantId: string;
-}
-
-interface AvailabilityResponse {
-  id: string;
-  recordDayId: string;
-  contestantId: string;
-  responseValue: string;
+  confirmedRsvp?: string | null;
 }
 
 type DeadlineStatus = 'overdue' | 'due-soon' | 'on-track';
@@ -44,7 +38,6 @@ interface DeadlineInfo {
   daysUntilDeadline: number;
   daysUntilRecordDate: number;
   status: DeadlineStatus;
-  invitationsSent: number;
   confirmedCount: number;
   totalSeats: number;
   seatsAvailable: number;
@@ -65,10 +58,6 @@ export default function Dashboard() {
 
   const { data: seatAssignments = [] } = useQuery<SeatAssignment[]>({
     queryKey: ['/api/seat-assignments'],
-  });
-
-  const { data: availabilityResponses = [] } = useQuery<AvailabilityResponse[]>({
-    queryKey: ['/api/availability-responses'],
   });
 
   // Calculate real statistics
@@ -103,16 +92,13 @@ export default function Dashboard() {
       const daysUntilDeadline = differenceInDays(deadline, today);
       const daysUntilRecordDate = differenceInDays(recordDate, today);
       
-      // Count invitations sent for this record day (availability responses sent)
-      const invitationsForDay = availabilityResponses.filter(ar => ar.recordDayId === rd.id);
-      const invitationsSent = invitationsForDay.length;
-      
-      // Count confirmed (availability responses with 'yes')
-      const confirmedCount = invitationsForDay.filter(ar => ar.responseValue === 'yes').length;
-      
-      // Count assigned seats
+      // Count assigned seats for this record day
+      const assignmentsForDay = seatAssignments.filter(sa => sa.recordDayId === rd.id);
       const totalSeats = rd.totalSeats || 154;
-      const assignedSeats = seatAssignments.filter(sa => sa.recordDayId === rd.id).length;
+      const assignedSeats = assignmentsForDay.length;
+      
+      // Count confirmed (seat assignments with confirmedRsvp set)
+      const confirmedCount = assignmentsForDay.filter(sa => sa.confirmedRsvp).length;
       const seatsAvailable = totalSeats - assignedSeats;
       
       // Determine status
@@ -133,7 +119,6 @@ export default function Dashboard() {
         daysUntilDeadline,
         daysUntilRecordDate,
         status,
-        invitationsSent,
         confirmedCount,
         totalSeats,
         seatsAvailable,
