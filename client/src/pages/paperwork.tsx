@@ -40,11 +40,16 @@ import {
   AlertTriangle,
   Copy
 } from "lucide-react";
-import type { RecordDay, Contestant, SeatAssignment } from "@shared/schema";
+import type { RecordDay, Contestant, SeatAssignment, StandbyAssignment } from "@shared/schema";
 
 interface PaperworkAssignment extends SeatAssignment {
   contestant: Contestant | null;
   recordDay: RecordDay | null;
+}
+
+interface StandbyWithContestant extends StandbyAssignment {
+  contestant: Contestant;
+  recordDay?: RecordDay;
 }
 
 interface AdobeSignConfig {
@@ -60,6 +65,7 @@ interface AdobeSignConfig {
 type StatusFilter = "all" | "invited" | "confirmed";
 type PaperworkStatusFilter = "all" | "ready_to_send" | "awaiting_return" | "complete";
 type BlockFilter = "all" | "1" | "2" | "3" | "4" | "5" | "6" | "7";
+type ViewMode = "seats" | "standbys";
 
 const PAPERWORK_TRACKER_STORAGE_KEY = 'paperwork-tracker-state';
 
@@ -69,6 +75,7 @@ interface PaperworkTrackerState {
   paperworkStatusFilter: PaperworkStatusFilter;
   blockFilter: BlockFilter;
   activeTab: string;
+  viewMode: ViewMode;
 }
 
 export default function Paperwork() {
@@ -119,6 +126,17 @@ export default function Paperwork() {
     return "all";
   });
   
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    try {
+      const saved = localStorage.getItem(PAPERWORK_TRACKER_STORAGE_KEY);
+      if (saved) {
+        const state: PaperworkTrackerState = JSON.parse(saved);
+        return state.viewMode || "seats";
+      }
+    } catch {}
+    return "seats";
+  });
+  
   const [searchName, setSearchName] = useState("");
   
   const [activeTab, setActiveTab] = useState(() => {
@@ -143,12 +161,13 @@ export default function Paperwork() {
         paperworkStatusFilter,
         blockFilter,
         activeTab,
+        viewMode,
       };
       localStorage.setItem(PAPERWORK_TRACKER_STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
       console.error("Failed to save paperwork tracker state:", e);
     }
-  }, [selectedRecordDay, statusFilter, paperworkStatusFilter, blockFilter, activeTab]);
+  }, [selectedRecordDay, statusFilter, paperworkStatusFilter, blockFilter, activeTab, viewMode]);
   const [sendEmailDialogOpen, setSendEmailDialogOpen] = useState(false);
   const [adobeSignLink, setAdobeSignLink] = useState("");
   
@@ -207,6 +226,23 @@ Deal or No Deal Production Team`);
 
   const { data: adobeConfig } = useQuery<AdobeSignConfig>({
     queryKey: ["/api/adobe-sign-smtp/config"],
+  });
+
+  // Query for standbys when in standby view mode
+  const { data: standbyData = [], isLoading: loadingStandbys } = useQuery<StandbyWithContestant[]>({
+    queryKey: ["/api/standbys/record-day", selectedRecordDay],
+    queryFn: async () => {
+      if (selectedRecordDay === "all") {
+        // Fetch all standbys
+        const response = await fetch("/api/standbys", { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to fetch standbys');
+        return response.json();
+      }
+      const response = await fetch(`/api/standbys/record-day/${selectedRecordDay}`, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch standbys');
+      return response.json();
+    },
+    enabled: viewMode === "standbys",
   });
 
   const invalidatePaperworkQueries = async () => {
@@ -527,8 +563,21 @@ Deal or No Deal Production Team`);
         <TabsContent value="paperwork" className="space-y-4 mt-0">
           {/* Filters - Two Rows */}
           <div className="space-y-3">
-            {/* Row 1: Record Day + Search */}
+            {/* Row 1: View Mode + Record Day + Search */}
             <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="view-mode-filter">View:</Label>
+                <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+                  <SelectTrigger className="w-[140px]" data-testid="select-view-mode">
+                    <SelectValue placeholder="Seats" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="seats">Seat Bookings</SelectItem>
+                    <SelectItem value="standbys">Standbys</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="flex items-center gap-2">
                 <Label htmlFor="record-day-filter">Record Day:</Label>
                 <Select value={selectedRecordDay} onValueChange={setSelectedRecordDay}>
@@ -723,43 +772,157 @@ Deal or No Deal Production Team`);
           */}
 
           {/* Main Table */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Invited Contestants ({filteredData.length})
-                  </CardTitle>
-                  <CardDescription>
-                    Contestants who have been sent a booking invitation
-                  </CardDescription>
+          {viewMode === "standbys" ? (
+            /* Standbys Table */
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-amber-600" />
+                      Standbys ({standbyData.filter(s => 
+                        (!searchName || s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase()))
+                      ).length})
+                    </CardTitle>
+                    <CardDescription>
+                      Backup contestants for the selected record day
+                    </CardDescription>
+                  </div>
                 </div>
-                <Button 
-                  onClick={handleCopyAllEmails}
-                  disabled={allEmails.length === 0}
-                  variant="outline"
-                  className="border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400 dark:hover:bg-orange-900/20"
-                  title="Copy emails of all currently visible contestants to clipboard"
-                  data-testid="button-copy-all-emails"
-                >
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copy Visible Emails ({allEmails.length})
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {loadingPaperwork ? (
-                <div className="flex items-center justify-center py-8">
-                  <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {loadingStandbys ? (
+                  <div className="flex items-center justify-center py-8">
+                    <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : standbyData.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No standbys found</p>
+                    <p className="text-sm">Add standbys from the Seating Chart page</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-amber-100 dark:bg-amber-900/20">
+                        <TableHead className="font-semibold">Priority</TableHead>
+                        <TableHead className="font-semibold">Name</TableHead>
+                        <TableHead className="font-semibold">Record Day</TableHead>
+                        <TableHead className="font-semibold">Email</TableHead>
+                        <TableHead className="font-semibold">Phone</TableHead>
+                        <TableHead className="font-semibold text-center">Standby Status</TableHead>
+                        <TableHead className="font-semibold text-center">Email Sent</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {standbyData
+                        .filter(s => !searchName || s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase()))
+                        .sort((a, b) => (a.priority || 999) - (b.priority || 999))
+                        .map((standby) => (
+                          <TableRow 
+                            key={standby.id}
+                            className={standby.confirmedAt ? 'bg-green-50 dark:bg-green-900/20' : ''}
+                            data-testid={`row-standby-${standby.id}`}
+                          >
+                            <TableCell>
+                              <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                                #{standby.priority || '-'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {standby.contestant?.name || "Unknown"}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3 text-muted-foreground" />
+                                {standby.recordDay ? format(new Date(standby.recordDay.date), "MMM d, yyyy") : 
+                                  (selectedRecordDay !== "all" ? 
+                                    sortedRecordDays.find(rd => rd.id === selectedRecordDay)?.date ? 
+                                      format(new Date(sortedRecordDays.find(rd => rd.id === selectedRecordDay)!.date), "MMM d, yyyy") : "N/A"
+                                    : "N/A")}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {standby.contestant?.email || "-"}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {standby.contestant?.phone || "-"}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {standby.confirmedAt ? (
+                                <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Confirmed
+                                </Badge>
+                              ) : standby.status === 'pending' ? (
+                                <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  Pending
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary">
+                                  {standby.status}
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {standby.standbyEmailSent ? (
+                                <div className="flex flex-col items-center">
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(new Date(standby.standbyEmailSent), "MMM d")}
+                                  </span>
+                                </div>
+                              ) : (
+                                <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            /* Seat Bookings Table */
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Invited Contestants ({filteredData.length})
+                    </CardTitle>
+                    <CardDescription>
+                      Contestants who have been sent a booking invitation
+                    </CardDescription>
+                  </div>
+                  <Button 
+                    onClick={handleCopyAllEmails}
+                    disabled={allEmails.length === 0}
+                    variant="outline"
+                    className="border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400 dark:hover:bg-orange-900/20"
+                    title="Copy emails of all currently visible contestants to clipboard"
+                    data-testid="button-copy-all-emails"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Visible Emails ({allEmails.length})
+                  </Button>
                 </div>
-              ) : filteredData.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>No invited contestants found</p>
-                  <p className="text-sm">Contestants appear here after they are sent a booking email</p>
-                </div>
-              ) : (
+              </CardHeader>
+              <CardContent>
+                {loadingPaperwork ? (
+                  <div className="flex items-center justify-center py-8">
+                    <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : filteredData.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No invited contestants found</p>
+                    <p className="text-sm">Contestants appear here after they are sent a booking email</p>
+                  </div>
+                ) : (
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-orange-100 dark:bg-orange-900/20">
@@ -868,6 +1031,7 @@ Deal or No Deal Production Team`);
               )}
             </CardContent>
           </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="settings">

@@ -43,11 +43,16 @@ import {
   ChevronDown,
   ChevronRight
 } from "lucide-react";
-import type { RecordDay, Contestant, SeatAssignment, RebookingHistory } from "@shared/schema";
+import type { RecordDay, Contestant, SeatAssignment, RebookingHistory, StandbyAssignment } from "@shared/schema";
 
 interface BookingAssignment extends SeatAssignment {
   contestant: Contestant | null;
   recordDay: RecordDay | null;
+}
+
+interface StandbyWithContestant extends StandbyAssignment {
+  contestant: Contestant;
+  recordDay?: RecordDay;
 }
 
 interface RebookingHistoryEntry extends RebookingHistory {
@@ -68,6 +73,7 @@ interface BookingTrackerResponse {
 }
 
 type StatusFilter = "all" | "not_sent" | "awaiting" | "confirmed" | "declined";
+type ViewMode = "seats" | "standbys";
 
 const BOOKING_TRACKER_STORAGE_KEY = 'booking-tracker-state';
 
@@ -75,6 +81,7 @@ interface BookingTrackerState {
   selectedRecordDay: string;
   selectedBlock: string;
   statusFilter: StatusFilter;
+  viewMode: ViewMode;
 }
 
 export default function BookingResponses() {
@@ -114,6 +121,17 @@ export default function BookingResponses() {
     return "all";
   });
   
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    try {
+      const saved = localStorage.getItem(BOOKING_TRACKER_STORAGE_KEY);
+      if (saved) {
+        const state: BookingTrackerState = JSON.parse(saved);
+        return state.viewMode || "seats";
+      }
+    } catch {}
+    return "seats";
+  });
+  
   const [searchName, setSearchName] = useState("");
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
   
@@ -124,12 +142,13 @@ export default function BookingResponses() {
         selectedRecordDay,
         selectedBlock,
         statusFilter,
+        viewMode,
       };
       localStorage.setItem(BOOKING_TRACKER_STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
       console.error("Failed to save booking tracker state:", e);
     }
-  }, [selectedRecordDay, selectedBlock, statusFilter]);
+  }, [selectedRecordDay, selectedBlock, statusFilter, viewMode]);
   
   // Send email dialog state
   const [sendEmailDialogOpen, setSendEmailDialogOpen] = useState(false);
@@ -249,6 +268,22 @@ export default function BookingResponses() {
       return res.json();
     },
     enabled: !!selectedRecordDay,
+  });
+
+  // Query for standbys when in standby view mode
+  const { data: standbyData = [], isLoading: loadingStandbys } = useQuery<StandbyWithContestant[]>({
+    queryKey: ["/api/standbys/record-day", selectedRecordDay],
+    queryFn: async () => {
+      if (!selectedRecordDay) {
+        const response = await fetch("/api/standbys", { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to fetch standbys');
+        return response.json();
+      }
+      const response = await fetch(`/api/standbys/record-day/${selectedRecordDay}`, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch standbys');
+      return response.json();
+    },
+    enabled: viewMode === "standbys",
   });
 
   // Query for seat assignments on the rebook record day (to show available seats)
@@ -984,6 +1019,19 @@ export default function BookingResponses() {
       {/* Filters Row */}
       <div className="flex flex-wrap gap-4 items-center">
         <div className="flex items-center gap-2">
+          <Label htmlFor="view-mode-filter">View:</Label>
+          <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+            <SelectTrigger className="w-[140px]" data-testid="select-view-mode">
+              <SelectValue placeholder="Seats" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="seats">Seat Bookings</SelectItem>
+              <SelectItem value="standbys">Standbys</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
           <Label htmlFor="record-day-filter">Record Day:</Label>
           <Select value={selectedRecordDay} onValueChange={handleRecordDayChange}>
             <SelectTrigger className="w-[280px]" data-testid="select-record-day">
@@ -1044,6 +1092,120 @@ export default function BookingResponses() {
         </div>
       </div>
 
+      {viewMode === "standbys" ? (
+        /* Standbys View */
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-amber-600" />
+                  Standbys ({standbyData.filter(s => 
+                    (!searchName || s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase()))
+                  ).length})
+                </CardTitle>
+                <CardDescription>
+                  Backup contestants for the selected record day
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loadingStandbys ? (
+              <div className="flex items-center justify-center py-8">
+                <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : standbyData.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No standbys found</p>
+                <p className="text-sm">Add standbys from the Seating Chart page</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-amber-100 dark:bg-amber-900/20">
+                    <TableHead className="font-semibold">Priority</TableHead>
+                    <TableHead className="font-semibold">Name</TableHead>
+                    <TableHead className="font-semibold">Record Day</TableHead>
+                    <TableHead className="font-semibold">Email</TableHead>
+                    <TableHead className="font-semibold">Phone</TableHead>
+                    <TableHead className="font-semibold text-center">Standby Status</TableHead>
+                    <TableHead className="font-semibold text-center">Email Sent</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {standbyData
+                    .filter(s => !searchName || s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase()))
+                    .sort((a, b) => (a.priority || 999) - (b.priority || 999))
+                    .map((standby) => (
+                      <TableRow 
+                        key={standby.id}
+                        className={standby.confirmedAt ? 'bg-green-50 dark:bg-green-900/20' : ''}
+                        data-testid={`row-standby-${standby.id}`}
+                      >
+                        <TableCell>
+                          <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                            #{standby.priority || '-'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {standby.contestant?.name || "Unknown"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 text-muted-foreground" />
+                            {standby.recordDay ? format(new Date(standby.recordDay.date), "MMM d, yyyy") : 
+                              (selectedRecordDay ? 
+                                sortedRecordDays.find(rd => rd.id === selectedRecordDay)?.date ? 
+                                  format(new Date(sortedRecordDays.find(rd => rd.id === selectedRecordDay)!.date), "MMM d, yyyy") : "N/A"
+                                : "N/A")}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {standby.contestant?.email || "-"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {standby.contestant?.phone || "-"}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {standby.confirmedAt ? (
+                            <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Confirmed
+                            </Badge>
+                          ) : standby.status === 'pending' ? (
+                            <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Pending
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">
+                              {standby.status}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {standby.standbyEmailSent ? (
+                            <div className="flex flex-col items-center">
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                              <span className="text-xs text-muted-foreground">
+                                {format(new Date(standby.standbyEmailSent), "MMM d")}
+                              </span>
+                            </div>
+                          ) : (
+                            <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+      <>
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="border-blue-200 dark:border-blue-800">
@@ -2151,6 +2313,8 @@ export default function BookingResponses() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </>
+      )}
     </div>
   );
 }

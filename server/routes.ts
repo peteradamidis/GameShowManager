@@ -6220,7 +6220,7 @@ ${finalEmailFooter}`;
       // Find the seat assignment for this contestant
       // If recordDate is provided, match to that specific record day
       let seatAssignment = null;
-      const allAssignments = await storage.getSeatAssignments();
+      const allAssignments = await storage.getAllSeatAssignments();
       const contestantAssignments = allAssignments.filter(a => a.contestantId === contestant!.id);
       
       if (contestantAssignments.length === 0) {
