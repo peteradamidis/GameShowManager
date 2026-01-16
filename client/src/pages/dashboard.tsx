@@ -179,9 +179,9 @@ export default function Dashboard() {
         };
       case 'on-track':
         return {
-          bg: 'bg-green-100 dark:bg-green-900/30',
-          border: 'border-green-300 dark:border-green-700',
-          text: 'text-green-700 dark:text-green-300',
+          bg: 'bg-slate-100 dark:bg-slate-800/50',
+          border: 'border-slate-300 dark:border-slate-600',
+          text: 'text-slate-600 dark:text-slate-400',
           icon: CheckCircle2,
           label: 'ON TRACK',
         };
