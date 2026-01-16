@@ -269,19 +269,19 @@ export default function Dashboard() {
                     data-testid={`deadline-row-${info.recordDayId}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <StatusIcon className={`h-5 w-5 flex-shrink-0 ${style.text}`} />
+                      <StatusIcon className={`h-6 w-6 flex-shrink-0 ${style.text}`} />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium">
+                          <span className="text-lg font-bold">
                             {info.rxNumber || format(info.recordDate, "MMM d")}
                           </span>
-                          <span className="text-sm text-muted-foreground">
+                          <span className="font-semibold">
                             Record: {format(info.recordDate, "EEE, MMM d")}
                           </span>
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="font-semibold">
                           Deadline: {format(info.deadline, "EEE, MMM d")}
-                          {info.daysUntilDeadline === 0 && " (TODAY)"}
+                          {info.daysUntilDeadline === 0 && <span className="text-red-600 dark:text-red-400 ml-1">(TODAY)</span>}
                         </div>
                       </div>
                     </div>
