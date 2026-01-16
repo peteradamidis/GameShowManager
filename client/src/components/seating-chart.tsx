@@ -1203,8 +1203,9 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 <img 
                   src={centreStageImage} 
                   alt="Centre Stage" 
-                  className="object-contain"
+                  className="object-contain host-wave-animation"
                   style={{ height: '200px' }}
+                  data-testid="image-host-wave"
                 />
               </div>
               
