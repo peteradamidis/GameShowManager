@@ -119,6 +119,10 @@ export const seatAssignments = pgTable("seat_assignments", {
   notifiedOfTx: boolean("notified_of_tx"), // Whether contestant was notified of TX
   photosSent: boolean("photos_sent"), // Whether photos were sent
   
+  // Seat-level notes and override fields (for changes after invitations are sent)
+  seatNotes: text("seat_notes"), // Notes specific to this seat assignment (syncs with OTD notes)
+  attendingWithOverride: text("attending_with_override"), // Override for attending with (when original changes after invitation)
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   // Ensure one contestant per record day
