@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient, apiRequest } from "./lib/queryClient";
 import { QueryClientProvider, useQuery, useMutation } from "@tanstack/react-query";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut } from "lucide-react";
 import { initCrossTabSync, closeCrossTabSync } from "./lib/crossTabSync";
+import { MoneyRain } from "@/components/money-rain";
 import Dashboard from "@/pages/dashboard";
 import Contestants from "@/pages/contestants";
 import RecordDays from "@/pages/record-days";
@@ -90,6 +91,18 @@ function AuthenticatedApp() {
     "--sidebar-width-icon": "3rem",
   };
 
+  const [showMoneyRain, setShowMoneyRain] = useState(false);
+
+  const handleLogoClick = useCallback(() => {
+    if (!showMoneyRain) {
+      setShowMoneyRain(true);
+    }
+  }, [showMoneyRain]);
+
+  const handleMoneyRainComplete = useCallback(() => {
+    setShowMoneyRain(false);
+  }, []);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -120,6 +133,8 @@ function AuthenticatedApp() {
   }
 
   return (
+    <>
+    <MoneyRain isActive={showMoneyRain} onComplete={handleMoneyRainComplete} />
     <SidebarProvider style={style as React.CSSProperties}>
       <div className="flex h-screen w-full">
         <AppSidebar />
@@ -127,7 +142,13 @@ function AuthenticatedApp() {
           <header className="flex items-center justify-between p-4 border-b">
             <SidebarTrigger data-testid="button-sidebar-toggle" />
             <div className="flex items-center gap-3">
-              <img src={logoImage} alt="Deal or No Deal" className="h-12" />
+              <img 
+                src={logoImage} 
+                alt="Deal or No Deal" 
+                className="h-12 cursor-pointer hover:scale-105 transition-transform"
+                onClick={handleLogoClick}
+                data-testid="button-logo-easter-egg"
+              />
               <h2 className="text-lg font-semibold">Deal or No Deal Contestant Manager</h2>
             </div>
             <div className="flex items-center gap-2">
@@ -153,6 +174,7 @@ function AuthenticatedApp() {
       </div>
       <Toaster />
     </SidebarProvider>
+    </>
   );
 }
 
