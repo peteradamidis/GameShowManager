@@ -146,7 +146,7 @@ export default function RecordDays() {
     },
   });
 
-  const recordDays: RecordDay[] = apiRecordDays
+  const recordDays: RecordDay[] = [...apiRecordDays]
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .map((day) => {
       const dayAssignments = allAssignments.find((a) => a.recordDayId === day.id)?.assignments || [];
