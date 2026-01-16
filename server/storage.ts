@@ -429,16 +429,35 @@ export class DbStorage implements IStorage {
   async deleteRecordDay(id: string): Promise<{ success: boolean; error?: string }> {
     const db = getDb();
     
-    // Check if record day has any seat assignments
-    const assignments = await db
-      .select()
+    // Check if record day has any seat assignments (including temporary contestants)
+    // Join with contestants to get details for error message
+    const assignmentsWithContestants = await db
+      .select({
+        assignment: seatAssignments,
+        contestant: contestants,
+      })
       .from(seatAssignments)
+      .leftJoin(contestants, eq(seatAssignments.contestantId, contestants.id))
       .where(eq(seatAssignments.recordDayId, id));
     
-    if (assignments.length > 0) {
+    if (assignmentsWithContestants.length > 0) {
+      // Count regular vs temporary contestants for detailed error message
+      const tempCount = assignmentsWithContestants.filter(a => a.contestant?.isTemporary).length;
+      const regularCount = assignmentsWithContestants.length - tempCount;
+      
+      let errorDetail = `Cannot delete: This record day has ${assignmentsWithContestants.length} seat assignment(s)`;
+      if (tempCount > 0 && regularCount > 0) {
+        errorDetail += ` (${regularCount} regular, ${tempCount} temporary)`;
+      } else if (tempCount > 0) {
+        errorDetail += ` (${tempCount} temporary contestant${tempCount > 1 ? 's' : ''})`;
+      }
+      errorDetail += `. Remove all contestants first.`;
+      
+      console.log(`[deleteRecordDay] Blocked deletion of record day ${id}: ${assignmentsWithContestants.length} assignments found`);
+      
       return { 
         success: false, 
-        error: `Cannot delete: This record day has ${assignments.length} seat assignment(s). Remove all contestants first.` 
+        error: errorDetail
       };
     }
     
