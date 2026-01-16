@@ -10848,7 +10848,7 @@ ${finalEmailFooter}`;
       });
       
       // Broadcast the change for real-time updates
-      wsManager.broadcast({
+      wsManager.broadcastBookingUpdate({
         type: 'attendance-issue',
         recordDayId,
         issueType,
