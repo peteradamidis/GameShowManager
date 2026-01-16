@@ -9131,7 +9131,13 @@ ${finalEmailFooter}`;
       const recordDays = await storage.getRecordDays();
       
       // Filter to invited contestants (those who have been sent a booking email)
-      let filteredAssignments = assignments.filter((a: SeatAssignment) => a.bookingEmailSent);
+      // Also include temporary contestants who were added directly to the seating chart
+      let filteredAssignments = assignments.filter((a: SeatAssignment) => {
+        if (a.bookingEmailSent) return true;
+        // Include temporary contestants even if they haven't been sent booking email
+        const contestant = contestants.find(c => c.id === a.contestantId);
+        return contestant?.isTemporary === true;
+      });
       
       // Filter by status if specified
       if (status === 'confirmed') {
