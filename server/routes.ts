@@ -4670,12 +4670,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'rxNumber', 'rxEpNumber', 'caseNumber', 'winningMoneyRole', 'winningMoneyAmount',
         'caseAmount', 'quickCash', 'bankOfferTaken', 'spinTheWheel', 'prize',
         'txNumber', 'txDate', 'notifiedOfTx', 'photosSent',
-        'attendingWithOverride' // For editing attending with after invitations are sent
+        'attendingWithOverride', // For editing attending with after invitations are sent
+        'emailsCopiedAt' // Track when emails were copied for external paperwork sending
       ];
       
       const timestampFields = [
         'bookingEmailSent', 'confirmedRsvp', 'paperworkSent', 
-        'paperworkReceived', 'signedIn'
+        'paperworkReceived', 'signedIn', 'emailsCopiedAt'
       ];
       
       // PROTECTION: Check if bookingEmailSent is being cleared - this is NOT allowed once set
@@ -9696,6 +9697,107 @@ ${finalEmailFooter}`;
       });
     } catch (error: any) {
       console.error("Error bulk sending paperwork:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Bulk mark emails as copied (for tracking when emails are copied to external sending)
+  app.post("/api/paperwork/bulk-mark-copied", requireAuth, async (req, res) => {
+    try {
+      const { assignmentIds } = req.body;
+      
+      if (!assignmentIds || !Array.isArray(assignmentIds) || assignmentIds.length === 0) {
+        return res.status(400).json({ error: "Assignment IDs must be a non-empty array" });
+      }
+      
+      const now = new Date();
+      let marked = 0;
+      let failed = 0;
+      const errors: string[] = [];
+      
+      for (const assignmentId of assignmentIds) {
+        try {
+          const assignment = await storage.getSeatAssignmentById(assignmentId);
+          if (!assignment) {
+            failed++;
+            errors.push(`Assignment ${assignmentId} not found`);
+            continue;
+          }
+          
+          await storage.updateSeatAssignmentWorkflow(assignmentId, {
+            emailsCopiedAt: now,
+          });
+          
+          // Broadcast update via WebSocket
+          wsManager.broadcastBookingUpdate({
+            type: 'booking-master-update',
+            recordDayId: assignment.recordDayId,
+            assignmentId,
+            field: 'emailsCopiedAt',
+            value: now,
+          });
+          
+          marked++;
+        } catch (err: any) {
+          failed++;
+          errors.push(`Error processing ${assignmentId}: ${err.message}`);
+        }
+      }
+      
+      res.json({ 
+        success: true,
+        marked,
+        failed,
+        errors: errors.length > 0 ? errors : undefined,
+      });
+    } catch (error: any) {
+      console.error("Error bulk marking emails as copied:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Clear emails copied status (for resetting tracking)
+  app.delete("/api/paperwork/clear-copied", requireAuth, async (req, res) => {
+    try {
+      const { assignmentIds } = req.body;
+      
+      if (!assignmentIds || !Array.isArray(assignmentIds) || assignmentIds.length === 0) {
+        return res.status(400).json({ error: "Assignment IDs must be a non-empty array" });
+      }
+      
+      let cleared = 0;
+      let failed = 0;
+      
+      for (const assignmentId of assignmentIds) {
+        try {
+          const assignment = await storage.getSeatAssignmentById(assignmentId);
+          if (!assignment) {
+            failed++;
+            continue;
+          }
+          
+          await storage.updateSeatAssignmentWorkflow(assignmentId, {
+            emailsCopiedAt: null,
+          });
+          
+          // Broadcast update via WebSocket
+          wsManager.broadcastBookingUpdate({
+            type: 'booking-master-update',
+            recordDayId: assignment.recordDayId,
+            assignmentId,
+            field: 'emailsCopiedAt',
+            value: null,
+          });
+          
+          cleared++;
+        } catch {
+          failed++;
+        }
+      }
+      
+      res.json({ success: true, cleared, failed });
+    } catch (error: any) {
+      console.error("Error clearing copied status:", error);
       res.status(500).json({ error: error.message });
     }
   });
