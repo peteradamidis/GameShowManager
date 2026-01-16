@@ -1,4 +1,5 @@
-import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList, UserCheck, MessageSquareText, FileText, Trophy, AlertTriangle } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList, UserCheck, MessageSquareText, FileText, Trophy, AlertTriangle, DollarSign } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -10,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { MoneyRain } from "./money-rain";
 
 const menuItems = [
   {
@@ -81,12 +83,32 @@ const menuItems = [
 
 export function AppSidebar() {
   const [location] = useLocation();
+  const [showMoneyRain, setShowMoneyRain] = useState(false);
+
+  const handleLogoClick = useCallback(() => {
+    if (!showMoneyRain) {
+      setShowMoneyRain(true);
+    }
+  }, [showMoneyRain]);
+
+  const handleMoneyRainComplete = useCallback(() => {
+    setShowMoneyRain(false);
+  }, []);
 
   return (
-    <Sidebar>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Deal or No Deal</SidebarGroupLabel>
+    <>
+      <MoneyRain isActive={showMoneyRain} onComplete={handleMoneyRainComplete} />
+      <Sidebar>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel 
+              onClick={handleLogoClick}
+              className="cursor-pointer hover:text-primary transition-colors select-none flex items-center gap-1.5"
+              data-testid="button-logo-easter-egg"
+            >
+              <DollarSign className="h-4 w-4 text-green-500" />
+              Deal or No Deal
+            </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -104,5 +126,6 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
+    </>
   );
 }
