@@ -2,7 +2,7 @@ import { SeatingChart } from "@/components/seating-chart";
 import { WinningMoneyModal } from "@/components/winning-money-modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check, Eye, User, Mail, Phone, MapPin, ArrowLeftRight, Camera, UserPlus, Pencil } from "lucide-react";
+import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check, Eye, User, Mail, Phone, MapPin, ArrowLeftRight, Camera, UserPlus, Pencil, ClipboardCheck, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -33,6 +33,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 // Generate seats with the proper row structure
 const SEAT_ROWS = [
@@ -121,6 +124,9 @@ export default function SeatingChartPage() {
   
   // Podium Visualiser mode - shows only contestant photos
   const [isPodiumVisualizerMode, setIsPodiumVisualizerMode] = useState(false);
+  
+  // Readiness tab state
+  const [activeTab, setActiveTab] = useState<"seating" | "readiness">("seating");
   
   // Temporary contestant dialog state
   const [tempContestantDialogOpen, setTempContestantDialogOpen] = useState(false);
@@ -366,6 +372,48 @@ export default function SeatingChartPage() {
 
   // Check if record day is locked (RX Day Mode)
   const isLocked = currentRecordDay?.lockedAt != null;
+
+  // Calculate block readiness data for the Readiness tab
+  // Uses assignments directly instead of seats since seats is built after early returns
+  const blockReadiness = useMemo(() => {
+    if (!assignments || !Array.isArray(assignments)) return [];
+    
+    const TOTAL_SEATS_PER_BLOCK = 22; // 5+5+4+4+4 = 22 seats per block
+    
+    return Array(7).fill(null).map((_, blockIdx) => {
+      const blockNumber = blockIdx + 1;
+      const blockAssignments = assignments.filter((a: any) => a.blockNumber === blockNumber);
+      const totalSeats = TOTAL_SEATS_PER_BLOCK;
+      const filledSeats = blockAssignments.length;
+      const confirmedSeats = blockAssignments.filter((a: any) => a.confirmedRsvp).length;
+      const missingConfirmation = filledSeats - confirmedSeats;
+      const hasIssues = blockAssignments.filter((a: any) => a.mobilityNotes).length;
+      
+      // Calculate readiness status
+      let status: 'ready' | 'warning' | 'incomplete' = 'ready';
+      if (filledSeats === 0) {
+        status = 'incomplete';
+      } else if (confirmedSeats < filledSeats) {
+        status = 'warning';
+      }
+      
+      const fillPercent = Math.round((filledSeats / totalSeats) * 100);
+      const confirmPercent = filledSeats > 0 ? Math.round((confirmedSeats / filledSeats) * 100) : 0;
+      
+      return {
+        blockNumber,
+        totalSeats,
+        filledSeats,
+        confirmedSeats,
+        missingConfirmation,
+        hasIssues,
+        fillPercent,
+        confirmPercent,
+        status,
+        emptySeats: totalSeats - filledSeats,
+      };
+    });
+  }, [assignments]);
 
   // Lock/Unlock mutations
   const lockMutation = useMutation({
@@ -1251,33 +1299,180 @@ export default function SeatingChartPage() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">
-          Loading seating chart...
-        </div>
-      ) : (
-        <SeatingChart 
-          recordDayId={recordDayId} 
-          initialSeats={seats}
-          onRefreshNeeded={refetch}
-          onEmptySeatClick={handleEmptySeatClick}
-          onRemove={handleRemove}
-          onCancel={handleCancel}
-          onWinningMoneyClick={isLocked ? handleWinningMoneyClick : undefined}
-          onRemoveWinningMoney={isLocked ? handleRemoveWinningMoney : undefined}
-          onReturnToStandby={handleReturnToStandby}
-          onNoShow={isLocked ? handleNoShow : undefined}
-          onEarlyLeaver={isLocked ? handleEarlyLeaver : undefined}
-          onEditTempContestant={handleEditTempContestant}
-          isLocked={isLocked}
-          standbys={standbys}
-          onStandbySeated={() => {
-            refetch();
-            refetchStandbys();
-          }}
-          isPodiumVisualizerMode={isPodiumVisualizerMode}
-        />
-      )}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "seating" | "readiness")}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="seating" className="gap-2" data-testid="tab-seating">
+            <Users className="h-4 w-4" />
+            Seating Chart
+          </TabsTrigger>
+          <TabsTrigger value="readiness" className="gap-2" data-testid="tab-readiness">
+            <ClipboardCheck className="h-4 w-4" />
+            Readiness
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="seating">
+          {isLoading ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Loading seating chart...
+            </div>
+          ) : (
+            <SeatingChart 
+              recordDayId={recordDayId} 
+              initialSeats={seats}
+              onRefreshNeeded={refetch}
+              onEmptySeatClick={handleEmptySeatClick}
+              onRemove={handleRemove}
+              onCancel={handleCancel}
+              onWinningMoneyClick={isLocked ? handleWinningMoneyClick : undefined}
+              onRemoveWinningMoney={isLocked ? handleRemoveWinningMoney : undefined}
+              onReturnToStandby={handleReturnToStandby}
+              onNoShow={isLocked ? handleNoShow : undefined}
+              onEarlyLeaver={isLocked ? handleEarlyLeaver : undefined}
+              onEditTempContestant={handleEditTempContestant}
+              isLocked={isLocked}
+              standbys={standbys}
+              onStandbySeated={() => {
+                refetch();
+                refetchStandbys();
+              }}
+              isPodiumVisualizerMode={isPodiumVisualizerMode}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="readiness">
+          <div className="space-y-6">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Users className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Filled</p>
+                      <p className="text-2xl font-semibold">
+                        {blockReadiness.reduce((sum, b) => sum + b.filledSeats, 0)}/
+                        {blockReadiness.reduce((sum, b) => sum + b.totalSeats, 0)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-500/10 rounded-lg">
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Confirmed</p>
+                      <p className="text-2xl font-semibold">
+                        {blockReadiness.reduce((sum, b) => sum + b.confirmedSeats, 0)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-amber-500/10 rounded-lg">
+                      <AlertCircle className="h-5 w-5 text-amber-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Awaiting Confirmation</p>
+                      <p className="text-2xl font-semibold">
+                        {blockReadiness.reduce((sum, b) => sum + b.missingConfirmation, 0)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-muted rounded-lg">
+                      <XCircle className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Empty Seats</p>
+                      <p className="text-2xl font-semibold">
+                        {blockReadiness.reduce((sum, b) => sum + b.emptySeats, 0)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Per-Block Readiness */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {blockReadiness.map((block) => (
+                <Card 
+                  key={block.blockNumber} 
+                  className={`cursor-pointer hover-elevate ${
+                    block.status === 'ready' ? 'border-green-500/50' : 
+                    block.status === 'warning' ? 'border-amber-500/50' : 
+                    'border-muted'
+                  }`}
+                  onClick={() => setActiveTab("seating")}
+                  data-testid={`readiness-block-${block.blockNumber}`}
+                >
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center justify-between">
+                      <span>Block {block.blockNumber}</span>
+                      {block.status === 'ready' && block.filledSeats > 0 ? (
+                        <Badge className="bg-green-500 text-white">Ready</Badge>
+                      ) : block.status === 'warning' ? (
+                        <Badge className="bg-amber-500 text-white">Pending</Badge>
+                      ) : (
+                        <Badge variant="secondary">Incomplete</Badge>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Filled</span>
+                        <span className="font-medium">{block.filledSeats}/{block.totalSeats}</span>
+                      </div>
+                      <Progress value={block.fillPercent} className="h-2" />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Confirmed</span>
+                        <span className="font-medium">{block.confirmedSeats}/{block.filledSeats}</span>
+                      </div>
+                      <Progress 
+                        value={block.confirmPercent} 
+                        className={`h-2 ${block.confirmPercent === 100 ? '[&>div]:bg-green-500' : '[&>div]:bg-amber-500'}`} 
+                      />
+                    </div>
+
+                    {block.missingConfirmation > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                        <AlertCircle className="h-4 w-4" />
+                        <span>{block.missingConfirmation} awaiting confirmation</span>
+                      </div>
+                    )}
+
+                    {block.hasIssues > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                        <AlertTriangle className="h-4 w-4" />
+                        <span>{block.hasIssues} with mobility notes</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Assign Contestant to Empty Seat Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
