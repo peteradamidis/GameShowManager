@@ -36,7 +36,7 @@ export default function AttendanceIssuesPage() {
   }) || [];
 
   const sortedIssues = [...filteredIssues].sort((a, b) => 
-    new Date(b.markedAt).getTime() - new Date(a.markedAt).getTime()
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
   const noShowCount = issues?.filter(i => i.issueType === 'no_show').length || 0;
@@ -169,7 +169,7 @@ export default function AttendanceIssuesPage() {
                         {issue.markedBy || 'Unknown'}
                       </TableCell>
                       <TableCell>
-                        {format(new Date(issue.markedAt), 'MMM d, yyyy h:mm a')}
+                        {format(new Date(issue.createdAt), 'MMM d, yyyy h:mm a')}
                       </TableCell>
                     </TableRow>
                   );
