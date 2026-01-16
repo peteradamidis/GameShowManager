@@ -1,16 +1,20 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { AlertTriangle, Clock } from "lucide-react";
+import { AlertTriangle, Clock, CalendarPlus, Check } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AttendanceIssuesPage() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
 
   const { data: issues, isLoading } = useQuery<any[]>({
     queryKey: ['/api/attendance-issues'],
@@ -41,6 +45,29 @@ export default function AttendanceIssuesPage() {
 
   const noShowCount = issues?.filter(i => i.issueType === 'no_show').length || 0;
   const earlyLeaverCount = issues?.filter(i => i.issueType === 'early_leaver').length || 0;
+
+  const moveToRescheduleMutation = useMutation({
+    mutationFn: async (issueId: string) => {
+      return apiRequest('POST', `/api/attendance-issues/${issueId}/move-to-reschedule`, {
+        movedBy: 'producer',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/attendance-issues'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'] });
+      toast({
+        title: "Moved to Reschedule",
+        description: "Contestant has been added to the reschedule list.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to move to reschedule",
+        description: error?.message || "Could not move contestant to reschedule list.",
+        variant: "destructive",
+      });
+    },
+  });
 
   if (isLoading) {
     return (
@@ -119,12 +146,13 @@ export default function AttendanceIssuesPage() {
                 <TableHead>Block/Seat</TableHead>
                 <TableHead>Marked By</TableHead>
                 <TableHead>Date/Time</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedIssues.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     No attendance issues recorded
                   </TableCell>
                 </TableRow>
@@ -170,6 +198,25 @@ export default function AttendanceIssuesPage() {
                       </TableCell>
                       <TableCell>
                         {format(new Date(issue.createdAt), 'MMM d, yyyy h:mm a')}
+                      </TableCell>
+                      <TableCell>
+                        {issue.movedToReschedule ? (
+                          <Badge variant="outline" className="text-green-600 border-green-600" data-testid={`badge-rescheduled-${issue.id}`}>
+                            <Check className="h-3 w-3 mr-1" />
+                            Rescheduled
+                          </Badge>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => moveToRescheduleMutation.mutate(issue.id)}
+                            disabled={moveToRescheduleMutation.isPending}
+                            data-testid={`button-move-to-reschedule-${issue.id}`}
+                          >
+                            <CalendarPlus className="h-3 w-3 mr-1" />
+                            Move to Reschedule
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   );

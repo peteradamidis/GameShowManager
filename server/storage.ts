@@ -280,6 +280,7 @@ export interface IStorage {
   getAttendanceIssues(): Promise<Array<AttendanceIssue & { contestant: Contestant; recordDay: RecordDay }>>;
   getAttendanceIssuesByRecordDay(recordDayId: string): Promise<Array<AttendanceIssue & { contestant: Contestant }>>;
   deleteAttendanceIssue(id: string): Promise<void>;
+  moveAttendanceIssueToReschedule(id: string, movedBy?: string): Promise<{ attendanceIssue: AttendanceIssue; canceledAssignment: CanceledAssignment }>;
 }
 
 export class DbStorage implements IStorage {
@@ -2016,6 +2017,52 @@ export class DbStorage implements IStorage {
       
       // Delete the attendance issue
       await tx.delete(attendanceIssues).where(eq(attendanceIssues.id, id));
+    });
+  }
+
+  async moveAttendanceIssueToReschedule(id: string, movedBy?: string): Promise<{ attendanceIssue: AttendanceIssue; canceledAssignment: CanceledAssignment }> {
+    // Get the attendance issue
+    const [issue] = await db
+      .select()
+      .from(attendanceIssues)
+      .where(eq(attendanceIssues.id, id));
+    
+    if (!issue) {
+      throw new Error("Attendance issue not found");
+    }
+    
+    if (issue.movedToReschedule) {
+      throw new Error("This attendance issue has already been moved to reschedule");
+    }
+    
+    return await db.transaction(async (tx) => {
+      // Create a canceled assignment for the reschedule list
+      const [canceledAssignment] = await tx
+        .insert(canceledAssignments)
+        .values({
+          contestantId: issue.contestantId,
+          recordDayId: issue.recordDayId,
+          blockNumber: issue.blockNumber,
+          seatLabel: issue.seatLabel,
+          reason: issue.issueType === 'no_show' ? 'No-show - eligible for reschedule' : 'Early leaver - eligible for reschedule',
+          movedBy: movedBy || issue.markedBy,
+        })
+        .returning();
+      
+      // Update the attendance issue to mark it as moved to reschedule
+      const [updatedIssue] = await tx
+        .update(attendanceIssues)
+        .set({
+          movedToReschedule: true,
+          movedToRescheduleAt: new Date(),
+        })
+        .where(eq(attendanceIssues.id, id))
+        .returning();
+      
+      return {
+        attendanceIssue: updatedIssue,
+        canceledAssignment,
+      };
     });
   }
 }

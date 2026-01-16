@@ -421,6 +421,8 @@ export const attendanceIssues = pgTable("attendance_issues", {
   issueType: attendanceIssueTypeEnum("issue_type").notNull(), // no_show or early_leaver
   notes: text("notes"), // Optional notes about the incident
   markedBy: text("marked_by"), // Who marked this (producer initials)
+  movedToReschedule: boolean("moved_to_reschedule").default(false), // True when moved to reschedule list
+  movedToRescheduleAt: timestamp("moved_to_reschedule_at"), // When they were moved
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

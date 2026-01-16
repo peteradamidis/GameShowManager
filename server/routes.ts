@@ -10853,6 +10853,20 @@ ${finalEmailFooter}`;
     }
   });
 
+  // Move attendance issue to reschedule list
+  app.post("/api/attendance-issues/:id/move-to-reschedule", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { movedBy } = req.body;
+      
+      const result = await storage.moveAttendanceIssueToReschedule(id, movedBy);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error moving attendance issue to reschedule:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize WebSocket server for real-time updates
