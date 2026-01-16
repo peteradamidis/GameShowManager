@@ -273,10 +273,6 @@ export default function Dashboard() {
                     
                     <div className="flex items-center gap-4 flex-wrap">
                       <div className="text-sm">
-                        <span className="text-muted-foreground">Invites: </span>
-                        <span className="font-medium">{info.invitationsSent}</span>
-                      </div>
-                      <div className="text-sm">
                         <span className="text-muted-foreground">Confirmed: </span>
                         <span className="font-medium">{info.confirmedCount}</span>
                       </div>
