@@ -54,7 +54,7 @@ export default function RecordDays() {
     rxNumber: "",
     totalSeats: 154,
   });
-  const [viewMode, setViewMode] = useState<"grid" | "calendar">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "calendar">("calendar");
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
