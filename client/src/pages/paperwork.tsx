@@ -459,11 +459,17 @@ Deal or No Deal Production Team`);
     }
     return true;
   }).sort((a, b) => {
-    // Sort by record day date first, then by block, then by seat for stable ordering
+    // Sort by confirmedRsvp timestamp descending (latest confirmed first)
+    const confirmedA = a.confirmedRsvp ? new Date(a.confirmedRsvp).getTime() : 0;
+    const confirmedB = b.confirmedRsvp ? new Date(b.confirmedRsvp).getTime() : 0;
+    if (confirmedA !== confirmedB) return confirmedB - confirmedA; // Descending order
+    
+    // Fallback to record day date for unconfirmed items
     const dateA = a.recordDay?.date ? new Date(a.recordDay.date).getTime() : 0;
     const dateB = b.recordDay?.date ? new Date(b.recordDay.date).getTime() : 0;
-    if (dateA !== dateB) return dateA - dateB;
+    if (dateA !== dateB) return dateB - dateA;
     
+    // Then by block, then by seat
     const blockA = a.blockNumber ?? 0;
     const blockB = b.blockNumber ?? 0;
     if (blockA !== blockB) return blockA - blockB;
