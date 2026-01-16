@@ -1,0 +1,80 @@
+4-Feb-26	Wed	1	5			RX- 1-5
+5-Feb-26	Thu	2	10			RX EP 6 - 10
+6-Feb-26	Fri	3	15			RX EP 11 - 15
+7-Feb-26	Sat					
+8-Feb-26	Sun					
+9-Feb-26	Mon	4	20		2	RX EP 16 - 20
+10-Feb-26	Tue	5	25			RX EP 21 - 25 
+11-Feb-26	Wed	6	30			RX EP 26 - 30
+12-Feb-26	Thu					
+13-Feb-26	Fri					AUDITIONS #13 (400) - The Vibe Hotel TBC
+14-Feb-26	Sat					
+15-Feb-26	Sun					
+16-Feb-26	Mon				3	
+17-Feb-26	Tue	7	35			RX EP 31 - 35
+18-Feb-26	Wed	8	40			RX EP 36 - 40
+19-Feb-26	Thu	9	45			RX EP 41 - 45
+20-Feb-26	Fri	10	50			RX EP 46 - 50
+21-Feb-26	Sat					
+22-Feb-26	Sun					
+23-Feb-26	Mon				4	
+24-Feb-26	Tue	11	55			RX EP 51 - 55 
+25-Feb-26	Wed	12	60			RX EP 56 - 60
+26-Feb-26	Thu	13	65			RX EP 61 - 65
+27-Feb-26	Fri					
+28-Feb-26	Sat					
+1-Mar-26	Sun					
+2-Mar-26	Mon	14	70		5	RX EP 66 - 70
+3-Mar-26	Tue	15	75			RX EP 71 - 75
+4-Mar-26	Wed	16	80			RX EP 76 - 80
+5-Mar-26	Thu	17	85			RX EP 81 - 85
+6-Mar-26	Fri					
+7-Mar-26	Sat					
+8-Mar-26	Sun					
+9-Mar-26	Mon			9		PUBLIC HOLIDAY - LABOUR DAY
+10-Mar-26	Tue					
+11-Mar-26	Wed					AUDITIONS #14 (400) - The Vibe Hotel TBC
+12-Mar-26	Thu					AUDITIONS #15 (400) - The Vibe Hotel TBC
+13-Mar-26	Fri					
+14-Mar-26	Sat					
+15-Mar-26	Sun					
+16-Mar-26	Mon	18	90		6	RX EP 86-90
+17-Mar-26	Tue	19	95			RX EP 91-95
+18-Mar-26	Wed	20	100			RX EP 96-100
+19-Mar-26	Thu	21	105			RX EP 101-105
+20-Mar-26	Fri					
+21-Mar-26	Sat					
+22-Mar-26	Sun					
+23-Mar-26	Mon				7	
+24-Mar-26	Tue	22	110			RX EP 106-110 
+25-Mar-26	Wed	23	115			RX EP 111-115
+26-Mar-26	Thu	24	120			RX EP 116-120
+27-Mar-26	Fri	25	125			RX EP 121-125
+28-Mar-26	Sat					
+29-Mar-26	Sun					
+30-Mar-26	Mon	26	130		8	RX EP 126-130
+31-Mar-26	Tue	27	135			RX EP 131-135
+1-Apr-26	Wed	28	140			RX EP 136-140
+2-Apr-26	Thu					
+3-Apr-26	Fri					GOOD FRIDAY PUBLIC HOLIDAY
+4-Apr-26	Sat					
+5-Apr-26	Sun					
+6-Apr-26	Mon				9	EASTER MONDAY PUBLIC HOLIDAY
+7-Apr-26	Tue	29	145			RX EP 141-145
+8-Apr-26	Wed	30	150			RX EP 146-150
+9-Apr-26	Thu	31	155			RX EP 151-155
+10-Apr-26	Fri					
+11-Apr-26	Sat					
+12-Apr-26	Sun					
+13-Apr-26	Mon				10	
+14-Apr-26	Tue	32	160			RX EP 156-160
+15-Apr-26	Wed	33	165			RX EP 161-165
+16-Apr-26	Thu	34	170			RX EP 166-170
+17-Apr-26	Fri	35	175			RX EP 171-175
+18-Apr-26	Sat					
+19-Apr-26	Sun					
+20-Apr-26	Mon				11	
+21-Apr-26	Tue	36	180			RX EP 176-180
+22-Apr-26	Wed	37	185			RX EP 181-185
+23-Apr-26	Thu	38	190			RX EP 186-190
+24-Apr-26	Fri	39	195			RX EP 191-195

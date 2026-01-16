@@ -1,6 +1,6 @@
 import { RecordDayCard, RecordDay } from "@/components/record-day-card";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Edit, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, Edit, AlertTriangle, ChevronLeft, ChevronRight, CalendarDays, LayoutGrid } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 
 type ApiRecordDay = {
   id: string;
@@ -51,6 +53,11 @@ export default function RecordDays() {
     date: "",
     rxNumber: "",
     totalSeats: 154,
+  });
+  const [viewMode, setViewMode] = useState<"grid" | "calendar">("grid");
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
   });
 
   const { data: apiRecordDays = [], isLoading } = useQuery<ApiRecordDay[]>({
@@ -225,6 +232,66 @@ export default function RecordDays() {
     }
   };
 
+  // Calendar helpers
+  const getCalendarDays = () => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDayOfWeek = firstDay.getDay(); // 0 = Sunday
+    
+    const days: Array<{ date: Date | null; recordDay?: RecordDay & { rawDate: string } }> = [];
+    
+    // Add empty slots for days before the first of the month
+    for (let i = 0; i < startDayOfWeek; i++) {
+      days.push({ date: null });
+    }
+    
+    // Add all days in the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      // Find if there's a record day on this date
+      const recordDay = apiRecordDays.find(rd => rd.date.split('T')[0] === dateStr);
+      let enrichedRecordDay: (RecordDay & { rawDate: string }) | undefined;
+      
+      if (recordDay) {
+        const dayAssignments = allAssignments.find((a) => a.recordDayId === recordDay.id)?.assignments || [];
+        enrichedRecordDay = {
+          id: recordDay.id,
+          date: new Date(recordDay.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+          rawDate: recordDay.date,
+          rxNumber: recordDay.rxNumber,
+          totalSeats: recordDay.totalSeats || 154,
+          filledSeats: dayAssignments.length,
+          confirmedSeats: dayAssignments.filter((a: any) => a.confirmedRsvp).length,
+        };
+      }
+      
+      days.push({ date, recordDay: enrichedRecordDay });
+    }
+    
+    return days;
+  };
+
+  const calendarDays = getCalendarDays();
+  const monthName = calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  
+  const goToPrevMonth = () => {
+    setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1));
+  };
+  
+  const goToNextMonth = () => {
+    setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1));
+  };
+  
+  const goToToday = () => {
+    const now = new Date();
+    setCalendarMonth(new Date(now.getFullYear(), now.getMonth(), 1));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -240,36 +307,123 @@ export default function RecordDays() {
         </Button>
       </div>
 
-      {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">
-          Loading record days...
-        </div>
-      ) : recordDays.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          No record days yet. Create one to get started!
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {recordDays.map((recordDay) => {
-            const apiDay = apiRecordDays.find(d => d.id === recordDay.id);
-            return (
-              <RecordDayCard
-                key={recordDay.id}
-                recordDay={recordDay}
-                onViewSeating={() => setLocation(`/seating-chart?day=${recordDay.id}`)}
-                onEdit={apiDay ? () => handleOpenEdit(apiDay) : undefined}
-                onDelete={() => handleDeleteClick(recordDay.id)}
-                onSendInvitations={() => {
-                  toast({
-                    title: "Invitations sent",
-                    description: `Record day invitations sent to all ${recordDay.filledSeats} assigned contestants.`,
-                  });
-                }}
-              />
-            );
-          })}
-        </div>
-      )}
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "grid" | "calendar")} className="w-full">
+        <TabsList>
+          <TabsTrigger value="grid" className="gap-2" data-testid="tab-grid-view">
+            <LayoutGrid className="h-4 w-4" />
+            Grid
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="gap-2" data-testid="tab-calendar-view">
+            <CalendarDays className="h-4 w-4" />
+            Calendar
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="grid" className="mt-4">
+          {isLoading ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Loading record days...
+            </div>
+          ) : recordDays.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              No record days yet. Create one to get started!
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {recordDays.map((recordDay) => {
+                const apiDay = apiRecordDays.find(d => d.id === recordDay.id);
+                return (
+                  <RecordDayCard
+                    key={recordDay.id}
+                    recordDay={recordDay}
+                    onViewSeating={() => setLocation(`/seating-chart?day=${recordDay.id}`)}
+                    onEdit={apiDay ? () => handleOpenEdit(apiDay) : undefined}
+                    onDelete={() => handleDeleteClick(recordDay.id)}
+                    onSendInvitations={() => {
+                      toast({
+                        title: "Invitations sent",
+                        description: `Record day invitations sent to all ${recordDay.filledSeats} assigned contestants.`,
+                      });
+                    }}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="calendar" className="mt-4">
+          <Card>
+            <CardContent className="p-4">
+              {/* Calendar Header */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="icon" onClick={goToPrevMonth} data-testid="button-prev-month">
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="icon" onClick={goToNextMonth} data-testid="button-next-month">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <h2 className="text-xl font-semibold ml-2">{monthName}</h2>
+                </div>
+                <Button variant="outline" size="sm" onClick={goToToday} data-testid="button-today">
+                  Today
+                </Button>
+              </div>
+
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-1">
+                {/* Day headers */}
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                  <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
+                    {day}
+                  </div>
+                ))}
+                
+                {/* Calendar days */}
+                {calendarDays.map((dayInfo, index) => {
+                  const isToday = dayInfo.date && 
+                    dayInfo.date.toDateString() === new Date().toDateString();
+                  
+                  return (
+                    <div
+                      key={index}
+                      className={`min-h-[100px] border rounded-md p-1 ${
+                        dayInfo.date ? 'bg-background' : 'bg-muted/30'
+                      } ${isToday ? 'ring-2 ring-primary' : ''}`}
+                    >
+                      {dayInfo.date && (
+                        <>
+                          <div className={`text-sm font-medium mb-1 ${isToday ? 'text-primary' : ''}`}>
+                            {dayInfo.date.getDate()}
+                          </div>
+                          {dayInfo.recordDay && (
+                            <div
+                              className="bg-primary/10 border border-primary/30 rounded p-1 cursor-pointer hover-elevate"
+                              onClick={() => setLocation(`/seating-chart?day=${dayInfo.recordDay!.id}`)}
+                              data-testid={`calendar-day-${dayInfo.recordDay.id}`}
+                            >
+                              <div className="text-xs font-medium text-primary truncate">
+                                {dayInfo.recordDay.rxNumber || 'RX Day'}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                {dayInfo.recordDay.confirmedSeats}/{dayInfo.recordDay.filledSeats} confirmed
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {dayInfo.recordDay.filledSeats}/{dayInfo.recordDay.totalSeats} seats
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
