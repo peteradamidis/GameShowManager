@@ -247,7 +247,7 @@ export default function Dashboard() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Mail className="h-5 w-5" />
-            Upcoming Two Weeks
+            Upcoming Deadlines
             <span className="text-sm font-normal text-muted-foreground ml-2">
               (invites due 2 weeks before record)
             </span>
