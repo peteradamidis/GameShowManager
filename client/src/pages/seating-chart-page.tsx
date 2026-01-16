@@ -567,6 +567,8 @@ export default function SeatingChartPage() {
             photoUrl: assignment.photoUrl,
             contestantLocation: assignment.contestantLocation,
             criminalRecord: assignment.criminalRecord,
+            otdNotes: assignment.otdNotes,
+            attendingWithOverride: assignment.attendingWithOverride,
           };
         }
       }

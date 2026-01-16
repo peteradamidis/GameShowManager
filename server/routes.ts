@@ -4669,7 +4669,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'paperworkReceived', 'signedIn', 'otdNotes', 'standbyReplacementSwaps',
         'rxNumber', 'rxEpNumber', 'caseNumber', 'winningMoneyRole', 'winningMoneyAmount',
         'caseAmount', 'quickCash', 'bankOfferTaken', 'spinTheWheel', 'prize',
-        'txNumber', 'txDate', 'notifiedOfTx', 'photosSent'
+        'txNumber', 'txDate', 'notifiedOfTx', 'photosSent',
+        'attendingWithOverride' // For editing attending with after invitations are sent
       ];
       
       const timestampFields = [

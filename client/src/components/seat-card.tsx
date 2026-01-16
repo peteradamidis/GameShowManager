@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert, Pencil } from "lucide-react";
+import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert, Pencil, MessageSquare, UserCheck } from "lucide-react";
 import { getDistanceFromDocklands } from "@/components/contestant-table";
 
 // Helper function to check if a medical field has meaningful content (not NA/N/A/No/None/empty)
@@ -63,6 +66,8 @@ export interface SeatData {
   contestantLocation?: string; // Contestant's location for 60km distance check
   criminalRecord?: string; // Criminal record notes
   isTemporary?: boolean; // True if contestant was created as temporary (not from Cast It Reach)
+  otdNotes?: string; // OTD notes (syncs with Booking Master OTD notes column)
+  attendingWithOverride?: string; // Override for attending with when it changes after invitation
 }
 
 interface SeatCardProps {
@@ -123,7 +128,70 @@ export function SeatCard({
   onEditTempContestant,
 }: SeatCardProps) {
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [localOtdNotes, setLocalOtdNotes] = useState(seat.otdNotes || '');
+  const [localAttendingWith, setLocalAttendingWith] = useState(seat.attendingWithOverride || '');
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [isEditingAttendingWith, setIsEditingAttendingWith] = useState(false);
+  const { toast } = useToast();
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Sync local state with prop changes
+  useEffect(() => {
+    setLocalOtdNotes(seat.otdNotes || '');
+  }, [seat.otdNotes]);
+  
+  useEffect(() => {
+    setLocalAttendingWith(seat.attendingWithOverride || '');
+  }, [seat.attendingWithOverride]);
+  
   const isEmpty = !seat.contestantName;
+  
+  // Mutation for updating OTD notes and attending with override
+  const updateSeatDetailsMutation = useMutation({
+    mutationFn: async (data: { otdNotes?: string; attendingWithOverride?: string }) => {
+      const response = await apiRequest('PATCH', `/api/seat-assignments/${seat.assignmentId}/workflow`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+      toast({
+        title: "Updated",
+        description: "Seat details saved",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Debounced save for notes - waits 500ms after typing stops
+  const handleOtdNotesChange = (value: string) => {
+    setLocalOtdNotes(value);
+    // Guard: only save if we have a valid assignment ID
+    if (!seat.assignmentId) return;
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      if (seat.assignmentId) {
+        updateSeatDetailsMutation.mutate({ otdNotes: value });
+      }
+    }, 500);
+  };
+  
+  // Save attending with override on blur or explicit save
+  const handleAttendingWithSave = () => {
+    // Guard: only save if we have a valid assignment ID
+    if (!seat.assignmentId) return;
+    const trimmed = localAttendingWith.trim();
+    // Only save if it differs from the original contestant attending with
+    updateSeatDetailsMutation.mutate({ attendingWithOverride: trimmed || undefined });
+    setIsEditingAttendingWith(false);
+  };
   
   // Use standby colors for standbys, then rating-based colors, fallback to group colors if no rating
   // Standbys get purple styling to distinguish them from regular contestants
@@ -381,12 +449,92 @@ export function SeatCard({
                   </div>
                 )}
 
-                {contestantDetails.attendingWith && (
-                  <div className="text-sm">
-                    <label className="text-xs font-medium text-muted-foreground">Attending With</label>
-                    <p>{contestantDetails.attendingWith}</p>
+                {/* Attending With - shows original and allows override editing */}
+                <div className="text-sm">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                      <UserCheck className="h-3 w-3" />
+                      Attending With
+                    </label>
+                    {!isRXDayLocked && seat.assignmentId && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-5 w-5"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsEditingAttendingWith(!isEditingAttendingWith);
+                        }}
+                        data-testid={`button-edit-attending-with-${seat.assignmentId}`}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
-                )}
+                  
+                  {isEditingAttendingWith ? (
+                    <div className="space-y-2">
+                      <Input
+                        value={localAttendingWith}
+                        onChange={(e) => setLocalAttendingWith(e.target.value)}
+                        placeholder="Override attending with..."
+                        className="h-8 text-xs"
+                        data-testid={`input-attending-with-${seat.assignmentId}`}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleAttendingWithSave();
+                          if (e.key === 'Escape') {
+                            setLocalAttendingWith(seat.attendingWithOverride || '');
+                            setIsEditingAttendingWith(false);
+                          }
+                        }}
+                      />
+                      <div className="flex gap-1">
+                        <Button size="sm" className="h-6 text-xs" onClick={handleAttendingWithSave}>
+                          Save
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-6 text-xs"
+                          onClick={() => {
+                            setLocalAttendingWith(seat.attendingWithOverride || '');
+                            setIsEditingAttendingWith(false);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                      {contestantDetails?.attendingWith && (
+                        <p className="text-[10px] text-muted-foreground">
+                          Original: {contestantDetails.attendingWith}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      {/* Show effective attending with (override takes precedence) */}
+                      {seat.attendingWithOverride ? (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1">
+                            <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800">
+                              UPDATED
+                            </Badge>
+                            <span className="text-sm">{seat.attendingWithOverride}</span>
+                          </div>
+                          {contestantDetails?.attendingWith && contestantDetails.attendingWith !== seat.attendingWithOverride && (
+                            <p className="text-[10px] text-muted-foreground line-through">
+                              Original: {contestantDetails.attendingWith}
+                            </p>
+                          )}
+                        </div>
+                      ) : contestantDetails?.attendingWith ? (
+                        <p>{contestantDetails.attendingWith}</p>
+                      ) : (
+                        <p className="text-muted-foreground italic text-xs">Not specified</p>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {contestantDetails.availabilityNotes && (
                   <div className="text-sm">
@@ -424,6 +572,29 @@ export function SeatCard({
                     </Badge>
                   </div>
                 </div>
+
+                {/* OTD Notes - editable notes that sync with Booking Master OTD notes column */}
+                {seat.assignmentId && (
+                  <div className="text-sm p-2 bg-muted/30 rounded-md border">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <MessageSquare className="h-3 w-3" />
+                        OTD Notes
+                      </label>
+                    </div>
+                    <Textarea
+                      value={localOtdNotes}
+                      onChange={(e) => handleOtdNotesChange(e.target.value)}
+                      placeholder="Add OTD notes (syncs with Booking Master)..."
+                      className="min-h-[60px] text-xs resize-none"
+                      data-testid={`textarea-otd-notes-${seat.assignmentId}`}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    {updateSeatDetailsMutation.isPending && (
+                      <p className="text-[10px] text-muted-foreground mt-1">Saving...</p>
+                    )}
+                  </div>
+                )}
 
                 {wasSwapped && originalPosition && (
                   <div className="text-sm p-2 bg-amber-50 dark:bg-amber-950/50 rounded-md border border-amber-200 dark:border-amber-800">

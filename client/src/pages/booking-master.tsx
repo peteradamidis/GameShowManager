@@ -173,6 +173,8 @@ interface SeatAssignment {
   swappedAt?: string;
   // Standby tracking
   wasStandby?: boolean;
+  // Attending with override (for changes after invitations sent)
+  attendingWithOverride?: string;
 }
 
 interface BookingRow {
@@ -1147,7 +1149,18 @@ export default function BookingMaster() {
                         )}
                         {isColumnVisible("mobile") && <TableCell className="text-xs min-w-[120px] py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">{row.contestant?.phone || ""}</TableCell>}
                         {isColumnVisible("email") && <TableCell className="text-xs py-0.5 h-7 w-48 min-w-[180px] truncate border-r border-gray-200 dark:border-gray-700" title={row.contestant?.email}>{row.contestant?.email || ""}</TableCell>}
-                        {isColumnVisible("attendingWith") && <TableCell className="text-xs py-0.5 h-7 min-w-[140px] border-r border-gray-200 dark:border-gray-700">{row.contestant?.attendingWith || ""}</TableCell>}
+                        {isColumnVisible("attendingWith") && (
+                          <TableCell className="text-xs py-0.5 h-7 min-w-[140px] border-r border-gray-200 dark:border-gray-700">
+                            {row.assignment?.attendingWithOverride ? (
+                              <span className="flex items-center gap-1">
+                                <span>{row.assignment.attendingWithOverride}</span>
+                                <span className="text-[9px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1 rounded font-medium">UPDATED</span>
+                              </span>
+                            ) : (
+                              row.contestant?.attendingWith || ""
+                            )}
+                          </TableCell>
+                        )}
                         {isColumnVisible("location") && <TableCell className="text-xs py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">{row.contestant?.location || ""}</TableCell>}
                         {isColumnVisible("medicalQ") && (
                           <TableCell className="text-xs py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
