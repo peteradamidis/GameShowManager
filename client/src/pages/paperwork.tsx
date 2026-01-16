@@ -367,9 +367,21 @@ Deal or No Deal Production Team`);
     },
     onSuccess: async (data) => {
       await invalidatePaperworkQueries();
+      if (data.failed > 0) {
+        toast({ 
+          title: "Warning: Some records not marked", 
+          description: `${data.marked} marked, ${data.failed} failed`,
+          variant: "destructive" 
+        });
+      }
     },
     onError: (error: Error) => {
       console.error("Failed to mark emails as copied:", error);
+      toast({ 
+        title: "Failed to track copied emails", 
+        description: "Please try again",
+        variant: "destructive" 
+      });
     },
   });
 
