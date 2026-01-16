@@ -9,6 +9,7 @@ export interface RecordDay {
   rxNumber?: string | null;
   totalSeats: number;
   filledSeats: number;
+  confirmedSeats: number;
 }
 
 interface RecordDayCardProps {
@@ -71,9 +72,15 @@ export function RecordDayCard({ recordDay, onViewSeating, onEdit, onDelete, onSe
           <Progress value={fillPercent} />
         </div>
 
-        <div className="space-y-1">
-          <p className="text-muted-foreground">Fill Rate</p>
-          <p className="font-medium">{fillPercent}%</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <p className="text-muted-foreground text-sm">Confirmed</p>
+            <p className="font-medium text-lg">{recordDay.confirmedSeats}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-muted-foreground text-sm">Fill Rate</p>
+            <p className="font-medium text-lg">{fillPercent}%</p>
+          </div>
         </div>
 
         <div className="flex gap-2 pt-2">

@@ -151,6 +151,7 @@ export default function RecordDays() {
     .map((day) => {
       const dayAssignments = allAssignments.find((a) => a.recordDayId === day.id)?.assignments || [];
       const filledSeats = dayAssignments.length;
+      const confirmedSeats = dayAssignments.filter((a: any) => a.confirmedRsvp).length;
 
       return {
         id: day.id,
@@ -158,6 +159,7 @@ export default function RecordDays() {
         rxNumber: day.rxNumber,
         totalSeats: day.totalSeats || 154,
         filledSeats,
+        confirmedSeats,
       };
     });
 
