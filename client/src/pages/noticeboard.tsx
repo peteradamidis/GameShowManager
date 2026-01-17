@@ -495,9 +495,9 @@ export default function NoticeboardPage() {
       </div>
 
       <Card className="mb-6 bg-primary/5 border-primary/20">
-        <CardContent className="pt-4">
+        <CardContent className="py-3">
           <div className="flex items-start gap-3">
-            <Megaphone className="h-6 w-6 text-primary mt-0.5 flex-shrink-0" />
+            <Megaphone className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
             <div>
               <h3 className="font-semibold text-primary mb-1">Welcome to the Crew Noticeboard!</h3>
               <p className="text-sm text-muted-foreground">
