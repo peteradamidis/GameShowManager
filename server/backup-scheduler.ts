@@ -4,9 +4,17 @@ import xlsx from 'xlsx';
 import { storage } from './storage';
 
 const BACKUP_DIR = './storage/backups';
-const BACKUP_FILE = 'automatic-backup.json';
-const EXCEL_BACKUP_FILE = 'automatic-backup.xlsx';
 const BACKUP_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+
+// Generate timestamped backup filename
+function getBackupFilename(extension: 'json' | 'xlsx'): string {
+  const now = new Date();
+  const timestamp = now.toISOString()
+    .replace(/[:.]/g, '-')
+    .replace('T', '_')
+    .slice(0, 19);
+  return `backup_${timestamp}.${extension}`;
+}
 
 let backupIntervalId: NodeJS.Timeout | null = null;
 let lastBackupTime: Date | null = null;
@@ -74,11 +82,13 @@ export async function performBackup(): Promise<{ success: boolean; message: stri
       },
     };
 
-    const backupPath = path.join(BACKUP_DIR, BACKUP_FILE);
+    const jsonFilename = getBackupFilename('json');
+    const excelFilename = getBackupFilename('xlsx');
+    const backupPath = path.join(BACKUP_DIR, jsonFilename);
     fs.writeFileSync(backupPath, JSON.stringify(backupData, null, 2));
 
     // Also create Excel backup
-    const excelPath = path.join(BACKUP_DIR, EXCEL_BACKUP_FILE);
+    const excelPath = path.join(BACKUP_DIR, excelFilename);
     await createExcelBackup(backupData.data, excelPath);
 
     lastBackupTime = new Date();
@@ -146,8 +156,23 @@ export function stopBackupScheduler() {
   }
 }
 
+// Get list of all backup files
+export function getBackupFiles(): { json: string[]; excel: string[] } {
+  ensureBackupDir();
+  try {
+    const files = fs.readdirSync(BACKUP_DIR);
+    return {
+      json: files.filter(f => f.startsWith('backup_') && f.endsWith('.json')).sort().reverse(),
+      excel: files.filter(f => f.startsWith('backup_') && f.endsWith('.xlsx')).sort().reverse(),
+    };
+  } catch (error) {
+    return { json: [], excel: [] };
+  }
+}
+
 // Get backup status
 export function getBackupStatus() {
+  const backupFiles = getBackupFiles();
   return {
     schedulerRunning: !!backupIntervalId,
     schedulerInitialized,
@@ -156,31 +181,40 @@ export function getBackupStatus() {
     lastBackupError,
     consecutiveFailures,
     backupInterval: '1 hour',
-    backupPath: path.join(BACKUP_DIR, BACKUP_FILE),
+    backupDir: BACKUP_DIR,
+    totalBackups: backupFiles.json.length,
+    latestBackup: backupFiles.json[0] || null,
   };
 }
 
 // Check if backup file exists and get its info
-export function getBackupFileInfo(): { exists: boolean; size?: number; modifiedAt?: string } {
-  const backupPath = path.join(BACKUP_DIR, BACKUP_FILE);
-  try {
-    if (fs.existsSync(backupPath)) {
-      const stats = fs.statSync(backupPath);
-      return {
-        exists: true,
-        size: stats.size,
-        modifiedAt: stats.mtime.toISOString(),
-      };
-    }
-  } catch (error) {
-    // File doesn't exist or can't be read
+export function getBackupFileInfo(): { exists: boolean; size?: number; modifiedAt?: string; latestFile?: string } {
+  const backupFiles = getBackupFiles();
+  if (backupFiles.json.length === 0) {
+    return { exists: false };
   }
-  return { exists: false };
+  const latestFile = backupFiles.json[0];
+  const backupPath = path.join(BACKUP_DIR, latestFile);
+  try {
+    const stats = fs.statSync(backupPath);
+    return {
+      exists: true,
+      size: stats.size,
+      modifiedAt: stats.mtime.toISOString(),
+      latestFile,
+    };
+  } catch (error) {
+    return { exists: false };
+  }
 }
 
-// Read the backup file content
-export function readBackupFile(): string | null {
-  const backupPath = path.join(BACKUP_DIR, BACKUP_FILE);
+// Read a specific backup file content (defaults to latest)
+export function readBackupFile(filename?: string): string | null {
+  const backupFiles = getBackupFiles();
+  const targetFile = filename || backupFiles.json[0];
+  if (!targetFile) return null;
+  
+  const backupPath = path.join(BACKUP_DIR, targetFile);
   try {
     if (fs.existsSync(backupPath)) {
       return fs.readFileSync(backupPath, 'utf-8');
@@ -290,12 +324,15 @@ async function createExcelBackup(data: any, filePath: string): Promise<void> {
   xlsx.writeFile(workbook, filePath);
 }
 
-// Get Excel backup file path
-export function getExcelBackupPath(): string {
-  return path.join(BACKUP_DIR, EXCEL_BACKUP_FILE);
+// Get latest Excel backup file path
+export function getExcelBackupPath(): string | null {
+  const backupFiles = getBackupFiles();
+  if (backupFiles.excel.length === 0) return null;
+  return path.join(BACKUP_DIR, backupFiles.excel[0]);
 }
 
 // Check if Excel backup exists
 export function excelBackupExists(): boolean {
-  return fs.existsSync(getExcelBackupPath());
+  const backupFiles = getBackupFiles();
+  return backupFiles.excel.length > 0;
 }
