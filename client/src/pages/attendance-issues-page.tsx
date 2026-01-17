@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { AlertTriangle, Clock, CalendarPlus, Check } from "lucide-react";
+import { AlertTriangle, Clock, CalendarPlus, Check, Trash2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -64,6 +64,27 @@ export default function AttendanceIssuesPage() {
       toast({
         title: "Failed to move to reschedule",
         description: error?.message || "Could not move contestant to reschedule list.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const removeIssueMutation = useMutation({
+    mutationFn: async (issueId: string) => {
+      return apiRequest('DELETE', `/api/attendance-issues/${issueId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/attendance-issues'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      toast({
+        title: "Issue Removed",
+        description: "Attendance issue has been removed and contestant count decremented.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to remove issue",
+        description: error?.message || "Could not remove attendance issue.",
         variant: "destructive",
       });
     },
@@ -200,23 +221,35 @@ export default function AttendanceIssuesPage() {
                         {format(new Date(issue.createdAt), 'MMM d, yyyy h:mm a')}
                       </TableCell>
                       <TableCell>
-                        {issue.movedToReschedule ? (
-                          <Badge variant="outline" className="text-green-600 border-green-600" data-testid={`badge-rescheduled-${issue.id}`}>
-                            <Check className="h-3 w-3 mr-1" />
-                            Rescheduled
-                          </Badge>
-                        ) : (
+                        <div className="flex items-center gap-2">
+                          {issue.movedToReschedule ? (
+                            <Badge variant="outline" className="text-green-600 border-green-600" data-testid={`badge-rescheduled-${issue.id}`}>
+                              <Check className="h-3 w-3 mr-1" />
+                              Rescheduled
+                            </Badge>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => moveToRescheduleMutation.mutate(issue.id)}
+                              disabled={moveToRescheduleMutation.isPending}
+                              data-testid={`button-move-to-reschedule-${issue.id}`}
+                            >
+                              <CalendarPlus className="h-3 w-3 mr-1" />
+                              Move to Reschedule
+                            </Button>
+                          )}
                           <Button
                             size="sm"
-                            variant="outline"
-                            onClick={() => moveToRescheduleMutation.mutate(issue.id)}
-                            disabled={moveToRescheduleMutation.isPending}
-                            data-testid={`button-move-to-reschedule-${issue.id}`}
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => removeIssueMutation.mutate(issue.id)}
+                            disabled={removeIssueMutation.isPending}
+                            data-testid={`button-remove-issue-${issue.id}`}
                           >
-                            <CalendarPlus className="h-3 w-3 mr-1" />
-                            Move to Reschedule
+                            <Trash2 className="h-3 w-3" />
                           </Button>
-                        )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
