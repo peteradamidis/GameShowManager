@@ -663,6 +663,8 @@ export class DbStorage implements IStorage {
       txDate: workflowFields.txDate,
       notifiedOfTx: workflowFields.notifiedOfTx,
       photosSent: workflowFields.photosSent,
+      attendingWithOverride: workflowFields.attendingWithOverride,
+      emailsCopiedAt: workflowFields.emailsCopiedAt,
     };
 
     const fieldsToUpdate = Object.fromEntries(
