@@ -100,8 +100,9 @@ const groupColors = [
 
 // Rating-based colors - pure inline styles (no Tailwind dependency)
 const ratingColors: Record<string, { bg: string; border: string }> = {
-  'A+': { bg: '#dcfce7', border: '#16a34a' },
-  'A': { bg: '#dcfce7', border: '#22c55e' },
+  'A+': { bg: '#dcfce7', border: '#16a34a' }, // Bright green
+  'A': { bg: '#dbeafe', border: '#3b82f6' }, // Faded blue
+  'P': { bg: '#e0f2e0', border: '#6aaa6a' }, // Faded/muted green (less saturated than A+)
   'B+': { bg: '#fef3c7', border: '#f59e0b' },
   'B': { bg: '#fed7aa', border: '#f97316' },
   'C': { bg: '#fee2e2', border: '#ef4444' },
