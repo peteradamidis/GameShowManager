@@ -364,9 +364,9 @@ export interface IStorage {
   deleteNoticeboardComment(id: string): Promise<void>;
   
   // Noticeboard Likes
-  toggleLike(postId: string, userId: string): Promise<{ liked: boolean; likeCount: number }>;
+  toggleLike(postId: string, browserId: string): Promise<{ liked: boolean; likeCount: number }>;
   getLikesByPost(postId: string): Promise<NoticeboardLike[]>;
-  hasUserLikedPost(postId: string, userId: string): Promise<boolean>;
+  hasBrowserLikedPost(postId: string, browserId: string): Promise<boolean>;
 }
 
 export class DbStorage implements IStorage {
@@ -2395,14 +2395,14 @@ export class DbStorage implements IStorage {
   }
 
   // Noticeboard Likes
-  async toggleLike(postId: string, userId: string): Promise<{ liked: boolean; likeCount: number }> {
-    // Check if already liked
+  async toggleLike(postId: string, browserId: string): Promise<{ liked: boolean; likeCount: number }> {
+    // Check if already liked by this browser
     const [existing] = await db
       .select()
       .from(noticeboardLikes)
       .where(and(
         eq(noticeboardLikes.postId, postId),
-        eq(noticeboardLikes.userId, userId)
+        eq(noticeboardLikes.browserId, browserId)
       ));
     
     if (existing) {
@@ -2410,7 +2410,7 @@ export class DbStorage implements IStorage {
       await db.delete(noticeboardLikes).where(eq(noticeboardLikes.id, existing.id));
     } else {
       // Like
-      await db.insert(noticeboardLikes).values({ postId, userId });
+      await db.insert(noticeboardLikes).values({ postId, browserId });
     }
     
     // Get new like count
@@ -2432,13 +2432,13 @@ export class DbStorage implements IStorage {
       .where(eq(noticeboardLikes.postId, postId));
   }
 
-  async hasUserLikedPost(postId: string, userId: string): Promise<boolean> {
+  async hasBrowserLikedPost(postId: string, browserId: string): Promise<boolean> {
     const [existing] = await db
       .select()
       .from(noticeboardLikes)
       .where(and(
         eq(noticeboardLikes.postId, postId),
-        eq(noticeboardLikes.userId, userId)
+        eq(noticeboardLikes.browserId, browserId)
       ));
     return !!existing;
   }

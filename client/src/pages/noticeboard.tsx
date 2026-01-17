@@ -68,7 +68,18 @@ const DISPLAY_NAME_KEY = "noticeboard_display_name";
 const getStoredDisplayName = () => localStorage.getItem(DISPLAY_NAME_KEY) || "";
 const setStoredDisplayName = (name: string) => localStorage.setItem(DISPLAY_NAME_KEY, name);
 
-function PostCard({ post, onRefresh, displayName }: { post: Post; onRefresh: () => void; displayName: string }) {
+// Helper to get/generate unique browser ID for likes tracking
+const BROWSER_ID_KEY = "noticeboard_browser_id";
+const getBrowserId = (): string => {
+  let browserId = localStorage.getItem(BROWSER_ID_KEY);
+  if (!browserId) {
+    browserId = crypto.randomUUID();
+    localStorage.setItem(BROWSER_ID_KEY, browserId);
+  }
+  return browserId;
+};
+
+function PostCard({ post, onRefresh, displayName, browserId }: { post: Post; onRefresh: () => void; displayName: string; browserId: string }) {
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -80,7 +91,7 @@ function PostCard({ post, onRefresh, displayName }: { post: Post; onRefresh: () 
   });
 
   const likeMutation = useMutation({
-    mutationFn: () => apiRequest("POST", `/api/noticeboard/posts/${post.id}/like`),
+    mutationFn: () => apiRequest("POST", `/api/noticeboard/posts/${post.id}/like`, { browserId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/noticeboard/posts"] });
     },
@@ -474,8 +485,17 @@ function CreatePostForm({ onSuccess, displayName, onDisplayNameChange }: {
 
 export default function NoticeboardPage() {
   const [displayName, setDisplayName] = useState(() => getStoredDisplayName());
+  const [browserId] = useState(() => getBrowserId());
+  
   const { data: posts = [], isLoading, refetch } = useQuery<Post[]>({
-    queryKey: ["/api/noticeboard/posts"],
+    queryKey: ["/api/noticeboard/posts", { browserId }],
+    queryFn: async () => {
+      const response = await fetch(`/api/noticeboard/posts?browserId=${browserId}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch posts');
+      return response.json();
+    },
   });
 
   const handleDisplayNameChange = (name: string) => {
@@ -528,7 +548,7 @@ export default function NoticeboardPage() {
           </Card>
         ) : (
           posts.map((post) => (
-            <PostCard key={post.id} post={post} onRefresh={() => refetch()} displayName={displayName} />
+            <PostCard key={post.id} post={post} onRefresh={() => refetch()} displayName={displayName} browserId={browserId} />
           ))
         )}
       </div>

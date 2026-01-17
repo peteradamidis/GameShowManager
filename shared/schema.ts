@@ -527,15 +527,15 @@ export const insertNoticeboardCommentSchema = createInsertSchema(noticeboardComm
 export type InsertNoticeboardComment = z.infer<typeof insertNoticeboardCommentSchema>;
 export type NoticeboardComment = typeof noticeboardComments.$inferSelect;
 
-// Noticeboard Likes table - likes on posts
+// Noticeboard Likes table - likes on posts (tracked by browser ID for shared logins)
 export const noticeboardLikes = pgTable("noticeboard_likes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   postId: varchar("post_id").references(() => noticeboardPosts.id, { onDelete: 'cascade' }).notNull(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+  browserId: varchar("browser_id").notNull(), // Unique ID per browser (stored in localStorage)
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
-  // One like per user per post
-  uniqueLikePerUserPost: unique().on(table.postId, table.userId),
+  // One like per browser per post
+  uniqueLikePerBrowserPost: unique().on(table.postId, table.browserId),
 }));
 
 export const insertNoticeboardLikeSchema = createInsertSchema(noticeboardLikes).omit({

@@ -11545,11 +11545,11 @@ ${finalEmailFooter}`;
   app.get("/api/noticeboard/posts", requireAuth, async (req, res) => {
     try {
       const posts = await storage.getNoticeboardPosts();
-      const userId = (req.session as any)?.userId;
+      const browserId = req.query.browserId as string | undefined;
       
-      // Add likedByCurrentUser flag for each post
+      // Add likedByCurrentUser flag for each post based on browser ID
       const postsWithLikeStatus = await Promise.all(posts.map(async (post) => {
-        const liked = userId ? await storage.hasUserLikedPost(post.id, userId) : false;
+        const liked = browserId ? await storage.hasBrowserLikedPost(post.id, browserId) : false;
         return { ...post, likedByCurrentUser: liked };
       }));
       
@@ -11663,13 +11663,13 @@ ${finalEmailFooter}`;
   app.post("/api/noticeboard/posts/:id/like", requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
-      const userId = (req.session as any)?.userId;
+      const { browserId } = req.body;
       
-      if (!userId) {
-        return res.status(401).json({ error: "User not authenticated" });
+      if (!browserId) {
+        return res.status(400).json({ error: "Browser ID is required" });
       }
       
-      const result = await storage.toggleLike(id, userId);
+      const result = await storage.toggleLike(id, browserId);
       res.json(result);
     } catch (error: any) {
       console.error("Error toggling like:", error);
