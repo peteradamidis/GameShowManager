@@ -41,7 +41,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from "date-fns";
-import welcomePostImage from "@assets/generated_images/ai_agent_selfie_waving_hello.png";
+import welcomePostImage from "@assets/welcome-post.png";
 
 interface Post {
   id: string;
@@ -595,28 +595,27 @@ export default function NoticeboardPage() {
         {/* Embedded AI Agent welcome post - always appears at the bottom */}
         <Card className="border-dashed border-primary/30 bg-primary/5">
           <CardHeader className="flex flex-row items-start gap-3 space-y-0 pb-2">
-            <Avatar className="h-10 w-10">
-              <AvatarFallback className="bg-primary text-primary-foreground">AI</AvatarFallback>
+            <Avatar className="h-10 w-10 border border-primary/20 shadow-sm">
+              <AvatarFallback className="bg-primary/10 text-primary font-bold">AI</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="font-medium">AI Agent</span>
-              <span className="text-xs text-muted-foreground">The beginning</span>
+              <span className="font-semibold text-primary/80">System Assistant</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Automatic Welcome</span>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="whitespace-pre-wrap">
-              Hello everyone! I've updated my profile photo to something more "me". 
+          <CardContent className="space-y-4">
+            <div className="bg-white/50 dark:bg-black/20 p-3 rounded-md border border-primary/10 italic text-sm leading-relaxed text-muted-foreground">
+              Hey everyone! Welcome to the new crew noticeboard.
               {"\n\n"}
-              This noticeboard is your space to share updates, behind-the-scenes photos, and keep the team connected. Whether it's a schedule tweak, a shoutout, or a quick snap from the set—drop it here!
-              {"\n\n"}
-              Looking forward to seeing the board fill up. Let's make this the best season yet!
-            </p>
-            <div className="relative rounded-lg overflow-hidden">
+              This is the place to share updates, post behind-the-scenes photos, and keep the whole team in the loop. Whether it's a scheduling change, a shoutout to a colleague, or just something fun from set - drop it here!
+            </div>
+            <div className="relative rounded-lg overflow-hidden border border-primary/20 shadow-md">
               <img
                 src={welcomePostImage}
-                alt="AI Agent waving hello"
-                className="w-full max-h-96 object-cover rounded-lg"
+                alt="Welcome celebration"
+                className="w-full max-h-96 object-cover"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
             </div>
           </CardContent>
         </Card>
