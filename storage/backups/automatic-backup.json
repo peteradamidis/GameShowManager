@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2026-01-17T03:10:32.166Z",
+  "exportedAt": "2026-01-17T03:18:34.708Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -12534,6 +12534,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-13T10:50:09.502Z"
       },
       {
@@ -12582,6 +12583,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-13T10:50:10.002Z"
       },
       {
@@ -12630,6 +12632,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:50.970Z"
       },
       {
@@ -12678,6 +12681,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:51.475Z"
       },
       {
@@ -12726,6 +12730,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:51.982Z"
       },
       {
@@ -12774,6 +12779,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:52.480Z"
       },
       {
@@ -12822,6 +12828,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:52.978Z"
       },
       {
@@ -12870,6 +12877,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:53.487Z"
       },
       {
@@ -12918,6 +12926,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:53.986Z"
       },
       {
@@ -12966,6 +12975,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:54.485Z"
       },
       {
@@ -13014,6 +13024,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:54.982Z"
       },
       {
@@ -13062,6 +13073,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:55.493Z"
       },
       {
@@ -13110,6 +13122,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:55.991Z"
       },
       {
@@ -13158,6 +13171,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:56.490Z"
       },
       {
@@ -13206,6 +13220,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:56.988Z"
       },
       {
@@ -13254,6 +13269,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:57.487Z"
       },
       {
@@ -13302,6 +13318,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:57.986Z"
       },
       {
@@ -13350,6 +13367,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:58.486Z"
       },
       {
@@ -13398,6 +13416,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:58.993Z"
       },
       {
@@ -13446,6 +13465,7 @@
         "photosSent": null,
         "seatNotes": null,
         "attendingWithOverride": null,
+        "mobilityNotesOverride": null,
         "createdAt": "2026-01-14T04:40:59.495Z"
       }
     ],

@@ -4671,6 +4671,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'caseAmount', 'quickCash', 'bankOfferTaken', 'spinTheWheel', 'prize',
         'txNumber', 'txDate', 'notifiedOfTx', 'photosSent',
         'attendingWithOverride', // For editing attending with after invitations are sent
+        'mobilityNotesOverride', // For editing mobility/medical notes after invitations are sent
         'emailsCopiedAt' // Track when emails were copied for external paperwork sending
       ];
       
@@ -4982,7 +4983,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Simple PATCH to update seat assignment fields (for booking responses page)
   app.patch("/api/seat-assignments/:id", async (req, res) => {
     try {
-      const { confirmedRsvp, bookingEmailSent, notes, seatNotes, attendingWithOverride } = req.body;
+      const { confirmedRsvp, bookingEmailSent, notes, seatNotes, attendingWithOverride, mobilityNotesOverride } = req.body;
       
       // Check if bookingEmailSent is being cleared - this is NOT allowed once set
       // Covers all falsy values: false, null, undefined, 0, "0", ""
@@ -5018,6 +5019,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (attendingWithOverride !== undefined) {
         updateData.attendingWithOverride = attendingWithOverride;
       }
+      if (mobilityNotesOverride !== undefined) {
+        updateData.mobilityNotesOverride = mobilityNotesOverride;
+      }
       
       const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, updateData);
       
@@ -5030,14 +5034,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateContestantAvailability(updated.contestantId, 'confirmed');
       }
       
-      // Broadcast updates for seatNotes and attendingWithOverride to sync with Booking Master
-      if (seatNotes !== undefined || attendingWithOverride !== undefined) {
+      // Broadcast updates for seatNotes, attendingWithOverride, and mobilityNotesOverride to sync with Booking Master
+      if (seatNotes !== undefined || attendingWithOverride !== undefined || mobilityNotesOverride !== undefined) {
         wsManager.broadcastBookingUpdate({
           type: 'booking-master-update',
           recordDayId: updated.recordDayId,
           assignmentId: req.params.id,
-          field: seatNotes !== undefined ? 'seatNotes' : 'attendingWithOverride',
-          value: seatNotes !== undefined ? seatNotes : attendingWithOverride,
+          field: seatNotes !== undefined ? 'seatNotes' : (attendingWithOverride !== undefined ? 'attendingWithOverride' : 'mobilityNotesOverride'),
+          value: seatNotes !== undefined ? seatNotes : (attendingWithOverride !== undefined ? attendingWithOverride : mobilityNotesOverride),
         });
       }
       

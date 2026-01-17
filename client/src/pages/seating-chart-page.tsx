@@ -582,6 +582,7 @@ export default function SeatingChartPage() {
             criminalRecord: assignment.criminalRecord,
             otdNotes: assignment.otdNotes,
             attendingWithOverride: assignment.attendingWithOverride,
+            mobilityNotesOverride: assignment.mobilityNotesOverride,
           };
         }
       }

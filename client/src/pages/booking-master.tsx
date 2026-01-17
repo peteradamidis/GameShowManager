@@ -173,8 +173,9 @@ interface SeatAssignment {
   swappedAt?: string;
   // Standby tracking
   wasStandby?: boolean;
-  // Attending with override (for changes after invitations sent)
+  // Override fields (for changes after invitations sent)
   attendingWithOverride?: string;
+  mobilityNotesOverride?: string;
 }
 
 interface BookingRow {
@@ -1150,12 +1151,21 @@ export default function BookingMaster() {
                         {isColumnVisible("mobile") && <TableCell className="text-xs min-w-[120px] py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">{row.contestant?.phone || ""}</TableCell>}
                         {isColumnVisible("email") && <TableCell className="text-xs py-0.5 h-7 w-48 min-w-[180px] truncate border-r border-gray-200 dark:border-gray-700" title={row.contestant?.email}>{row.contestant?.email || ""}</TableCell>}
                         {isColumnVisible("attendingWith") && (
-                          <TableCell className="text-xs py-0.5 h-7 min-w-[140px] border-r border-gray-200 dark:border-gray-700">
-                            {row.assignment?.attendingWithOverride ? (
-                              <span className="flex items-center gap-1">
-                                <span>{row.assignment.attendingWithOverride}</span>
-                                <span className="text-[9px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1 rounded font-medium">UPDATED</span>
-                              </span>
+                          <TableCell className="text-xs py-0.5 h-7 min-w-[160px] border-r border-gray-200 dark:border-gray-700">
+                            {row.assignment ? (
+                              <div className="flex items-center gap-1">
+                                <Input
+                                  key={`attending-${row.assignment.id}`}
+                                  defaultValue={row.assignment.attendingWithOverride || row.contestant?.attendingWith || ""}
+                                  onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "attendingWithOverride", e.target.value)}
+                                  placeholder={row.contestant?.attendingWith || "Attending with..."}
+                                  className="h-6 text-xs flex-1"
+                                  data-testid={`input-attending-with-${row.seatId}`}
+                                />
+                                {row.assignment.attendingWithOverride && row.assignment.attendingWithOverride !== row.contestant?.attendingWith && (
+                                  <span className="text-[9px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1 rounded font-medium whitespace-nowrap">UPDATED</span>
+                                )}
+                              </div>
                             ) : (
                               row.contestant?.attendingWith || ""
                             )}
@@ -1168,8 +1178,24 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("mobilityNotes") && (
-                          <TableCell className="text-xs py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
-                            {row.contestant?.mobilityNotes || ""}
+                          <TableCell className="text-xs py-0.5 h-7 min-w-[160px] border-r border-gray-200 dark:border-gray-700">
+                            {row.assignment ? (
+                              <div className="flex items-center gap-1">
+                                <Input
+                                  key={`mobility-${row.assignment.id}`}
+                                  defaultValue={row.assignment.mobilityNotesOverride || row.contestant?.mobilityNotes || ""}
+                                  onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "mobilityNotesOverride", e.target.value)}
+                                  placeholder={row.contestant?.mobilityNotes || "Medical notes..."}
+                                  className="h-6 text-xs flex-1"
+                                  data-testid={`input-mobility-notes-${row.seatId}`}
+                                />
+                                {row.assignment.mobilityNotesOverride && row.assignment.mobilityNotesOverride !== row.contestant?.mobilityNotes && (
+                                  <span className="text-[9px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1 rounded font-medium whitespace-nowrap">UPDATED</span>
+                                )}
+                              </div>
+                            ) : (
+                              row.contestant?.mobilityNotes || ""
+                            )}
                           </TableCell>
                         )}
                         {isColumnVisible("criminal") && (

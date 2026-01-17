@@ -68,6 +68,7 @@ export interface SeatData {
   isTemporary?: boolean; // True if contestant was created as temporary (not from Cast It Reach)
   otdNotes?: string; // OTD notes (syncs with Booking Master OTD notes column)
   attendingWithOverride?: string; // Override for attending with when it changes after invitation
+  mobilityNotesOverride?: string; // Override for mobility/medical notes when they change after invitation
 }
 
 interface SeatCardProps {
@@ -300,7 +301,7 @@ export function SeatCard({
                 </TooltipContent>
               </Tooltip>
             )}
-            {(hasMeaningfulMedicalNote(seat.mobilityNotes) || hasMeaningfulMedicalNote(seat.medicalInfo)) && (
+            {(hasMeaningfulMedicalNote(seat.mobilityNotes) || hasMeaningfulMedicalNote(seat.medicalInfo) || hasMeaningfulMedicalNote(seat.mobilityNotesOverride)) && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div data-testid={`mobility-icon-${seat.assignmentId}`}>
@@ -308,7 +309,7 @@ export function SeatCard({
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  <p>Has mobility/medical notes</p>
+                  <p>Has mobility/medical notes{seat.mobilityNotesOverride ? ' (updated)' : ''}</p>
                 </TooltipContent>
               </Tooltip>
             )}
@@ -551,10 +552,26 @@ export function SeatCard({
                   </div>
                 )}
 
-                {hasMeaningfulMedicalNote(contestantDetails.mobilityNotes) && (
+                {(hasMeaningfulMedicalNote(contestantDetails.mobilityNotes) || hasMeaningfulMedicalNote(seat.mobilityNotesOverride)) && (
                   <div className="text-sm">
                     <label className="text-xs font-medium text-muted-foreground">Mobility/Access Notes</label>
-                    <p className="text-xs">{contestantDetails.mobilityNotes}</p>
+                    {seat.mobilityNotesOverride ? (
+                      <div>
+                        <div className="flex items-center gap-1">
+                          <Badge className="text-[9px] px-1 py-0 h-4 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                            UPDATED
+                          </Badge>
+                          <span className="text-xs">{seat.mobilityNotesOverride}</span>
+                        </div>
+                        {contestantDetails.mobilityNotes && contestantDetails.mobilityNotes !== seat.mobilityNotesOverride && (
+                          <p className="text-[10px] text-muted-foreground line-through">
+                            Original: {contestantDetails.mobilityNotes}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-xs">{contestantDetails.mobilityNotes}</p>
+                    )}
                   </div>
                 )}
 
