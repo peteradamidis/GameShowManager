@@ -664,6 +664,7 @@ export class DbStorage implements IStorage {
       notifiedOfTx: workflowFields.notifiedOfTx,
       photosSent: workflowFields.photosSent,
       attendingWithOverride: workflowFields.attendingWithOverride,
+      mobilityNotesOverride: workflowFields.mobilityNotesOverride,
       emailsCopiedAt: workflowFields.emailsCopiedAt,
     };
 
