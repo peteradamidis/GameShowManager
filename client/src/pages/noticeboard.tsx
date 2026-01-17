@@ -557,10 +557,10 @@ export default function NoticeboardPage() {
       </div>
 
       {/* Embedded welcome notice */}
-      <Alert className="mb-6 border-primary/30 bg-primary/5">
-        <Megaphone className="h-4 w-4" />
-        <AlertTitle>Welcome to the Crew Noticeboard</AlertTitle>
-        <AlertDescription>
+      <Alert className="mb-6 border-muted bg-muted/30">
+        <Megaphone className="h-4 w-4 text-muted-foreground" />
+        <AlertTitle className="text-foreground">Welcome to the Crew Noticeboard</AlertTitle>
+        <AlertDescription className="text-muted-foreground">
           Post updates, share photos, and keep the team in the loop. Your display name is saved locally so you can post without logging in.
         </AlertDescription>
       </Alert>
