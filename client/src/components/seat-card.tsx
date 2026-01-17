@@ -439,11 +439,13 @@ export function SeatCard({
           {seatContent}
         </HoverCardTrigger>
         <HoverCardContent 
-          className="w-80" 
+          className="w-80 z-[100] max-h-[80vh] overflow-y-auto" 
           side="bottom" 
           align="center"
           sideOffset={8}
-          collisionPadding={16}
+          avoidCollisions={true}
+          collisionPadding={{ top: 150, bottom: 50, left: 20, right: 20 }}
+          sticky="partial"
           data-testid="hovercard-contestant-details"
         >
           <div className="space-y-3">
