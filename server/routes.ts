@@ -2140,6 +2140,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fix phone numbers - adds 0 prefix to Australian mobile numbers starting with 4
+  app.post("/api/contestants/fix-phone-numbers", requireAuth, async (req, res) => {
+    try {
+      // Get all contestants
+      const allContestants = await storage.getContestants();
+      
+      // Find contestants with phone numbers starting with "4" (missing the 0 prefix)
+      const contestantsToFix = allContestants.filter(c => 
+        c.phone && c.phone.trim().startsWith('4')
+      );
+      
+      // Update their phone numbers to have 0 prefix
+      let fixedCount = 0;
+      const fixedContestants: { id: string; name: string; oldPhone: string; newPhone: string }[] = [];
+      
+      for (const contestant of contestantsToFix) {
+        const oldPhone = contestant.phone!;
+        const newPhone = '0' + oldPhone.trim();
+        await storage.updateContestant(contestant.id, { phone: newPhone });
+        fixedCount++;
+        fixedContestants.push({ 
+          id: contestant.id, 
+          name: contestant.name, 
+          oldPhone, 
+          newPhone 
+        });
+      }
+      
+      console.log(`[Fix Phone Numbers] Fixed ${fixedCount} phone numbers with missing 0 prefix`);
+      
+      res.json({
+        message: `Fixed ${fixedCount} phone numbers`,
+        fixedCount,
+        fixedContestants
+      });
+    } catch (error: any) {
+      console.error("[Fix Phone Numbers] Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get all record days
   app.get("/api/record-days", async (req, res) => {
     try {

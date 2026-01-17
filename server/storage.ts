@@ -125,6 +125,44 @@ export async function warmupDatabaseConnection(): Promise<boolean> {
   return false;
 }
 
+// Fix phone numbers that start with 4 (missing Australian 0 prefix)
+export async function fixPhoneNumbers(): Promise<number> {
+  if (!pool) {
+    console.log('  [Fix Phone] No pool available');
+    return 0;
+  }
+  
+  try {
+    const database = getDb();
+    
+    // Find all contestants with phone numbers starting with "4"
+    const allContestants = await database.select().from(contestants);
+    const toFix = allContestants.filter(c => c.phone && c.phone.trim().startsWith('4'));
+    
+    if (toFix.length === 0) {
+      console.log('  [Fix Phone] No phone numbers need fixing');
+      return 0;
+    }
+    
+    console.log(`  [Fix Phone] Fixing ${toFix.length} phone numbers with missing 0 prefix...`);
+    
+    // Update each one
+    for (const contestant of toFix) {
+      const newPhone = '0' + contestant.phone!.trim();
+      await database
+        .update(contestants)
+        .set({ phone: newPhone })
+        .where(eq(contestants.id, contestant.id));
+    }
+    
+    console.log(`  [Fix Phone] Fixed ${toFix.length} phone numbers`);
+    return toFix.length;
+  } catch (error) {
+    console.error('  [Fix Phone] Error fixing phone numbers:', error);
+    return 0;
+  }
+}
+
 export interface IStorage {
   // Contestants
   createContestant(contestant: InsertContestant): Promise<Contestant>;

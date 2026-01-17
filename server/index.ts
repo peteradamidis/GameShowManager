@@ -8,7 +8,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./db-init";
-import { warmupDatabaseConnection } from "./storage";
+import { warmupDatabaseConnection, fixPhoneNumbers } from "./storage";
 import { startBackupScheduler } from "./backup-scheduler";
 import { getSessionConfig, createDefaultAdmin } from "./auth";
 
@@ -133,9 +133,14 @@ app.use((req, res, next) => {
       
       // Warm up database connection in background after server is ready
       console.log('Step 5: Warming up database connection...');
-      warmupDatabaseConnection().then(success => {
+      warmupDatabaseConnection().then(async success => {
         if (success) {
           console.log('Step 5: Database warmed up and ready');
+          
+          // Fix phone numbers with missing 0 prefix (Australian mobiles starting with 4)
+          console.log('Step 5.5: Checking phone numbers...');
+          await fixPhoneNumbers();
+          
           // Start automatic backup scheduler after database is ready
           console.log('Step 6: Starting automatic backup scheduler...');
           startBackupScheduler();
