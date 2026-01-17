@@ -407,7 +407,7 @@ export function SeatCard({
                 className={`h-5 px-1.5 text-[9px] font-semibold ${
                   seat.playerType === 'player' ? 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700' :
                   seat.playerType === 'backup' ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700' :
-                  'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-700'
+                  'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-500 border-emerald-200 dark:border-emerald-800'
                 }`}>
                 {seat.playerType === 'player' ? 'P' : seat.playerType === 'backup' ? 'B' : 'PP'}
               </Badge>
@@ -482,8 +482,8 @@ export function SeatCard({
                   </div>
                 </div>
 
-                {/* Player Type - clickable badges (only for A+ and A rated contestants) */}
-                {(seat.auditionRating === 'A+' || seat.auditionRating === 'A') && (
+                {/* Player Type - clickable badges (only for A+, A, and P rated contestants) */}
+                {(seat.auditionRating === 'A+' || seat.auditionRating === 'A' || seat.auditionRating === 'P') && (
                   <div className="text-sm">
                     <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Player Type</label>
                     <div className="flex flex-wrap gap-1.5">
@@ -525,8 +525,8 @@ export function SeatCard({
                         disabled={updatePlayerTypeMutation.isPending}
                         className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${
                           localPlayerType === 'player_partner' 
-                            ? 'bg-purple-500 text-white border-purple-600 dark:bg-purple-600 dark:border-purple-500' 
-                            : 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-700 hover:bg-purple-500/20'
+                            ? 'bg-emerald-500 text-white border-emerald-600 dark:bg-emerald-600 dark:border-emerald-500' 
+                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-500/20'
                         } disabled:opacity-50`}
                         data-testid={`button-player-type-partner-${seat.assignmentId}`}
                       >
