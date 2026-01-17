@@ -124,6 +124,7 @@ export const seatAssignments = pgTable("seat_assignments", {
   seatNotes: text("seat_notes"), // Legacy - not used in UI, kept for backwards compatibility
   attendingWithOverride: text("attending_with_override"), // Override for attending with (when original changes after invitation)
   mobilityNotesOverride: text("mobility_notes_override"), // Override for mobility/medical notes (when original changes after invitation)
+  castingCardUrl: text("casting_card_url"), // URL to uploaded casting card PDF for players
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
