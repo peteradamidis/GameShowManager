@@ -149,14 +149,33 @@ export default function Dashboard() {
       const confirmedCount = assignmentsForDay.filter(sa => sa.confirmedRsvp).length;
       const seatsAvailable = totalSeats - assignedSeats;
       
-      // Determine status based on confirmation deadline (most critical)
+      // Determine status based on the current phase
+      // Email deadline comes first, then confirmation deadline
       let status: DeadlineStatus;
-      if (daysUntilConfirmationDeadline < 0) {
-        status = 'overdue';
-      } else if (daysUntilConfirmationDeadline <= DUE_SOON_THRESHOLD) {
-        status = 'due-soon';
+      if (daysUntilEmailDeadline > 0) {
+        // Before email deadline
+        if (daysUntilEmailDeadline <= DUE_SOON_THRESHOLD) {
+          status = 'due-soon';
+        } else {
+          status = 'on-track';
+        }
+      } else if (daysUntilConfirmationDeadline > 0) {
+        // Email passed, before confirmation deadline
+        if (daysUntilConfirmationDeadline <= DUE_SOON_THRESHOLD) {
+          status = 'due-soon';
+        } else {
+          status = 'on-track';
+        }
+      } else if (daysUntilRecordDate > 0) {
+        // Confirmation passed, before record day
+        if (daysUntilRecordDate <= DUE_SOON_THRESHOLD) {
+          status = 'due-soon';
+        } else {
+          status = 'on-track';
+        }
       } else {
-        status = 'on-track';
+        // Record day passed
+        status = 'overdue';
       }
       
       return {
@@ -392,17 +411,17 @@ export default function Dashboard() {
                         </div>
                         <div className="text-sm flex flex-col gap-1 mt-1">
                           <div className="flex items-center gap-2 text-muted-foreground">
-                            <span className="font-semibold w-44">Confirmation Deadline:</span>
-                            <span className={info.daysUntilConfirmationDeadline < 0 ? "text-red-600 font-bold" : "font-medium text-foreground"}>
-                              {format(info.confirmationDeadline, "EEE, MMM d")}
-                              {info.daysUntilConfirmationDeadline === 0 && <span className="text-red-600 dark:text-red-400 ml-1">(TODAY)</span>}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-muted-foreground">
                             <span className="font-semibold w-44">Sending Email Deadline:</span>
                             <span className={info.daysUntilEmailDeadline < 0 ? "text-red-600 font-bold" : "font-medium text-foreground"}>
                               {format(info.emailDeadline, "EEE, MMM d")}
                               {info.daysUntilEmailDeadline === 0 && <span className="text-red-600 dark:text-red-400 ml-1">(TODAY)</span>}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <span className="font-semibold w-44">Confirmation Deadline:</span>
+                            <span className={info.daysUntilConfirmationDeadline < 0 ? "text-red-600 font-bold" : "font-medium text-foreground"}>
+                              {format(info.confirmationDeadline, "EEE, MMM d")}
+                              {info.daysUntilConfirmationDeadline === 0 && <span className="text-red-600 dark:text-red-400 ml-1">(TODAY)</span>}
                             </span>
                           </div>
                         </div>
@@ -425,11 +444,25 @@ export default function Dashboard() {
                         variant={info.status === 'overdue' ? 'destructive' : info.status === 'due-soon' ? 'secondary' : 'default'}
                         className={`${style.text} ${style.bg} border ${style.border}`}
                       >
-                        {info.status === 'overdue' 
-                          ? `${Math.abs(info.daysUntilConfirmationDeadline)} days overdue`
-                          : info.daysUntilConfirmationDeadline === 0 
-                            ? 'Confirmation due today!'
-                            : `${info.daysUntilConfirmationDeadline} days until confirmation`
+                        {info.daysUntilEmailDeadline > 0
+                          ? info.daysUntilEmailDeadline === 1
+                            ? '1 day until email deadline'
+                            : `${info.daysUntilEmailDeadline} days until email deadline`
+                          : info.daysUntilEmailDeadline === 0
+                            ? 'Email deadline today!'
+                            : info.daysUntilConfirmationDeadline > 0
+                              ? info.daysUntilConfirmationDeadline === 1
+                                ? '1 day until confirmation'
+                                : `${info.daysUntilConfirmationDeadline} days until confirmation`
+                              : info.daysUntilConfirmationDeadline === 0
+                                ? 'Confirmation due today!'
+                                : info.daysUntilRecordDate > 0
+                                  ? info.daysUntilRecordDate === 1
+                                    ? '1 day until record'
+                                    : `${info.daysUntilRecordDate} days until record`
+                                  : info.daysUntilRecordDate === 0
+                                    ? 'Record day today!'
+                                    : `${Math.abs(info.daysUntilRecordDate)} days past record`
                         }
                       </Badge>
                     </div>
