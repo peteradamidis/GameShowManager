@@ -88,6 +88,7 @@ const recordVisit = () => localStorage.setItem(NOTICEBOARD_LAST_VISIT_KEY, new D
 function PostCard({ post, onRefresh, displayName, browserId }: { post: Post; onRefresh: () => void; displayName: string; browserId: string }) {
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
+  const [commentName, setCommentName] = useState(() => getStoredDisplayName());
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -130,13 +131,11 @@ function PostCard({ post, onRefresh, displayName, browserId }: { post: Post; onR
   });
 
   const commentMutation = useMutation({
-    mutationFn: (content: string) =>
-      apiRequest("POST", `/api/noticeboard/posts/${post.id}/comments`, { 
-        content, 
-        authorName: displayName || undefined 
-      }),
+    mutationFn: (data: { content: string; authorName: string }) =>
+      apiRequest("POST", `/api/noticeboard/posts/${post.id}/comments`, data),
     onSuccess: () => {
       setNewComment("");
+      setStoredDisplayName(commentName); // Save name for future use
       refetchComments();
       queryClient.invalidateQueries({ queryKey: ["/api/noticeboard/posts"] });
     },
@@ -144,8 +143,8 @@ function PostCard({ post, onRefresh, displayName, browserId }: { post: Post; onR
 
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newComment.trim()) {
-      commentMutation.mutate(newComment.trim());
+    if (newComment.trim() && commentName.trim()) {
+      commentMutation.mutate({ content: newComment.trim(), authorName: commentName.trim() });
     }
   };
 
@@ -273,22 +272,31 @@ function PostCard({ post, onRefresh, displayName, browserId }: { post: Post; onR
               </div>
             )}
             
-            <form onSubmit={handleSubmitComment} className="flex gap-2">
-              <Input
-                placeholder="Write a comment..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="flex-1"
-                data-testid={`input-comment-${post.id}`}
-              />
-              <Button 
-                type="submit" 
-                size="icon"
-                disabled={!newComment.trim() || commentMutation.isPending}
-                data-testid={`button-submit-comment-${post.id}`}
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+            <form onSubmit={handleSubmitComment} className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Your name"
+                  value={commentName}
+                  onChange={(e) => setCommentName(e.target.value)}
+                  className="w-32"
+                  data-testid={`input-comment-name-${post.id}`}
+                />
+                <Input
+                  placeholder="Write a comment..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  className="flex-1"
+                  data-testid={`input-comment-${post.id}`}
+                />
+                <Button 
+                  type="submit" 
+                  size="icon"
+                  disabled={!newComment.trim() || !commentName.trim() || commentMutation.isPending}
+                  data-testid={`button-submit-comment-${post.id}`}
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
             </form>
           </div>
         )}
