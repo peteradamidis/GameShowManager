@@ -41,7 +41,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from "date-fns";
-import welcomePostImage from "@assets/generated_images/cute_robot_holding_movie_clapper.png";
+import welcomePostImage from "@assets/generated_images/cute_robot_holding_deal_or_no_deal_clapperboard.png";
 
 interface Post {
   id: string;
