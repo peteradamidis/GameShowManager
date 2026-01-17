@@ -20,6 +20,9 @@ import {
   users,
   rebookingHistory,
   attendanceIssues,
+  noticeboardPosts,
+  noticeboardComments,
+  noticeboardLikes,
   type Contestant,
   type InsertContestant,
   type Group,
@@ -55,6 +58,12 @@ import {
   type InsertRebookingHistory,
   type AttendanceIssue,
   type InsertAttendanceIssue,
+  type NoticeboardPost,
+  type InsertNoticeboardPost,
+  type NoticeboardComment,
+  type InsertNoticeboardComment,
+  type NoticeboardLike,
+  type InsertNoticeboardLike,
 } from "@shared/schema";
 import { eq, and, sql, inArray } from "drizzle-orm";
 
@@ -340,6 +349,24 @@ export interface IStorage {
   getAttendanceIssuesByRecordDay(recordDayId: string): Promise<Array<AttendanceIssue & { contestant: Contestant }>>;
   deleteAttendanceIssue(id: string): Promise<void>;
   moveAttendanceIssueToReschedule(id: string, movedBy?: string): Promise<{ attendanceIssue: AttendanceIssue; canceledAssignment: CanceledAssignment }>;
+  
+  // Noticeboard
+  createNoticeboardPost(post: InsertNoticeboardPost): Promise<NoticeboardPost>;
+  getNoticeboardPosts(): Promise<Array<NoticeboardPost & { likeCount: number; commentCount: number; likedByCurrentUser?: boolean }>>;
+  getNoticeboardPostById(id: string): Promise<NoticeboardPost | undefined>;
+  updateNoticeboardPost(id: string, data: Partial<NoticeboardPost>): Promise<NoticeboardPost | undefined>;
+  deleteNoticeboardPost(id: string): Promise<void>;
+  togglePinPost(id: string): Promise<NoticeboardPost | undefined>;
+  
+  // Noticeboard Comments
+  createNoticeboardComment(comment: InsertNoticeboardComment): Promise<NoticeboardComment>;
+  getCommentsByPost(postId: string): Promise<NoticeboardComment[]>;
+  deleteNoticeboardComment(id: string): Promise<void>;
+  
+  // Noticeboard Likes
+  toggleLike(postId: string, userId: string): Promise<{ liked: boolean; likeCount: number }>;
+  getLikesByPost(postId: string): Promise<NoticeboardLike[]>;
+  hasUserLikedPost(postId: string, userId: string): Promise<boolean>;
 }
 
 export class DbStorage implements IStorage {
@@ -2268,6 +2295,152 @@ export class DbStorage implements IStorage {
         eq(prizeWinners.recordDayId, recordDayId),
         eq(prizeWinners.contestantId, contestantId)
       ));
+  }
+
+  // Noticeboard Posts
+  async createNoticeboardPost(post: InsertNoticeboardPost): Promise<NoticeboardPost> {
+    const [created] = await db
+      .insert(noticeboardPosts)
+      .values(post)
+      .returning();
+    return created;
+  }
+
+  async getNoticeboardPosts(): Promise<Array<NoticeboardPost & { likeCount: number; commentCount: number }>> {
+    const posts = await db
+      .select()
+      .from(noticeboardPosts)
+      .orderBy(sql`${noticeboardPosts.isPinned} DESC, ${noticeboardPosts.createdAt} DESC`);
+    
+    // Get like counts for all posts
+    const likeCounts = await db
+      .select({
+        postId: noticeboardLikes.postId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(noticeboardLikes)
+      .groupBy(noticeboardLikes.postId);
+    
+    // Get comment counts for all posts
+    const commentCounts = await db
+      .select({
+        postId: noticeboardComments.postId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(noticeboardComments)
+      .groupBy(noticeboardComments.postId);
+    
+    const likeMap = new Map(likeCounts.map(l => [l.postId, l.count]));
+    const commentMap = new Map(commentCounts.map(c => [c.postId, c.count]));
+    
+    return posts.map(post => ({
+      ...post,
+      likeCount: likeMap.get(post.id) || 0,
+      commentCount: commentMap.get(post.id) || 0,
+    }));
+  }
+
+  async getNoticeboardPostById(id: string): Promise<NoticeboardPost | undefined> {
+    const [post] = await db
+      .select()
+      .from(noticeboardPosts)
+      .where(eq(noticeboardPosts.id, id));
+    return post;
+  }
+
+  async updateNoticeboardPost(id: string, data: Partial<NoticeboardPost>): Promise<NoticeboardPost | undefined> {
+    const [updated] = await db
+      .update(noticeboardPosts)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(noticeboardPosts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteNoticeboardPost(id: string): Promise<void> {
+    await db.delete(noticeboardPosts).where(eq(noticeboardPosts.id, id));
+  }
+
+  async togglePinPost(id: string): Promise<NoticeboardPost | undefined> {
+    const post = await this.getNoticeboardPostById(id);
+    if (!post) return undefined;
+    
+    const [updated] = await db
+      .update(noticeboardPosts)
+      .set({ isPinned: !post.isPinned, updatedAt: new Date() })
+      .where(eq(noticeboardPosts.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Noticeboard Comments
+  async createNoticeboardComment(comment: InsertNoticeboardComment): Promise<NoticeboardComment> {
+    const [created] = await db
+      .insert(noticeboardComments)
+      .values(comment)
+      .returning();
+    return created;
+  }
+
+  async getCommentsByPost(postId: string): Promise<NoticeboardComment[]> {
+    return db
+      .select()
+      .from(noticeboardComments)
+      .where(eq(noticeboardComments.postId, postId))
+      .orderBy(noticeboardComments.createdAt);
+  }
+
+  async deleteNoticeboardComment(id: string): Promise<void> {
+    await db.delete(noticeboardComments).where(eq(noticeboardComments.id, id));
+  }
+
+  // Noticeboard Likes
+  async toggleLike(postId: string, userId: string): Promise<{ liked: boolean; likeCount: number }> {
+    // Check if already liked
+    const [existing] = await db
+      .select()
+      .from(noticeboardLikes)
+      .where(and(
+        eq(noticeboardLikes.postId, postId),
+        eq(noticeboardLikes.userId, userId)
+      ));
+    
+    if (existing) {
+      // Unlike
+      await db.delete(noticeboardLikes).where(eq(noticeboardLikes.id, existing.id));
+    } else {
+      // Like
+      await db.insert(noticeboardLikes).values({ postId, userId });
+    }
+    
+    // Get new like count
+    const [result] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(noticeboardLikes)
+      .where(eq(noticeboardLikes.postId, postId));
+    
+    return {
+      liked: !existing,
+      likeCount: result?.count || 0,
+    };
+  }
+
+  async getLikesByPost(postId: string): Promise<NoticeboardLike[]> {
+    return db
+      .select()
+      .from(noticeboardLikes)
+      .where(eq(noticeboardLikes.postId, postId));
+  }
+
+  async hasUserLikedPost(postId: string, userId: string): Promise<boolean> {
+    const [existing] = await db
+      .select()
+      .from(noticeboardLikes)
+      .where(and(
+        eq(noticeboardLikes.postId, postId),
+        eq(noticeboardLikes.userId, userId)
+      ));
+    return !!existing;
   }
 }
 

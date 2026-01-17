@@ -11539,6 +11539,221 @@ ${finalEmailFooter}`;
     }
   });
 
+  // ===== NOTICEBOARD ENDPOINTS =====
+  
+  // Get all noticeboard posts
+  app.get("/api/noticeboard/posts", requireAuth, async (req, res) => {
+    try {
+      const posts = await storage.getNoticeboardPosts();
+      const userId = (req.session as any)?.userId;
+      
+      // Add likedByCurrentUser flag for each post
+      const postsWithLikeStatus = await Promise.all(posts.map(async (post) => {
+        const liked = userId ? await storage.hasUserLikedPost(post.id, userId) : false;
+        return { ...post, likedByCurrentUser: liked };
+      }));
+      
+      res.json(postsWithLikeStatus);
+    } catch (error: any) {
+      console.error("Error getting noticeboard posts:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create a new post
+  app.post("/api/noticeboard/posts", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      const user = await storage.getUserById(userId);
+      
+      if (!user) {
+        return res.status(401).json({ error: "User not found" });
+      }
+      
+      const { content, imageUrl } = req.body;
+      
+      if (!content || content.trim().length === 0) {
+        return res.status(400).json({ error: "Post content is required" });
+      }
+      
+      const post = await storage.createNoticeboardPost({
+        authorId: userId,
+        authorName: user.username,
+        content: content.trim(),
+        imageUrl: imageUrl || null,
+      });
+      
+      res.json({ ...post, likeCount: 0, commentCount: 0, likedByCurrentUser: false });
+    } catch (error: any) {
+      console.error("Error creating noticeboard post:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update a post
+  app.patch("/api/noticeboard/posts/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { content } = req.body;
+      const userId = (req.session as any)?.userId;
+      
+      const post = await storage.getNoticeboardPostById(id);
+      if (!post) {
+        return res.status(404).json({ error: "Post not found" });
+      }
+      
+      // Only author can edit
+      if (post.authorId !== userId) {
+        return res.status(403).json({ error: "Not authorized to edit this post" });
+      }
+      
+      const updated = await storage.updateNoticeboardPost(id, { content });
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating noticeboard post:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete a post
+  app.delete("/api/noticeboard/posts/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.session as any)?.userId;
+      
+      const post = await storage.getNoticeboardPostById(id);
+      if (!post) {
+        return res.status(404).json({ error: "Post not found" });
+      }
+      
+      // Only author can delete (or could add admin check here)
+      if (post.authorId !== userId) {
+        return res.status(403).json({ error: "Not authorized to delete this post" });
+      }
+      
+      await storage.deleteNoticeboardPost(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting noticeboard post:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Toggle pin on a post (admin only in future, for now any user)
+  app.post("/api/noticeboard/posts/:id/pin", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updated = await storage.togglePinPost(id);
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Post not found" });
+      }
+      
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error toggling pin:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Like/unlike a post
+  app.post("/api/noticeboard/posts/:id/like", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.session as any)?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      const result = await storage.toggleLike(id, userId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error toggling like:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get comments for a post
+  app.get("/api/noticeboard/posts/:id/comments", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const comments = await storage.getCommentsByPost(id);
+      res.json(comments);
+    } catch (error: any) {
+      console.error("Error getting comments:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Add a comment to a post
+  app.post("/api/noticeboard/posts/:id/comments", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { content } = req.body;
+      const userId = (req.session as any)?.userId;
+      const user = await storage.getUserById(userId);
+      
+      if (!user) {
+        return res.status(401).json({ error: "User not found" });
+      }
+      
+      if (!content || content.trim().length === 0) {
+        return res.status(400).json({ error: "Comment content is required" });
+      }
+      
+      const comment = await storage.createNoticeboardComment({
+        postId: id,
+        authorId: userId,
+        authorName: user.username,
+        content: content.trim(),
+      });
+      
+      res.json(comment);
+    } catch (error: any) {
+      console.error("Error creating comment:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete a comment
+  app.delete("/api/noticeboard/comments/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteNoticeboardComment(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting comment:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Upload image for noticeboard post
+  app.post("/api/noticeboard/upload-image", requireAuth, upload.single('image'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No image file provided" });
+      }
+      
+      const filename = `noticeboard_${Date.now()}_${req.file.originalname}`;
+      const uploadDir = path.join(process.cwd(), 'uploads', 'noticeboard');
+      
+      // Ensure directory exists
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      const filepath = path.join(uploadDir, filename);
+      fs.writeFileSync(filepath, req.file.buffer);
+      
+      const imageUrl = `/uploads/noticeboard/${filename}`;
+      res.json({ imageUrl });
+    } catch (error: any) {
+      console.error("Error uploading noticeboard image:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize WebSocket server for real-time updates
