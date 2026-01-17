@@ -7746,8 +7746,9 @@ ${finalEmailFooter}`;
         }
       };
 
-      // Process in batches to avoid overloading
-      const BATCH_SIZE = 5;
+      // Process in batches to avoid overloading - with delay between batches
+      const BATCH_SIZE = 3; // Reduced batch size
+      const DELAY_BETWEEN_BATCHES_MS = 2000; // 2 second delay between batches
       const results: {
         seatAssignmentId: string;
         success: boolean;
@@ -7756,10 +7757,19 @@ ${finalEmailFooter}`;
         error?: string;
       }[] = [];
 
+      // Helper to delay execution
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
       for (let i = 0; i < seatAssignmentIds.length; i += BATCH_SIZE) {
         const batch = seatAssignmentIds.slice(i, i + BATCH_SIZE);
         const batchResults = await Promise.all(batch.map(processAssignment));
         results.push(...batchResults);
+        
+        // Add delay between batches to avoid overwhelming the mail server
+        if (i + BATCH_SIZE < seatAssignmentIds.length) {
+          console.log(`📧 Bulk email: Sent batch ${Math.floor(i / BATCH_SIZE) + 1}, waiting ${DELAY_BETWEEN_BATCHES_MS}ms before next batch...`);
+          await delay(DELAY_BETWEEN_BATCHES_MS);
+        }
       }
 
       const successCount = results.filter(r => r.success).length;
@@ -9855,6 +9865,11 @@ ${finalEmailFooter}`;
       let failed = 0;
       const errors: string[] = [];
       
+      // Rate limiting for bulk emails
+      const DELAY_BETWEEN_EMAILS_MS = 1500; // 1.5 second delay between emails
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+      let emailCount = 0;
+      
       for (const assignmentId of assignmentIds) {
         try {
           const assignment = await storage.getSeatAssignmentById(assignmentId);
@@ -10016,6 +10031,13 @@ ${finalEmailFooter}`;
             });
             
             sent++;
+            emailCount++;
+            
+            // Add delay after sending to avoid overwhelming mail server
+            if (emailCount < assignmentIds.length) {
+              console.log(`📧 Paperwork bulk email: Sent ${emailCount}/${assignmentIds.length}, waiting ${DELAY_BETWEEN_EMAILS_MS}ms before next...`);
+              await delay(DELAY_BETWEEN_EMAILS_MS);
+            }
           } else {
             failed++;
             errors.push(`Failed to send to ${contestant.email}: ${emailResult.error}`);
