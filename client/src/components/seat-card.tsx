@@ -30,13 +30,6 @@ const hasMeaningfulMedicalNote = (value: string | undefined | null): boolean => 
 };
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export interface SeatData {
   id: string;
@@ -489,33 +482,72 @@ export function SeatCard({
                   </div>
                 </div>
 
-                {/* Player Type - editable dropdown */}
-                <div className="text-sm">
-                  <label className="text-xs font-medium text-muted-foreground">Player Type</label>
-                  <Select 
-                    value={localPlayerType || 'none'} 
-                    onValueChange={handlePlayerTypeChange}
-                    disabled={updatePlayerTypeMutation.isPending}
-                  >
-                    <SelectTrigger 
-                      className={`h-8 mt-1 text-xs ${
-                        localPlayerType === 'player' ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700' :
-                        localPlayerType === 'backup' ? 'bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700' :
-                        localPlayerType === 'player_partner' ? 'bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-700' :
-                        ''
-                      }`}
-                      data-testid={`select-player-type-${seat.assignmentId}`}
-                    >
-                      <SelectValue placeholder="Select type..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Not Set</SelectItem>
-                      <SelectItem value="player">Player</SelectItem>
-                      <SelectItem value="backup">Backup</SelectItem>
-                      <SelectItem value="player_partner">Partner</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Player Type - clickable badges (only for A+ and A rated contestants) */}
+                {(seat.auditionRating === 'A+' || seat.auditionRating === 'A') && (
+                  <div className="text-sm">
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Player Type</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePlayerTypeChange(localPlayerType === 'player' ? 'none' : 'player');
+                        }}
+                        disabled={updatePlayerTypeMutation.isPending}
+                        className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${
+                          localPlayerType === 'player' 
+                            ? 'bg-blue-500 text-white border-blue-600 dark:bg-blue-600 dark:border-blue-500' 
+                            : 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700 hover:bg-blue-500/20'
+                        } disabled:opacity-50`}
+                        data-testid={`button-player-type-player-${seat.assignmentId}`}
+                      >
+                        Player
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePlayerTypeChange(localPlayerType === 'backup' ? 'none' : 'backup');
+                        }}
+                        disabled={updatePlayerTypeMutation.isPending}
+                        className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${
+                          localPlayerType === 'backup' 
+                            ? 'bg-amber-500 text-white border-amber-600 dark:bg-amber-600 dark:border-amber-500' 
+                            : 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 hover:bg-amber-500/20'
+                        } disabled:opacity-50`}
+                        data-testid={`button-player-type-backup-${seat.assignmentId}`}
+                      >
+                        Backup
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePlayerTypeChange(localPlayerType === 'player_partner' ? 'none' : 'player_partner');
+                        }}
+                        disabled={updatePlayerTypeMutation.isPending}
+                        className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${
+                          localPlayerType === 'player_partner' 
+                            ? 'bg-purple-500 text-white border-purple-600 dark:bg-purple-600 dark:border-purple-500' 
+                            : 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-700 hover:bg-purple-500/20'
+                        } disabled:opacity-50`}
+                        data-testid={`button-player-type-partner-${seat.assignmentId}`}
+                      >
+                        Partner
+                      </button>
+                      {localPlayerType && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePlayerTypeChange('none');
+                          }}
+                          disabled={updatePlayerTypeMutation.isPending}
+                          className="px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                          data-testid={`button-player-type-clear-${seat.assignmentId}`}
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Attending With - shows original and allows override editing */}
                 <div className="text-sm">
