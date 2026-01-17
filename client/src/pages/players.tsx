@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,8 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Star, User, Users } from "lucide-react";
+import { Star, User, Users, Play } from "lucide-react";
 import { format } from "date-fns";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface RecordDay {
   id: string;
@@ -34,6 +36,7 @@ interface SeatAssignment {
   blockNumber: number;
   seatLabel: string;
   playerType: string | null;
+  rxEpNumber: string | null;
   bookingConfirmationStatus: string | null;
   contestant: {
     id: string;
@@ -43,7 +46,7 @@ interface SeatAssignment {
     age: number | null;
     phone: string | null;
     email: string | null;
-    rating: number | null;
+    rating: string | null;
     suburb: string | null;
     medicalMobilityNotes: string | null;
     attendingWith: string | null;
@@ -67,7 +70,14 @@ interface Contestant {
   attendingWith: string | null;
 }
 
+interface EpisodeGroup {
+  episodeNumber: string;
+  player: SeatAssignment | null;
+  backups: SeatAssignment[];
+}
+
 export default function PlayersPage() {
+  const { toast } = useToast();
   const [selectedRecordDayId, setSelectedRecordDayId] = useState<string>('');
 
   const { data: recordDays = [], isLoading: loadingDays } = useQuery<RecordDay[]>({
@@ -79,9 +89,9 @@ export default function PlayersPage() {
   });
 
   const { data: rawAssignments = [], isLoading: loadingAssignments } = useQuery<any[]>({
-    queryKey: ['/api/seat-assignments', selectedRecordDayId !== 'all' ? selectedRecordDayId : undefined],
+    queryKey: ['/api/seat-assignments', selectedRecordDayId || undefined],
     queryFn: async () => {
-      const url = selectedRecordDayId !== 'all' 
+      const url = selectedRecordDayId 
         ? `/api/seat-assignments?recordDayId=${selectedRecordDayId}`
         : '/api/seat-assignments';
       const response = await fetch(url, { credentials: 'include' });
@@ -121,7 +131,6 @@ export default function PlayersPage() {
     return [...recordDays].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [recordDays]);
 
-  // Set default to first record day when available
   useEffect(() => {
     if (!selectedRecordDayId && sortedRecordDays.length > 0) {
       setSelectedRecordDayId(sortedRecordDays[0].id);
@@ -129,16 +138,17 @@ export default function PlayersPage() {
   }, [sortedRecordDays, selectedRecordDayId]);
 
   const { players, backups } = useMemo(() => {
-    // Filter by selected record day
     const filtered = selectedRecordDayId 
       ? allAssignments.filter(a => a.recordDayId === selectedRecordDayId)
       : [];
     
-    // Filter to only include assignments with contestant data
     const withContestants = filtered.filter(a => a.contestant);
     
     return {
       players: withContestants.filter(a => a.playerType === 'player').sort((a, b) => {
+        const epA = parseInt(a.rxEpNumber) || 99;
+        const epB = parseInt(b.rxEpNumber) || 99;
+        if (epA !== epB) return epA - epB;
         if (a.blockNumber !== b.blockNumber) return a.blockNumber - b.blockNumber;
         return (a.seatLabel || '').localeCompare(b.seatLabel || '');
       }),
@@ -149,114 +159,105 @@ export default function PlayersPage() {
     };
   }, [allAssignments, selectedRecordDayId]);
 
-  const getRecordDayInfo = (recordDayId: string) => {
-    const day = recordDays.find(d => d.id === recordDayId);
-    return day ? `${day.rxNumber} - ${format(new Date(day.date), 'dd/MM/yyyy')}` : '';
-  };
-
-  const getStatusBadge = (status: string | null) => {
-    if (!status) return <Badge variant="outline" className="text-xs">Not Sent</Badge>;
-    switch (status) {
-      case 'confirmed':
-        return <Badge className="bg-green-500/20 text-green-700 dark:text-green-400 text-xs">Confirmed</Badge>;
-      case 'declined':
-        return <Badge className="bg-red-500/20 text-red-700 dark:text-red-400 text-xs">Declined</Badge>;
-      case 'pending':
-        return <Badge className="bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs">Pending</Badge>;
-      default:
-        return <Badge variant="outline" className="text-xs">{status}</Badge>;
+  const episodeGroups = useMemo(() => {
+    const groups: EpisodeGroup[] = [];
+    
+    for (let ep = 1; ep <= 5; ep++) {
+      const epStr = ep.toString();
+      const player = players.find(p => p.rxEpNumber === epStr) || null;
+      
+      const epBackups = player 
+        ? backups.filter(b => b.blockNumber === player.blockNumber)
+        : [];
+      
+      groups.push({
+        episodeNumber: epStr,
+        player,
+        backups: epBackups,
+      });
     }
+    
+    const unassignedPlayers = players.filter(p => !p.rxEpNumber || !['1','2','3','4','5'].includes(p.rxEpNumber));
+    const assignedBackupIds = new Set(groups.flatMap(g => g.backups.map(b => b.id)));
+    const unassignedBackups = backups.filter(b => !assignedBackupIds.has(b.id));
+    
+    return { groups, unassignedPlayers, unassignedBackups };
+  }, [players, backups]);
+
+  const updateEpisodeMutation = useMutation({
+    mutationFn: async ({ assignmentId, episodeNumber }: { assignmentId: string; episodeNumber: string | null }) => {
+      const response = await apiRequest('PATCH', `/api/seat-assignments/${assignmentId}/workflow`, {
+        rxEpNumber: episodeNumber,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.includes('/api/seat-assignments');
+        }
+      });
+      toast({ title: "Updated", description: "Episode number saved" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update", variant: "destructive" });
+    },
+  });
+
+  const handleEpisodeChange = (assignmentId: string, value: string) => {
+    const episodeNumber = value === 'none' ? null : value;
+    updateEpisodeMutation.mutate({ assignmentId, episodeNumber });
   };
 
-  const renderRating = (rating: number | null) => {
-    if (!rating) return <span className="text-muted-foreground">-</span>;
+  const renderPersonRow = (assignment: SeatAssignment, isPlayer: boolean, showEpisodeSelector: boolean = false) => {
+    const c = assignment.contestant;
+    if (!c) return null;
+    const attendingWith = assignment.attendingWithOverride || c.attendingWith;
+    const notes = assignment.medicalMobilityNotesOverride || c.medicalMobilityNotes;
+    
     return (
-      <div className="flex items-center gap-0.5">
-        {[1, 2, 3, 4, 5].map(i => (
-          <Star
-            key={i}
-            className={`h-3 w-3 ${i <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`}
-          />
-        ))}
-      </div>
+      <TableRow key={assignment.id} className={isPlayer ? 'bg-blue-500/5' : 'bg-amber-500/5'}>
+        {showEpisodeSelector && (
+          <TableCell>
+            <Select 
+              value={assignment.rxEpNumber || 'none'} 
+              onValueChange={(v) => handleEpisodeChange(assignment.id, v)}
+              disabled={updateEpisodeMutation.isPending}
+            >
+              <SelectTrigger className="w-16 h-7 text-xs" data-testid={`select-episode-${assignment.id}`}>
+                <SelectValue placeholder="-" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">-</SelectItem>
+                <SelectItem value="1">EP 1</SelectItem>
+                <SelectItem value="2">EP 2</SelectItem>
+                <SelectItem value="3">EP 3</SelectItem>
+                <SelectItem value="4">EP 4</SelectItem>
+                <SelectItem value="5">EP 5</SelectItem>
+              </SelectContent>
+            </Select>
+          </TableCell>
+        )}
+        <TableCell>
+          <Badge variant="outline" className={isPlayer ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400' : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'}>
+            {isPlayer ? 'P' : 'B'} B{assignment.blockNumber} {assignment.seatLabel}
+          </Badge>
+        </TableCell>
+        <TableCell className="font-medium">{c.firstName} {c.lastName}</TableCell>
+        <TableCell>
+          <Badge variant="outline" className={c.gender === 'Female' ? 'bg-pink-500/10 text-pink-700 dark:text-pink-400' : 'bg-blue-500/10 text-blue-700 dark:text-blue-400'}>
+            {c.gender === 'Female' ? 'F' : 'M'}
+          </Badge>
+        </TableCell>
+        <TableCell>{c.age || '-'}</TableCell>
+        <TableCell className="text-sm">{c.suburb || '-'}</TableCell>
+        <TableCell className="text-sm">{c.phone || '-'}</TableCell>
+        <TableCell className="text-sm max-w-[120px] truncate" title={attendingWith || ''}>{attendingWith || '-'}</TableCell>
+        <TableCell className="text-sm max-w-[120px] truncate" title={notes || ''}>{notes || '-'}</TableCell>
+      </TableRow>
     );
   };
-
-  const renderPlayerTable = (assignments: SeatAssignment[], title: string, icon: React.ReactNode, bgClass: string) => (
-    <Card className="mb-6">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          {icon}
-          {title}
-          <Badge variant="secondary" className="ml-2">{assignments.length}</Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {assignments.length === 0 ? (
-          <p className="text-muted-foreground text-sm py-4 text-center">No {title.toLowerCase()} found</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-20">Block/Seat</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="w-16">Gender</TableHead>
-                  <TableHead className="w-16">Age</TableHead>
-                  <TableHead className="w-24">Rating</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead className="w-28">Status</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Attending With</TableHead>
-                  <TableHead>Notes</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {assignments.map(assignment => {
-                  const c = assignment.contestant;
-                  if (!c) return null;
-                  const attendingWith = assignment.attendingWithOverride || c.attendingWith;
-                  const notes = assignment.medicalMobilityNotesOverride || c.medicalMobilityNotes;
-                  
-                  return (
-                    <TableRow key={assignment.id} data-testid={`row-player-${assignment.id}`}>
-                      <TableCell>
-                        <Badge variant="outline" className={bgClass}>
-                          B{assignment.blockNumber} {assignment.seatLabel}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {c.firstName} {c.lastName}
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant="outline" 
-                          className={c.gender === 'Female' ? 'bg-pink-500/10 text-pink-700 dark:text-pink-400' : 'bg-blue-500/10 text-blue-700 dark:text-blue-400'}
-                        >
-                          {c.gender === 'Female' ? 'F' : 'M'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{c.age || '-'}</TableCell>
-                      <TableCell>{renderRating(c.rating)}</TableCell>
-                      <TableCell className="text-sm">{c.suburb || '-'}</TableCell>
-                      <TableCell>{getStatusBadge(assignment.bookingConfirmationStatus)}</TableCell>
-                      <TableCell className="text-sm">{c.phone || '-'}</TableCell>
-                      <TableCell className="text-sm max-w-[150px] truncate" title={attendingWith || ''}>
-                        {attendingWith || '-'}
-                      </TableCell>
-                      <TableCell className="text-sm max-w-[150px] truncate" title={notes || ''}>
-                        {notes || '-'}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
 
   if (loadingDays || loadingAssignments) {
     return (
@@ -273,11 +274,11 @@ export default function PlayersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold">Players & Backups</h1>
-          <p className="text-muted-foreground text-sm">View players and backups assigned to record days</p>
+          <p className="text-muted-foreground text-sm">Assign episode order for the day (5 episodes per day)</p>
         </div>
         
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Filter by RX Day:</span>
+          <span className="text-sm text-muted-foreground">RX Day:</span>
           <Select value={selectedRecordDayId} onValueChange={setSelectedRecordDayId}>
             <SelectTrigger className="w-[220px]" data-testid="select-record-day-filter">
               <SelectValue placeholder="Select record day..." />
@@ -293,7 +294,7 @@ export default function PlayersPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-4 mb-6">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
@@ -320,20 +321,125 @@ export default function PlayersPage() {
             </div>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-500/10 rounded-lg">
+                <Play className="h-5 w-5 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{episodeGroups.groups.filter(g => g.player).length}/5</p>
+                <p className="text-sm text-muted-foreground">Episodes Assigned</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {renderPlayerTable(
-        players, 
-        'Players', 
-        <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />,
-        'bg-blue-500/10 text-blue-700 dark:text-blue-400'
+      {episodeGroups.groups.map(group => (
+        <Card key={group.episodeNumber} className="mb-4">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Badge className={group.player ? 'bg-green-500' : 'bg-muted text-muted-foreground'}>
+                EP {group.episodeNumber}
+              </Badge>
+              {group.player ? (
+                <span className="text-sm font-normal text-muted-foreground">
+                  Block {group.player.blockNumber} - {group.player.contestant?.firstName} {group.player.contestant?.lastName}
+                </span>
+              ) : (
+                <span className="text-sm font-normal text-muted-foreground italic">No player assigned</span>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {group.player || group.backups.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-20">Type/Seat</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="w-14">Gender</TableHead>
+                    <TableHead className="w-14">Age</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Attending With</TableHead>
+                    <TableHead>Notes</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {group.player && renderPersonRow(group.player, true, false)}
+                  {group.backups.map(backup => renderPersonRow(backup, false, false))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-2">Assign a player to this episode from the unassigned list below</p>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+
+      {episodeGroups.unassignedPlayers.length > 0 && (
+        <Card className="mb-4 border-dashed">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg text-amber-600 dark:text-amber-400">
+              <User className="h-5 w-5" />
+              Unassigned Players
+              <Badge variant="secondary">{episodeGroups.unassignedPlayers.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-20">Episode</TableHead>
+                  <TableHead className="w-24">Seat</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="w-14">Gender</TableHead>
+                  <TableHead className="w-14">Age</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Attending With</TableHead>
+                  <TableHead>Notes</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {episodeGroups.unassignedPlayers.map(player => renderPersonRow(player, true, true))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
-      
-      {renderPlayerTable(
-        backups, 
-        'Backups', 
-        <Users className="h-5 w-5 text-amber-600 dark:text-amber-400" />,
-        'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+
+      {episodeGroups.unassignedBackups.length > 0 && (
+        <Card className="border-dashed">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg text-muted-foreground">
+              <Users className="h-5 w-5" />
+              Backups Without Episode (Block doesn't match any assigned player)
+              <Badge variant="secondary">{episodeGroups.unassignedBackups.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-24">Seat</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="w-14">Gender</TableHead>
+                  <TableHead className="w-14">Age</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Attending With</TableHead>
+                  <TableHead>Notes</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {episodeGroups.unassignedBackups.map(backup => renderPersonRow(backup, false, false))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
