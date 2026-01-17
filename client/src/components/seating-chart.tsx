@@ -30,8 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
-import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, RotateCcw, Check } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import stageBackdropImage from "@/assets/stage-backdrop.png";
 import podiumSetImage from "@/assets/podium-set.png";
@@ -767,28 +766,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     queryKey: ['/api/record-days', recordDayId, 'block-config-status'],
   });
 
-  // Fetch returning standbys for this record day
-  const { data: returningStandbys = [] } = useQuery<Array<{
-    id: string;
-    contestantId: string;
-    recordDayId: string;
-    blockNumber: number;
-    seatLabel: string | null;
-    blockType: 'PB' | 'NPB';
-    confirmedAttendance: boolean;
-    attendedAt: string;
-    contestant: {
-      id: string;
-      name: string;
-      gender: string;
-      age: number;
-      auditionRating?: string;
-      photoUrl?: string;
-    };
-  }>>({
-    queryKey: ['/api/standby-attendance', recordDayId],
-  });
-
   // Create a map of block number to block type
   const blockTypeMap: Record<number, 'PB' | 'NPB'> = {};
   if (blockTypesData) {
@@ -1353,137 +1330,77 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 />
               </div>
               
-              {/* Standbys Panel with Tabs */}
+              {/* Standbys Panel */}
               <Card className="w-full max-w-xs" data-testid="standbys-panel">
-                <Tabs defaultValue="standbys" className="w-full">
-                  <CardHeader className="pb-2">
-                    <TabsList className="w-full grid grid-cols-2">
-                      <TabsTrigger value="standbys" className="text-xs" data-testid="tab-standbys">
-                        Standbys
-                        <Badge variant="secondary" className="ml-1 text-[10px] px-1">
-                          {standbys.filter(s => s.status !== 'seated').length}
-                        </Badge>
-                      </TabsTrigger>
-                      <TabsTrigger value="returners" className="text-xs" data-testid="tab-returners">
-                        <RotateCcw className="h-3 w-3 mr-1" />
-                        Returners
-                        <Badge variant="secondary" className="ml-1 text-[10px] px-1">
-                          {returningStandbys.length}
-                        </Badge>
-                      </TabsTrigger>
-                    </TabsList>
-                    {!isLocked && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Lock RX Day mode to drag standbys into empty seats
-                      </p>
-                    )}
-                  </CardHeader>
-
-                  <TabsContent value="standbys" className="mt-0">
-                    <CardContent className="pt-0">
-                      {standbys.filter(s => s.status !== 'seated').length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          No standbys for this day
-                        </p>
-                      ) : (
-                        <>
-                          {isLocked && standbys.filter(s => s.status !== 'seated').length > 0 && (
-                            <div className="mb-2 flex items-center justify-between gap-2">
-                              <p className="text-xs text-muted-foreground">
-                                Select standbys who attended
-                              </p>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 text-xs bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800"
-                                disabled={selectedAttendedStandbys.size === 0 || markAttendedMutation.isPending}
-                                onClick={handleMarkSelectedAsAttended}
-                                data-testid="button-mark-attended"
-                              >
-                                <Check className="h-3 w-3 mr-1" />
-                                Mark Attended ({selectedAttendedStandbys.size})
-                              </Button>
-                            </div>
-                          )}
-                          <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                            {standbys
-                              .filter(s => s.status !== 'seated')
-                              .sort((a, b) => (a.priority || 999) - (b.priority || 999))
-                              .map((standby, idx, arr) => (
-                                <div key={standby.id} className="flex items-start gap-2">
-                                  {isLocked && (
-                                    <Checkbox
-                                      checked={selectedAttendedStandbys.has(standby.id)}
-                                      onCheckedChange={() => handleToggleAttended(standby.id)}
-                                      className="mt-2.5"
-                                      data-testid={`checkbox-attended-${standby.id}`}
-                                    />
-                                  )}
-                                  <div className="flex-1">
-                                    <DraggableStandby
-                                      standby={standby}
-                                      isLocked={isLocked}
-                                      priorityIndex={idx + 1}
-                                      isFirst={idx === 0}
-                                      isLast={idx === arr.length - 1}
-                                      onMoveUp={() => handleStandbyReorder(standby.id, idx, idx - 1, arr)}
-                                      onMoveDown={() => handleStandbyReorder(standby.id, idx, idx + 1, arr)}
-                                    />
-                                  </div>
-                                </div>
-                              ))}
-                          </div>
-                        </>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm">Standbys</span>
+                    <Badge variant="secondary" className="text-[10px] px-1">
+                      {standbys.filter(s => s.status !== 'seated').length}
+                    </Badge>
+                  </div>
+                  {!isLocked && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Lock RX Day mode to drag standbys into empty seats
+                    </p>
+                  )}
+                </CardHeader>
+                <CardContent className="pt-0">
+                  {standbys.filter(s => s.status !== 'seated').length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No standbys for this day
+                    </p>
+                  ) : (
+                    <>
+                      {isLocked && standbys.filter(s => s.status !== 'seated').length > 0 && (
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <p className="text-xs text-muted-foreground">
+                            Select standbys who attended
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800"
+                            disabled={selectedAttendedStandbys.size === 0 || markAttendedMutation.isPending}
+                            onClick={handleMarkSelectedAsAttended}
+                            data-testid="button-mark-attended"
+                          >
+                            <Check className="h-3 w-3 mr-1" />
+                            Mark Attended ({selectedAttendedStandbys.size})
+                          </Button>
+                        </div>
                       )}
-                    </CardContent>
-                  </TabsContent>
-
-                  <TabsContent value="returners" className="mt-0">
-                    <CardContent className="pt-0">
-                      {returningStandbys.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          No returning standbys recorded
-                        </p>
-                      ) : (
-                        <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                          {returningStandbys.map((returner) => (
-                            <div 
-                              key={returner.id}
-                              className="p-2 border rounded-md bg-teal-50 dark:bg-teal-950/20 border-teal-500/30"
-                              data-testid={`returner-${returner.contestantId}`}
-                            >
-                              <div className="flex items-center justify-between gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-sm truncate">{returner.contestant.name}</p>
-                                  <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-                                    <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
-                                      {returner.contestant.gender === "Female" ? "F" : "M"}
-                                    </Badge>
-                                    <Badge 
-                                      variant="outline" 
-                                      className={`text-[10px] px-1 py-0 h-4 ${
-                                        returner.blockType === 'NPB' 
-                                          ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100' 
-                                          : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
-                                      }`}
-                                    >
-                                      Block {returner.blockNumber} ({returner.blockType})
-                                    </Badge>
-                                    {returner.confirmedAttendance && (
-                                      <Badge className="text-[10px] px-1 py-0 h-4 bg-green-500 text-white">
-                                        Confirmed
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </div>
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                        {standbys
+                          .filter(s => s.status !== 'seated')
+                          .sort((a, b) => (a.priority || 999) - (b.priority || 999))
+                          .map((standby, idx, arr) => (
+                            <div key={standby.id} className="flex items-start gap-2">
+                              {isLocked && (
+                                <Checkbox
+                                  checked={selectedAttendedStandbys.has(standby.id)}
+                                  onCheckedChange={() => handleToggleAttended(standby.id)}
+                                  className="mt-2.5"
+                                  data-testid={`checkbox-attended-${standby.id}`}
+                                />
+                              )}
+                              <div className="flex-1">
+                                <DraggableStandby
+                                  standby={standby}
+                                  isLocked={isLocked}
+                                  priorityIndex={idx + 1}
+                                  isFirst={idx === 0}
+                                  isLast={idx === arr.length - 1}
+                                  onMoveUp={() => handleStandbyReorder(standby.id, idx, idx - 1, arr)}
+                                  onMoveDown={() => handleStandbyReorder(standby.id, idx, idx + 1, arr)}
+                                />
                               </div>
                             </div>
                           ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </TabsContent>
-                </Tabs>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
               </Card>
             </div>
           </div>
