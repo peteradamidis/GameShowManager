@@ -3,21 +3,14 @@ import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Star, User, Users, Play } from "lucide-react";
+import { Star, User, Users, Play, Phone, Mail, MapPin } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -50,6 +43,7 @@ interface SeatAssignment {
     suburb: string | null;
     medicalMobilityNotes: string | null;
     attendingWith: string | null;
+    photoUrl: string | null;
   } | null;
   medicalMobilityNotesOverride?: string | null;
   attendingWithOverride?: string | null;
@@ -68,6 +62,7 @@ interface Contestant {
   suburb: string | null;
   medicalMobilityNotes: string | null;
   attendingWith: string | null;
+  photoUrl: string | null;
 }
 
 interface EpisodeGroup {
@@ -122,6 +117,7 @@ export default function PlayersPage() {
           suburb: contestant.suburb,
           medicalMobilityNotes: contestant.medicalMobilityNotes,
           attendingWith: contestant.attendingWith,
+          photoUrl: contestant.photoUrl,
         } : null,
       };
     });
@@ -210,56 +206,117 @@ export default function PlayersPage() {
     updateEpisodeMutation.mutate({ assignmentId, episodeNumber });
   };
 
-  const renderPersonRow = (assignment: SeatAssignment, isPlayer: boolean, showEpisodeSelector: boolean = false, showEpisodeColumn: boolean = false) => {
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
+  };
+
+  const renderRating = (rating: string | null) => {
+    if (!rating) return null;
+    const ratingNum = parseInt(rating) || 0;
+    return (
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map(i => (
+          <Star
+            key={i}
+            className={`h-3 w-3 ${i <= ratingNum ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  const renderPersonCard = (assignment: SeatAssignment, isPlayer: boolean, showEpisodeSelector: boolean = false) => {
     const c = assignment.contestant;
     if (!c) return null;
     const attendingWith = assignment.attendingWithOverride || c.attendingWith;
     const notes = assignment.medicalMobilityNotesOverride || c.medicalMobilityNotes;
     
     return (
-      <TableRow key={assignment.id} className={isPlayer ? 'bg-blue-500/5' : 'bg-amber-500/5'}>
-        {showEpisodeColumn && (
-          <TableCell>
-            {showEpisodeSelector ? (
-              <Select 
-                value={assignment.rxEpNumber || 'none'} 
-                onValueChange={(v) => handleEpisodeChange(assignment.id, v)}
-                disabled={updateEpisodeMutation.isPending}
-              >
-                <SelectTrigger className="w-16 h-7 text-xs" data-testid={`select-episode-${assignment.id}`}>
-                  <SelectValue placeholder="-" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">-</SelectItem>
-                  <SelectItem value="1">EP 1</SelectItem>
-                  <SelectItem value="2">EP 2</SelectItem>
-                  <SelectItem value="3">EP 3</SelectItem>
-                  <SelectItem value="4">EP 4</SelectItem>
-                  <SelectItem value="5">EP 5</SelectItem>
-                </SelectContent>
-              </Select>
-            ) : (
-              <span className="text-muted-foreground text-xs">-</span>
+      <div 
+        key={assignment.id} 
+        className={`p-4 rounded-lg border ${isPlayer ? 'bg-blue-500/5 border-blue-500/20' : 'bg-amber-500/5 border-amber-500/20'}`}
+        data-testid={`card-person-${assignment.id}`}
+      >
+        <div className="flex gap-4">
+          <Avatar className="h-16 w-16 border-2 border-background shadow-sm">
+            <AvatarImage src={c.photoUrl || undefined} alt={`${c.firstName} ${c.lastName}`} />
+            <AvatarFallback className={isPlayer ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400' : 'bg-amber-500/20 text-amber-700 dark:text-amber-400'}>
+              {getInitials(c.firstName, c.lastName)}
+            </AvatarFallback>
+          </Avatar>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <span className="font-semibold text-lg">{c.firstName} {c.lastName}</span>
+              <Badge variant="outline" className={isPlayer ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400' : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'}>
+                {isPlayer ? 'PLAYER' : 'BACKUP'}
+              </Badge>
+              <Badge variant="outline" className={c.gender === 'Female' ? 'bg-pink-500/10 text-pink-700 dark:text-pink-400' : 'bg-blue-500/10 text-blue-700 dark:text-blue-400'}>
+                {c.gender === 'Female' ? 'F' : 'M'} {c.age || ''}
+              </Badge>
+              {renderRating(c.rating)}
+              {showEpisodeSelector && (
+                <Select 
+                  value={assignment.rxEpNumber || 'none'} 
+                  onValueChange={(v) => handleEpisodeChange(assignment.id, v)}
+                  disabled={updateEpisodeMutation.isPending}
+                >
+                  <SelectTrigger className="w-20 h-7 text-xs" data-testid={`select-episode-${assignment.id}`}>
+                    <SelectValue placeholder="EP -" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="1">EP 1</SelectItem>
+                    <SelectItem value="2">EP 2</SelectItem>
+                    <SelectItem value="3">EP 3</SelectItem>
+                    <SelectItem value="4">EP 4</SelectItem>
+                    <SelectItem value="5">EP 5</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-1 text-sm mb-1">
+              <Badge className="bg-primary/10 text-primary font-bold">
+                Block {assignment.blockNumber} - Seat {assignment.seatLabel}
+              </Badge>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-muted-foreground mt-2">
+              {c.phone && (
+                <div className="flex items-center gap-1">
+                  <Phone className="h-3 w-3" />
+                  <span>{c.phone}</span>
+                </div>
+              )}
+              {c.email && (
+                <div className="flex items-center gap-1 truncate">
+                  <Mail className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">{c.email}</span>
+                </div>
+              )}
+              {c.suburb && (
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  <span>{c.suburb}</span>
+                </div>
+              )}
+              {attendingWith && (
+                <div className="flex items-center gap-1 truncate">
+                  <Users className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate" title={attendingWith}>{attendingWith}</span>
+                </div>
+              )}
+            </div>
+            
+            {notes && (
+              <div className="mt-2 text-xs bg-amber-500/10 text-amber-700 dark:text-amber-400 px-2 py-1 rounded">
+                {notes}
+              </div>
             )}
-          </TableCell>
-        )}
-        <TableCell>
-          <Badge variant="outline" className={isPlayer ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400' : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'}>
-            {isPlayer ? 'P' : 'B'} B{assignment.blockNumber} {assignment.seatLabel}
-          </Badge>
-        </TableCell>
-        <TableCell className="font-medium">{c.firstName} {c.lastName}</TableCell>
-        <TableCell>
-          <Badge variant="outline" className={c.gender === 'Female' ? 'bg-pink-500/10 text-pink-700 dark:text-pink-400' : 'bg-blue-500/10 text-blue-700 dark:text-blue-400'}>
-            {c.gender === 'Female' ? 'F' : 'M'}
-          </Badge>
-        </TableCell>
-        <TableCell>{c.age || '-'}</TableCell>
-        <TableCell className="text-sm">{c.suburb || '-'}</TableCell>
-        <TableCell className="text-sm">{c.phone || '-'}</TableCell>
-        <TableCell className="text-sm max-w-[120px] truncate" title={attendingWith || ''}>{attendingWith || '-'}</TableCell>
-        <TableCell className="text-sm max-w-[120px] truncate" title={notes || ''}>{notes || '-'}</TableCell>
-      </TableRow>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -343,48 +400,44 @@ export default function PlayersPage() {
       {episodeGroups.groups.map(group => {
         const hasConflict = group.players.length > 1;
         return (
-          <Card key={group.episodeNumber} className={`mb-4 ${hasConflict ? 'border-red-500' : ''}`}>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Badge className={group.players.length > 0 ? (hasConflict ? 'bg-red-500' : 'bg-green-500') : 'bg-muted text-muted-foreground'}>
+          <Card key={group.episodeNumber} className={`mb-4 ${hasConflict ? 'border-red-500 border-2' : ''}`}>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-3">
+                <Badge className={`text-lg px-3 py-1 ${group.players.length > 0 ? (hasConflict ? 'bg-red-500' : 'bg-green-500') : 'bg-muted text-muted-foreground'}`}>
                   EP {group.episodeNumber}
                 </Badge>
                 {hasConflict ? (
-                  <span className="text-sm font-normal text-red-600 dark:text-red-400">
+                  <span className="text-base font-semibold text-red-600 dark:text-red-400">
                     Conflict: {group.players.length} players assigned
                   </span>
                 ) : group.players.length === 1 ? (
-                  <span className="text-sm font-normal text-muted-foreground">
-                    Block {group.players[0].blockNumber} - {group.players[0].contestant?.firstName} {group.players[0].contestant?.lastName}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-primary text-primary-foreground text-base font-bold px-3 py-1">
+                      BLOCK {group.players[0].blockNumber}
+                    </Badge>
+                    <span className="text-base font-medium">
+                      {group.players[0].contestant?.firstName} {group.players[0].contestant?.lastName}
+                    </span>
+                  </div>
                 ) : (
-                  <span className="text-sm font-normal text-muted-foreground italic">No player assigned</span>
+                  <span className="text-base font-normal text-muted-foreground italic">No player assigned</span>
                 )}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {group.players.length > 0 || group.backups.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-20">Episode</TableHead>
-                      <TableHead className="w-24">Type/Seat</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead className="w-14">Gender</TableHead>
-                      <TableHead className="w-14">Age</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Attending With</TableHead>
-                      <TableHead>Notes</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {group.players.map(player => renderPersonRow(player, true, true, true))}
-                    {group.backups.map(backup => renderPersonRow(backup, false, false, true))}
-                  </TableBody>
-                </Table>
+                <div className="space-y-3">
+                  {group.players.map(player => renderPersonCard(player, true, true))}
+                  {group.backups.length > 0 && (
+                    <>
+                      {group.players.length > 0 && <div className="border-t pt-3 mt-3" />}
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Backups for this block</p>
+                      {group.backups.map(backup => renderPersonCard(backup, false, false))}
+                    </>
+                  )}
+                </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-2">Assign a player to this episode from the unassigned list below</p>
+                <p className="text-sm text-muted-foreground text-center py-4">Assign a player to this episode from the unassigned list below</p>
               )}
             </CardContent>
           </Card>
@@ -392,64 +445,37 @@ export default function PlayersPage() {
       })}
 
       {episodeGroups.unassignedPlayers.length > 0 && (
-        <Card className="mb-4 border-dashed">
-          <CardHeader className="pb-2">
+        <Card className="mb-4 border-dashed border-amber-500/50">
+          <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg text-amber-600 dark:text-amber-400">
               <User className="h-5 w-5" />
               Unassigned Players
-              <Badge variant="secondary">{episodeGroups.unassignedPlayers.length}</Badge>
+              <Badge className="bg-amber-500/20 text-amber-700 dark:text-amber-400">{episodeGroups.unassignedPlayers.length}</Badge>
             </CardTitle>
+            <p className="text-sm text-muted-foreground">Select an episode for each player using the dropdown</p>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-20">Episode</TableHead>
-                  <TableHead className="w-24">Seat</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="w-14">Gender</TableHead>
-                  <TableHead className="w-14">Age</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Attending With</TableHead>
-                  <TableHead>Notes</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {episodeGroups.unassignedPlayers.map(player => renderPersonRow(player, true, true, true))}
-              </TableBody>
-            </Table>
+            <div className="space-y-3">
+              {episodeGroups.unassignedPlayers.map(player => renderPersonCard(player, true, true))}
+            </div>
           </CardContent>
         </Card>
       )}
 
       {episodeGroups.unassignedBackups.length > 0 && (
         <Card className="border-dashed">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg text-muted-foreground">
               <Users className="h-5 w-5" />
-              Backups Without Episode (Block doesn't match any assigned player)
+              Backups Without Episode
               <Badge variant="secondary">{episodeGroups.unassignedBackups.length}</Badge>
             </CardTitle>
+            <p className="text-sm text-muted-foreground">These backups' blocks don't match any assigned player</p>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-24">Seat</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="w-14">Gender</TableHead>
-                  <TableHead className="w-14">Age</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Attending With</TableHead>
-                  <TableHead>Notes</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {episodeGroups.unassignedBackups.map(backup => renderPersonRow(backup, false, false))}
-              </TableBody>
-            </Table>
+            <div className="space-y-3">
+              {episodeGroups.unassignedBackups.map(backup => renderPersonCard(backup, false, false))}
+            </div>
           </CardContent>
         </Card>
       )}
