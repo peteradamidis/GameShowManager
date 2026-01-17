@@ -32,7 +32,7 @@ interface SeatAssignment {
   contestantId: string;
   recordDayId: string;
   blockNumber: number;
-  seatNumber: number;
+  seatLabel: string;
   playerType: string | null;
   bookingConfirmationStatus: string | null;
   contestant: {
@@ -47,9 +47,24 @@ interface SeatAssignment {
     suburb: string | null;
     medicalMobilityNotes: string | null;
     attendingWith: string | null;
-  };
+  } | null;
   medicalMobilityNotesOverride?: string | null;
   attendingWithOverride?: string | null;
+}
+
+interface Contestant {
+  id: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  gender: string;
+  age: number | null;
+  phone: string | null;
+  email: string | null;
+  auditionRating: string | null;
+  suburb: string | null;
+  medicalMobilityNotes: string | null;
+  attendingWith: string | null;
 }
 
 export default function PlayersPage() {
@@ -59,7 +74,11 @@ export default function PlayersPage() {
     queryKey: ['/api/record-days'],
   });
 
-  const { data: allAssignments = [], isLoading: loadingAssignments } = useQuery<SeatAssignment[]>({
+  const { data: contestants = [] } = useQuery<Contestant[]>({
+    queryKey: ['/api/contestants'],
+  });
+
+  const { data: rawAssignments = [], isLoading: loadingAssignments } = useQuery<any[]>({
     queryKey: ['/api/seat-assignments', selectedRecordDayId !== 'all' ? selectedRecordDayId : undefined],
     queryFn: async () => {
       const url = selectedRecordDayId !== 'all' 
@@ -71,6 +90,32 @@ export default function PlayersPage() {
     },
     enabled: true,
   });
+
+  const contestantsMap = useMemo(() => {
+    return new Map(contestants.map(c => [c.id, c]));
+  }, [contestants]);
+
+  const allAssignments = useMemo(() => {
+    return rawAssignments.map(a => {
+      const contestant = contestantsMap.get(a.contestantId);
+      return {
+        ...a,
+        contestant: contestant ? {
+          id: contestant.id,
+          firstName: contestant.firstName || contestant.name?.split(' ')[0] || '',
+          lastName: contestant.lastName || contestant.name?.split(' ').slice(1).join(' ') || '',
+          gender: contestant.gender,
+          age: contestant.age,
+          phone: contestant.phone,
+          email: contestant.email,
+          rating: contestant.auditionRating,
+          suburb: contestant.suburb,
+          medicalMobilityNotes: contestant.medicalMobilityNotes,
+          attendingWith: contestant.attendingWith,
+        } : null,
+      };
+    });
+  }, [rawAssignments, contestantsMap]);
 
   const sortedRecordDays = useMemo(() => {
     return [...recordDays].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -87,11 +132,11 @@ export default function PlayersPage() {
     return {
       players: withContestants.filter(a => a.playerType === 'player').sort((a, b) => {
         if (a.blockNumber !== b.blockNumber) return a.blockNumber - b.blockNumber;
-        return a.seatNumber - b.seatNumber;
+        return (a.seatLabel || '').localeCompare(b.seatLabel || '');
       }),
       backups: withContestants.filter(a => a.playerType === 'backup').sort((a, b) => {
         if (a.blockNumber !== b.blockNumber) return a.blockNumber - b.blockNumber;
-        return a.seatNumber - b.seatNumber;
+        return (a.seatLabel || '').localeCompare(b.seatLabel || '');
       }),
     };
   }, [allAssignments, selectedRecordDayId]);
@@ -175,7 +220,7 @@ export default function PlayersPage() {
                       )}
                       <TableCell>
                         <Badge variant="outline" className={bgClass}>
-                          B{assignment.blockNumber} S{assignment.seatNumber}
+                          B{assignment.blockNumber} {assignment.seatLabel}
                         </Badge>
                       </TableCell>
                       <TableCell className="font-medium">
