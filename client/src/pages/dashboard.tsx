@@ -405,7 +405,7 @@ export default function Dashboard() {
                 );
               })}
             </div>
-          ) : null}
+          )}
         </CardContent>
       </Card>
 
