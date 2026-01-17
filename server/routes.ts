@@ -125,6 +125,33 @@ const photoUpload = multer({
   }
 });
 
+// Casting card PDF upload configuration - store on disk
+const castingCardStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(process.cwd(), 'uploads', 'casting-cards');
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `casting-card-${uniqueSuffix}.pdf`);
+  }
+});
+
+const castingCardUpload = multer({
+  storage: castingCardStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for casting card PDFs
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed for casting cards'));
+    }
+  }
+});
+
 // Helper to normalize a name for matching
 function normalizeNameForMatching(name: string): string {
   return name.toLowerCase().trim().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ');
@@ -631,6 +658,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Photo delete error:", error);
       res.status(500).json({ error: "Failed to delete photo" });
+    }
+  });
+
+  // Upload casting card PDF for a seat assignment (player)
+  app.post("/api/seat-assignments/:id/casting-card", (req, res, next) => {
+    castingCardUpload.single("castingCard")(req, res, (err: any) => {
+      if (err) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ error: "File too large. Maximum size is 10MB." });
+        }
+        if (err.message?.includes('Only PDF files are allowed')) {
+          return res.status(400).json({ error: "Only PDF files are allowed for casting cards." });
+        }
+        console.error("Multer error:", err);
+        return res.status(400).json({ error: err.message || "File upload failed" });
+      }
+      next();
+    });
+  }, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      if (!req.file) {
+        return res.status(400).json({ error: "No casting card file uploaded" });
+      }
+
+      // Get existing assignment
+      const assignments = await storage.getSeatAssignments();
+      const existingAssignment = assignments.find(a => a.id === id);
+      
+      if (!existingAssignment) {
+        fs.unlinkSync(req.file.path);
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+
+      // Delete old casting card if it exists
+      if (existingAssignment.castingCardUrl) {
+        const oldFilePath = path.join(process.cwd(), existingAssignment.castingCardUrl.replace(/^\//, ''));
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath);
+        }
+      }
+
+      const castingCardUrl = `/uploads/casting-cards/${req.file.filename}`;
+      
+      // Update assignment with casting card URL
+      await storage.updateSeatAssignmentCastingCard(id, castingCardUrl);
+
+      res.json({ castingCardUrl, message: "Casting card uploaded successfully" });
+    } catch (error) {
+      console.error("Casting card upload error:", error);
+      res.status(500).json({ error: "Failed to upload casting card" });
+    }
+  });
+
+  // Delete casting card for a seat assignment
+  app.delete("/api/seat-assignments/:id/casting-card", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const assignments = await storage.getSeatAssignments();
+      const assignment = assignments.find(a => a.id === id);
+      
+      if (!assignment) {
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+
+      // Delete the file if it exists
+      if (assignment.castingCardUrl) {
+        const filePath = path.join(process.cwd(), assignment.castingCardUrl.replace(/^\//, ''));
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+
+      // Clear casting card URL in database
+      await storage.updateSeatAssignmentCastingCard(id, null);
+      
+      res.json({ message: "Casting card deleted successfully" });
+    } catch (error) {
+      console.error("Casting card delete error:", error);
+      res.status(500).json({ error: "Failed to delete casting card" });
     }
   });
 

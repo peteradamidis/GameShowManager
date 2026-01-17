@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportedAt": "2026-01-17T05:22:55.236Z",
+  "exportedAt": "2026-01-17T05:25:03.862Z",
   "automatic": true,
   "data": {
     "recordDays": [
@@ -12535,6 +12535,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-13T10:50:10.002Z"
       },
       {
@@ -12584,6 +12585,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:50.970Z"
       },
       {
@@ -12633,6 +12635,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:51.475Z"
       },
       {
@@ -12682,6 +12685,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:51.982Z"
       },
       {
@@ -12731,6 +12735,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:52.480Z"
       },
       {
@@ -12780,6 +12785,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:52.978Z"
       },
       {
@@ -12829,6 +12835,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:53.487Z"
       },
       {
@@ -12878,6 +12885,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:53.986Z"
       },
       {
@@ -12927,6 +12935,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:54.485Z"
       },
       {
@@ -12976,6 +12985,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:54.982Z"
       },
       {
@@ -13025,6 +13035,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:55.493Z"
       },
       {
@@ -13074,6 +13085,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:55.991Z"
       },
       {
@@ -13123,6 +13135,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:56.490Z"
       },
       {
@@ -13172,6 +13185,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:56.988Z"
       },
       {
@@ -13221,6 +13235,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:57.487Z"
       },
       {
@@ -13270,6 +13285,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:57.986Z"
       },
       {
@@ -13319,6 +13335,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:58.486Z"
       },
       {
@@ -13368,6 +13385,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:58.993Z"
       },
       {
@@ -13417,6 +13435,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-14T04:40:59.495Z"
       },
       {
@@ -13466,6 +13485,7 @@
         "seatNotes": null,
         "attendingWithOverride": null,
         "mobilityNotesOverride": null,
+        "castingCardUrl": null,
         "createdAt": "2026-01-13T10:50:09.502Z"
       }
     ],

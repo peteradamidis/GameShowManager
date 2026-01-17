@@ -198,6 +198,7 @@ export interface IStorage {
   deleteSeatAssignment(id: string): Promise<void>;
   updateSeatAssignment(id: string, blockNumber: number, seatLabel: string): Promise<SeatAssignment | undefined>;
   updateSeatAssignmentWorkflow(id: string, workflowFields: Partial<SeatAssignment>): Promise<SeatAssignment | undefined>;
+  updateSeatAssignmentCastingCard(id: string, castingCardUrl: string | null): Promise<SeatAssignment | undefined>;
   atomicSwapSeats(
     sourceId: string,
     targetId: string | null,
@@ -718,6 +719,18 @@ export class DbStorage implements IStorage {
     const [updated] = await db
       .update(seatAssignments)
       .set(fieldsToUpdate)
+      .where(eq(seatAssignments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateSeatAssignmentCastingCard(
+    id: string,
+    castingCardUrl: string | null
+  ): Promise<SeatAssignment | undefined> {
+    const [updated] = await db
+      .update(seatAssignments)
+      .set({ castingCardUrl })
       .where(eq(seatAssignments.id, id))
       .returning();
     return updated;
