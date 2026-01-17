@@ -72,7 +72,8 @@ interface BookingTrackerResponse {
   };
 }
 
-type StatusFilter = "all" | "not_sent" | "awaiting" | "confirmed" | "declined";
+type StatusFilter = "all" | "not_sent" | "awaiting" | "confirmed" | "declined" | "failed_send";
+type EmailTypeFilter = "all" | "bigpond_only" | "exclude_bigpond";
 type ViewMode = "seats" | "standbys";
 
 const BOOKING_TRACKER_STORAGE_KEY = 'booking-tracker-state';
@@ -81,6 +82,7 @@ interface BookingTrackerState {
   selectedRecordDay: string;
   selectedBlock: string;
   statusFilter: StatusFilter;
+  emailTypeFilter: EmailTypeFilter;
   viewMode: ViewMode;
 }
 
@@ -121,6 +123,17 @@ export default function BookingResponses() {
     return "all";
   });
   
+  const [emailTypeFilter, setEmailTypeFilter] = useState<EmailTypeFilter>(() => {
+    try {
+      const saved = localStorage.getItem(BOOKING_TRACKER_STORAGE_KEY);
+      if (saved) {
+        const state: BookingTrackerState = JSON.parse(saved);
+        return state.emailTypeFilter || "all";
+      }
+    } catch {}
+    return "all";
+  });
+  
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     try {
       const saved = localStorage.getItem(BOOKING_TRACKER_STORAGE_KEY);
@@ -142,13 +155,14 @@ export default function BookingResponses() {
         selectedRecordDay,
         selectedBlock,
         statusFilter,
+        emailTypeFilter,
         viewMode,
       };
       localStorage.setItem(BOOKING_TRACKER_STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
       console.error("Failed to save booking tracker state:", e);
     }
-  }, [selectedRecordDay, selectedBlock, statusFilter, viewMode]);
+  }, [selectedRecordDay, selectedBlock, statusFilter, emailTypeFilter, viewMode]);
   
   // Send email dialog state
   const [sendEmailDialogOpen, setSendEmailDialogOpen] = useState(false);
@@ -169,6 +183,11 @@ export default function BookingResponses() {
   
   const handleStatusFilterChange = (value: StatusFilter) => {
     setStatusFilter(value);
+    setSelectedAssignments(new Set());
+  };
+  
+  const handleEmailTypeFilterChange = (value: EmailTypeFilter) => {
+    setEmailTypeFilter(value);
     setSelectedAssignments(new Set());
   };
   
@@ -711,13 +730,33 @@ export default function BookingResponses() {
   
   // Helper to check if assignment is declined
   const isDeclined = (a: BookingAssignment) => a.notes?.startsWith('[DECLINED]');
+  
+  // Helper to check if email is a Bigpond address
+  const isBigpondEmail = (email: string | undefined | null) => {
+    if (!email) return false;
+    const lower = email.toLowerCase();
+    return lower.includes('bigpond');
+  };
 
-  // Filter by block and search
+  // Filter by block, email type, failed sends, and search
   const filteredData = trackerData.filter((item) => {
     // Filter by block
     if (selectedBlock !== "all" && item.blockNumber !== parseInt(selectedBlock)) {
       return false;
     }
+    
+    // Filter by email type (Bigpond)
+    if (emailTypeFilter === "bigpond_only") {
+      if (!isBigpondEmail(item.contestant?.email)) return false;
+    } else if (emailTypeFilter === "exclude_bigpond") {
+      if (isBigpondEmail(item.contestant?.email)) return false;
+    }
+    
+    // Filter by failed send status
+    if (statusFilter === "failed_send") {
+      if (!item.bookingEmailError) return false;
+    }
+    
     // Filter by search
     if (!searchName) return true;
     const search = searchName.toLowerCase();
@@ -726,6 +765,9 @@ export default function BookingResponses() {
       item.contestant?.email?.toLowerCase().includes(search)
     );
   });
+  
+  // Count failed sends for stats
+  const failedSendCount = trackerData.filter(a => a.bookingEmailError).length;
 
   // Selection helpers
   const selectedItems = filteredData.filter(item => selectedAssignments.has(item.id));
@@ -1076,6 +1118,25 @@ export default function BookingResponses() {
               <SelectItem value="awaiting">Awaiting Reply</SelectItem>
               <SelectItem value="confirmed">Confirmed</SelectItem>
               <SelectItem value="declined">Declined</SelectItem>
+              <SelectItem value="failed_send">
+                <span className="flex items-center gap-1 text-red-600">
+                  Failed Sends {failedSendCount > 0 && `(${failedSendCount})`}
+                </span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Label htmlFor="email-type-filter">Email:</Label>
+          <Select value={emailTypeFilter} onValueChange={(v) => handleEmailTypeFilterChange(v as EmailTypeFilter)}>
+            <SelectTrigger className="w-[160px]" data-testid="select-email-type-filter">
+              <SelectValue placeholder="All Emails" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Emails</SelectItem>
+              <SelectItem value="bigpond_only">Bigpond Only</SelectItem>
+              <SelectItem value="exclude_bigpond">Exclude Bigpond</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1527,7 +1588,30 @@ export default function BookingResponses() {
                         </span>
                       </TableCell>
                       <TableCell className="text-center py-1 px-2">
-                        {item.bookingEmailSent ? (
+                        {item.bookingEmailError ? (
+                          <div className="flex flex-col items-center gap-0.5">
+                            <Badge variant="destructive" className="text-[9px] px-1 py-0">
+                              <XCircle className="h-2.5 w-2.5 mr-0.5" />
+                              FAILED
+                            </Badge>
+                            <span className="text-[9px] text-red-500 max-w-[80px] truncate" title={item.bookingEmailError}>
+                              {item.bookingEmailError.substring(0, 20)}...
+                            </span>
+                            {item.contestant?.email && !isDeclined(item) && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-5 px-1.5 text-[10px] border-red-300 text-red-600 hover:bg-red-50"
+                                onClick={() => handleResendClick(item)}
+                                disabled={resendBookingEmailMutation.isPending}
+                                data-testid={`button-retry-${item.id}`}
+                              >
+                                <RefreshCw className="h-2.5 w-2.5 mr-0.5" />
+                                Retry
+                              </Button>
+                            )}
+                          </div>
+                        ) : item.bookingEmailSent ? (
                           <div className="flex flex-col items-center gap-0.5">
                             <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
                               <MailCheck className="h-3 w-3" />
