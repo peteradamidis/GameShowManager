@@ -697,17 +697,47 @@ export function SeatCard({
                         <MessageSquare className="h-3 w-3" />
                         Notes
                       </label>
+                      {!isEditingNotes && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsEditingNotes(true);
+                          }}
+                          data-testid={`button-edit-notes-${seat.assignmentId}`}
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                      )}
                     </div>
-                    <Textarea
-                      value={localNotes}
-                      onChange={(e) => handleNotesChange(e.target.value)}
-                      placeholder="Add notes (syncs with Booking Master)..."
-                      className="min-h-[60px] text-xs resize-none"
-                      data-testid={`textarea-notes-${seat.assignmentId}`}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    {updateSeatDetailsMutation.isPending && (
-                      <p className="text-[10px] text-muted-foreground mt-1">Saving...</p>
+                    {isEditingNotes ? (
+                      <>
+                        <Textarea
+                          value={localNotes}
+                          onChange={(e) => handleNotesChange(e.target.value)}
+                          placeholder="Add notes (syncs with Booking Master)..."
+                          className="min-h-[60px] text-xs resize-none"
+                          data-testid={`textarea-notes-${seat.assignmentId}`}
+                          onClick={(e) => e.stopPropagation()}
+                          onBlur={() => setIsEditingNotes(false)}
+                          autoFocus
+                        />
+                        {updateSeatDetailsMutation.isPending && (
+                          <p className="text-[10px] text-muted-foreground mt-1">Saving...</p>
+                        )}
+                      </>
+                    ) : (
+                      <p 
+                        className="text-xs text-muted-foreground min-h-[20px] cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsEditingNotes(true);
+                        }}
+                      >
+                        {localNotes || <span className="italic">No notes</span>}
+                      </p>
                     )}
                   </div>
                 )}
