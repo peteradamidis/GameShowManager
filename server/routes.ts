@@ -7228,9 +7228,10 @@ ${finalEmailFooter}`;
               sentAt: new Date(),
             });
 
-            // Update bookingEmailSent timestamp
+            // Update bookingEmailSent timestamp and clear any previous error
             await storage.updateSeatAssignmentWorkflow(seatAssignmentId, {
               bookingEmailSent: new Date(),
+              bookingEmailError: null, // Clear any previous error on successful send
             });
 
             // Update contestant status to 'invited'
@@ -7245,7 +7246,11 @@ ${finalEmailFooter}`;
             };
           } catch (emailError: any) {
             console.error(`Failed to send booking confirmation email to ${contestant.email}:`, emailError.message);
-            return { seatAssignmentId, success: false, error: `Email send failed: ${emailError.message}` };
+            // Store the error in the database for tracking
+            await storage.updateSeatAssignmentWorkflow(seatAssignmentId, {
+              bookingEmailError: emailError.message || 'Unknown email send error',
+            });
+            return { seatAssignmentId, success: false, error: `Email send failed: ${emailError.message}`, contestantName: contestant.name, email: contestant.email };
           }
         } catch (error: any) {
           console.error(`Error processing assignment ${seatAssignmentId}:`, error.message);
