@@ -66,7 +66,7 @@ export interface SeatData {
   contestantLocation?: string; // Contestant's location for 60km distance check
   criminalRecord?: string; // Criminal record notes
   isTemporary?: boolean; // True if contestant was created as temporary (not from Cast It Reach)
-  otdNotes?: string; // OTD notes (syncs with Booking Master OTD notes column)
+  notes?: string; // Notes (syncs with Booking Master NOTES column)
   attendingWithOverride?: string; // Override for attending with when it changes after invitation
   mobilityNotesOverride?: string; // Override for mobility/medical notes when they change after invitation
 }
@@ -130,7 +130,7 @@ export function SeatCard({
   onEditTempContestant,
 }: SeatCardProps) {
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
-  const [localOtdNotes, setLocalOtdNotes] = useState(seat.otdNotes || '');
+  const [localNotes, setLocalNotes] = useState(seat.notes || '');
   const [localAttendingWith, setLocalAttendingWith] = useState(seat.attendingWithOverride || '');
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [isEditingAttendingWith, setIsEditingAttendingWith] = useState(false);
@@ -139,8 +139,8 @@ export function SeatCard({
   
   // Sync local state with prop changes
   useEffect(() => {
-    setLocalOtdNotes(seat.otdNotes || '');
-  }, [seat.otdNotes]);
+    setLocalNotes(seat.notes || '');
+  }, [seat.notes]);
   
   useEffect(() => {
     setLocalAttendingWith(seat.attendingWithOverride || '');
@@ -148,9 +148,9 @@ export function SeatCard({
   
   const isEmpty = !seat.contestantName;
   
-  // Mutation for updating OTD notes and attending with override
+  // Mutation for updating notes and attending with override
   const updateSeatDetailsMutation = useMutation({
-    mutationFn: async (data: { otdNotes?: string; attendingWithOverride?: string }) => {
+    mutationFn: async (data: { notes?: string; attendingWithOverride?: string }) => {
       const response = await apiRequest('PATCH', `/api/seat-assignments/${seat.assignmentId}/workflow`, data);
       return response.json();
     },
@@ -171,8 +171,8 @@ export function SeatCard({
   });
   
   // Debounced save for notes - waits 500ms after typing stops
-  const handleOtdNotesChange = (value: string) => {
-    setLocalOtdNotes(value);
+  const handleNotesChange = (value: string) => {
+    setLocalNotes(value);
     // Guard: only save if we have a valid assignment ID
     if (!seat.assignmentId) return;
     if (debounceTimerRef.current) {
@@ -180,7 +180,7 @@ export function SeatCard({
     }
     debounceTimerRef.current = setTimeout(() => {
       if (seat.assignmentId) {
-        updateSeatDetailsMutation.mutate({ otdNotes: value });
+        updateSeatDetailsMutation.mutate({ notes: value });
       }
     }, 500);
   };
@@ -591,21 +591,21 @@ export function SeatCard({
                   </div>
                 </div>
 
-                {/* OTD Notes - editable notes that sync with Booking Master OTD notes column */}
+                {/* Notes - editable notes that sync with Booking Master NOTES column */}
                 {seat.assignmentId && (
                   <div className="text-sm p-2 bg-muted/30 rounded-md border">
                     <div className="flex items-center justify-between mb-1">
                       <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
                         <MessageSquare className="h-3 w-3" />
-                        OTD Notes
+                        Notes
                       </label>
                     </div>
                     <Textarea
-                      value={localOtdNotes}
-                      onChange={(e) => handleOtdNotesChange(e.target.value)}
-                      placeholder="Add OTD notes (syncs with Booking Master)..."
+                      value={localNotes}
+                      onChange={(e) => handleNotesChange(e.target.value)}
+                      placeholder="Add notes (syncs with Booking Master)..."
                       className="min-h-[60px] text-xs resize-none"
-                      data-testid={`textarea-otd-notes-${seat.assignmentId}`}
+                      data-testid={`textarea-notes-${seat.assignmentId}`}
                       onClick={(e) => e.stopPropagation()}
                     />
                     {updateSeatDetailsMutation.isPending && (
