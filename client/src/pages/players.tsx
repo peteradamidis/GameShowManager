@@ -9,7 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Star, User, Users, Play, Phone, Mail, MapPin } from "lucide-react";
+import { Star, User, Users, Play, Phone, Mail, MapPin, Upload, FileText, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -31,6 +32,7 @@ interface SeatAssignment {
   playerType: string | null;
   rxEpNumber: string | null;
   bookingConfirmationStatus: string | null;
+  castingCardUrl: string | null;
   contestant: {
     id: string;
     firstName: string;
@@ -206,6 +208,67 @@ export default function PlayersPage() {
     updateEpisodeMutation.mutate({ assignmentId, episodeNumber });
   };
 
+  const uploadCastingCardMutation = useMutation({
+    mutationFn: async ({ assignmentId, file }: { assignmentId: string; file: File }) => {
+      const formData = new FormData();
+      formData.append('castingCard', file);
+      const response = await fetch(`/api/seat-assignments/${assignmentId}/casting-card`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to upload casting card');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.includes('/api/seat-assignments');
+        }
+      });
+      toast({ title: "Success", description: "Casting card uploaded" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to upload", variant: "destructive" });
+    },
+  });
+
+  const deleteCastingCardMutation = useMutation({
+    mutationFn: async (assignmentId: string) => {
+      const response = await apiRequest('DELETE', `/api/seat-assignments/${assignmentId}/casting-card`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.includes('/api/seat-assignments');
+        }
+      });
+      toast({ title: "Deleted", description: "Casting card removed" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to delete", variant: "destructive" });
+    },
+  });
+
+  const handleCastingCardUpload = (assignmentId: string) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        uploadCastingCardMutation.mutate({ assignmentId, file });
+      }
+    };
+    input.click();
+  };
+
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
@@ -312,6 +375,47 @@ export default function PlayersPage() {
             {notes && (
               <div className="mt-2 text-xs bg-amber-500/10 text-amber-700 dark:text-amber-400 px-2 py-1 rounded">
                 {notes}
+              </div>
+            )}
+            
+            {isPlayer && (
+              <div className="mt-3 flex items-center gap-2">
+                {assignment.castingCardUrl ? (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1 text-xs"
+                      onClick={() => window.open(assignment.castingCardUrl!, '_blank')}
+                      data-testid={`button-view-casting-card-${assignment.id}`}
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      View Casting Card
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                      onClick={() => deleteCastingCardMutation.mutate(assignment.id)}
+                      disabled={deleteCastingCardMutation.isPending}
+                      data-testid={`button-delete-casting-card-${assignment.id}`}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 gap-1 text-xs"
+                    onClick={() => handleCastingCardUpload(assignment.id)}
+                    disabled={uploadCastingCardMutation.isPending}
+                    data-testid={`button-upload-casting-card-${assignment.id}`}
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    Upload Casting Card
+                  </Button>
+                )}
               </div>
             )}
           </div>
