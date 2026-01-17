@@ -604,7 +604,7 @@ export default function NoticeboardPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-white/50 dark:bg-black/20 p-3 rounded-md border border-primary/10 italic text-sm leading-relaxed text-muted-foreground">
+            <div className="bg-white/50 dark:bg-black/20 p-3 rounded-md border border-primary/10 text-sm leading-relaxed text-muted-foreground">
               Hey everyone! Welcome to the new crew noticeboard.
               {"\n\n"}
               This is the place to share updates, post behind-the-scenes photos, and keep the whole team in the loop. Whether it's a scheduling change, a shoutout to a colleague, or just something fun from set - drop it here!
