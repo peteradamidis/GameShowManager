@@ -487,3 +487,61 @@ export const insertAttendanceIssueSchema = createInsertSchema(attendanceIssues).
 
 export type InsertAttendanceIssue = z.infer<typeof insertAttendanceIssueSchema>;
 export type AttendanceIssue = typeof attendanceIssues.$inferSelect;
+
+// Noticeboard Posts table - social media style posts for crew
+export const noticeboardPosts = pgTable("noticeboard_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  authorId: varchar("author_id").references(() => users.id).notNull(),
+  authorName: text("author_name").notNull(), // Denormalized for display
+  content: text("content").notNull(),
+  imageUrl: text("image_url"), // Optional image attachment
+  isPinned: boolean("is_pinned").default(false), // Pinned posts appear at top
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertNoticeboardPostSchema = createInsertSchema(noticeboardPosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertNoticeboardPost = z.infer<typeof insertNoticeboardPostSchema>;
+export type NoticeboardPost = typeof noticeboardPosts.$inferSelect;
+
+// Noticeboard Comments table - comments on posts
+export const noticeboardComments = pgTable("noticeboard_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").references(() => noticeboardPosts.id, { onDelete: 'cascade' }).notNull(),
+  authorId: varchar("author_id").references(() => users.id).notNull(),
+  authorName: text("author_name").notNull(), // Denormalized for display
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertNoticeboardCommentSchema = createInsertSchema(noticeboardComments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertNoticeboardComment = z.infer<typeof insertNoticeboardCommentSchema>;
+export type NoticeboardComment = typeof noticeboardComments.$inferSelect;
+
+// Noticeboard Likes table - likes on posts
+export const noticeboardLikes = pgTable("noticeboard_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").references(() => noticeboardPosts.id, { onDelete: 'cascade' }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  // One like per user per post
+  uniqueLikePerUserPost: unique().on(table.postId, table.userId),
+}));
+
+export const insertNoticeboardLikeSchema = createInsertSchema(noticeboardLikes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertNoticeboardLike = z.infer<typeof insertNoticeboardLikeSchema>;
+export type NoticeboardLike = typeof noticeboardLikes.$inferSelect;
