@@ -150,32 +150,20 @@ export default function Dashboard() {
       const seatsAvailable = totalSeats - assignedSeats;
       
       // Determine status based on the current phase
-      // Email deadline comes first, then confirmation deadline
+      // Email deadline comes first, then confirmation deadline, then record day
       let status: DeadlineStatus;
       if (daysUntilEmailDeadline > 0) {
         // Before email deadline
-        if (daysUntilEmailDeadline <= DUE_SOON_THRESHOLD) {
-          status = 'due-soon';
-        } else {
-          status = 'on-track';
-        }
+        status = daysUntilEmailDeadline <= DUE_SOON_THRESHOLD ? 'due-soon' : 'on-track';
       } else if (daysUntilConfirmationDeadline > 0) {
         // Email passed, before confirmation deadline
-        if (daysUntilConfirmationDeadline <= DUE_SOON_THRESHOLD) {
-          status = 'due-soon';
-        } else {
-          status = 'on-track';
-        }
-      } else if (daysUntilRecordDate > 0) {
-        // Confirmation passed, before record day
-        if (daysUntilRecordDate <= DUE_SOON_THRESHOLD) {
-          status = 'due-soon';
-        } else {
-          status = 'on-track';
-        }
+        status = daysUntilConfirmationDeadline <= DUE_SOON_THRESHOLD ? 'due-soon' : 'on-track';
+      } else if (daysUntilRecordDate >= 0) {
+        // Confirmation passed, on or before record day
+        status = daysUntilRecordDate <= DUE_SOON_THRESHOLD ? 'due-soon' : 'on-track';
       } else {
-        // Record day passed
-        status = 'overdue';
+        // Record day passed (shouldn't show, but fallback)
+        status = 'on-track';
       }
       
       return {
@@ -195,8 +183,10 @@ export default function Dashboard() {
       };
     })
     // Filter to show record days within the first 2 calendar weeks (Mon-Sun, Mon-Sun)
+    // and only show days where record date hasn't passed yet
     .filter(d => {
       if (!weekStart || !twoWeeksEnd) return false;
+      if (d.daysUntilRecordDate < 0) return false; // Hide after record day
       return d.recordDate >= weekStart && d.recordDate <= twoWeeksEnd;
     });
 
