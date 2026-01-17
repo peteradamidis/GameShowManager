@@ -104,8 +104,10 @@ export default function Dashboard() {
   }, {} as Record<string, number>);
 
   const sortedRatings = Object.entries(ratingCounts).sort((a, b) => {
-    const order = ['A+', 'A', 'B+', 'B', 'C'];
-    return order.indexOf(a[0]) - order.indexOf(b[0]);
+    const order = ['A+', 'A', 'B+', 'B', 'C', 'P'];
+    const aIndex = order.indexOf(a[0]) === -1 ? 999 : order.indexOf(a[0]);
+    const bIndex = order.indexOf(b[0]) === -1 ? 999 : order.indexOf(b[0]);
+    return aIndex - bIndex;
   });
 
   // Today's date
@@ -192,6 +194,8 @@ export default function Dashboard() {
       completed: "Completed",
     };
 
+    const confirmedSeats = assignmentsForDay.filter(sa => sa.confirmedRsvp).length;
+    
     return {
       id: rd.id,
       date: new Date(rd.date).toLocaleDateString('en-US', { 
@@ -202,6 +206,7 @@ export default function Dashboard() {
       rxNumber: rd.rxNumber,
       totalSeats: rd.totalSeats || 154,
       filledSeats,
+      confirmedSeats,
       status: statusMap[rd.status] || "Draft",
     };
   });
@@ -272,10 +277,10 @@ export default function Dashboard() {
       </div>
 
       {/* Ratings Breakdown */}
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
+      <div className="flex flex-wrap gap-4">
         {sortedRatings.map(([rating, count]) => (
-          <Card key={rating} className="bg-muted/30">
-            <CardContent className="pt-6">
+          <Card key={rating} className="bg-muted/30 flex-1 min-w-[100px]">
+            <CardContent className="pt-4 pb-4">
               <div className="text-center">
                 <p className="text-sm font-medium text-muted-foreground mb-1">Rating {rating}</p>
                 <div className="text-2xl font-bold">{count}</div>
