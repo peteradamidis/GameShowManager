@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   DndContext,
   closestCenter,
@@ -694,11 +694,38 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
 }
 
 export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onEditTempContestant, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false }: SeatingChartProps) {
-  const [blocks, setBlocks] = useState<SeatData[][]>(
-    initialSeats || Array(7).fill(null).map((_, blockIdx) => 
-      generateBlockSeats(recordDayId, blockIdx)
-    )
+  // Use initialSeats as source of truth - derive blocks from props, not state
+  // Only use local state for temporary overrides during active drag operations
+  const defaultBlocks = useMemo(() => 
+    Array(7).fill(null).map((_, blockIdx) => generateBlockSeats(recordDayId, blockIdx)),
+    [recordDayId]
   );
+  
+  // Track a version number to know when to accept prop updates
+  const [propsVersion, setPropsVersion] = useState(0);
+  const [localBlocks, setLocalBlocks] = useState<SeatData[][] | null>(null);
+  
+  // The active blocks are either from props (primary) or local override (during optimistic updates)
+  const blocks = localBlocks ?? initialSeats ?? defaultBlocks;
+  
+  // Clear local overrides when props change (after API confirms changes)
+  useEffect(() => {
+    if (initialSeats) {
+      // When initialSeats updates, clear any local overrides
+      setLocalBlocks(null);
+      setPropsVersion(v => v + 1);
+    }
+  }, [initialSeats]);
+  
+  // Helper to set blocks (for optimistic updates during drag)
+  const setBlocks = (newBlocks: SeatData[][] | ((prev: SeatData[][]) => SeatData[][])) => {
+    if (typeof newBlocks === 'function') {
+      setLocalBlocks(prev => newBlocks(prev ?? initialSeats ?? defaultBlocks));
+    } else {
+      setLocalBlocks(newBlocks);
+    }
+  };
+  
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [pendingSwap, setPendingSwap] = useState<PendingSwap | null>(null);
@@ -858,12 +885,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     }
   };
 
-  // Update blocks when initialSeats changes (after data loads from API)
-  useEffect(() => {
-    if (initialSeats) {
-      setBlocks(initialSeats);
-    }
-  }, [initialSeats]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
