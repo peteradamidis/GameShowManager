@@ -395,7 +395,14 @@ export function SeatCard({
         <HoverCardTrigger asChild>
           {seatContent}
         </HoverCardTrigger>
-        <HoverCardContent className="w-80" data-testid="hovercard-contestant-details">
+        <HoverCardContent 
+          className="w-80" 
+          side="bottom" 
+          align="center"
+          sideOffset={8}
+          collisionPadding={16}
+          data-testid="hovercard-contestant-details"
+        >
           <div className="space-y-3">
             {contestantDetails ? (
               <>
