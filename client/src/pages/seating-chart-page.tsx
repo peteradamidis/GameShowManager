@@ -522,6 +522,56 @@ export default function SeatingChartPage() {
     }
   };
 
+  // Build seat data from assignments - memoized to avoid rebuilding on every render
+  // Must be called before any conditional returns (React hooks rules)
+  const seats: SeatData[][] = useMemo(() => {
+    if (!recordDayId) return [];
+    const emptyBlocks = generateEmptyBlocks(recordDayId);
+    
+    if (assignments && Array.isArray(assignments)) {
+      assignments.forEach((assignment: any) => {
+        const blockIdx = assignment.blockNumber - 1;
+        if (blockIdx >= 0 && blockIdx < 7 && emptyBlocks[blockIdx]) {
+          const expectedId = `${recordDayId}-block${blockIdx}-${assignment.seatLabel}`;
+          const seatIdx = emptyBlocks[blockIdx].findIndex(seat => seat.id === expectedId);
+          
+          if (seatIdx !== -1) {
+            emptyBlocks[blockIdx][seatIdx] = {
+              ...emptyBlocks[blockIdx][seatIdx],
+              contestantName: assignment.contestantName,
+              age: assignment.age,
+              gender: assignment.gender,
+              groupId: assignment.groupId,
+              assignmentId: assignment.id,
+              contestantId: assignment.contestantId,
+              auditionRating: assignment.auditionRating,
+              playerType: assignment.playerType,
+              attendingWith: assignment.attendingWith,
+              originalBlockNumber: assignment.originalBlockNumber,
+              originalSeatLabel: assignment.originalSeatLabel,
+              swappedAt: assignment.swappedAt,
+              rxNumber: assignment.rxNumber,
+              caseNumber: assignment.caseNumber,
+              winningMoneyRole: assignment.winningMoneyRole,
+              winningMoneyAmount: assignment.winningMoneyAmount,
+              mobilityNotes: assignment.mobilityNotes,
+              medicalInfo: assignment.medicalInfo,
+              wasStandby: assignment.wasStandby,
+              photoUrl: assignment.photoUrl,
+              contestantLocation: assignment.contestantLocation,
+              criminalRecord: assignment.criminalRecord,
+              notes: assignment.notes,
+              attendingWithOverride: assignment.attendingWithOverride,
+              mobilityNotesOverride: assignment.mobilityNotesOverride,
+            };
+          }
+        }
+      });
+    }
+    
+    return emptyBlocks;
+  }, [recordDayId, assignments]);
+
   // Show loading state if record days are still loading
   if (recordDaysLoading) {
     return (
@@ -544,49 +594,15 @@ export default function SeatingChartPage() {
     );
   }
 
-  // Build seat data from assignments
-  const seats: SeatData[][] = generateEmptyBlocks(recordDayId);
-  
-  if (assignments && Array.isArray(assignments)) {
-    assignments.forEach((assignment: any) => {
-      const blockIdx = assignment.blockNumber - 1;
-      if (blockIdx >= 0 && blockIdx < 7 && seats[blockIdx]) {
-        // Match exact seat ID: recordDayId-blockX-seatLabel
-        const expectedId = `${recordDayId}-block${blockIdx}-${assignment.seatLabel}`;
-        const seatIdx = seats[blockIdx].findIndex(seat => seat.id === expectedId);
-        
-        if (seatIdx !== -1) {
-          seats[blockIdx][seatIdx] = {
-            ...seats[blockIdx][seatIdx],
-            contestantName: assignment.contestantName,
-            age: assignment.age,
-            gender: assignment.gender,
-            groupId: assignment.groupId,
-            assignmentId: assignment.id,
-            contestantId: assignment.contestantId,
-            auditionRating: assignment.auditionRating,
-            playerType: assignment.playerType,
-            attendingWith: assignment.attendingWith,
-            originalBlockNumber: assignment.originalBlockNumber,
-            originalSeatLabel: assignment.originalSeatLabel,
-            swappedAt: assignment.swappedAt,
-            rxNumber: assignment.rxNumber,
-            caseNumber: assignment.caseNumber,
-            winningMoneyRole: assignment.winningMoneyRole,
-            winningMoneyAmount: assignment.winningMoneyAmount,
-            mobilityNotes: assignment.mobilityNotes,
-            medicalInfo: assignment.medicalInfo,
-            wasStandby: assignment.wasStandby,
-            photoUrl: assignment.photoUrl,
-            contestantLocation: assignment.contestantLocation,
-            criminalRecord: assignment.criminalRecord,
-            notes: assignment.notes,
-            attendingWithOverride: assignment.attendingWithOverride,
-            mobilityNotesOverride: assignment.mobilityNotesOverride,
-          };
-        }
-      }
-    });
+  // Show loading state while assignments are being fetched (prevents flash of empty seats)
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading seating chart...</p>
+        </div>
+      </div>
+    );
   }
   
   // Detect separated groups - mark contestants whose partners are not in adjacent seats
