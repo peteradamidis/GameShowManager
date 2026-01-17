@@ -261,6 +261,20 @@ export const standbyAttendanceHistory = pgTable("standby_attendance_history", {
   uniqueAttendancePerDay: unique().on(table.recordDayId, table.contestantId),
 }));
 
+// Prize Winners table - tracks contestants added to prize draw during RX Day
+export const prizeWinners = pgTable("prize_winners", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contestantId: varchar("contestant_id").references(() => contestants.id).notNull(),
+  recordDayId: varchar("record_day_id").references(() => recordDays.id).notNull(),
+  blockNumber: integer("block_number").notNull(), // Block they were in when added
+  seatLabel: text("seat_label").notNull(), // Seat they were in when added
+  contestantName: text("contestant_name").notNull(), // Denormalized for quick display
+  addedAt: timestamp("added_at").defaultNow().notNull(),
+}, (table) => ({
+  // One prize entry per contestant per record day
+  uniquePrizePerDay: unique().on(table.recordDayId, table.contestantId),
+}));
+
 // Insert schemas
 export const insertGroupSchema = createInsertSchema(groups).omit({
   id: true,
@@ -325,6 +339,11 @@ export const insertStandbyAttendanceHistorySchema = createInsertSchema(standbyAt
   id: true,
   createdAt: true,
   attendedAt: true,
+});
+
+export const insertPrizeWinnerSchema = createInsertSchema(prizeWinners).omit({
+  id: true,
+  addedAt: true,
 });
 
 // Rebooking History table - tracks when contestants are moved between record days
@@ -392,6 +411,9 @@ export type StandbyConfirmationToken = typeof standbyConfirmationTokens.$inferSe
 
 export type InsertStandbyAttendanceHistory = z.infer<typeof insertStandbyAttendanceHistorySchema>;
 export type StandbyAttendanceHistory = typeof standbyAttendanceHistory.$inferSelect;
+
+export type InsertPrizeWinner = z.infer<typeof insertPrizeWinnerSchema>;
+export type PrizeWinner = typeof prizeWinners.$inferSelect;
 
 // System Configuration table - stores app-wide settings like Google Sheets config
 export const systemConfig = pgTable("system_config", {

@@ -14,6 +14,7 @@ import {
   standbyAssignments,
   standbyConfirmationTokens,
   standbyAttendanceHistory,
+  prizeWinners,
   systemConfig,
   formConfigurations,
   users,
@@ -45,6 +46,8 @@ import {
   type InsertStandbyConfirmationToken,
   type StandbyAttendanceHistory,
   type InsertStandbyAttendanceHistory,
+  type PrizeWinner,
+  type InsertPrizeWinner,
   type SystemConfig,
   type User,
   type InsertUser,
@@ -291,6 +294,12 @@ export interface IStorage {
   getStandbyAttendanceHistoryByContestant(contestantId: string): Promise<Array<StandbyAttendanceHistory & { recordDay: RecordDay }>>;
   getReturningStandbys(): Promise<Array<Contestant & { attendanceHistory: StandbyAttendanceHistory[] }>>;
   deleteStandbyAttendanceHistory(id: string): Promise<void>;
+  
+  // Prize Winners
+  addPrizeWinner(data: InsertPrizeWinner): Promise<PrizeWinner>;
+  getPrizeWinnersByRecordDay(recordDayId: string): Promise<PrizeWinner[]>;
+  removePrizeWinner(id: string): Promise<void>;
+  removePrizeWinnerByContestant(recordDayId: string, contestantId: string): Promise<void>;
   
   // System Configuration
   getSystemConfig(key: string): Promise<string | null>;
@@ -2218,6 +2227,47 @@ export class DbStorage implements IStorage {
         canceledAssignment,
       };
     });
+  }
+
+  // Prize Winners
+  async addPrizeWinner(data: InsertPrizeWinner): Promise<PrizeWinner> {
+    const [created] = await db
+      .insert(prizeWinners)
+      .values(data)
+      .onConflictDoNothing() // Don't error if already added
+      .returning();
+    // If already exists, fetch and return it
+    if (!created) {
+      const [existing] = await db
+        .select()
+        .from(prizeWinners)
+        .where(and(
+          eq(prizeWinners.recordDayId, data.recordDayId),
+          eq(prizeWinners.contestantId, data.contestantId)
+        ));
+      return existing;
+    }
+    return created;
+  }
+
+  async getPrizeWinnersByRecordDay(recordDayId: string): Promise<PrizeWinner[]> {
+    return db
+      .select()
+      .from(prizeWinners)
+      .where(eq(prizeWinners.recordDayId, recordDayId));
+  }
+
+  async removePrizeWinner(id: string): Promise<void> {
+    await db.delete(prizeWinners).where(eq(prizeWinners.id, id));
+  }
+
+  async removePrizeWinnerByContestant(recordDayId: string, contestantId: string): Promise<void> {
+    await db
+      .delete(prizeWinners)
+      .where(and(
+        eq(prizeWinners.recordDayId, recordDayId),
+        eq(prizeWinners.contestantId, contestantId)
+      ));
   }
 }
 

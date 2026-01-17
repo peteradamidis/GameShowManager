@@ -11439,6 +11439,84 @@ ${finalEmailFooter}`;
     }
   });
 
+  // ============== PRIZE WINNERS ==============
+  
+  // Get prize winners for a record day
+  app.get("/api/record-days/:recordDayId/prize-winners", async (req, res) => {
+    try {
+      const { recordDayId } = req.params;
+      const winners = await storage.getPrizeWinnersByRecordDay(recordDayId);
+      res.json(winners);
+    } catch (error: any) {
+      console.error("Error fetching prize winners:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Add a contestant to prize winners list
+  app.post("/api/record-days/:recordDayId/prize-winners", async (req, res) => {
+    try {
+      const { recordDayId } = req.params;
+      const { contestantId, contestantName, blockNumber, seatLabel } = req.body;
+      
+      if (!contestantId || !contestantName || !blockNumber || !seatLabel) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+      
+      const winner = await storage.addPrizeWinner({
+        recordDayId,
+        contestantId,
+        contestantName,
+        blockNumber,
+        seatLabel,
+      });
+      
+      // Broadcast update
+      wsManager.broadcastBookingUpdate({
+        type: 'prize-winner-added',
+        recordDayId,
+        contestantId,
+      });
+      
+      res.json(winner);
+    } catch (error: any) {
+      console.error("Error adding prize winner:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Remove a contestant from prize winners list by ID
+  app.delete("/api/prize-winners/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.removePrizeWinner(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error removing prize winner:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Remove a contestant from prize winners list by contestant ID
+  app.delete("/api/record-days/:recordDayId/prize-winners/:contestantId", async (req, res) => {
+    try {
+      const { recordDayId, contestantId } = req.params;
+      await storage.removePrizeWinnerByContestant(recordDayId, contestantId);
+      
+      // Broadcast update
+      wsManager.broadcastBookingUpdate({
+        type: 'prize-winner-removed',
+        recordDayId,
+        contestantId,
+      });
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error removing prize winner:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize WebSocket server for real-time updates
