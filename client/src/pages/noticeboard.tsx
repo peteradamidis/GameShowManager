@@ -494,13 +494,16 @@ export default function NoticeboardPage() {
         </p>
       </div>
 
-      <Card className="mb-4 bg-primary/5 border-primary/20">
-        <CardContent className="py-3">
-          <div className="flex items-center gap-2">
-            <Megaphone className="h-4 w-4 text-primary flex-shrink-0" />
-            <p className="text-sm text-primary">
-              Welcome to the Crew Noticeboard!
-            </p>
+      <Card className="mb-6 bg-primary/5 border-primary/20">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <Megaphone className="h-6 w-6 text-primary mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="font-semibold text-primary mb-1">Welcome to the Crew Noticeboard!</h3>
+              <p className="text-sm text-muted-foreground">
+                This is your space to share updates, photos from set, announcements, and stay connected with the team.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
