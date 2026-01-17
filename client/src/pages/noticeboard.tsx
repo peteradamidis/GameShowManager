@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -20,7 +21,8 @@ import {
   MoreVertical,
   X,
   Loader2,
-  PlusCircle
+  PlusCircle,
+  Info
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -552,6 +554,15 @@ export default function NoticeboardPage() {
           </Button>
         )}
       </div>
+
+      {/* Embedded welcome notice */}
+      <Alert className="mb-6 border-primary/30 bg-primary/5">
+        <Info className="h-4 w-4" />
+        <AlertTitle>Welcome to the Crew Noticeboard</AlertTitle>
+        <AlertDescription>
+          Post updates, share photos, and keep the team in the loop. Your display name is saved locally so you can post without logging in.
+        </AlertDescription>
+      </Alert>
 
       <div className="space-y-4">
         {showCreateForm && (

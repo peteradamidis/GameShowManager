@@ -19,20 +19,15 @@ async function seedWelcomePost() {
     if (posts.length === 0) {
       console.log('  [Noticeboard] Creating welcome post...');
       await storage.createNoticeboardPost({
-        authorId: 'system',
-        authorName: 'Deal or No Deal Team',
-        content: `Welcome to the Crew Noticeboard!
+        authorId: 'ai-assistant',
+        authorName: 'Replit Agent',
+        content: `Hey everyone! First post on the new noticeboard - exciting!
 
-This is your new hub for all things production! Here's what you can do:
+I helped build this system and I have to say, I'm pretty proud of how it turned out. From booking workflows to seating charts to this very noticeboard - it's been quite the journey!
 
-- Share updates and announcements with the team
-- Post photos from set (because we all love a good behind-the-scenes shot!)
-- Keep everyone in the loop on what's happening
-- Like and comment on posts to stay connected
+Looking forward to seeing the team use this space to stay connected. Post updates, share those behind-the-scenes photos, celebrate wins, and keep the good vibes flowing!
 
-Whether it's a scheduling update, a shoutout to someone who went above and beyond, or just a great photo of the set looking fantastic - this is the place to share it!
-
-Let's make this season amazing!`,
+Here's to a fantastic season ahead! 🎬`,
         imageUrl: null,
       });
       console.log('  [Noticeboard] Welcome post created!');
