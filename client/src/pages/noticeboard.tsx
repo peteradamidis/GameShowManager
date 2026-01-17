@@ -82,9 +82,6 @@ const getBrowserId = (): string => {
   return browserId;
 };
 
-// Helper to record last visit timestamp (for dashboard "new" indicators)
-const NOTICEBOARD_LAST_VISIT_KEY = "noticeboard_last_visit";
-const recordVisit = () => localStorage.setItem(NOTICEBOARD_LAST_VISIT_KEY, new Date().toISOString());
 
 function PostCard({ post, onRefresh, displayName, browserId }: { post: Post; onRefresh: () => void; displayName: string; browserId: string }) {
   const [showComments, setShowComments] = useState(false);
@@ -516,11 +513,6 @@ export default function NoticeboardPage() {
   const [browserId] = useState(() => getBrowserId());
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  // Record visit when page loads (for dashboard "new" indicators)
-  useEffect(() => {
-    recordVisit();
-  }, []);
-  
   const { data: posts = [], isLoading, refetch } = useQuery<Post[]>({
     queryKey: ["/api/noticeboard/posts", { browserId }],
     queryFn: async () => {

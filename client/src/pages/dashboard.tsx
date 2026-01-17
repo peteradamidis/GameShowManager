@@ -16,11 +16,11 @@ interface NoticeboardPost {
   isPinned: boolean;
 }
 
-// Track when user last visited the noticeboard
-const NOTICEBOARD_LAST_VISIT_KEY = "noticeboard_last_visit";
-const getLastVisit = () => {
-  const stored = localStorage.getItem(NOTICEBOARD_LAST_VISIT_KEY);
-  return stored ? new Date(stored) : new Date(0);
+// Posts are "new" if created within the last 24 hours (since everyone shares the same login)
+const isPostNew = (createdAt: string) => {
+  const postDate = new Date(createdAt);
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  return postDate > oneDayAgo;
 };
 
 interface Contestant {
@@ -82,8 +82,7 @@ export default function Dashboard() {
   });
 
   // Calculate new posts since last visit
-  const lastVisit = getLastVisit();
-  const newPostsCount = recentPosts.filter(p => new Date(p.createdAt) > lastVisit).length;
+  const newPostsCount = recentPosts.filter(p => isPostNew(p.createdAt)).length;
 
   // Calculate real statistics
   const totalApplicants = contestants.length;
@@ -280,7 +279,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="space-y-3">
               {recentPosts.slice(0, 3).map((post) => {
-                const isNew = new Date(post.createdAt) > lastVisit;
+                const isNew = isPostNew(post.createdAt);
                 return (
                   <div
                     key={post.id}
