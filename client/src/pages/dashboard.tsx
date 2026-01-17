@@ -191,34 +191,43 @@ export default function Dashboard() {
     });
 
   // Transform record days to the format expected by RecordDayCard
-  const upcomingRecordDays: RecordDay[] = recordDaysData.map(rd => {
-    const assignmentsForDay = seatAssignments.filter(sa => sa.recordDayId === rd.id);
-    const filledSeats = assignmentsForDay.length;
-    
-    // Map status to expected format
-    const statusMap: Record<string, "Draft" | "Ready" | "Invited" | "Completed"> = {
-      draft: "Draft",
-      ready: "Ready",
-      invited: "Invited",
-      completed: "Completed",
-    };
+  // Filter to only show record days within the next 2 calendar weeks
+  const upcomingRecordDays: RecordDay[] = recordDaysData
+    .filter(rd => {
+      if (!weekStart || !twoWeeksEnd) return false;
+      const recordDate = new Date(rd.date);
+      if (recordDate < today) return false; // Hide past record days
+      return recordDate >= weekStart && recordDate <= twoWeeksEnd;
+    })
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .map(rd => {
+      const assignmentsForDay = seatAssignments.filter(sa => sa.recordDayId === rd.id);
+      const filledSeats = assignmentsForDay.length;
+      
+      // Map status to expected format
+      const statusMap: Record<string, "Draft" | "Ready" | "Invited" | "Completed"> = {
+        draft: "Draft",
+        ready: "Ready",
+        invited: "Invited",
+        completed: "Completed",
+      };
 
-    const confirmedSeats = assignmentsForDay.filter(sa => sa.confirmedRsvp).length;
-    
-    return {
-      id: rd.id,
-      date: new Date(rd.date).toLocaleDateString('en-US', { 
-        month: 'long', 
-        day: 'numeric', 
-        year: 'numeric' 
-      }),
-      rxNumber: rd.rxNumber,
-      totalSeats: rd.totalSeats || 154,
-      filledSeats,
-      confirmedSeats,
-      status: statusMap[rd.status] || "Draft",
-    };
-  });
+      const confirmedSeats = assignmentsForDay.filter(sa => sa.confirmedRsvp).length;
+      
+      return {
+        id: rd.id,
+        date: new Date(rd.date).toLocaleDateString('en-US', { 
+          month: 'long', 
+          day: 'numeric', 
+          year: 'numeric' 
+        }),
+        rxNumber: rd.rxNumber,
+        totalSeats: rd.totalSeats || 154,
+        filledSeats,
+        confirmedSeats,
+        status: statusMap[rd.status] || "Draft",
+      };
+    });
 
   // Helper to get status styling
   const getStatusStyle = (status: DeadlineStatus) => {
