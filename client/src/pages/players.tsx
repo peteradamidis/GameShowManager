@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Star, User, Users, Play, Phone, Mail, MapPin, Upload, FileText, X } from "lucide-react";
+import { User, Users, Play, Phone, Mail, MapPin, Upload, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
@@ -273,21 +273,6 @@ export default function PlayersPage() {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
 
-  const renderRating = (rating: string | null) => {
-    if (!rating) return null;
-    const ratingNum = parseInt(rating) || 0;
-    return (
-      <div className="flex items-center gap-0.5">
-        {[1, 2, 3, 4, 5].map(i => (
-          <Star
-            key={i}
-            className={`h-3 w-3 ${i <= ratingNum ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`}
-          />
-        ))}
-      </div>
-    );
-  };
-
   const renderPersonCard = (assignment: SeatAssignment, isPlayer: boolean, showEpisodeSelector: boolean = false) => {
     const c = assignment.contestant;
     if (!c) return null;
@@ -317,7 +302,6 @@ export default function PlayersPage() {
               <Badge variant="outline" className={c.gender === 'Female' ? 'bg-pink-500/10 text-pink-700 dark:text-pink-400' : 'bg-blue-500/10 text-blue-700 dark:text-blue-400'}>
                 {c.gender === 'Female' ? 'F' : 'M'} {c.age || ''}
               </Badge>
-              {renderRating(c.rating)}
               {showEpisodeSelector && (
                 <Select 
                   value={assignment.rxEpNumber || 'none'} 
