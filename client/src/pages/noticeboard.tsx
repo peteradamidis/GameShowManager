@@ -41,7 +41,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from "date-fns";
-import welcomePostImage from "@assets/welcome-post.png";
+import welcomePostImage from "@assets/generated_images/cute_robot_holding_movie_clapper.png";
 
 interface Post {
   id: string;
@@ -599,20 +599,20 @@ export default function NoticeboardPage() {
               <AvatarFallback className="bg-primary/10 text-primary font-bold">AI</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="font-semibold text-primary/80">System Assistant</span>
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Automatic Welcome</span>
+              <span className="font-semibold text-primary/80">Cute Assistant</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Ready for Action</span>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-white/50 dark:bg-black/20 p-3 rounded-md border border-primary/10 italic text-sm leading-relaxed text-muted-foreground">
-              Hey everyone! Welcome to the new crew noticeboard.
+              Action! 🎬 I've updated my look to something a bit more professional (and cute).
               {"\n\n"}
-              This is the place to share updates, post behind-the-scenes photos, and keep the whole team in the loop. Whether it's a scheduling change, a shoutout to a colleague, or just something fun from set - drop it here!
+              This noticeboard is your space to share updates, behind-the-scenes photos, and keep the team connected. Let's make this season a hit!
             </div>
             <div className="relative rounded-lg overflow-hidden border border-primary/20 shadow-md">
               <img
                 src={welcomePostImage}
-                alt="Welcome celebration"
+                alt="Cute robot holding clapperboard"
                 className="w-full max-h-96 object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
