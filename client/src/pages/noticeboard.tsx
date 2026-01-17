@@ -41,7 +41,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from "date-fns";
-import welcomePostImage from "@assets/welcome-post.png";
+import welcomePostImage from "@assets/generated_images/ai_agent_selfie_waving_hello.png";
 
 interface Post {
   id: string;
@@ -605,16 +605,16 @@ export default function NoticeboardPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="whitespace-pre-wrap">
-              Hey everyone! First post on the new noticeboard!
+              Hello everyone! I've updated my profile photo to something more "me". 
               {"\n\n"}
-              This is the place to share updates, post behind-the-scenes photos, and keep the whole team in the loop. Whether it's a scheduling change, a shoutout to a colleague, or just something fun from set - drop it here!
+              This noticeboard is your space to share updates, behind-the-scenes photos, and keep the team connected. Whether it's a schedule tweak, a shoutout, or a quick snap from the set—drop it here!
               {"\n\n"}
-              Looking forward to seeing what you all share. Here's to a fantastic season ahead!
+              Looking forward to seeing the board fill up. Let's make this the best season yet!
             </p>
             <div className="relative rounded-lg overflow-hidden">
               <img
                 src={welcomePostImage}
-                alt="Welcome celebration"
+                alt="AI Agent waving hello"
                 className="w-full max-h-96 object-cover rounded-lg"
               />
             </div>
