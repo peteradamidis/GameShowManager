@@ -55,6 +55,7 @@ export default function ReschedulePage() {
   const [selectedContestant, setSelectedContestant] = useState<any>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editFormData, setEditFormData] = useState<any>({});
+  const [filterOriginalRecordDayId, setFilterOriginalRecordDayId] = useState<string>("all");
 
   const handleRowClick = (contestant: any) => {
     setSelectedContestant(contestant);
@@ -309,8 +310,27 @@ export default function ReschedulePage() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
           <CardTitle>Contestants for Rebooking</CardTitle>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="filter-original-day" className="text-sm font-medium whitespace-nowrap">Original Date:</Label>
+            <Select value={filterOriginalRecordDayId} onValueChange={setFilterOriginalRecordDayId}>
+              <SelectTrigger id="filter-original-day" className="w-64" data-testid="select-filter-original-day">
+                <SelectValue placeholder="All dates" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All dates</SelectItem>
+                {recordDays
+                  .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                  .map((rd: any) => (
+                    <SelectItem key={rd.id} value={rd.id}>
+                      {rd.rxNumber ? `${rd.rxNumber} — ` : ''}{format(new Date(rd.date), "EEE, MMM d, yyyy")}
+                    </SelectItem>
+                  ))
+                }
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
           {canceledAssignments.length === 0 ? (
@@ -336,7 +356,11 @@ export default function ReschedulePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {canceledAssignments.map((cancellation: any) => (
+                {canceledAssignments
+                  .filter((cancellation: any) => 
+                    filterOriginalRecordDayId === "all" || cancellation.recordDayId === filterOriginalRecordDayId
+                  )
+                  .map((cancellation: any) => (
                   <TableRow 
                     key={cancellation.id} 
                     data-testid={`row-canceled-${cancellation.id}`}
