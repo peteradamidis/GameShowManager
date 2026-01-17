@@ -88,7 +88,7 @@ const recordVisit = () => localStorage.setItem(NOTICEBOARD_LAST_VISIT_KEY, new D
 function PostCard({ post, onRefresh, displayName, browserId }: { post: Post; onRefresh: () => void; displayName: string; browserId: string }) {
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
-  const [commentName, setCommentName] = useState(() => getStoredDisplayName());
+  const [commentName, setCommentName] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -135,7 +135,7 @@ function PostCard({ post, onRefresh, displayName, browserId }: { post: Post; onR
       apiRequest("POST", `/api/noticeboard/posts/${post.id}/comments`, data),
     onSuccess: () => {
       setNewComment("");
-      setStoredDisplayName(commentName); // Save name for future use
+      setCommentName(""); // Clear name after posting
       refetchComments();
       queryClient.invalidateQueries({ queryKey: ["/api/noticeboard/posts"] });
     },
