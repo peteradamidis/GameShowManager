@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -68,7 +68,7 @@ interface Contestant {
 }
 
 export default function PlayersPage() {
-  const [selectedRecordDayId, setSelectedRecordDayId] = useState<string>('all');
+  const [selectedRecordDayId, setSelectedRecordDayId] = useState<string>('');
 
   const { data: recordDays = [], isLoading: loadingDays } = useQuery<RecordDay[]>({
     queryKey: ['/api/record-days'],
@@ -121,10 +121,18 @@ export default function PlayersPage() {
     return [...recordDays].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [recordDays]);
 
+  // Set default to first record day when available
+  useEffect(() => {
+    if (!selectedRecordDayId && sortedRecordDays.length > 0) {
+      setSelectedRecordDayId(sortedRecordDays[0].id);
+    }
+  }, [sortedRecordDays, selectedRecordDayId]);
+
   const { players, backups } = useMemo(() => {
-    const filtered = selectedRecordDayId === 'all' 
-      ? allAssignments 
-      : allAssignments.filter(a => a.recordDayId === selectedRecordDayId);
+    // Filter by selected record day
+    const filtered = selectedRecordDayId 
+      ? allAssignments.filter(a => a.recordDayId === selectedRecordDayId)
+      : [];
     
     // Filter to only include assignments with contestant data
     const withContestants = filtered.filter(a => a.contestant);
@@ -191,7 +199,6 @@ export default function PlayersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {selectedRecordDayId === 'all' && <TableHead className="w-32">RX Day</TableHead>}
                   <TableHead className="w-20">Block/Seat</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead className="w-16">Gender</TableHead>
@@ -213,11 +220,6 @@ export default function PlayersPage() {
                   
                   return (
                     <TableRow key={assignment.id} data-testid={`row-player-${assignment.id}`}>
-                      {selectedRecordDayId === 'all' && (
-                        <TableCell className="text-xs text-muted-foreground">
-                          {getRecordDayInfo(assignment.recordDayId)}
-                        </TableCell>
-                      )}
                       <TableCell>
                         <Badge variant="outline" className={bgClass}>
                           B{assignment.blockNumber} {assignment.seatLabel}
@@ -281,7 +283,6 @@ export default function PlayersPage() {
               <SelectValue placeholder="Select record day..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Record Days</SelectItem>
               {sortedRecordDays.map(day => (
                 <SelectItem key={day.id} value={day.id}>
                   {day.rxNumber} - {format(new Date(day.date), 'dd/MM/yyyy')}
