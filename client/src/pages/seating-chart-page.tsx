@@ -148,6 +148,19 @@ export default function SeatingChartPage() {
   const [editTempNotes, setEditTempNotes] = useState("");
   const [isUpdatingTempContestant, setIsUpdatingTempContestant] = useState(false);
   
+  // Attendance issue dialog state (No-Show / Early Leaver)
+  const [attendanceIssueDialogOpen, setAttendanceIssueDialogOpen] = useState(false);
+  const [attendanceIssueType, setAttendanceIssueType] = useState<'no_show' | 'early_leaver'>('no_show');
+  const [attendanceIssueInitials, setAttendanceIssueInitials] = useState("");
+  const [attendanceIssuePending, setAttendanceIssuePending] = useState<{
+    assignmentId: string;
+    contestantId: string;
+    blockNumber: number;
+    seatLabel: string;
+    contestantName?: string;
+  } | null>(null);
+  const [isRecordingAttendanceIssue, setIsRecordingAttendanceIssue] = useState(false);
+  
   // Get record day ID from query parameter, localStorage, or fetch first available
   const searchParams = new URLSearchParams(window.location.search);
   const urlRecordDayId = searchParams.get('day');
@@ -978,55 +991,44 @@ export default function SeatingChartPage() {
     }
   };
 
-  // Handle marking a contestant as No-Show
-  const handleNoShow = async (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => {
-    if (!confirm("Mark this contestant as a No-Show? This will remove them from the seat and record the issue.")) {
-      return;
-    }
+  // Handle marking a contestant as No-Show - opens dialog for producer initials
+  const handleNoShow = (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => {
+    // Find contestant name for display
+    const assignment = (assignments as any[])?.find((a: any) => a.id === assignmentId);
+    const contestantName = assignment?.contestant?.name || 'Unknown';
     
-    try {
-      await apiRequest('POST', '/api/attendance-issues', {
-        contestantId,
-        recordDayId,
-        blockNumber,
-        seatLabel,
-        issueType: 'no_show',
-        markedBy: 'producer', // TODO: Get actual user
-      });
-      
-      // Refresh queries
-      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/attendance-issues'] });
-      broadcastSeatingChange(recordDayId);
-      
-      toast({
-        title: "No-Show recorded",
-        description: "Contestant has been marked as a no-show and removed from the seat.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Failed to record no-show",
-        description: error?.message || "Could not mark contestant as no-show.",
-        variant: "destructive",
-      });
-    }
+    setAttendanceIssuePending({ assignmentId, contestantId, blockNumber, seatLabel, contestantName });
+    setAttendanceIssueType('no_show');
+    setAttendanceIssueInitials("");
+    setAttendanceIssueDialogOpen(true);
   };
 
-  // Handle marking a contestant as Early Leaver
-  const handleEarlyLeaver = async (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => {
-    if (!confirm("Mark this contestant as an Early Leaver? This will remove them from the seat and record the issue.")) {
-      return;
-    }
+  // Handle marking a contestant as Early Leaver - opens dialog for producer initials
+  const handleEarlyLeaver = (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => {
+    // Find contestant name for display
+    const assignment = (assignments as any[])?.find((a: any) => a.id === assignmentId);
+    const contestantName = assignment?.contestant?.name || 'Unknown';
+    
+    setAttendanceIssuePending({ assignmentId, contestantId, blockNumber, seatLabel, contestantName });
+    setAttendanceIssueType('early_leaver');
+    setAttendanceIssueInitials("");
+    setAttendanceIssueDialogOpen(true);
+  };
+  
+  // Confirm and submit attendance issue with producer initials
+  const confirmAttendanceIssue = async () => {
+    if (!attendanceIssuePending || !attendanceIssueInitials.trim()) return;
+    
+    setIsRecordingAttendanceIssue(true);
     
     try {
       await apiRequest('POST', '/api/attendance-issues', {
-        contestantId,
+        contestantId: attendanceIssuePending.contestantId,
         recordDayId,
-        blockNumber,
-        seatLabel,
-        issueType: 'early_leaver',
-        markedBy: 'producer', // TODO: Get actual user
+        blockNumber: attendanceIssuePending.blockNumber,
+        seatLabel: attendanceIssuePending.seatLabel,
+        issueType: attendanceIssueType,
+        markedBy: attendanceIssueInitials.trim().toUpperCase(),
       });
       
       // Refresh queries
@@ -1036,15 +1038,22 @@ export default function SeatingChartPage() {
       broadcastSeatingChange(recordDayId);
       
       toast({
-        title: "Early leaver recorded",
-        description: "Contestant has been marked as an early leaver and removed from the seat.",
+        title: attendanceIssueType === 'no_show' ? "No-Show recorded" : "Early leaver recorded",
+        description: `Contestant has been marked as ${attendanceIssueType === 'no_show' ? 'a no-show' : 'an early leaver'} and removed from the seat.`,
       });
+      
+      // Close dialog and reset state
+      setAttendanceIssueDialogOpen(false);
+      setAttendanceIssuePending(null);
+      setAttendanceIssueInitials("");
     } catch (error: any) {
       toast({
-        title: "Failed to record early leaver",
-        description: error?.message || "Could not mark contestant as early leaver.",
+        title: `Failed to record ${attendanceIssueType === 'no_show' ? 'no-show' : 'early leaver'}`,
+        description: error?.message || "Could not record attendance issue.",
         variant: "destructive",
       });
+    } finally {
+      setIsRecordingAttendanceIssue(false);
     }
   };
 
@@ -2124,6 +2133,88 @@ export default function SeatingChartPage() {
               data-testid="button-save-temp-contestant"
             >
               {isUpdatingTempContestant ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Attendance Issue Dialog (No-Show / Early Leaver) */}
+      <Dialog open={attendanceIssueDialogOpen} onOpenChange={(open) => {
+        if (!open && !isRecordingAttendanceIssue) {
+          setAttendanceIssueDialogOpen(false);
+          setAttendanceIssuePending(null);
+          setAttendanceIssueInitials("");
+        }
+      }}>
+        <DialogContent className="max-w-sm" data-testid="dialog-attendance-issue">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {attendanceIssueType === 'no_show' ? (
+                <>
+                  <XCircle className="h-5 w-5 text-red-600" />
+                  Record No-Show
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-5 w-5 text-amber-600" />
+                  Record Early Leaver
+                </>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              {attendanceIssuePending?.contestantName && (
+                <span className="font-medium">{attendanceIssuePending.contestantName}</span>
+              )}
+              {' '}will be removed from Block {attendanceIssuePending?.blockNumber}, Seat {attendanceIssuePending?.seatLabel}.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="grid gap-2">
+              <Label htmlFor="producer-initials" className="text-sm font-medium">
+                Producer Initials <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="producer-initials"
+                value={attendanceIssueInitials}
+                onChange={(e) => setAttendanceIssueInitials(e.target.value.toUpperCase())}
+                placeholder="e.g. JD"
+                maxLength={5}
+                className="uppercase"
+                data-testid="input-attendance-initials"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && attendanceIssueInitials.trim()) {
+                    confirmAttendanceIssue();
+                  }
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter your initials to confirm this action
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setAttendanceIssueDialogOpen(false);
+                setAttendanceIssuePending(null);
+                setAttendanceIssueInitials("");
+              }}
+              disabled={isRecordingAttendanceIssue}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={confirmAttendanceIssue}
+              disabled={isRecordingAttendanceIssue || !attendanceIssueInitials.trim()}
+              variant={attendanceIssueType === 'no_show' ? 'destructive' : 'default'}
+              className={attendanceIssueType === 'early_leaver' ? 'bg-amber-600 hover:bg-amber-700' : ''}
+              data-testid="button-confirm-attendance-issue"
+            >
+              {isRecordingAttendanceIssue ? "Recording..." : `Confirm ${attendanceIssueType === 'no_show' ? 'No-Show' : 'Early Leaver'}`}
             </Button>
           </DialogFooter>
         </DialogContent>
