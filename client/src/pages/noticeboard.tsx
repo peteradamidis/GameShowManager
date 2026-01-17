@@ -20,7 +20,7 @@ import {
   MoreVertical,
   X,
   Loader2,
-  Megaphone
+  PlusCircle
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -311,10 +311,11 @@ function PostCard({ post, onRefresh, displayName, browserId }: { post: Post; onR
   );
 }
 
-function CreatePostForm({ onSuccess, displayName, onDisplayNameChange }: { 
+function CreatePostForm({ onSuccess, displayName, onDisplayNameChange, onCancel }: { 
   onSuccess: () => void; 
   displayName: string; 
   onDisplayNameChange: (name: string) => void;
+  onCancel?: () => void;
 }) {
   const [content, setContent] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -466,16 +467,28 @@ function CreatePostForm({ onSuccess, displayName, onDisplayNameChange }: {
               </Button>
             </div>
             
-            <Button
-              type="submit"
-              disabled={!content.trim() || createMutation.isPending || isUploading}
-              data-testid="button-submit-post"
-            >
-              {(createMutation.isPending || isUploading) && (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            <div className="flex items-center gap-2">
+              {onCancel && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={onCancel}
+                  data-testid="button-cancel-post"
+                >
+                  Cancel
+                </Button>
               )}
-              Post
-            </Button>
+              <Button
+                type="submit"
+                disabled={!content.trim() || createMutation.isPending || isUploading}
+                data-testid="button-submit-post"
+              >
+                {(createMutation.isPending || isUploading) && (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                )}
+                Post
+              </Button>
+            </div>
           </div>
         </form>
       </CardContent>
@@ -486,6 +499,7 @@ function CreatePostForm({ onSuccess, displayName, onDisplayNameChange }: {
 export default function NoticeboardPage() {
   const [displayName, setDisplayName] = useState(() => getStoredDisplayName());
   const [browserId] = useState(() => getBrowserId());
+  const [showCreateForm, setShowCreateForm] = useState(false);
   
   const { data: posts = [], isLoading, refetch } = useQuery<Post[]>({
     queryKey: ["/api/noticeboard/posts", { browserId }],
@@ -503,37 +517,42 @@ export default function NoticeboardPage() {
     setStoredDisplayName(name);
   };
 
+  const handlePostSuccess = () => {
+    refetch();
+    setShowCreateForm(false);
+  };
+
   return (
     <div className="container max-w-2xl mx-auto py-6 px-4">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold" data-testid="text-page-title">
-          Crew Noticeboard
-        </h1>
-        <p className="text-muted-foreground">
-          Share updates, photos, and announcements with the team
-        </p>
+      <div className="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold" data-testid="text-page-title">
+            Crew Noticeboard
+          </h1>
+          <p className="text-muted-foreground">
+            Share updates, photos, and announcements with the team
+          </p>
+        </div>
+        {!showCreateForm && (
+          <Button 
+            onClick={() => setShowCreateForm(true)}
+            data-testid="button-new-post"
+          >
+            <PlusCircle className="h-4 w-4 mr-2" />
+            New Post
+          </Button>
+        )}
       </div>
 
-      <Card className="mb-6 bg-primary/5 border-primary/20">
-        <CardContent className="py-3">
-          <div className="flex items-start gap-3">
-            <Megaphone className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-            <div>
-              <h3 className="font-semibold text-primary mb-1">Welcome to the Crew Noticeboard!</h3>
-              <p className="text-sm text-muted-foreground">
-                This is your space to share updates, photos from set, announcements, and stay connected with the team.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       <div className="space-y-4">
-        <CreatePostForm 
-          onSuccess={() => refetch()} 
-          displayName={displayName}
-          onDisplayNameChange={handleDisplayNameChange}
-        />
+        {showCreateForm && (
+          <CreatePostForm 
+            onSuccess={handlePostSuccess} 
+            displayName={displayName}
+            onDisplayNameChange={handleDisplayNameChange}
+            onCancel={() => setShowCreateForm(false)}
+          />
+        )}
         
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
