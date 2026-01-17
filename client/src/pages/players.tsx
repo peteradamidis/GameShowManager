@@ -72,7 +72,7 @@ interface Contestant {
 
 interface EpisodeGroup {
   episodeNumber: string;
-  player: SeatAssignment | null;
+  players: SeatAssignment[];
   backups: SeatAssignment[];
 }
 
@@ -164,15 +164,14 @@ export default function PlayersPage() {
     
     for (let ep = 1; ep <= 5; ep++) {
       const epStr = ep.toString();
-      const player = players.find(p => p.rxEpNumber === epStr) || null;
+      const epPlayers = players.filter(p => p.rxEpNumber === epStr);
       
-      const epBackups = player 
-        ? backups.filter(b => b.blockNumber === player.blockNumber)
-        : [];
+      const blockNumbers = new Set(epPlayers.map(p => p.blockNumber));
+      const epBackups = backups.filter(b => blockNumbers.has(b.blockNumber));
       
       groups.push({
         episodeNumber: epStr,
-        player,
+        players: epPlayers,
         backups: epBackups,
       });
     }
@@ -180,8 +179,9 @@ export default function PlayersPage() {
     const unassignedPlayers = players.filter(p => !p.rxEpNumber || !['1','2','3','4','5'].includes(p.rxEpNumber));
     const assignedBackupIds = new Set(groups.flatMap(g => g.backups.map(b => b.id)));
     const unassignedBackups = backups.filter(b => !assignedBackupIds.has(b.id));
+    const assignedCount = groups.filter(g => g.players.length > 0).length;
     
-    return { groups, unassignedPlayers, unassignedBackups };
+    return { groups, unassignedPlayers, unassignedBackups, assignedCount };
   }, [players, backups]);
 
   const updateEpisodeMutation = useMutation({
@@ -210,7 +210,7 @@ export default function PlayersPage() {
     updateEpisodeMutation.mutate({ assignmentId, episodeNumber });
   };
 
-  const renderPersonRow = (assignment: SeatAssignment, isPlayer: boolean, showEpisodeSelector: boolean = false) => {
+  const renderPersonRow = (assignment: SeatAssignment, isPlayer: boolean, showEpisodeSelector: boolean = false, showEpisodeColumn: boolean = false) => {
     const c = assignment.contestant;
     if (!c) return null;
     const attendingWith = assignment.attendingWithOverride || c.attendingWith;
@@ -218,25 +218,29 @@ export default function PlayersPage() {
     
     return (
       <TableRow key={assignment.id} className={isPlayer ? 'bg-blue-500/5' : 'bg-amber-500/5'}>
-        {showEpisodeSelector && (
+        {showEpisodeColumn && (
           <TableCell>
-            <Select 
-              value={assignment.rxEpNumber || 'none'} 
-              onValueChange={(v) => handleEpisodeChange(assignment.id, v)}
-              disabled={updateEpisodeMutation.isPending}
-            >
-              <SelectTrigger className="w-16 h-7 text-xs" data-testid={`select-episode-${assignment.id}`}>
-                <SelectValue placeholder="-" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">-</SelectItem>
-                <SelectItem value="1">EP 1</SelectItem>
-                <SelectItem value="2">EP 2</SelectItem>
-                <SelectItem value="3">EP 3</SelectItem>
-                <SelectItem value="4">EP 4</SelectItem>
-                <SelectItem value="5">EP 5</SelectItem>
-              </SelectContent>
-            </Select>
+            {showEpisodeSelector ? (
+              <Select 
+                value={assignment.rxEpNumber || 'none'} 
+                onValueChange={(v) => handleEpisodeChange(assignment.id, v)}
+                disabled={updateEpisodeMutation.isPending}
+              >
+                <SelectTrigger className="w-16 h-7 text-xs" data-testid={`select-episode-${assignment.id}`}>
+                  <SelectValue placeholder="-" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">-</SelectItem>
+                  <SelectItem value="1">EP 1</SelectItem>
+                  <SelectItem value="2">EP 2</SelectItem>
+                  <SelectItem value="3">EP 3</SelectItem>
+                  <SelectItem value="4">EP 4</SelectItem>
+                  <SelectItem value="5">EP 5</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <span className="text-muted-foreground text-xs">-</span>
+            )}
           </TableCell>
         )}
         <TableCell>
@@ -328,7 +332,7 @@ export default function PlayersPage() {
                 <Play className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{episodeGroups.groups.filter(g => g.player).length}/5</p>
+                <p className="text-2xl font-bold">{episodeGroups.assignedCount}/5</p>
                 <p className="text-sm text-muted-foreground">Episodes Assigned</p>
               </div>
             </div>
@@ -336,48 +340,56 @@ export default function PlayersPage() {
         </Card>
       </div>
 
-      {episodeGroups.groups.map(group => (
-        <Card key={group.episodeNumber} className="mb-4">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Badge className={group.player ? 'bg-green-500' : 'bg-muted text-muted-foreground'}>
-                EP {group.episodeNumber}
-              </Badge>
-              {group.player ? (
-                <span className="text-sm font-normal text-muted-foreground">
-                  Block {group.player.blockNumber} - {group.player.contestant?.firstName} {group.player.contestant?.lastName}
-                </span>
+      {episodeGroups.groups.map(group => {
+        const hasConflict = group.players.length > 1;
+        return (
+          <Card key={group.episodeNumber} className={`mb-4 ${hasConflict ? 'border-red-500' : ''}`}>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Badge className={group.players.length > 0 ? (hasConflict ? 'bg-red-500' : 'bg-green-500') : 'bg-muted text-muted-foreground'}>
+                  EP {group.episodeNumber}
+                </Badge>
+                {hasConflict ? (
+                  <span className="text-sm font-normal text-red-600 dark:text-red-400">
+                    Conflict: {group.players.length} players assigned
+                  </span>
+                ) : group.players.length === 1 ? (
+                  <span className="text-sm font-normal text-muted-foreground">
+                    Block {group.players[0].blockNumber} - {group.players[0].contestant?.firstName} {group.players[0].contestant?.lastName}
+                  </span>
+                ) : (
+                  <span className="text-sm font-normal text-muted-foreground italic">No player assigned</span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {group.players.length > 0 || group.backups.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-20">Episode</TableHead>
+                      <TableHead className="w-24">Type/Seat</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead className="w-14">Gender</TableHead>
+                      <TableHead className="w-14">Age</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Attending With</TableHead>
+                      <TableHead>Notes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {group.players.map(player => renderPersonRow(player, true, true, true))}
+                    {group.backups.map(backup => renderPersonRow(backup, false, false, true))}
+                  </TableBody>
+                </Table>
               ) : (
-                <span className="text-sm font-normal text-muted-foreground italic">No player assigned</span>
+                <p className="text-sm text-muted-foreground text-center py-2">Assign a player to this episode from the unassigned list below</p>
               )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {group.player || group.backups.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-20">Type/Seat</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="w-14">Gender</TableHead>
-                    <TableHead className="w-14">Age</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Attending With</TableHead>
-                    <TableHead>Notes</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {group.player && renderPersonRow(group.player, true, false)}
-                  {group.backups.map(backup => renderPersonRow(backup, false, false))}
-                </TableBody>
-              </Table>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-2">Assign a player to this episode from the unassigned list below</p>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        );
+      })}
 
       {episodeGroups.unassignedPlayers.length > 0 && (
         <Card className="mb-4 border-dashed">
@@ -404,7 +416,7 @@ export default function PlayersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {episodeGroups.unassignedPlayers.map(player => renderPersonRow(player, true, true))}
+                {episodeGroups.unassignedPlayers.map(player => renderPersonRow(player, true, true, true))}
               </TableBody>
             </Table>
           </CardContent>
