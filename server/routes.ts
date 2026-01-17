@@ -125,61 +125,243 @@ const photoUpload = multer({
   }
 });
 
-// Helper function to identify groups from "Attending With" column
-function identifyGroups(contestants: any[]): Map<string, string[]> {
-  const groupMap = new Map<string, string[]>();
-  const nameToGroup = new Map<string, string>();
+// Helper to normalize a name for matching
+function normalizeNameForMatching(name: string): string {
+  return name.toLowerCase().trim().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ');
+}
+
+// Check if contestant A's attendingWith mentions contestant B's name
+function mentionsName(contestantAttendingWith: string | null, targetName: string): boolean {
+  if (!contestantAttendingWith || !targetName) return false;
   
-  // Create a normalized name to original name mapping for contestants
-  const normalizedNameMap = new Map<string, string>();
-  contestants.forEach((c) => {
-    const normalized = c.name.toLowerCase().trim();
-    normalizedNameMap.set(normalized, c.name);
+  const attendingWith = contestantAttendingWith.toLowerCase();
+  const normalizedTarget = normalizeNameForMatching(targetName);
+  const targetParts = normalizedTarget.split(' ').filter(p => p.length > 2);
+  
+  // Check if any significant part of target name is mentioned
+  // Require at least first name OR last name match (not just any 3-char substring)
+  return targetParts.some(part => {
+    // Ensure it's a word boundary match, not substring
+    const regex = new RegExp(`\\b${part}\\b`, 'i');
+    return regex.test(attendingWith);
   });
+}
 
-  contestants.forEach((contestant) => {
-    const contestantNormalized = contestant.name.toLowerCase().trim();
-    
-    if (!contestant.attendingWith) return;
-    
-    // Parse attending with names
-    const attendingWithNames = contestant.attendingWith
-      .split(/[,&]/)
-      .map((name: string) => name.trim().toLowerCase())
-      .filter((name: string) => name.length > 0);
+// Check for reciprocal mention - A mentions B AND B mentions A
+function hasReciprocalMention(contestantA: any, contestantB: any): boolean {
+  const aMentionsB = mentionsName(contestantA.attendingWith, contestantB.name);
+  const bMentionsA = mentionsName(contestantB.attendingWith, contestantA.name);
+  return aMentionsB && bMentionsA;
+}
 
-    // Find all people in this group (including this contestant)
-    const groupMembers = new Set<string>([contestantNormalized]);
-    attendingWithNames.forEach((name: string) => {
-      // Only add if the person exists in our contestant list (case-insensitive)
-      if (normalizedNameMap.has(name)) {
-        groupMembers.add(name);
-      }
-    });
-
-    // Check if any member already has a group
-    let existingGroupId: string | null = null;
-    for (const member of Array.from(groupMembers)) {
-      if (nameToGroup.has(member)) {
-        existingGroupId = nameToGroup.get(member)!;
-        break;
+// Score disambiguation factors (used only when multiple candidates have same name)
+function getDisambiguationScore(candidate: any, sourceContestant: any): number {
+  let score = 0;
+  
+  // PHONE PREFIX MATCH - Same household indicator (+30 points)
+  if (sourceContestant.phone && candidate.phone) {
+    const sourcePhone = sourceContestant.phone.replace(/\D/g, '');
+    const candidatePhone = candidate.phone.replace(/\D/g, '');
+    if (sourcePhone.length >= 6 && candidatePhone.length >= 6) {
+      if (sourcePhone.substring(0, 6) === candidatePhone.substring(0, 6)) {
+        score += 30;
       }
     }
+  }
+  
+  // LOCATION MATCH - Same suburb strongly suggests correct match (+25 points)
+  if (sourceContestant.suburb && candidate.suburb) {
+    if (sourceContestant.suburb.toLowerCase().trim() === candidate.suburb.toLowerCase().trim()) {
+      score += 25;
+    }
+  }
+  
+  // Same state is weaker (+5 points)
+  if (sourceContestant.state && candidate.state) {
+    if (sourceContestant.state.toLowerCase().trim() === candidate.state.toLowerCase().trim()) {
+      score += 5;
+    }
+  }
+  
+  // AGE PROXIMITY - Family members typically have related ages (+10-15 points)
+  if (sourceContestant.age && candidate.age) {
+    const ageDiff = Math.abs(sourceContestant.age - candidate.age);
+    if (ageDiff <= 5) {
+      score += 15; // Very close ages (siblings, partners, friends)
+    } else if (ageDiff >= 15 && ageDiff <= 35) {
+      score += 10; // Parent-child typical range
+    }
+  }
+  
+  return score;
+}
 
-    // Assign all members to the same group
-    const groupId = existingGroupId || `GROUP-${Math.random().toString(36).substr(2, 9)}`;
-    Array.from(groupMembers).forEach((member) => {
-      nameToGroup.set(member, groupId);
-      if (!groupMap.has(groupId)) {
-        groupMap.set(groupId, []);
+// Helper function to identify groups from "Attending With" column
+// Uses RECIPROCAL MENTIONS as the primary grouping signal
+// Falls back to disambiguation scoring when there are duplicate names
+function identifyGroups(contestants: any[]): Map<string, string[]> {
+  const groupMap = new Map<string, string[]>();
+  const contestantIdToGroup = new Map<number, string>();
+  const ambiguousMatches: { source: string; targetName: string; candidates: string[]; reason: string }[] = [];
+  
+  // Create lookup: normalized name -> all contestants with that name
+  const normalizedNameToContestants = new Map<string, any[]>();
+  contestants.forEach((c) => {
+    const normalized = normalizeNameForMatching(c.name);
+    if (!normalizedNameToContestants.has(normalized)) {
+      normalizedNameToContestants.set(normalized, []);
+    }
+    normalizedNameToContestants.get(normalized)!.push(c);
+  });
+  
+  // Create lookup by ID for fast access
+  const contestantById = new Map<number, any>();
+  contestants.forEach(c => contestantById.set(c.id, c));
+
+  // Phase 1: Build confirmed groups using RECIPROCAL MENTIONS only
+  // This is the most reliable signal - both parties list each other
+  contestants.forEach((contestant) => {
+    if (!contestant.attendingWith) return;
+    
+    // Parse attending with names (skip solo indicators)
+    const attendingWithNames = contestant.attendingWith
+      .split(/[,&/\n]+/)
+      .map((name: string) => name.trim())
+      .filter((name: string) => name.length > 0 && 
+        !['na', 'n/a', 'none', 'solo', 'alone', '-', '', 'myself', 'me', 'just me'].includes(name.toLowerCase()));
+
+    if (attendingWithNames.length === 0) return;
+
+    const confirmedGroupMembers = new Set<number>([contestant.id]);
+    
+    attendingWithNames.forEach((targetName: string) => {
+      const normalizedTarget = normalizeNameForMatching(targetName);
+      
+      // Find candidates with matching name
+      let candidates = normalizedNameToContestants.get(normalizedTarget) || [];
+      candidates = candidates.filter(c => c.id !== contestant.id);
+      
+      if (candidates.length === 0) {
+        // No exact match - try matching first name + last name separately
+        const targetParts = normalizedTarget.split(' ').filter(p => p.length > 2);
+        if (targetParts.length > 0) {
+          normalizedNameToContestants.forEach((contestantList, normalizedName) => {
+            const nameParts = normalizedName.split(' ');
+            // Require matching first name OR last name (full word, not substring)
+            const hasWordMatch = targetParts.some(tp => nameParts.includes(tp));
+            if (hasWordMatch) {
+              contestantList.forEach(c => {
+                if (c.id !== contestant.id && !candidates.some(existing => existing.id === c.id)) {
+                  candidates.push(c);
+                }
+              });
+            }
+          });
+        }
       }
-      // Use original name from contestant data, not normalized
-      const originalName = normalizedNameMap.get(member) || member;
-      if (!groupMap.get(groupId)!.includes(originalName)) {
-        groupMap.get(groupId)!.push(originalName);
+      
+      if (candidates.length === 0) return;
+      
+      if (candidates.length === 1) {
+        // Single candidate - check for reciprocal mention
+        const candidate = candidates[0];
+        if (hasReciprocalMention(contestant, candidate)) {
+          // Confirmed match - both parties list each other
+          confirmedGroupMembers.add(candidate.id);
+        } else if (mentionsName(contestant.attendingWith, candidate.name)) {
+          // One-way mention - still add but lower confidence
+          // This is common when one person fills out the form more completely
+          confirmedGroupMembers.add(candidate.id);
+        }
+      } else {
+        // Multiple candidates with same/similar name - need disambiguation
+        // First, check for reciprocal mentions (strongest signal)
+        const reciprocalMatches = candidates.filter(c => hasReciprocalMention(contestant, c));
+        
+        if (reciprocalMatches.length === 1) {
+          // Exactly one has reciprocal mention - use that one
+          confirmedGroupMembers.add(reciprocalMatches[0].id);
+        } else if (reciprocalMatches.length > 1) {
+          // Multiple reciprocal matches (rare edge case) - use disambiguation score
+          const scored = reciprocalMatches.map(c => ({
+            contestant: c,
+            score: getDisambiguationScore(c, contestant)
+          })).sort((a, b) => b.score - a.score);
+          
+          if (scored[0].score > scored[1].score) {
+            confirmedGroupMembers.add(scored[0].contestant.id);
+          } else {
+            // Can't disambiguate - flag for manual review, don't auto-link
+            ambiguousMatches.push({
+              source: contestant.name,
+              targetName,
+              candidates: scored.map(s => `${s.contestant.name} (id:${s.contestant.id}, score:${s.score})`),
+              reason: 'Multiple reciprocal matches with same score'
+            });
+          }
+        } else {
+          // No reciprocal mentions - use disambiguation scoring only if confident
+          const scored = candidates.map(c => ({
+            contestant: c,
+            score: getDisambiguationScore(c, contestant)
+          })).sort((a, b) => b.score - a.score);
+          
+          const topScore = scored[0].score;
+          const secondScore = scored.length > 1 ? scored[1].score : 0;
+          
+          // Require significant score difference (25+ points lead) for auto-linking without reciprocal
+          if (topScore >= 25 && topScore > secondScore + 20) {
+            confirmedGroupMembers.add(scored[0].contestant.id);
+          } else {
+            // Not confident enough - flag for manual review, DON'T auto-link
+            ambiguousMatches.push({
+              source: contestant.name,
+              targetName,
+              candidates: scored.slice(0, 3).map(s => `${s.contestant.name} (id:${s.contestant.id}, score:${s.score})`),
+              reason: 'No reciprocal mention and scores too close'
+            });
+            // Skip adding to group - let manual linking handle it
+          }
+        }
       }
     });
+
+    // Assign group if we have confirmed members
+    if (confirmedGroupMembers.size > 1) {
+      // Check if any member already has a group
+      let existingGroupId: string | null = null;
+      for (const memberId of Array.from(confirmedGroupMembers)) {
+        if (contestantIdToGroup.has(memberId)) {
+          existingGroupId = contestantIdToGroup.get(memberId)!;
+          break;
+        }
+      }
+
+      const groupId = existingGroupId || `GROUP-${Math.random().toString(36).substr(2, 9)}`;
+      
+      Array.from(confirmedGroupMembers).forEach((memberId) => {
+        contestantIdToGroup.set(memberId, groupId);
+        if (!groupMap.has(groupId)) {
+          groupMap.set(groupId, []);
+        }
+        const memberContestant = contestantById.get(memberId);
+        if (memberContestant && !groupMap.get(groupId)!.includes(memberContestant.name)) {
+          groupMap.get(groupId)!.push(memberContestant.name);
+        }
+      });
+    }
   });
+
+  // Log ambiguous matches that need manual review
+  if (ambiguousMatches.length > 0) {
+    console.log(`[Group Linking] ${ambiguousMatches.length} ambiguous name matches need manual review:`);
+    ambiguousMatches.forEach(match => {
+      console.log(`  - "${match.source}" mentioned "${match.targetName}"`);
+      console.log(`    Candidates: ${match.candidates.join(' | ')}`);
+      console.log(`    Reason: ${match.reason}`);
+    });
+    console.log('  Use manual group linking on the Contestants page to resolve these.');
+  }
 
   return groupMap;
 }
