@@ -27,6 +27,8 @@ interface Contestant {
   id: string;
   availabilityStatus: string;
   gender: string;
+  availableForStandby: boolean;
+  auditionRating?: string | null;
 }
 
 interface RecordDayData {
@@ -88,8 +90,23 @@ export default function Dashboard() {
 
   // Calculate real statistics
   const totalApplicants = contestants.length;
-  const pendingAvailability = contestants.filter(c => c.availabilityStatus === 'pending').length;
-  const assignedContestants = contestants.filter(c => c.availabilityStatus === 'assigned').length;
+  const availableContestants = contestants.filter(c => c.availabilityStatus === 'available').length;
+  const availableStandbys = contestants.filter(c => 
+    c.availableForStandby && c.availabilityStatus === 'available'
+  ).length;
+
+  // Rating counts
+  const ratingCounts = contestants.reduce((acc, c) => {
+    if (c.auditionRating) {
+      acc[c.auditionRating] = (acc[c.auditionRating] || 0) + 1;
+    }
+    return acc;
+  }, {} as Record<string, number>);
+
+  const sortedRatings = Object.entries(ratingCounts).sort((a, b) => {
+    const order = ['A+', 'A', 'B+', 'B', 'C'];
+    return order.indexOf(a[0]) - order.indexOf(b[0]);
+  });
 
   // Today's date
   const today = new Date();
@@ -234,28 +251,38 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatsCard
-          title="Total Applicants"
+          title="Total Contestants"
           value={totalApplicants}
           icon={Users}
         />
         <StatsCard
-          title="Pending Availability"
-          value={pendingAvailability}
-          icon={Clock}
-          subtitle="Awaiting response"
-        />
-        <StatsCard
-          title="Assigned Contestants"
-          value={assignedContestants}
+          title="Total Available"
+          value={availableContestants}
           icon={CheckCircle}
+          subtitle="Contestants with available tag"
         />
         <StatsCard
-          title="Upcoming Record Days"
-          value={upcomingRecordDays.length}
-          icon={Calendar}
+          title="Available Standbys"
+          value={availableStandbys}
+          icon={Clock}
+          subtitle="Standby tag + Available"
         />
+      </div>
+
+      {/* Ratings Breakdown */}
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
+        {sortedRatings.map(([rating, count]) => (
+          <Card key={rating} className="bg-muted/30">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-sm font-medium text-muted-foreground mb-1">Rating {rating}</p>
+                <div className="text-2xl font-bold">{count}</div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Crew Noticeboard Updates */}
