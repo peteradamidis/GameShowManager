@@ -26,6 +26,7 @@ import Settings from "@/pages/settings";
 import Backup from "@/pages/backup";
 import Paperwork from "@/pages/paperwork";
 import AttendanceIssuesPage from "@/pages/attendance-issues-page";
+import NoticeboardPage from "@/pages/noticeboard";
 import AvailabilityResponsePage from "@/pages/availability-response-page";
 import BookingConfirmationPage from "@/pages/booking-confirmation-page";
 import Login from "@/pages/login";
@@ -53,6 +54,7 @@ function Router() {
       <Route path="/winners" component={WinnersPage} />
       <Route path="/paperwork" component={Paperwork} />
       <Route path="/attendance-issues" component={AttendanceIssuesPage} />
+      <Route path="/noticeboard" component={NoticeboardPage} />
       <Route path="/settings" component={Settings} />
       <Route path="/backup" component={Backup} />
       <Route path="/availability/respond/:token" component={AvailabilityResponsePage} />
