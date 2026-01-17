@@ -18,6 +18,11 @@ const menuItems = [
     icon: Home,
   },
   {
+    title: "Noticeboard",
+    url: "/noticeboard",
+    icon: Megaphone,
+  },
+  {
     title: "Contestants",
     url: "/contestants",
     icon: Users,
@@ -76,11 +81,6 @@ const menuItems = [
     title: "Attendance Issues",
     url: "/attendance-issues",
     icon: AlertTriangle,
-  },
-  {
-    title: "Noticeboard",
-    url: "/noticeboard",
-    icon: Megaphone,
   },
   {
     title: "Settings",
