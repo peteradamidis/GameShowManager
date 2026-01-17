@@ -81,12 +81,15 @@ export default function PlayersPage() {
       ? allAssignments 
       : allAssignments.filter(a => a.recordDayId === selectedRecordDayId);
     
+    // Filter to only include assignments with contestant data
+    const withContestants = filtered.filter(a => a.contestant);
+    
     return {
-      players: filtered.filter(a => a.playerType === 'player').sort((a, b) => {
+      players: withContestants.filter(a => a.playerType === 'player').sort((a, b) => {
         if (a.blockNumber !== b.blockNumber) return a.blockNumber - b.blockNumber;
         return a.seatNumber - b.seatNumber;
       }),
-      backups: filtered.filter(a => a.playerType === 'backup').sort((a, b) => {
+      backups: withContestants.filter(a => a.playerType === 'backup').sort((a, b) => {
         if (a.blockNumber !== b.blockNumber) return a.blockNumber - b.blockNumber;
         return a.seatNumber - b.seatNumber;
       }),
@@ -159,6 +162,7 @@ export default function PlayersPage() {
               <TableBody>
                 {assignments.map(assignment => {
                   const c = assignment.contestant;
+                  if (!c) return null;
                   const attendingWith = assignment.attendingWithOverride || c.attendingWith;
                   const notes = assignment.medicalMobilityNotesOverride || c.medicalMobilityNotes;
                   
