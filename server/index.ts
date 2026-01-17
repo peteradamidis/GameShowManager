@@ -8,9 +8,41 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./db-init";
-import { warmupDatabaseConnection, fixPhoneNumbers } from "./storage";
+import { warmupDatabaseConnection, fixPhoneNumbers, storage } from "./storage";
 import { startBackupScheduler } from "./backup-scheduler";
 import { getSessionConfig, createDefaultAdmin } from "./auth";
+
+// Seed a fun welcome post if the noticeboard is empty
+async function seedWelcomePost() {
+  try {
+    const posts = await storage.getNoticeboardPosts();
+    if (posts.length === 0) {
+      console.log('  [Noticeboard] Creating welcome post...');
+      await storage.createNoticeboardPost({
+        authorId: 'system',
+        authorName: 'Deal or No Deal Team',
+        content: `Welcome to the Crew Noticeboard!
+
+This is your new hub for all things production! Here's what you can do:
+
+- Share updates and announcements with the team
+- Post photos from set (because we all love a good behind-the-scenes shot!)
+- Keep everyone in the loop on what's happening
+- Like and comment on posts to stay connected
+
+Whether it's a scheduling update, a shoutout to someone who went above and beyond, or just a great photo of the set looking fantastic - this is the place to share it!
+
+Let's make this season amazing!`,
+        imageUrl: null,
+      });
+      console.log('  [Noticeboard] Welcome post created!');
+    } else {
+      console.log('  [Noticeboard] Posts already exist, skipping welcome post');
+    }
+  } catch (error) {
+    console.error('  [Noticeboard] Error seeding welcome post:', error);
+  }
+}
 
 // Log startup info immediately for debugging
 console.log('=== Server Starting ===');
@@ -140,6 +172,10 @@ app.use((req, res, next) => {
           // Fix phone numbers with missing 0 prefix (Australian mobiles starting with 4)
           console.log('Step 5.5: Checking phone numbers...');
           await fixPhoneNumbers();
+          
+          // Seed welcome post if noticeboard is empty
+          console.log('Step 5.6: Checking noticeboard...');
+          await seedWelcomePost();
           
           // Start automatic backup scheduler after database is ready
           console.log('Step 6: Starting automatic backup scheduler...');
