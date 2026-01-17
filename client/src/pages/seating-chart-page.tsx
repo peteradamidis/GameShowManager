@@ -1220,13 +1220,12 @@ export default function SeatingChartPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-6">
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex flex-col gap-1 mb-3">
             <h1 className="text-2xl font-semibold">Seating Chart</h1>
             {currentRecordDay && (
-              <Badge variant="secondary">
-                {currentRecordDay.rxNumber && `${currentRecordDay.rxNumber} - `}
-                {format(new Date(currentRecordDay.date), "EEE, MMMM d, yyyy")}
-              </Badge>
+              <h2 className="text-xl font-bold text-primary">
+                {currentRecordDay.rxNumber} — {format(new Date(currentRecordDay.date), "EEEE, MMMM d, yyyy")}
+              </h2>
             )}
           </div>
           <p className="text-muted-foreground">
