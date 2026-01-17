@@ -120,9 +120,10 @@ export const seatAssignments = pgTable("seat_assignments", {
   notifiedOfTx: boolean("notified_of_tx"), // Whether contestant was notified of TX
   photosSent: boolean("photos_sent"), // Whether photos were sent
   
-  // Override field for attending with changes after invitations are sent
+  // Override fields for changes after invitations are sent
   seatNotes: text("seat_notes"), // Legacy - not used in UI, kept for backwards compatibility
   attendingWithOverride: text("attending_with_override"), // Override for attending with (when original changes after invitation)
+  mobilityNotesOverride: text("mobility_notes_override"), // Override for mobility/medical notes (when original changes after invitation)
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
