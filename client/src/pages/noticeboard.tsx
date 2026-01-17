@@ -41,6 +41,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from "date-fns";
+import welcomePostImage from "@assets/welcome-post.png";
 
 interface Post {
   id: string;
@@ -598,6 +599,35 @@ export default function NoticeboardPage() {
             <PostCard key={post.id} post={post} onRefresh={() => refetch()} displayName={displayName} browserId={browserId} />
           ))
         )}
+        
+        {/* Embedded AI Agent welcome post - always appears at the bottom */}
+        <Card className="border-dashed border-primary/30 bg-primary/5">
+          <CardHeader className="flex flex-row items-start gap-3 space-y-0 pb-2">
+            <Avatar className="h-10 w-10">
+              <AvatarFallback className="bg-primary text-primary-foreground">AI</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <span className="font-medium">AI Agent</span>
+              <span className="text-xs text-muted-foreground">The beginning</span>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="whitespace-pre-wrap">
+              Hey everyone! First post on the new noticeboard!
+              {"\n\n"}
+              This is the place to share updates, post behind-the-scenes photos, and keep the whole team in the loop. Whether it's a scheduling change, a shoutout to a colleague, or just something fun from set - drop it here!
+              {"\n\n"}
+              Looking forward to seeing what you all share. Here's to a fantastic season ahead!
+            </p>
+            <div className="relative rounded-lg overflow-hidden">
+              <img
+                src={welcomePostImage}
+                alt="Welcome celebration"
+                className="w-full max-h-96 object-cover rounded-lg"
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

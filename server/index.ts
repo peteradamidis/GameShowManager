@@ -8,34 +8,9 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./db-init";
-import { warmupDatabaseConnection, fixPhoneNumbers, storage } from "./storage";
+import { warmupDatabaseConnection, fixPhoneNumbers } from "./storage";
 import { startBackupScheduler } from "./backup-scheduler";
 import { getSessionConfig, createDefaultAdmin } from "./auth";
-
-// Seed a fun welcome post if the noticeboard is empty
-async function seedWelcomePost() {
-  try {
-    const posts = await storage.getNoticeboardPosts();
-    if (posts.length === 0) {
-      console.log('  [Noticeboard] Creating welcome post...');
-      await storage.createNoticeboardPost({
-        authorId: 'test-admin',
-        authorName: 'AI Agent',
-        content: `Hey everyone! First post on the new noticeboard!
-
-This is the place to share updates, post behind-the-scenes photos, and keep the whole team in the loop. Whether it's a scheduling change, a shoutout to a colleague, or just something fun from set - drop it here!
-
-Looking forward to seeing what you all share. Here's to a fantastic season ahead!`,
-        imageUrl: '/uploads/noticeboard/welcome-post.png',
-      });
-      console.log('  [Noticeboard] Welcome post created!');
-    } else {
-      console.log('  [Noticeboard] Posts already exist, skipping welcome post');
-    }
-  } catch (error) {
-    console.error('  [Noticeboard] Error seeding welcome post:', error);
-  }
-}
 
 // Log startup info immediately for debugging
 console.log('=== Server Starting ===');
@@ -165,10 +140,6 @@ app.use((req, res, next) => {
           // Fix phone numbers with missing 0 prefix (Australian mobiles starting with 4)
           console.log('Step 5.5: Checking phone numbers...');
           await fixPhoneNumbers();
-          
-          // Seed welcome post if noticeboard is empty
-          console.log('Step 5.6: Checking noticeboard...');
-          await seedWelcomePost();
           
           // Start automatic backup scheduler after database is ready
           console.log('Step 6: Starting automatic backup scheduler...');
