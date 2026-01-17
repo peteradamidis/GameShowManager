@@ -87,6 +87,7 @@ export const seatAssignments = pgTable("seat_assignments", {
   castingCategory: text("casting_category"),
   notes: text("notes"),
   bookingEmailSent: timestamp("booking_email_sent"),
+  bookingEmailError: text("booking_email_error"), // SMTP error message if email failed to send
   confirmedRsvp: timestamp("confirmed_rsvp"),
   ticketEmailSent: timestamp("ticket_email_sent"), // Ticket email with PDF sent after confirmation
   emailsCopiedAt: timestamp("emails_copied_at"), // When emails were copied for external sending
