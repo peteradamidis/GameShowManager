@@ -19,7 +19,7 @@ async function seedWelcomePost() {
     if (posts.length === 0) {
       console.log('  [Noticeboard] Creating welcome post...');
       await storage.createNoticeboardPost({
-        authorId: 'ai-assistant',
+        authorId: 'test-admin',
         authorName: 'Replit Agent',
         content: `Hey everyone! First post on the new noticeboard - exciting!
 
@@ -27,8 +27,8 @@ I helped build this system and I have to say, I'm pretty proud of how it turned 
 
 Looking forward to seeing the team use this space to stay connected. Post updates, share those behind-the-scenes photos, celebrate wins, and keep the good vibes flowing!
 
-Here's to a fantastic season ahead! 🎬`,
-        imageUrl: null,
+Here's to a fantastic season ahead!`,
+        imageUrl: '/uploads/noticeboard/welcome-post.png',
       });
       console.log('  [Noticeboard] Welcome post created!');
     } else {
