@@ -283,7 +283,7 @@ export function SeatCard({
 
   const seatContent = (
     <Card
-      className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity border-2 relative ${
+      className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity border-2 relative overflow-hidden ${
         isEmpty
           ? isRXDayLocked 
             ? "border-dashed bg-muted/30 hover-elevate"  // Locked: not clickable
@@ -322,12 +322,12 @@ export function SeatCard({
           <span className="text-[10px] font-mono">{seatLabel}</span>
         </div>
       ) : (
-        <div className="space-y-1">
+        <div className="space-y-1 overflow-hidden">
           <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
             <span>{seatLabel}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <p className="font-medium text-xs flex-1 leading-tight break-words" title={seat.contestantName}>
+          <div className="flex items-center gap-1 min-w-0">
+            <p className="font-medium text-xs flex-1 truncate min-w-0" title={seat.contestantName}>
               {seat.contestantName}
             </p>
             {seat.isGroupSeparated && (
