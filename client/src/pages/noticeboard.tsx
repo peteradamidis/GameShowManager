@@ -62,7 +62,12 @@ interface Comment {
   createdAt: string;
 }
 
-function PostCard({ post, onRefresh }: { post: Post; onRefresh: () => void }) {
+// Helper to get/set display name from localStorage
+const DISPLAY_NAME_KEY = "noticeboard_display_name";
+const getStoredDisplayName = () => localStorage.getItem(DISPLAY_NAME_KEY) || "";
+const setStoredDisplayName = (name: string) => localStorage.setItem(DISPLAY_NAME_KEY, name);
+
+function PostCard({ post, onRefresh, displayName }: { post: Post; onRefresh: () => void; displayName: string }) {
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -108,7 +113,10 @@ function PostCard({ post, onRefresh }: { post: Post; onRefresh: () => void }) {
 
   const commentMutation = useMutation({
     mutationFn: (content: string) =>
-      apiRequest("POST", `/api/noticeboard/posts/${post.id}/comments`, { content }),
+      apiRequest("POST", `/api/noticeboard/posts/${post.id}/comments`, { 
+        content, 
+        authorName: displayName || undefined 
+      }),
     onSuccess: () => {
       setNewComment("");
       refetchComments();
@@ -291,7 +299,11 @@ function PostCard({ post, onRefresh }: { post: Post; onRefresh: () => void }) {
   );
 }
 
-function CreatePostForm({ onSuccess }: { onSuccess: () => void }) {
+function CreatePostForm({ onSuccess, displayName, onDisplayNameChange }: { 
+  onSuccess: () => void; 
+  displayName: string; 
+  onDisplayNameChange: (name: string) => void;
+}) {
   const [content, setContent] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -299,7 +311,7 @@ function CreatePostForm({ onSuccess }: { onSuccess: () => void }) {
   const { toast } = useToast();
 
   const createMutation = useMutation({
-    mutationFn: async (data: { content: string; imageUrl?: string }) =>
+    mutationFn: async (data: { content: string; imageUrl?: string; authorName?: string }) =>
       apiRequest("POST", "/api/noticeboard/posts", data),
     onSuccess: () => {
       setContent("");
@@ -368,7 +380,11 @@ function CreatePostForm({ onSuccess }: { onSuccess: () => void }) {
       setIsUploading(false);
     }
 
-    createMutation.mutate({ content: content.trim(), imageUrl });
+    createMutation.mutate({ 
+      content: content.trim(), 
+      imageUrl,
+      authorName: displayName || undefined 
+    });
   };
 
   const clearImage = () => {
@@ -380,6 +396,16 @@ function CreatePostForm({ onSuccess }: { onSuccess: () => void }) {
     <Card>
       <CardContent className="pt-4">
         <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-muted-foreground whitespace-nowrap">From:</label>
+            <Input
+              placeholder="Your name (optional)"
+              value={displayName}
+              onChange={(e) => onDisplayNameChange(e.target.value)}
+              className="max-w-[200px]"
+              data-testid="input-display-name"
+            />
+          </div>
           <Textarea
             placeholder="Share an update with the crew..."
             value={content}
@@ -446,9 +472,15 @@ function CreatePostForm({ onSuccess }: { onSuccess: () => void }) {
 }
 
 export default function NoticeboardPage() {
+  const [displayName, setDisplayName] = useState(() => getStoredDisplayName());
   const { data: posts = [], isLoading, refetch } = useQuery<Post[]>({
     queryKey: ["/api/noticeboard/posts"],
   });
+
+  const handleDisplayNameChange = (name: string) => {
+    setDisplayName(name);
+    setStoredDisplayName(name);
+  };
 
   return (
     <div className="container max-w-2xl mx-auto py-6 px-4">
@@ -462,7 +494,11 @@ export default function NoticeboardPage() {
       </div>
 
       <div className="space-y-4">
-        <CreatePostForm onSuccess={() => refetch()} />
+        <CreatePostForm 
+          onSuccess={() => refetch()} 
+          displayName={displayName}
+          onDisplayNameChange={handleDisplayNameChange}
+        />
         
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -477,7 +513,7 @@ export default function NoticeboardPage() {
           </Card>
         ) : (
           posts.map((post) => (
-            <PostCard key={post.id} post={post} onRefresh={() => refetch()} />
+            <PostCard key={post.id} post={post} onRefresh={() => refetch()} displayName={displayName} />
           ))
         )}
       </div>

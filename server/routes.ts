@@ -11570,15 +11570,18 @@ ${finalEmailFooter}`;
         return res.status(401).json({ error: "User not found" });
       }
       
-      const { content, imageUrl } = req.body;
+      const { content, imageUrl, authorName } = req.body;
       
       if (!content || content.trim().length === 0) {
         return res.status(400).json({ error: "Post content is required" });
       }
       
+      // Use provided authorName or fall back to username
+      const displayName = authorName?.trim() || user.username;
+      
       const post = await storage.createNoticeboardPost({
         authorId: userId,
-        authorName: user.username,
+        authorName: displayName,
         content: content.trim(),
         imageUrl: imageUrl || null,
       });
@@ -11690,7 +11693,7 @@ ${finalEmailFooter}`;
   app.post("/api/noticeboard/posts/:id/comments", requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
-      const { content } = req.body;
+      const { content, authorName } = req.body;
       const userId = (req.session as any)?.userId;
       const user = await storage.getUserById(userId);
       
@@ -11702,10 +11705,13 @@ ${finalEmailFooter}`;
         return res.status(400).json({ error: "Comment content is required" });
       }
       
+      // Use provided authorName or fall back to username
+      const displayName = authorName?.trim() || user.username;
+      
       const comment = await storage.createNoticeboardComment({
         postId: id,
         authorId: userId,
-        authorName: user.username,
+        authorName: displayName,
         content: content.trim(),
       });
       
