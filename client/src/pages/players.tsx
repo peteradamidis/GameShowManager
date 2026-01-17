@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, Mail, MapPin, Upload, FileText, X, ZoomIn } from "lucide-react";
+import { User, Users, Play, Phone, Mail, MapPin, Upload, FileText, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -291,22 +291,15 @@ export default function PlayersPage() {
         data-testid={`card-person-${assignment.id}`}
       >
         <div className="flex gap-4">
-          <div 
-            className={`relative group ${c.photoUrl ? 'cursor-pointer' : ''}`}
+          <Avatar 
+            className={`h-16 w-16 border-2 border-background shadow-sm ${c.photoUrl ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''}`}
             onClick={() => c.photoUrl && setViewingPhoto({ url: c.photoUrl, name: `${c.firstName} ${c.lastName}` })}
           >
-            <Avatar className="h-16 w-16 border-2 border-background shadow-sm">
-              <AvatarImage src={c.photoUrl || undefined} alt={`${c.firstName} ${c.lastName}`} />
-              <AvatarFallback className={isPlayer ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400' : 'bg-amber-500/20 text-amber-700 dark:text-amber-400'}>
-                {getInitials(c.firstName, c.lastName)}
-              </AvatarFallback>
-            </Avatar>
-            {c.photoUrl && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                <ZoomIn className="h-5 w-5 text-white" />
-              </div>
-            )}
-          </div>
+            <AvatarImage src={c.photoUrl || undefined} alt={`${c.firstName} ${c.lastName}`} />
+            <AvatarFallback className={isPlayer ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400' : 'bg-amber-500/20 text-amber-700 dark:text-amber-400'}>
+              {getInitials(c.firstName, c.lastName)}
+            </AvatarFallback>
+          </Avatar>
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -585,15 +578,15 @@ export default function PlayersPage() {
 
       {/* Photo lightbox dialog */}
       <Dialog open={!!viewingPhoto} onOpenChange={(open) => !open && setViewingPhoto(null)}>
-        <DialogContent className="max-w-3xl p-2">
+        <DialogContent className="max-w-5xl max-h-[95vh] p-4">
           {viewingPhoto && (
             <div className="flex flex-col items-center">
               <img
                 src={viewingPhoto.url}
                 alt={viewingPhoto.name}
-                className="max-h-[80vh] w-auto object-contain rounded-lg"
+                className="max-h-[85vh] max-w-full object-contain rounded-lg"
               />
-              <p className="mt-3 text-lg font-medium">{viewingPhoto.name}</p>
+              <p className="mt-4 text-xl font-medium">{viewingPhoto.name}</p>
             </div>
           )}
         </DialogContent>
