@@ -1031,6 +1031,31 @@ export default function SeatingChartPage() {
     setAttendanceIssueInitials("");
     setAttendanceIssueDialogOpen(true);
   };
+
+  // Handle adding a contestant to the prize draw - contestant stays in seat
+  const handlePrizeWinner = async (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => {
+    try {
+      await apiRequest('POST', `/api/record-days/${recordDayId}/prize-winners`, {
+        contestantId,
+        contestantName,
+        blockNumber,
+        seatLabel,
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/record-days', recordDayId, 'prize-winners'] });
+      
+      toast({
+        title: "Added to Prize Draw",
+        description: `${contestantName} has been added to the prize draw list.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to add to prize draw",
+        description: error?.message || "Could not add contestant to prize draw.",
+        variant: "destructive",
+      });
+    }
+  };
   
   // Confirm and submit attendance issue with producer initials
   const confirmAttendanceIssue = async () => {
@@ -1483,6 +1508,7 @@ export default function SeatingChartPage() {
             onReturnToStandby={handleReturnToStandby}
             onNoShow={isLocked ? handleNoShow : undefined}
             onEarlyLeaver={isLocked ? handleEarlyLeaver : undefined}
+            onPrizeWinner={isLocked ? handlePrizeWinner : undefined}
             onEditTempContestant={handleEditTempContestant}
             isLocked={isLocked}
             standbys={standbys}

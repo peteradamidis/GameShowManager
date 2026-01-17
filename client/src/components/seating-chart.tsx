@@ -30,7 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
-import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check } from "lucide-react";
+import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import stageBackdropImage from "@/assets/stage-backdrop.png";
 import podiumSetImage from "@/assets/podium-set.png";
@@ -118,6 +118,7 @@ interface SeatingChartProps {
   onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
   onNoShow?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
+  onPrizeWinner?: (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => void;
   onEditTempContestant?: (contestantId: string) => void;
   isLocked?: boolean; // RX Day Mode - when true, use tracked swap endpoint
   standbys?: StandbyData[]; // Standbys for this record day
@@ -140,6 +141,7 @@ function DraggableDroppableSeat({
   onReturnToStandby,
   onNoShow,
   onEarlyLeaver,
+  onPrizeWinner,
   onEditTempContestant,
 }: {
   seat: SeatData;
@@ -156,6 +158,7 @@ function DraggableDroppableSeat({
   onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
   onNoShow?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
+  onPrizeWinner?: (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => void;
   onEditTempContestant?: (contestantId: string) => void;
 }) {
   // Make occupied seats draggable
@@ -198,6 +201,7 @@ function DraggableDroppableSeat({
         onReturnToStandby={onReturnToStandby}
         onNoShow={onNoShow}
         onEarlyLeaver={onEarlyLeaver}
+        onPrizeWinner={onPrizeWinner}
         onEditTempContestant={onEditTempContestant}
       />
     </div>
@@ -336,6 +340,7 @@ function SeatingBlock({
   onReturnToStandby,
   onNoShow,
   onEarlyLeaver,
+  onPrizeWinner,
   onEditTempContestant,
   blockType,
   onBlockTypeChange,
@@ -356,6 +361,7 @@ function SeatingBlock({
   onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
   onNoShow?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
+  onPrizeWinner?: (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => void;
   onEditTempContestant?: (contestantId: string) => void;
   blockType?: 'PB' | 'NPB';
   onBlockTypeChange?: (blockNumber: number, newType: 'PB' | 'NPB') => void;
@@ -598,6 +604,7 @@ function SeatingBlock({
                           onReturnToStandby={onReturnToStandby}
                           onNoShow={onNoShow}
                           onEarlyLeaver={onEarlyLeaver}
+                          onPrizeWinner={onPrizeWinner}
                           onEditTempContestant={onEditTempContestant}
                         />
                         {/* Horizontal link to next seat in same row */}
@@ -693,7 +700,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onEditTempContestant, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false }: SeatingChartProps) {
   // Use initialSeats as source of truth - derive blocks from props, not state
   // Only use local state for temporary overrides during active drag operations
   const defaultBlocks = useMemo(() => 
@@ -791,6 +798,33 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   // Fetch block configuration status (5 PB + 2 NPB required)
   const { data: blockConfigStatus } = useQuery<{complete: boolean; pbCount: number; npbCount: number}>({
     queryKey: ['/api/record-days', recordDayId, 'block-config-status'],
+  });
+
+  // Fetch prize winners for this record day (only when in RX mode)
+  const { data: prizeWinners = [] } = useQuery<{id: string; contestantId: string; contestantName: string; blockNumber: number; seatLabel: string; createdAt: string}[]>({
+    queryKey: ['/api/record-days', recordDayId, 'prize-winners'],
+    enabled: isLocked,
+  });
+
+  // Mutation to remove prize winner
+  const removePrizeWinnerMutation = useMutation({
+    mutationFn: async (prizeWinnerId: string) => {
+      await apiRequest('DELETE', `/api/prize-winners/${prizeWinnerId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/record-days', recordDayId, 'prize-winners'] });
+      toast({
+        title: "Removed from Prize Draw",
+        description: "Contestant has been removed from the prize draw list.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error removing from prize draw",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   // Create a map of block number to block type
@@ -1246,6 +1280,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onReturnToStandby={onReturnToStandby}
                   onNoShow={onNoShow}
                   onEarlyLeaver={onEarlyLeaver}
+                  onPrizeWinner={onPrizeWinner}
                   onEditTempContestant={onEditTempContestant}
                   blockType={blockTypeMap[idx + 1]}
                   onBlockTypeChange={handleBlockTypeChange}
@@ -1309,6 +1344,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     onReturnToStandby={onReturnToStandby}
                     onNoShow={onNoShow}
                     onEarlyLeaver={onEarlyLeaver}
+                    onPrizeWinner={onPrizeWinner}
                     onEditTempContestant={onEditTempContestant}
                     blockType={blockTypeMap[originalIdx + 1]}
                     onBlockTypeChange={handleBlockTypeChange}
@@ -1344,6 +1380,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onReturnToStandby={onReturnToStandby}
                   onNoShow={onNoShow}
                   onEarlyLeaver={onEarlyLeaver}
+                  onPrizeWinner={onPrizeWinner}
                   onEditTempContestant={onEditTempContestant}
                   blockType={blockTypeMap[7]}
                   onBlockTypeChange={handleBlockTypeChange}
@@ -1423,6 +1460,60 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   )}
                 </CardContent>
               </Card>
+              
+              {/* Prize Winners Panel - Only visible in RX mode */}
+              {isLocked && (
+                <Card className="w-full max-w-xs bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800" data-testid="prize-winners-panel">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      <Gift className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      <span className="font-medium text-sm text-amber-700 dark:text-amber-300">Prize Draw</span>
+                      <Badge variant="secondary" className="text-[10px] px-1 bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+                        {prizeWinners.length}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-1">
+                      Contestants entered in the prize draw
+                    </p>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    {prizeWinners.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No prize draw entries yet
+                      </p>
+                    ) : (
+                      <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                        {prizeWinners.map((winner) => (
+                          <div 
+                            key={winner.id} 
+                            className="flex items-center justify-between gap-2 p-2 rounded-md bg-amber-100/50 dark:bg-amber-900/30 border border-amber-200/50 dark:border-amber-800/50"
+                            data-testid={`prize-winner-${winner.id}`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate text-amber-900 dark:text-amber-100">
+                                {winner.contestantName}
+                              </p>
+                              <p className="text-[10px] text-amber-600 dark:text-amber-400">
+                                Block {winner.blockNumber} - {winner.seatLabel}
+                              </p>
+                            </div>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 text-amber-600 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
+                              onClick={() => removePrizeWinnerMutation.mutate(winner.id)}
+                              disabled={removePrizeWinnerMutation.isPending}
+                              data-testid={`button-remove-prize-winner-${winner.id}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>
