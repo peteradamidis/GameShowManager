@@ -599,7 +599,7 @@ export default function NoticeboardPage() {
               <AvatarFallback className="bg-primary/10 text-primary font-bold">AI</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="font-semibold text-primary/80">Cute Assistant</span>
+              <span className="font-semibold text-primary/80">AI Assistant</span>
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Ready for Action</span>
             </div>
           </CardHeader>
