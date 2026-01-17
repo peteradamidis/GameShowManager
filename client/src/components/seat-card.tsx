@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert, Pencil, MessageSquare, UserCheck } from "lucide-react";
+import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert, Pencil, MessageSquare, UserCheck, Gift } from "lucide-react";
 import { getDistanceFromDocklands } from "@/components/contestant-table";
 
 // Helper function to check if a medical field has meaningful content (not NA/N/A/No/None/empty)
@@ -79,6 +79,7 @@ interface SeatCardProps {
   onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
   onNoShow?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
+  onPrizeWinner?: (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => void;
   onEditTempContestant?: (contestantId: string) => void;
 }
 
@@ -120,6 +121,7 @@ export function SeatCard({
   onReturnToStandby,
   onNoShow,
   onEarlyLeaver,
+  onPrizeWinner,
   onEditTempContestant,
 }: SeatCardProps) {
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
@@ -837,36 +839,52 @@ export function SeatCard({
                   </Button>
                 )}
                 {isRXDayLocked && seat.contestantId && (
-                  <div className="flex gap-2">
+                  <>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-400 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const seatLabel = seat.id.split('-').pop() || '';
+                          onNoShow?.(seat.assignmentId!, seat.contestantId!, blockIndex + 1, seatLabel);
+                        }}
+                        data-testid={`button-no-show-${seat.assignmentId}`}
+                      >
+                        <UserX className="h-3 w-3 mr-1" />
+                        No Show
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-400 border-orange-300 dark:border-orange-700 hover:bg-orange-100 dark:hover:bg-orange-900"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const seatLabel = seat.id.split('-').pop() || '';
+                          onEarlyLeaver?.(seat.assignmentId!, seat.contestantId!, blockIndex + 1, seatLabel);
+                        }}
+                        data-testid={`button-early-leaver-${seat.assignmentId}`}
+                      >
+                        <Clock className="h-3 w-3 mr-1" />
+                        Early Leaver
+                      </Button>
+                    </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-400 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900"
+                      className="w-full bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900"
                       onClick={(e) => {
                         e.stopPropagation();
                         const seatLabel = seat.id.split('-').pop() || '';
-                        onNoShow?.(seat.assignmentId!, seat.contestantId!, blockIndex + 1, seatLabel);
+                        onPrizeWinner?.(seat.contestantId!, seat.contestantName || '', blockIndex + 1, seatLabel);
                       }}
-                      data-testid={`button-no-show-${seat.assignmentId}`}
+                      data-testid={`button-prize-winner-${seat.assignmentId}`}
                     >
-                      <UserX className="h-3 w-3 mr-1" />
-                      No Show
+                      <Gift className="h-3 w-3 mr-1" />
+                      Add to Prize Draw
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-400 border-orange-300 dark:border-orange-700 hover:bg-orange-100 dark:hover:bg-orange-900"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const seatLabel = seat.id.split('-').pop() || '';
-                        onEarlyLeaver?.(seat.assignmentId!, seat.contestantId!, blockIndex + 1, seatLabel);
-                      }}
-                      data-testid={`button-early-leaver-${seat.assignmentId}`}
-                    >
-                      <Clock className="h-3 w-3 mr-1" />
-                      Early Leaver
-                    </Button>
-                  </div>
+                  </>
                 )}
                 <div className="flex gap-2">
                   <Button
