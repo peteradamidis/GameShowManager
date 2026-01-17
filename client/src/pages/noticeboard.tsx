@@ -557,10 +557,10 @@ export default function NoticeboardPage() {
       </div>
 
       {/* Embedded welcome notice */}
-      <Alert className="mb-6 border-muted bg-muted/30">
-        <Megaphone className="h-4 w-4 text-muted-foreground" />
-        <AlertTitle className="text-foreground">Welcome to the Crew Noticeboard</AlertTitle>
-        <AlertDescription className="text-muted-foreground">
+      <Alert className="mb-6 border-primary/30 bg-primary/5">
+        <Megaphone className="h-4 w-4" />
+        <AlertTitle>Welcome to the Crew Noticeboard</AlertTitle>
+        <AlertDescription>
           Post updates, share photos, and keep the team in the loop. Your display name is saved locally so you can post without logging in.
         </AlertDescription>
       </Alert>
@@ -605,9 +605,9 @@ export default function NoticeboardPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-white/50 dark:bg-black/20 p-3 rounded-md border border-primary/10 italic text-sm leading-relaxed text-muted-foreground">
-              Action! 🎬 I've updated my look to something a bit more professional (and cute).
+              Hey everyone! Welcome to the new crew noticeboard.
               {"\n\n"}
-              This noticeboard is your space to share updates, behind-the-scenes photos, and keep the team connected. Let's make this season a hit!
+              This is the place to share updates, post behind-the-scenes photos, and keep the whole team in the loop. Whether it's a scheduling change, a shoutout to a colleague, or just something fun from set - drop it here!
             </div>
             <div className="relative rounded-lg overflow-hidden border border-primary/20 shadow-md">
               <img
