@@ -195,6 +195,54 @@ export function SeatCard({
     setIsEditingAttendingWith(false);
   };
   
+  // Local state for optimistic player type updates
+  const [localPlayerType, setLocalPlayerType] = useState<string | undefined>(seat.playerType);
+  
+  // Sync local player type with prop changes
+  useEffect(() => {
+    setLocalPlayerType(seat.playerType);
+  }, [seat.playerType]);
+  
+  // Mutation for updating player type
+  const updatePlayerTypeMutation = useMutation({
+    mutationFn: async (playerType: string | null) => {
+      const response = await apiRequest('PATCH', `/api/seat-assignments/${seat.assignmentId}/player-type`, { playerType });
+      return response.json();
+    },
+    onSuccess: () => {
+      // Force refetch to get updated data from server
+      // Use predicate to match all seat-assignment queries regardless of parameters
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.includes('/api/seat-assignments');
+        }
+      });
+      toast({
+        title: "Updated",
+        description: "Player type saved",
+      });
+    },
+    onError: (error: any) => {
+      // Revert optimistic update on error
+      setLocalPlayerType(seat.playerType);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update player type",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handle player type change with optimistic update
+  const handlePlayerTypeChange = (value: string) => {
+    if (!seat.assignmentId) return;
+    const playerType = value === 'none' ? null : value;
+    // Optimistic update - set local state immediately
+    setLocalPlayerType(playerType || undefined);
+    updatePlayerTypeMutation.mutate(playerType);
+  };
+  
   // Use standby colors for standbys, then rating-based colors, fallback to group colors if no rating
   // Standbys get purple styling to distinguish them from regular contestants
   const colorInfo = seat.wasStandby 
@@ -441,22 +489,33 @@ export function SeatCard({
                   </div>
                 </div>
 
-                {contestantDetails.playerType && (
-                  <div className="text-sm">
-                    <label className="text-xs font-medium text-muted-foreground">Player Type</label>
-                    <Badge className={`text-xs mt-1 ${
-                      contestantDetails.playerType === 'player' ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800' :
-                      contestantDetails.playerType === 'backup' ? 'bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800' :
-                      contestantDetails.playerType === 'player_partner' ? 'bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800' :
-                      'bg-gray-500/20 text-gray-700 dark:text-gray-400 border-gray-200 dark:border-gray-800'
-                    }`}>
-                      {contestantDetails.playerType === 'player' ? 'Player' :
-                       contestantDetails.playerType === 'backup' ? 'Backup' :
-                       contestantDetails.playerType === 'player_partner' ? 'Partner' :
-                       contestantDetails.playerType}
-                    </Badge>
-                  </div>
-                )}
+                {/* Player Type - editable dropdown */}
+                <div className="text-sm">
+                  <label className="text-xs font-medium text-muted-foreground">Player Type</label>
+                  <Select 
+                    value={localPlayerType || 'none'} 
+                    onValueChange={handlePlayerTypeChange}
+                    disabled={updatePlayerTypeMutation.isPending}
+                  >
+                    <SelectTrigger 
+                      className={`h-8 mt-1 text-xs ${
+                        localPlayerType === 'player' ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700' :
+                        localPlayerType === 'backup' ? 'bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700' :
+                        localPlayerType === 'player_partner' ? 'bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-700' :
+                        ''
+                      }`}
+                      data-testid={`select-player-type-${seat.assignmentId}`}
+                    >
+                      <SelectValue placeholder="Select type..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Not Set</SelectItem>
+                      <SelectItem value="player">Player</SelectItem>
+                      <SelectItem value="backup">Backup</SelectItem>
+                      <SelectItem value="player_partner">Partner</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 {/* Attending With - shows original and allows override editing */}
                 <div className="text-sm">

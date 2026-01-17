@@ -5069,11 +5069,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { playerType } = req.body;
       
-      if (!playerType || !['player', 'backup', 'player_partner'].includes(playerType)) {
+      // Allow null/undefined to clear player type, or valid enum values
+      if (playerType !== null && playerType !== undefined && !['player', 'backup', 'player_partner'].includes(playerType)) {
         return res.status(400).json({ error: "Invalid player type" });
       }
       
-      const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, { playerType });
+      const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, { playerType: playerType || null });
       
       if (!updated) {
         return res.status(404).json({ error: "Seat assignment not found" });
