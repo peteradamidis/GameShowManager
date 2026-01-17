@@ -499,7 +499,7 @@ export default function NoticeboardPage() {
           <div className="flex items-center gap-2">
             <Megaphone className="h-4 w-4 text-primary flex-shrink-0" />
             <p className="text-sm text-primary">
-              Welcome to the Crew Noticeboard! Share updates, photos, and announcements with the team.
+              Welcome to the Crew Noticeboard!
             </p>
           </div>
         </CardContent>
