@@ -50,8 +50,10 @@ interface DeadlineInfo {
   recordDayId: string;
   recordDate: Date;
   rxNumber?: string | null;
-  deadline: Date;
-  daysUntilDeadline: number;
+  emailDeadline: Date;
+  confirmationDeadline: Date;
+  daysUntilEmailDeadline: number;
+  daysUntilConfirmationDeadline: number;
   daysUntilRecordDate: number;
   status: DeadlineStatus;
   confirmedCount: number;
@@ -93,8 +95,9 @@ export default function Dashboard() {
   const today = new Date();
   const formattedToday = format(today, "EEEE, MMMM d, yyyy");
 
-  // Calculate deadlines for the first 2 calendar weeks of upcoming record days
-  const INVITATION_LEAD_DAYS = 14; // 2 weeks before record day
+  // Calculate deadlines
+  const SENDING_EMAIL_LEAD_DAYS = 14; // 2 weeks before record day (Sending Email Deadline)
+  const CONFIRMATION_LEAD_DAYS = 7; // 1 week before record day (Contestant Confirmation Deadline)
   const DUE_SOON_THRESHOLD = 3; // Days before deadline to show "due soon"
   
   // First, get all future record days sorted by date
@@ -112,8 +115,10 @@ export default function Dashboard() {
   const deadlineInfos: DeadlineInfo[] = futureRecordDays
     .map(rd => {
       const recordDate = new Date(rd.date);
-      const deadline = subDays(recordDate, INVITATION_LEAD_DAYS);
-      const daysUntilDeadline = differenceInDays(deadline, today);
+      const emailDeadline = subDays(recordDate, SENDING_EMAIL_LEAD_DAYS);
+      const confirmationDeadline = subDays(recordDate, CONFIRMATION_LEAD_DAYS);
+      const daysUntilEmailDeadline = differenceInDays(emailDeadline, today);
+      const daysUntilConfirmationDeadline = differenceInDays(confirmationDeadline, today);
       const daysUntilRecordDate = differenceInDays(recordDate, today);
       
       // Count assigned seats for this record day
@@ -125,11 +130,11 @@ export default function Dashboard() {
       const confirmedCount = assignmentsForDay.filter(sa => sa.confirmedRsvp).length;
       const seatsAvailable = totalSeats - assignedSeats;
       
-      // Determine status
+      // Determine status based on confirmation deadline (most critical)
       let status: DeadlineStatus;
-      if (daysUntilDeadline < 0) {
+      if (daysUntilConfirmationDeadline < 0) {
         status = 'overdue';
-      } else if (daysUntilDeadline <= DUE_SOON_THRESHOLD) {
+      } else if (daysUntilConfirmationDeadline <= DUE_SOON_THRESHOLD) {
         status = 'due-soon';
       } else {
         status = 'on-track';
@@ -139,8 +144,10 @@ export default function Dashboard() {
         recordDayId: rd.id,
         recordDate,
         rxNumber: rd.rxNumber,
-        deadline,
-        daysUntilDeadline,
+        emailDeadline,
+        confirmationDeadline,
+        daysUntilEmailDeadline,
+        daysUntilConfirmationDeadline,
         daysUntilRecordDate,
         status,
         confirmedCount,
@@ -321,7 +328,7 @@ export default function Dashboard() {
             <Mail className="h-5 w-5" />
             Upcoming Deadlines
             <span className="text-sm font-normal text-muted-foreground ml-2">
-              (2 weeks before record)
+              (Confirmed 1wk / Email 2wks before record)
             </span>
           </CardTitle>
         </CardHeader>
@@ -351,32 +358,46 @@ export default function Dashboard() {
                             Record: {format(info.recordDate, "EEE, MMM d")}
                           </span>
                         </div>
-                        <div className="font-semibold">
-                          Deadline: {format(info.deadline, "EEE, MMM d")}
-                          {info.daysUntilDeadline === 0 && <span className="text-red-600 dark:text-red-400 ml-1">(TODAY)</span>}
+                        <div className="text-sm flex flex-col gap-1 mt-1">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <span className="font-semibold w-44">Confirmation Deadline:</span>
+                            <span className={info.daysUntilConfirmationDeadline < 0 ? "text-red-600 font-bold" : "font-medium text-foreground"}>
+                              {format(info.confirmationDeadline, "EEE, MMM d")}
+                              {info.daysUntilConfirmationDeadline === 0 && <span className="text-red-600 dark:text-red-400 ml-1">(TODAY)</span>}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <span className="font-semibold w-44">Sending Email Deadline:</span>
+                            <span className={info.daysUntilEmailDeadline < 0 ? "text-red-600 font-bold" : "font-medium text-foreground"}>
+                              {format(info.emailDeadline, "EEE, MMM d")}
+                              {info.daysUntilEmailDeadline === 0 && <span className="text-red-600 dark:text-red-400 ml-1">(TODAY)</span>}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
                     
                     <div className="flex items-center gap-4 flex-wrap">
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Confirmed: </span>
-                        <span className="font-medium">{info.confirmedCount}</span>
-                      </div>
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Assigned: </span>
-                        <span className="font-medium">{info.assignedSeats}</span>
-                        <span className="text-muted-foreground"> / {info.totalSeats}</span>
+                      <div className="text-sm text-right">
+                        <div>
+                          <span className="text-muted-foreground">Confirmed: </span>
+                          <span className="font-medium">{info.confirmedCount}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Assigned: </span>
+                          <span className="font-medium">{info.assignedSeats}</span>
+                          <span className="text-muted-foreground"> / {info.totalSeats}</span>
+                        </div>
                       </div>
                       <Badge 
                         variant={info.status === 'overdue' ? 'destructive' : info.status === 'due-soon' ? 'secondary' : 'default'}
                         className={`${style.text} ${style.bg} border ${style.border}`}
                       >
                         {info.status === 'overdue' 
-                          ? `${Math.abs(info.daysUntilDeadline)} days overdue`
-                          : info.daysUntilDeadline === 0 
-                            ? 'Due today!'
-                            : `${info.daysUntilDeadline} days left`
+                          ? `${Math.abs(info.daysUntilConfirmationDeadline)} days overdue`
+                          : info.daysUntilConfirmationDeadline === 0 
+                            ? 'Confirmation due today!'
+                            : `${info.daysUntilConfirmationDeadline} days until confirmation`
                         }
                       </Badge>
                     </div>
@@ -384,7 +405,7 @@ export default function Dashboard() {
                 );
               })}
             </div>
-          )}
+          ) : null}
         </CardContent>
       </Card>
 
