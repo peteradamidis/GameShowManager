@@ -327,7 +327,7 @@ export function SeatCard({
             <span>{seatLabel}</span>
           </div>
           <div className="flex items-center gap-1">
-            <p className="font-medium truncate text-xs flex-1" title={seat.contestantName}>
+            <p className="font-medium text-xs flex-1 leading-tight break-words" title={seat.contestantName}>
               {seat.contestantName}
             </p>
             {seat.isGroupSeparated && (
