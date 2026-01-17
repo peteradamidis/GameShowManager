@@ -28,11 +28,6 @@ const menuItems = [
     icon: CheckSquare,
   },
   {
-    title: "Standbys",
-    url: "/standbys",
-    icon: UserCheck,
-  },
-  {
     title: "Record Days",
     url: "/record-days",
     icon: Calendar,
@@ -48,6 +43,16 @@ const menuItems = [
     icon: ClipboardList,
   },
   {
+    title: "Players",
+    url: "/players",
+    icon: Star,
+  },
+  {
+    title: "Standbys",
+    url: "/standbys",
+    icon: UserCheck,
+  },
+  {
     title: "Booking Tracker",
     url: "/booking-responses",
     icon: MessageSquareText,
@@ -61,11 +66,6 @@ const menuItems = [
     title: "Reschedule",
     url: "/reschedule",
     icon: RefreshCcw,
-  },
-  {
-    title: "Players",
-    url: "/players",
-    icon: Star,
   },
   {
     title: "Winners",
