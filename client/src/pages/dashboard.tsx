@@ -2,10 +2,26 @@ import { StatsCard } from "@/components/stats-card";
 import { RecordDayCard, RecordDay } from "@/components/record-day-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { format, differenceInDays, subDays, startOfWeek, endOfWeek, addWeeks } from "date-fns";
+import { format, differenceInDays, subDays, startOfWeek, endOfWeek, addWeeks, formatDistanceToNow } from "date-fns";
+
+interface NoticeboardPost {
+  id: string;
+  authorName: string;
+  content: string;
+  createdAt: string;
+  isPinned: boolean;
+}
+
+// Track when user last visited the noticeboard
+const NOTICEBOARD_LAST_VISIT_KEY = "noticeboard_last_visit";
+const getLastVisit = () => {
+  const stored = localStorage.getItem(NOTICEBOARD_LAST_VISIT_KEY);
+  return stored ? new Date(stored) : new Date(0);
+};
 
 interface Contestant {
   id: string;
@@ -59,6 +75,15 @@ export default function Dashboard() {
   const { data: seatAssignments = [] } = useQuery<SeatAssignment[]>({
     queryKey: ['/api/seat-assignments'],
   });
+
+  // Fetch recent noticeboard posts
+  const { data: recentPosts = [] } = useQuery<NoticeboardPost[]>({
+    queryKey: ['/api/noticeboard/posts/recent'],
+  });
+
+  // Calculate new posts since last visit
+  const lastVisit = getLastVisit();
+  const newPostsCount = recentPosts.filter(p => new Date(p.createdAt) > lastVisit).length;
 
   // Calculate real statistics
   const totalApplicants = contestants.length;
@@ -226,6 +251,69 @@ export default function Dashboard() {
           icon={Calendar}
         />
       </div>
+
+      {/* Crew Noticeboard Updates */}
+      {recentPosts.length > 0 && (
+        <Card data-testid="card-noticeboard-updates" className="border-primary/20">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Megaphone className="h-5 w-5 text-primary" />
+                Crew Noticeboard
+                {newPostsCount > 0 && (
+                  <Badge variant="destructive" className="ml-2" data-testid="badge-new-posts">
+                    {newPostsCount} new
+                  </Badge>
+                )}
+              </CardTitle>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setLocation('/noticeboard')}
+                data-testid="button-view-noticeboard"
+              >
+                View All
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {recentPosts.slice(0, 3).map((post) => {
+                const isNew = new Date(post.createdAt) > lastVisit;
+                return (
+                  <div
+                    key={post.id}
+                    className={`p-3 rounded-lg border cursor-pointer hover-elevate ${
+                      isNew ? 'bg-primary/5 border-primary/30' : 'bg-muted/50'
+                    }`}
+                    onClick={() => setLocation('/noticeboard')}
+                    data-testid={`noticeboard-preview-${post.id}`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-sm">{post.authorName}</span>
+                          {isNew && (
+                            <Badge variant="secondary" className="text-xs px-1.5 py-0">NEW</Badge>
+                          )}
+                          {post.isPinned && (
+                            <Badge variant="outline" className="text-xs px-1.5 py-0">Pinned</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{post.content}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Invitation Deadlines Panel */}
       <Card data-testid="card-invitation-deadlines">

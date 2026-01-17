@@ -11541,6 +11541,25 @@ ${finalEmailFooter}`;
 
   // ===== NOTICEBOARD ENDPOINTS =====
   
+  // Get recent noticeboard posts (for dashboard preview)
+  app.get("/api/noticeboard/posts/recent", requireAuth, async (req, res) => {
+    try {
+      const posts = await storage.getNoticeboardPosts();
+      // Return only basic info for up to 5 most recent posts (pinned first)
+      const recentPosts = posts.slice(0, 5).map(p => ({
+        id: p.id,
+        authorName: p.authorName,
+        content: p.content,
+        createdAt: p.createdAt,
+        isPinned: p.isPinned,
+      }));
+      res.json(recentPosts);
+    } catch (error: any) {
+      console.error("Error getting recent noticeboard posts:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
   // Get all noticeboard posts
   app.get("/api/noticeboard/posts", requireAuth, async (req, res) => {
     try {
