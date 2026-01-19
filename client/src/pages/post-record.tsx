@@ -18,7 +18,6 @@ import {
   FileCheck2, 
   Search,
   Users,
-  Trash2,
   RefreshCw,
   Tv,
   Trophy,
@@ -154,24 +153,6 @@ export default function PostRecordPage() {
     onError: (error: Error) => {
       toast({ 
         title: "Update failed", 
-        description: error.message,
-        variant: "destructive" 
-      });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const response = await apiRequest("DELETE", `/api/post-record/${id}`, {});
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/post-record"] });
-      toast({ title: "Entry removed" });
-    },
-    onError: (error: Error) => {
-      toast({ 
-        title: "Delete failed", 
         description: error.message,
         variant: "destructive" 
       });
@@ -392,15 +373,27 @@ export default function PostRecordPage() {
     }
   };
 
-  const filteredData = postRecordData.filter((item) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      item.contestant?.name?.toLowerCase().includes(query) ||
-      item.contestant?.email?.toLowerCase().includes(query) ||
-      item.contestant?.phone?.toLowerCase().includes(query)
-    );
-  });
+  const filteredData = postRecordData
+    .filter((item) => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        item.contestant?.name?.toLowerCase().includes(query) ||
+        item.contestant?.email?.toLowerCase().includes(query) ||
+        item.contestant?.phone?.toLowerCase().includes(query)
+      );
+    })
+    .sort((a, b) => {
+      // Sort by record day date first
+      const dateA = a.recordDay?.date ? new Date(a.recordDay.date).getTime() : 0;
+      const dateB = b.recordDay?.date ? new Date(b.recordDay.date).getTime() : 0;
+      if (dateA !== dateB) return dateA - dateB;
+      
+      // Then sort by RX number
+      const rxA = a.seatAssignment?.rxNumber || a.rxNumberOverride || "";
+      const rxB = b.seatAssignment?.rxNumber || b.rxNumberOverride || "";
+      return rxA.localeCompare(rxB, undefined, { numeric: true });
+    });
 
   return (
     <div className={isFullscreen ? "fixed inset-0 flex flex-col p-2 bg-background gap-1 z-50" : "space-y-6"}>
@@ -913,24 +906,14 @@ export default function PostRecordPage() {
                                   </Button>
                                 </>
                               ) : (
-                                <>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => startEditing(item)}
-                                    data-testid={`button-edit-${item.id}`}
-                                  >
-                                    <Pencil className="h-4 w-4 text-muted-foreground" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => deleteMutation.mutate(item.id)}
-                                    data-testid={`button-delete-${item.id}`}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                  </Button>
-                                </>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => startEditing(item)}
+                                  data-testid={`button-edit-${item.id}`}
+                                >
+                                  <Pencil className="h-4 w-4 text-muted-foreground" />
+                                </Button>
                               )}
                             </div>
                           </TableCell>
