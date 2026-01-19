@@ -21,6 +21,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
+import { Switch } from "@/components/ui/switch";
 import { 
   FileCheck2, 
   Plus, 
@@ -31,7 +32,8 @@ import {
   Edit,
   Save,
   X,
-  RefreshCw
+  RefreshCw,
+  Tv
 } from "lucide-react";
 import type { RecordDay, Contestant, PostRecordTracking } from "@shared/schema";
 
@@ -45,6 +47,7 @@ const POST_RECORD_STORAGE_KEY = 'post-record-state';
 interface PostRecordState {
   selectedRecordDay: string;
   searchQuery: string;
+  showTxSection: boolean;
 }
 
 export default function PostRecordPage() {
@@ -61,6 +64,17 @@ export default function PostRecordPage() {
     return "all";
   });
   
+  const [showTxSection, setShowTxSection] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(POST_RECORD_STORAGE_KEY);
+      if (saved) {
+        const state: PostRecordState = JSON.parse(saved);
+        return state.showTxSection !== false; // Default to true
+      }
+    } catch {}
+    return true;
+  });
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedContestantId, setSelectedContestantId] = useState<string>("");
@@ -72,12 +86,13 @@ export default function PostRecordPage() {
       const state: PostRecordState = {
         selectedRecordDay,
         searchQuery,
+        showTxSection,
       };
       localStorage.setItem(POST_RECORD_STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
       console.error("Failed to save post-record state:", e);
     }
-  }, [selectedRecordDay, searchQuery]);
+  }, [selectedRecordDay, searchQuery, showTxSection]);
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
     queryKey: ["/api/record-days"],
@@ -271,6 +286,16 @@ export default function PostRecordPage() {
                 data-testid="input-search-post-record"
               />
             </div>
+            <div className="flex items-center gap-2 ml-auto">
+              <Tv className="h-4 w-4 text-yellow-600" />
+              <Label htmlFor="tx-toggle" className="text-sm font-medium">TX</Label>
+              <Switch
+                id="tx-toggle"
+                checked={showTxSection}
+                onCheckedChange={setShowTxSection}
+                data-testid="switch-tx-visibility"
+              />
+            </div>
           </div>
 
           {isLoading && (
@@ -280,16 +305,18 @@ export default function PostRecordPage() {
           )}
           
           <ScrollArea className="w-full">
-              <div className="min-w-[2600px]">
+              <div className={showTxSection ? "min-w-[2600px]" : "min-w-[2200px]"}>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead colSpan={3} className="text-center font-bold text-rose-800 dark:text-rose-200 bg-rose-100 dark:bg-rose-900/20 border-r-2">
                         RECORD
                       </TableHead>
-                      <TableHead colSpan={4} className="text-center font-bold text-yellow-800 dark:text-yellow-200 bg-yellow-100 dark:bg-yellow-900/20 border-r-2">
-                        TX
-                      </TableHead>
+                      {showTxSection && (
+                        <TableHead colSpan={4} className="text-center font-bold text-yellow-800 dark:text-yellow-200 bg-yellow-100 dark:bg-yellow-900/20 border-r-2">
+                          TX
+                        </TableHead>
+                      )}
                       <TableHead colSpan={11} className="text-center font-bold text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-900/20 border-r-2">
                         CONTESTANTS
                       </TableHead>
@@ -302,10 +329,14 @@ export default function PostRecordPage() {
                       <TableHead className="font-semibold text-center bg-rose-50 dark:bg-rose-900/10 min-w-[90px]">RX DATE</TableHead>
                       <TableHead className="font-semibold text-center bg-rose-50 dark:bg-rose-900/10 min-w-[70px]">RX DAY</TableHead>
                       <TableHead className="font-semibold text-center bg-rose-50 dark:bg-rose-900/10 border-r-2 min-w-[80px]">RX EP NO.</TableHead>
-                      <TableHead className="font-semibold text-center bg-yellow-50 dark:bg-yellow-900/10 min-w-[100px]">TX EP NUMBER</TableHead>
-                      <TableHead className="font-semibold text-center bg-yellow-50 dark:bg-yellow-900/10 min-w-[90px]">TX EP DATE</TableHead>
-                      <TableHead className="font-semibold text-center bg-yellow-50 dark:bg-yellow-900/10 min-w-[100px]">NOTIFIED OF TX?</TableHead>
-                      <TableHead className="font-semibold text-center bg-yellow-50 dark:bg-yellow-900/10 border-r-2 min-w-[90px]">PHOTO SENT</TableHead>
+                      {showTxSection && (
+                        <>
+                          <TableHead className="font-semibold text-center bg-yellow-50 dark:bg-yellow-900/10 min-w-[100px]">TX EP NUMBER</TableHead>
+                          <TableHead className="font-semibold text-center bg-yellow-50 dark:bg-yellow-900/10 min-w-[90px]">TX EP DATE</TableHead>
+                          <TableHead className="font-semibold text-center bg-yellow-50 dark:bg-yellow-900/10 min-w-[100px]">NOTIFIED OF TX?</TableHead>
+                          <TableHead className="font-semibold text-center bg-yellow-50 dark:bg-yellow-900/10 border-r-2 min-w-[90px]">PHOTO SENT</TableHead>
+                        </>
+                      )}
                       <TableHead className="font-semibold min-w-[150px] sticky left-0 bg-background z-10">Name</TableHead>
                       <TableHead className="font-semibold text-center">Player</TableHead>
                       <TableHead className="font-semibold min-w-[120px]">Phone</TableHead>
@@ -337,7 +368,7 @@ export default function PostRecordPage() {
                   <TableBody>
                     {filteredData.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={33} className="h-24 text-center text-muted-foreground">
+                        <TableCell colSpan={showTxSection ? 33 : 29} className="h-24 text-center text-muted-foreground">
                           No entries found. Click "Add Entry" to add contestants to track.
                         </TableCell>
                       </TableRow>
@@ -366,38 +397,42 @@ export default function PostRecordPage() {
                             />
                           </TableCell>
                           {/* TX columns */}
-                          <TableCell className="text-center bg-yellow-50/50 dark:bg-yellow-900/5">
-                            <Input
-                              value={item.txEpNumber || ""}
-                              onChange={(e) => handleFieldChange(item.id, "txEpNumber", e.target.value)}
-                              className="w-16 h-7 text-xs text-center"
-                              placeholder="-"
-                              data-testid={`input-tx-ep-number-${item.id}`}
-                            />
-                          </TableCell>
-                          <TableCell className="text-center bg-yellow-50/50 dark:bg-yellow-900/5">
-                            <Input
-                              type="date"
-                              value={item.txEpDate ? format(new Date(item.txEpDate), "yyyy-MM-dd") : ""}
-                              onChange={(e) => handleFieldChange(item.id, "txEpDate", e.target.value ? new Date(e.target.value).toISOString() : null)}
-                              className="w-28 h-7 text-xs"
-                              data-testid={`input-tx-ep-date-${item.id}`}
-                            />
-                          </TableCell>
-                          <TableCell className="text-center bg-yellow-50/50 dark:bg-yellow-900/5">
-                            <Checkbox
-                              checked={item.notifiedOfTx || false}
-                              onCheckedChange={(checked) => handleCheckboxChange(item.id, "notifiedOfTx", checked === true)}
-                              data-testid={`checkbox-notified-tx-${item.id}`}
-                            />
-                          </TableCell>
-                          <TableCell className="text-center bg-yellow-50/50 dark:bg-yellow-900/5 border-r-2">
-                            <Checkbox
-                              checked={item.photoSent || false}
-                              onCheckedChange={(checked) => handleCheckboxChange(item.id, "photoSent", checked === true)}
-                              data-testid={`checkbox-photo-sent-${item.id}`}
-                            />
-                          </TableCell>
+                          {showTxSection && (
+                            <>
+                              <TableCell className="text-center bg-yellow-50/50 dark:bg-yellow-900/5">
+                                <Input
+                                  value={item.txEpNumber || ""}
+                                  onChange={(e) => handleFieldChange(item.id, "txEpNumber", e.target.value)}
+                                  className="w-16 h-7 text-xs text-center"
+                                  placeholder="-"
+                                  data-testid={`input-tx-ep-number-${item.id}`}
+                                />
+                              </TableCell>
+                              <TableCell className="text-center bg-yellow-50/50 dark:bg-yellow-900/5">
+                                <Input
+                                  type="date"
+                                  value={item.txEpDate ? format(new Date(item.txEpDate), "yyyy-MM-dd") : ""}
+                                  onChange={(e) => handleFieldChange(item.id, "txEpDate", e.target.value ? new Date(e.target.value).toISOString() : null)}
+                                  className="w-28 h-7 text-xs"
+                                  data-testid={`input-tx-ep-date-${item.id}`}
+                                />
+                              </TableCell>
+                              <TableCell className="text-center bg-yellow-50/50 dark:bg-yellow-900/5">
+                                <Checkbox
+                                  checked={item.notifiedOfTx || false}
+                                  onCheckedChange={(checked) => handleCheckboxChange(item.id, "notifiedOfTx", checked === true)}
+                                  data-testid={`checkbox-notified-tx-${item.id}`}
+                                />
+                              </TableCell>
+                              <TableCell className="text-center bg-yellow-50/50 dark:bg-yellow-900/5 border-r-2">
+                                <Checkbox
+                                  checked={item.photoSent || false}
+                                  onCheckedChange={(checked) => handleCheckboxChange(item.id, "photoSent", checked === true)}
+                                  data-testid={`checkbox-photo-sent-${item.id}`}
+                                />
+                              </TableCell>
+                            </>
+                          )}
                           {/* CONTESTANTS columns */}
                           <TableCell className="font-medium sticky left-0 bg-background z-10">
                             {item.contestant?.name || "Unknown"}
