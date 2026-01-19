@@ -133,13 +133,14 @@ export default function StandbysPage() {
     
     // Create a map of contestant ID to their group identifier
     const contestantToGroup = new Map<string, string>();
-    const groupColors = [
-      "border-l-blue-500",
-      "border-l-purple-500", 
-      "border-l-green-500",
-      "border-l-orange-500",
-      "border-l-pink-500",
-      "border-l-teal-500",
+    // Use both border and background colors for much more obvious grouping
+    const groupStyles = [
+      { border: "border-l-4 border-l-blue-500", bg: "bg-blue-50 dark:bg-blue-950/30" },
+      { border: "border-l-4 border-l-purple-500", bg: "bg-purple-50 dark:bg-purple-950/30" }, 
+      { border: "border-l-4 border-l-green-500", bg: "bg-green-50 dark:bg-green-950/30" },
+      { border: "border-l-4 border-l-orange-500", bg: "bg-orange-50 dark:bg-orange-950/30" },
+      { border: "border-l-4 border-l-pink-500", bg: "bg-pink-50 dark:bg-pink-950/30" },
+      { border: "border-l-4 border-l-teal-500", bg: "bg-teal-50 dark:bg-teal-950/30" },
     ];
     
     // First pass: assign groups based on groupId
@@ -176,11 +177,11 @@ export default function StandbysPage() {
       }
     });
     
-    // Get unique groups and assign colors
+    // Get unique groups and assign styles
     const uniqueGroups = Array.from(new Set(contestantToGroup.values()));
-    const groupColorMap = new Map<string, string>();
+    const groupStyleMap = new Map<string, { border: string; bg: string }>();
     uniqueGroups.forEach((groupId, index) => {
-      groupColorMap.set(groupId, groupColors[index % groupColors.length]);
+      groupStyleMap.set(groupId, groupStyles[index % groupStyles.length]);
     });
     
     // Sort standbys so groups are together
@@ -197,8 +198,8 @@ export default function StandbysPage() {
     return sorted.map(s => ({
       ...s,
       groupIdentifier: contestantToGroup.get(s.contestantId) || null,
-      groupColor: contestantToGroup.has(s.contestantId) 
-        ? groupColorMap.get(contestantToGroup.get(s.contestantId)!) 
+      groupStyle: contestantToGroup.has(s.contestantId) 
+        ? groupStyleMap.get(contestantToGroup.get(s.contestantId)!) 
         : null,
       groupMembers: contestantToGroup.has(s.contestantId)
         ? standbysForRecordDay
@@ -472,6 +473,7 @@ export default function StandbysPage() {
                       </TableHead>
                       <TableHead className="w-16">Photo</TableHead>
                       <TableHead>Name</TableHead>
+                      <TableHead>Attending With</TableHead>
                       <TableHead>Rating</TableHead>
                       <TableHead>Gender</TableHead>
                       <TableHead>Email</TableHead>
@@ -487,7 +489,7 @@ export default function StandbysPage() {
                       <TableRow 
                         key={standby.id} 
                         data-testid={`row-standby-${standby.id}`}
-                        className={standby.groupColor ? `border-l-4 ${standby.groupColor}` : ''}
+                        className={standby.groupStyle ? `${standby.groupStyle.border} ${standby.groupStyle.bg}` : ''}
                       >
                         <TableCell>
                           <Checkbox
@@ -528,6 +530,9 @@ export default function StandbysPage() {
                               </Tooltip>
                             )}
                           </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {standby.contestant.attendingWith || "-"}
                         </TableCell>
                         <TableCell>
                           {standby.contestant.auditionRating ? (
