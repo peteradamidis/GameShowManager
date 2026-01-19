@@ -231,6 +231,48 @@ export default function Contestants() {
     return new Map(allSeatAssignments.map((sa: any) => [sa.contestantId, sa]));
   }, [allSeatAssignments]);
 
+  // Create a map of contestantId to paperwork status (combining seat assignments and canceled assignments)
+  const paperworkStatusMap = useMemo(() => {
+    const map = new Map<string, { status: 'received' | 'sent' | 'none'; receivedAt?: string; sentAt?: string }>();
+    
+    // First, add active seat assignments
+    allSeatAssignments.forEach((sa: any) => {
+      if (sa.paperworkReceived) {
+        map.set(sa.contestantId, { 
+          status: 'received', 
+          receivedAt: sa.paperworkReceived,
+          sentAt: sa.paperworkSent 
+        });
+      } else if (sa.paperworkSent) {
+        map.set(sa.contestantId, { 
+          status: 'sent', 
+          sentAt: sa.paperworkSent 
+        });
+      }
+    });
+    
+    // Then, check canceled assignments (for rescheduled contestants)
+    canceledAssignments.forEach((ca: any) => {
+      // Only add if not already in map from active assignment
+      if (!map.has(ca.contestantId)) {
+        if (ca.paperworkReceived) {
+          map.set(ca.contestantId, { 
+            status: 'received', 
+            receivedAt: ca.paperworkReceived,
+            sentAt: ca.paperworkSent 
+          });
+        } else if (ca.paperworkSent) {
+          map.set(ca.contestantId, { 
+            status: 'sent', 
+            sentAt: ca.paperworkSent 
+          });
+        }
+      }
+    });
+    
+    return map;
+  }, [allSeatAssignments, canceledAssignments]);
+
   // Find group members for the single selected contestant (for "Book with Group" button)
   const selectedContestantGroupMembers = useMemo(() => {
     if (selectedContestants.length !== 1) return [];
@@ -1426,6 +1468,7 @@ export default function Contestants() {
             onSearchChange={setSearchTerm}
             rescheduleContestantIds={rescheduleContestantIds}
             standbyContestantIds={standbyContestantIds}
+            paperworkStatusMap={paperworkStatusMap}
             allContestants={contestants}
             onBookWithGroup={(contestantIds) => {
               // Reset assign dialog state before opening for group booking

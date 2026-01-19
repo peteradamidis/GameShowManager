@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar, AlertTriangle, Users, CalendarPlus, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar, AlertTriangle, Users, CalendarPlus, ArrowUp, ArrowDown, ArrowUpDown, FileCheck } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -69,6 +69,12 @@ interface SeatAssignment {
   rating?: string | null;
 }
 
+interface PaperworkStatus {
+  status: 'received' | 'sent' | 'none';
+  receivedAt?: string;
+  sentAt?: string;
+}
+
 interface ContestantTableProps {
   contestants: Contestant[];
   selectedIds?: string[];
@@ -78,6 +84,7 @@ interface ContestantTableProps {
   onSearchChange?: (term: string) => void;
   rescheduleContestantIds?: Set<string>;
   standbyContestantIds?: Set<string>;
+  paperworkStatusMap?: Map<string, PaperworkStatus>;
   allContestants?: Contestant[];
   onBookWithGroup?: (contestantIds: string[]) => void;
   onDeleteContestant?: (contestantId: string) => void;
@@ -449,6 +456,7 @@ export function ContestantTable({
   onSearchChange,
   rescheduleContestantIds = new Set(),
   standbyContestantIds = new Set(),
+  paperworkStatusMap = new Map(),
   allContestants,
   onBookWithGroup,
   onDeleteContestant
@@ -1168,6 +1176,16 @@ export function ContestantTable({
                     {standbyContestantIds.has(contestant.id) && (
                       <Badge variant="outline" className="border-yellow-300 bg-yellow-500/20 text-yellow-800 dark:border-yellow-700 dark:text-yellow-400">
                         Standby
+                      </Badge>
+                    )}
+                    {paperworkStatusMap.get(contestant.id)?.status === 'received' && (
+                      <Badge variant="outline" className="border-teal-300 bg-teal-500/20 text-teal-800 dark:border-teal-700 dark:text-teal-400 text-xs px-1.5" title="Paperwork received" data-testid={`badge-paperwork-${contestant.id}`}>
+                        <FileCheck className="h-3 w-3" />
+                      </Badge>
+                    )}
+                    {paperworkStatusMap.get(contestant.id)?.status === 'sent' && (
+                      <Badge variant="outline" className="border-amber-300 bg-amber-500/20 text-amber-800 dark:border-amber-700 dark:text-amber-400 text-xs px-1.5" title="Paperwork sent, awaiting return" data-testid={`badge-paperwork-sent-${contestant.id}`}>
+                        PW
                       </Badge>
                     )}
                     {contestant.podiumStory && (
