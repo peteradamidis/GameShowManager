@@ -973,6 +973,19 @@ Deal or No Deal Production Team`);
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-orange-100 dark:bg-orange-900/20">
+                      <TableHead className="w-8 px-2">
+                        <Checkbox
+                          checked={selectedAssignments.size === filteredData.length && filteredData.length > 0}
+                          onCheckedChange={(checked) => {
+                            if (checked === true) {
+                              setSelectedAssignments(new Set(filteredData.map(item => item.id)));
+                            } else {
+                              setSelectedAssignments(new Set());
+                            }
+                          }}
+                          data-testid="checkbox-select-all-paperwork"
+                        />
+                      </TableHead>
                       <TableHead className="font-semibold">Name</TableHead>
                       <TableHead className="font-semibold">Record Day</TableHead>
                       <TableHead className="font-semibold">Seat</TableHead>
@@ -988,11 +1001,27 @@ Deal or No Deal Production Team`);
                       <TableRow 
                         key={item.id} 
                         className={`
-                          ${item.paperworkReceived ? 'bg-teal-50 dark:bg-teal-900/20' : 
+                          ${selectedAssignments.has(item.id) ? 'bg-orange-50 dark:bg-orange-900/10' :
+                            item.paperworkReceived ? 'bg-teal-50 dark:bg-teal-900/20' : 
                             item.paperworkSent ? 'bg-amber-50 dark:bg-amber-900/10' : ''}
                         `}
                         data-testid={`row-paperwork-${item.id}`}
                       >
+                        <TableCell className="px-2">
+                          <Checkbox
+                            checked={selectedAssignments.has(item.id)}
+                            onCheckedChange={(checked) => {
+                              const newSelected = new Set(selectedAssignments);
+                              if (checked === true) {
+                                newSelected.add(item.id);
+                              } else {
+                                newSelected.delete(item.id);
+                              }
+                              setSelectedAssignments(newSelected);
+                            }}
+                            data-testid={`checkbox-paperwork-${item.id}`}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium">
                           {item.contestant?.name || "Unknown"}
                         </TableCell>
