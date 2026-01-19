@@ -5706,10 +5706,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'bookingEmailSent', 'confirmedRsvp', 'wasDeclined', 'declinedAt', 'declinedBy', 'reason'
       ];
       
+      // Date fields that need conversion from ISO strings to Date objects
+      const dateFields = ['paperworkSent', 'paperworkReceived', 'paperworkOnDay', 'bookingEmailSent', 'confirmedRsvp', 'declinedAt'];
+      
       const updateData: Record<string, any> = {};
       for (const field of allowedFields) {
         if (req.body[field] !== undefined) {
-          updateData[field] = req.body[field];
+          let value = req.body[field];
+          // Convert date strings to Date objects for timestamp fields
+          if (dateFields.includes(field) && value !== null && typeof value === 'string') {
+            value = new Date(value);
+          }
+          updateData[field] = value;
         }
       }
       
