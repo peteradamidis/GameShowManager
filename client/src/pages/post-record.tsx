@@ -10,23 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { Switch } from "@/components/ui/switch";
 import { 
   FileCheck2, 
-  Plus, 
   Search,
-  Calendar,
   Users,
   Trash2,
   RefreshCw,
@@ -87,8 +77,6 @@ export default function PostRecordPage() {
   });
   
   const [searchQuery, setSearchQuery] = useState("");
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [selectedContestantId, setSelectedContestantId] = useState<string>("");
   const [isFullscreen, setIsFullscreen] = useState(false);
   
   // Confirmation dialog for unticking checkboxes
@@ -131,30 +119,6 @@ export default function PostRecordPage() {
       const response = await fetch(buildPostRecordUrl());
       if (!response.ok) throw new Error("Failed to fetch post-record data");
       return response.json();
-    },
-  });
-
-  const { data: contestants = [] } = useQuery<Contestant[]>({
-    queryKey: ["/api/contestants"],
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async (data: { contestantId: string; recordDayId?: string }) => {
-      const response = await apiRequest("POST", "/api/post-record", data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/post-record"] });
-      setAddDialogOpen(false);
-      setSelectedContestantId("");
-      toast({ title: "Added contestant to post-record tracking" });
-    },
-    onError: (error: Error) => {
-      toast({ 
-        title: "Failed to add", 
-        description: error.message,
-        variant: "destructive" 
-      });
     },
   });
 
@@ -286,10 +250,6 @@ export default function PostRecordPage() {
     );
   });
 
-  const contestantsNotInTracking = contestants.filter(
-    (c) => !postRecordData.some((p) => p.contestantId === c.id)
-  );
-
   return (
     <div className={isFullscreen ? "fixed inset-0 flex flex-col p-2 bg-background gap-1 z-50" : "space-y-6"}>
       {/* Confirmation dialog for unticking checkboxes */}
@@ -350,14 +310,6 @@ export default function PostRecordPage() {
               >
                 <Trophy className="h-4 w-4 mr-1" />
                 {importWinnersMutation.isPending ? "..." : (isFullscreen ? "Import" : "Import Winners")}
-              </Button>
-              <Button
-                size={isFullscreen ? "sm" : "default"}
-                onClick={() => setAddDialogOpen(true)}
-                data-testid="button-add-post-record"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                {isFullscreen ? "Add" : "Add Entry"}
               </Button>
             </div>
           </div>
@@ -477,7 +429,7 @@ export default function PostRecordPage() {
                     {filteredData.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={showTxSection ? 33 : 29} className="h-24 text-center text-muted-foreground">
-                          No entries found. Click "Add Entry" to add contestants to track.
+                          No entries found. Use "Import Winners" to automatically add contestants.
                         </TableCell>
                       </TableRow>
                     ) : filteredData.map((item) => (
@@ -720,56 +672,6 @@ export default function PostRecordPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Post-Record Entry</DialogTitle>
-            <DialogDescription>
-              Select a contestant to add to post-record tracking
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Contestant</Label>
-              <Select
-                value={selectedContestantId}
-                onValueChange={setSelectedContestantId}
-              >
-                <SelectTrigger data-testid="select-add-contestant">
-                  <SelectValue placeholder="Select a contestant" />
-                </SelectTrigger>
-                <SelectContent>
-                  {contestantsNotInTracking.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name} {c.email ? `(${c.email})` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {selectedRecordDay !== "all" && (
-              <p className="text-sm text-muted-foreground">
-                Will be added to record day: {recordDays.find(r => r.id === selectedRecordDay)?.date ? format(new Date(recordDays.find(r => r.id === selectedRecordDay)!.date), "MMM d, yyyy") : ""}
-              </p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => createMutation.mutate({
-                contestantId: selectedContestantId,
-                recordDayId: selectedRecordDay !== "all" ? selectedRecordDay : undefined,
-              })}
-              disabled={!selectedContestantId || createMutation.isPending}
-              data-testid="button-confirm-add"
-            >
-              Add Entry
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
