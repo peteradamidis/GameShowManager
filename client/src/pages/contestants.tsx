@@ -39,7 +39,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     invited: "border-purple-200 bg-purple-500/10 text-purple-700 dark:border-purple-800 dark:text-purple-400",
     confirmed: "border-teal-200 bg-teal-500/10 text-teal-700 dark:border-teal-800 dark:text-teal-400",
     returning_standby: "border-orange-200 bg-orange-500/10 text-orange-700 dark:border-orange-800 dark:text-orange-400",
-    rescheduled: "border-amber-300 bg-amber-500/20 text-amber-800 dark:border-amber-700 dark:text-amber-400",
+    rescheduled: "border-rose-400 bg-rose-500/20 text-rose-800 dark:border-rose-700 dark:text-rose-300",
   };
   
   const displayLabels: Record<string, string> = {
