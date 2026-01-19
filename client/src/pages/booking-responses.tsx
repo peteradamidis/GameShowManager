@@ -43,7 +43,7 @@ import {
   ChevronDown,
   ChevronRight
 } from "lucide-react";
-import type { RecordDay, Contestant, SeatAssignment, RebookingHistory, StandbyAssignment } from "@shared/schema";
+import type { RecordDay, Contestant, SeatAssignment, RebookingHistory, StandbyAssignment, CanceledAssignment } from "@shared/schema";
 
 interface BookingAssignment extends SeatAssignment {
   contestant: Contestant | null;
@@ -59,6 +59,11 @@ interface RebookingHistoryEntry extends RebookingHistory {
   contestant?: Contestant;
   fromRecordDay: RecordDay;
   toRecordDay: RecordDay;
+}
+
+interface CanceledAssignmentWithDetails extends CanceledAssignment {
+  contestant: Contestant;
+  recordDay: RecordDay;
 }
 
 interface BookingTrackerResponse {
@@ -300,6 +305,26 @@ export default function BookingResponses() {
     enabled: viewMode === "standbys",
   });
 
+  // Query for canceled assignments (declined contestants now on reschedule list)
+  const { data: canceledAssignments = [] } = useQuery<CanceledAssignmentWithDetails[]>({
+    queryKey: ["/api/canceled-assignments"],
+    queryFn: async () => {
+      const response = await fetch("/api/canceled-assignments", { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch canceled assignments');
+      return response.json();
+    },
+    enabled: statusFilter === "declined",
+  });
+
+  // Filter canceled assignments by record day if one is selected
+  const filteredCanceledAssignments = canceledAssignments.filter(ca => {
+    // Only show declined contestants
+    if (!ca.wasDeclined) return false;
+    // Filter by record day if selected
+    if (selectedRecordDay && ca.recordDayId !== selectedRecordDay) return false;
+    return true;
+  });
+
   // Query for seat assignments on the rebook record day (to show available seats)
   const { data: rebookDayAssignments = [] } = useQuery<SeatAssignment[]>({
     queryKey: ["/api/seat-assignments", { recordDayId: rebookRecordDayId }],
@@ -351,7 +376,8 @@ export default function BookingResponses() {
           key.startsWith('/api/paperwork') ||
           key.startsWith('/api/contestants') ||
           key.startsWith('/api/booking-master') ||
-          key.startsWith('/api/rebooking-history')
+          key.startsWith('/api/rebooking-history') ||
+          key.startsWith('/api/canceled-assignments')
         );
       },
     });
@@ -717,11 +743,18 @@ export default function BookingResponses() {
   });
 
   // Use stats from API (computed from record-day-filtered but not status-filtered data)
+  // Plus add canceled assignments with wasDeclined to declined count
   const totalCount = stats.total;
   const notSentCount = stats.notSent;
   const awaitingCount = stats.awaiting;
   const confirmedCount = stats.confirmed;
-  const declinedCount = stats.declined;
+  // Include both active declined assignments and canceled assignments that were declined
+  const rescheduledDeclinedCount = canceledAssignments.filter(ca => {
+    if (!ca.wasDeclined) return false;
+    if (selectedRecordDay && ca.recordDayId !== selectedRecordDay) return false;
+    return true;
+  }).length;
+  const declinedCount = stats.declined + rescheduledDeclinedCount;
   
   // Helper to check if assignment is declined
   const isDeclined = (a: BookingAssignment) => a.notes?.startsWith('[DECLINED]');
@@ -1765,6 +1798,127 @@ export default function BookingResponses() {
                     </TableRow>
                   );
                 })}
+                
+                {/* Rescheduled/Declined contestants from canceled assignments */}
+                {statusFilter === "declined" && filteredCanceledAssignments.map((item) => (
+                  <TableRow 
+                    key={`canceled-${item.id}`}
+                    className="bg-red-50 dark:bg-red-950/20"
+                    data-testid={`row-canceled-${item.id}`}
+                  >
+                    <TableCell>
+                      <span className="text-xs text-muted-foreground">-</span>
+                    </TableCell>
+                    <TableCell className="py-1">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          {item.contestant?.photoUrl && (
+                            <AvatarImage src={item.contestant.photoUrl} alt={item.contestant?.name || ''} />
+                          )}
+                          <AvatarFallback className="text-[10px]">
+                            {(item.contestant?.name || '?').split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-xs">{item.contestant?.name || 'Unknown'}</span>
+                          <Badge variant="outline" className="w-fit text-[9px] px-1 py-0 border-amber-500 text-amber-600">
+                            Rescheduled
+                          </Badge>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-1">
+                      {item.contestant?.auditionRating ? (
+                        <Badge 
+                          variant="outline" 
+                          className={`text-[10px] px-1.5 py-0 ${
+                            item.contestant.auditionRating === 'A+' ? 'border-green-500 text-green-600 dark:text-green-400' :
+                            item.contestant.auditionRating === 'A' ? 'border-green-400 text-green-500 dark:text-green-300' :
+                            item.contestant.auditionRating === 'B+' ? 'border-blue-400 text-blue-500 dark:text-blue-300' :
+                            item.contestant.auditionRating === 'B' ? 'border-blue-300 text-blue-400 dark:text-blue-200' :
+                            item.contestant.auditionRating === 'C' ? 'border-orange-400 text-orange-500 dark:text-orange-300' :
+                            item.contestant.auditionRating === 'P' ? 'border-purple-400 text-purple-500 dark:text-purple-300' :
+                            ''
+                          }`}
+                        >
+                          {item.contestant.auditionRating}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-1 max-w-[160px]">
+                      {item.contestant?.attendingWith ? (
+                        <div className="flex flex-col text-xs text-muted-foreground">
+                          {item.contestant.attendingWith.split(/[,&]/).map((name, idx) => (
+                            <span key={idx} className="truncate" title={name.trim()}>{name.trim()}</span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-1">
+                      <div className="flex flex-col text-xs">
+                        <span>
+                          {item.recordDay?.date 
+                            ? format(new Date(item.recordDay.date), "MMM d") 
+                            : "-"}
+                        </span>
+                        {item.recordDay?.rxNumber && (
+                          <span className="text-muted-foreground text-[10px]">
+                            {item.recordDay.rxNumber}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-1">
+                      <span className="text-xs font-mono text-muted-foreground">
+                        {item.blockNumber ? `${item.blockNumber}-${item.seatLabel}` : '-'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-1">
+                      <span className="text-xs text-muted-foreground truncate max-w-[120px] block">
+                        {item.contestant?.email || "-"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center py-1 px-2">
+                      {item.bookingEmailSent ? (
+                        <div className="flex items-center justify-center gap-1 text-green-600 dark:text-green-400">
+                          <MailCheck className="h-3 w-3" />
+                          <span className="text-[10px]">
+                            {format(new Date(item.bookingEmailSent), "M/d")}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center py-1 px-2">
+                      <Badge variant="destructive" className="text-[10px] px-1.5">
+                        <XCircle className="h-2.5 w-2.5 mr-0.5" />
+                        Declined
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center py-1 px-2">
+                      <span className="text-xs text-muted-foreground">-</span>
+                    </TableCell>
+                    <TableCell className="py-1 px-2">
+                      <div className="text-xs text-muted-foreground">
+                        {item.declinedAt && (
+                          <div className="text-[10px]">
+                            {format(new Date(item.declinedAt), "M/d h:mma")}
+                          </div>
+                        )}
+                        {item.reason && (
+                          <div className="text-[10px] truncate max-w-[100px]" title={item.reason}>
+                            {item.reason.replace('[DECLINED] ', '')}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
             </div>

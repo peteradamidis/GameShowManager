@@ -40,7 +40,7 @@ import {
   AlertTriangle,
   Copy
 } from "lucide-react";
-import type { RecordDay, Contestant, SeatAssignment, StandbyAssignment } from "@shared/schema";
+import type { RecordDay, Contestant, SeatAssignment, StandbyAssignment, CanceledAssignment } from "@shared/schema";
 
 interface PaperworkAssignment extends SeatAssignment {
   contestant: Contestant | null;
@@ -50,6 +50,11 @@ interface PaperworkAssignment extends SeatAssignment {
 interface StandbyWithContestant extends StandbyAssignment {
   contestant: Contestant;
   recordDay?: RecordDay;
+}
+
+interface CanceledAssignmentWithDetails extends CanceledAssignment {
+  contestant: Contestant;
+  recordDay: RecordDay;
 }
 
 interface AdobeSignConfig {
@@ -62,7 +67,7 @@ interface AdobeSignConfig {
   hasPassword: boolean;
 }
 
-type StatusFilter = "all" | "invited" | "confirmed";
+type StatusFilter = "all" | "invited" | "confirmed" | "declined";
 type PaperworkStatusFilter = "all" | "ready_to_send" | "awaiting_return" | "complete" | "new_only";
 type BlockFilter = "all" | "1" | "2" | "3" | "4" | "5" | "6" | "7";
 type ViewMode = "seats" | "standbys";
@@ -245,11 +250,34 @@ Deal or No Deal Production Team`);
     enabled: viewMode === "standbys",
   });
 
+  // Query for canceled assignments (declined contestants on reschedule list)
+  const { data: canceledAssignments = [] } = useQuery<CanceledAssignmentWithDetails[]>({
+    queryKey: ["/api/canceled-assignments"],
+    queryFn: async () => {
+      const response = await fetch("/api/canceled-assignments", { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch canceled assignments');
+      return response.json();
+    },
+    enabled: statusFilter === "declined",
+  });
+
+  // Filter canceled assignments by record day if one is selected
+  const filteredCanceledAssignments = canceledAssignments.filter(ca => {
+    // Only show declined contestants
+    if (!ca.wasDeclined) return false;
+    // Filter by record day if selected
+    if (selectedRecordDay !== "all" && ca.recordDayId !== selectedRecordDay) return false;
+    return true;
+  });
+
   const invalidatePaperworkQueries = async () => {
     await queryClient.invalidateQueries({
       predicate: (query) => {
         const key = query.queryKey[0];
-        return typeof key === 'string' && key.startsWith('/api/paperwork');
+        return typeof key === 'string' && (
+          key.startsWith('/api/paperwork') ||
+          key.startsWith('/api/canceled-assignments')
+        );
       },
     });
     // Also invalidate seat assignments for sync with Booking Master
@@ -705,6 +733,7 @@ Deal or No Deal Production Team`);
                     <SelectItem value="all">All Invited</SelectItem>
                     <SelectItem value="invited">Invited Only</SelectItem>
                     <SelectItem value="confirmed">Confirmed Only</SelectItem>
+                    <SelectItem value="declined">Declined (Rescheduled)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1117,6 +1146,103 @@ Deal or No Deal Production Team`);
                                 <Send className="h-3 w-3 mr-1" />
                                 Ready To Send
                               </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    
+                    {/* Rescheduled/Declined contestants from canceled assignments */}
+                    {statusFilter === "declined" && filteredCanceledAssignments.map((item) => (
+                      <TableRow 
+                        key={`canceled-${item.id}`}
+                        className="bg-red-50 dark:bg-red-950/20"
+                        data-testid={`row-canceled-paperwork-${item.id}`}
+                      >
+                        <TableCell className="px-2">
+                          <span className="text-xs text-muted-foreground">-</span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{item.contestant?.name || "Unknown"}</span>
+                            <Badge variant="outline" className="w-fit text-[10px] px-1 py-0 border-amber-500 text-amber-600 mt-1">
+                              Rescheduled
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 text-muted-foreground" />
+                            {item.recordDay ? format(new Date(item.recordDay.date), "MMM d, yyyy") : "N/A"}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {item.blockNumber ? (
+                            <Badge className="bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700">
+                              Block {item.blockNumber} - {item.seatLabel}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell 
+                          className="text-sm select-all cursor-text"
+                          title="Click to select, then Ctrl+C to copy"
+                        >
+                          {item.contestant?.email || "-"}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="destructive">
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Declined
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={!!item.paperworkSent}
+                            disabled={true}
+                            data-testid={`checkbox-canceled-sent-${item.id}`}
+                          />
+                          {item.paperworkSent && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {format(new Date(item.paperworkSent), "MMM d")}
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={!!item.paperworkReceived}
+                            disabled={true}
+                            data-testid={`checkbox-canceled-received-${item.id}`}
+                          />
+                          {item.paperworkReceived && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {format(new Date(item.paperworkReceived), "MMM d")}
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1 items-start">
+                            {item.paperworkReceived ? (
+                              <Badge className="bg-teal-600 text-white dark:bg-teal-600">
+                                <FileCheck className="h-3 w-3 mr-1" />
+                                Complete
+                              </Badge>
+                            ) : item.paperworkSent ? (
+                              <Badge className="bg-amber-500 text-white dark:bg-amber-500">
+                                <Clock className="h-3 w-3 mr-1" />
+                                Awaiting Return
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-muted-foreground">
+                                <Send className="h-3 w-3 mr-1" />
+                                Not Sent
+                              </Badge>
+                            )}
+                            {item.declinedAt && (
+                              <span className="text-[10px] text-muted-foreground">
+                                Declined {format(new Date(item.declinedAt), "M/d")}
+                              </span>
                             )}
                           </div>
                         </TableCell>
