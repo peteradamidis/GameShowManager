@@ -358,7 +358,7 @@ export default function ReschedulePage() {
                   <TableHead className="w-16">Photo</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Paperwork</TableHead>
+                  <TableHead>Rating</TableHead>
                   <TableHead>Age</TableHead>
                   <TableHead>Gender</TableHead>
                   <TableHead>Original Attendance</TableHead>
@@ -394,7 +394,19 @@ export default function ReschedulePage() {
                       </Avatar>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {cancellation.contestant.name}
+                      <div className="flex items-center gap-1.5">
+                        <span>{cancellation.contestant.name}</span>
+                        {cancellation.paperworkReceived && (
+                          <Badge variant="outline" className="border-teal-300 bg-teal-500/20 text-teal-800 dark:border-teal-700 dark:text-teal-400 text-xs px-1.5" title="Paperwork received">
+                            <FileCheck className="h-3 w-3" />
+                          </Badge>
+                        )}
+                        {!cancellation.paperworkReceived && cancellation.paperworkSent && (
+                          <Badge variant="outline" className="border-amber-300 bg-amber-500/20 text-amber-800 dark:border-amber-700 dark:text-amber-400 text-xs px-1.5" title="Paperwork sent, awaiting return">
+                            PW
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {cancellation.isFromStandby ? (
@@ -408,14 +420,9 @@ export default function ReschedulePage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {cancellation.paperworkReceived ? (
-                        <Badge className="bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300">
-                          <FileCheck className="h-3 w-3 mr-1" />
-                          Received
-                        </Badge>
-                      ) : cancellation.paperworkSent ? (
-                        <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                          Sent
+                      {cancellation.contestant.auditionRating ? (
+                        <Badge variant="outline">
+                          {cancellation.contestant.auditionRating}
                         </Badge>
                       ) : (
                         <span className="text-muted-foreground text-xs">—</span>
