@@ -1603,7 +1603,7 @@ export function ContestantTable({
                         <label className="text-xs font-medium text-muted-foreground">Rating</label>
                         {contestantDetails.auditionRating?.toUpperCase().trim() === 'DNU' ? (
                           <Badge variant="destructive" className="text-xs font-bold">
-                            DNU - Do Not Use
+                            DNU
                           </Badge>
                         ) : (
                           <p className={`text-sm font-semibold ${
