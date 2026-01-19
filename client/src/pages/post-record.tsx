@@ -553,10 +553,10 @@ export default function PostRecordPage() {
                             />
                           </TableCell>
                           <TableCell className="border-r-2">
-                            <Input
+                            <Textarea
                               value={item.notes || ""}
                               onChange={(e) => handleFieldChange(item.id, "notes", e.target.value || null)}
-                              className="w-48 h-7 text-xs"
+                              className="min-w-[200px] min-h-[28px] h-7 text-xs resize"
                               placeholder="-"
                               data-testid={`input-notes-${item.id}`}
                             />
