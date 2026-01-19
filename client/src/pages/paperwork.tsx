@@ -433,9 +433,14 @@ Deal or No Deal Production Team`);
 
   // Filter by search, block, and paperwork status, then sort for stable ordering
   const filteredData = paperworkData.filter((item) => {
-    // Filter by name search
-    if (searchName && !item.contestant?.name?.toLowerCase().includes(searchName.toLowerCase())) {
-      return false;
+    // Filter by name or email search
+    if (searchName) {
+      const searchLower = searchName.toLowerCase();
+      const nameMatch = item.contestant?.name?.toLowerCase().includes(searchLower);
+      const emailMatch = item.contestant?.email?.toLowerCase().includes(searchLower);
+      if (!nameMatch && !emailMatch) {
+        return false;
+      }
     }
     // Filter by block
     if (blockFilter !== "all" && item.blockNumber !== parseInt(blockFilter)) {
@@ -644,10 +649,10 @@ Deal or No Deal Production Team`);
               <div className="flex items-center gap-2">
                 <Search className="h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by name..."
+                  placeholder="Search name or email..."
                   value={searchName}
                   onChange={(e) => setSearchName(e.target.value)}
-                  className="w-[200px]"
+                  className="w-[220px]"
                   data-testid="input-search-name"
                 />
               </div>
@@ -827,9 +832,12 @@ Deal or No Deal Production Team`);
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Users className="h-5 w-5 text-amber-600" />
-                      Standbys ({standbyData.filter(s => 
-                        (!searchName || s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase()))
-                      ).length})
+                      Standbys ({standbyData.filter(s => {
+                        if (!searchName) return true;
+                        const searchLower = searchName.toLowerCase();
+                        return s.contestant?.name?.toLowerCase().includes(searchLower) || 
+                               s.contestant?.email?.toLowerCase().includes(searchLower);
+                      }).length})
                     </CardTitle>
                     <CardDescription>
                       Backup contestants for the selected record day
@@ -863,7 +871,12 @@ Deal or No Deal Production Team`);
                     </TableHeader>
                     <TableBody>
                       {standbyData
-                        .filter(s => !searchName || s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase()))
+                        .filter(s => {
+                          if (!searchName) return true;
+                          const searchLower = searchName.toLowerCase();
+                          return s.contestant?.name?.toLowerCase().includes(searchLower) || 
+                                 s.contestant?.email?.toLowerCase().includes(searchLower);
+                        })
                         .sort((a, b) => (a.priority || 999) - (b.priority || 999))
                         .map((standby) => (
                           <TableRow 
