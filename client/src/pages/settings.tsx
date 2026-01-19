@@ -2154,6 +2154,8 @@ function BackupSection() {
 function DataMaintenanceSection() {
   const [isFixingStatus, setIsFixingStatus] = useState(false);
   const [fixResult, setFixResult] = useState<{ fixedCount: number; fixedContestants: Array<{ id: string; name: string }> } | null>(null);
+  const [isFixingDeclined, setIsFixingDeclined] = useState(false);
+  const [declinedFixResult, setDeclinedFixResult] = useState<{ fixedCount: number; totalCanceled: number } | null>(null);
   const { toast } = useToast();
 
   const handleFixStatus = async () => {
@@ -2182,6 +2184,35 @@ function DataMaintenanceSection() {
       });
     } finally {
       setIsFixingStatus(false);
+    }
+  };
+
+  const handleFixDeclined = async () => {
+    setIsFixingDeclined(true);
+    setDeclinedFixResult(null);
+    try {
+      const response = await apiRequest("POST", "/api/canceled-assignments/fix-declined");
+      const data = await response.json();
+      
+      if (response.ok) {
+        setDeclinedFixResult({ fixedCount: data.fixedCount, totalCanceled: data.totalCanceled });
+        toast({
+          title: "Declined fix completed",
+          description: data.fixedCount > 0 
+            ? `Fixed ${data.fixedCount} declined record(s). They will now appear in the Paperwork declined filter.`
+            : "All declined records are already properly marked.",
+        });
+      } else {
+        throw new Error(data.error || "Fix failed");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Fix failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsFixingDeclined(false);
     }
   };
 
@@ -2241,6 +2272,46 @@ function DataMaintenanceSection() {
                   )}
                 </ul>
               </div>
+            )}
+          </div>
+        )}
+
+        <Separator className="my-4" />
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Fix Legacy Declined Records</p>
+          <p className="text-sm text-muted-foreground">
+            Finds cancelled bookings that were declined (contain "DECLINED" in the reason) but weren't properly 
+            marked. After fixing, these records will appear in the Paperwork "Declined" filter.
+          </p>
+        </div>
+        
+        <Button 
+          onClick={handleFixDeclined} 
+          disabled={isFixingDeclined}
+          data-testid="button-fix-declined"
+        >
+          {isFixingDeclined ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Fixing...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Fix Declined Records
+            </>
+          )}
+        </Button>
+        
+        {declinedFixResult && (
+          <div className="p-3 rounded-lg bg-muted text-sm">
+            {declinedFixResult.fixedCount === 0 ? (
+              <p className="text-green-600 dark:text-green-400">All declined records are already properly marked.</p>
+            ) : (
+              <p className="text-amber-600 dark:text-amber-400 font-medium">
+                Fixed {declinedFixResult.fixedCount} declined record(s) out of {declinedFixResult.totalCanceled} total cancelled assignments.
+              </p>
             )}
           </div>
         )}

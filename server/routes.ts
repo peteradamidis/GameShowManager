@@ -2433,6 +2433,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fix legacy declined records - marks canceled assignments with DECLINED reason as wasDeclined=true
+  app.post("/api/canceled-assignments/fix-declined", requireAuth, async (req, res) => {
+    try {
+      // Get all canceled assignments
+      const allCanceled = await storage.getCanceledSeatAssignments();
+      
+      // Find canceled assignments that have DECLINED in reason but wasDeclined is false
+      const legacyDeclined = allCanceled.filter(c => 
+        c.reason && 
+        c.reason.toUpperCase().includes('DECLINED') && 
+        !c.wasDeclined
+      );
+      
+      // Update each to have wasDeclined = true
+      let fixedCount = 0;
+      const fixedRecords: Array<{ id: string; contestantId: string; reason: string }> = [];
+      
+      for (const canceled of legacyDeclined) {
+        await storage.updateCanceledAssignment(canceled.id, { wasDeclined: true });
+        fixedCount++;
+        fixedRecords.push({
+          id: canceled.id,
+          contestantId: canceled.contestantId,
+          reason: canceled.reason || '',
+        });
+      }
+      
+      console.log(`[Fix Declined] Fixed ${fixedCount} legacy declined records`);
+      
+      res.json({
+        message: `Fixed ${fixedCount} legacy declined records`,
+        fixedCount,
+        totalCanceled: allCanceled.length,
+        fixedRecords,
+      });
+    } catch (error: any) {
+      console.error("[Fix Declined] Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Fix phone numbers - adds 0 prefix to Australian mobile numbers starting with 4
   app.post("/api/contestants/fix-phone-numbers", requireAuth, async (req, res) => {
     try {
