@@ -524,19 +524,23 @@ export default function PostRecordPage() {
                              item.seatAssignment?.spinTheWheel === false ? 'No' : '-'}
                           </TableCell>
                           <TableCell className="text-center">
-                            <Select
-                              value={item.bankOfferTaken === null ? "n/a" : item.bankOfferTaken ? "yes" : "no"}
-                              onValueChange={(value) => handleFieldChange(item.id, "bankOfferTaken", value === "n/a" ? null : value === "yes")}
-                            >
-                              <SelectTrigger className="w-16 h-7 text-xs" data-testid={`select-bank-offer-${item.id}`}>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="n/a">N/A</SelectItem>
-                                <SelectItem value="yes">Yes</SelectItem>
-                                <SelectItem value="no">No</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            {item.seatAssignment?.winningMoneyRole === 'case_holder' ? (
+                              <span className="text-xs text-muted-foreground">-</span>
+                            ) : (
+                              <Select
+                                value={item.bankOfferTaken === null ? "n/a" : item.bankOfferTaken ? "yes" : "no"}
+                                onValueChange={(value) => handleFieldChange(item.id, "bankOfferTaken", value === "n/a" ? null : value === "yes")}
+                              >
+                                <SelectTrigger className="w-16 h-7 text-xs" data-testid={`select-bank-offer-${item.id}`}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="n/a">N/A</SelectItem>
+                                  <SelectItem value="yes">Yes</SelectItem>
+                                  <SelectItem value="no">No</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
                           </TableCell>
                           <TableCell className="text-center">
                             <Input
