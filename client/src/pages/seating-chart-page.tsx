@@ -566,6 +566,7 @@ export default function SeatingChartPage() {
               notes: assignment.notes,
               attendingWithOverride: assignment.attendingWithOverride,
               mobilityNotesOverride: assignment.mobilityNotesOverride,
+              podiumStory: assignment.podiumStory,
             };
           }
         }

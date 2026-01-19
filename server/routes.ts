@@ -3167,6 +3167,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           photoUrl: contestant?.photoUrl,
           contestantLocation: contestant?.location,
           criminalRecord: contestant?.criminalRecord,
+          podiumStory: contestant?.podiumStory,
+          attendingWithOverride: assignment.attendingWithOverride,
+          mobilityNotesOverride: assignment.mobilityNotesOverride,
         };
       });
 

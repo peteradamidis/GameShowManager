@@ -62,6 +62,7 @@ export interface SeatData {
   notes?: string; // Notes (syncs with Booking Master NOTES column)
   attendingWithOverride?: string; // Override for attending with when it changes after invitation
   mobilityNotesOverride?: string; // Override for mobility/medical notes when they change after invitation
+  podiumStory?: boolean; // True if contestant has a podium story
 }
 
 interface SeatCardProps {
@@ -398,6 +399,21 @@ export function SeatCard({
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
                   <p>Has criminal record notes</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {seat.podiumStory && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span 
+                    className="inline-flex items-center justify-center px-1 h-3.5 rounded bg-purple-200/70 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400 text-[9px] font-bold flex-shrink-0" 
+                    data-testid={`podium-story-icon-${seat.assignmentId}`}
+                  >
+                    PS
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  <p>Has podium story</p>
                 </TooltipContent>
               </Tooltip>
             )}
