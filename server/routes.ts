@@ -10823,6 +10823,10 @@ ${finalEmailFooter}`;
     // Allow iframe embedding from same origin
     res.removeHeader('X-Frame-Options');
     res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+    // Prevent caching to ensure latest template is always shown
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     
     try {
       // Get saved template values with fallback defaults
@@ -10838,7 +10842,11 @@ ${finalEmailFooter}`;
       // Get record day data if provided
       const recordDayId = req.query.recordDayId as string | undefined;
       let sampleName = 'Sarah Johnson';
-      let sampleDate = 'Wednesday, 15 January 2026';
+      // Use a dynamic sample date (2 weeks from now) to avoid caching confusion
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 14);
+      const sampleDateOptions: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+      let sampleDate = futureDate.toLocaleDateString('en-AU', sampleDateOptions).toUpperCase();
       let sampleRx = 'RX01';
       
       if (recordDayId) {
