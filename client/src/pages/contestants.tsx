@@ -38,14 +38,21 @@ const StatusBadge = ({ status }: { status: string }) => {
     assigned: "border-blue-200 bg-blue-500/10 text-blue-700 dark:border-blue-800 dark:text-blue-400",
     invited: "border-purple-200 bg-purple-500/10 text-purple-700 dark:border-purple-800 dark:text-purple-400",
     confirmed: "border-teal-200 bg-teal-500/10 text-teal-700 dark:border-teal-800 dark:text-teal-400",
-    reschedule: "border-yellow-300 bg-yellow-500/20 text-yellow-800 dark:border-yellow-700 dark:text-yellow-400",
+    returning_standby: "border-orange-200 bg-orange-500/10 text-orange-700 dark:border-orange-800 dark:text-orange-400",
+    rescheduled: "border-amber-300 bg-amber-500/20 text-amber-800 dark:border-amber-700 dark:text-amber-400",
+  };
+  
+  const displayLabels: Record<string, string> = {
+    returning_standby: "Returning Standby",
+    rescheduled: "Rescheduled",
   };
   
   const colorClasses = colors[status.toLowerCase()] || colors.available;
+  const displayLabel = displayLabels[status.toLowerCase()] || status;
   
   return (
     <span className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold ${colorClasses}`}>
-      {status}
+      {displayLabel}
     </span>
   );
 };
@@ -1008,6 +1015,8 @@ export default function Contestants() {
                 <SelectItem value="assigned">Assigned</SelectItem>
                 <SelectItem value="invited">Invited</SelectItem>
                 <SelectItem value="confirmed">Confirmed</SelectItem>
+                <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                <SelectItem value="returning_standby">Returning Standby</SelectItem>
               </SelectContent>
             </Select>
           </div>

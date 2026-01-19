@@ -8496,8 +8496,8 @@ ${finalEmailFooter}`;
         movedToRescheduleAt: new Date(),
       });
 
-      // Update contestant status to 'available' so they appear correctly in all tabs
-      await storage.updateContestantAvailability(standby.contestantId, 'available');
+      // Update contestant status to 'rescheduled' so they are identifiable across all tabs
+      await storage.updateContestantAvailability(standby.contestantId, 'rescheduled');
 
       res.json({
         message: "Standby moved to reschedule tab",
