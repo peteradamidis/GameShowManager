@@ -8303,10 +8303,12 @@ ${finalEmailFooter}`;
           }
         }
       } else if (confirmationStatus === 'declined') {
-        // Cancel the booking and move to reschedule list
+        // Cancel the booking and move to reschedule list with isDecline=true
         await storage.cancelSeatAssignment(
           tokenRecord.seatAssignmentId,
-          `Declined confirmation: ${notes || 'No reason provided'}`
+          `Declined confirmation: ${notes || 'No reason provided'}`,
+          'Contestant', // movedBy - marked by the contestant themselves
+          true // isDecline = true so wasDeclined flag is set
         );
       }
 
