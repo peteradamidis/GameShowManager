@@ -1426,9 +1426,28 @@ export default function Settings() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Email Structure Overview */}
+            <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+              <p className="text-sm font-medium text-purple-800 dark:text-purple-200 mb-2">Email Structure:</p>
+              <ol className="text-xs text-purple-700 dark:text-purple-300 space-y-1 list-decimal list-inside">
+                <li>Banner image</li>
+                <li><strong>Headline</strong> (editable below)</li>
+                <li>Yellow warning: "You must follow the steps below to confirm..."</li>
+                <li>Personalized greeting: "Hi [Name],"</li>
+                <li><strong>Intro paragraph</strong> (editable below)</li>
+                <li>Date/Time/Location block (auto-filled from record day)</li>
+                <li>"CAN YOU ATTEND?" button section</li>
+                <li><strong>Instructions</strong> (editable below)</li>
+                <li>"If you will be attending, please provide:" list (medical, mobility, emergency contact, dietary)</li>
+                <li>Water bottle reminder</li>
+                <li>Sign-off: "Kind Regards, The Deal Or No Deal Team"</li>
+                <li><strong>Footer</strong> (editable below)</li>
+              </ol>
+            </div>
+            
             <div className="space-y-2">
               <Label htmlFor="standby-email-headline">Headline</Label>
-              <p className="text-xs text-muted-foreground">The purple title shown below the banner</p>
+              <p className="text-xs text-muted-foreground">The gold title shown below the banner image</p>
               <Input
                 id="standby-email-headline"
                 value={standbyEmailHeadline}
@@ -1436,14 +1455,14 @@ export default function Settings() {
                   setStandbyEmailHeadline(e.target.value);
                   setStandbyTemplateChanged(true);
                 }}
-                placeholder="You're on Our Standby List!"
+                placeholder="You've Been Selected to be a Standby Contestant!"
                 data-testid="input-standby-email-headline"
               />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="standby-email-intro">Introduction Paragraph</Label>
-              <p className="text-xs text-muted-foreground">Shown after "Hi [Name]," - can include HTML for styling</p>
+              <p className="text-xs text-muted-foreground">Shown after "Hi [Name]," greeting. Separate paragraphs with blank lines.</p>
               <Textarea
                 id="standby-email-intro"
                 value={standbyEmailIntro}
@@ -1451,15 +1470,15 @@ export default function Settings() {
                   setStandbyEmailIntro(e.target.value);
                   setStandbyTemplateChanged(true);
                 }}
-                placeholder="You have been added to our standby list..."
-                className="min-h-[80px]"
+                placeholder="We enjoyed meeting you at our auditions and would love to invite you to be a STANDBY CONTESTANT on Deal or No Deal..."
+                className="min-h-[100px]"
                 data-testid="input-standby-email-intro"
               />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="standby-email-instructions">Instructions</Label>
-              <p className="text-xs text-muted-foreground">Text before the response buttons</p>
+              <p className="text-xs text-muted-foreground">Shown after the "CAN YOU ATTEND?" button. Include fast-tracking info here. Separate paragraphs with blank lines.</p>
               <Textarea
                 id="standby-email-instructions"
                 value={standbyEmailInstructions}
@@ -1467,15 +1486,15 @@ export default function Settings() {
                   setStandbyEmailInstructions(e.target.value);
                   setStandbyTemplateChanged(true);
                 }}
-                placeholder="Please confirm your availability as a standby..."
-                className="min-h-[60px]"
+                placeholder="If you're selected to participate in studio, you will be required for the full day..."
+                className="min-h-[180px]"
                 data-testid="input-standby-email-instructions"
               />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="standby-email-footer">Footer Message</Label>
-              <p className="text-xs text-muted-foreground">Small text at the bottom - can include HTML</p>
+              <p className="text-xs text-muted-foreground">Small text at the very bottom of the email</p>
               <Textarea
                 id="standby-email-footer"
                 value={standbyEmailFooter}
@@ -1483,7 +1502,7 @@ export default function Settings() {
                   setStandbyEmailFooter(e.target.value);
                   setStandbyTemplateChanged(true);
                 }}
-                placeholder="This is an automated message..."
+                placeholder="This is an automated message from the Deal or No Deal production team..."
                 className="min-h-[60px]"
                 data-testid="input-standby-email-footer"
               />
