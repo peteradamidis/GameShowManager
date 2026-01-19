@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2, Users, AlertTriangle, RefreshCw, Link, Unlink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -123,6 +124,7 @@ export default function Contestants() {
   const [selectedContestants, setSelectedContestants] = useState<string[]>([]);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [standbyDialogOpen, setStandbyDialogOpen] = useState(false);
+  const [standbyIncludeGroups, setStandbyIncludeGroups] = useState(true);
   const [groupPreviewOpen, setGroupPreviewOpen] = useState(false);
   const [groupPreviewMembers, setGroupPreviewMembers] = useState<Contestant[]>([]);
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("");
@@ -352,6 +354,40 @@ export default function Contestants() {
     if (!selected?.groupId) return [];
     return contestants.filter(c => c.groupId === selected.groupId);
   }, [selectedContestants, selectedContestantsForLinking, contestants]);
+
+  // Get all contestants to book as standbys including their group members
+  const standbyContestantsWithGroups = useMemo(() => {
+    if (!standbyIncludeGroups) {
+      return selectedContestantsForLinking;
+    }
+    
+    const allIds = new Set<string>(selectedContestants);
+    
+    // For each selected contestant, find their group members
+    selectedContestantsForLinking.forEach(contestant => {
+      if (contestant.groupId) {
+        // Find all group members by groupId
+        contestants.forEach(c => {
+          if (c.groupId === contestant.groupId) {
+            allIds.add(c.id);
+          }
+        });
+      } else if (contestant.attendingWith) {
+        // Find group members by attendingWith matching
+        contestants.forEach(c => {
+          if (c.id === contestant.id) return;
+          if (attendingWithMentionsName(contestant.attendingWith, c.name)) {
+            allIds.add(c.id);
+          }
+          if (attendingWithMentionsName(c.attendingWith, contestant.name)) {
+            allIds.add(c.id);
+          }
+        });
+      }
+    });
+    
+    return contestants.filter(c => allIds.has(c.id));
+  }, [selectedContestants, selectedContestantsForLinking, contestants, standbyIncludeGroups]);
 
   // Get unique values for filter dropdowns
   const uniqueGenders = Array.from(new Set(contestants.map(c => c.gender).filter(Boolean)));
@@ -1806,11 +1842,11 @@ export default function Contestants() {
 
       {/* Book as Standby Dialog */}
       <Dialog open={standbyDialogOpen} onOpenChange={setStandbyDialogOpen}>
-        <DialogContent className="max-w-md" data-testid="dialog-add-standby">
+        <DialogContent className="max-w-lg" data-testid="dialog-add-standby">
           <DialogHeader>
             <DialogTitle>Book as Standby</DialogTitle>
             <DialogDescription>
-              Book {selectedContestants.length} contestant{selectedContestants.length !== 1 ? 's' : ''} as standby for a record day.
+              Book contestants as standby for a record day.
               Standbys are backup contestants who receive separate booking emails.
             </DialogDescription>
           </DialogHeader>
@@ -1832,6 +1868,45 @@ export default function Contestants() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Include group members toggle */}
+            {standbyContestantsWithGroups.length > selectedContestants.length && (
+              <div className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-amber-600" />
+                  <span className="text-sm font-medium">Include group members</span>
+                </div>
+                <Switch 
+                  checked={standbyIncludeGroups} 
+                  onCheckedChange={setStandbyIncludeGroups}
+                  data-testid="switch-include-groups"
+                />
+              </div>
+            )}
+
+            {/* List of contestants to book */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Contestants to book ({standbyContestantsWithGroups.length})
+              </label>
+              <div className="max-h-48 overflow-y-auto border rounded-md divide-y">
+                {standbyContestantsWithGroups.map((c) => (
+                  <div key={c.id} className="flex items-center justify-between px-3 py-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{c.name}</span>
+                      {!selectedContestants.includes(c.id) && (
+                        <span className="text-xs bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded">
+                          group member
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-muted-foreground text-xs">
+                      {c.gender}, {c.age}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <DialogFooter>
@@ -1841,9 +1916,9 @@ export default function Contestants() {
             <Button 
               className="bg-amber-400/80 hover:bg-amber-500/80 text-amber-950"
               onClick={() => {
-                if (selectedRecordDay && selectedContestants.length > 0) {
+                if (selectedRecordDay && standbyContestantsWithGroups.length > 0) {
                   addStandbyMutation.mutate({
-                    contestantIds: selectedContestants,
+                    contestantIds: standbyContestantsWithGroups.map(c => c.id),
                     recordDayId: selectedRecordDay,
                   });
                 }
@@ -1851,7 +1926,7 @@ export default function Contestants() {
               disabled={!selectedRecordDay || addStandbyMutation.isPending}
               data-testid="button-confirm-add-standby"
             >
-              {addStandbyMutation.isPending ? "Booking..." : `Book ${selectedContestants.length} as Standby`}
+              {addStandbyMutation.isPending ? "Booking..." : `Book ${standbyContestantsWithGroups.length} as Standby`}
             </Button>
           </DialogFooter>
         </DialogContent>
