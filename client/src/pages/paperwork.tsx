@@ -340,6 +340,42 @@ Deal or No Deal Production Team`);
     },
   });
 
+  // Mutation for updating canceled assignment paperwork
+  const updateCanceledPaperworkMutation = useMutation({
+    mutationFn: async (data: { id: string; updates: Record<string, boolean | string | null> }) => {
+      const response = await apiRequest("PATCH", `/api/canceled-assignments/${data.id}`, data.updates);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Paperwork status updated" });
+      invalidatePaperworkQueries();
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Handler for canceled assignment paperwork checkbox changes
+  const handleCanceledPaperworkCheckbox = (
+    item: CanceledAssignment,
+    field: "paperworkSent" | "paperworkReceived",
+    checked: boolean
+  ) => {
+    const updates: Record<string, boolean | string | null> = {};
+    
+    if (field === "paperworkSent") {
+      updates.paperworkSent = checked ? new Date().toISOString() : null;
+      if (!checked) {
+        // If clearing sent, also clear received
+        updates.paperworkReceived = null;
+      }
+    } else {
+      updates.paperworkReceived = checked ? new Date().toISOString() : null;
+    }
+    
+    updateCanceledPaperworkMutation.mutate({ id: item.id, updates });
+  };
+
   // Get contestant name for an assignment
   const getContestantName = (itemId: string): string => {
     const item = paperworkData.find(p => p.id === itemId);
@@ -1200,7 +1236,8 @@ Deal or No Deal Production Team`);
                         <TableCell className="text-center">
                           <Checkbox
                             checked={!!item.paperworkSent}
-                            disabled={true}
+                            onCheckedChange={(checked) => handleCanceledPaperworkCheckbox(item, "paperworkSent", checked === true)}
+                            disabled={updateCanceledPaperworkMutation.isPending}
                             data-testid={`checkbox-canceled-sent-${item.id}`}
                           />
                           {item.paperworkSent && (
@@ -1212,7 +1249,8 @@ Deal or No Deal Production Team`);
                         <TableCell className="text-center">
                           <Checkbox
                             checked={!!item.paperworkReceived}
-                            disabled={true}
+                            onCheckedChange={(checked) => handleCanceledPaperworkCheckbox(item, "paperworkReceived", checked === true)}
+                            disabled={!item.paperworkSent || updateCanceledPaperworkMutation.isPending}
                             data-testid={`checkbox-canceled-received-${item.id}`}
                           />
                           {item.paperworkReceived && (
