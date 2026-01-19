@@ -24,8 +24,7 @@ import {
   Maximize2,
   Minimize2,
   Pencil,
-  Save,
-  X
+  Save
 } from "lucide-react";
 import {
   AlertDialog,
@@ -81,23 +80,11 @@ export default function PostRecordPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
   
-  // Edit mode state
-  const [editingRowId, setEditingRowId] = useState<string | null>(null);
-  const [editFormData, setEditFormData] = useState<{
-    nameOverride: string;
-    phoneOverride: string;
-    emailOverride: string;
-    contestantTypeOverride: string;
-    rxNumberOverride: string;
-    spinTheWheelOverride: string;
-  }>({
-    nameOverride: "",
-    phoneOverride: "",
-    emailOverride: "",
-    contestantTypeOverride: "",
-    rxNumberOverride: "",
-    spinTheWheelOverride: "",
-  });
+  // Edit mode state - now applies to entire document instead of per-row
+  const [isEditMode, setIsEditMode] = useState(false);
+  
+  // Local edit state to track changes while in edit mode
+  const [editedValues, setEditedValues] = useState<Record<string, Record<string, any>>>({});
   
   // Confirmation dialog for unticking checkboxes
   const [confirmUncheckDialog, setConfirmUncheckDialog] = useState<{
@@ -238,117 +225,69 @@ export default function PostRecordPage() {
     setConfirmUncheckDialog({ open: false, itemId: "", field: "", fieldLabel: "" });
   }, [confirmUncheckDialog, updateMutation]);
 
-  const handleFieldChange = useCallback((id: string, field: string, value: string | number | boolean | null) => {
-    updateMutation.mutate({ id, data: { [field]: value } });
-  }, [updateMutation]);
+  // Get a local edit value, falling back to server data
+  const getEditValue = useCallback((itemId: string, field: string, defaultValue: any) => {
+    if (editedValues[itemId] && field in editedValues[itemId]) {
+      return editedValues[itemId][field];
+    }
+    return defaultValue;
+  }, [editedValues]);
 
-  // Start editing a row
-  const startEditing = useCallback((item: PostRecordWithDetails) => {
-    setEditingRowId(item.id);
-    // Get display values (override if exists, otherwise source data)
-    const displayName = item.nameOverride ?? item.contestant?.name ?? "";
-    const displayPhone = item.phoneOverride ?? item.contestant?.phone ?? "";
-    const displayEmail = item.emailOverride ?? item.contestant?.email ?? "";
-    const displayContestantType = item.contestantTypeOverride ?? item.seatAssignment?.winningMoneyRole ?? "";
-    const displayRxNumber = item.rxNumberOverride ?? item.seatAssignment?.rxNumber ?? "";
-    const displaySpinTheWheel = item.spinTheWheelOverride !== null && item.spinTheWheelOverride !== undefined
-      ? (item.spinTheWheelOverride ? "yes" : "no")
-      : (item.seatAssignment?.spinTheWheel === true ? "yes" : item.seatAssignment?.spinTheWheel === false ? "no" : "");
-    
-    setEditFormData({
-      nameOverride: displayName,
-      phoneOverride: displayPhone,
-      emailOverride: displayEmail,
-      contestantTypeOverride: displayContestantType,
-      rxNumberOverride: displayRxNumber,
-      spinTheWheelOverride: displaySpinTheWheel,
-    });
+  // Set a local edit value
+  const setEditValue = useCallback((itemId: string, field: string, value: any) => {
+    setEditedValues(prev => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        [field]: value
+      }
+    }));
   }, []);
 
-  // Save edit changes
-  const saveEditing = useCallback(() => {
-    if (!editingRowId) return;
-    
-    const item = postRecordData.find(i => i.id === editingRowId);
-    if (!item) return;
+  // Save all edited values when exiting edit mode
+  const saveAllChanges = useCallback(async () => {
+    const entries = Object.entries(editedValues);
+    if (entries.length === 0) {
+      setIsEditMode(false);
+      return;
+    }
 
-    // Build update data - only set overrides if different from source
-    const updateData: Record<string, string | boolean | null> = {};
-    
-    // Name override
-    const sourceName = item.contestant?.name ?? "";
-    if (editFormData.nameOverride !== sourceName) {
-      updateData.nameOverride = editFormData.nameOverride || null;
-    } else {
-      updateData.nameOverride = null; // Clear override if same as source
-    }
-    
-    // Phone override
-    const sourcePhone = item.contestant?.phone ?? "";
-    if (editFormData.phoneOverride !== sourcePhone) {
-      updateData.phoneOverride = editFormData.phoneOverride || null;
-    } else {
-      updateData.phoneOverride = null;
-    }
-    
-    // Email override
-    const sourceEmail = item.contestant?.email ?? "";
-    if (editFormData.emailOverride !== sourceEmail) {
-      updateData.emailOverride = editFormData.emailOverride || null;
-    } else {
-      updateData.emailOverride = null;
-    }
-    
-    // Contestant type override
-    const sourceContestantType = item.seatAssignment?.winningMoneyRole ?? "";
-    if (editFormData.contestantTypeOverride !== sourceContestantType) {
-      updateData.contestantTypeOverride = editFormData.contestantTypeOverride || null;
-    } else {
-      updateData.contestantTypeOverride = null;
-    }
-    
-    // RX Number override
-    const sourceRxNumber = item.seatAssignment?.rxNumber ?? "";
-    if (editFormData.rxNumberOverride !== sourceRxNumber) {
-      updateData.rxNumberOverride = editFormData.rxNumberOverride || null;
-    } else {
-      updateData.rxNumberOverride = null;
-    }
-    
-    // Spin the wheel override
-    const sourceSpinTheWheel = item.seatAssignment?.spinTheWheel === true ? "yes" : item.seatAssignment?.spinTheWheel === false ? "no" : "";
-    if (editFormData.spinTheWheelOverride !== sourceSpinTheWheel) {
-      if (editFormData.spinTheWheelOverride === "yes") {
-        updateData.spinTheWheelOverride = true;
-      } else if (editFormData.spinTheWheelOverride === "no") {
-        updateData.spinTheWheelOverride = false;
-      } else {
-        updateData.spinTheWheelOverride = null;
+    // Save all changes, converting string values to proper types
+    for (const [itemId, fields] of entries) {
+      if (Object.keys(fields).length > 0) {
+        // Convert string select values back to booleans for the API
+        const apiData: Record<string, any> = { ...fields };
+        
+        // Convert spinTheWheelOverrideStr to spinTheWheelOverride boolean
+        if ("spinTheWheelOverrideStr" in apiData) {
+          const strVal = apiData.spinTheWheelOverrideStr;
+          apiData.spinTheWheelOverride = strVal === "none" ? null : strVal === "yes";
+          delete apiData.spinTheWheelOverrideStr;
+        }
+        
+        // Convert bankOfferTakenStr to bankOfferTaken boolean
+        if ("bankOfferTakenStr" in apiData) {
+          const strVal = apiData.bankOfferTakenStr;
+          apiData.bankOfferTaken = strVal === "n/a" ? null : strVal === "yes";
+          delete apiData.bankOfferTakenStr;
+        }
+        
+        // Convert txEpDateStr to ISO format for the API
+        if ("txEpDateStr" in apiData) {
+          const dateStr = apiData.txEpDateStr;
+          apiData.txEpDate = dateStr ? new Date(dateStr).toISOString() : null;
+          delete apiData.txEpDateStr;
+        }
+        
+        await updateMutation.mutateAsync({ id: itemId, data: apiData });
       }
-    } else {
-      updateData.spinTheWheelOverride = null;
     }
     
-    updateMutation.mutate({ id: editingRowId, data: updateData }, {
-      onSuccess: () => {
-        setEditingRowId(null);
-        toast({ title: "Changes saved" });
-      }
-    });
-  }, [editingRowId, editFormData, postRecordData, updateMutation, toast]);
-
-  // Cancel editing
-  const cancelEditing = useCallback(() => {
-    setEditingRowId(null);
-    setEditFormData({
-      nameOverride: "",
-      phoneOverride: "",
-      emailOverride: "",
-      contestantTypeOverride: "",
-      rxNumberOverride: "",
-      spinTheWheelOverride: "",
-    });
-  }, []);
+    // Clear edit state and exit edit mode
+    setEditedValues({});
+    setIsEditMode(false);
+    toast({ title: "Changes saved" });
+  }, [editedValues, updateMutation, toast]);
 
   // Helper to get display value (override ?? source)
   const getDisplayValue = (item: PostRecordWithDetails, field: 'name' | 'phone' | 'email' | 'contestantType' | 'rxNumber' | 'spinTheWheel') => {
@@ -428,6 +367,28 @@ export default function PostRecordPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {isEditMode ? (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={saveAllChanges}
+                  disabled={updateMutation.isPending}
+                  data-testid="button-done-editing"
+                >
+                  <Save className="h-4 w-4 mr-1" />
+                  {updateMutation.isPending ? "Saving..." : "Done"}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditMode(true)}
+                  data-testid="button-edit-document"
+                >
+                  <Pencil className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="icon"
@@ -528,7 +489,6 @@ export default function PostRecordPage() {
                       <TableHead colSpan={15} className="text-center font-bold text-blue-800 dark:text-blue-200 bg-blue-100 dark:bg-blue-900/20">
                         LEGALS
                       </TableHead>
-                      <TableHead className="w-12"></TableHead>
                     </TableRow>
                     <TableRow>
                       <TableHead className="font-semibold text-center bg-rose-50 dark:bg-rose-900/10 min-w-[90px]">RX DATE</TableHead>
@@ -543,7 +503,7 @@ export default function PostRecordPage() {
                         </>
                       )}
                       <TableHead className="font-semibold min-w-[150px] sticky left-0 bg-background z-10">Name</TableHead>
-                      <TableHead className="font-semibold text-center">Contestant Type</TableHead>
+                      <TableHead className="font-semibold text-center min-w-[110px]">Contestant Type</TableHead>
                       <TableHead className="font-semibold min-w-[120px]">Phone</TableHead>
                       <TableHead className="font-semibold min-w-[180px]">Email</TableHead>
                       <TableHead className="font-semibold text-center">Case No.</TableHead>
@@ -567,13 +527,12 @@ export default function PostRecordPage() {
                       <TableHead className="font-semibold text-center">Honesty Check</TableHead>
                       <TableHead className="font-semibold text-center">Social Media Sweep</TableHead>
                       <TableHead className="font-semibold text-center">Bankruptcy Check</TableHead>
-                      <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredData.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={showTxSection ? 33 : 29} className="h-24 text-center text-muted-foreground">
+                        <TableCell colSpan={showTxSection ? 32 : 28} className="h-24 text-center text-muted-foreground">
                           No entries found. Use "Import Winners" to automatically add contestants.
                         </TableCell>
                       </TableRow>
@@ -587,10 +546,10 @@ export default function PostRecordPage() {
                             {item.recordDay ? format(new Date(item.recordDay.date), "d-MMM-yy") : "-"}
                           </TableCell>
                           <TableCell className="text-center text-xs bg-rose-50/50 dark:bg-rose-900/5">
-                            {editingRowId === item.id ? (
+                            {isEditMode ? (
                               <Input
-                                value={editFormData.rxNumberOverride}
-                                onChange={(e) => setEditFormData(prev => ({ ...prev, rxNumberOverride: e.target.value }))}
+                                value={getEditValue(item.id, "rxNumberOverride", getDisplayValue(item, 'rxNumber'))}
+                                onChange={(e) => setEditValue(item.id, "rxNumberOverride", e.target.value || null)}
                                 className="w-24 h-7 text-xs text-center"
                                 placeholder="RX Day"
                                 data-testid={`input-edit-rxday-${item.id}`}
@@ -601,35 +560,47 @@ export default function PostRecordPage() {
                               </span>
                             )}
                           </TableCell>
-                          <TableCell className="text-center bg-rose-50/50 dark:bg-rose-900/5 border-r-2">
-                            <Input
-                              value={item.rxEpNo || ""}
-                              onChange={(e) => handleFieldChange(item.id, "rxEpNo", e.target.value)}
-                              className="w-16 h-7 text-xs text-center"
-                              placeholder="-"
-                              data-testid={`input-rx-ep-no-${item.id}`}
-                            />
+                          <TableCell className="text-center text-xs bg-rose-50/50 dark:bg-rose-900/5 border-r-2">
+                            {isEditMode ? (
+                              <Input
+                                value={getEditValue(item.id, "rxEpNo", item.rxEpNo || "")}
+                                onChange={(e) => setEditValue(item.id, "rxEpNo", e.target.value || null)}
+                                className="w-16 h-7 text-xs text-center"
+                                placeholder="-"
+                                data-testid={`input-rx-ep-no-${item.id}`}
+                              />
+                            ) : (
+                              <span>{item.rxEpNo || "-"}</span>
+                            )}
                           </TableCell>
                           {/* TX columns */}
                           {showTxSection && (
                             <>
-                              <TableCell className="text-center bg-yellow-50/50 dark:bg-yellow-900/5">
-                                <Input
-                                  value={item.txEpNumber || ""}
-                                  onChange={(e) => handleFieldChange(item.id, "txEpNumber", e.target.value)}
-                                  className="w-16 h-7 text-xs text-center"
-                                  placeholder="-"
-                                  data-testid={`input-tx-ep-number-${item.id}`}
-                                />
+                              <TableCell className="text-center text-xs bg-yellow-50/50 dark:bg-yellow-900/5">
+                                {isEditMode ? (
+                                  <Input
+                                    value={getEditValue(item.id, "txEpNumber", item.txEpNumber || "")}
+                                    onChange={(e) => setEditValue(item.id, "txEpNumber", e.target.value || null)}
+                                    className="w-16 h-7 text-xs text-center"
+                                    placeholder="-"
+                                    data-testid={`input-tx-ep-number-${item.id}`}
+                                  />
+                                ) : (
+                                  <span>{item.txEpNumber || "-"}</span>
+                                )}
                               </TableCell>
-                              <TableCell className="text-center bg-yellow-50/50 dark:bg-yellow-900/5">
-                                <Input
-                                  type="date"
-                                  value={item.txEpDate ? format(new Date(item.txEpDate), "yyyy-MM-dd") : ""}
-                                  onChange={(e) => handleFieldChange(item.id, "txEpDate", e.target.value ? new Date(e.target.value).toISOString() : null)}
-                                  className="w-28 h-7 text-xs"
-                                  data-testid={`input-tx-ep-date-${item.id}`}
-                                />
+                              <TableCell className="text-center text-xs bg-yellow-50/50 dark:bg-yellow-900/5">
+                                {isEditMode ? (
+                                  <Input
+                                    type="date"
+                                    value={getEditValue(item.id, "txEpDateStr", item.txEpDate ? format(new Date(item.txEpDate), "yyyy-MM-dd") : "")}
+                                    onChange={(e) => setEditValue(item.id, "txEpDateStr", e.target.value || null)}
+                                    className="w-28 h-7 text-xs"
+                                    data-testid={`input-tx-ep-date-${item.id}`}
+                                  />
+                                ) : (
+                                  <span>{item.txEpDate ? format(new Date(item.txEpDate), "d-MMM-yy") : "-"}</span>
+                                )}
                               </TableCell>
                               <TableCell className="text-center bg-yellow-50/50 dark:bg-yellow-900/5">
                                 <Checkbox
@@ -649,10 +620,10 @@ export default function PostRecordPage() {
                           )}
                           {/* CONTESTANTS columns */}
                           <TableCell className="font-medium sticky left-0 bg-card z-10">
-                            {editingRowId === item.id ? (
+                            {isEditMode ? (
                               <Input
-                                value={editFormData.nameOverride}
-                                onChange={(e) => setEditFormData(prev => ({ ...prev, nameOverride: e.target.value }))}
+                                value={getEditValue(item.id, "nameOverride", getDisplayValue(item, 'name'))}
+                                onChange={(e) => setEditValue(item.id, "nameOverride", e.target.value || null)}
                                 className="w-40 h-7 text-xs"
                                 placeholder="Name"
                                 data-testid={`input-edit-name-${item.id}`}
@@ -664,10 +635,10 @@ export default function PostRecordPage() {
                             )}
                           </TableCell>
                           <TableCell className="text-center text-xs">
-                            {editingRowId === item.id ? (
+                            {isEditMode ? (
                               <Select
-                                value={editFormData.contestantTypeOverride || "none"}
-                                onValueChange={(value) => setEditFormData(prev => ({ ...prev, contestantTypeOverride: value === "none" ? "" : value }))}
+                                value={getEditValue(item.id, "contestantTypeOverride", getDisplayValue(item, 'contestantType')) || "none"}
+                                onValueChange={(value) => setEditValue(item.id, "contestantTypeOverride", value === "none" ? null : value)}
                               >
                                 <SelectTrigger className="w-28 h-7 text-xs" data-testid={`select-edit-type-${item.id}`}>
                                   <SelectValue />
@@ -685,11 +656,11 @@ export default function PostRecordPage() {
                               </span>
                             )}
                           </TableCell>
-                          <TableCell>
-                            {editingRowId === item.id ? (
+                          <TableCell className="text-xs">
+                            {isEditMode ? (
                               <Input
-                                value={editFormData.phoneOverride}
-                                onChange={(e) => setEditFormData(prev => ({ ...prev, phoneOverride: e.target.value }))}
+                                value={getEditValue(item.id, "phoneOverride", getDisplayValue(item, 'phone'))}
+                                onChange={(e) => setEditValue(item.id, "phoneOverride", e.target.value || null)}
                                 className="w-32 h-7 text-xs"
                                 placeholder="Phone"
                                 data-testid={`input-edit-phone-${item.id}`}
@@ -701,10 +672,10 @@ export default function PostRecordPage() {
                             )}
                           </TableCell>
                           <TableCell className="text-xs">
-                            {editingRowId === item.id ? (
+                            {isEditMode ? (
                               <Input
-                                value={editFormData.emailOverride}
-                                onChange={(e) => setEditFormData(prev => ({ ...prev, emailOverride: e.target.value }))}
+                                value={getEditValue(item.id, "emailOverride", getDisplayValue(item, 'email'))}
+                                onChange={(e) => setEditValue(item.id, "emailOverride", e.target.value || null)}
                                 className="w-48 h-7 text-xs"
                                 placeholder="Email"
                                 data-testid={`input-edit-email-${item.id}`}
@@ -715,30 +686,38 @@ export default function PostRecordPage() {
                               </span>
                             )}
                           </TableCell>
-                          <TableCell className="text-center">
-                            <Input
-                              value={item.caseNumber || ""}
-                              onChange={(e) => handleFieldChange(item.id, "caseNumber", e.target.value || null)}
-                              className="w-16 h-7 text-xs text-center"
-                              placeholder="-"
-                              data-testid={`input-case-number-${item.id}`}
-                            />
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Input
-                              type="number"
-                              value={item.caseAmount || ""}
-                              onChange={(e) => handleFieldChange(item.id, "caseAmount", e.target.value ? parseInt(e.target.value) : null)}
-                              className="w-20 h-7 text-xs text-center"
-                              placeholder="-"
-                              data-testid={`input-case-amount-${item.id}`}
-                            />
+                          <TableCell className="text-center text-xs">
+                            {isEditMode ? (
+                              <Input
+                                value={getEditValue(item.id, "caseNumber", item.caseNumber || "")}
+                                onChange={(e) => setEditValue(item.id, "caseNumber", e.target.value || null)}
+                                className="w-16 h-7 text-xs text-center"
+                                placeholder="-"
+                                data-testid={`input-case-number-${item.id}`}
+                              />
+                            ) : (
+                              <span>{item.caseNumber || "-"}</span>
+                            )}
                           </TableCell>
                           <TableCell className="text-center text-xs">
-                            {editingRowId === item.id ? (
+                            {isEditMode ? (
+                              <Input
+                                type="number"
+                                value={getEditValue(item.id, "caseAmount", item.caseAmount || "")}
+                                onChange={(e) => setEditValue(item.id, "caseAmount", e.target.value ? parseInt(e.target.value) : null)}
+                                className="w-20 h-7 text-xs text-center"
+                                placeholder="-"
+                                data-testid={`input-case-amount-${item.id}`}
+                              />
+                            ) : (
+                              <span>{item.caseAmount ? `$${item.caseAmount.toLocaleString()}` : "-"}</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center text-xs">
+                            {isEditMode ? (
                               <Select
-                                value={editFormData.spinTheWheelOverride || "none"}
-                                onValueChange={(value) => setEditFormData(prev => ({ ...prev, spinTheWheelOverride: value === "none" ? "" : value }))}
+                                value={getEditValue(item.id, "spinTheWheelOverrideStr", item.spinTheWheelOverride !== null && item.spinTheWheelOverride !== undefined ? (item.spinTheWheelOverride ? "yes" : "no") : (item.seatAssignment?.spinTheWheel === true ? "yes" : item.seatAssignment?.spinTheWheel === false ? "no" : "none"))}
+                                onValueChange={(value) => setEditValue(item.id, "spinTheWheelOverrideStr", value)}
                               >
                                 <SelectTrigger className="w-16 h-7 text-xs" data-testid={`select-edit-prize-wheel-${item.id}`}>
                                   <SelectValue />
@@ -755,13 +734,13 @@ export default function PostRecordPage() {
                               </span>
                             )}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-center text-xs">
                             {item.seatAssignment?.winningMoneyRole === 'case_holder' ? (
-                              <span className="text-xs text-muted-foreground">-</span>
-                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            ) : isEditMode ? (
                               <Select
-                                value={item.bankOfferTaken === null ? "n/a" : item.bankOfferTaken ? "yes" : "no"}
-                                onValueChange={(value) => handleFieldChange(item.id, "bankOfferTaken", value === "n/a" ? null : value === "yes")}
+                                value={getEditValue(item.id, "bankOfferTakenStr", item.bankOfferTaken === null ? "n/a" : item.bankOfferTaken ? "yes" : "no")}
+                                onValueChange={(value) => setEditValue(item.id, "bankOfferTakenStr", value)}
                               >
                                 <SelectTrigger className="w-16 h-7 text-xs" data-testid={`select-bank-offer-${item.id}`}>
                                   <SelectValue />
@@ -772,26 +751,36 @@ export default function PostRecordPage() {
                                   <SelectItem value="no">No</SelectItem>
                                 </SelectContent>
                               </Select>
+                            ) : (
+                              <span>{item.bankOfferTaken === null ? "N/A" : item.bankOfferTaken ? "Yes" : "No"}</span>
                             )}
                           </TableCell>
-                          <TableCell className="text-center">
-                            <Input
-                              type="number"
-                              value={item.amountWon || ""}
-                              onChange={(e) => handleFieldChange(item.id, "amountWon", e.target.value ? parseInt(e.target.value) : null)}
-                              className="w-24 h-7 text-xs text-center"
-                              placeholder="-"
-                              data-testid={`input-amount-won-${item.id}`}
-                            />
+                          <TableCell className="text-center text-xs">
+                            {isEditMode ? (
+                              <Input
+                                type="number"
+                                value={getEditValue(item.id, "amountWon", item.amountWon || "")}
+                                onChange={(e) => setEditValue(item.id, "amountWon", e.target.value ? parseInt(e.target.value) : null)}
+                                className="w-24 h-7 text-xs text-center"
+                                placeholder="-"
+                                data-testid={`input-amount-won-${item.id}`}
+                              />
+                            ) : (
+                              <span>{item.amountWon ? `$${item.amountWon.toLocaleString()}` : "-"}</span>
+                            )}
                           </TableCell>
-                          <TableCell className="border-r-2">
-                            <Textarea
-                              value={item.notes || ""}
-                              onChange={(e) => handleFieldChange(item.id, "notes", e.target.value || null)}
-                              className="min-w-[200px] min-h-[28px] h-7 text-xs resize"
-                              placeholder="-"
-                              data-testid={`input-notes-${item.id}`}
-                            />
+                          <TableCell className="border-r-2 text-xs">
+                            {isEditMode ? (
+                              <Textarea
+                                value={getEditValue(item.id, "notes", item.notes || "")}
+                                onChange={(e) => setEditValue(item.id, "notes", e.target.value || null)}
+                                className="min-w-[200px] min-h-[28px] h-7 text-xs resize"
+                                placeholder="-"
+                                data-testid={`input-notes-${item.id}`}
+                              />
+                            ) : (
+                              <span className="whitespace-pre-wrap">{item.notes || "-"}</span>
+                            )}
                           </TableCell>
                           <TableCell className="text-center">
                             <Checkbox
@@ -882,40 +871,6 @@ export default function PostRecordPage() {
                               checked={item.bankruptcyCheck || false}
                               onCheckedChange={(checked) => handleCheckboxChange(item.id, "bankruptcyCheck", checked === true)}
                             />
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              {editingRowId === item.id ? (
-                                <>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={saveEditing}
-                                    disabled={updateMutation.isPending}
-                                    data-testid={`button-save-${item.id}`}
-                                  >
-                                    <Save className="h-4 w-4 text-green-600" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={cancelEditing}
-                                    data-testid={`button-cancel-${item.id}`}
-                                  >
-                                    <X className="h-4 w-4 text-muted-foreground" />
-                                  </Button>
-                                </>
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => startEditing(item)}
-                                  data-testid={`button-edit-${item.id}`}
-                                >
-                                  <Pencil className="h-4 w-4 text-muted-foreground" />
-                                </Button>
-                              )}
-                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
