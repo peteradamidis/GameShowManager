@@ -33,7 +33,8 @@ import {
   Save,
   X,
   RefreshCw,
-  Tv
+  Tv,
+  Trophy
 } from "lucide-react";
 import type { RecordDay, Contestant, PostRecordTracking } from "@shared/schema";
 
@@ -178,6 +179,39 @@ export default function PostRecordPage() {
     },
   });
 
+  const importWinnersMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/post-record/import-winners", {});
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/post-record"] });
+      if (data.imported > 0) {
+        toast({ 
+          title: "Winners imported", 
+          description: `Imported ${data.imported} winners. ${data.skipped > 0 ? `${data.skipped} already existed.` : ''}`
+        });
+      } else if (data.skipped > 0) {
+        toast({ 
+          title: "All winners already imported", 
+          description: `${data.skipped} winners already exist in Post Record.`
+        });
+      } else {
+        toast({ 
+          title: "No winners to import", 
+          description: "No contestants with winning money found."
+        });
+      }
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Import failed", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
   const handleCheckboxChange = useCallback((id: string, field: string, value: boolean) => {
     updateMutation.mutate({ id, data: { [field]: value } });
   }, [updateMutation]);
@@ -243,6 +277,15 @@ export default function PostRecordPage() {
               >
                 <RefreshCw className="h-4 w-4 mr-1" />
                 Refresh
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => importWinnersMutation.mutate()}
+                disabled={importWinnersMutation.isPending}
+                data-testid="button-import-winners"
+              >
+                <Trophy className="h-4 w-4 mr-1" />
+                {importWinnersMutation.isPending ? "Importing..." : "Import Winners"}
               </Button>
               <Button
                 onClick={() => setAddDialogOpen(true)}

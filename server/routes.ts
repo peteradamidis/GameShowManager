@@ -11914,6 +11914,86 @@ ${finalEmailFooter}`;
     }
   });
 
+  // Import all winners into post-record tracking
+  app.post("/api/post-record/import-winners", requireAuth, async (req, res) => {
+    try {
+      // Get all seat assignments with winning money
+      const allAssignments = await storage.getAllSeatAssignments();
+      
+      // Filter for winners: must have valid role AND positive amount
+      const winners = allAssignments.filter((a) => {
+        const hasValidRole = a.winningMoneyRole && typeof a.winningMoneyRole === 'string' && a.winningMoneyRole.trim() !== '';
+        const hasValidAmount = typeof a.winningMoneyAmount === 'number' && a.winningMoneyAmount > 0;
+        return hasValidRole && hasValidAmount;
+      });
+
+      if (winners.length === 0) {
+        return res.json({ 
+          message: "No winners found to import",
+          imported: 0,
+          skipped: 0,
+          total: 0
+        });
+      }
+
+      // Get existing post-record entries to avoid duplicates
+      const existingEntries = await storage.getPostRecordEntriesWithDetails();
+      const existingMap = new Map<string, boolean>();
+      existingEntries.forEach((e: any) => {
+        // Use contestantId + recordDayId as unique key
+        const key = `${e.contestantId}_${e.recordDayId || 'null'}`;
+        existingMap.set(key, true);
+      });
+
+      let imported = 0;
+      let skipped = 0;
+
+      for (const winner of winners) {
+        const key = `${winner.contestantId}_${winner.recordDayId || 'null'}`;
+        
+        // Skip if entry already exists
+        if (existingMap.has(key)) {
+          skipped++;
+          continue;
+        }
+        
+        // Create post-record entry with pre-populated fields from winner data
+        await storage.createPostRecordEntry({
+          contestantId: winner.contestantId,
+          recordDayId: winner.recordDayId,
+          seatAssignmentId: winner.id,
+          // RECORD section
+          rxEpNo: winner.rxEpNumber || null,
+          // Contestant info from seat assignment
+          isPlayer: winner.winningMoneyRole === 'player',
+          caseNumber: winner.caseNumber || null,
+          caseAmount: winner.caseAmount || null,
+          prizeWon: winner.winningMoneyText || (winner.winningMoneyAmount ? `$${winner.winningMoneyAmount.toLocaleString()}` : null),
+          bankOfferTaken: winner.bankOfferTaken || false,
+          amountWon: winner.winningMoneyAmount || null,
+          // TX section - from seat assignment if available
+          txEpNumber: winner.txNumber || null,
+          txEpDate: winner.txDate || null,
+          notifiedOfTx: winner.notifiedOfTx || false,
+          photoSent: winner.photosSent || false,
+        });
+        
+        imported++;
+        existingMap.set(key, true); // Mark as added to avoid duplicates in same batch
+      }
+
+      res.json({
+        message: `Imported ${imported} winners into Post Record`,
+        imported,
+        skipped,
+        total: winners.length
+      });
+    } catch (error: any) {
+      console.error("Error importing winners to post-record:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Delete post-record entry
   app.delete("/api/post-record/:id", requireAuth, async (req, res) => {
     try {
