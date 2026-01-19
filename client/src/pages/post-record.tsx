@@ -29,13 +29,22 @@ import {
   Calendar,
   Users,
   Trash2,
-  Edit,
-  Save,
-  X,
   RefreshCw,
   Tv,
-  Trophy
+  Trophy,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { RecordDay, Contestant, PostRecordTracking } from "@shared/schema";
 
 interface PostRecordWithDetails extends PostRecordTracking {
@@ -79,8 +88,15 @@ export default function PostRecordPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedContestantId, setSelectedContestantId] = useState<string>("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editData, setEditData] = useState<Partial<PostRecordTracking>>({});
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  // Confirmation dialog for unticking checkboxes
+  const [confirmUncheckDialog, setConfirmUncheckDialog] = useState<{
+    open: boolean;
+    itemId: string;
+    field: string;
+    fieldLabel: string;
+  }>({ open: false, itemId: "", field: "", fieldLabel: "" });
 
   useEffect(() => {
     try {
@@ -148,9 +164,6 @@ export default function PostRecordPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/post-record"] });
-      setEditingId(null);
-      setEditData({});
-      toast({ title: "Updated successfully" });
     },
     onError: (error: Error) => {
       toast({ 
@@ -212,35 +225,55 @@ export default function PostRecordPage() {
     },
   });
 
+  // Field labels for checkbox confirmation dialog
+  const checkboxFieldLabels: Record<string, string> = {
+    notifiedOfTx: "Notified of TX",
+    photoSent: "Photo Sent",
+    isPlayer: "Player",
+    appearanceReleaseSigned: "Appearance Release",
+    nedSigned: "NED Signed",
+    disclosureDocumentReceived: "Disclosure Received",
+    returnedEntryBySupplier: "Returned Entry (Supplier)",
+    entrySentByContestant: "Entry Sent (Contestant)",
+    paramountEntryContestant: "ESA Entry",
+    afpConfirmation: "AFP Confirm",
+    afpFyiCheck: "AFP FYI Check",
+    afpCheckReturned: "AFP Check Returned",
+    afpNo: "AFP No",
+    afpBatchNo: "AFP Batch No",
+    idiwriterCheck: "Idiwriter Check",
+    socialMediaBrief: "Social Media Brief",
+    bankruptcyCheck: "Bankruptcy Check",
+  };
+
   const handleCheckboxChange = useCallback((id: string, field: string, value: boolean) => {
-    updateMutation.mutate({ id, data: { [field]: value } });
+    // If unchecking, show confirmation dialog
+    if (!value) {
+      setConfirmUncheckDialog({
+        open: true,
+        itemId: id,
+        field,
+        fieldLabel: checkboxFieldLabels[field] || field,
+      });
+    } else {
+      // If checking, just update directly
+      updateMutation.mutate({ id, data: { [field]: value } });
+    }
   }, [updateMutation]);
+
+  const confirmUncheck = useCallback(() => {
+    if (confirmUncheckDialog.itemId && confirmUncheckDialog.field) {
+      updateMutation.mutate({ 
+        id: confirmUncheckDialog.itemId, 
+        data: { [confirmUncheckDialog.field]: false } 
+      });
+    }
+    setConfirmUncheckDialog({ open: false, itemId: "", field: "", fieldLabel: "" });
+  }, [confirmUncheckDialog, updateMutation]);
 
   const handleFieldChange = useCallback((id: string, field: string, value: string | number | boolean | null) => {
     updateMutation.mutate({ id, data: { [field]: value } });
   }, [updateMutation]);
-
-  const startEditing = (item: PostRecordWithDetails) => {
-    setEditingId(item.id);
-    setEditData({
-      caseNumber: item.caseNumber,
-      caseAmount: item.caseAmount,
-      prizeWon: item.prizeWon,
-      amountWon: item.amountWon,
-      notes: item.notes,
-    });
-  };
-
-  const saveEditing = () => {
-    if (editingId) {
-      updateMutation.mutate({ id: editingId, data: editData });
-    }
-  };
-
-  const cancelEditing = () => {
-    setEditingId(null);
-    setEditData({});
-  };
 
   const filteredData = postRecordData.filter((item) => {
     if (!searchQuery) return true;
@@ -257,18 +290,47 @@ export default function PostRecordPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
+    <div className={isFullscreen ? "fixed inset-0 flex flex-col p-2 bg-background gap-1 z-50" : "space-y-6"}>
+      {/* Confirmation dialog for unticking checkboxes */}
+      <AlertDialog open={confirmUncheckDialog.open} onOpenChange={(open) => !open && setConfirmUncheckDialog({ open: false, itemId: "", field: "", fieldLabel: "" })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Uncheck</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to uncheck "{confirmUncheckDialog.fieldLabel}"? This will mark it as incomplete.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmUncheck} data-testid="button-confirm-uncheck">
+              Yes, Uncheck
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Card className={isFullscreen ? "flex flex-col flex-1 min-h-0" : ""}>
+        <CardHeader className={isFullscreen ? "flex-shrink-0 py-2" : ""}>
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-2">
-              <FileCheck2 className="h-6 w-6 text-primary" />
+              <FileCheck2 className={isFullscreen ? "h-5 w-5 text-primary" : "h-6 w-6 text-primary"} />
               <div>
-                <CardTitle>Post Record Tracking</CardTitle>
-                <CardDescription>Track post-production paperwork and legal requirements</CardDescription>
+                <CardTitle className={isFullscreen ? "text-lg" : ""}>Post Record Tracking</CardTitle>
+                {!isFullscreen && (
+                  <CardDescription>Track post-production paperwork and legal requirements</CardDescription>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                data-testid="button-toggle-fullscreen"
+              >
+                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -276,36 +338,38 @@ export default function PostRecordPage() {
                 data-testid="button-refresh-post-record"
               >
                 <RefreshCw className="h-4 w-4 mr-1" />
-                Refresh
+                {!isFullscreen && "Refresh"}
               </Button>
               <Button
                 variant="secondary"
+                size={isFullscreen ? "sm" : "default"}
                 onClick={() => importWinnersMutation.mutate()}
                 disabled={importWinnersMutation.isPending}
                 data-testid="button-import-winners"
               >
                 <Trophy className="h-4 w-4 mr-1" />
-                {importWinnersMutation.isPending ? "Importing..." : "Import Winners"}
+                {importWinnersMutation.isPending ? "..." : (isFullscreen ? "Import" : "Import Winners")}
               </Button>
               <Button
+                size={isFullscreen ? "sm" : "default"}
                 onClick={() => setAddDialogOpen(true)}
                 data-testid="button-add-post-record"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Add Entry
+                {isFullscreen ? "Add" : "Add Entry"}
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4 mb-4">
+        <CardContent className={isFullscreen ? "flex-1 flex flex-col min-h-0 py-2" : ""}>
+          <div className={`flex flex-wrap gap-4 mb-4 ${isFullscreen ? 'gap-2 flex-shrink-0' : ''}`}>
             <div className="flex items-center gap-2">
-              <Label htmlFor="record-day-filter">Record Day</Label>
+              {!isFullscreen && <Label htmlFor="record-day-filter">Record Day</Label>}
               <Select
                 value={selectedRecordDay}
                 onValueChange={setSelectedRecordDay}
               >
-                <SelectTrigger className="w-48" data-testid="select-record-day">
+                <SelectTrigger className={isFullscreen ? "w-40" : "w-48"} data-testid="select-record-day">
                   <SelectValue placeholder="All Record Days" />
                 </SelectTrigger>
                 <SelectContent>
@@ -322,10 +386,10 @@ export default function PostRecordPage() {
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name, email, or phone..."
+                placeholder={isFullscreen ? "Search..." : "Search by name, email, or phone..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64"
+                className={isFullscreen ? "w-40" : "w-64"}
                 data-testid="input-search-post-record"
               />
             </div>
@@ -347,7 +411,7 @@ export default function PostRecordPage() {
             </div>
           )}
           
-          <ScrollArea className="w-full">
+          <ScrollArea className={`w-full ${isFullscreen ? 'flex-1' : ''}`} style={isFullscreen ? { minHeight: 0 } : undefined}>
               <div className={showTxSection ? "min-w-[2600px]" : "min-w-[2200px]"}>
                 <Table>
                   <TableHeader>
@@ -415,12 +479,9 @@ export default function PostRecordPage() {
                           No entries found. Click "Add Entry" to add contestants to track.
                         </TableCell>
                       </TableRow>
-                    ) : filteredData.map((item) => {
-                      const isEditing = editingId === item.id;
-                      return (
+                    ) : filteredData.map((item) => (
                         <TableRow 
                           key={item.id}
-                          className={isEditing ? "bg-blue-50 dark:bg-blue-900/10" : ""}
                           data-testid={`row-post-record-${item.id}`}
                         >
                           {/* RECORD columns */}
@@ -490,42 +551,32 @@ export default function PostRecordPage() {
                           <TableCell>{item.contestant?.phone || "-"}</TableCell>
                           <TableCell className="text-xs">{item.contestant?.email || "-"}</TableCell>
                           <TableCell className="text-center">
-                            {isEditing ? (
-                              <Input
-                                value={editData.caseNumber || ""}
-                                onChange={(e) => setEditData({ ...editData, caseNumber: e.target.value })}
-                                className="w-16 h-7 text-xs"
-                              />
-                            ) : (
-                              item.caseNumber || "-"
-                            )}
+                            <Input
+                              value={item.caseNumber || ""}
+                              onChange={(e) => handleFieldChange(item.id, "caseNumber", e.target.value || null)}
+                              className="w-16 h-7 text-xs text-center"
+                              placeholder="-"
+                              data-testid={`input-case-number-${item.id}`}
+                            />
                           </TableCell>
                           <TableCell className="text-center">
-                            {isEditing ? (
-                              <Input
-                                type="number"
-                                value={editData.caseAmount || ""}
-                                onChange={(e) => setEditData({ ...editData, caseAmount: e.target.value ? parseInt(e.target.value) : undefined })}
-                                className="w-20 h-7 text-xs"
-                              />
-                            ) : (
-                              item.caseAmount ? `$${item.caseAmount.toLocaleString()}` : "-"
-                            )}
+                            <Input
+                              type="number"
+                              value={item.caseAmount || ""}
+                              onChange={(e) => handleFieldChange(item.id, "caseAmount", e.target.value ? parseInt(e.target.value) : null)}
+                              className="w-20 h-7 text-xs text-center"
+                              placeholder="-"
+                              data-testid={`input-case-amount-${item.id}`}
+                            />
                           </TableCell>
                           <TableCell className="text-center bg-green-50 dark:bg-green-900/10">
-                            {isEditing ? (
-                              <Input
-                                value={editData.prizeWon || ""}
-                                onChange={(e) => setEditData({ ...editData, prizeWon: e.target.value })}
-                                className="w-24 h-7 text-xs"
-                              />
-                            ) : (
-                              item.prizeWon ? (
-                                <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                  {item.prizeWon}
-                                </Badge>
-                              ) : "-"
-                            )}
+                            <Input
+                              value={item.prizeWon || ""}
+                              onChange={(e) => handleFieldChange(item.id, "prizeWon", e.target.value || null)}
+                              className="w-24 h-7 text-xs text-center"
+                              placeholder="-"
+                              data-testid={`input-prize-won-${item.id}`}
+                            />
                           </TableCell>
                           <TableCell className="text-center bg-red-50 dark:bg-red-900/10">
                             <Select
@@ -543,27 +594,23 @@ export default function PostRecordPage() {
                             </Select>
                           </TableCell>
                           <TableCell className="text-center">
-                            {isEditing ? (
-                              <Input
-                                type="number"
-                                value={editData.amountWon || ""}
-                                onChange={(e) => setEditData({ ...editData, amountWon: e.target.value ? parseInt(e.target.value) : undefined })}
-                                className="w-24 h-7 text-xs"
-                              />
-                            ) : (
-                              item.amountWon ? `$${item.amountWon.toLocaleString()}` : "-"
-                            )}
+                            <Input
+                              type="number"
+                              value={item.amountWon || ""}
+                              onChange={(e) => handleFieldChange(item.id, "amountWon", e.target.value ? parseInt(e.target.value) : null)}
+                              className="w-24 h-7 text-xs text-center"
+                              placeholder="-"
+                              data-testid={`input-amount-won-${item.id}`}
+                            />
                           </TableCell>
                           <TableCell>
-                            {isEditing ? (
-                              <Input
-                                value={editData.notes || ""}
-                                onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
-                                className="w-32 h-7 text-xs"
-                              />
-                            ) : (
-                              <span className="text-xs">{item.notes || "-"}</span>
-                            )}
+                            <Input
+                              value={item.notes || ""}
+                              onChange={(e) => handleFieldChange(item.id, "notes", e.target.value || null)}
+                              className="w-32 h-7 text-xs"
+                              placeholder="-"
+                              data-testid={`input-notes-${item.id}`}
+                            />
                           </TableCell>
                           <TableCell className="border-r-2">
                             {item.recordDay ? (
@@ -658,51 +705,17 @@ export default function PostRecordPage() {
                             />
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-1">
-                              {isEditing ? (
-                                <>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={saveEditing}
-                                    data-testid={`button-save-${item.id}`}
-                                  >
-                                    <Save className="h-4 w-4 text-green-600" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={cancelEditing}
-                                    data-testid={`button-cancel-${item.id}`}
-                                  >
-                                    <X className="h-4 w-4 text-muted-foreground" />
-                                  </Button>
-                                </>
-                              ) : (
-                                <>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => startEditing(item)}
-                                    data-testid={`button-edit-${item.id}`}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => deleteMutation.mutate(item.id)}
-                                    data-testid={`button-delete-${item.id}`}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                  </Button>
-                                </>
-                              )}
-                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => deleteMutation.mutate(item.id)}
+                              data-testid={`button-delete-${item.id}`}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
                           </TableCell>
                         </TableRow>
-                      );
-                    })}
+                      ))}
                   </TableBody>
                 </Table>
               </div>
