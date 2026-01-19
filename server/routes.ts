@@ -11817,7 +11817,9 @@ ${finalEmailFooter}`;
     'appearanceReleaseSigned', 'nedSigned', 'disclosureDocumentReceived',
     'returnedEntryBySupplier', 'entrySentByContestant', 'statementBySupplier', 'paramountEntryContestant',
     'afpConfirmation', 'afpFyiCheck', 'afpCheckReturned', 'afpNo', 'afpBatchNo',
-    'idiwriterCheck', 'socialMediaBrief', 'bankruptcyCheck'
+    'idiwriterCheck', 'socialMediaBrief', 'bankruptcyCheck',
+    // Override fields for Post Record editing
+    'nameOverride', 'phoneOverride', 'emailOverride', 'contestantTypeOverride', 'rxNumberOverride', 'spinTheWheelOverride'
   ];
 
   // Get all post-record tracking entries with details
