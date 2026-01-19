@@ -1017,10 +1017,14 @@ Deal or No Deal Production Team`);
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Users className="h-5 w-5" />
-                      Invited Contestants ({filteredData.length})
+                      {statusFilter === "declined" 
+                        ? `Declined Contestants (${filteredCanceledAssignments.length})`
+                        : `Invited Contestants (${filteredData.length})`}
                     </CardTitle>
                     <CardDescription>
-                      Contestants who have been sent a booking invitation
+                      {statusFilter === "declined"
+                        ? "Contestants who have declined their booking and are on the reschedule list"
+                        : "Contestants who have been sent a booking invitation"}
                     </CardDescription>
                   </div>
                   <Button 
@@ -1041,11 +1045,11 @@ Deal or No Deal Production Team`);
                   <div className="flex items-center justify-center py-8">
                     <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
-                ) : filteredData.length === 0 ? (
+                ) : (statusFilter === "declined" ? filteredCanceledAssignments.length === 0 : filteredData.length === 0) ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p>No invited contestants found</p>
-                    <p className="text-sm">Contestants appear here after they are sent a booking email</p>
+                    <p>{statusFilter === "declined" ? "No declined contestants found" : "No invited contestants found"}</p>
+                    <p className="text-sm">{statusFilter === "declined" ? "Declined contestants will appear here after they decline their booking" : "Contestants appear here after they are sent a booking email"}</p>
                   </div>
                 ) : (
                 <Table>
@@ -1075,7 +1079,8 @@ Deal or No Deal Production Team`);
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredData.map((item) => (
+                    {/* Regular seat assignments - hide when viewing declined filter */}
+                    {statusFilter !== "declined" && filteredData.map((item) => (
                       <TableRow 
                         key={item.id} 
                         className={`
