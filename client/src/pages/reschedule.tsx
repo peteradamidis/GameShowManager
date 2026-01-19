@@ -402,8 +402,8 @@ export default function ReschedulePage() {
                           </Badge>
                         )}
                         {!cancellation.paperworkReceived && cancellation.paperworkSent && (
-                          <Badge variant="outline" className="border-amber-300 bg-amber-500/20 text-amber-800 dark:border-amber-700 dark:text-amber-400 text-xs px-1.5" title="Paperwork sent, awaiting return">
-                            PW
+                          <Badge variant="outline" className="border-orange-300 bg-orange-500/20 text-orange-700 dark:border-orange-700 dark:text-orange-400 text-xs px-1.5" title="Paperwork sent, awaiting return">
+                            <FileCheck className="h-3 w-3" />
                           </Badge>
                         )}
                       </div>

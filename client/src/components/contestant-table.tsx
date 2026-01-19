@@ -1185,8 +1185,8 @@ export function ContestantTable({
                       </Badge>
                     )}
                     {paperworkStatusMap.get(contestant.id)?.status === 'sent' && (
-                      <Badge variant="outline" className="border-amber-300 bg-amber-500/20 text-amber-800 dark:border-amber-700 dark:text-amber-400 text-xs px-1.5" title="Paperwork sent, awaiting return" data-testid={`badge-paperwork-sent-${contestant.id}`}>
-                        PW
+                      <Badge variant="outline" className="border-orange-300 bg-orange-500/20 text-orange-700 dark:border-orange-700 dark:text-orange-400 text-xs px-1.5" title="Paperwork sent, awaiting return" data-testid={`badge-paperwork-sent-${contestant.id}`}>
+                        <FileCheck className="h-3 w-3" />
                       </Badge>
                     )}
                     {contestant.podiumStory && (
@@ -1680,6 +1680,37 @@ export function ContestantTable({
                         </span>
                         <span><span className="text-xs text-muted-foreground mr-1">Seat:</span><span className="font-mono font-medium text-green-600 dark:text-green-400">{String(selectedContestantSeatAssignment.blockNumber).padStart(2, '0')}-{selectedContestantSeatAssignment.seatLabel}</span></span>
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Paperwork Status */}
+                {contestantDetails && paperworkStatusMap.get(contestantDetails.id) && (
+                  <div className={`rounded-md px-3 py-2 ${
+                    paperworkStatusMap.get(contestantDetails.id)?.status === 'received' 
+                      ? 'bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800' 
+                      : 'bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <FileCheck className={`h-4 w-4 ${
+                        paperworkStatusMap.get(contestantDetails.id)?.status === 'received' 
+                          ? 'text-teal-700 dark:text-teal-400' 
+                          : 'text-orange-700 dark:text-orange-400'
+                      }`} />
+                      <span className={`text-sm font-medium ${
+                        paperworkStatusMap.get(contestantDetails.id)?.status === 'received' 
+                          ? 'text-teal-700 dark:text-teal-400' 
+                          : 'text-orange-700 dark:text-orange-400'
+                      }`}>
+                        {paperworkStatusMap.get(contestantDetails.id)?.status === 'received' 
+                          ? `Paperwork completed on ${paperworkStatusMap.get(contestantDetails.id)?.receivedAt 
+                              ? new Date(paperworkStatusMap.get(contestantDetails.id)!.receivedAt!).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) 
+                              : 'unknown date'}`
+                          : `Paperwork sent on ${paperworkStatusMap.get(contestantDetails.id)?.sentAt 
+                              ? new Date(paperworkStatusMap.get(contestantDetails.id)!.sentAt!).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) 
+                              : 'unknown date'}`
+                        }
+                      </span>
                     </div>
                   </div>
                 )}
