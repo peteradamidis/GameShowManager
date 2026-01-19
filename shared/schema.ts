@@ -580,6 +580,7 @@ export const postRecordTracking = pgTable("post_record_tracking", {
   // Legals - Entry and Supplier tracking
   returnedEntryBySupplier: boolean("returned_entry_by_supplier").default(false),
   entrySentByContestant: boolean("entry_sent_by_contestant").default(false),
+  statementBySupplier: boolean("statement_by_supplier").default(false),
   paramountEntryContestant: boolean("paramount_entry_contestant").default(false),
   
   // AFP (Australian Federal Police?) tracking

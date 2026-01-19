@@ -230,19 +230,20 @@ export default function PostRecordPage() {
     notifiedOfTx: "Notified of TX",
     photoSent: "Photo Sent",
     isPlayer: "Player",
-    appearanceReleaseSigned: "Appearance Release",
-    nedSigned: "NED Signed",
+    appearanceReleaseSigned: "Appearance Release Signed",
+    nedSigned: "Deed Signed",
     disclosureDocumentReceived: "Disclosure Received",
-    returnedEntryBySupplier: "Returned Entry (Supplier)",
-    entrySentByContestant: "Entry Sent (Contestant)",
+    returnedEntryBySupplier: "Gift Card Sent & Signed Accepted",
+    entrySentByContestant: "Stat Dec",
+    statementBySupplier: "Statement by Supplier",
     paramountEntryContestant: "ESA Entry",
     afpConfirmation: "AFP Confirm",
-    afpFyiCheck: "AFP FYI Check",
-    afpCheckReturned: "AFP Check Returned",
+    afpFyiCheck: "100 Pts ID",
+    afpCheckReturned: "AFP Batch No.",
     afpNo: "AFP No",
     afpBatchNo: "AFP Batch No",
-    idiwriterCheck: "Idiwriter Check",
-    socialMediaBrief: "Social Media Brief",
+    idiwriterCheck: "Honesty Check",
+    socialMediaBrief: "Social Media Sweep",
     bankruptcyCheck: "Bankruptcy Check",
   };
 
@@ -427,7 +428,7 @@ export default function PostRecordPage() {
                       <TableHead colSpan={11} className="text-center font-bold text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-900/20 border-r-2">
                         CONTESTANTS
                       </TableHead>
-                      <TableHead colSpan={14} className="text-center font-bold text-blue-800 dark:text-blue-200 bg-blue-100 dark:bg-blue-900/20">
+                      <TableHead colSpan={15} className="text-center font-bold text-blue-800 dark:text-blue-200 bg-blue-100 dark:bg-blue-900/20">
                         LEGALS
                       </TableHead>
                       <TableHead className="w-12"></TableHead>
@@ -455,19 +456,20 @@ export default function PostRecordPage() {
                       <TableHead className="font-semibold text-center">Amount Won</TableHead>
                       <TableHead className="font-semibold min-w-[150px]">Notes</TableHead>
                       <TableHead className="font-semibold border-r-2">Record Day</TableHead>
-                      <TableHead className="font-semibold text-center">Appearance Release</TableHead>
-                      <TableHead className="font-semibold text-center">NED Signed</TableHead>
+                      <TableHead className="font-semibold text-center">Appearance Release Signed</TableHead>
+                      <TableHead className="font-semibold text-center">Deed Signed</TableHead>
                       <TableHead className="font-semibold text-center">Disclosure Received</TableHead>
-                      <TableHead className="font-semibold text-center">Returned Entry (Supplier)</TableHead>
-                      <TableHead className="font-semibold text-center">Entry Sent (Contestant)</TableHead>
+                      <TableHead className="font-semibold text-center">Gift Card Sent & Signed Accepted</TableHead>
+                      <TableHead className="font-semibold text-center">Stat Dec</TableHead>
+                      <TableHead className="font-semibold text-center">Statement by Supplier</TableHead>
                       <TableHead className="font-semibold text-center">ESA Entry</TableHead>
                       <TableHead className="font-semibold text-center">AFP Confirm</TableHead>
-                      <TableHead className="font-semibold text-center">AFP FYI Check</TableHead>
-                      <TableHead className="font-semibold text-center">AFP Check Returned</TableHead>
+                      <TableHead className="font-semibold text-center">100 Pts ID</TableHead>
+                      <TableHead className="font-semibold text-center">AFP Batch No.</TableHead>
                       <TableHead className="font-semibold text-center">AFP No.</TableHead>
                       <TableHead className="font-semibold text-center">AFP Batch No.</TableHead>
-                      <TableHead className="font-semibold text-center">Idiwriter Check</TableHead>
-                      <TableHead className="font-semibold text-center">Social Media Brief</TableHead>
+                      <TableHead className="font-semibold text-center">Honesty Check</TableHead>
+                      <TableHead className="font-semibold text-center">Social Media Sweep</TableHead>
                       <TableHead className="font-semibold text-center">Bankruptcy Check</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
@@ -475,7 +477,7 @@ export default function PostRecordPage() {
                   <TableBody>
                     {filteredData.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={showTxSection ? 33 : 29} className="h-24 text-center text-muted-foreground">
+                        <TableCell colSpan={showTxSection ? 34 : 30} className="h-24 text-center text-muted-foreground">
                           No entries found. Click "Add Entry" to add contestants to track.
                         </TableCell>
                       </TableRow>
@@ -648,6 +650,12 @@ export default function PostRecordPage() {
                             <Checkbox
                               checked={item.entrySentByContestant || false}
                               onCheckedChange={(checked) => handleCheckboxChange(item.id, "entrySentByContestant", checked === true)}
+                            />
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Checkbox
+                              checked={item.statementBySupplier || false}
+                              onCheckedChange={(checked) => handleCheckboxChange(item.id, "statementBySupplier", checked === true)}
                             />
                           </TableCell>
                           <TableCell className="text-center">
