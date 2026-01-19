@@ -23,6 +23,7 @@ import {
   noticeboardPosts,
   noticeboardComments,
   noticeboardLikes,
+  postRecordTracking,
   type Contestant,
   type InsertContestant,
   type Group,
@@ -64,6 +65,8 @@ import {
   type InsertNoticeboardComment,
   type NoticeboardLike,
   type InsertNoticeboardLike,
+  type PostRecordTracking,
+  type InsertPostRecordTracking,
 } from "@shared/schema";
 import { eq, and, sql, inArray } from "drizzle-orm";
 
@@ -2441,6 +2444,106 @@ export class DbStorage implements IStorage {
         eq(noticeboardLikes.browserId, browserId)
       ));
     return !!existing;
+  }
+
+  // Post-Record Tracking
+  async getPostRecordEntries(recordDayId?: string): Promise<PostRecordTracking[]> {
+    const db = getDb();
+    if (recordDayId) {
+      return db
+        .select()
+        .from(postRecordTracking)
+        .where(eq(postRecordTracking.recordDayId, recordDayId))
+        .orderBy(postRecordTracking.createdAt);
+    }
+    return db
+      .select()
+      .from(postRecordTracking)
+      .orderBy(postRecordTracking.createdAt);
+  }
+
+  async getPostRecordEntriesWithDetails(recordDayId?: string): Promise<Array<PostRecordTracking & { contestant: Contestant | null; recordDay: RecordDay | null }>> {
+    const db = getDb();
+    
+    // Get all entries
+    const entries = recordDayId 
+      ? await db.select().from(postRecordTracking).where(eq(postRecordTracking.recordDayId, recordDayId)).orderBy(postRecordTracking.createdAt)
+      : await db.select().from(postRecordTracking).orderBy(postRecordTracking.createdAt);
+    
+    if (entries.length === 0) return [];
+    
+    // Batch fetch contestants
+    const contestantIds = [...new Set(entries.map(e => e.contestantId).filter(Boolean))];
+    const contestantsData = contestantIds.length > 0 
+      ? await db.select().from(contestants).where(inArray(contestants.id, contestantIds))
+      : [];
+    const contestantMap = new Map(contestantsData.map(c => [c.id, c]));
+    
+    // Batch fetch record days
+    const recordDayIds = [...new Set(entries.map(e => e.recordDayId).filter((id): id is string => !!id))];
+    const recordDaysData = recordDayIds.length > 0 
+      ? await db.select().from(recordDays).where(inArray(recordDays.id, recordDayIds))
+      : [];
+    const recordDayMap = new Map(recordDaysData.map(rd => [rd.id, rd]));
+    
+    // Combine data
+    return entries.map(entry => ({
+      ...entry,
+      contestant: contestantMap.get(entry.contestantId) || null,
+      recordDay: entry.recordDayId ? recordDayMap.get(entry.recordDayId) || null : null,
+    }));
+  }
+
+  async getPostRecordEntryById(id: string): Promise<PostRecordTracking | undefined> {
+    const db = getDb();
+    const [entry] = await db
+      .select()
+      .from(postRecordTracking)
+      .where(eq(postRecordTracking.id, id));
+    return entry;
+  }
+
+  async getPostRecordEntryByContestant(contestantId: string, recordDayId?: string): Promise<PostRecordTracking | undefined> {
+    const db = getDb();
+    if (recordDayId) {
+      const [entry] = await db
+        .select()
+        .from(postRecordTracking)
+        .where(and(
+          eq(postRecordTracking.contestantId, contestantId),
+          eq(postRecordTracking.recordDayId, recordDayId)
+        ));
+      return entry;
+    }
+    const [entry] = await db
+      .select()
+      .from(postRecordTracking)
+      .where(eq(postRecordTracking.contestantId, contestantId));
+    return entry;
+  }
+
+  async createPostRecordEntry(data: InsertPostRecordTracking): Promise<PostRecordTracking> {
+    const db = getDb();
+    const [created] = await db
+      .insert(postRecordTracking)
+      .values(data)
+      .returning();
+    return created;
+  }
+
+  async updatePostRecordEntry(id: string, data: Partial<InsertPostRecordTracking>): Promise<PostRecordTracking | undefined> {
+    const db = getDb();
+    const [updated] = await db
+      .update(postRecordTracking)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(postRecordTracking.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePostRecordEntry(id: string): Promise<void> {
+    const db = getDb();
+    await db.delete(postRecordTracking).where(eq(postRecordTracking.id, id));
   }
 }
 

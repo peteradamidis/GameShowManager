@@ -546,3 +546,54 @@ export const insertNoticeboardLikeSchema = createInsertSchema(noticeboardLikes).
 
 export type InsertNoticeboardLike = z.infer<typeof insertNoticeboardLikeSchema>;
 export type NoticeboardLike = typeof noticeboardLikes.$inferSelect;
+
+// Post Record tracking table - tracks post-production paperwork and legal requirements
+export const postRecordTracking = pgTable("post_record_tracking", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contestantId: varchar("contestant_id").references(() => contestants.id).notNull(),
+  recordDayId: varchar("record_day_id").references(() => recordDays.id),
+  seatAssignmentId: varchar("seat_assignment_id").references(() => seatAssignments.id),
+  
+  // Contestant info (denormalized for display)
+  isPlayer: boolean("is_player").default(false),
+  caseNumber: text("case_number"),
+  caseAmount: integer("case_amount"),
+  prizeWon: text("prize_won"), // Prize description
+  bankOfferTaken: boolean("bank_offer_taken"),
+  amountWon: integer("amount_won"),
+  notes: text("notes"),
+  
+  // Legals - Appearance and Disclosures
+  appearanceReleaseSigned: boolean("appearance_release_signed").default(false),
+  nedSigned: boolean("ned_signed").default(false), // NED = Non-disclosure?
+  disclosureDocumentReceived: boolean("disclosure_document_received").default(false),
+  
+  // Legals - Entry and Supplier tracking
+  returnedEntryBySupplier: boolean("returned_entry_by_supplier").default(false),
+  entrySentByContestant: boolean("entry_sent_by_contestant").default(false),
+  paramountEntryContestant: boolean("paramount_entry_contestant").default(false),
+  
+  // AFP (Australian Federal Police?) tracking
+  afpConfirmation: boolean("afp_confirmation").default(false),
+  afpFyiCheck: boolean("afp_fyi_check").default(false),
+  afpCheckReturned: boolean("afp_check_returned").default(false),
+  afpNo: text("afp_no"),
+  afpBatchNo: text("afp_batch_no"),
+  
+  // Other checks
+  idiwriterCheck: boolean("idiwriter_check").default(false),
+  socialMediaBrief: boolean("social_media_brief").default(false),
+  bankruptcyCheck: boolean("bankruptcy_check").default(false),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertPostRecordTrackingSchema = createInsertSchema(postRecordTracking).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertPostRecordTracking = z.infer<typeof insertPostRecordTrackingSchema>;
+export type PostRecordTracking = typeof postRecordTracking.$inferSelect;

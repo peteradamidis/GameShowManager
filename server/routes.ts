@@ -14,7 +14,9 @@ import {
   canceledAssignments,
   contestantAvailability,
   availabilityTokens,
-  bookingConfirmationTokens
+  bookingConfirmationTokens,
+  postRecordTracking,
+  insertPostRecordTrackingSchema
 } from "@shared/schema";
 import { 
   parseAttendingWith, 
@@ -11780,6 +11782,132 @@ ${finalEmailFooter}`;
       res.json({ imageUrl });
     } catch (error: any) {
       console.error("Error uploading noticeboard image:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============================================
+  // Post-Record Tracking API endpoints
+  // ============================================
+
+  // Whitelist of updatable fields for post-record entries
+  const postRecordUpdatableFields = [
+    'isPlayer', 'caseNumber', 'caseAmount', 'prizeWon', 'bankOfferTaken', 'amountWon', 'notes',
+    'appearanceReleaseSigned', 'nedSigned', 'disclosureDocumentReceived',
+    'returnedEntryBySupplier', 'entrySentByContestant', 'paramountEntryContestant',
+    'afpConfirmation', 'afpFyiCheck', 'afpCheckReturned', 'afpNo', 'afpBatchNo',
+    'idiwriterCheck', 'socialMediaBrief', 'bankruptcyCheck'
+  ];
+
+  // Get all post-record tracking entries with details
+  app.get("/api/post-record", requireAuth, async (req, res) => {
+    try {
+      const { recordDayId } = req.query;
+      const entries = await storage.getPostRecordEntriesWithDetails(recordDayId as string | undefined);
+      res.json(entries);
+    } catch (error: any) {
+      console.error("Error fetching post-record data:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create new post-record entry
+  app.post("/api/post-record", requireAuth, async (req, res) => {
+    try {
+      const { contestantId, recordDayId } = req.body;
+      
+      // Validate required fields
+      if (!contestantId || typeof contestantId !== 'string') {
+        return res.status(400).json({ error: "Contestant ID is required and must be a string" });
+      }
+      
+      // Check if contestant exists
+      const contestant = await storage.getContestant(contestantId);
+      if (!contestant) {
+        return res.status(400).json({ error: "Contestant not found" });
+      }
+      
+      // Check if record day exists (if provided)
+      let recordDay = null;
+      if (recordDayId) {
+        recordDay = await storage.getRecordDay(recordDayId);
+        if (!recordDay) {
+          return res.status(400).json({ error: "Record day not found" });
+        }
+      }
+      
+      // Check if entry already exists
+      const existingEntry = await storage.getPostRecordEntryByContestant(contestantId, recordDayId);
+      if (existingEntry) {
+        return res.status(400).json({ error: "Entry already exists for this contestant" });
+      }
+      
+      const newEntry = await storage.createPostRecordEntry({
+        contestantId,
+        recordDayId: recordDayId || null,
+      });
+      
+      res.json({ ...newEntry, contestant, recordDay });
+    } catch (error: any) {
+      console.error("Error creating post-record entry:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update post-record entry
+  app.patch("/api/post-record/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Check if entry exists
+      const existing = await storage.getPostRecordEntryById(id);
+      if (!existing) {
+        return res.status(404).json({ error: "Entry not found" });
+      }
+      
+      // Filter to only allowed fields
+      const updateData: Record<string, any> = {};
+      for (const field of postRecordUpdatableFields) {
+        if (req.body[field] !== undefined) {
+          updateData[field] = req.body[field];
+        }
+      }
+      
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
+      
+      const updated = await storage.updatePostRecordEntry(id, updateData);
+      if (!updated) {
+        return res.status(404).json({ error: "Entry not found" });
+      }
+      
+      // Fetch related data
+      const contestant = await storage.getContestant(updated.contestantId);
+      const recordDay = updated.recordDayId ? await storage.getRecordDay(updated.recordDayId) : null;
+      
+      res.json({ ...updated, contestant, recordDay });
+    } catch (error: any) {
+      console.error("Error updating post-record entry:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete post-record entry
+  app.delete("/api/post-record/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Check if entry exists
+      const existing = await storage.getPostRecordEntryById(id);
+      if (!existing) {
+        return res.status(404).json({ error: "Entry not found" });
+      }
+      
+      await storage.deletePostRecordEntry(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting post-record entry:", error);
       res.status(500).json({ error: error.message });
     }
   });
