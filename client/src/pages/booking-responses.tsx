@@ -1799,8 +1799,8 @@ export default function BookingResponses() {
                   );
                 })}
                 
-                {/* Rescheduled/Declined contestants from canceled assignments */}
-                {statusFilter === "declined" && filteredCanceledAssignments.map((item) => (
+                {/* Rescheduled/Declined contestants from canceled assignments - show in both "all" and "declined" views */}
+                {(statusFilter === "declined" || statusFilter === "all") && filteredCanceledAssignments.map((item) => (
                   <TableRow 
                     key={`canceled-${item.id}`}
                     className="bg-red-50 dark:bg-red-950/20"
