@@ -655,7 +655,7 @@ export default function PostRecordPage() {
                             </>
                           )}
                           {/* CONTESTANTS columns */}
-                          <TableCell className="font-medium sticky left-0 bg-background z-10">
+                          <TableCell className="font-medium sticky left-0 bg-card z-10">
                             {editingRowId === item.id ? (
                               <Input
                                 value={editFormData.nameOverride}
