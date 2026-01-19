@@ -202,9 +202,9 @@ export default function SeatingChartPage() {
     return recordDays.find((rd: any) => rd.id === recordDayId);
   }, [recordDays, recordDayId]);
 
-  // Sync producer state with current record day
+  // Sync producer state with current record day - always update when day changes
   useEffect(() => {
-    if (currentRecordDay && !selectedProducer) {
+    if (currentRecordDay) {
       setSelectedProducer(currentRecordDay.producer || "");
     }
   }, [currentRecordDay?.id]);

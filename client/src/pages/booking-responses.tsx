@@ -757,11 +757,12 @@ export default function BookingResponses() {
       if (!item.bookingEmailError) return false;
     }
     
-    // Filter by search
+    // Filter by search (name, attending with, AND email)
     if (!searchName) return true;
     const search = searchName.toLowerCase();
     return (
       item.contestant?.name?.toLowerCase().includes(search) ||
+      item.contestant?.attendingWith?.toLowerCase().includes(search) ||
       item.contestant?.email?.toLowerCase().includes(search)
     );
   });
@@ -1511,6 +1512,7 @@ export default function BookingResponses() {
                     />
                   </TableHead>
                   <TableHead className="font-semibold text-xs">Name</TableHead>
+                  <TableHead className="font-semibold text-xs">Rating</TableHead>
                   <TableHead className="font-semibold text-xs">Attending<br/>With</TableHead>
                   <TableHead className="font-semibold text-xs whitespace-nowrap">Date /<br/>RX</TableHead>
                   <TableHead className="font-semibold text-xs">Seat</TableHead>
@@ -1551,6 +1553,26 @@ export default function BookingResponses() {
                           </Avatar>
                           <span className="font-medium text-xs">{item.contestant?.name || 'Unknown'}</span>
                         </div>
+                      </TableCell>
+                      <TableCell className="py-1">
+                        {item.contestant?.auditionRating ? (
+                          <Badge 
+                            variant="outline" 
+                            className={`text-[10px] px-1.5 py-0 ${
+                              item.contestant.auditionRating === 'A+' ? 'border-green-500 text-green-600 dark:text-green-400' :
+                              item.contestant.auditionRating === 'A' ? 'border-green-400 text-green-500 dark:text-green-300' :
+                              item.contestant.auditionRating === 'B+' ? 'border-blue-400 text-blue-500 dark:text-blue-300' :
+                              item.contestant.auditionRating === 'B' ? 'border-blue-300 text-blue-400 dark:text-blue-200' :
+                              item.contestant.auditionRating === 'C' ? 'border-orange-400 text-orange-500 dark:text-orange-300' :
+                              item.contestant.auditionRating === 'P' ? 'border-purple-400 text-purple-500 dark:text-purple-300' :
+                              ''
+                            }`}
+                          >
+                            {item.contestant.auditionRating}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                       <TableCell className="py-1 max-w-[160px]">
                         {item.contestant?.attendingWith ? (
