@@ -1407,6 +1407,7 @@ export function ContestantTable({
                             <SelectItem value="B+">B+</SelectItem>
                             <SelectItem value="B">B</SelectItem>
                             <SelectItem value="C">C</SelectItem>
+                            <SelectItem value="DNU">DNU (Do Not Use)</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1571,15 +1572,21 @@ export function ContestantTable({
                       </div>
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Rating</label>
-                        <p className={`text-sm font-semibold ${
-                          contestantDetails.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
-                          contestantDetails.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
-                          contestantDetails.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
-                          contestantDetails.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
-                          contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' : 'text-muted-foreground'
-                        }`}>
-                          {contestantDetails.auditionRating || '-'}
-                        </p>
+                        {contestantDetails.auditionRating?.toUpperCase().trim() === 'DNU' ? (
+                          <Badge variant="destructive" className="text-xs font-bold">
+                            DNU - Do Not Use
+                          </Badge>
+                        ) : (
+                          <p className={`text-sm font-semibold ${
+                            contestantDetails.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
+                            contestantDetails.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
+                            contestantDetails.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
+                            contestantDetails.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
+                            contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' : 'text-muted-foreground'
+                          }`}>
+                            {contestantDetails.auditionRating || '-'}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Player Type</label>

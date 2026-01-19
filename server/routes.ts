@@ -5674,6 +5674,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Canceled assignment not found" });
       }
 
+      // Check if contestant is DNU-rated (Do Not Use) - block rebooking
+      const contestant = await storage.getContestantById(canceled.contestantId);
+      if (contestant?.auditionRating?.toUpperCase().trim() === 'DNU') {
+        return res.status(400).json({ error: "Cannot rebook a DNU-rated contestant (Do Not Use)" });
+      }
+
       // Create new seat assignment with paperwork status carried over
       const newAssignment = await storage.createSeatAssignment({
         recordDayId,
@@ -8357,6 +8363,20 @@ ${finalEmailFooter}`;
         const moreCount = alreadySeatedIds.length > 3 ? ` and ${alreadySeatedIds.length - 3} more` : '';
         return res.status(409).json({ 
           error: `Cannot add as standby: ${names}${moreCount} already seated for this record day` 
+        });
+      }
+      
+      // Check if any contestant is DNU-rated (Do Not Use) - block them from being added as standby
+      const dnuContestants: string[] = [];
+      for (const contestantId of contestantIds) {
+        const contestant = await storage.getContestantById(contestantId);
+        if (contestant?.auditionRating?.toUpperCase().trim() === 'DNU') {
+          dnuContestants.push(contestant.name);
+        }
+      }
+      if (dnuContestants.length > 0) {
+        return res.status(400).json({ 
+          error: `Cannot add DNU-rated contestants as standbys: ${dnuContestants.join(', ')}` 
         });
       }
       
