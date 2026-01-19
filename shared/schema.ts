@@ -595,6 +595,14 @@ export const postRecordTracking = pgTable("post_record_tracking", {
   socialMediaBrief: boolean("social_media_brief").default(false),
   bankruptcyCheck: boolean("bankruptcy_check").default(false),
   
+  // Override fields for Post Record editing (supersede contestant/seatAssignment data)
+  nameOverride: text("name_override"),
+  phoneOverride: text("phone_override"),
+  emailOverride: text("email_override"),
+  contestantTypeOverride: text("contestant_type_override"), // 'player' or 'case_holder'
+  rxNumberOverride: text("rx_number_override"),
+  spinTheWheelOverride: boolean("spin_the_wheel_override"),
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
