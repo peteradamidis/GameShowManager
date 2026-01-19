@@ -275,20 +275,13 @@ export default function PostRecordPage() {
             </div>
           </div>
 
-          {isLoading ? (
-            <div className="flex items-center justify-center p-8">
+          {isLoading && (
+            <div className="flex items-center justify-center p-4">
               <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : filteredData.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-8 text-center">
-              <FileCheck2 className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium">No entries found</h3>
-              <p className="text-sm text-muted-foreground">
-                Add contestants to track their post-record paperwork
-              </p>
-            </div>
-          ) : (
-            <ScrollArea className="w-full">
+          )}
+          
+          <ScrollArea className="w-full">
               <div className="min-w-[2000px]">
                 <Table>
                   <TableHeader>
@@ -331,7 +324,13 @@ export default function PostRecordPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredData.map((item) => {
+                    {filteredData.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={26} className="h-24 text-center text-muted-foreground">
+                          No entries found. Click "Add Entry" to add contestants to track.
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredData.map((item) => {
                       const isEditing = editingId === item.id;
                       return (
                         <TableRow 
@@ -580,7 +579,6 @@ export default function PostRecordPage() {
               </div>
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
-          )}
 
           <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
             <Users className="h-4 w-4" />
