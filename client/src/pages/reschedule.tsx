@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Calendar as CalendarIcon, User, Mail, Phone, MapPin, Users, Heart, AlertTriangle, Pencil, X, Save, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon, User, Mail, Phone, MapPin, Users, Heart, AlertTriangle, Pencil, X, Save, Trash2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format, isSameDay, parseISO } from "date-fns";
@@ -56,6 +56,7 @@ export default function ReschedulePage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editFormData, setEditFormData] = useState<any>({});
   const [filterOriginalRecordDayId, setFilterOriginalRecordDayId] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const handleRowClick = (contestant: any) => {
     setSelectedContestant(contestant);
@@ -312,24 +313,36 @@ export default function ReschedulePage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
           <CardTitle>Contestants for Rebooking</CardTitle>
-          <div className="flex items-center gap-2">
-            <Label htmlFor="filter-original-day" className="text-sm font-medium whitespace-nowrap">Original Date:</Label>
-            <Select value={filterOriginalRecordDayId} onValueChange={setFilterOriginalRecordDayId}>
-              <SelectTrigger id="filter-original-day" className="w-64" data-testid="select-filter-original-day">
-                <SelectValue placeholder="All dates" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All dates</SelectItem>
-                {recordDays
-                  .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                  .map((rd: any) => (
-                    <SelectItem key={rd.id} value={rd.id}>
-                      {rd.rxNumber ? `${rd.rxNumber} — ` : ''}{format(new Date(rd.date), "EEE, MMM d, yyyy")}
-                    </SelectItem>
-                  ))
-                }
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 w-64"
+                data-testid="input-search-reschedule"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="filter-original-day" className="text-sm font-medium whitespace-nowrap">Original Date:</Label>
+              <Select value={filterOriginalRecordDayId} onValueChange={setFilterOriginalRecordDayId}>
+                <SelectTrigger id="filter-original-day" className="w-64" data-testid="select-filter-original-day">
+                  <SelectValue placeholder="All dates" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All dates</SelectItem>
+                  {recordDays
+                    .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                    .map((rd: any) => (
+                      <SelectItem key={rd.id} value={rd.id}>
+                        {rd.rxNumber ? `${rd.rxNumber} — ` : ''}{format(new Date(rd.date), "EEE, MMM d, yyyy")}
+                      </SelectItem>
+                    ))
+                  }
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -357,9 +370,11 @@ export default function ReschedulePage() {
               </TableHeader>
               <TableBody>
                 {canceledAssignments
-                  .filter((cancellation: any) => 
-                    filterOriginalRecordDayId === "all" || cancellation.recordDayId === filterOriginalRecordDayId
-                  )
+                  .filter((cancellation: any) => {
+                    const matchesDate = filterOriginalRecordDayId === "all" || cancellation.recordDayId === filterOriginalRecordDayId;
+                    const matchesSearch = !searchQuery || cancellation.contestant?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+                    return matchesDate && matchesSearch;
+                  })
                   .map((cancellation: any) => (
                   <TableRow 
                     key={cancellation.id} 
