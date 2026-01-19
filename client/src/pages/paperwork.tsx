@@ -261,12 +261,19 @@ Deal or No Deal Production Team`);
     },
   });
 
-  // Filter canceled assignments by record day if one is selected
+  // Filter canceled assignments by record day, search, and other filters
   const filteredCanceledAssignments = canceledAssignments.filter(ca => {
     // Only show declined contestants
     if (!ca.wasDeclined) return false;
     // Filter by record day if selected
     if (selectedRecordDay !== "all" && ca.recordDayId !== selectedRecordDay) return false;
+    // Filter by search name
+    if (searchName) {
+      const searchLower = searchName.toLowerCase();
+      const nameMatch = ca.contestant?.name?.toLowerCase().includes(searchLower);
+      const emailMatch = ca.contestant?.email?.toLowerCase().includes(searchLower);
+      if (!nameMatch && !emailMatch) return false;
+    }
     return true;
   });
 

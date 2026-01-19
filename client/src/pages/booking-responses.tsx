@@ -316,12 +316,20 @@ export default function BookingResponses() {
     },
   });
 
-  // Filter canceled assignments by record day if one is selected
+  // Filter canceled assignments by record day, search, and other filters
   const filteredCanceledAssignments = canceledAssignments.filter(ca => {
     // Only show declined contestants
     if (!ca.wasDeclined) return false;
     // Filter by record day if selected
     if (selectedRecordDay && ca.recordDayId !== selectedRecordDay) return false;
+    // Filter by search name
+    if (searchName) {
+      const searchLower = searchName.toLowerCase();
+      const nameMatch = ca.contestant?.name?.toLowerCase().includes(searchLower);
+      const attendingWithMatch = ca.contestant?.attendingWith?.toLowerCase().includes(searchLower);
+      const emailMatch = ca.contestant?.email?.toLowerCase().includes(searchLower);
+      if (!nameMatch && !attendingWithMatch && !emailMatch) return false;
+    }
     return true;
   });
 
