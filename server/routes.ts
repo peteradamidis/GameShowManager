@@ -2474,7 +2474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Fix legacy reschedule status - updates contestants in canceled_assignments to have 'reschedule' status
+  // Fix legacy reschedule status - updates contestants in canceled_assignments to have 'rescheduled' status
   app.post("/api/contestants/fix-reschedule-status", requireAuth, async (req, res) => {
     try {
       // Get all canceled assignments
@@ -2486,18 +2486,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all contestants to check their current status
       const allContestants = await storage.getContestants();
       
-      // Find contestants who are in canceled_assignments but don't have 'reschedule' status
+      // Find contestants who are in canceled_assignments but don't have 'rescheduled' status
       const contestantsToFix = allContestants.filter(c => 
         contestantIds.includes(c.id) && 
-        c.availabilityStatus !== 'reschedule'
+        c.availabilityStatus !== 'rescheduled'
       );
       
-      // Update each contestant's status to 'reschedule'
+      // Update each contestant's status to 'rescheduled'
       let fixedCount = 0;
       const fixedRecords: Array<{ id: string; name: string; previousStatus: string }> = [];
       
       for (const contestant of contestantsToFix) {
-        await storage.updateContestant(contestant.id, { availabilityStatus: 'reschedule' });
+        await storage.updateContestant(contestant.id, { availabilityStatus: 'rescheduled' });
         fixedCount++;
         fixedRecords.push({
           id: contestant.id,
@@ -2509,7 +2509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[Fix Reschedule Status] Fixed ${fixedCount} contestants`);
       
       res.json({
-        message: `Fixed ${fixedCount} contestants to 'reschedule' status`,
+        message: `Fixed ${fixedCount} contestants to 'rescheduled' status`,
         fixedCount,
         totalInReschedule: contestantIds.length,
         fixedRecords,
@@ -8643,8 +8643,8 @@ ${finalEmailFooter}`;
         movedToRescheduleAt: new Date(),
       });
 
-      // Update contestant status to 'reschedule' so they are identifiable across all tabs
-      await storage.updateContestantAvailability(standby.contestantId, 'reschedule');
+      // Update contestant status to 'rescheduled' so they are identifiable across all tabs
+      await storage.updateContestantAvailability(standby.contestantId, 'rescheduled');
 
       res.json({
         message: "Standby moved to reschedule tab",
