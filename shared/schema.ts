@@ -554,6 +554,15 @@ export const postRecordTracking = pgTable("post_record_tracking", {
   recordDayId: varchar("record_day_id").references(() => recordDays.id),
   seatAssignmentId: varchar("seat_assignment_id").references(() => seatAssignments.id),
   
+  // RECORD section - RX Episode number
+  rxEpNo: text("rx_ep_no"),
+  
+  // TX section - Transmission/broadcast info
+  txEpNumber: text("tx_ep_number"),
+  txEpDate: timestamp("tx_ep_date"),
+  notifiedOfTx: boolean("notified_of_tx").default(false),
+  photoSent: boolean("photo_sent").default(false),
+  
   // Contestant info (denormalized for display)
   isPlayer: boolean("is_player").default(false),
   caseNumber: text("case_number"),

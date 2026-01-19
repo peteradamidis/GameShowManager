@@ -11792,6 +11792,7 @@ ${finalEmailFooter}`;
 
   // Whitelist of updatable fields for post-record entries
   const postRecordUpdatableFields = [
+    'rxEpNo', 'txEpNumber', 'txEpDate', 'notifiedOfTx', 'photoSent',
     'isPlayer', 'caseNumber', 'caseAmount', 'prizeWon', 'bankOfferTaken', 'amountWon', 'notes',
     'appearanceReleaseSigned', 'nedSigned', 'disclosureDocumentReceived',
     'returnedEntryBySupplier', 'entrySentByContestant', 'paramountEntryContestant',

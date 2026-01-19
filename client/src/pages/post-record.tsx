@@ -280,19 +280,32 @@ export default function PostRecordPage() {
           )}
           
           <ScrollArea className="w-full">
-              <div className="min-w-[2000px]">
+              <div className="min-w-[2600px]">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-amber-100 dark:bg-amber-900/20">
-                      <TableHead colSpan={11} className="text-center font-bold text-amber-800 dark:text-amber-200 border-r-2">
+                    <TableRow>
+                      <TableHead colSpan={3} className="text-center font-bold text-rose-800 dark:text-rose-200 bg-rose-100 dark:bg-rose-900/20 border-r-2">
+                        RECORD
+                      </TableHead>
+                      <TableHead colSpan={4} className="text-center font-bold text-yellow-800 dark:text-yellow-200 bg-yellow-100 dark:bg-yellow-900/20 border-r-2">
+                        TX
+                      </TableHead>
+                      <TableHead colSpan={11} className="text-center font-bold text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-900/20 border-r-2">
                         CONTESTANTS
                       </TableHead>
-                      <TableHead colSpan={12} className="text-center font-bold text-blue-800 dark:text-blue-200">
+                      <TableHead colSpan={14} className="text-center font-bold text-blue-800 dark:text-blue-200 bg-blue-100 dark:bg-blue-900/20">
                         LEGALS
                       </TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                     <TableRow>
+                      <TableHead className="font-semibold text-center bg-rose-50 dark:bg-rose-900/10 min-w-[90px]">RX DATE</TableHead>
+                      <TableHead className="font-semibold text-center bg-rose-50 dark:bg-rose-900/10 min-w-[70px]">RX DAY</TableHead>
+                      <TableHead className="font-semibold text-center bg-rose-50 dark:bg-rose-900/10 border-r-2 min-w-[80px]">RX EP NO.</TableHead>
+                      <TableHead className="font-semibold text-center bg-yellow-50 dark:bg-yellow-900/10 min-w-[100px]">TX EP NUMBER</TableHead>
+                      <TableHead className="font-semibold text-center bg-yellow-50 dark:bg-yellow-900/10 min-w-[90px]">TX EP DATE</TableHead>
+                      <TableHead className="font-semibold text-center bg-yellow-50 dark:bg-yellow-900/10 min-w-[100px]">NOTIFIED OF TX?</TableHead>
+                      <TableHead className="font-semibold text-center bg-yellow-50 dark:bg-yellow-900/10 border-r-2 min-w-[90px]">PHOTO SENT</TableHead>
                       <TableHead className="font-semibold min-w-[150px] sticky left-0 bg-background z-10">Name</TableHead>
                       <TableHead className="font-semibold text-center">Player</TableHead>
                       <TableHead className="font-semibold min-w-[120px]">Phone</TableHead>
@@ -324,7 +337,7 @@ export default function PostRecordPage() {
                   <TableBody>
                     {filteredData.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={26} className="h-24 text-center text-muted-foreground">
+                        <TableCell colSpan={33} className="h-24 text-center text-muted-foreground">
                           No entries found. Click "Add Entry" to add contestants to track.
                         </TableCell>
                       </TableRow>
@@ -336,6 +349,56 @@ export default function PostRecordPage() {
                           className={isEditing ? "bg-blue-50 dark:bg-blue-900/10" : ""}
                           data-testid={`row-post-record-${item.id}`}
                         >
+                          {/* RECORD columns */}
+                          <TableCell className="text-center text-xs bg-rose-50/50 dark:bg-rose-900/5">
+                            {item.recordDay ? format(new Date(item.recordDay.date), "d-MMM-yy") : "-"}
+                          </TableCell>
+                          <TableCell className="text-center text-xs bg-rose-50/50 dark:bg-rose-900/5">
+                            {item.recordDay?.rxNumber || "-"}
+                          </TableCell>
+                          <TableCell className="text-center bg-rose-50/50 dark:bg-rose-900/5 border-r-2">
+                            <Input
+                              value={item.rxEpNo || ""}
+                              onChange={(e) => handleFieldChange(item.id, "rxEpNo", e.target.value)}
+                              className="w-16 h-7 text-xs text-center"
+                              placeholder="-"
+                              data-testid={`input-rx-ep-no-${item.id}`}
+                            />
+                          </TableCell>
+                          {/* TX columns */}
+                          <TableCell className="text-center bg-yellow-50/50 dark:bg-yellow-900/5">
+                            <Input
+                              value={item.txEpNumber || ""}
+                              onChange={(e) => handleFieldChange(item.id, "txEpNumber", e.target.value)}
+                              className="w-16 h-7 text-xs text-center"
+                              placeholder="-"
+                              data-testid={`input-tx-ep-number-${item.id}`}
+                            />
+                          </TableCell>
+                          <TableCell className="text-center bg-yellow-50/50 dark:bg-yellow-900/5">
+                            <Input
+                              type="date"
+                              value={item.txEpDate ? format(new Date(item.txEpDate), "yyyy-MM-dd") : ""}
+                              onChange={(e) => handleFieldChange(item.id, "txEpDate", e.target.value ? new Date(e.target.value).toISOString() : null)}
+                              className="w-28 h-7 text-xs"
+                              data-testid={`input-tx-ep-date-${item.id}`}
+                            />
+                          </TableCell>
+                          <TableCell className="text-center bg-yellow-50/50 dark:bg-yellow-900/5">
+                            <Checkbox
+                              checked={item.notifiedOfTx || false}
+                              onCheckedChange={(checked) => handleCheckboxChange(item.id, "notifiedOfTx", checked === true)}
+                              data-testid={`checkbox-notified-tx-${item.id}`}
+                            />
+                          </TableCell>
+                          <TableCell className="text-center bg-yellow-50/50 dark:bg-yellow-900/5 border-r-2">
+                            <Checkbox
+                              checked={item.photoSent || false}
+                              onCheckedChange={(checked) => handleCheckboxChange(item.id, "photoSent", checked === true)}
+                              data-testid={`checkbox-photo-sent-${item.id}`}
+                            />
+                          </TableCell>
+                          {/* CONTESTANTS columns */}
                           <TableCell className="font-medium sticky left-0 bg-background z-10">
                             {item.contestant?.name || "Unknown"}
                           </TableCell>
