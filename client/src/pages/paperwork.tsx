@@ -251,6 +251,7 @@ Deal or No Deal Production Team`);
   });
 
   // Query for canceled assignments (declined contestants on reschedule list)
+  // Always fetch so we can include declined count in "All Invited" stats
   const { data: canceledAssignments = [] } = useQuery<CanceledAssignmentWithDetails[]>({
     queryKey: ["/api/canceled-assignments"],
     queryFn: async () => {
@@ -258,7 +259,6 @@ Deal or No Deal Production Team`);
       if (!response.ok) throw new Error('Failed to fetch canceled assignments');
       return response.json();
     },
-    enabled: statusFilter === "declined",
   });
 
   // Filter canceled assignments by record day if one is selected
@@ -551,9 +551,13 @@ Deal or No Deal Production Team`);
   // Stats
   const invitedCount = filteredData.filter(item => !item.confirmedRsvp).length;
   const confirmedCount = filteredData.filter(item => item.confirmedRsvp).length;
+  const declinedCount = filteredCanceledAssignments.length;
   const pendingSent = filteredData.filter(item => !item.paperworkSent);
   const pendingReceived = filteredData.filter(item => item.paperworkSent && !item.paperworkReceived);
   const completed = filteredData.filter(item => item.paperworkSent && item.paperworkReceived);
+  
+  // Total count for "All Invited" includes both active and declined
+  const totalInvitedCount = filteredData.length + (statusFilter === "all" ? declinedCount : 0);
 
   const sortedRecordDays = [...recordDays].sort((a, b) => 
     new Date(a.date).getTime() - new Date(b.date).getTime()
@@ -1019,12 +1023,14 @@ Deal or No Deal Production Team`);
                       <Users className="h-5 w-5" />
                       {statusFilter === "declined" 
                         ? `Declined Contestants (${filteredCanceledAssignments.length})`
-                        : `Invited Contestants (${filteredData.length})`}
+                        : `Invited Contestants (${totalInvitedCount})`}
                     </CardTitle>
                     <CardDescription>
                       {statusFilter === "declined"
                         ? "Contestants who have declined their booking and are on the reschedule list"
-                        : "Contestants who have been sent a booking invitation"}
+                        : statusFilter === "all" && declinedCount > 0
+                          ? `Contestants who have been sent a booking invitation (including ${declinedCount} declined)`
+                          : "Contestants who have been sent a booking invitation"}
                     </CardDescription>
                   </div>
                   <Button 
@@ -1193,8 +1199,8 @@ Deal or No Deal Production Team`);
                       </TableRow>
                     ))}
                     
-                    {/* Rescheduled/Declined contestants from canceled assignments */}
-                    {statusFilter === "declined" && filteredCanceledAssignments.map((item) => (
+                    {/* Rescheduled/Declined contestants from canceled assignments - show in both "all" and "declined" views */}
+                    {(statusFilter === "declined" || statusFilter === "all") && filteredCanceledAssignments.map((item) => (
                       <TableRow 
                         key={`canceled-${item.id}`}
                         className="bg-red-50 dark:bg-red-950/20"
