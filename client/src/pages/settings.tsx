@@ -2230,7 +2230,7 @@ function DataMaintenanceSection() {
         toast({
           title: "Reschedule status fix completed",
           description: data.fixedCount > 0 
-            ? `Fixed ${data.fixedCount} contestant(s). They will now show as 'rescheduled' in the Contestants tab.`
+            ? `Fixed ${data.fixedCount} contestant(s). They will now show as 'Reschedule' in the Contestants tab.`
             : "All contestants in reschedule already have the correct status.",
         });
       } else {
@@ -2352,7 +2352,7 @@ function DataMaintenanceSection() {
         <div className="space-y-2">
           <p className="text-sm font-medium">Fix Reschedule Status</p>
           <p className="text-sm text-muted-foreground">
-            Updates contestants in the Reschedule list to have 'rescheduled' status. After fixing, 
+            Updates contestants in the Reschedule list to have 'Reschedule' status. After fixing, 
             they will show correctly in the Contestants tab status filter.
           </p>
         </div>

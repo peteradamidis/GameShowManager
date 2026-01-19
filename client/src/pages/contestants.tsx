@@ -1057,7 +1057,7 @@ export default function Contestants() {
                 <SelectItem value="assigned">Assigned</SelectItem>
                 <SelectItem value="invited">Invited</SelectItem>
                 <SelectItem value="confirmed">Confirmed</SelectItem>
-                <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                <SelectItem value="reschedule">Reschedule</SelectItem>
                 <SelectItem value="returning_standby">Returning Standby</SelectItem>
               </SelectContent>
             </Select>

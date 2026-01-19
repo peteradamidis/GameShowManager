@@ -1143,7 +1143,7 @@ export class DbStorage implements IStorage {
 
       await tx
         .update(contestants)
-        .set({ availabilityStatus: 'rescheduled' })
+        .set({ availabilityStatus: 'reschedule' })
         .where(eq(contestants.id, assignment.contestantId));
 
       return canceled;
@@ -2282,10 +2282,10 @@ export class DbStorage implements IStorage {
         .where(eq(attendanceIssues.id, id))
         .returning();
       
-      // Update contestant status to 'rescheduled'
+      // Update contestant status to 'reschedule'
       await tx
         .update(contestants)
-        .set({ availabilityStatus: 'rescheduled' })
+        .set({ availabilityStatus: 'reschedule' })
         .where(eq(contestants.id, issue.contestantId));
       
       return {
