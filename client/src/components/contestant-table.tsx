@@ -1587,6 +1587,16 @@ export function ContestantTable({
                               Standby
                             </Badge>
                           )}
+                          {contestantDetails.podiumStory && (
+                            <Badge variant="outline" className="border-purple-300 bg-purple-500/20 text-purple-800 dark:border-purple-700 dark:text-purple-400 text-xs py-0">
+                              Podium Story
+                            </Badge>
+                          )}
+                          {contestantDetails.availableForStandby && (
+                            <Badge variant="outline" className="border-amber-300 bg-amber-500/20 text-amber-800 dark:border-amber-700 dark:text-amber-400 text-xs py-0">
+                              Available for Standby
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       <div>
