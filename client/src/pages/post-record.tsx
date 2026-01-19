@@ -23,7 +23,10 @@ import {
   Tv,
   Trophy,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Pencil,
+  Save,
+  X
 } from "lucide-react";
 import {
   AlertDialog,
@@ -78,6 +81,24 @@ export default function PostRecordPage() {
   
   const [searchQuery, setSearchQuery] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  // Edit mode state
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState<{
+    nameOverride: string;
+    phoneOverride: string;
+    emailOverride: string;
+    contestantTypeOverride: string;
+    rxNumberOverride: string;
+    spinTheWheelOverride: string;
+  }>({
+    nameOverride: "",
+    phoneOverride: "",
+    emailOverride: "",
+    contestantTypeOverride: "",
+    rxNumberOverride: "",
+    spinTheWheelOverride: "",
+  });
   
   // Confirmation dialog for unticking checkboxes
   const [confirmUncheckDialog, setConfirmUncheckDialog] = useState<{
@@ -239,6 +260,137 @@ export default function PostRecordPage() {
   const handleFieldChange = useCallback((id: string, field: string, value: string | number | boolean | null) => {
     updateMutation.mutate({ id, data: { [field]: value } });
   }, [updateMutation]);
+
+  // Start editing a row
+  const startEditing = useCallback((item: PostRecordWithDetails) => {
+    setEditingRowId(item.id);
+    // Get display values (override if exists, otherwise source data)
+    const displayName = item.nameOverride ?? item.contestant?.name ?? "";
+    const displayPhone = item.phoneOverride ?? item.contestant?.phone ?? "";
+    const displayEmail = item.emailOverride ?? item.contestant?.email ?? "";
+    const displayContestantType = item.contestantTypeOverride ?? item.seatAssignment?.winningMoneyRole ?? "";
+    const displayRxNumber = item.rxNumberOverride ?? item.seatAssignment?.rxNumber ?? "";
+    const displaySpinTheWheel = item.spinTheWheelOverride !== null && item.spinTheWheelOverride !== undefined
+      ? (item.spinTheWheelOverride ? "yes" : "no")
+      : (item.seatAssignment?.spinTheWheel === true ? "yes" : item.seatAssignment?.spinTheWheel === false ? "no" : "");
+    
+    setEditFormData({
+      nameOverride: displayName,
+      phoneOverride: displayPhone,
+      emailOverride: displayEmail,
+      contestantTypeOverride: displayContestantType,
+      rxNumberOverride: displayRxNumber,
+      spinTheWheelOverride: displaySpinTheWheel,
+    });
+  }, []);
+
+  // Save edit changes
+  const saveEditing = useCallback(() => {
+    if (!editingRowId) return;
+    
+    const item = postRecordData.find(i => i.id === editingRowId);
+    if (!item) return;
+
+    // Build update data - only set overrides if different from source
+    const updateData: Record<string, string | boolean | null> = {};
+    
+    // Name override
+    const sourceName = item.contestant?.name ?? "";
+    if (editFormData.nameOverride !== sourceName) {
+      updateData.nameOverride = editFormData.nameOverride || null;
+    } else {
+      updateData.nameOverride = null; // Clear override if same as source
+    }
+    
+    // Phone override
+    const sourcePhone = item.contestant?.phone ?? "";
+    if (editFormData.phoneOverride !== sourcePhone) {
+      updateData.phoneOverride = editFormData.phoneOverride || null;
+    } else {
+      updateData.phoneOverride = null;
+    }
+    
+    // Email override
+    const sourceEmail = item.contestant?.email ?? "";
+    if (editFormData.emailOverride !== sourceEmail) {
+      updateData.emailOverride = editFormData.emailOverride || null;
+    } else {
+      updateData.emailOverride = null;
+    }
+    
+    // Contestant type override
+    const sourceContestantType = item.seatAssignment?.winningMoneyRole ?? "";
+    if (editFormData.contestantTypeOverride !== sourceContestantType) {
+      updateData.contestantTypeOverride = editFormData.contestantTypeOverride || null;
+    } else {
+      updateData.contestantTypeOverride = null;
+    }
+    
+    // RX Number override
+    const sourceRxNumber = item.seatAssignment?.rxNumber ?? "";
+    if (editFormData.rxNumberOverride !== sourceRxNumber) {
+      updateData.rxNumberOverride = editFormData.rxNumberOverride || null;
+    } else {
+      updateData.rxNumberOverride = null;
+    }
+    
+    // Spin the wheel override
+    const sourceSpinTheWheel = item.seatAssignment?.spinTheWheel === true ? "yes" : item.seatAssignment?.spinTheWheel === false ? "no" : "";
+    if (editFormData.spinTheWheelOverride !== sourceSpinTheWheel) {
+      if (editFormData.spinTheWheelOverride === "yes") {
+        updateData.spinTheWheelOverride = true;
+      } else if (editFormData.spinTheWheelOverride === "no") {
+        updateData.spinTheWheelOverride = false;
+      } else {
+        updateData.spinTheWheelOverride = null;
+      }
+    } else {
+      updateData.spinTheWheelOverride = null;
+    }
+    
+    updateMutation.mutate({ id: editingRowId, data: updateData }, {
+      onSuccess: () => {
+        setEditingRowId(null);
+        toast({ title: "Changes saved" });
+      }
+    });
+  }, [editingRowId, editFormData, postRecordData, updateMutation, toast]);
+
+  // Cancel editing
+  const cancelEditing = useCallback(() => {
+    setEditingRowId(null);
+    setEditFormData({
+      nameOverride: "",
+      phoneOverride: "",
+      emailOverride: "",
+      contestantTypeOverride: "",
+      rxNumberOverride: "",
+      spinTheWheelOverride: "",
+    });
+  }, []);
+
+  // Helper to get display value (override ?? source)
+  const getDisplayValue = (item: PostRecordWithDetails, field: 'name' | 'phone' | 'email' | 'contestantType' | 'rxNumber' | 'spinTheWheel') => {
+    switch (field) {
+      case 'name':
+        return item.nameOverride ?? item.contestant?.name ?? "";
+      case 'phone':
+        return item.phoneOverride ?? item.contestant?.phone ?? "";
+      case 'email':
+        return item.emailOverride ?? item.contestant?.email ?? "";
+      case 'contestantType':
+        return item.contestantTypeOverride ?? item.seatAssignment?.winningMoneyRole ?? "";
+      case 'rxNumber':
+        return item.rxNumberOverride ?? item.seatAssignment?.rxNumber ?? "";
+      case 'spinTheWheel':
+        if (item.spinTheWheelOverride !== null && item.spinTheWheelOverride !== undefined) {
+          return item.spinTheWheelOverride ? "Yes" : "No";
+        }
+        return item.seatAssignment?.spinTheWheel === true ? "Yes" : item.seatAssignment?.spinTheWheel === false ? "No" : "-";
+      default:
+        return "";
+    }
+  };
 
   const filteredData = postRecordData.filter((item) => {
     if (!searchQuery) return true;
@@ -442,7 +594,19 @@ export default function PostRecordPage() {
                             {item.recordDay ? format(new Date(item.recordDay.date), "d-MMM-yy") : "-"}
                           </TableCell>
                           <TableCell className="text-center text-xs bg-rose-50/50 dark:bg-rose-900/5">
-                            {item.seatAssignment?.rxNumber || "-"}
+                            {editingRowId === item.id ? (
+                              <Input
+                                value={editFormData.rxNumberOverride}
+                                onChange={(e) => setEditFormData(prev => ({ ...prev, rxNumberOverride: e.target.value }))}
+                                className="w-24 h-7 text-xs text-center"
+                                placeholder="RX Day"
+                                data-testid={`input-edit-rxday-${item.id}`}
+                              />
+                            ) : (
+                              <span className={item.rxNumberOverride ? "text-purple-600 dark:text-purple-400" : ""}>
+                                {getDisplayValue(item, 'rxNumber') || "-"}
+                              </span>
+                            )}
                           </TableCell>
                           <TableCell className="text-center bg-rose-50/50 dark:bg-rose-900/5 border-r-2">
                             <Input
@@ -492,14 +656,72 @@ export default function PostRecordPage() {
                           )}
                           {/* CONTESTANTS columns */}
                           <TableCell className="font-medium sticky left-0 bg-background z-10">
-                            {item.contestant?.name || "Unknown"}
+                            {editingRowId === item.id ? (
+                              <Input
+                                value={editFormData.nameOverride}
+                                onChange={(e) => setEditFormData(prev => ({ ...prev, nameOverride: e.target.value }))}
+                                className="w-40 h-7 text-xs"
+                                placeholder="Name"
+                                data-testid={`input-edit-name-${item.id}`}
+                              />
+                            ) : (
+                              <span className={item.nameOverride ? "text-purple-600 dark:text-purple-400" : ""}>
+                                {getDisplayValue(item, 'name') || "Unknown"}
+                              </span>
+                            )}
                           </TableCell>
                           <TableCell className="text-center text-xs">
-                            {item.seatAssignment?.winningMoneyRole === 'player' ? 'PLAYER' : 
-                             item.seatAssignment?.winningMoneyRole === 'case_holder' ? 'CASE HOLDER' : '-'}
+                            {editingRowId === item.id ? (
+                              <Select
+                                value={editFormData.contestantTypeOverride || "none"}
+                                onValueChange={(value) => setEditFormData(prev => ({ ...prev, contestantTypeOverride: value === "none" ? "" : value }))}
+                              >
+                                <SelectTrigger className="w-28 h-7 text-xs" data-testid={`select-edit-type-${item.id}`}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">-</SelectItem>
+                                  <SelectItem value="player">PLAYER</SelectItem>
+                                  <SelectItem value="case_holder">CASE HOLDER</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <span className={item.contestantTypeOverride ? "text-purple-600 dark:text-purple-400" : ""}>
+                                {getDisplayValue(item, 'contestantType') === 'player' ? 'PLAYER' : 
+                                 getDisplayValue(item, 'contestantType') === 'case_holder' ? 'CASE HOLDER' : '-'}
+                              </span>
+                            )}
                           </TableCell>
-                          <TableCell>{item.contestant?.phone || "-"}</TableCell>
-                          <TableCell className="text-xs">{item.contestant?.email || "-"}</TableCell>
+                          <TableCell>
+                            {editingRowId === item.id ? (
+                              <Input
+                                value={editFormData.phoneOverride}
+                                onChange={(e) => setEditFormData(prev => ({ ...prev, phoneOverride: e.target.value }))}
+                                className="w-32 h-7 text-xs"
+                                placeholder="Phone"
+                                data-testid={`input-edit-phone-${item.id}`}
+                              />
+                            ) : (
+                              <span className={item.phoneOverride ? "text-purple-600 dark:text-purple-400" : ""}>
+                                {getDisplayValue(item, 'phone') || "-"}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {editingRowId === item.id ? (
+                              <Input
+                                value={editFormData.emailOverride}
+                                onChange={(e) => setEditFormData(prev => ({ ...prev, emailOverride: e.target.value }))}
+                                className="w-48 h-7 text-xs"
+                                placeholder="Email"
+                                data-testid={`input-edit-email-${item.id}`}
+                              />
+                            ) : (
+                              <span className={item.emailOverride ? "text-purple-600 dark:text-purple-400" : ""}>
+                                {getDisplayValue(item, 'email') || "-"}
+                              </span>
+                            )}
+                          </TableCell>
                           <TableCell className="text-center">
                             <Input
                               value={item.caseNumber || ""}
@@ -520,8 +742,25 @@ export default function PostRecordPage() {
                             />
                           </TableCell>
                           <TableCell className="text-center text-xs">
-                            {item.seatAssignment?.spinTheWheel === true ? 'Yes' : 
-                             item.seatAssignment?.spinTheWheel === false ? 'No' : '-'}
+                            {editingRowId === item.id ? (
+                              <Select
+                                value={editFormData.spinTheWheelOverride || "none"}
+                                onValueChange={(value) => setEditFormData(prev => ({ ...prev, spinTheWheelOverride: value === "none" ? "" : value }))}
+                              >
+                                <SelectTrigger className="w-16 h-7 text-xs" data-testid={`select-edit-prize-wheel-${item.id}`}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">-</SelectItem>
+                                  <SelectItem value="yes">Yes</SelectItem>
+                                  <SelectItem value="no">No</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <span className={item.spinTheWheelOverride !== null && item.spinTheWheelOverride !== undefined ? "text-purple-600 dark:text-purple-400" : ""}>
+                                {getDisplayValue(item, 'spinTheWheel')}
+                              </span>
+                            )}
                           </TableCell>
                           <TableCell className="text-center">
                             {item.seatAssignment?.winningMoneyRole === 'case_holder' ? (
@@ -652,14 +891,48 @@ export default function PostRecordPage() {
                             />
                           </TableCell>
                           <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => deleteMutation.mutate(item.id)}
-                              data-testid={`button-delete-${item.id}`}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              {editingRowId === item.id ? (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={saveEditing}
+                                    disabled={updateMutation.isPending}
+                                    data-testid={`button-save-${item.id}`}
+                                  >
+                                    <Save className="h-4 w-4 text-green-600" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={cancelEditing}
+                                    data-testid={`button-cancel-${item.id}`}
+                                  >
+                                    <X className="h-4 w-4 text-muted-foreground" />
+                                  </Button>
+                                </>
+                              ) : (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => startEditing(item)}
+                                    data-testid={`button-edit-${item.id}`}
+                                  >
+                                    <Pencil className="h-4 w-4 text-muted-foreground" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => deleteMutation.mutate(item.id)}
+                                    data-testid={`button-delete-${item.id}`}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
