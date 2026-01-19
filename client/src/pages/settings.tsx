@@ -252,9 +252,9 @@ const EMAIL_TEMPLATE_DEFAULTS = {
   availability_email_instructions: 'Please complete the form as soon as possible so we can allocate recording slots. If you have any questions, please reply to this email.',
   availability_email_footer: 'This is an automated message from the Deal or No Deal production team. Please do not forward this email as it contains a unique response link.',
   // Standby email  
-  standby_email_headline: 'You\'re on Our Standby List!',
-  standby_email_intro: 'You have been added to our standby list for an upcoming Deal or No Deal recording. This means you may be called to attend if a seat becomes available.',
-  standby_email_instructions: 'Please confirm your availability as a standby by clicking the button below. We\'ll be in touch if a spot opens up for you.',
+  standby_email_headline: "You've Been Selected to be a Standby Contestant!",
+  standby_email_intro: "We enjoyed meeting you at our auditions and would love to invite you to be a STANDBY CONTESTANT on Deal or No Deal. As a standby contestant, you may be selected to join our live studio recording of the show should any positions become available on the day.",
+  standby_email_instructions: "If you're selected to participate in studio, you will be required for the full day.\n\nAfter being a Standby Contestant, you are eligible to be FAST-TRACKED into the next available record date to attend a full day in studio. That's double the chances! You must email dond.standby@endemolshine.com.au to be rebooked to return.\n\nPlease find attached important information relating to your attendance at the Deal or No Deal recording. Please read this attachment thoroughly and get in touch ASAP should there be any issues.\n\nYou will receive another email closer to your record date with additional paperwork.",
   standby_email_footer: 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.',
   // Ticket email
   ticket_email_headline: 'Your Official Ticket',
