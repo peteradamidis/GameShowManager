@@ -9620,9 +9620,9 @@ ${finalEmailFooter}`;
         recordDayFilteredCanceled = recordDayFilteredCanceled.filter((a: any) => a.recordDayId === recordDayId);
       }
       
-      // Helper to check if assignment is declined (notes/reason start with [DECLINED])
-      const isDeclined = (a: SeatAssignment) => a.notes?.startsWith('[DECLINED]');
-      const isCanceledDeclined = (a: any) => a.reason?.startsWith('[DECLINED]');
+      // Helper to check if assignment is declined (notes/reason contain [DECLINED] or wasDeclined flag is set)
+      const isDeclined = (a: SeatAssignment) => a.notes?.toUpperCase().includes('DECLINED');
+      const isCanceledDeclined = (a: any) => a.wasDeclined || a.reason?.toUpperCase().includes('DECLINED');
       
       // Count declined from both active assignments and canceled assignments
       const declinedFromActive = recordDayFilteredAssignments.filter((a: SeatAssignment) => isDeclined(a)).length;
