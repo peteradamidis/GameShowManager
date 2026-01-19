@@ -621,7 +621,7 @@ function SeatingBlock({
                         {/* Horizontal link to next seat in same row */}
                         {hasLinkToNext && (
                           <div 
-                            className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2 z-10"
+                            className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2 z-30"
                             data-testid={`link-icon-h-${row.label}-${seatIdxInRow}`}
                           >
                             <Link2
@@ -633,7 +633,7 @@ function SeatingBlock({
                         {/* Vertical link to seat in row below */}
                         {hasVerticalLink && (
                           <div 
-                            className="absolute bottom-0 left-1/2 transform translate-y-1/2 -translate-x-1/2 z-10"
+                            className="absolute bottom-0 left-1/2 transform translate-y-1/2 -translate-x-1/2 z-30"
                             data-testid={`link-icon-v-${row.label}-${seatIdxInRow}`}
                           >
                             <Link2
