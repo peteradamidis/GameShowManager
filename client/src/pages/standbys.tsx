@@ -133,14 +133,16 @@ export default function StandbysPage() {
     
     // Create a map of contestant ID to their group identifier
     const contestantToGroup = new Map<string, string>();
-    // Use both border and background colors for much more obvious grouping
+    // Use different background colors for each group so they're easy to identify
     const groupStyles = [
-      { border: "border-l-4 border-l-blue-500", bg: "bg-blue-50 dark:bg-blue-950/30" },
-      { border: "border-l-4 border-l-purple-500", bg: "bg-purple-50 dark:bg-purple-950/30" }, 
-      { border: "border-l-4 border-l-green-500", bg: "bg-green-50 dark:bg-green-950/30" },
-      { border: "border-l-4 border-l-orange-500", bg: "bg-orange-50 dark:bg-orange-950/30" },
-      { border: "border-l-4 border-l-pink-500", bg: "bg-pink-50 dark:bg-pink-950/30" },
-      { border: "border-l-4 border-l-teal-500", bg: "bg-teal-50 dark:bg-teal-950/30" },
+      "bg-blue-100 dark:bg-blue-900/40",
+      "bg-purple-100 dark:bg-purple-900/40", 
+      "bg-green-100 dark:bg-green-900/40",
+      "bg-orange-100 dark:bg-orange-900/40",
+      "bg-pink-100 dark:bg-pink-900/40",
+      "bg-teal-100 dark:bg-teal-900/40",
+      "bg-amber-100 dark:bg-amber-900/40",
+      "bg-rose-100 dark:bg-rose-900/40",
     ];
     
     // First pass: assign groups based on groupId
@@ -179,7 +181,7 @@ export default function StandbysPage() {
     
     // Get unique groups and assign styles
     const uniqueGroups = Array.from(new Set(contestantToGroup.values()));
-    const groupStyleMap = new Map<string, { border: string; bg: string }>();
+    const groupStyleMap = new Map<string, string>();
     uniqueGroups.forEach((groupId, index) => {
       groupStyleMap.set(groupId, groupStyles[index % groupStyles.length]);
     });
@@ -489,7 +491,7 @@ export default function StandbysPage() {
                       <TableRow 
                         key={standby.id} 
                         data-testid={`row-standby-${standby.id}`}
-                        className={standby.groupStyle ? `${standby.groupStyle.border} ${standby.groupStyle.bg}` : ''}
+                        className={standby.groupStyle || ''}
                       >
                         <TableCell>
                           <Checkbox
