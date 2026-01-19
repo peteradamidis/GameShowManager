@@ -441,9 +441,12 @@ const StatusBadge = ({ status }: { status: string }) => {
   
   const colorClasses = colors[status.toLowerCase()] || colors.available;
   
+  // Display "reschedule" instead of "rescheduled" for consistency
+  const displayStatus = status.toLowerCase() === "rescheduled" ? "reschedule" : status;
+  
   return (
     <span className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold ${colorClasses}`}>
-      {status}
+      {displayStatus}
     </span>
   );
 };
