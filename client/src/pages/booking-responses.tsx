@@ -244,12 +244,7 @@ export default function BookingResponses() {
     new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
-  // Set default to first record day when data loads
-  useEffect(() => {
-    if (sortedRecordDays.length > 0 && !selectedRecordDay) {
-      setSelectedRecordDay(sortedRecordDays[0].id);
-    }
-  }, [sortedRecordDays, selectedRecordDay]);
+  // Note: No auto-selection - "All Record Days" is the default when no selection is stored
 
   // Build query URL with filters
   const buildTrackerUrl = () => {
@@ -1076,11 +1071,12 @@ export default function BookingResponses() {
 
         <div className="flex items-center gap-2">
           <Label htmlFor="record-day-filter">Record Day:</Label>
-          <Select value={selectedRecordDay} onValueChange={handleRecordDayChange}>
+          <Select value={selectedRecordDay || "all"} onValueChange={(v) => handleRecordDayChange(v === "all" ? "" : v)}>
             <SelectTrigger className="w-[280px]" data-testid="select-record-day">
               <SelectValue placeholder="Select Record Day" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">All Record Days</SelectItem>
               {sortedRecordDays.map((rd) => (
                 <SelectItem key={rd.id} value={rd.id}>
                   {format(new Date(rd.date), "EEE, MMM d, yyyy")} {rd.rxNumber ? `- ${rd.rxNumber}` : ""}
