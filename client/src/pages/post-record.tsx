@@ -398,7 +398,7 @@ export default function PostRecordPage() {
                         </>
                       )}
                       <TableHead className="font-semibold min-w-[150px] sticky left-0 bg-background z-10">Name</TableHead>
-                      <TableHead className="font-semibold text-center">Player?</TableHead>
+                      <TableHead className="font-semibold text-center">Contestant Type</TableHead>
                       <TableHead className="font-semibold min-w-[120px]">Phone</TableHead>
                       <TableHead className="font-semibold min-w-[180px]">Email</TableHead>
                       <TableHead className="font-semibold text-center">Case No.</TableHead>
