@@ -442,7 +442,7 @@ export default function PostRecordPage() {
                             {item.recordDay ? format(new Date(item.recordDay.date), "d-MMM-yy") : "-"}
                           </TableCell>
                           <TableCell className="text-center text-xs bg-rose-50/50 dark:bg-rose-900/5">
-                            {item.recordDay?.rxNumber || "-"}
+                            {item.seatAssignment?.rxNumber || "-"}
                           </TableCell>
                           <TableCell className="text-center bg-rose-50/50 dark:bg-rose-900/5 border-r-2">
                             <Input
