@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Calendar as CalendarIcon, User, Mail, Phone, MapPin, Users, Heart, AlertTriangle, Pencil, X, Save, Trash2, Search } from "lucide-react";
+import { Calendar as CalendarIcon, User, Mail, Phone, MapPin, Users, Heart, AlertTriangle, Pencil, X, Save, Trash2, Search, FileCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format, isSameDay, parseISO } from "date-fns";
@@ -358,6 +358,7 @@ export default function ReschedulePage() {
                   <TableHead className="w-16">Photo</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
+                  <TableHead>Paperwork</TableHead>
                   <TableHead>Age</TableHead>
                   <TableHead>Gender</TableHead>
                   <TableHead>Original Attendance</TableHead>
@@ -404,6 +405,20 @@ export default function ReschedulePage() {
                         <Badge variant="secondary">
                           Canceled
                         </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {cancellation.paperworkReceived ? (
+                        <Badge className="bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300">
+                          <FileCheck className="h-3 w-3 mr-1" />
+                          Received
+                        </Badge>
+                      ) : cancellation.paperworkSent ? (
+                        <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                          Sent
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
                       )}
                     </TableCell>
                     <TableCell>{cancellation.contestant.age}</TableCell>
