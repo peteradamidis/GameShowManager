@@ -179,8 +179,6 @@ export default function PostRecordPage() {
       prizeWon: item.prizeWon,
       amountWon: item.amountWon,
       notes: item.notes,
-      afpNo: item.afpNo,
-      afpBatchNo: item.afpBatchNo,
     });
   };
 
@@ -311,12 +309,12 @@ export default function PostRecordPage() {
                       <TableHead className="font-semibold text-center">Disclosure Received</TableHead>
                       <TableHead className="font-semibold text-center">Returned Entry (Supplier)</TableHead>
                       <TableHead className="font-semibold text-center">Entry Sent (Contestant)</TableHead>
-                      <TableHead className="font-semibold text-center">Paramount Entry</TableHead>
+                      <TableHead className="font-semibold text-center">ESA Entry</TableHead>
                       <TableHead className="font-semibold text-center">AFP Confirm</TableHead>
                       <TableHead className="font-semibold text-center">AFP FYI Check</TableHead>
                       <TableHead className="font-semibold text-center">AFP Check Returned</TableHead>
-                      <TableHead className="font-semibold text-center min-w-[80px]">AFP No.</TableHead>
-                      <TableHead className="font-semibold text-center min-w-[80px]">AFP Batch No.</TableHead>
+                      <TableHead className="font-semibold text-center">AFP No.</TableHead>
+                      <TableHead className="font-semibold text-center">AFP Batch No.</TableHead>
                       <TableHead className="font-semibold text-center">Idiwriter Check</TableHead>
                       <TableHead className="font-semibold text-center">Social Media Brief</TableHead>
                       <TableHead className="font-semibold text-center">Bankruptcy Check</TableHead>
@@ -489,26 +487,16 @@ export default function PostRecordPage() {
                             />
                           </TableCell>
                           <TableCell className="text-center">
-                            {isEditing ? (
-                              <Input
-                                value={editData.afpNo || ""}
-                                onChange={(e) => setEditData({ ...editData, afpNo: e.target.value })}
-                                className="w-16 h-7 text-xs"
-                              />
-                            ) : (
-                              <span className="text-xs">{item.afpNo || "-"}</span>
-                            )}
+                            <Checkbox
+                              checked={item.afpNo || false}
+                              onCheckedChange={(checked) => handleCheckboxChange(item.id, "afpNo", checked === true)}
+                            />
                           </TableCell>
                           <TableCell className="text-center">
-                            {isEditing ? (
-                              <Input
-                                value={editData.afpBatchNo || ""}
-                                onChange={(e) => setEditData({ ...editData, afpBatchNo: e.target.value })}
-                                className="w-16 h-7 text-xs"
-                              />
-                            ) : (
-                              <span className="text-xs">{item.afpBatchNo || "-"}</span>
-                            )}
+                            <Checkbox
+                              checked={item.afpBatchNo || false}
+                              onCheckedChange={(checked) => handleCheckboxChange(item.id, "afpBatchNo", checked === true)}
+                            />
                           </TableCell>
                           <TableCell className="text-center">
                             <Checkbox

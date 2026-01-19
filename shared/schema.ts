@@ -577,8 +577,8 @@ export const postRecordTracking = pgTable("post_record_tracking", {
   afpConfirmation: boolean("afp_confirmation").default(false),
   afpFyiCheck: boolean("afp_fyi_check").default(false),
   afpCheckReturned: boolean("afp_check_returned").default(false),
-  afpNo: text("afp_no"),
-  afpBatchNo: text("afp_batch_no"),
+  afpNo: boolean("afp_no").default(false),
+  afpBatchNo: boolean("afp_batch_no").default(false),
   
   // Other checks
   idiwriterCheck: boolean("idiwriter_check").default(false),
