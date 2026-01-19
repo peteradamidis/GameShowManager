@@ -435,8 +435,8 @@ const StatusBadge = ({ status }: { status: string }) => {
     assigned: "border-blue-200 bg-blue-500/10 text-blue-700 dark:border-blue-800 dark:text-blue-400",
     invited: "border-purple-200 bg-purple-500/10 text-purple-700 dark:border-purple-800 dark:text-purple-400",
     confirmed: "border-sky-300 bg-sky-500/15 text-sky-700 dark:border-sky-700 dark:text-sky-400",
-    reschedule: "border-rose-400 bg-rose-500/20 text-rose-800 dark:border-rose-700 dark:text-rose-300",
-    rescheduled: "border-rose-400 bg-rose-500/20 text-rose-800 dark:border-rose-700 dark:text-rose-300",
+    reschedule: "border-red-900/50 bg-red-900/15 text-red-900 dark:border-red-800 dark:text-red-400",
+    rescheduled: "border-red-900/50 bg-red-900/15 text-red-900 dark:border-red-800 dark:text-red-400",
   };
   
   const colorClasses = colors[status.toLowerCase()] || colors.available;
