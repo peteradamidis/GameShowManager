@@ -127,6 +127,9 @@ export default function SeatingChartPage() {
   // Readiness tab state
   const [isReadinessMode, setIsReadinessMode] = useState(false);
   
+  // Seat search state
+  const [seatSearchQuery, setSeatSearchQuery] = useState("");
+  
   // Temporary contestant dialog state
   const [tempContestantDialogOpen, setTempContestantDialogOpen] = useState(false);
   const [tempContestantName, setTempContestantName] = useState("");
@@ -1314,6 +1317,24 @@ export default function SeatingChartPage() {
             </div>
           )}
           <div className="flex gap-2 items-center">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search name..."
+                value={seatSearchQuery}
+                onChange={(e) => setSeatSearchQuery(e.target.value)}
+                className="pl-8 w-40 h-9"
+                data-testid="input-seat-search"
+              />
+              {seatSearchQuery && (
+                <button
+                  onClick={() => setSeatSearchQuery("")}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <XCircle className="h-4 w-4" />
+                </button>
+              )}
+            </div>
             {isLocked ? (
               <Badge 
                 variant="secondary" 
@@ -1540,6 +1561,7 @@ export default function SeatingChartPage() {
               refetchStandbys();
             }}
             isPodiumVisualizerMode={isPodiumVisualizerMode}
+            searchQuery={seatSearchQuery}
           />
         )
       )}

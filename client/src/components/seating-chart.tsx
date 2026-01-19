@@ -124,6 +124,7 @@ interface SeatingChartProps {
   standbys?: StandbyData[]; // Standbys for this record day
   onStandbySeated?: () => void; // Callback when standby is seated
   isPodiumVisualizerMode?: boolean; // Show only contestant photos
+  searchQuery?: string; // Search for contestant by name
 }
 
 function DraggableDroppableSeat({
@@ -133,6 +134,7 @@ function DraggableDroppableSeat({
   isOver,
   isGlobalDragging,
   isRXDayLocked,
+  isHighlighted,
   onEmptySeatClick,
   onRemove,
   onCancel,
@@ -150,6 +152,7 @@ function DraggableDroppableSeat({
   isOver: boolean;
   isGlobalDragging?: boolean;
   isRXDayLocked?: boolean;
+  isHighlighted?: boolean;
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
   onRemove?: (assignmentId: string) => void;
   onCancel?: (assignmentId: string) => void;
@@ -178,13 +181,18 @@ function DraggableDroppableSeat({
     setDropRef(element);
   };
 
+  const highlightClass = isHighlighted 
+    ? "ring-4 ring-yellow-400 dark:ring-yellow-500 rounded-lg animate-pulse" 
+    : "";
+  const overClass = isOver ? "ring-4 ring-primary rounded-lg scale-105 transition-all" : "";
+  
   return (
     <div 
       ref={setRefs} 
       {...attributes} 
       {...listeners}
-      className={isOver ? "ring-4 ring-primary rounded-lg scale-105 transition-all" : ""}
-      style={isOver ? { zIndex: 10 } : undefined}
+      className={`${overClass} ${highlightClass}`.trim()}
+      style={isOver || isHighlighted ? { zIndex: 10 } : undefined}
     >
       <SeatCard
         seat={seat}
@@ -332,6 +340,7 @@ function SeatingBlock({
   overId,
   isGlobalDragging,
   isRXDayLocked,
+  matchedSeatIds,
   onEmptySeatClick,
   onRemove,
   onCancel,
@@ -353,6 +362,7 @@ function SeatingBlock({
   overId: string | null;
   isGlobalDragging?: boolean;
   isRXDayLocked?: boolean;
+  matchedSeatIds?: Set<string>;
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
   onRemove?: (assignmentId: string) => void;
   onCancel?: (assignmentId: string) => void;
@@ -596,6 +606,7 @@ function SeatingBlock({
                           isOver={overId === seat.id}
                           isGlobalDragging={isGlobalDragging}
                           isRXDayLocked={isRXDayLocked}
+                          isHighlighted={matchedSeatIds?.has(seat.id)}
                           onEmptySeatClick={onEmptySeatClick}
                           onRemove={onRemove}
                           onCancel={onCancel}
@@ -700,7 +711,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "" }: SeatingChartProps) {
   // Use initialSeats as source of truth - derive blocks from props, not state
   // Only use local state for temporary overrides during active drag operations
   const defaultBlocks = useMemo(() => 
@@ -714,6 +725,21 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   
   // The active blocks are either from props (primary) or local override (during optimistic updates)
   const blocks = localBlocks ?? initialSeats ?? defaultBlocks;
+  
+  // Calculate which seats match the search query
+  const matchedSeatIds = useMemo(() => {
+    if (!searchQuery.trim()) return new Set<string>();
+    const query = searchQuery.toLowerCase().trim();
+    const matches = new Set<string>();
+    blocks.forEach(block => {
+      block.forEach(seat => {
+        if (seat.contestantName && seat.contestantName.toLowerCase().includes(query)) {
+          matches.add(seat.id);
+        }
+      });
+    });
+    return matches;
+  }, [blocks, searchQuery]);
   
   // Clear local overrides when props change (after API confirms changes)
   useEffect(() => {
@@ -1272,6 +1298,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   overId={overId}
                   isGlobalDragging={!!activeId}
                   isRXDayLocked={isLocked}
+                  matchedSeatIds={matchedSeatIds}
                   onEmptySeatClick={handleEmptySeatClick}
                   onRemove={onRemove}
                   onCancel={onCancel}
@@ -1336,6 +1363,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     overId={overId}
                     isGlobalDragging={!!activeId}
                     isRXDayLocked={isLocked}
+                    matchedSeatIds={matchedSeatIds}
                     onEmptySeatClick={handleEmptySeatClick}
                     onRemove={onRemove}
                     onCancel={onCancel}
@@ -1372,6 +1400,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   overId={overId}
                   isGlobalDragging={!!activeId}
                   isRXDayLocked={isLocked}
+                  matchedSeatIds={matchedSeatIds}
                   onEmptySeatClick={handleEmptySeatClick}
                   onRemove={onRemove}
                   onCancel={onCancel}
