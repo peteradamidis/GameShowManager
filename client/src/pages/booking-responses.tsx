@@ -306,6 +306,7 @@ export default function BookingResponses() {
   });
 
   // Query for canceled assignments (declined contestants now on reschedule list)
+  // Always fetch so declined count includes fixed legacy records with wasDeclined flag
   const { data: canceledAssignments = [] } = useQuery<CanceledAssignmentWithDetails[]>({
     queryKey: ["/api/canceled-assignments"],
     queryFn: async () => {
@@ -313,7 +314,6 @@ export default function BookingResponses() {
       if (!response.ok) throw new Error('Failed to fetch canceled assignments');
       return response.json();
     },
-    enabled: statusFilter === "declined",
   });
 
   // Filter canceled assignments by record day if one is selected
