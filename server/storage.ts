@@ -238,7 +238,8 @@ export interface IStorage {
     blockA: number,
     blockB: number
   ): Promise<{ swappedCount: number; blockAAssignments: SeatAssignment[]; blockBAssignments: SeatAssignment[] }>;
-  cancelSeatAssignment(id: string, reason?: string): Promise<CanceledAssignment>;
+  cancelSeatAssignment(id: string, reason?: string, movedBy?: string, isDecline?: boolean): Promise<CanceledAssignment>;
+  updateCanceledAssignment(id: string, data: Partial<CanceledAssignment>): Promise<CanceledAssignment | undefined>;
   
   // Canceled Assignments
   getCanceledAssignments(): Promise<Array<CanceledAssignment & { contestant: Contestant; recordDay: RecordDay }>>;
@@ -1102,7 +1103,7 @@ export class DbStorage implements IStorage {
     });
   }
 
-  async cancelSeatAssignment(id: string, reason?: string, movedBy?: string): Promise<CanceledAssignment> {
+  async cancelSeatAssignment(id: string, reason?: string, movedBy?: string, isDecline: boolean = false): Promise<CanceledAssignment> {
     return await db.transaction(async (tx) => {
       const [assignment] = await tx
         .select()
@@ -1122,9 +1123,19 @@ export class DbStorage implements IStorage {
           seatLabel: assignment.seatLabel,
           reason,
           movedBy,
+          // Track if this was a decline vs a producer move
+          wasDeclined: isDecline,
+          declinedAt: isDecline ? new Date() : null,
+          declinedBy: isDecline ? movedBy : null,
+          // Carry over booking status for rescheduling
+          bookingEmailSent: assignment.bookingEmailSent,
+          confirmedRsvp: assignment.confirmedRsvp,
           // Carry over paperwork status for rescheduling
           paperworkSent: assignment.paperworkSent,
+          paperworkSentBy: assignment.paperworkSentBy,
           paperworkReceived: assignment.paperworkReceived,
+          paperworkReceivedBy: assignment.paperworkReceivedBy,
+          paperworkOnDay: assignment.paperworkOnDay,
         })
         .returning();
 
@@ -1153,6 +1164,16 @@ export class DbStorage implements IStorage {
         movedBy: canceledAssignments.movedBy,
         isFromStandby: canceledAssignments.isFromStandby,
         originalAttendanceDate: canceledAssignments.originalAttendanceDate,
+        wasDeclined: canceledAssignments.wasDeclined,
+        declinedAt: canceledAssignments.declinedAt,
+        declinedBy: canceledAssignments.declinedBy,
+        bookingEmailSent: canceledAssignments.bookingEmailSent,
+        confirmedRsvp: canceledAssignments.confirmedRsvp,
+        paperworkSent: canceledAssignments.paperworkSent,
+        paperworkSentBy: canceledAssignments.paperworkSentBy,
+        paperworkReceived: canceledAssignments.paperworkReceived,
+        paperworkReceivedBy: canceledAssignments.paperworkReceivedBy,
+        paperworkOnDay: canceledAssignments.paperworkOnDay,
         contestant: contestants,
         recordDay: recordDays,
       })
@@ -1161,6 +1182,15 @@ export class DbStorage implements IStorage {
       .innerJoin(recordDays, eq(canceledAssignments.recordDayId, recordDays.id));
 
     return results as any;
+  }
+
+  async updateCanceledAssignment(id: string, data: Partial<CanceledAssignment>): Promise<CanceledAssignment | undefined> {
+    const [updated] = await db
+      .update(canceledAssignments)
+      .set(data)
+      .where(eq(canceledAssignments.id, id))
+      .returning();
+    return updated;
   }
 
   async createCanceledAssignment(data: Partial<InsertCanceledAssignment> & { contestantId: string; recordDayId: string }): Promise<CanceledAssignment> {

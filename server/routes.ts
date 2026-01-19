@@ -5421,8 +5421,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const declineReason = reason ? `[DECLINED] ${reason}` : "[DECLINED] No reason provided";
       
       if (moveToReschedule) {
-        // Move to reschedule list (canceled assignments)
-        const canceled = await storage.cancelSeatAssignment(req.params.id, declineReason, movedBy);
+        // Move to reschedule list (canceled assignments) with isDecline=true
+        const canceled = await storage.cancelSeatAssignment(req.params.id, declineReason, movedBy, true);
         res.json({ moved: true, canceled });
       } else {
         // Just mark as declined but keep in place
@@ -5652,6 +5652,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.deleteCanceledAssignment(req.params.id);
       res.json({ message: "Contestant returned to available pool" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update canceled assignment (paperwork fields, etc.)
+  app.patch("/api/canceled-assignments/:id", async (req, res) => {
+    try {
+      const allowedFields = [
+        'paperworkSent', 'paperworkSentBy', 'paperworkReceived', 'paperworkReceivedBy', 'paperworkOnDay',
+        'bookingEmailSent', 'confirmedRsvp', 'wasDeclined', 'declinedAt', 'declinedBy', 'reason'
+      ];
+      
+      const updateData: Record<string, any> = {};
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          updateData[field] = req.body[field];
+        }
+      }
+      
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
+      
+      const updated = await storage.updateCanceledAssignment(req.params.id, updateData);
+      if (!updated) {
+        return res.status(404).json({ error: "Canceled assignment not found" });
+      }
+      
+      res.json(updated);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
