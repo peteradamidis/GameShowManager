@@ -11815,7 +11815,7 @@ ${finalEmailFooter}`;
     'rxEpNo', 'txEpNumber', 'txEpDate', 'notifiedOfTx', 'photoSent',
     'isPlayer', 'caseNumber', 'caseAmount', 'prizeWon', 'bankOfferTaken', 'amountWon', 'notes',
     'appearanceReleaseSigned', 'nedSigned', 'disclosureDocumentReceived',
-    'returnedEntryBySupplier', 'entrySentByContestant', 'paramountEntryContestant',
+    'returnedEntryBySupplier', 'entrySentByContestant', 'statementBySupplier', 'paramountEntryContestant',
     'afpConfirmation', 'afpFyiCheck', 'afpCheckReturned', 'afpNo', 'afpBatchNo',
     'idiwriterCheck', 'socialMediaBrief', 'bankruptcyCheck'
   ];

@@ -2468,7 +2468,7 @@ export class DbStorage implements IStorage {
       .orderBy(postRecordTracking.createdAt);
   }
 
-  async getPostRecordEntriesWithDetails(recordDayId?: string): Promise<Array<PostRecordTracking & { contestant: Contestant | null; recordDay: RecordDay | null }>> {
+  async getPostRecordEntriesWithDetails(recordDayId?: string): Promise<Array<PostRecordTracking & { contestant: Contestant | null; recordDay: RecordDay | null; seatAssignment: SeatAssignment | null }>> {
     const db = getDb();
     
     // Get all entries
@@ -2492,11 +2492,19 @@ export class DbStorage implements IStorage {
       : [];
     const recordDayMap = new Map(recordDaysData.map(rd => [rd.id, rd]));
     
+    // Batch fetch seat assignments
+    const seatAssignmentIds = [...new Set(entries.map(e => e.seatAssignmentId).filter((id): id is string => !!id))];
+    const seatAssignmentsData = seatAssignmentIds.length > 0 
+      ? await db.select().from(seatAssignments).where(inArray(seatAssignments.id, seatAssignmentIds))
+      : [];
+    const seatAssignmentMap = new Map(seatAssignmentsData.map(sa => [sa.id, sa]));
+    
     // Combine data
     return entries.map(entry => ({
       ...entry,
       contestant: contestantMap.get(entry.contestantId) || null,
       recordDay: entry.recordDayId ? recordDayMap.get(entry.recordDayId) || null : null,
+      seatAssignment: entry.seatAssignmentId ? seatAssignmentMap.get(entry.seatAssignmentId) || null : null,
     }));
   }
 

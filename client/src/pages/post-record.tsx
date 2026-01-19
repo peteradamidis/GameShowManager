@@ -45,11 +45,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import type { RecordDay, Contestant, PostRecordTracking } from "@shared/schema";
+import type { RecordDay, Contestant, PostRecordTracking, SeatAssignment } from "@shared/schema";
 
 interface PostRecordWithDetails extends PostRecordTracking {
   contestant: Contestant | null;
   recordDay: RecordDay | null;
+  seatAssignment: SeatAssignment | null;
 }
 
 const POST_RECORD_STORAGE_KEY = 'post-record-state';
@@ -229,7 +230,6 @@ export default function PostRecordPage() {
   const checkboxFieldLabels: Record<string, string> = {
     notifiedOfTx: "Notified of TX",
     photoSent: "Photo Sent",
-    isPlayer: "Player",
     appearanceReleaseSigned: "Appearance Release Signed",
     nedSigned: "Deed Signed",
     disclosureDocumentReceived: "Disclosure Received",
@@ -425,7 +425,7 @@ export default function PostRecordPage() {
                           TX
                         </TableHead>
                       )}
-                      <TableHead colSpan={11} className="text-center font-bold text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-900/20 border-r-2">
+                      <TableHead colSpan={10} className="text-center font-bold text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-900/20 border-r-2">
                         CONTESTANTS
                       </TableHead>
                       <TableHead colSpan={15} className="text-center font-bold text-blue-800 dark:text-blue-200 bg-blue-100 dark:bg-blue-900/20">
@@ -446,16 +446,15 @@ export default function PostRecordPage() {
                         </>
                       )}
                       <TableHead className="font-semibold min-w-[150px] sticky left-0 bg-background z-10">Name</TableHead>
-                      <TableHead className="font-semibold text-center">Player</TableHead>
+                      <TableHead className="font-semibold text-center">Player?</TableHead>
                       <TableHead className="font-semibold min-w-[120px]">Phone</TableHead>
                       <TableHead className="font-semibold min-w-[180px]">Email</TableHead>
                       <TableHead className="font-semibold text-center">Case No.</TableHead>
                       <TableHead className="font-semibold text-center">Case Amount</TableHead>
-                      <TableHead className="font-semibold min-w-[100px] text-center bg-green-100 dark:bg-green-900/20">Prize Won</TableHead>
-                      <TableHead className="font-semibold text-center bg-red-100 dark:bg-red-900/20">Bank Offer Taken?</TableHead>
+                      <TableHead className="font-semibold text-center">Prize Wheel</TableHead>
+                      <TableHead className="font-semibold text-center">Bank Offer Taken?</TableHead>
                       <TableHead className="font-semibold text-center">Amount Won</TableHead>
-                      <TableHead className="font-semibold min-w-[150px]">Notes</TableHead>
-                      <TableHead className="font-semibold border-r-2">Record Day</TableHead>
+                      <TableHead className="font-semibold min-w-[200px] border-r-2">Notes</TableHead>
                       <TableHead className="font-semibold text-center">Appearance Release Signed</TableHead>
                       <TableHead className="font-semibold text-center">Deed Signed</TableHead>
                       <TableHead className="font-semibold text-center">Disclosure Received</TableHead>
@@ -477,7 +476,7 @@ export default function PostRecordPage() {
                   <TableBody>
                     {filteredData.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={showTxSection ? 34 : 30} className="h-24 text-center text-muted-foreground">
+                        <TableCell colSpan={showTxSection ? 33 : 29} className="h-24 text-center text-muted-foreground">
                           No entries found. Click "Add Entry" to add contestants to track.
                         </TableCell>
                       </TableRow>
@@ -543,12 +542,9 @@ export default function PostRecordPage() {
                           <TableCell className="font-medium sticky left-0 bg-background z-10">
                             {item.contestant?.name || "Unknown"}
                           </TableCell>
-                          <TableCell className="text-center">
-                            <Checkbox
-                              checked={item.isPlayer || false}
-                              onCheckedChange={(checked) => handleCheckboxChange(item.id, "isPlayer", checked === true)}
-                              data-testid={`checkbox-is-player-${item.id}`}
-                            />
+                          <TableCell className="text-center text-xs">
+                            {item.seatAssignment?.winningMoneyRole === 'player' ? 'PLAYER' : 
+                             item.seatAssignment?.winningMoneyRole === 'case_holder' ? 'CASE HOLDER' : '-'}
                           </TableCell>
                           <TableCell>{item.contestant?.phone || "-"}</TableCell>
                           <TableCell className="text-xs">{item.contestant?.email || "-"}</TableCell>
@@ -571,16 +567,11 @@ export default function PostRecordPage() {
                               data-testid={`input-case-amount-${item.id}`}
                             />
                           </TableCell>
-                          <TableCell className="text-center bg-green-50 dark:bg-green-900/10">
-                            <Input
-                              value={item.prizeWon || ""}
-                              onChange={(e) => handleFieldChange(item.id, "prizeWon", e.target.value || null)}
-                              className="w-24 h-7 text-xs text-center"
-                              placeholder="-"
-                              data-testid={`input-prize-won-${item.id}`}
-                            />
+                          <TableCell className="text-center text-xs">
+                            {item.seatAssignment?.spinTheWheel === true ? 'Yes' : 
+                             item.seatAssignment?.spinTheWheel === false ? 'No' : '-'}
                           </TableCell>
-                          <TableCell className="text-center bg-red-50 dark:bg-red-900/10">
+                          <TableCell className="text-center">
                             <Select
                               value={item.bankOfferTaken === null ? "n/a" : item.bankOfferTaken ? "yes" : "no"}
                               onValueChange={(value) => handleFieldChange(item.id, "bankOfferTaken", value === "n/a" ? null : value === "yes")}
@@ -605,22 +596,14 @@ export default function PostRecordPage() {
                               data-testid={`input-amount-won-${item.id}`}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="border-r-2">
                             <Input
                               value={item.notes || ""}
                               onChange={(e) => handleFieldChange(item.id, "notes", e.target.value || null)}
-                              className="w-32 h-7 text-xs"
+                              className="w-48 h-7 text-xs"
                               placeholder="-"
                               data-testid={`input-notes-${item.id}`}
                             />
-                          </TableCell>
-                          <TableCell className="border-r-2">
-                            {item.recordDay ? (
-                              <div className="flex items-center gap-1 text-xs">
-                                <Calendar className="h-3 w-3 text-muted-foreground" />
-                                {format(new Date(item.recordDay.date), "MMM d")}
-                              </div>
-                            ) : "-"}
                           </TableCell>
                           <TableCell className="text-center">
                             <Checkbox
