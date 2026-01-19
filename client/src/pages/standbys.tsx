@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft } from "lucide-react";
+import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface RecordDay {
@@ -51,6 +51,8 @@ interface Contestant {
   photoUrl: string | null;
   auditionRating: string | null;
   availabilityStatus: string;
+  groupId: string | null;
+  attendingWith: string | null;
 }
 
 interface StandbyAssignment {
@@ -124,6 +126,87 @@ export default function StandbysPage() {
     if (!selectedRecordDayId) return [];
     return allStandbys.filter(s => s.recordDayId === selectedRecordDayId);
   }, [allStandbys, selectedRecordDayId]);
+
+  // Group standbys together and sort so groups appear consecutively
+  const groupedStandbysForRecordDay = useMemo(() => {
+    if (standbysForRecordDay.length === 0) return [];
+    
+    // Create a map of contestant ID to their group identifier
+    const contestantToGroup = new Map<string, string>();
+    const groupColors = [
+      "border-l-blue-500",
+      "border-l-purple-500", 
+      "border-l-green-500",
+      "border-l-orange-500",
+      "border-l-pink-500",
+      "border-l-teal-500",
+    ];
+    
+    // First pass: assign groups based on groupId
+    standbysForRecordDay.forEach(s => {
+      if (s.contestant.groupId) {
+        contestantToGroup.set(s.contestantId, `group-${s.contestant.groupId}`);
+      }
+    });
+    
+    // Second pass: try to match by attendingWith for contestants without groupId
+    standbysForRecordDay.forEach(s => {
+      if (!contestantToGroup.has(s.contestantId) && s.contestant.attendingWith) {
+        // Look for other standbys whose name appears in this contestant's attendingWith
+        standbysForRecordDay.forEach(other => {
+          if (other.contestantId !== s.contestantId) {
+            const attendingWithLower = (s.contestant.attendingWith || '').toLowerCase();
+            const nameParts = other.contestant.name.toLowerCase().split(' ');
+            const firstName = nameParts[0];
+            const lastName = nameParts[nameParts.length - 1];
+            
+            if (attendingWithLower.includes(firstName) || attendingWithLower.includes(lastName)) {
+              // Found a match - create or join a group
+              const existingGroup = contestantToGroup.get(other.contestantId);
+              if (existingGroup) {
+                contestantToGroup.set(s.contestantId, existingGroup);
+              } else {
+                const newGroupId = `attendingWith-${s.contestantId}-${other.contestantId}`;
+                contestantToGroup.set(s.contestantId, newGroupId);
+                contestantToGroup.set(other.contestantId, newGroupId);
+              }
+            }
+          }
+        });
+      }
+    });
+    
+    // Get unique groups and assign colors
+    const uniqueGroups = Array.from(new Set(contestantToGroup.values()));
+    const groupColorMap = new Map<string, string>();
+    uniqueGroups.forEach((groupId, index) => {
+      groupColorMap.set(groupId, groupColors[index % groupColors.length]);
+    });
+    
+    // Sort standbys so groups are together
+    const sorted = [...standbysForRecordDay].sort((a, b) => {
+      const groupA = contestantToGroup.get(a.contestantId) || '';
+      const groupB = contestantToGroup.get(b.contestantId) || '';
+      if (groupA && groupB && groupA !== groupB) return groupA.localeCompare(groupB);
+      if (groupA && !groupB) return -1;
+      if (!groupA && groupB) return 1;
+      return a.contestant.name.localeCompare(b.contestant.name);
+    });
+    
+    // Return with group info
+    return sorted.map(s => ({
+      ...s,
+      groupIdentifier: contestantToGroup.get(s.contestantId) || null,
+      groupColor: contestantToGroup.has(s.contestantId) 
+        ? groupColorMap.get(contestantToGroup.get(s.contestantId)!) 
+        : null,
+      groupMembers: contestantToGroup.has(s.contestantId)
+        ? standbysForRecordDay
+            .filter(other => contestantToGroup.get(other.contestantId) === contestantToGroup.get(s.contestantId))
+            .map(m => m.contestant.name)
+        : null,
+    }));
+  }, [standbysForRecordDay]);
 
   // Group standbys by record day for the overview
   const standbysByRecordDay = useMemo(() => {
@@ -400,8 +483,12 @@ export default function StandbysPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {standbysForRecordDay.map(standby => (
-                      <TableRow key={standby.id} data-testid={`row-standby-${standby.id}`}>
+                    {groupedStandbysForRecordDay.map(standby => (
+                      <TableRow 
+                        key={standby.id} 
+                        data-testid={`row-standby-${standby.id}`}
+                        className={standby.groupColor ? `border-l-4 ${standby.groupColor}` : ''}
+                      >
                         <TableCell>
                           <Checkbox
                             checked={selectedStandbys.includes(standby.id)}
@@ -419,7 +506,29 @@ export default function StandbysPage() {
                             </AvatarFallback>
                           </Avatar>
                         </TableCell>
-                        <TableCell className="font-medium">{standby.contestant.name}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {standby.contestant.name}
+                            {standby.groupMembers && standby.groupMembers.length > 1 && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="outline" className="text-xs px-1.5 py-0 cursor-help">
+                                    <Users className="h-3 w-3 mr-1" />
+                                    {standby.groupMembers.length}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <div className="text-sm">
+                                    <p className="font-medium mb-1">Group members:</p>
+                                    {standby.groupMembers.map((name, i) => (
+                                      <p key={i}>{name}</p>
+                                    ))}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           {standby.contestant.auditionRating ? (
                             <span className={`font-semibold ${
