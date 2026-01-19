@@ -2156,6 +2156,8 @@ function DataMaintenanceSection() {
   const [fixResult, setFixResult] = useState<{ fixedCount: number; fixedContestants: Array<{ id: string; name: string }> } | null>(null);
   const [isFixingDeclined, setIsFixingDeclined] = useState(false);
   const [declinedFixResult, setDeclinedFixResult] = useState<{ fixedCount: number; totalCanceled: number } | null>(null);
+  const [isFixingReschedule, setIsFixingReschedule] = useState(false);
+  const [rescheduleFixResult, setRescheduleFixResult] = useState<{ fixedCount: number; totalInReschedule: number } | null>(null);
   const { toast } = useToast();
 
   const handleFixStatus = async () => {
@@ -2213,6 +2215,35 @@ function DataMaintenanceSection() {
       });
     } finally {
       setIsFixingDeclined(false);
+    }
+  };
+
+  const handleFixReschedule = async () => {
+    setIsFixingReschedule(true);
+    setRescheduleFixResult(null);
+    try {
+      const response = await apiRequest("POST", "/api/contestants/fix-reschedule-status");
+      const data = await response.json();
+      
+      if (response.ok) {
+        setRescheduleFixResult({ fixedCount: data.fixedCount, totalInReschedule: data.totalInReschedule });
+        toast({
+          title: "Reschedule status fix completed",
+          description: data.fixedCount > 0 
+            ? `Fixed ${data.fixedCount} contestant(s). They will now show as 'rescheduled' in the Contestants tab.`
+            : "All contestants in reschedule already have the correct status.",
+        });
+      } else {
+        throw new Error(data.error || "Fix failed");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Fix failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsFixingReschedule(false);
     }
   };
 
@@ -2311,6 +2342,46 @@ function DataMaintenanceSection() {
             ) : (
               <p className="text-amber-600 dark:text-amber-400 font-medium">
                 Fixed {declinedFixResult.fixedCount} declined record(s) out of {declinedFixResult.totalCanceled} total cancelled assignments.
+              </p>
+            )}
+          </div>
+        )}
+
+        <Separator className="my-4" />
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Fix Reschedule Status</p>
+          <p className="text-sm text-muted-foreground">
+            Updates contestants in the Reschedule list to have 'rescheduled' status. After fixing, 
+            they will show correctly in the Contestants tab status filter.
+          </p>
+        </div>
+        
+        <Button 
+          onClick={handleFixReschedule} 
+          disabled={isFixingReschedule}
+          data-testid="button-fix-reschedule"
+        >
+          {isFixingReschedule ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Fixing...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Fix Reschedule Status
+            </>
+          )}
+        </Button>
+        
+        {rescheduleFixResult && (
+          <div className="p-3 rounded-lg bg-muted text-sm">
+            {rescheduleFixResult.fixedCount === 0 ? (
+              <p className="text-green-600 dark:text-green-400">All contestants in reschedule already have the correct status.</p>
+            ) : (
+              <p className="text-amber-600 dark:text-amber-400 font-medium">
+                Fixed {rescheduleFixResult.fixedCount} contestant(s) out of {rescheduleFixResult.totalInReschedule} in reschedule list.
               </p>
             )}
           </div>

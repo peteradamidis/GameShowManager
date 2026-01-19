@@ -2474,6 +2474,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fix legacy reschedule status - updates contestants in canceled_assignments to have 'rescheduled' status
+  app.post("/api/contestants/fix-reschedule-status", requireAuth, async (req, res) => {
+    try {
+      // Get all canceled assignments
+      const allCanceled = await storage.getCanceledAssignments();
+      
+      // Get unique contestant IDs from canceled assignments
+      const contestantIds = [...new Set(allCanceled.map(c => c.contestantId))];
+      
+      // Get all contestants to check their current status
+      const allContestants = await storage.getContestants();
+      
+      // Find contestants who are in canceled_assignments but don't have 'rescheduled' status
+      const contestantsToFix = allContestants.filter(c => 
+        contestantIds.includes(c.id) && 
+        c.availabilityStatus !== 'rescheduled'
+      );
+      
+      // Update each contestant's status to 'rescheduled'
+      let fixedCount = 0;
+      const fixedRecords: Array<{ id: string; name: string; previousStatus: string }> = [];
+      
+      for (const contestant of contestantsToFix) {
+        await storage.updateContestant(contestant.id, { availabilityStatus: 'rescheduled' });
+        fixedCount++;
+        fixedRecords.push({
+          id: contestant.id,
+          name: contestant.name,
+          previousStatus: contestant.availabilityStatus || 'unknown',
+        });
+      }
+      
+      console.log(`[Fix Reschedule Status] Fixed ${fixedCount} contestants`);
+      
+      res.json({
+        message: `Fixed ${fixedCount} contestants to 'rescheduled' status`,
+        fixedCount,
+        totalInReschedule: contestantIds.length,
+        fixedRecords,
+      });
+    } catch (error: any) {
+      console.error("[Fix Reschedule Status] Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Fix phone numbers - adds 0 prefix to Australian mobile numbers starting with 4
   app.post("/api/contestants/fix-phone-numbers", requireAuth, async (req, res) => {
     try {
