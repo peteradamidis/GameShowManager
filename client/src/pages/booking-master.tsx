@@ -49,7 +49,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Calendar, Mail, Maximize2, Minimize2, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle, FileText, Sparkles, Users, AlertTriangle, Copy } from "lucide-react";
+import { Download, Calendar, Mail, Maximize2, Minimize2, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle, FileText, Sparkles, Users, AlertTriangle, Copy, Pencil } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -251,6 +251,7 @@ export default function BookingMaster() {
   const [filterConfirmedOnly, setFilterConfirmedOnly] = useState(false);
   const [filterPaperworkNotSent, setFilterPaperworkNotSent] = useState(false);
   const [isStandbyMode, setIsStandbyMode] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   // Use refs instead of state for pending text updates to avoid re-renders
   const pendingTextUpdatesRef = useRef<Record<string, string>>({});
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnId, boolean>>(() => {
@@ -893,6 +894,16 @@ export default function BookingMaster() {
           </Button>
 
           <Button 
+            onClick={() => setIsEditMode(!isEditMode)}
+            variant={isEditMode ? "default" : "outline"}
+            title={isEditMode ? "Exit edit mode" : "Edit attending with and medical notes"}
+            data-testid="button-toggle-edit-mode"
+          >
+            <Pencil className="h-4 w-4 mr-1" />
+            {isEditMode ? "Done Editing" : "Edit Fields"}
+          </Button>
+
+          <Button 
             onClick={handleToggleFullscreen} 
             variant="outline" 
             size="icon"
@@ -1153,19 +1164,30 @@ export default function BookingMaster() {
                         {isColumnVisible("attendingWith") && (
                           <TableCell className="text-xs py-0.5 h-7 min-w-[160px] border-r border-gray-200 dark:border-gray-700">
                             {row.assignment ? (
-                              <div className="flex items-center gap-1">
-                                <Input
-                                  key={`attending-${row.assignment.id}`}
-                                  defaultValue={row.assignment.attendingWithOverride || row.contestant?.attendingWith || ""}
-                                  onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "attendingWithOverride", e.target.value)}
-                                  placeholder={row.contestant?.attendingWith || "Attending with..."}
-                                  className="h-6 text-xs flex-1"
-                                  data-testid={`input-attending-with-${row.seatId}`}
-                                />
-                                {row.assignment.attendingWithOverride && row.assignment.attendingWithOverride !== row.contestant?.attendingWith && (
-                                  <span className="text-[9px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1 rounded font-medium whitespace-nowrap">UPDATED</span>
-                                )}
-                              </div>
+                              isEditMode ? (
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    key={`attending-${row.assignment.id}`}
+                                    defaultValue={row.assignment.attendingWithOverride || row.contestant?.attendingWith || ""}
+                                    onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "attendingWithOverride", e.target.value)}
+                                    placeholder={row.contestant?.attendingWith || "Attending with..."}
+                                    className="h-6 text-xs flex-1"
+                                    data-testid={`input-attending-with-${row.seatId}`}
+                                  />
+                                  {row.assignment.attendingWithOverride && row.assignment.attendingWithOverride !== row.contestant?.attendingWith && (
+                                    <span className="text-[9px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1 rounded font-medium whitespace-nowrap">UPDATED</span>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1">
+                                  <span className="truncate" title={row.assignment.attendingWithOverride || row.contestant?.attendingWith || ""}>
+                                    {row.assignment.attendingWithOverride || row.contestant?.attendingWith || ""}
+                                  </span>
+                                  {row.assignment.attendingWithOverride && row.assignment.attendingWithOverride !== row.contestant?.attendingWith && (
+                                    <span className="text-[9px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1 rounded font-medium whitespace-nowrap flex-shrink-0">UPDATED</span>
+                                  )}
+                                </div>
+                              )
                             ) : (
                               row.contestant?.attendingWith || ""
                             )}
@@ -1180,19 +1202,30 @@ export default function BookingMaster() {
                         {isColumnVisible("mobilityNotes") && (
                           <TableCell className="text-xs py-0.5 h-7 min-w-[160px] border-r border-gray-200 dark:border-gray-700">
                             {row.assignment ? (
-                              <div className="flex items-center gap-1">
-                                <Input
-                                  key={`mobility-${row.assignment.id}`}
-                                  defaultValue={row.assignment.mobilityNotesOverride || row.contestant?.mobilityNotes || ""}
-                                  onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "mobilityNotesOverride", e.target.value)}
-                                  placeholder={row.contestant?.mobilityNotes || "Medical notes..."}
-                                  className="h-6 text-xs flex-1"
-                                  data-testid={`input-mobility-notes-${row.seatId}`}
-                                />
-                                {row.assignment.mobilityNotesOverride && row.assignment.mobilityNotesOverride !== row.contestant?.mobilityNotes && (
-                                  <span className="text-[9px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1 rounded font-medium whitespace-nowrap">UPDATED</span>
-                                )}
-                              </div>
+                              isEditMode ? (
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    key={`mobility-${row.assignment.id}`}
+                                    defaultValue={row.assignment.mobilityNotesOverride || row.contestant?.mobilityNotes || ""}
+                                    onChange={(e) => handleDebouncedTextUpdate(row.assignment!.id, "mobilityNotesOverride", e.target.value)}
+                                    placeholder={row.contestant?.mobilityNotes || "Medical notes..."}
+                                    className="h-6 text-xs flex-1"
+                                    data-testid={`input-mobility-notes-${row.seatId}`}
+                                  />
+                                  {row.assignment.mobilityNotesOverride && row.assignment.mobilityNotesOverride !== row.contestant?.mobilityNotes && (
+                                    <span className="text-[9px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1 rounded font-medium whitespace-nowrap">UPDATED</span>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1">
+                                  <span className="truncate" title={row.assignment.mobilityNotesOverride || row.contestant?.mobilityNotes || ""}>
+                                    {row.assignment.mobilityNotesOverride || row.contestant?.mobilityNotes || ""}
+                                  </span>
+                                  {row.assignment.mobilityNotesOverride && row.assignment.mobilityNotesOverride !== row.contestant?.mobilityNotes && (
+                                    <span className="text-[9px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1 rounded font-medium whitespace-nowrap flex-shrink-0">UPDATED</span>
+                                  )}
+                                </div>
+                              )
                             ) : (
                               row.contestant?.mobilityNotes || ""
                             )}
