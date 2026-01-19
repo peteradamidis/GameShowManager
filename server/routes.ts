@@ -11875,7 +11875,7 @@ ${finalEmailFooter}`;
       }
       
       // Check if contestant exists
-      const contestant = await storage.getContestant(contestantId);
+      const contestant = await storage.getContestantById(contestantId);
       if (!contestant) {
         return res.status(400).json({ error: "Contestant not found" });
       }
@@ -11883,7 +11883,7 @@ ${finalEmailFooter}`;
       // Check if record day exists (if provided)
       let recordDay = null;
       if (recordDayId) {
-        recordDay = await storage.getRecordDay(recordDayId);
+        recordDay = await storage.getRecordDayById(recordDayId);
         if (!recordDay) {
           return res.status(400).json({ error: "Record day not found" });
         }
@@ -11936,8 +11936,8 @@ ${finalEmailFooter}`;
       }
       
       // Fetch related data
-      const contestant = await storage.getContestant(updated.contestantId);
-      const recordDay = updated.recordDayId ? await storage.getRecordDay(updated.recordDayId) : null;
+      const contestant = await storage.getContestantById(updated.contestantId);
+      const recordDay = updated.recordDayId ? await storage.getRecordDayById(updated.recordDayId) : null;
       
       res.json({ ...updated, contestant, recordDay });
     } catch (error: any) {
