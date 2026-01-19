@@ -147,9 +147,20 @@ export const canceledAssignments = pgTable("canceled_assignments", {
   movedBy: text("moved_by"), // Producer initials who moved to reschedule
   isFromStandby: boolean("is_from_standby").default(false), // True if this came from standby tab
   originalAttendanceDate: timestamp("original_attendance_date"), // Date standby originally attended
-  // Carry over paperwork status when rescheduling
+  
+  // Declined tracking - persists even after reschedule
+  wasDeclined: boolean("was_declined").default(false), // True if this was a decline (not just a producer move)
+  declinedAt: timestamp("declined_at"), // When the contestant declined
+  declinedBy: text("declined_by"), // Who processed the decline
+  
+  // Carry over booking/paperwork status when rescheduling
+  bookingEmailSent: timestamp("booking_email_sent"), // When booking invitation was sent
+  confirmedRsvp: timestamp("confirmed_rsvp"), // If they confirmed before declining
   paperworkSent: timestamp("paperwork_sent"),
+  paperworkSentBy: text("paperwork_sent_by"),
   paperworkReceived: timestamp("paperwork_received"),
+  paperworkReceivedBy: text("paperwork_received_by"),
+  paperworkOnDay: timestamp("paperwork_on_day"), // Paperwork completed on the day
 });
 
 // Availability Tokens table - stores unique tokens for availability check responses
