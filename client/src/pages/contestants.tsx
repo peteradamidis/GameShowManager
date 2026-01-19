@@ -34,12 +34,12 @@ import type { BlockType } from "@shared/schema";
 
 const StatusBadge = ({ status }: { status: string }) => {
   const colors: Record<string, string> = {
-    available: "border-green-200 bg-green-500/10 text-green-700 dark:border-green-800 dark:text-green-400",
-    assigned: "border-blue-200 bg-blue-500/10 text-blue-700 dark:border-blue-800 dark:text-blue-400",
-    invited: "border-purple-200 bg-purple-500/10 text-purple-700 dark:border-purple-800 dark:text-purple-400",
-    confirmed: "border-sky-300 bg-sky-500/15 text-sky-700 dark:border-sky-700 dark:text-sky-400",
-    returning_standby: "border-orange-200 bg-orange-500/10 text-orange-700 dark:border-orange-800 dark:text-orange-400",
-    rescheduled: "border-red-900/50 bg-red-900/15 text-red-900 dark:border-red-800 dark:text-red-400",
+    available: "border-green-300 bg-green-500/10 text-green-700 dark:border-green-700 dark:text-green-400",
+    assigned: "border-blue-300 bg-blue-500/10 text-blue-700 dark:border-blue-700 dark:text-blue-400",
+    invited: "border-purple-300 bg-purple-500/10 text-purple-700 dark:border-purple-700 dark:text-purple-400",
+    confirmed: "border-sky-300 bg-sky-500/10 text-sky-700 dark:border-sky-700 dark:text-sky-400",
+    returning_standby: "border-orange-300 bg-orange-500/10 text-orange-700 dark:border-orange-700 dark:text-orange-400",
+    rescheduled: "border-red-400 bg-red-900/10 text-red-900 dark:border-red-700 dark:text-red-400",
   };
   
   const displayLabels: Record<string, string> = {
