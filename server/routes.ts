@@ -2437,7 +2437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/canceled-assignments/fix-declined", requireAuth, async (req, res) => {
     try {
       // Get all canceled assignments
-      const allCanceled = await storage.getCanceledSeatAssignments();
+      const allCanceled = await storage.getCanceledAssignments();
       
       // Find canceled assignments that have DECLINED in reason but wasDeclined is false
       const legacyDeclined = allCanceled.filter(c => 
