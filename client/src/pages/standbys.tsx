@@ -422,7 +422,7 @@ export default function StandbysPage() {
         : `STANDBY ATTENDED - ${blockLabel}`;
       
       // Create canceled assignment with isFromStandby: true and the block type info
-      return apiRequest('POST', '/api/canceled-assignments', {
+      await apiRequest('POST', '/api/canceled-assignments', {
         contestantId: standby.contestantId,
         recordDayId: standby.recordDayId,
         blockNumber: null, // Standbys don't have fixed block numbers
@@ -431,6 +431,14 @@ export default function StandbysPage() {
         movedBy: 'SYSTEM',
         isFromStandby: true,
         originalAttendanceDate: standby.recordDay?.date ? new Date(standby.recordDay.date) : new Date(),
+      });
+      
+      // Also update the standby status to 'declined' so the button changes
+      return apiRequest('PATCH', `/api/standbys/${standby.id}`, {
+        status: 'declined',
+        movedToReschedule: true,
+        movedToRescheduleAt: new Date().toISOString(),
+        notes: reason,
       });
     },
     onSuccess: () => {
