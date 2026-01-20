@@ -8935,23 +8935,6 @@ ${finalEmailFooter}`;
                 ).join('')}
               </div>
               
-              <!-- Required Info Reminder -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
-                <tr>
-                  <td style="padding: 20px;">
-                    <h3 style="color: #333333; font-size: 14px; font-weight: bold; margin: 0 0 12px 0;">
-                      If you will be attending, please provide:
-                    </h3>
-                    <ul style="color: #555555; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
-                      <li>Medical conditions (if any)</li>
-                      <li>Mobility requirements (e.g., issues climbing stairs or standing for a considerable amount of time)</li>
-                      <li>Emergency contact name & phone number</li>
-                      <li>Dietary requirements</li>
-                    </ul>
-                  </td>
-                </tr>
-              </table>
-              
               <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">
                 Please ensure you bring your own water bottle.
               </p>
@@ -10976,23 +10959,6 @@ ${finalEmailFooter}`;
                     `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
                   ).join('')}
                 </div>
-                
-                <!-- Required Info Reminder -->
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 0 25px 0;">
-                  <tr>
-                    <td style="padding: 20px;">
-                      <h3 style="color: #333333; font-size: 14px; font-weight: bold; margin: 0 0 12px 0;">
-                        If you will be attending, please provide:
-                      </h3>
-                      <ul style="color: #555555; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
-                        <li>Medical conditions (if any)</li>
-                        <li>Mobility requirements (e.g., issues climbing stairs or standing for a considerable amount of time)</li>
-                        <li>Emergency contact name & phone number</li>
-                        <li>Dietary requirements</li>
-                      </ul>
-                    </td>
-                  </tr>
-                </table>
                 
                 <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">
                   Please ensure you bring your own water bottle.
