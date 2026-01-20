@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users, RefreshCw, CheckCircle, Loader2, Ticket, Search, CalendarPlus } from "lucide-react";
+import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users, RefreshCw, CheckCircle, Loader2, Ticket, Search, CalendarPlus, PanelLeftClose, PanelLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -124,6 +124,7 @@ export default function StandbysPage() {
   const { toast } = useToast();
   const [selectedRecordDayId, setSelectedRecordDayId] = useState<string>("");
   const [selectedStandbys, setSelectedStandbys] = useState<string[]>([]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [previewData, setPreviewData] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<StandbyStatusFilter>("all");
@@ -672,8 +673,9 @@ export default function StandbysPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className={`grid grid-cols-1 gap-4 ${sidebarCollapsed ? '' : 'lg:grid-cols-5'}`}>
           {/* Record Day Selector */}
+          {!sidebarCollapsed && (
           <Card className="lg:col-span-1">
             <CardHeader>
               <CardTitle className="text-lg">Record Days</CardTitle>
@@ -720,21 +722,44 @@ export default function StandbysPage() {
               </div>
             </CardContent>
           </Card>
+          )}
 
           {/* Standbys List */}
-          <Card className="lg:col-span-4">
+          <Card className={sidebarCollapsed ? '' : 'lg:col-span-4'}>
             <CardHeader>
               <div className="flex items-center justify-between gap-4">
-                <div>
-                  <CardTitle className="text-lg">
-                    {isSearchMode 
-                      ? `Search Results for "${searchQuery}"` 
-                      : `Standbys for ${selectedRecordDay ? formatDate(selectedRecordDay.date) : 'Selected Day'}`}
-                  </CardTitle>
-                  <CardDescription>
-                    {standbysForRecordDay.length} standby contestant{standbysForRecordDay.length !== 1 ? 's' : ''}
+                <div className="flex items-center gap-2">
+                  {/* Sidebar toggle button */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                        data-testid="button-toggle-sidebar"
+                      >
+                        {sidebarCollapsed ? (
+                          <PanelLeft className="h-4 w-4" />
+                        ) : (
+                          <PanelLeftClose className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {sidebarCollapsed ? 'Show record days' : 'Hide record days'}
+                    </TooltipContent>
+                  </Tooltip>
+                  <div>
+                    <CardTitle className="text-lg">
+                      {isSearchMode 
+                        ? `Search Results for "${searchQuery}"` 
+                        : `Standbys for ${selectedRecordDay ? formatDate(selectedRecordDay.date) : 'Selected Day'}`}
+                    </CardTitle>
+                    <CardDescription>
+                      {standbysForRecordDay.length} standby contestant{standbysForRecordDay.length !== 1 ? 's' : ''}
                     {isSearchMode && ' (across all record days)'}
                   </CardDescription>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {/* Search Input */}
