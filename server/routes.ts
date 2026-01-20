@@ -9482,13 +9482,14 @@ ${finalEmailFooter}`;
         senderName: senderNameConfig || 'Deal or No Deal',
       };
       
-      // Send the standby ticket email
-      await sendEmail(emailConfig, {
-        to: contestant.email,
-        subject: `STANDBY TICKET - Deal or No Deal - ${recordDate}`,
-        html: emailHtml,
+      // Send the standby ticket email using correct function signature
+      await sendEmailWithAttachment(
+        contestant.email,
+        `STANDBY TICKET - Deal or No Deal - ${recordDate}`,
+        emailHtml,
         attachments,
-      });
+        emailConfig
+      );
 
       // Update standbyTicketSent timestamp
       await storage.updateStandbyAssignment(id, {
@@ -9699,12 +9700,14 @@ ${finalEmailFooter}`;
           const senderNameConfig = await storage.getSystemConfig('email_sender_name');
           const emailConfig: EmailConfig = { senderName: senderNameConfig || 'Deal or No Deal' };
           
-          await sendEmail(emailConfig, {
-            to: standby.contestant.email!,
-            subject: `STANDBY TICKET - Deal or No Deal - ${recordDate}`,
-            html: emailHtml,
+          // Send using correct function signature
+          await sendEmailWithAttachment(
+            standby.contestant.email!,
+            `STANDBY TICKET - Deal or No Deal - ${recordDate}`,
+            emailHtml,
             attachments,
-          });
+            emailConfig
+          );
 
           await storage.updateStandbyAssignment(standby.id, {
             standbyTicketSent: new Date().toISOString(),
