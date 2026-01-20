@@ -805,7 +805,7 @@ export default function StandbysPage() {
                       <TableHead className="font-semibold text-xs">Name</TableHead>
                       <TableHead className="font-semibold text-xs">Notes</TableHead>
                       {isSearchMode && <TableHead className="font-semibold text-xs whitespace-nowrap">Date /<br/>RX</TableHead>}
-                      <TableHead className="font-semibold text-xs text-center whitespace-nowrap">Booking<br/>Email Sent</TableHead>
+                      <TableHead className="font-semibold text-xs text-center whitespace-nowrap">Standby<br/>Email Sent</TableHead>
                       <TableHead className="font-semibold text-xs text-center whitespace-nowrap">Confirmed<br/>RSVP</TableHead>
                       <TableHead className="font-semibold text-xs text-center whitespace-nowrap">Paperwork<br/>Sent</TableHead>
                       <TableHead className="font-semibold text-xs text-center whitespace-nowrap">Paperwork<br/>Received &<br/>Logged</TableHead>
