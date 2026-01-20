@@ -3247,8 +3247,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all available contestants (not yet assigned)
       const allContestants = await storage.getContestants();
       
-      // Filter: include contestants who are available or rescheduled (exclude A+ rated - they must be manually assigned)
-      let availableAll = allContestants.filter((c) => c.availabilityStatus === "available" || c.availabilityStatus === "rescheduled");
+      // Filter: include ONLY contestants with "available" status
+      // IMPORTANT: "rescheduled" contestants are EXCLUDED from auto-assign - they must be manually booked
+      // via the Contestants page or Reschedule page to ensure proper tracking and control
+      let availableAll = allContestants.filter((c) => c.availabilityStatus === "available");
       
       // Get existing seat assignments for this record day to exclude already-assigned contestants
       const currentAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
