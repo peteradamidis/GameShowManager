@@ -5749,6 +5749,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create a new canceled assignment (for attended standbys being moved to reschedule)
+  app.post("/api/canceled-assignments", requireAuth, async (req, res) => {
+    try {
+      const { contestantId, recordDayId, blockNumber, seatLabel, reason, movedBy, isFromStandby, originalAttendanceDate } = req.body;
+      
+      if (!contestantId || !recordDayId) {
+        return res.status(400).json({ error: "contestantId and recordDayId are required" });
+      }
+      
+      // Create the canceled assignment record
+      const canceledAssignment = await storage.createCanceledAssignment({
+        contestantId,
+        recordDayId,
+        blockNumber: blockNumber || null,
+        seatLabel: seatLabel || null,
+        reason: reason || 'Moved to reschedule',
+        movedBy: movedBy || 'SYSTEM',
+        isFromStandby: isFromStandby || false,
+        originalAttendanceDate: originalAttendanceDate ? new Date(originalAttendanceDate) : null,
+      });
+      
+      // Update contestant status to 'rescheduled'
+      await storage.updateContestantAvailability(contestantId, 'rescheduled');
+      
+      res.json(canceledAssignment);
+    } catch (error: any) {
+      console.error("Error creating canceled assignment:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Delete canceled assignment and return contestant to available pool
   app.delete("/api/canceled-assignments/:id", async (req, res) => {
     try {
