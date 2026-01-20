@@ -534,7 +534,7 @@ export default function StandbysPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
       toast({ 
         title: "Ticket emails sent", 
-        description: `Successfully sent ${data.sent || 0} ticket(s)` 
+        description: `Successfully sent ${data.successCount || 0} ticket(s)` 
       });
       setSendTicketDialogOpen(false);
       setSelectedStandbys([]);
