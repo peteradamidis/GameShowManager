@@ -1758,7 +1758,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     
                     return (
                       <>
-                        <div className="max-h-[400px] overflow-y-auto">
+                        <div>
                           <div className="flex">
                             {/* Static tier numbers column */}
                             <div className="flex-shrink-0 w-8 mr-1">
