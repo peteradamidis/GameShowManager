@@ -53,11 +53,11 @@ function appendNgrokSkip(url: string): string {
 // Also handles plain URLs and makes them clickable
 function convertLinksToHtml(text: string): string {
   // First, convert markdown-style links: [link text](url)
-  let result = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: #8B0000; text-decoration: underline;">$1</a>');
+  let result = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: #0055A4; text-decoration: underline;">$1</a>');
   
   // Then, convert standalone URLs that aren't already in href attributes
   // Match URLs that start with http:// or https:// and aren't preceded by href=" or >
-  result = result.replace(/(?<!href="|>)(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color: #8B0000; text-decoration: underline;">$1</a>');
+  result = result.replace(/(?<!href="|>)(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color: #0055A4; text-decoration: underline;">$1</a>');
   
   return result;
 }
@@ -10880,7 +10880,7 @@ Thank you.`;
               
               <p style="color: #888888; font-size: 12px; text-align: center; margin: 0 0 20px 0;">
                 If the button doesn't work, copy and paste this link into your browser:<br/>
-                <a href="${adobeSignLink}" style="color: #8B0000; word-break: break-all;">${adobeSignLink}</a>
+                <a href="${adobeSignLink}" style="color: #0055A4; word-break: break-all;">${adobeSignLink}</a>
               </p>
               
               <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 0;">
