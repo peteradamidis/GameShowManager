@@ -1184,6 +1184,24 @@ export default function StandbysPage() {
                                 <XCircle className="h-2.5 w-2.5 mr-0.5" />
                                 Decline
                               </Button>
+                              {/* Test subjects only - can be fully removed */}
+                              {['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestantName) && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-5 w-5 p-0 text-destructive hover:text-destructive"
+                                  onClick={() => {
+                                    if (confirm(`Remove test subject ${standby.contestantName} from standby list?`)) {
+                                      deleteStandbyMutation.mutate(standby.id);
+                                    }
+                                  }}
+                                  disabled={deleteStandbyMutation.isPending}
+                                  title="Remove test subject from standby list"
+                                  data-testid={`button-remove-${standby.id}`}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              )}
                             </div>
                           )}
                         </TableCell>
