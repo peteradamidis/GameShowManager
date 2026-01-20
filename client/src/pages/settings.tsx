@@ -293,6 +293,10 @@ export default function Settings() {
   const [standbyEmailFooter, setStandbyEmailFooter] = useState(EMAIL_TEMPLATE_DEFAULTS.standby_email_footer);
   const [standbyTemplateChanged, setStandbyTemplateChanged] = useState(false);
   
+  // Reply-to mailto addresses for emails
+  const [bookingReplyToEmail, setBookingReplyToEmail] = useState('');
+  const [standbyReplyToEmail, setStandbyReplyToEmail] = useState('');
+  
   // Ticket email template state
   const [ticketEmailHeadline, setTicketEmailHeadline] = useState(EMAIL_TEMPLATE_DEFAULTS.ticket_email_headline);
   const [ticketEmailIntro, setTicketEmailIntro] = useState(EMAIL_TEMPLATE_DEFAULTS.ticket_email_intro);
@@ -329,6 +333,10 @@ export default function Settings() {
   const { data: savedStandbyIntro } = useQuery<string | null>({ queryKey: ["/api/system-config/standby_email_intro"] });
   const { data: savedStandbyInstructions } = useQuery<string | null>({ queryKey: ["/api/system-config/standby_email_instructions"] });
   const { data: savedStandbyFooter } = useQuery<string | null>({ queryKey: ["/api/system-config/standby_email_footer"] });
+  
+  // Fetch saved reply-to email addresses
+  const { data: savedBookingReplyToEmail } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_reply_to_email"] });
+  const { data: savedStandbyReplyToEmail } = useQuery<string | null>({ queryKey: ["/api/system-config/standby_reply_to_email"] });
   
   // Fetch saved ticket email template values
   const { data: savedTicketHeadline } = useQuery<string | null>({ queryKey: ["/api/system-config/ticket_email_headline"] });
@@ -397,6 +405,14 @@ export default function Settings() {
     if (savedStandbyFooter) setStandbyEmailFooter(savedStandbyFooter);
   }, [savedStandbyFooter]);
   
+  // Load saved reply-to email addresses
+  useEffect(() => {
+    if (savedBookingReplyToEmail) setBookingReplyToEmail(savedBookingReplyToEmail);
+  }, [savedBookingReplyToEmail]);
+  useEffect(() => {
+    if (savedStandbyReplyToEmail) setStandbyReplyToEmail(savedStandbyReplyToEmail);
+  }, [savedStandbyReplyToEmail]);
+  
   // Load saved ticket email template values
   useEffect(() => {
     if (savedTicketHeadline) setTicketEmailHeadline(savedTicketHeadline);
@@ -447,6 +463,7 @@ export default function Settings() {
         apiRequest("PUT", "/api/system-config/booking_email_instructions", { value: emailInstructions }),
         apiRequest("PUT", "/api/system-config/booking_email_additional_instructions", { value: emailAdditionalInstructions }),
         apiRequest("PUT", "/api/system-config/booking_email_footer", { value: emailFooter }),
+        apiRequest("PUT", "/api/system-config/booking_reply_to_email", { value: bookingReplyToEmail }),
       ]);
     },
     onSuccess: () => {
@@ -457,6 +474,7 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_email_instructions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_email_additional_instructions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_email_footer"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_reply_to_email"] });
     },
     onError: (error: any) => {
       toast({ title: "Error saving template", description: error.message, variant: "destructive" });
@@ -496,6 +514,7 @@ export default function Settings() {
         apiRequest("PUT", "/api/system-config/standby_email_intro", { value: standbyEmailIntro }),
         apiRequest("PUT", "/api/system-config/standby_email_instructions", { value: standbyEmailInstructions }),
         apiRequest("PUT", "/api/system-config/standby_email_footer", { value: standbyEmailFooter }),
+        apiRequest("PUT", "/api/system-config/standby_reply_to_email", { value: standbyReplyToEmail }),
       ]);
     },
     onSuccess: () => {
@@ -505,6 +524,7 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/standby_email_intro"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/standby_email_instructions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/standby_email_footer"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/standby_reply_to_email"] });
     },
     onError: (error: any) => {
       toast({ title: "Error saving template", description: error.message, variant: "destructive" });
@@ -1267,6 +1287,26 @@ export default function Settings() {
               />
             </div>
             
+            <Separator className="my-4" />
+            
+            <div className="space-y-2">
+              <Label htmlFor="booking-reply-to-email">Reply-To Email Address</Label>
+              <p className="text-xs text-muted-foreground">
+                The email address that appears in the "Reply-To" mailto link. This is where contestants will reply when clicking response links in the booking email.
+              </p>
+              <Input
+                id="booking-reply-to-email"
+                type="email"
+                value={bookingReplyToEmail}
+                onChange={(e) => {
+                  setBookingReplyToEmail(e.target.value);
+                  setEmailTemplateChanged(true);
+                }}
+                placeholder="e.g., dond.bookings@endemolshine.com.au"
+                data-testid="input-booking-reply-to-email"
+              />
+            </div>
+            
             <div className="flex justify-end pt-2">
               <Button
                 onClick={() => saveEmailTemplateMutation.mutate()}
@@ -1505,6 +1545,26 @@ export default function Settings() {
                 placeholder="This is an automated message from the Deal or No Deal production team..."
                 className="min-h-[60px]"
                 data-testid="input-standby-email-footer"
+              />
+            </div>
+            
+            <Separator className="my-4" />
+            
+            <div className="space-y-2">
+              <Label htmlFor="standby-reply-to-email">Reply-To Email Address</Label>
+              <p className="text-xs text-muted-foreground">
+                The email address that appears in the "Reply-To" mailto link. This is where contestants will reply when clicking response links in the standby email.
+              </p>
+              <Input
+                id="standby-reply-to-email"
+                type="email"
+                value={standbyReplyToEmail}
+                onChange={(e) => {
+                  setStandbyReplyToEmail(e.target.value);
+                  setStandbyTemplateChanged(true);
+                }}
+                placeholder="e.g., dond.standby@endemolshine.com.au"
+                data-testid="input-standby-reply-to-email"
               />
             </div>
             

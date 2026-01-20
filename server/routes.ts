@@ -8939,9 +8939,10 @@ ${finalEmailFooter}`;
             standbyBannerUrl = standbyBannerUrlConfig;  // External URL
           }
 
-          // Get reply-to email for mailto buttons
+          // Get reply-to email for mailto buttons (from system config or fallback)
+          const savedStandbyReplyTo = await storage.getSystemConfig('standby_reply_to_email');
           const smtpConfig = await getSmtpConfig();
-          const standbyReplyToEmail = smtpConfig.fromEmail || 'noreply@example.com';
+          const standbyReplyToEmail = savedStandbyReplyTo || smtpConfig.fromEmail || 'noreply@example.com';
           
           // Get saved standby email template values from database
           const savedStandbyHeadline = await storage.getSystemConfig('standby_email_headline');
@@ -11439,9 +11440,10 @@ ${finalEmailFooter}`;
       const instructions = await storage.getSystemConfig('standby_email_instructions') || "If you're selected to participate in studio, you will be required for the full day.\n\nAfter being a Standby Contestant, you are eligible to be FAST-TRACKED into the next available record date to attend a full day in studio. That's double the chances! You must email dond.standby@endemolshine.com.au to be rebooked to return.\n\nPlease find attached important information relating to your attendance at the Deal or No Deal recording. Please read this attachment thoroughly and get in touch ASAP should there be any issues.\n\nYou will receive another email closer to your record date with additional paperwork.";
       const footer = await storage.getSystemConfig('standby_email_footer') || 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.';
       
-      // Get reply-to email
+      // Get reply-to email (from system config or fallback to SMTP)
+      const savedReplyTo = await storage.getSystemConfig('standby_reply_to_email');
       const smtpConfig = await getSmtpConfig();
-      const replyToEmail = smtpConfig.fromEmail || 'noreply@example.com';
+      const replyToEmail = savedReplyTo || smtpConfig.fromEmail || 'noreply@example.com';
       
       // Get record day data if provided
       const recordDayId = req.query.recordDayId as string | undefined;
