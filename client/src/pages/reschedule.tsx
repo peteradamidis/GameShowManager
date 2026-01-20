@@ -410,9 +410,20 @@ export default function ReschedulePage() {
                     </TableCell>
                     <TableCell>
                       {cancellation.isFromStandby ? (
-                        <Badge className="bg-yellow-500 text-yellow-950 hover:bg-yellow-500">
-                          Standby
-                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Badge className="bg-yellow-500 text-yellow-950 hover:bg-yellow-500">
+                            Standby
+                          </Badge>
+                          {cancellation.reason?.includes('Podium Block') ? (
+                            <Badge variant="outline" className="border-purple-300 bg-purple-100 text-purple-700 dark:border-purple-700 dark:bg-purple-900 dark:text-purple-300 text-[10px]">
+                              PB
+                            </Badge>
+                          ) : cancellation.reason?.includes('Non-Playing Block') ? (
+                            <Badge variant="outline" className="border-blue-300 bg-blue-100 text-blue-700 dark:border-blue-700 dark:bg-blue-900 dark:text-blue-300 text-[10px]">
+                              NPB
+                            </Badge>
+                          ) : null}
+                        </div>
                       ) : (
                         <Badge variant="secondary">
                           Canceled
