@@ -1803,39 +1803,25 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     return (
                       <>
                         <div>
-                          <div className="flex">
-                            {/* Static tier numbers column - matches space-y-1 gap from standbys */}
-                            <div className="flex-shrink-0 w-8 mr-1 space-y-1">
+                          <SortableContext 
+                            items={flatListWithGroupInfo.map(item => item.standby.id)}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            <div className="space-y-1">
                               {flatListWithGroupInfo.map((item, idx) => (
-                                <div 
-                                  key={idx}
-                                  className={`flex items-center justify-center ${
-                                    item.isInGroup && !item.isFirstInGroup ? 'rounded-t-none border-t-0' : ''
-                                  } ${
-                                    item.isInGroup && !item.isLastInGroup ? 'rounded-b-none' : ''
-                                  }`}
-                                  style={{ height: item.isInGroup && !item.isFirstInGroup ? '44px' : '48px' }}
-                                >
-                                  <span 
-                                    className="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center"
-                                    title={`Tier ${idx + 1}`}
-                                  >
-                                    {idx + 1}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                            
-                            {/* Sortable standbys column */}
-                            <div className="flex-1 min-w-0">
-                              <SortableContext 
-                                items={flatListWithGroupInfo.map(item => item.standby.id)}
-                                strategy={verticalListSortingStrategy}
-                              >
-                                <div className="space-y-1">
-                                  {flatListWithGroupInfo.map((item) => (
+                                <div key={item.standby.id} className="flex items-center gap-1">
+                                  {/* Tier number badge - inline with standby for perfect alignment */}
+                                  <div className="flex-shrink-0 w-7 flex items-center justify-center">
+                                    <span 
+                                      className="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center"
+                                      title={`Tier ${idx + 1}`}
+                                    >
+                                      {idx + 1}
+                                    </span>
+                                  </div>
+                                  {/* Standby card */}
+                                  <div className="flex-1 min-w-0">
                                     <SortableStandbyItem
-                                      key={item.standby.id}
                                       standby={item.standby}
                                       isLocked={isLocked}
                                       isInGroup={item.isInGroup}
@@ -1844,11 +1830,11 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                       groupMemberNames={item.groupMemberNames}
                                       onSeatSelect={setSeatSelectionStandby}
                                     />
-                                  ))}
+                                  </div>
                                 </div>
-                              </SortableContext>
+                              ))}
                             </div>
-                          </div>
+                          </SortableContext>
                         </div>
                       </>
                     );
