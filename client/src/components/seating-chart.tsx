@@ -30,7 +30,20 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
-import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X } from "lucide-react";
+import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical } from "lucide-react";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Checkbox } from "@/components/ui/checkbox";
 import stageBackdropImage from "@/assets/stage-backdrop.png";
 import podiumSetImage from "@/assets/podium-set.png";
@@ -97,12 +110,18 @@ interface StandbyData {
   recordDayId: string;
   status: string;
   priority?: number;
+  standbyGroupId?: string | null;
   contestant: {
     id: string;
     name: string;
     gender: string;
     age: number;
     auditionRating?: string;
+    phone?: string | null;
+    email?: string | null;
+    attendingWith?: string | null;
+    groupId?: string | null;
+    suburb?: string | null;
   };
 }
 
@@ -216,28 +235,194 @@ function DraggableDroppableSeat({
   );
 }
 
-// Draggable Standby Item
-function DraggableStandby({
+// Sortable Standby Item with hover card
+function SortableStandbyItem({
   standby,
   isLocked,
-  priorityIndex,
-  onMoveUp,
-  onMoveDown,
-  isFirst,
-  isLast,
+  isInGroup,
+  isFirstInGroup,
+  isLastInGroup,
+  groupMemberNames,
 }: {
   standby: StandbyData;
   isLocked?: boolean;
-  priorityIndex: number;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
-  isFirst?: boolean;
-  isLast?: boolean;
+  isInGroup?: boolean;
+  isFirstInGroup?: boolean;
+  isLastInGroup?: boolean;
+  groupMemberNames?: string[];
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: standby.id,
+    data: { type: 'sortable-standby', standby },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const ratingColors: Record<string, string> = {
+    'A+': 'bg-emerald-500 text-white',
+    'A': 'bg-green-500 text-white',
+    'B+': 'bg-amber-500 text-white',
+    'B': 'bg-orange-500 text-white',
+    'C': 'bg-red-500 text-white',
+  };
+
+  // Group styling
+  const groupBorderClass = isInGroup 
+    ? isLastInGroup 
+      ? 'border-b-[3px] border-b-muted-foreground/30' 
+      : 'border-b-transparent'
+    : '';
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative ${isDragging ? 'opacity-50 z-50' : ''}`}
+      data-testid={`standby-item-${standby.id}`}
+    >
+      <HoverCard openDelay={200} closeDelay={100}>
+        <HoverCardTrigger asChild>
+          <div 
+            className={`flex items-center gap-2 p-2 rounded-md bg-background border ${groupBorderClass} ${
+              isInGroup && !isFirstInGroup ? 'rounded-t-none border-t-0' : ''
+            } ${
+              isInGroup && !isLastInGroup ? 'rounded-b-none' : ''
+            } ${
+              isInGroup ? 'ml-3 border-l-2 border-l-purple-400 dark:border-l-purple-600' : ''
+            } hover:bg-muted/50 transition-colors`}
+          >
+            {/* Drag handle */}
+            <div 
+              {...attributes}
+              {...listeners}
+              className={`flex-shrink-0 p-1 rounded ${isLocked ? 'cursor-grab hover:bg-muted' : 'cursor-not-allowed opacity-40'}`}
+              title={isLocked ? "Drag to reorder" : "Lock RX Day to reorder"}
+            >
+              <GripVertical className="h-4 w-4 text-muted-foreground" />
+            </div>
+            
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p className="font-medium text-sm truncate">{standby.contestant.name}</p>
+                {isInGroup && isFirstInGroup && (
+                  <span title="Group"><Users className="h-3 w-3 text-purple-500 flex-shrink-0" /></span>
+                )}
+              </div>
+              <div className="flex items-center gap-1 mt-0.5">
+                <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                  {standby.contestant.gender === "Female" ? "F" : "M"}
+                </Badge>
+                {standby.contestant.age && (
+                  <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                    {standby.contestant.age}
+                  </Badge>
+                )}
+                {standby.contestant.auditionRating && (
+                  <Badge className={`text-[10px] px-1 py-0 h-4 ${ratingColors[standby.contestant.auditionRating] || 'bg-gray-500 text-white'}`}>
+                    {standby.contestant.auditionRating}
+                  </Badge>
+                )}
+              </div>
+            </div>
+            
+            <Badge 
+              variant="secondary" 
+              className={`text-[10px] h-5 flex-shrink-0 ${
+                standby.status === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' :
+                'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
+              }`}
+            >
+              {standby.status === 'pending' ? 'Assigned' : 
+               standby.status === 'email_sent' ? 'Invited' : 
+               standby.status === 'seated' ? 'Assigned' :
+               standby.status}
+            </Badge>
+          </div>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-72" side="left" align="start">
+          <div className="space-y-3">
+            <div>
+              <h4 className="font-semibold text-sm">{standby.contestant.name}</h4>
+              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                <span>{standby.contestant.gender}</span>
+                <span>-</span>
+                <span>{standby.contestant.age} years old</span>
+                {standby.contestant.auditionRating && (
+                  <>
+                    <span>-</span>
+                    <Badge className={`text-[10px] px-1 py-0 h-4 ${ratingColors[standby.contestant.auditionRating] || 'bg-gray-500 text-white'}`}>
+                      {standby.contestant.auditionRating}
+                    </Badge>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            {standby.contestant.phone && (
+              <div className="flex items-center gap-2 text-xs">
+                <Phone className="h-3 w-3 text-muted-foreground" />
+                <span>{standby.contestant.phone}</span>
+              </div>
+            )}
+            
+            {standby.contestant.email && (
+              <div className="flex items-center gap-2 text-xs">
+                <Mail className="h-3 w-3 text-muted-foreground" />
+                <span className="truncate">{standby.contestant.email}</span>
+              </div>
+            )}
+            
+            {standby.contestant.suburb && (
+              <div className="text-xs text-muted-foreground">
+                {standby.contestant.suburb}
+              </div>
+            )}
+            
+            {groupMemberNames && groupMemberNames.length > 0 && (
+              <div className="pt-2 border-t">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-purple-600 dark:text-purple-400">
+                  <Users className="h-3 w-3" />
+                  <span>Attending With</span>
+                </div>
+                <ul className="mt-1 space-y-0.5">
+                  {groupMemberNames.map((name, idx) => (
+                    <li key={idx} className="text-xs text-muted-foreground pl-4">
+                      {name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </HoverCardContent>
+      </HoverCard>
+    </div>
+  );
+}
+
+// Legacy Draggable Standby Item (for drag-to-seat functionality)
+function DraggableStandby({
+  standby,
+  isLocked,
+}: {
+  standby: StandbyData;
+  isLocked?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `standby-${standby.id}`,
     data: { type: 'standby', standby },
-    disabled: !isLocked, // Only draggable when locked (RX mode)
+    disabled: !isLocked,
   });
 
   const ratingColors: Record<string, string> = {
@@ -251,73 +436,25 @@ function DraggableStandby({
   return (
     <div
       ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       className={`p-2 border rounded-md ${isDragging ? 'opacity-50' : ''} ${
         isLocked 
-          ? 'border-amber-500/50 bg-amber-50 dark:bg-amber-950/20' 
-          : 'border-muted'
+          ? 'border-amber-500/50 bg-amber-50 dark:bg-amber-950/20 cursor-grab' 
+          : 'border-muted cursor-not-allowed opacity-60'
       }`}
-      data-testid={`standby-item-${standby.id}`}
+      data-testid={`draggable-standby-${standby.id}`}
     >
-      <div className="flex items-center gap-2">
-        {/* Priority number */}
-        <div className="flex flex-col items-center gap-0.5">
-          <button
-            onClick={(e) => { e.stopPropagation(); onMoveUp?.(); }}
-            disabled={isFirst}
-            className={`p-0.5 rounded hover:bg-muted/80 ${isFirst ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`}
-            data-testid={`standby-move-up-${standby.id}`}
-            title="Move up in priority"
-          >
-            <ChevronUp className="h-3 w-3" />
-          </button>
-          <span 
-            className="w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center"
-            title={`Priority ${priorityIndex}`}
-          >
-            {priorityIndex}
-          </span>
-          <button
-            onClick={(e) => { e.stopPropagation(); onMoveDown?.(); }}
-            disabled={isLast}
-            className={`p-0.5 rounded hover:bg-muted/80 ${isLast ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`}
-            data-testid={`standby-move-down-${standby.id}`}
-            title="Move down in priority"
-          >
-            <ChevronDown className="h-3 w-3" />
-          </button>
-        </div>
-        
-        {/* Drag handle and content */}
-        <div 
-          {...attributes}
-          {...listeners}
-          className={`flex-1 min-w-0 ${isLocked ? 'cursor-grab hover:bg-muted/50' : 'cursor-not-allowed opacity-60'}`}
-        >
-          <p className="font-medium text-sm truncate">{standby.contestant.name}</p>
-          <div className="flex items-center gap-1 mt-0.5">
-            <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
-              {standby.contestant.gender === "Female" ? "F" : "M"}
-            </Badge>
-            {standby.contestant.auditionRating && (
-              <Badge className={`text-[10px] px-1 py-0 h-4 ${ratingColors[standby.contestant.auditionRating] || 'bg-gray-500 text-white'}`}>
-                {standby.contestant.auditionRating}
-              </Badge>
-            )}
-          </div>
-        </div>
-        
-        <Badge 
-          variant="secondary" 
-          className={`text-[10px] h-5 ${
-            standby.status === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' :
-            'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
-          }`}
-        >
-          {standby.status === 'pending' ? 'Assigned' : 
-           standby.status === 'email_sent' ? 'Invited' : 
-           standby.status === 'seated' ? 'Assigned' :
-           standby.status}
+      <p className="font-medium text-sm truncate">{standby.contestant.name}</p>
+      <div className="flex items-center gap-1 mt-0.5">
+        <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+          {standby.contestant.gender === "Female" ? "F" : "M"}
         </Badge>
+        {standby.contestant.auditionRating && (
+          <Badge className={`text-[10px] px-1 py-0 h-4 ${ratingColors[standby.contestant.auditionRating] || 'bg-gray-500 text-white'}`}>
+            {standby.contestant.auditionRating}
+          </Badge>
+        )}
       </div>
     </div>
   );
@@ -1118,8 +1255,73 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     if (!over || active.id === over.id) return;
 
     const activeIdStr = active.id as string;
+    const activeData = active.data?.current as { type: string; standby?: StandbyData } | undefined;
     
-    // Check if this is a standby being dragged
+    // Check if this is a sortable standby being dragged
+    if (activeData?.type === 'sortable-standby' && activeData.standby) {
+      const overData = over.data?.current as { type: string; standby?: StandbyData } | undefined;
+      
+      // If dropped on another sortable standby, reorder them
+      if (overData?.type === 'sortable-standby' && overData.standby) {
+        const activeStandbys = standbys.filter(s => s.status !== 'seated');
+        const sortedStandbys = [...activeStandbys].sort((a, b) => (a.priority || 999) - (b.priority || 999));
+        
+        const oldIndex = sortedStandbys.findIndex(s => s.id === active.id);
+        const newIndex = sortedStandbys.findIndex(s => s.id === over.id);
+        
+        if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+          // Reorder priorities
+          const reorderedList = arrayMove(sortedStandbys, oldIndex, newIndex);
+          
+          // Update priorities for all affected items
+          const priorityUpdates = reorderedList.map((standby, idx) => ({
+            id: standby.id,
+            priority: idx + 1,
+          }));
+          
+          // Call API to update all priorities
+          for (const update of priorityUpdates) {
+            await apiRequest('PATCH', `/api/standbys/${update.id}`, { priority: update.priority });
+          }
+          
+          // Invalidate queries to refresh
+          queryClient.invalidateQueries({ queryKey: ['/api/standbys/record-day', recordDayId] });
+        }
+        return;
+      }
+      
+      // If dropped on a seat, handle seat assignment
+      const targetSeat = findSeat(over.id as string);
+      if (targetSeat) {
+        const standby = activeData.standby;
+        
+        // Check if day is locked (RX mode required)
+        if (!isLocked) {
+          setStandbyError("Standbys can only be seated when the day is in RX Mode (locked).");
+          return;
+        }
+        
+        // Check if target seat is occupied
+        if (targetSeat.seat.contestantName) {
+          setStandbyError("Cannot seat standby in an occupied seat. Please choose an empty seat.");
+          return;
+        }
+        
+        // Get target location details
+        const targetLocation = getBlockAndSeat(targetSeat.seat.id);
+        
+        // Seat is empty and day is locked - proceed with assignment
+        setPendingStandbyAssign({
+          standby,
+          targetBlockNumber: targetLocation.blockNumber,
+          targetSeatLabel: targetLocation.seatLabel,
+        });
+        return;
+      }
+      return;
+    }
+    
+    // Check if this is a legacy standby being dragged to a seat (fallback)
     if (activeIdStr.startsWith('standby-')) {
       const standbyData = active.data?.current as { type: string; standby: StandbyData } | undefined;
       if (!standbyData || standbyData.type !== 'standby') return;
@@ -1417,7 +1619,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 />
               </div>
               
-              {/* Standbys Panel */}
+              {/* Standbys Panel - Redesigned with static tier numbers */}
               <Card className="w-full max-w-xs" data-testid="standbys-panel">
                 <CardHeader className="pb-2">
                   <div className="flex items-center gap-2">
@@ -1428,65 +1630,145 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   </div>
                   {!isLocked && (
                     <p className="text-xs text-muted-foreground mt-2">
-                      Lock RX Day mode to drag standbys into empty seats
+                      Lock RX Day mode to reorder and drag standbys into seats
                     </p>
                   )}
                 </CardHeader>
                 <CardContent className="pt-0">
-                  {standbys.filter(s => s.status !== 'seated').length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No standbys for this day
-                    </p>
-                  ) : (
-                    <>
-                      {isLocked && standbys.filter(s => s.status !== 'seated').length > 0 && (
-                        <div className="mb-2 flex items-center justify-between gap-2">
-                          <p className="text-xs text-muted-foreground">
-                            Select standbys who attended
-                          </p>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 text-xs bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800"
-                            disabled={selectedAttendedStandbys.size === 0 || markAttendedMutation.isPending}
-                            onClick={handleMarkSelectedAsAttended}
-                            data-testid="button-mark-attended"
-                          >
-                            <Check className="h-3 w-3 mr-1" />
-                            Mark Attended ({selectedAttendedStandbys.size})
-                          </Button>
-                        </div>
-                      )}
-                      <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                        {standbys
-                          .filter(s => s.status !== 'seated')
-                          .sort((a, b) => (a.priority || 999) - (b.priority || 999))
-                          .map((standby, idx, arr) => (
-                            <div key={standby.id} className="flex items-start gap-2">
-                              {isLocked && (
-                                <Checkbox
-                                  checked={selectedAttendedStandbys.has(standby.id)}
-                                  onCheckedChange={() => handleToggleAttended(standby.id)}
-                                  className="mt-2.5"
-                                  data-testid={`checkbox-attended-${standby.id}`}
-                                />
-                              )}
-                              <div className="flex-1">
-                                <DraggableStandby
-                                  standby={standby}
-                                  isLocked={isLocked}
-                                  priorityIndex={idx + 1}
-                                  isFirst={idx === 0}
-                                  isLast={idx === arr.length - 1}
-                                  onMoveUp={() => handleStandbyReorder(standby.id, idx, idx - 1, arr)}
-                                  onMoveDown={() => handleStandbyReorder(standby.id, idx, idx + 1, arr)}
-                                />
-                              </div>
+                  {(() => {
+                    const activeStandbys = standbys.filter(s => s.status !== 'seated');
+                    
+                    if (activeStandbys.length === 0) {
+                      return (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No standbys for this day
+                        </p>
+                      );
+                    }
+                    
+                    // Sort by priority
+                    const sortedStandbys = [...activeStandbys].sort((a, b) => (a.priority || 999) - (b.priority || 999));
+                    
+                    // Group standbys by standbyGroupId or contestant groupId
+                    const groupedStandbys: { groupId: string | null; members: StandbyData[] }[] = [];
+                    const processedIds = new Set<string>();
+                    
+                    for (const standby of sortedStandbys) {
+                      if (processedIds.has(standby.id)) continue;
+                      
+                      const groupId = standby.standbyGroupId || standby.contestant.groupId;
+                      
+                      if (groupId) {
+                        // Find all members of this group in the standby list
+                        const groupMembers = sortedStandbys.filter(s => 
+                          (s.standbyGroupId === groupId || s.contestant.groupId === groupId) && 
+                          !processedIds.has(s.id)
+                        );
+                        
+                        if (groupMembers.length > 1) {
+                          groupedStandbys.push({ groupId, members: groupMembers });
+                          groupMembers.forEach(m => processedIds.add(m.id));
+                        } else {
+                          // Single member, treat as ungrouped
+                          groupedStandbys.push({ groupId: null, members: [standby] });
+                          processedIds.add(standby.id);
+                        }
+                      } else {
+                        // Ungrouped standby
+                        groupedStandbys.push({ groupId: null, members: [standby] });
+                        processedIds.add(standby.id);
+                      }
+                    }
+                    
+                    // Flatten for tier numbering while preserving group info
+                    const flatListWithGroupInfo = groupedStandbys.flatMap(group => 
+                      group.members.map((member, idx) => ({
+                        standby: member,
+                        isInGroup: group.groupId !== null && group.members.length > 1,
+                        isFirstInGroup: idx === 0,
+                        isLastInGroup: idx === group.members.length - 1,
+                        groupMemberNames: group.members
+                          .filter(m => m.id !== member.id)
+                          .map(m => m.contestant.name),
+                      }))
+                    );
+                    
+                    return (
+                      <>
+                        {isLocked && activeStandbys.length > 0 && (
+                          <div className="mb-2 flex items-center justify-between gap-2">
+                            <p className="text-xs text-muted-foreground">
+                              Select standbys who attended
+                            </p>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800"
+                              disabled={selectedAttendedStandbys.size === 0 || markAttendedMutation.isPending}
+                              onClick={handleMarkSelectedAsAttended}
+                              data-testid="button-mark-attended"
+                            >
+                              <Check className="h-3 w-3 mr-1" />
+                              Mark Attended ({selectedAttendedStandbys.size})
+                            </Button>
+                          </div>
+                        )}
+                        <div className="max-h-[400px] overflow-y-auto">
+                          <div className="flex">
+                            {/* Static tier numbers column */}
+                            <div className="flex-shrink-0 w-8 mr-1">
+                              {flatListWithGroupInfo.map((_, idx) => (
+                                <div 
+                                  key={idx}
+                                  className="h-[52px] flex items-center justify-center"
+                                >
+                                  <span 
+                                    className="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center"
+                                    title={`Tier ${idx + 1}`}
+                                  >
+                                    {idx + 1}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                      </div>
-                    </>
-                  )}
+                            
+                            {/* Sortable standbys column */}
+                            <div className="flex-1 min-w-0">
+                              <SortableContext 
+                                items={flatListWithGroupInfo.map(item => item.standby.id)}
+                                strategy={verticalListSortingStrategy}
+                              >
+                                <div className="space-y-1">
+                                  {flatListWithGroupInfo.map((item) => (
+                                    <div key={item.standby.id} className="flex items-start gap-1">
+                                      {isLocked && (
+                                        <Checkbox
+                                          checked={selectedAttendedStandbys.has(item.standby.id)}
+                                          onCheckedChange={() => handleToggleAttended(item.standby.id)}
+                                          className="mt-3 flex-shrink-0"
+                                          data-testid={`checkbox-attended-${item.standby.id}`}
+                                        />
+                                      )}
+                                      <div className="flex-1 min-w-0">
+                                        <SortableStandbyItem
+                                          standby={item.standby}
+                                          isLocked={isLocked}
+                                          isInGroup={item.isInGroup}
+                                          isFirstInGroup={item.isFirstInGroup}
+                                          isLastInGroup={item.isLastInGroup}
+                                          groupMemberNames={item.groupMemberNames}
+                                        />
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </SortableContext>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </CardContent>
               </Card>
               
