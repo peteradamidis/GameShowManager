@@ -8548,6 +8548,29 @@ ${finalEmailFooter}`;
     }
   });
 
+  // Batch update standby priorities
+  app.post("/api/standbys/batch-update-priorities", async (req, res) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!updates || !Array.isArray(updates)) {
+        return res.status(400).json({ error: "updates array is required" });
+      }
+      
+      // Update all priorities in parallel
+      await Promise.all(
+        updates.map((update: { id: string; priority: number }) =>
+          storage.updateStandbyAssignment(update.id, { priority: update.priority })
+        )
+      );
+      
+      res.json({ success: true, updated: updates.length });
+    } catch (error: any) {
+      console.error("Error batch updating standby priorities:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Update standby assignment
   app.patch("/api/standbys/:id", async (req, res) => {
     try {

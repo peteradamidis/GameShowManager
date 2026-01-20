@@ -1235,13 +1235,33 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
             priority: idx + 1,
           }));
           
-          // Call API to update all priorities
-          for (const update of priorityUpdates) {
-            await apiRequest('PATCH', `/api/standbys/${update.id}`, { priority: update.priority });
-          }
+          // Optimistic update - immediately update the cache
+          const queryKey = ['/api/standbys/record-day', recordDayId];
+          const previousData = queryClient.getQueryData(queryKey);
           
-          // Invalidate queries to refresh
-          queryClient.invalidateQueries({ queryKey: ['/api/standbys/record-day', recordDayId] });
+          queryClient.setQueryData(queryKey, (old: StandbyData[] | undefined) => {
+            if (!old) return old;
+            return old.map(s => {
+              const update = priorityUpdates.find(u => u.id === s.id);
+              if (update) {
+                return { ...s, priority: update.priority };
+              }
+              return s;
+            });
+          });
+          
+          // Call batch API to update all priorities at once
+          try {
+            await apiRequest('POST', '/api/standbys/batch-update-priorities', { updates: priorityUpdates });
+          } catch (error) {
+            // Rollback on error
+            queryClient.setQueryData(queryKey, previousData);
+            toast({
+              title: "Error reordering standbys",
+              description: "Failed to save the new order. Please try again.",
+              variant: "destructive",
+            });
+          }
         }
         return;
       }
