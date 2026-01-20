@@ -30,7 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
-import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical, Briefcase, Trophy } from "lucide-react";
+import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical, Briefcase } from "lucide-react";
 import {
   HoverCard,
   HoverCardContent,
@@ -1738,14 +1738,14 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                 </p>
                               </div>
                               <div className="flex items-center gap-1">
-                                {/* Prize toggle button */}
+                                {/* Present toggle button */}
                                 <Button
                                   size="icon"
                                   variant="ghost"
                                   className={`h-6 w-6 transition-colors ${
                                     toggleState.prize 
-                                      ? 'text-yellow-500 bg-yellow-100 dark:bg-yellow-900/50 hover:bg-yellow-200 dark:hover:bg-yellow-800/50' 
-                                      : 'text-amber-400/50 hover:text-yellow-500 hover:bg-yellow-100/50 dark:hover:bg-yellow-900/30'
+                                      ? 'text-white bg-pink-500 hover:bg-pink-600 dark:bg-pink-600 dark:hover:bg-pink-500' 
+                                      : 'text-gray-400 hover:text-pink-500 hover:bg-pink-100 dark:hover:bg-pink-900/30'
                                   }`}
                                   onClick={() => setPrizeWinnerToggles(prev => ({
                                     ...prev,
@@ -1754,7 +1754,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                   data-testid={`button-prize-toggle-${winner.id}`}
                                   title={toggleState.prize ? "Prize selected" : "Select prize"}
                                 >
-                                  <Trophy className="h-3.5 w-3.5" />
+                                  <Gift className="h-3.5 w-3.5" />
                                 </Button>
                                 {/* Briefcase toggle button */}
                                 <Button
@@ -1762,8 +1762,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                   variant="ghost"
                                   className={`h-6 w-6 transition-colors ${
                                     toggleState.briefcase 
-                                      ? 'text-blue-500 bg-blue-100 dark:bg-blue-900/50 hover:bg-blue-200 dark:hover:bg-blue-800/50' 
-                                      : 'text-amber-400/50 hover:text-blue-500 hover:bg-blue-100/50 dark:hover:bg-blue-900/30'
+                                      ? 'text-white bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500' 
+                                      : 'text-gray-400 hover:text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/30'
                                   }`}
                                   onClick={() => setPrizeWinnerToggles(prev => ({
                                     ...prev,
