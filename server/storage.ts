@@ -1701,6 +1701,12 @@ export class DbStorage implements IStorage {
   }
 
   async deleteStandbyAssignment(id: string): Promise<void> {
+    // First delete any confirmation tokens that reference this standby assignment
+    await db
+      .delete(standbyConfirmationTokens)
+      .where(eq(standbyConfirmationTokens.standbyAssignmentId, id));
+    
+    // Then delete the standby assignment
     await db
       .delete(standbyAssignments)
       .where(eq(standbyAssignments.id, id));
