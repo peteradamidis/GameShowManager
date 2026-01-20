@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users, RefreshCw, CheckCircle, Loader2, Ticket, Search } from "lucide-react";
+import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users, RefreshCw, CheckCircle, Loader2, Ticket, Search, CalendarPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -73,6 +73,14 @@ interface StandbyAssignment {
   assignedAt: string | null;
   movedToReschedule: boolean;
   movedToRescheduleAt: string | null;
+  // Workflow tracking fields
+  signedIn: string | null;
+  bookingEmailSent: string | null;
+  confirmedRsvp: string | null;
+  paperworkSent: string | null;
+  paperworkReceived: string | null;
+  paperworkOnDay: string | null;
+  otdNotes: string | null;
   contestant: Contestant;
   recordDay?: RecordDay;
 }
@@ -130,6 +138,11 @@ export default function StandbysPage() {
 
   // Send ticket dialog state
   const [sendTicketDialogOpen, setSendTicketDialogOpen] = useState(false);
+
+  // Move attended standby to reschedule dialog state
+  const [moveToRescheduleDialogOpen, setMoveToRescheduleDialogOpen] = useState(false);
+  const [moveToRescheduleStandby, setMoveToRescheduleStandby] = useState<StandbyAssignment | null>(null);
+  const [attendedBlockType, setAttendedBlockType] = useState<"PB" | "NPB">("NPB");
 
   // Fetch record days
   const { data: recordDays = [], isLoading: recordDaysLoading } = useQuery<RecordDay[]>({
@@ -392,6 +405,38 @@ export default function StandbysPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
       toast({ title: "Confirmation cancelled", description: "Standby is back to awaiting response" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Move attended standby to reschedule mutation
+  const moveAttendedToRescheduleMutation = useMutation({
+    mutationFn: async ({ standby, blockType }: { standby: StandbyAssignment; blockType: "PB" | "NPB" }) => {
+      // Create canceled assignment with isFromStandby: true and the block type info
+      return apiRequest('POST', '/api/canceled-assignments', {
+        contestantId: standby.contestantId,
+        recordDayId: standby.recordDayId,
+        blockNumber: null, // Standbys don't have fixed block numbers
+        seatLabel: standby.assignedToSeat || null,
+        reason: `STANDBY ATTENDED - ${blockType === 'PB' ? 'Podium Block' : 'Non-Playing Block'}`,
+        movedBy: 'SYSTEM',
+        isFromStandby: true,
+        originalAttendanceDate: standby.recordDay?.date ? new Date(standby.recordDay.date) : new Date(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
+      toast({ 
+        title: "Moved to Reschedule", 
+        description: "Attended standby has been added to the reschedule list with Standby type" 
+      });
+      setMoveToRescheduleDialogOpen(false);
+      setMoveToRescheduleStandby(null);
+      setAttendedBlockType("NPB");
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -808,6 +853,7 @@ export default function StandbysPage() {
                       <TableHead className="font-semibold text-xs text-center">Sent</TableHead>
                       <TableHead className="font-semibold text-xs text-center">Status</TableHead>
                       <TableHead className="font-semibold text-xs text-center">Ticket</TableHead>
+                      <TableHead className="font-semibold text-xs text-center">Signed In</TableHead>
                       <TableHead className="font-semibold text-xs">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -1006,10 +1052,40 @@ export default function StandbysPage() {
                             <span className="text-muted-foreground text-xs">-</span>
                           )}
                         </TableCell>
+                        {/* Signed In */}
+                        <TableCell className="text-center py-1 px-2">
+                          {standby.signedIn ? (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                                <CheckCircle className="h-3 w-3" />
+                                <span className="text-[10px]">
+                                  {format(new Date(standby.signedIn), "d/M")}
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
+                        </TableCell>
                         {/* Actions */}
                         <TableCell className="py-1 px-2">
                           {standby.status === 'declined' ? (
                             <span className="text-xs text-muted-foreground">Rescheduled</span>
+                          ) : standby.signedIn ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-5 px-1.5 text-[10px] bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100 dark:bg-amber-950 dark:border-amber-700 dark:text-amber-300"
+                              onClick={() => {
+                                setMoveToRescheduleStandby(standby);
+                                setMoveToRescheduleDialogOpen(true);
+                              }}
+                              disabled={moveAttendedToRescheduleMutation.isPending}
+                              data-testid={`button-move-to-reschedule-${standby.id}`}
+                            >
+                              <CalendarPlus className="h-2.5 w-2.5 mr-0.5" />
+                              Reschedule
+                            </Button>
                           ) : standby.status === 'confirmed' ? (
                             <Button
                               size="sm"
@@ -1328,6 +1404,88 @@ export default function StandbysPage() {
                 <>
                   <Ticket className="h-4 w-4 mr-2" />
                   Send to {selectedConfirmedWithoutTicket.length} Standby(s)
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Move Attended Standby to Reschedule Dialog */}
+      <Dialog open={moveToRescheduleDialogOpen} onOpenChange={setMoveToRescheduleDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarPlus className="h-5 w-5 text-amber-600" />
+              Move to Reschedule
+            </DialogTitle>
+            <DialogDescription>
+              {moveToRescheduleStandby && (
+                <>
+                  Move <span className="font-medium">{moveToRescheduleStandby.contestant.name}</span> to the reschedule list.
+                  This contestant attended as a standby and can be rebooked for a future record day.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Where did they sit during the show?</Label>
+              <RadioGroup 
+                value={attendedBlockType} 
+                onValueChange={(v) => setAttendedBlockType(v as "PB" | "NPB")}
+                className="space-y-2"
+              >
+                <div className="flex items-center space-x-3 p-3 border rounded-md hover:bg-muted/50">
+                  <RadioGroupItem value="PB" id="block-pb" data-testid="radio-block-pb" />
+                  <div className="flex flex-col">
+                    <Label htmlFor="block-pb" className="font-medium cursor-pointer">
+                      Podium Block (PB)
+                    </Label>
+                    <span className="text-sm text-muted-foreground">
+                      They sat in a podium block during the show
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3 p-3 border rounded-md hover:bg-muted/50">
+                  <RadioGroupItem value="NPB" id="block-npb" data-testid="radio-block-npb" />
+                  <div className="flex flex-col">
+                    <Label htmlFor="block-npb" className="font-medium cursor-pointer">
+                      Non-Playing Block (NPB)
+                    </Label>
+                    <span className="text-sm text-muted-foreground">
+                      They sat in a non-playing block during the show
+                    </span>
+                  </div>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMoveToRescheduleDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => moveToRescheduleStandby && moveAttendedToRescheduleMutation.mutate({
+                standby: moveToRescheduleStandby,
+                blockType: attendedBlockType
+              })}
+              disabled={moveAttendedToRescheduleMutation.isPending}
+              className="bg-amber-600 hover:bg-amber-700"
+              data-testid="button-confirm-move-to-reschedule"
+            >
+              {moveAttendedToRescheduleMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Moving...
+                </>
+              ) : (
+                <>
+                  <CalendarPlus className="h-4 w-4 mr-2" />
+                  Move to Reschedule
                 </>
               )}
             </Button>
