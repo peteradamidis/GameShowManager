@@ -31,7 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users, RefreshCw, CheckCircle, Loader2, Ticket, Search } from "lucide-react";
+import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users, RefreshCw, CheckCircle, Loader2, Ticket, Search, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -472,6 +473,26 @@ export default function StandbysPage() {
     },
   });
 
+  // Update standby workflow fields mutation
+  const updateStandbyFieldMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: boolean | string | null }) => {
+      const body: Record<string, any> = {};
+      if (typeof value === 'boolean') {
+        // For boolean checkboxes, toggle timestamp
+        body[field] = value ? new Date().toISOString() : null;
+      } else {
+        body[field] = value;
+      }
+      return apiRequest('PATCH', `/api/standbys/${id}`, body);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error updating standby", description: error.message, variant: "destructive" });
+    },
+  });
+
   // Calculate confirmed standbys eligible for ticket sending
   const selectedConfirmedWithoutTicket = useMemo(() => {
     return standbysForRecordDay.filter(s => 
@@ -782,12 +803,15 @@ export default function StandbysPage() {
                         </TableHead>
                       )}
                       <TableHead className="font-semibold text-xs">Name</TableHead>
-                      <TableHead className="font-semibold text-xs">Rating</TableHead>
-                      <TableHead className="font-semibold text-xs">Attending<br/>With</TableHead>
+                      <TableHead className="font-semibold text-xs">Notes</TableHead>
                       {isSearchMode && <TableHead className="font-semibold text-xs whitespace-nowrap">Date /<br/>RX</TableHead>}
-                      <TableHead className="font-semibold text-xs">Email</TableHead>
-                      <TableHead className="font-semibold text-xs text-center">Sent</TableHead>
-                      <TableHead className="font-semibold text-xs text-center">Status</TableHead>
+                      <TableHead className="font-semibold text-xs text-center whitespace-nowrap">Booking<br/>Email Sent</TableHead>
+                      <TableHead className="font-semibold text-xs text-center whitespace-nowrap">Confirmed<br/>RSVP</TableHead>
+                      <TableHead className="font-semibold text-xs text-center whitespace-nowrap">Paperwork<br/>Sent</TableHead>
+                      <TableHead className="font-semibold text-xs text-center whitespace-nowrap">Paperwork<br/>Received &<br/>Logged</TableHead>
+                      <TableHead className="font-semibold text-xs text-center bg-amber-100 dark:bg-amber-900/30 whitespace-nowrap">OTD<br/>Paperwork</TableHead>
+                      <TableHead className="font-semibold text-xs text-center bg-green-100 dark:bg-green-900/30 whitespace-nowrap">Signed<br/>In</TableHead>
+                      <TableHead className="font-semibold text-xs">OTD Notes</TableHead>
                       <TableHead className="font-semibold text-xs text-center">Ticket</TableHead>
                       <TableHead className="font-semibold text-xs">Actions</TableHead>
                     </TableRow>
@@ -846,36 +870,29 @@ export default function StandbysPage() {
                             )}
                           </div>
                         </TableCell>
-                        {/* Rating */}
+                        {/* Notes */}
                         <TableCell className="py-1">
-                          {standby.contestant.auditionRating ? (
-                            <Badge 
-                              variant="outline" 
-                              className={`text-[10px] px-1.5 py-0 ${
-                                standby.contestant.auditionRating === 'A+' ? 'border-green-500 text-green-600 dark:text-green-400' :
-                                standby.contestant.auditionRating === 'A' ? 'border-green-400 text-green-500 dark:text-green-300' :
-                                standby.contestant.auditionRating === 'B+' ? 'border-blue-400 text-blue-500 dark:text-blue-300' :
-                                standby.contestant.auditionRating === 'B' ? 'border-blue-300 text-blue-400 dark:text-blue-200' :
-                                standby.contestant.auditionRating === 'C' ? 'border-orange-400 text-orange-500 dark:text-orange-300' : ''
-                              }`}
-                            >
-                              {standby.contestant.auditionRating}
-                            </Badge>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        {/* Attending With */}
-                        <TableCell className="py-1 max-w-[160px]">
-                          {standby.contestant.attendingWith ? (
-                            <div className="flex flex-col text-xs text-muted-foreground">
-                              {standby.contestant.attendingWith.split(/[,&]/).map((name, idx) => (
-                                <span key={idx} className="truncate" title={name.trim()}>{name.trim()}</span>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">-</span>
-                          )}
+                          <Collapsible>
+                            <CollapsibleTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-6 px-2 text-xs w-full justify-start">
+                                <ChevronDown className="h-3 w-3 mr-1" />
+                                Notes
+                              </Button>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="mt-1">
+                              <Input
+                                className="h-6 text-xs"
+                                value={standby.notes || ''}
+                                onChange={(e) => updateStandbyFieldMutation.mutate({ 
+                                  id: standby.id, 
+                                  field: 'notes', 
+                                  value: e.target.value 
+                                })}
+                                placeholder="Add notes..."
+                                data-testid={`input-notes-${standby.id}`}
+                              />
+                            </CollapsibleContent>
+                          </Collapsible>
                         </TableCell>
                         {/* Date/RX - only in search mode */}
                         {isSearchMode && (
@@ -895,57 +912,87 @@ export default function StandbysPage() {
                             </div>
                           </TableCell>
                         )}
-                        {/* Email */}
+                        {/* Booking Email Sent */}
+                        <TableCell className="text-center py-1 px-2">
+                          <Checkbox
+                            checked={!!standby.standbyEmailSent}
+                            disabled
+                            data-testid={`checkbox-email-sent-${standby.id}`}
+                          />
+                        </TableCell>
+                        {/* Confirmed RSVP */}
+                        <TableCell className="text-center py-1 px-2">
+                          <Checkbox
+                            checked={!!(standby as any).confirmedRsvp}
+                            onCheckedChange={(checked) => updateStandbyFieldMutation.mutate({
+                              id: standby.id,
+                              field: 'confirmedRsvp',
+                              value: !!checked
+                            })}
+                            data-testid={`checkbox-confirmed-rsvp-${standby.id}`}
+                          />
+                        </TableCell>
+                        {/* Paperwork Sent */}
+                        <TableCell className="text-center py-1 px-2">
+                          <Checkbox
+                            checked={!!(standby as any).paperworkSent}
+                            onCheckedChange={(checked) => updateStandbyFieldMutation.mutate({
+                              id: standby.id,
+                              field: 'paperworkSent',
+                              value: !!checked
+                            })}
+                            data-testid={`checkbox-paperwork-sent-${standby.id}`}
+                          />
+                        </TableCell>
+                        {/* Paperwork Received & Logged */}
+                        <TableCell className="text-center py-1 px-2">
+                          <Checkbox
+                            checked={!!(standby as any).paperworkReceived}
+                            onCheckedChange={(checked) => updateStandbyFieldMutation.mutate({
+                              id: standby.id,
+                              field: 'paperworkReceived',
+                              value: !!checked
+                            })}
+                            data-testid={`checkbox-paperwork-received-${standby.id}`}
+                          />
+                        </TableCell>
+                        {/* OTD Paperwork */}
+                        <TableCell className="text-center py-1 px-2 bg-amber-50 dark:bg-amber-900/20">
+                          <Checkbox
+                            checked={!!(standby as any).paperworkOnDay}
+                            onCheckedChange={(checked) => updateStandbyFieldMutation.mutate({
+                              id: standby.id,
+                              field: 'paperworkOnDay',
+                              value: !!checked
+                            })}
+                            data-testid={`checkbox-paperwork-otd-${standby.id}`}
+                          />
+                        </TableCell>
+                        {/* Signed In */}
+                        <TableCell className="text-center py-1 px-2 bg-green-50 dark:bg-green-900/20">
+                          <Checkbox
+                            checked={!!(standby as any).signedIn}
+                            onCheckedChange={(checked) => updateStandbyFieldMutation.mutate({
+                              id: standby.id,
+                              field: 'signedIn',
+                              value: !!checked
+                            })}
+                            data-testid={`checkbox-signed-in-${standby.id}`}
+                          />
+                        </TableCell>
+                        {/* OTD Notes */}
                         <TableCell className="py-1">
-                          <span className="text-xs text-muted-foreground truncate max-w-[120px] block">
-                            {standby.contestant.email || "-"}
-                          </span>
-                        </TableCell>
-                        {/* Sent status */}
-                        <TableCell className="text-center py-1 px-2">
-                          {standby.standbyEmailSent ? (
-                            <div className="flex flex-col items-center gap-0.5">
-                              <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                                <CheckCircle className="h-3 w-3" />
-                                <span className="text-[10px]">
-                                  {format(new Date(standby.standbyEmailSent), "d/M")}
-                                </span>
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-5 px-1.5 text-[10px]"
-                                onClick={() => resendEmailMutation.mutate(standby.id)}
-                                disabled={resendEmailMutation.isPending}
-                                data-testid={`button-resend-email-${standby.id}`}
-                              >
-                                <RefreshCw className="h-2.5 w-2.5 mr-0.5" />
-                                Resend
-                              </Button>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">-</span>
-                          )}
-                        </TableCell>
-                        {/* Status */}
-                        <TableCell className="text-center py-1 px-2">
-                          {standby.status === 'confirmed' ? (
-                            <Badge className="bg-green-500/20 text-green-700 border-green-300 dark:text-green-400 text-[10px] px-1.5 py-0">
-                              Confirmed
-                            </Badge>
-                          ) : standby.status === 'declined' ? (
-                            <Badge className="bg-red-500/20 text-red-700 border-red-300 dark:text-red-400 text-[10px] px-1.5 py-0">
-                              Declined
-                            </Badge>
-                          ) : standby.standbyEmailSent ? (
-                            <Badge className="bg-amber-500/20 text-amber-700 border-amber-300 dark:text-amber-400 text-[10px] px-1.5 py-0">
-                              Awaiting
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-muted-foreground text-[10px] px-1.5 py-0">
-                              Not Sent
-                            </Badge>
-                          )}
+                          <Input
+                            className="h-6 text-xs min-w-[100px]"
+                            value={(standby as any).otdNotes || ''}
+                            onChange={(e) => updateStandbyFieldMutation.mutate({
+                              id: standby.id,
+                              field: 'otdNotes',
+                              value: e.target.value
+                            })}
+                            placeholder="OTD Notes"
+                            data-testid={`input-otd-notes-${standby.id}`}
+                          />
                         </TableCell>
                         {/* Ticket */}
                         <TableCell className="text-center py-1 px-2">
