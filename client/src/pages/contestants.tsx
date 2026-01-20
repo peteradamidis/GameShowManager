@@ -149,6 +149,7 @@ export default function Contestants() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [unlinkDialogOpen, setUnlinkDialogOpen] = useState(false);
+  const [removeSeatDialogOpen, setRemoveSeatDialogOpen] = useState(false);
   
   const ITEMS_PER_PAGE = 50;
 
@@ -1001,7 +1002,7 @@ export default function Contestants() {
                 {selectedContestantAssignment ? (
                   <Button 
                     variant="destructive"
-                    onClick={() => removeSeatMutation.mutate(selectedContestantAssignment.id)}
+                    onClick={() => setRemoveSeatDialogOpen(true)}
                     disabled={removeSeatMutation.isPending || isSelectedAssignmentOnLockedDay}
                     title={isSelectedAssignmentOnLockedDay ? "Cannot remove - day is locked" : undefined}
                     data-testid="button-remove-from-seat"
@@ -1966,7 +1967,7 @@ export default function Contestants() {
               {selectedContestantAssignment ? (
                 <Button 
                   variant="destructive"
-                  onClick={() => removeSeatMutation.mutate(selectedContestantAssignment.id)}
+                  onClick={() => setRemoveSeatDialogOpen(true)}
                   disabled={removeSeatMutation.isPending || isSelectedAssignmentOnLockedDay}
                   title={isSelectedAssignmentOnLockedDay ? "Cannot remove - day is locked" : undefined}
                   data-testid="floating-button-remove-from-seat"
@@ -2227,6 +2228,58 @@ export default function Contestants() {
               data-testid="button-confirm-unlink"
             >
               {unlinkContestantMutation.isPending ? "Unlinking..." : "Unlink Contestant"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Remove from Seat Confirmation Dialog */}
+      <Dialog open={removeSeatDialogOpen} onOpenChange={setRemoveSeatDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <UserMinus className="h-5 w-5" />
+              Remove from Seat
+            </DialogTitle>
+            <DialogDescription asChild>
+              <div className="space-y-2">
+                {selectedContestantAssignment && (
+                  <>
+                    <p>
+                      Are you sure you want to remove this contestant from their seat?
+                    </p>
+                    <div className="p-3 bg-muted rounded-md">
+                      <p className="font-medium">
+                        {contestants.find(c => c.id === selectedContestantAssignment.contestantId)?.name || 'Unknown'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Block {selectedContestantAssignment.blockNumber}, Seat {selectedContestantAssignment.seatLabel}
+                      </p>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      They will be returned to the available contestant pool.
+                    </p>
+                  </>
+                )}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setRemoveSeatDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => {
+                if (selectedContestantAssignment) {
+                  removeSeatMutation.mutate(selectedContestantAssignment.id);
+                  setRemoveSeatDialogOpen(false);
+                }
+              }}
+              disabled={removeSeatMutation.isPending}
+              data-testid="button-confirm-remove-seat"
+            >
+              {removeSeatMutation.isPending ? "Removing..." : "Yes, Remove"}
             </Button>
           </DialogFooter>
         </DialogContent>
