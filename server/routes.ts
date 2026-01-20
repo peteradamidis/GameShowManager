@@ -422,7 +422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     etag: true,
     lastModified: true,
     setHeaders: (res, filePath) => {
-      // Set proper content type for images
+      // Set proper content type for images and PDFs
       const ext = path.extname(filePath).toLowerCase();
       const mimeTypes: Record<string, string> = {
         '.jpg': 'image/jpeg',
@@ -430,6 +430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         '.png': 'image/png',
         '.gif': 'image/gif',
         '.webp': 'image/webp',
+        '.pdf': 'application/pdf',
       };
       if (mimeTypes[ext]) {
         res.setHeader('Content-Type', mimeTypes[ext]);
