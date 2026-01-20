@@ -11,7 +11,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail, Download, Database, Clock, RefreshCw, Lock, Server, Send, Eye, ClipboardCheck, Ticket } from "lucide-react";
+import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail, Download, Database, Clock, RefreshCw, Lock, Server, Send, Eye, ClipboardCheck, Ticket, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -261,6 +261,8 @@ const EMAIL_TEMPLATE_DEFAULTS = {
   ticket_email_intro: 'Thank you for confirming your attendance! This is your official ticket for the Deal or No Deal recording.',
   ticket_email_important: 'IMPORTANT INFORMATION is attached in the PDF. Please read it carefully before your record day.',
   ticket_email_footer: 'This is an automated email from the Deal or No Deal production team.',
+  // Shared reminder message (appears in all emails)
+  email_reminder_message: 'Please ensure you bring your own water bottle.',
   // Mailto body templates (use {{name}} and {{date}} as placeholders)
   booking_mailto_body: `Hi Deal or No Deal Team,
 
@@ -373,6 +375,10 @@ export default function Settings() {
   const [ticketEmailFooter, setTicketEmailFooter] = useState(EMAIL_TEMPLATE_DEFAULTS.ticket_email_footer);
   const [ticketTemplateChanged, setTicketTemplateChanged] = useState(false);
   
+  // Shared reminder message state (appears in all emails as red bold text)
+  const [emailReminderMessage, setEmailReminderMessage] = useState(EMAIL_TEMPLATE_DEFAULTS.email_reminder_message);
+  const [reminderMessageChanged, setReminderMessageChanged] = useState(false);
+  
   // Auto-confirmation PDF state
   const [autoConfirmationPdf, setAutoConfirmationPdf] = useState<string>("");
   const [autoConfirmationPdfChanged, setAutoConfirmationPdfChanged] = useState(false);
@@ -416,6 +422,9 @@ export default function Settings() {
   const { data: savedTicketIntro } = useQuery<string | null>({ queryKey: ["/api/system-config/ticket_email_intro"] });
   const { data: savedTicketImportant } = useQuery<string | null>({ queryKey: ["/api/system-config/ticket_email_important"] });
   const { data: savedTicketFooter } = useQuery<string | null>({ queryKey: ["/api/system-config/ticket_email_footer"] });
+  
+  // Fetch saved shared reminder message
+  const { data: savedEmailReminderMessage } = useQuery<string | null>({ queryKey: ["/api/system-config/email_reminder_message"] });
 
   useEffect(() => {
     if (savedSenderName) {
@@ -507,6 +516,11 @@ export default function Settings() {
   useEffect(() => {
     if (savedTicketFooter) setTicketEmailFooter(savedTicketFooter);
   }, [savedTicketFooter]);
+  
+  // Load saved shared reminder message
+  useEffect(() => {
+    if (savedEmailReminderMessage) setEmailReminderMessage(savedEmailReminderMessage);
+  }, [savedEmailReminderMessage]);
 
   const saveSenderNameMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -636,6 +650,21 @@ export default function Settings() {
     },
     onError: (error: any) => {
       toast({ title: "Error saving template", description: error.message, variant: "destructive" });
+    },
+  });
+  
+  // Shared reminder message mutation (appears in all emails)
+  const saveReminderMessageMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("PUT", "/api/system-config/email_reminder_message", { value: emailReminderMessage });
+    },
+    onSuccess: () => {
+      toast({ title: "Reminder message saved", description: "Your changes will apply to all new emails (booking, standby, ticket)." });
+      setReminderMessageChanged(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/email_reminder_message"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error saving reminder message", description: error.message, variant: "destructive" });
     },
   });
 
@@ -1278,6 +1307,57 @@ export default function Settings() {
                 <li>Keep subject lines clear and descriptive</li>
                 <li>Test emails at mail-tester.com before sending to large groups</li>
               </ul>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              Shared Email Reminder
+            </CardTitle>
+            <CardDescription>
+              This message appears in all emails (booking, standby, and ticket) as bold red text near the bottom.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email-reminder-message">Reminder Message</Label>
+              <p className="text-xs text-muted-foreground">
+                Displayed in bold red text in all emails. Supports <code className="bg-muted px-1 rounded">[link text](url)</code> for hyperlinks.
+              </p>
+              <Textarea
+                id="email-reminder-message"
+                value={emailReminderMessage}
+                onChange={(e) => {
+                  setEmailReminderMessage(e.target.value);
+                  setReminderMessageChanged(true);
+                }}
+                placeholder="Please ensure you bring your own water bottle."
+                className="min-h-[80px]"
+                data-testid="input-email-reminder-message"
+              />
+            </div>
+            
+            <div className="flex justify-end pt-2">
+              <Button
+                onClick={() => saveReminderMessageMutation.mutate()}
+                disabled={!reminderMessageChanged || saveReminderMessageMutation.isPending}
+                data-testid="button-save-reminder-message"
+              >
+                {saveReminderMessageMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Reminder
+                  </>
+                )}
+              </Button>
             </div>
           </CardContent>
         </Card>

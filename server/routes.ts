@@ -7077,6 +7077,7 @@ ${finalEmailFooter}`;
         bookingReplyToEmail,
         senderNameConfig,
         bookingMailtoBodyConfig,
+        emailReminderMessage,
         smtpConfig,
       ] = await Promise.all([
         storage.getSystemConfig('email_banner_url'),
@@ -7089,6 +7090,7 @@ ${finalEmailFooter}`;
         storage.getSystemConfig('booking_reply_to_email'),
         storage.getSystemConfig('email_sender_name'),
         storage.getSystemConfig('booking_mailto_body'),
+        storage.getSystemConfig('email_reminder_message'),
         getSmtpConfig(),
       ]);
 
@@ -7138,6 +7140,7 @@ Thank you.`;
         bookingReplyToEmail: bookingReplyToEmail || smtpConfig.fromEmail || 'noreply@example.com',
         senderName: senderNameConfig || 'Deal or No Deal',
         bookingMailtoBody: bookingMailtoBodyConfig || defaultBookingMailtoBody,
+        emailReminderMessage: emailReminderMessage || 'Please ensure you bring your own water bottle.',
       };
 
       // Pre-load banner image once
@@ -7344,7 +7347,7 @@ Thank you.`;
               ` : ''}
               
               <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 20px 0;">
-                Please ensure you bring your own water bottle.
+                ${convertLinksToHtml(sharedConfig.emailReminderMessage)}
               </p>
               
               <p style="color: #333333; font-size: 15px; margin: 0;">
@@ -9008,6 +9011,8 @@ Thank you.`;
           const savedStandbyInstructions = await storage.getSystemConfig('standby_email_instructions');
           const savedStandbyFooter = await storage.getSystemConfig('standby_email_footer');
           const savedStandbyMailtoBody = await storage.getSystemConfig('standby_mailto_body');
+          const savedReminderMessage = await storage.getSystemConfig('email_reminder_message');
+          const standbyReminderMessage = savedReminderMessage || 'Please ensure you bring your own water bottle.';
           
           // Default standby mailto body template
           const defaultStandbyMailtoBody = `Hi Deal or No Deal Team,
@@ -9146,7 +9151,7 @@ Thank you.`;
               </div>
               
               <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">
-                Please ensure you bring your own water bottle.
+                ${convertLinksToHtml(standbyReminderMessage)}
               </p>
               
               <p style="color: #333333; font-size: 15px; margin: 0;">
@@ -9419,6 +9424,7 @@ Thank you.`;
       const ticketIntro = await storage.getSystemConfig('standby_ticket_intro') || 'Thank you for confirming your attendance as a <strong>STANDBY CONTESTANT</strong>! This is your official standby ticket for the Deal or No Deal recording.';
       const ticketImportant = await storage.getSystemConfig('standby_ticket_important') || 'IMPORTANT: As a standby contestant, you may be selected to join our studio recording should any positions become available on the day. Please read the attached PDF carefully.';
       const ticketFooter = await storage.getSystemConfig('standby_ticket_footer') || 'This is an automated email from the Deal or No Deal production team.';
+      const ticketReminderMessage = await storage.getSystemConfig('email_reminder_message') || 'Please ensure you bring your own water bottle.';
       
       // Create email HTML with banner - STANDBY version
       const emailHtml = `<!DOCTYPE html>
@@ -9513,7 +9519,7 @@ Thank you.`;
               </table>
               
               <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">
-                Please ensure you bring your own water bottle.
+                ${convertLinksToHtml(ticketReminderMessage)}
               </p>
               
               <p style="color: #333333; font-size: 15px; margin: 0 0 10px 0;">
@@ -9752,7 +9758,7 @@ Thank you.`;
                   </td>
                 </tr>
               </table>
-              <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">Please ensure you bring your own water bottle.</p>
+              <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">${convertLinksToHtml(ticketReminderMessage)}</p>
               <p style="color: #333333; font-size: 15px; margin: 0 0 10px 0;">We look forward to seeing you on the day!<br/>Kind Regards,<br/><strong>The Deal Or No Deal Team</strong></p>
             </td>
           </tr>
@@ -10096,6 +10102,7 @@ Thank you.`;
       const emailButtonText = await storage.getSystemConfig('booking_email_button_text') || 'Confirm Attendance';
       const emailAdditionalInstructions = await storage.getSystemConfig('booking_email_additional_instructions') || '';
       const emailFooter = await storage.getSystemConfig('booking_email_footer') || 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.';
+      const emailReminderMessage = await storage.getSystemConfig('email_reminder_message') || 'Please ensure you bring your own water bottle.';
       const mailtoBodyConfig = await storage.getSystemConfig('booking_mailto_body');
       const defaultMailtoBody = `Hi Deal or No Deal Team,
 
@@ -10254,7 +10261,7 @@ Thank you.`;
               ` : ''}
               
               <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 20px 0;">
-                Please ensure you bring your own water bottle.
+                ${convertLinksToHtml(emailReminderMessage)}
               </p>
               
               <p style="color: #333333; font-size: 15px; margin: 0;">
@@ -11089,6 +11096,7 @@ Thank you.`;
       const instructions = await storage.getSystemConfig('booking_email_instructions') || 'Please confirm your attendance by clicking the button below. You can also let us know about dietary requirements or ask any questions.';
       const additionalInstructions = await storage.getSystemConfig('booking_email_additional_instructions') || 'We will be recording multiple episodes on the day. The recording of these shows will take approximately 10 hours. Please be prepared to make yourself available for the full length of time.';
       const footer = await storage.getSystemConfig('booking_email_footer') || 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.';
+      const reminderMessage = await storage.getSystemConfig('email_reminder_message') || 'Please ensure you bring your own water bottle.';
       const replyToEmail = await storage.getSystemConfig('booking_reply_to_email') || 'bookings@dealornodeal.example.com';
       const mailtoBodyConfig = await storage.getSystemConfig('booking_mailto_body');
       const defaultMailtoBody = `Hi Deal or No Deal Team,
@@ -11243,7 +11251,7 @@ Thank you.`;
                 ` : ''}
                 
                 <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 20px 0;">
-                  Please ensure you bring your own water bottle.
+                  ${convertLinksToHtml(reminderMessage)}
                 </p>
                 
                 <p style="color: #333333; font-size: 15px; margin: 0;">
@@ -11602,6 +11610,7 @@ Thank you.`;
       const intro = await storage.getSystemConfig('standby_email_intro') || "We enjoyed meeting you at our auditions and would love to invite you to be a <strong>STANDBY CONTESTANT</strong> on Deal or No Deal. <strong><u>As a standby contestant, you may be selected to join our studio recording should any positions become available on the day.</u></strong>";
       const instructions = await storage.getSystemConfig('standby_email_instructions') || "If you're selected to participate in studio, you will be required for the full day.\n\nAfter being a Standby Contestant, you are eligible to be FAST-TRACKED into the next available record date to attend a full day in studio. That's double the chances! You must email dond.standby@endemolshine.com.au to be rebooked to return.\n\nPlease find attached important information relating to your attendance at the Deal or No Deal recording. Please read this attachment thoroughly and get in touch ASAP should there be any issues.\n\nYou will receive another email closer to your record date with additional paperwork.";
       const footer = await storage.getSystemConfig('standby_email_footer') || 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.';
+      const reminderMessage = await storage.getSystemConfig('email_reminder_message') || 'Please ensure you bring your own water bottle.';
       const mailtoBodyConfig = await storage.getSystemConfig('standby_mailto_body');
       const defaultMailtoBody = `Hi Deal or No Deal Team,
 
@@ -11763,7 +11772,7 @@ Thank you.`;
                 </div>
                 
                 <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">
-                  Please ensure you bring your own water bottle.
+                  ${convertLinksToHtml(reminderMessage)}
                 </p>
                 
                 <p style="color: #333333; font-size: 15px; margin: 0;">
@@ -11810,6 +11819,7 @@ Thank you.`;
       const ticketIntro = await storage.getSystemConfig('standby_ticket_intro') || 'Thank you for confirming your attendance as a <strong>STANDBY CONTESTANT</strong>! This is your official standby ticket for the Deal or No Deal recording.';
       const ticketImportant = await storage.getSystemConfig('standby_ticket_important') || 'IMPORTANT: As a standby contestant, you may be selected to join our studio recording should any positions become available on the day. Please read the attached PDF carefully.';
       const ticketFooter = await storage.getSystemConfig('standby_ticket_footer') || 'This is an automated email from the Deal or No Deal production team.';
+      const reminderMessage = await storage.getSystemConfig('email_reminder_message') || 'Please ensure you bring your own water bottle.';
       
       // Use actual record day date if provided, otherwise fallback to sample date
       let sampleDate: string;
@@ -11899,7 +11909,7 @@ Thank you.`;
                     </td>
                   </tr>
                 </table>
-                <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">Please ensure you bring your own water bottle.</p>
+                <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">${convertLinksToHtml(reminderMessage)}</p>
                 <p style="color: #333333; font-size: 15px; margin: 0 0 10px 0;">We look forward to seeing you on the day!<br/>Kind Regards,<br/><strong>The Deal Or No Deal Team</strong></p>
               </td>
             </tr>
