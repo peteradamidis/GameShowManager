@@ -286,7 +286,7 @@ export function SeatCard({
 
   const seatContent = (
     <Card
-      className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity border-2 relative overflow-hidden ${
+      className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity border-2 relative ${
         isEmpty
           ? isRXDayLocked 
             ? "border-dashed bg-muted/30 hover-elevate"  // Locked: not clickable
@@ -308,9 +308,9 @@ export function SeatCard({
           <TooltipTrigger asChild>
             <div 
               data-testid={`badge-moved-${seat.assignmentId}`}
-              className="absolute -top-1.5 -right-1.5 z-10 flex items-center justify-center w-5 h-5 rounded-full bg-amber-500 text-white cursor-help shadow-sm"
+              className="absolute top-0.5 right-0.5 z-10 flex items-center justify-center w-4 h-4 rounded-full bg-amber-500 text-white cursor-help shadow-sm"
             >
-              <ArrowLeftRight className="h-3 w-3" />
+              <ArrowLeftRight className="h-2.5 w-2.5" />
             </div>
           </TooltipTrigger>
           <TooltipContent side="top" className="text-xs">
