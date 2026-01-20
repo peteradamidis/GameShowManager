@@ -1128,17 +1128,34 @@ export default function StandbysPage() {
                               )}
                             </Button>
                           ) : standby.status === 'confirmed' ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-5 px-1.5 text-[10px]"
-                              onClick={() => unconfirmStandbyMutation.mutate(standby)}
-                              disabled={unconfirmStandbyMutation.isPending}
-                              data-testid={`button-cancel-confirm-${standby.id}`}
-                            >
-                              <XCircle className="h-2.5 w-2.5 mr-0.5" />
-                              Cancel
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-5 px-1.5 text-[10px]"
+                                onClick={() => unconfirmStandbyMutation.mutate(standby)}
+                                disabled={unconfirmStandbyMutation.isPending}
+                                data-testid={`button-cancel-confirm-${standby.id}`}
+                              >
+                                <XCircle className="h-2.5 w-2.5 mr-0.5" />
+                                Cancel
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-5 w-5 p-0 text-destructive hover:text-destructive"
+                                onClick={() => {
+                                  if (confirm(`Remove ${standby.contestantName} from standby list?`)) {
+                                    deleteStandbyMutation.mutate(standby.id);
+                                  }
+                                }}
+                                disabled={deleteStandbyMutation.isPending}
+                                title="Remove from standby list"
+                                data-testid={`button-remove-${standby.id}`}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           ) : (
                             <div className="flex items-center gap-1">
                               <Button
