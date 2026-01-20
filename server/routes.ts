@@ -701,8 +701,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get existing assignment
-      const assignments = await storage.getSeatAssignments();
-      const existingAssignment = assignments.find(a => a.id === id);
+      const assignments = await storage.getAllSeatAssignments();
+      const existingAssignment = assignments.find((a: any) => a.id === id);
       
       if (!existingAssignment) {
         fs.unlinkSync(req.file.path);
@@ -734,8 +734,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       
-      const assignments = await storage.getSeatAssignments();
-      const assignment = assignments.find(a => a.id === id);
+      const assignments = await storage.getAllSeatAssignments();
+      const assignment = assignments.find((a: any) => a.id === id);
       
       if (!assignment) {
         return res.status(404).json({ error: "Seat assignment not found" });
