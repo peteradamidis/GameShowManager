@@ -1804,12 +1804,17 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                       <>
                         <div>
                           <div className="flex">
-                            {/* Static tier numbers column */}
-                            <div className="flex-shrink-0 w-8 mr-1">
-                              {flatListWithGroupInfo.map((_, idx) => (
+                            {/* Static tier numbers column - matches space-y-1 gap from standbys */}
+                            <div className="flex-shrink-0 w-8 mr-1 space-y-1">
+                              {flatListWithGroupInfo.map((item, idx) => (
                                 <div 
                                   key={idx}
-                                  className="h-[52px] flex items-center justify-center"
+                                  className={`flex items-center justify-center ${
+                                    item.isInGroup && !item.isFirstInGroup ? 'rounded-t-none border-t-0' : ''
+                                  } ${
+                                    item.isInGroup && !item.isLastInGroup ? 'rounded-b-none' : ''
+                                  }`}
+                                  style={{ height: item.isInGroup && !item.isFirstInGroup ? '44px' : '48px' }}
                                 >
                                   <span 
                                     className="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center"
