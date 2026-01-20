@@ -419,6 +419,18 @@ export function SeatCard({
                 </TooltipContent>
               </Tooltip>
             )}
+            {seat.availabilityStatus === 'rescheduled' && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div data-testid={`rescheduled-icon-${seat.assignmentId}`}>
+                    <Clock className="h-3 w-3 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  <p>Rescheduled contestant</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
           <div className="flex items-center gap-1">
             {seat.playerType && (
