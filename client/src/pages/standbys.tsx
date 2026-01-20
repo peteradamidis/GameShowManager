@@ -897,7 +897,7 @@ export default function StandbysPage() {
                                 const rd = recordDays.find(r => r.id === standby.recordDayId);
                                 return rd ? (
                                   <>
-                                    <span>{format(new Date(rd.date), "MMM d")}</span>
+                                    <span>{format(new Date(rd.date), "d MMM")}</span>
                                     {rd.rxNumber && (
                                       <span className="text-muted-foreground text-[10px]">{rd.rxNumber}</span>
                                     )}
@@ -919,7 +919,7 @@ export default function StandbysPage() {
                             <div className="flex items-center justify-center gap-1 text-green-600 dark:text-green-400">
                               <CheckCircle className="h-3 w-3" />
                               <span className="text-[10px]">
-                                {format(new Date(standby.standbyEmailSent), "M/d")}
+                                {format(new Date(standby.standbyEmailSent), "d/M")}
                               </span>
                             </div>
                           ) : (
@@ -954,7 +954,7 @@ export default function StandbysPage() {
                                 <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
                                   <Ticket className="h-3 w-3" />
                                   <span className="text-[10px]">
-                                    {format(new Date(standby.standbyTicketSent), "M/d")}
+                                    {format(new Date(standby.standbyTicketSent), "d/M")}
                                   </span>
                                 </div>
                                 <Button
@@ -1186,7 +1186,7 @@ export default function StandbysPage() {
                       .filter(rd => rd.id !== declineStandby?.recordDayId)
                       .map(rd => (
                         <SelectItem key={rd.id} value={rd.id}>
-                          {format(new Date(rd.date), "MMM d, yyyy")} {rd.rxNumber && `(${rd.rxNumber})`}
+                          {format(new Date(rd.date), "d MMM yyyy")} {rd.rxNumber && `(${rd.rxNumber})`}
                         </SelectItem>
                       ))}
                   </SelectContent>

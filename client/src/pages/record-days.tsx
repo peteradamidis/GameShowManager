@@ -162,7 +162,7 @@ export default function RecordDays() {
 
       return {
         id: day.id,
-        date: new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+        date: new Date(day.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }),
         rxNumber: day.rxNumber,
         totalSeats: day.totalSeats || 154,
         filledSeats,
@@ -261,7 +261,7 @@ export default function RecordDays() {
         const dayAssignments = allAssignments.find((a) => a.recordDayId === recordDay.id)?.assignments || [];
         enrichedRecordDay = {
           id: recordDay.id,
-          date: new Date(recordDay.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+          date: new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }),
           rawDate: recordDay.date,
           rxNumber: recordDay.rxNumber,
           totalSeats: recordDay.totalSeats || 154,
@@ -277,7 +277,7 @@ export default function RecordDays() {
   };
 
   const calendarDays = getCalendarDays();
-  const monthName = calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthName = calendarMonth.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
   
   const goToPrevMonth = () => {
     setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1));
@@ -501,11 +501,11 @@ export default function RecordDays() {
               <p>
                 <strong>Warning:</strong> You are about to permanently delete the record day on{" "}
                 <strong>
-                  {deleteRecordDay && new Date(deleteRecordDay.date).toLocaleDateString('en-US', { 
+                  {deleteRecordDay && new Date(deleteRecordDay.date).toLocaleDateString('en-AU', { 
                     weekday: 'long',
-                    year: 'numeric', 
+                    day: 'numeric', 
                     month: 'long', 
-                    day: 'numeric' 
+                    year: 'numeric' 
                   })}
                 </strong>
                 {deleteRecordDay?.rxNumber && ` (${deleteRecordDay.rxNumber})`}.

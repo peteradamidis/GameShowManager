@@ -1120,7 +1120,7 @@ export default function BookingResponses() {
               <SelectItem value="all">All Record Days</SelectItem>
               {sortedRecordDays.map((rd) => (
                 <SelectItem key={rd.id} value={rd.id}>
-                  {format(new Date(rd.date), "EEE, MMM d, yyyy")} {rd.rxNumber ? `- ${rd.rxNumber}` : ""}
+                  {format(new Date(rd.date), "EEE, d MMM yyyy")} {rd.rxNumber ? `- ${rd.rxNumber}` : ""}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -1254,10 +1254,10 @@ export default function BookingResponses() {
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Calendar className="h-3 w-3 text-muted-foreground" />
-                            {standby.recordDay ? format(new Date(standby.recordDay.date), "MMM d, yyyy") : 
+                            {standby.recordDay ? format(new Date(standby.recordDay.date), "d MMM yyyy") : 
                               (selectedRecordDay ? 
                                 sortedRecordDays.find(rd => rd.id === selectedRecordDay)?.date ? 
-                                  format(new Date(sortedRecordDays.find(rd => rd.id === selectedRecordDay)!.date), "MMM d, yyyy") : "N/A"
+                                  format(new Date(sortedRecordDays.find(rd => rd.id === selectedRecordDay)!.date), "d MMM yyyy") : "N/A"
                                 : "N/A")}
                           </div>
                         </TableCell>
@@ -1289,7 +1289,7 @@ export default function BookingResponses() {
                             <div className="flex flex-col items-center">
                               <CheckCircle className="h-4 w-4 text-green-600" />
                               <span className="text-xs text-muted-foreground">
-                                {format(new Date(standby.standbyEmailSent), "MMM d")}
+                                {format(new Date(standby.standbyEmailSent), "d MMM")}
                               </span>
                             </div>
                           ) : (
@@ -1420,13 +1420,13 @@ export default function BookingResponses() {
                       <div className="text-xs text-muted-foreground mt-1">
                         {isIncoming ? (
                           <>
-                            From: {entry.fromRecordDay?.rxNumber || format(new Date(entry.fromRecordDay?.date), 'MMM d')} 
+                            From: {entry.fromRecordDay?.rxNumber || format(new Date(entry.fromRecordDay?.date), 'd MMM')} 
                             {' '}Block {entry.fromBlockNumber}, Seat {entry.fromSeatLabel}
                             {' → '}Block {entry.toBlockNumber}, Seat {entry.toSeatLabel}
                           </>
                         ) : (
                           <>
-                            To: {entry.toRecordDay?.rxNumber || format(new Date(entry.toRecordDay?.date), 'MMM d')}
+                            To: {entry.toRecordDay?.rxNumber || format(new Date(entry.toRecordDay?.date), 'd MMM')}
                             {' '}Block {entry.toBlockNumber}, Seat {entry.toSeatLabel}
                             {' (was Block '}{entry.fromBlockNumber}, Seat {entry.fromSeatLabel}{')'}
                           </>
@@ -1438,7 +1438,7 @@ export default function BookingResponses() {
                         </div>
                       )}
                       <div className="text-xs text-muted-foreground">
-                        {format(new Date(entry.rebookedAt), 'MMM d, yyyy h:mm a')} by {entry.rebookedBy}
+                        {format(new Date(entry.rebookedAt), 'd MMM yyyy h:mm a')} by {entry.rebookedBy}
                       </div>
                     </div>
                   );
@@ -1626,7 +1626,7 @@ export default function BookingResponses() {
                         <div className="flex flex-col text-xs">
                           <span>
                             {item.recordDay?.date 
-                              ? format(new Date(item.recordDay.date), "MMM d") 
+                              ? format(new Date(item.recordDay.date), "d MMM") 
                               : "-"}
                           </span>
                           {item.recordDay?.rxNumber && (
@@ -1675,7 +1675,7 @@ export default function BookingResponses() {
                             <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
                               <MailCheck className="h-3 w-3" />
                               <span className="text-[10px]">
-                                {format(new Date(item.bookingEmailSent), "M/d")}
+                                {format(new Date(item.bookingEmailSent), "d/M")}
                               </span>
                             </div>
                             {item.contestant?.email && !isDeclined(item) && (
@@ -1706,7 +1706,7 @@ export default function BookingResponses() {
                               <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
                                 <Ticket className="h-3 w-3" />
                                 <span className="text-[10px]">
-                                  {format(new Date(item.ticketEmailSent), "M/d")}
+                                  {format(new Date(item.ticketEmailSent), "d/M")}
                                 </span>
                               </div>
                               <Button
@@ -1870,7 +1870,7 @@ export default function BookingResponses() {
                       <div className="flex flex-col text-xs">
                         <span>
                           {item.recordDay?.date 
-                            ? format(new Date(item.recordDay.date), "MMM d") 
+                            ? format(new Date(item.recordDay.date), "d MMM") 
                             : "-"}
                         </span>
                         {item.recordDay?.rxNumber && (
@@ -1895,7 +1895,7 @@ export default function BookingResponses() {
                         <div className="flex items-center justify-center gap-1 text-green-600 dark:text-green-400">
                           <MailCheck className="h-3 w-3" />
                           <span className="text-[10px]">
-                            {format(new Date(item.bookingEmailSent), "M/d")}
+                            {format(new Date(item.bookingEmailSent), "d/M")}
                           </span>
                         </div>
                       ) : (
@@ -1915,7 +1915,7 @@ export default function BookingResponses() {
                       <div className="text-xs text-muted-foreground">
                         {item.declinedAt && (
                           <div className="text-[10px]">
-                            {format(new Date(item.declinedAt), "M/d h:mma")}
+                            {format(new Date(item.declinedAt), "d/M h:mma")}
                           </div>
                         )}
                         {item.reason && (
@@ -2171,7 +2171,7 @@ export default function BookingResponses() {
                         .filter(rd => rd.id !== declineAssignment?.recordDayId)
                         .map((rd) => (
                           <SelectItem key={rd.id} value={rd.id}>
-                            {rd.rxNumber ? `${rd.rxNumber} - ` : ""}{format(new Date(rd.date), "EEE, MMM d, yyyy")}
+                            {rd.rxNumber ? `${rd.rxNumber} - ` : ""}{format(new Date(rd.date), "EEE, d MMM yyyy")}
                           </SelectItem>
                         ))}
                     </SelectContent>
@@ -2338,7 +2338,7 @@ export default function BookingResponses() {
                     .filter(rd => rd.id !== changeDateAssignment?.recordDayId)
                     .map((rd) => (
                       <SelectItem key={rd.id} value={rd.id}>
-                        {rd.rxNumber ? `${rd.rxNumber} - ` : ""}{format(new Date(rd.date), "EEE, MMM d, yyyy")}
+                        {rd.rxNumber ? `${rd.rxNumber} - ` : ""}{format(new Date(rd.date), "EEE, d MMM yyyy")}
                       </SelectItem>
                     ))}
                 </SelectContent>

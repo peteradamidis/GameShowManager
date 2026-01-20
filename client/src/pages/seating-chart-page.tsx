@@ -1287,7 +1287,7 @@ export default function SeatingChartPage() {
                       .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
                       .map((rd: any) => (
                         <SelectItem key={rd.id} value={rd.id}>
-                          {rd.rxNumber ? `${rd.rxNumber} — ` : ''}{format(new Date(rd.date), "EEE, MMM d, yyyy")}
+                          {rd.rxNumber ? `${rd.rxNumber} — ` : ''}{format(new Date(rd.date), "EEE, d MMM yyyy")}
                         </SelectItem>
                       ))
                     }

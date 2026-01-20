@@ -693,8 +693,8 @@ export default function BookingMaster() {
     }
 
     const selectedDay = recordDays.find(d => d.id === selectedRecordDay);
-    const dayName = selectedDay ? format(new Date(selectedDay.date), "MMMM-d-yyyy") : "booking-master";
-    const dayDate = selectedDay ? format(new Date(selectedDay.date), "MMMM d, yyyy") : "";
+    const dayName = selectedDay ? format(new Date(selectedDay.date), "d-MMMM-yyyy") : "booking-master";
+    const dayDate = selectedDay ? format(new Date(selectedDay.date), "d MMMM yyyy") : "";
 
     const headers = [
       "SEAT", "NAME", "MOBILE", "EMAIL", "ATTENDING WITH", "LOCATION", 
@@ -924,7 +924,7 @@ export default function BookingMaster() {
           <SelectContent>
             {recordDays.map((day) => (
               <SelectItem key={day.id} value={day.id} data-testid={`option-record-day-${day.id}`}>
-                {format(new Date(day.date), "EEE, MMMM d, yyyy")}
+                {format(new Date(day.date), "EEE, d MMMM yyyy")}
               </SelectItem>
             ))}
           </SelectContent>

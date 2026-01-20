@@ -778,12 +778,12 @@ export default function AvailabilityManagement() {
                           <TableCell className="text-sm">{token.contestant.phone || "-"}</TableCell>
                           <TableCell className="text-sm">
                             {token.lastSentAt 
-                              ? format(new Date(token.lastSentAt), 'MMM d, yyyy')
-                              : format(new Date(token.createdAt), 'MMM d, yyyy')
+                              ? format(new Date(token.lastSentAt), 'd MMM yyyy')
+                              : format(new Date(token.createdAt), 'd MMM yyyy')
                             }
                           </TableCell>
                           <TableCell className="text-sm">
-                            {format(new Date(token.expiresAt), 'MMM d, yyyy')}
+                            {format(new Date(token.expiresAt), 'd MMM yyyy')}
                           </TableCell>
                           <TableCell>{getStatusBadge(token.status)}</TableCell>
                         </TableRow>
@@ -833,7 +833,7 @@ export default function AvailabilityManagement() {
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-2">
                               <Calendar className="h-4 w-4 text-muted-foreground" />
-                              {format(new Date(day.date), 'EEE, MMM d, yyyy')}
+                              {format(new Date(day.date), 'EEE, d MMM yyyy')}
                             </div>
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">

@@ -11762,9 +11762,9 @@ ${finalEmailFooter}`;
 
         if (bookingData.length > 0) {
           // Format record day date for tab name (e.g., "Dec 15, 2024")
-          const tabName = new Date(recordDay.date).toLocaleDateString('en-US', {
-            month: 'short',
+          const tabName = new Date(recordDay.date).toLocaleDateString('en-AU', {
             day: 'numeric',
+            month: 'short',
             year: 'numeric'
           });
           

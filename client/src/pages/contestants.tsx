@@ -1280,10 +1280,10 @@ export default function Contestants() {
                     <SelectItem value="na">N/A</SelectItem>
                     {recordDays.map((day: any) => (
                       <SelectItem key={day.id} value={day.id}>
-                        {new Date(day.date).toLocaleDateString('en-US', { 
+                        {new Date(day.date).toLocaleDateString('en-AU', { 
                           weekday: 'short', 
-                          month: 'short', 
-                          day: 'numeric' 
+                          day: 'numeric', 
+                          month: 'short' 
                         })}
                         {day.rxNumber ? ` (${day.rxNumber})` : ''}
                       </SelectItem>
@@ -1733,7 +1733,7 @@ export default function Contestants() {
               {selectedRecordDayDetails && (
                 <div className="mt-2 p-2 bg-muted rounded text-sm">
                   <span className="font-medium">Selected: </span>
-                  {format(parseISO(selectedRecordDayDetails.date.split('T')[0]), 'MMMM d, yyyy')}
+                  {format(parseISO(selectedRecordDayDetails.date.split('T')[0]), 'd MMMM yyyy')}
                   {selectedRecordDayDetails.rxNumber && (
                     <span className="ml-2 text-muted-foreground">({selectedRecordDayDetails.rxNumber})</span>
                   )}
@@ -1861,7 +1861,7 @@ export default function Contestants() {
                 <SelectContent>
                   {recordDays.map((rd: any) => (
                     <SelectItem key={rd.id} value={rd.id}>
-                      {format(parseISO(rd.date), 'EEE, MMM d, yyyy')}
+                      {format(parseISO(rd.date), 'EEE, d MMM yyyy')}
                       {rd.rxNumber && ` (${rd.rxNumber})`}
                     </SelectItem>
                   ))}

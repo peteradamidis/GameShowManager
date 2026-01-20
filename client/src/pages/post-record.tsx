@@ -435,7 +435,7 @@ export default function PostRecordPage() {
                   <SelectItem value="all">All Record Days</SelectItem>
                   {recordDays.map((rd) => (
                     <SelectItem key={rd.id} value={rd.id}>
-                      {format(new Date(rd.date), "MMM d, yyyy")}
+                      {format(new Date(rd.date), "d MMM yyyy")}
                       {rd.rxNumber ? ` - ${rd.rxNumber}` : ""}
                     </SelectItem>
                   ))}

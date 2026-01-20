@@ -714,7 +714,7 @@ Deal or No Deal Production Team`);
                     <SelectItem value="all">All Record Days</SelectItem>
                     {sortedRecordDays.map((rd) => (
                       <SelectItem key={rd.id} value={rd.id}>
-                        {format(new Date(rd.date), "EEE, MMM d, yyyy")} {rd.rxNumber ? `- ${rd.rxNumber}` : ""}
+                        {format(new Date(rd.date), "EEE, d MMM yyyy")} {rd.rxNumber ? `- ${rd.rxNumber}` : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -971,10 +971,10 @@ Deal or No Deal Production Team`);
                             <TableCell>
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3 text-muted-foreground" />
-                                {standby.recordDay ? format(new Date(standby.recordDay.date), "MMM d, yyyy") : 
+                                {standby.recordDay ? format(new Date(standby.recordDay.date), "d MMM yyyy") : 
                                   (selectedRecordDay !== "all" ? 
                                     sortedRecordDays.find(rd => rd.id === selectedRecordDay)?.date ? 
-                                      format(new Date(sortedRecordDays.find(rd => rd.id === selectedRecordDay)!.date), "MMM d, yyyy") : "N/A"
+                                      format(new Date(sortedRecordDays.find(rd => rd.id === selectedRecordDay)!.date), "d MMM yyyy") : "N/A"
                                     : "N/A")}
                               </div>
                             </TableCell>
@@ -1006,7 +1006,7 @@ Deal or No Deal Production Team`);
                                 <div className="flex flex-col items-center">
                                   <CheckCircle className="h-4 w-4 text-green-600" />
                                   <span className="text-xs text-muted-foreground">
-                                    {format(new Date(standby.standbyEmailSent), "MMM d")}
+                                    {format(new Date(standby.standbyEmailSent), "d MMM")}
                                   </span>
                                 </div>
                               ) : (
@@ -1124,7 +1124,7 @@ Deal or No Deal Production Team`);
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Calendar className="h-3 w-3 text-muted-foreground" />
-                            {item.recordDay ? format(new Date(item.recordDay.date), "MMM d, yyyy") : "N/A"}
+                            {item.recordDay ? format(new Date(item.recordDay.date), "d MMM yyyy") : "N/A"}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -1161,7 +1161,7 @@ Deal or No Deal Production Team`);
                           />
                           {item.paperworkSent && (
                             <p className="text-xs text-muted-foreground mt-1">
-                              {format(new Date(item.paperworkSent), "MMM d")}
+                              {format(new Date(item.paperworkSent), "d MMM")}
                             </p>
                           )}
                         </TableCell>
@@ -1174,7 +1174,7 @@ Deal or No Deal Production Team`);
                           />
                           {item.paperworkReceived && (
                             <p className="text-xs text-muted-foreground mt-1">
-                              {format(new Date(item.paperworkReceived), "MMM d")}
+                              {format(new Date(item.paperworkReceived), "d MMM")}
                             </p>
                           )}
                         </TableCell>
@@ -1227,7 +1227,7 @@ Deal or No Deal Production Team`);
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Calendar className="h-3 w-3 text-muted-foreground" />
-                            {item.recordDay ? format(new Date(item.recordDay.date), "MMM d, yyyy") : "N/A"}
+                            {item.recordDay ? format(new Date(item.recordDay.date), "d MMM yyyy") : "N/A"}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -1260,7 +1260,7 @@ Deal or No Deal Production Team`);
                           />
                           {item.paperworkSent && (
                             <p className="text-xs text-muted-foreground mt-1">
-                              {format(new Date(item.paperworkSent), "MMM d")}
+                              {format(new Date(item.paperworkSent), "d MMM")}
                             </p>
                           )}
                         </TableCell>
@@ -1273,7 +1273,7 @@ Deal or No Deal Production Team`);
                           />
                           {item.paperworkReceived && (
                             <p className="text-xs text-muted-foreground mt-1">
-                              {format(new Date(item.paperworkReceived), "MMM d")}
+                              {format(new Date(item.paperworkReceived), "d MMM")}
                             </p>
                           )}
                         </TableCell>
@@ -1297,7 +1297,7 @@ Deal or No Deal Production Team`);
                             )}
                             {item.declinedAt && (
                               <span className="text-[10px] text-muted-foreground">
-                                Declined {format(new Date(item.declinedAt), "M/d")}
+                                Declined {format(new Date(item.declinedAt), "d/M")}
                               </span>
                             )}
                           </div>

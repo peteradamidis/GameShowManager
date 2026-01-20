@@ -112,7 +112,7 @@ export default function Dashboard() {
 
   // Today's date - normalize to start of day for accurate day comparisons
   const today = startOfDay(new Date());
-  const formattedToday = format(today, "EEEE, MMMM d, yyyy");
+  const formattedToday = format(today, "EEEE, d MMMM yyyy");
 
   // Calculate deadlines
   const SENDING_EMAIL_LEAD_DAYS = 14; // 2 weeks before record day (Sending Email Deadline)
@@ -217,7 +217,7 @@ export default function Dashboard() {
       
       return {
         id: rd.id,
-        date: new Date(rd.date).toLocaleDateString('en-US', { 
+        date: new Date(rd.date).toLocaleDateString('en-AU', { 
           month: 'long', 
           day: 'numeric', 
           year: 'numeric' 
@@ -403,24 +403,24 @@ export default function Dashboard() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-lg font-bold">
-                            {info.rxNumber || format(info.recordDate, "MMM d")}
+                            {info.rxNumber || format(info.recordDate, "d MMM")}
                           </span>
                           <span className="font-semibold">
-                            Record: {format(info.recordDate, "EEE, MMM d")}
+                            Record: {format(info.recordDate, "EEE, d MMM")}
                           </span>
                         </div>
                         <div className="text-sm flex flex-col gap-1 mt-1">
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <span className="font-semibold w-44">Sending Email Deadline:</span>
                             <span className={info.daysUntilEmailDeadline < 0 ? "text-red-600 font-bold" : "font-medium text-foreground"}>
-                              {format(info.emailDeadline, "EEE, MMM d")}
+                              {format(info.emailDeadline, "EEE, d MMM")}
                               {info.daysUntilEmailDeadline === 0 && <span className="text-red-600 dark:text-red-400 ml-1">(TODAY)</span>}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <span className="font-semibold w-44">Confirmation Deadline:</span>
                             <span className={info.daysUntilConfirmationDeadline < 0 ? "text-red-600 font-bold" : "font-medium text-foreground"}>
-                              {format(info.confirmationDeadline, "EEE, MMM d")}
+                              {format(info.confirmationDeadline, "EEE, d MMM")}
                               {info.daysUntilConfirmationDeadline === 0 && <span className="text-red-600 dark:text-red-400 ml-1">(TODAY)</span>}
                             </span>
                           </div>

@@ -277,8 +277,8 @@ export default function BookingConfirmationPage() {
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" style={{ color: '#D4AF37' }} />
                         <span className="font-medium">
-                          {new Date(tokenData.booking.recordDate).toLocaleDateString('en-US', { 
-                            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                          {new Date(tokenData.booking.recordDate).toLocaleDateString('en-AU', { 
+                            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
                           })}
                         </span>
                       </div>
@@ -392,8 +392,8 @@ export default function BookingConfirmationPage() {
                   <div>
                     <p className="text-xs text-gray-500">Recording Date</p>
                     <p className="font-semibold text-gray-800">
-                      {new Date(tokenData.booking.recordDate).toLocaleDateString('en-US', { 
-                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                      {new Date(tokenData.booking.recordDate).toLocaleDateString('en-AU', { 
+                        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
                       })}
                     </p>
                   </div>

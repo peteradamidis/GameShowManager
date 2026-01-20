@@ -210,7 +210,7 @@ export default function AttendanceIssuesPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {recordDay ? format(new Date(recordDay.date), 'MMM d, yyyy') : 'Unknown'}
+                        {recordDay ? format(new Date(recordDay.date), 'd MMM yyyy') : 'Unknown'}
                       </TableCell>
                       <TableCell>
                         Block {issue.blockNumber}, Seat {issue.seatLabel}
@@ -219,7 +219,7 @@ export default function AttendanceIssuesPage() {
                         {issue.markedBy || 'Unknown'}
                       </TableCell>
                       <TableCell>
-                        {format(new Date(issue.createdAt), 'MMM d, yyyy h:mm a')}
+                        {format(new Date(issue.createdAt), 'd MMM yyyy h:mm a')}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">

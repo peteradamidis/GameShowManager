@@ -336,7 +336,7 @@ export default function ReschedulePage() {
                     .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
                     .map((rd: any) => (
                       <SelectItem key={rd.id} value={rd.id}>
-                        {rd.rxNumber ? `${rd.rxNumber} — ` : ''}{format(new Date(rd.date), "EEE, MMM d, yyyy")}
+                        {rd.rxNumber ? `${rd.rxNumber} — ` : ''}{format(new Date(rd.date), "EEE, d MMM yyyy")}
                       </SelectItem>
                     ))
                   }
@@ -438,12 +438,12 @@ export default function ReschedulePage() {
                       {cancellation.isFromStandby && cancellation.originalAttendanceDate ? (
                         <div className="flex items-center gap-2">
                           <CalendarIcon className="h-3 w-3 text-muted-foreground" />
-                          {format(new Date(cancellation.originalAttendanceDate), 'MMM dd, yyyy')}
+                          {format(new Date(cancellation.originalAttendanceDate), 'dd MMM yyyy')}
                         </div>
                       ) : cancellation.recordDay?.date ? (
                         <div className="flex items-center gap-2">
                           <CalendarIcon className="h-3 w-3 text-muted-foreground" />
-                          {format(new Date(cancellation.recordDay.date), 'MMM dd, yyyy')}
+                          {format(new Date(cancellation.recordDay.date), 'dd MMM yyyy')}
                         </div>
                       ) : (
                         <span className="text-muted-foreground">—</span>
@@ -463,7 +463,7 @@ export default function ReschedulePage() {
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
-                      {format(new Date(cancellation.canceledAt), 'MMM dd, yyyy HH:mm')}
+                      {format(new Date(cancellation.canceledAt), 'dd MMM yyyy HH:mm')}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
                       {cancellation.reason || '—'}
@@ -548,7 +548,7 @@ export default function ReschedulePage() {
               {selectedRecordDayDetails && (
                 <div className="mt-1 p-1.5 bg-muted rounded text-sm">
                   <span className="font-medium">Selected: </span>
-                  {format(parseISO(selectedRecordDayDetails.date.split('T')[0]), 'MMMM d, yyyy')}
+                  {format(parseISO(selectedRecordDayDetails.date.split('T')[0]), 'd MMMM yyyy')}
                   {selectedRecordDayDetails.rxNumber && (
                     <span className="text-muted-foreground"> ({selectedRecordDayDetails.rxNumber})</span>
                   )}
