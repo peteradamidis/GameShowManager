@@ -9391,28 +9391,24 @@ ${finalEmailFooter}`;
                     <h2 style="color: #92400E; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase;">
                       Your Standby Booking Details
                     </h2>
-                    <table role="presentation" cellspacing="0" cellpadding="0">
+                    <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
                       <tr>
-                        <td style="padding: 5px 0;">
-                          <span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">DATE:</span>
-                          <span style="color: #333; font-size: 14px; font-weight: bold;">${recordDate.toUpperCase()}</span>
+                        <td style="padding: 8px 0;">
+                          <div style="color: #666; font-size: 12px; margin-bottom: 2px;">DATE</div>
+                          <div style="color: #333; font-size: 15px; font-weight: bold;">${recordDate.toUpperCase()}</div>
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding: 5px 0;">
-                          <span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">TIME:</span>
-                          <span style="color: #333; font-size: 14px; font-weight: bold;">8:00 AM</span>
+                        <td style="padding: 8px 0;">
+                          <div style="color: #666; font-size: 12px; margin-bottom: 2px;">TIME</div>
+                          <div style="color: #333; font-size: 15px; font-weight: bold;">8:00 AM</div>
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding: 5px 0;">
-                          <span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">LOCATION:</span>
-                          <span style="color: #333; font-size: 14px; font-weight: bold;">Docklands Studios Melbourne</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 5px 0 0 80px;">
-                          <span style="color: #666; font-size: 13px;">476 Docklands Drive, Docklands, VIC 3008</span>
+                        <td style="padding: 8px 0;">
+                          <div style="color: #666; font-size: 12px; margin-bottom: 2px;">LOCATION</div>
+                          <div style="color: #333; font-size: 15px; font-weight: bold;">Docklands Studios Melbourne</div>
+                          <div style="color: #666; font-size: 13px; margin-top: 2px;">476 Docklands Drive, Docklands, VIC 3008</div>
                         </td>
                       </tr>
                     </table>
@@ -9652,11 +9648,10 @@ ${finalEmailFooter}`;
                     <h2 style="color: #92400E; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase;">
                       Your Standby Booking Details
                     </h2>
-                    <table role="presentation" cellspacing="0" cellpadding="0">
-                      <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">DATE:</span><span style="color: #333; font-size: 14px; font-weight: bold;">${recordDate.toUpperCase()}</span></td></tr>
-                      <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">TIME:</span><span style="color: #333; font-size: 14px; font-weight: bold;">8:00 AM</span></td></tr>
-                      <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">LOCATION:</span><span style="color: #333; font-size: 14px; font-weight: bold;">Docklands Studios Melbourne</span></td></tr>
-                      <tr><td style="padding: 5px 0 0 80px;"><span style="color: #666; font-size: 13px;">476 Docklands Drive, Docklands, VIC 3008</span></td></tr>
+                    <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+                      <tr><td style="padding: 8px 0;"><div style="color: #666; font-size: 12px; margin-bottom: 2px;">DATE</div><div style="color: #333; font-size: 15px; font-weight: bold;">${recordDate.toUpperCase()}</div></td></tr>
+                      <tr><td style="padding: 8px 0;"><div style="color: #666; font-size: 12px; margin-bottom: 2px;">TIME</div><div style="color: #333; font-size: 15px; font-weight: bold;">8:00 AM</div></td></tr>
+                      <tr><td style="padding: 8px 0;"><div style="color: #666; font-size: 12px; margin-bottom: 2px;">LOCATION</div><div style="color: #333; font-size: 15px; font-weight: bold;">Docklands Studios Melbourne</div><div style="color: #666; font-size: 13px; margin-top: 2px;">476 Docklands Drive, Docklands, VIC 3008</div></td></tr>
                     </table>
                   </td>
                 </tr>
@@ -11697,11 +11692,10 @@ ${finalEmailFooter}`;
                       <h2 style="color: #92400E; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase;">
                         Your Standby Booking Details
                       </h2>
-                      <table role="presentation" cellspacing="0" cellpadding="0">
-                        <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">DATE:</span><span style="color: #333; font-size: 14px; font-weight: bold;">${sampleDate}</span></td></tr>
-                        <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">TIME:</span><span style="color: #333; font-size: 14px; font-weight: bold;">8:00 AM</span></td></tr>
-                        <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">LOCATION:</span><span style="color: #333; font-size: 14px; font-weight: bold;">Docklands Studios Melbourne</span></td></tr>
-                        <tr><td style="padding: 5px 0 0 80px;"><span style="color: #666; font-size: 13px;">476 Docklands Drive, Docklands, VIC 3008</span></td></tr>
+                      <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+                        <tr><td style="padding: 8px 0;"><div style="color: #666; font-size: 12px; margin-bottom: 2px;">DATE</div><div style="color: #333; font-size: 15px; font-weight: bold;">${sampleDate}</div></td></tr>
+                        <tr><td style="padding: 8px 0;"><div style="color: #666; font-size: 12px; margin-bottom: 2px;">TIME</div><div style="color: #333; font-size: 15px; font-weight: bold;">8:00 AM</div></td></tr>
+                        <tr><td style="padding: 8px 0;"><div style="color: #666; font-size: 12px; margin-bottom: 2px;">LOCATION</div><div style="color: #333; font-size: 15px; font-weight: bold;">Docklands Studios Melbourne</div><div style="color: #666; font-size: 13px; margin-top: 2px;">476 Docklands Drive, Docklands, VIC 3008</div></td></tr>
                       </table>
                     </td>
                   </tr>
