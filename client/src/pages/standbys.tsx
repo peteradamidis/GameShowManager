@@ -1437,26 +1437,26 @@ export default function StandbysPage() {
                 onValueChange={(v) => setAttendedBlockType(v as "PB" | "NPB")}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-3 p-3 border rounded-md hover:bg-muted/50">
-                  <RadioGroupItem value="PB" id="block-pb" data-testid="radio-block-pb" />
+                <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
+                  <RadioGroupItem value="PB" id="block-pb" data-testid="radio-block-pb" className="mt-1" />
                   <div className="flex flex-col">
                     <Label htmlFor="block-pb" className="font-medium cursor-pointer">
                       Podium Block (PB)
                     </Label>
                     <span className="text-sm text-muted-foreground">
-                      They sat in a podium block during the show
+                      They sat in a podium block during the show. This should only be selected if they appeared on the podium as a case holder. This does not apply to blocks that already played before the standbys were added in.
                     </span>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-3 p-3 border rounded-md hover:bg-muted/50">
-                  <RadioGroupItem value="NPB" id="block-npb" data-testid="radio-block-npb" />
+                <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
+                  <RadioGroupItem value="NPB" id="block-npb" data-testid="radio-block-npb" className="mt-1" />
                   <div className="flex flex-col">
                     <Label htmlFor="block-npb" className="font-medium cursor-pointer">
                       Non-Playing Block (NPB)
                     </Label>
                     <span className="text-sm text-muted-foreground">
-                      They sat in a non-playing block during the show
+                      They sat in a non-playing block during the show. This also applies to standbys that have been added into PBs after they have already played.
                     </span>
                   </div>
                 </div>
