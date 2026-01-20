@@ -450,12 +450,13 @@ export default function ReschedulePage() {
                           <Badge className="bg-yellow-500 text-yellow-950 hover:bg-yellow-500">
                             Standby
                           </Badge>
-                          {cancellation.reason?.includes('Podium Block') ? (
-                            <Badge variant="outline" className="border-purple-300 bg-purple-100 text-purple-700 dark:border-purple-700 dark:bg-purple-900 dark:text-purple-300 text-[10px]">
+                          {/* Display block type from seatedAsBlockType field or fall back to parsing reason */}
+                          {cancellation.seatedAsBlockType === 'PB' || cancellation.reason?.includes('Podium Block') || cancellation.reason?.includes('Case Holder') ? (
+                            <Badge variant="outline" className="border-purple-300 bg-purple-100 text-purple-700 dark:border-purple-700 dark:bg-purple-900 dark:text-purple-300 text-[10px]" title="Case Holder">
                               PB
                             </Badge>
-                          ) : cancellation.reason?.includes('Non-Playing Block') ? (
-                            <Badge variant="outline" className="border-blue-300 bg-blue-100 text-blue-700 dark:border-blue-700 dark:bg-blue-900 dark:text-blue-300 text-[10px]">
+                          ) : cancellation.seatedAsBlockType === 'NPB' || cancellation.reason?.includes('Non-Playing Block') ? (
+                            <Badge variant="outline" className="border-blue-300 bg-blue-100 text-blue-700 dark:border-blue-700 dark:bg-blue-900 dark:text-blue-300 text-[10px]" title="Non Playing Block">
                               NPB
                             </Badge>
                           ) : cancellation.reason?.includes('Not Seated') ? (

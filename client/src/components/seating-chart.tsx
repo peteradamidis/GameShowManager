@@ -46,6 +46,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import stageBackdropImage from "@/assets/stage-backdrop.png";
 import podiumSetImage from "@/assets/podium-set.png";
 import centreStageImage from "@/assets/centre-stage.png";
@@ -1001,6 +1003,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     targetBlockNumber: number;
     targetSeatLabel: string;
   } | null>(null);
+  const [standbyBlockType, setStandbyBlockType] = useState<'PB' | 'NPB'>('NPB');
   // Seat selection dialog for standbys (alternative to drag-and-drop)
   const [seatSelectionStandby, setSeatSelectionStandby] = useState<StandbyData | null>(null);
   // Prize winner toggle states: { winnerId: { prize: boolean, briefcase: boolean } }
@@ -1460,7 +1463,9 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     if (!pendingStandbyAssign) return;
     
     const { standby, targetBlockNumber, targetSeatLabel } = pendingStandbyAssign;
+    const blockType = standbyBlockType; // Capture current selection
     setPendingStandbyAssign(null);
+    setStandbyBlockType('NPB'); // Reset for next time
     
     try {
       // First update the standby status to 'seated' - this removes the standby block
@@ -1470,16 +1475,20 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
       });
       
       // Now create the seat assignment (standby check will pass since status is 'seated')
+      // Include the block type (Case Holder = PB, Non Playing Block = NPB)
       await apiRequest('POST', `/api/seat-assignments`, {
         recordDayId,
         contestantId: standby.contestantId,
         blockNumber: targetBlockNumber,
         seatLabel: targetSeatLabel,
+        seatedAsBlockType: blockType,
+        seatedFromStandby: true,
       });
       
+      const blockTypeLabel = blockType === 'PB' ? 'Case Holder' : 'Non Playing Block';
       toast({
         title: "Standby seated",
-        description: `${standby.contestant.name} has been assigned to Block ${targetBlockNumber}, Seat ${targetSeatLabel}.`,
+        description: `${standby.contestant.name} has been assigned to Block ${targetBlockNumber}, Seat ${targetSeatLabel} as ${blockTypeLabel}.`,
       });
       
       // Refresh data
@@ -2025,7 +2034,12 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         </AlertDialog>
 
         {/* Standby Seat Assignment Confirmation Dialog */}
-        <AlertDialog open={!!pendingStandbyAssign} onOpenChange={(open) => !open && setPendingStandbyAssign(null)}>
+        <AlertDialog open={!!pendingStandbyAssign} onOpenChange={(open) => { 
+          if (!open) {
+            setPendingStandbyAssign(null);
+            setStandbyBlockType('NPB');
+          }
+        }}>
           <AlertDialogContent data-testid="dialog-standby-assign">
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2">
@@ -2033,18 +2047,42 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 Seat Standby
               </AlertDialogTitle>
               <AlertDialogDescription asChild>
-                <div className="space-y-3 text-sm text-muted-foreground">
+                <div className="space-y-4 text-sm text-muted-foreground">
                   <span className="block">
                     You are about to assign a standby to a seat. This action will be recorded.
                   </span>
                   {pendingStandbyAssign && (
-                    <div className="mt-3 p-3 bg-muted rounded-lg text-sm">
+                    <div className="p-3 bg-muted rounded-lg text-sm">
                       <span className="block font-medium text-foreground">
                         Assign <span className="text-primary">{pendingStandbyAssign.standby.contestant.name}</span>
                         {' '}to seat <strong>{String(pendingStandbyAssign.targetBlockNumber).padStart(2, '0')}-{pendingStandbyAssign.targetSeatLabel}</strong>
                       </span>
                     </div>
                   )}
+                  <div className="space-y-2">
+                    <span className="block font-medium text-foreground text-sm">
+                      How is this standby being seated?
+                    </span>
+                    <RadioGroup 
+                      value={standbyBlockType} 
+                      onValueChange={(value) => setStandbyBlockType(value as 'PB' | 'NPB')}
+                      className="flex gap-4"
+                      data-testid="radio-standby-block-type"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="PB" id="block-type-pb" data-testid="radio-pb" />
+                        <Label htmlFor="block-type-pb" className="text-sm font-normal cursor-pointer">
+                          Case Holder (PB)
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="NPB" id="block-type-npb" data-testid="radio-npb" />
+                        <Label htmlFor="block-type-npb" className="text-sm font-normal cursor-pointer">
+                          Non Playing Block (NPB)
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
                 </div>
               </AlertDialogDescription>
             </AlertDialogHeader>

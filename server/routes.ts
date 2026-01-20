@@ -2674,7 +2674,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a seat assignment
   app.post("/api/seat-assignments", async (req, res) => {
     try {
-      const { recordDayId, contestantId, blockNumber, seatLabel, playerType } = req.body;
+      const { recordDayId, contestantId, blockNumber, seatLabel, playerType, seatedAsBlockType, seatedFromStandby } = req.body;
 
       if (!recordDayId || !contestantId || !blockNumber || !seatLabel) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -2749,6 +2749,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Carry over paperwork status from previous bookings
         paperworkSent: previousCanceled?.paperworkSent || undefined,
         paperworkReceived: previousCanceled?.paperworkReceived || undefined,
+        // Standby block type tracking - when standby is seated
+        seatedAsBlockType: seatedAsBlockType || undefined,
+        seatedFromStandby: seatedFromStandby === true,
       });
 
       // Update contestant status to assigned
