@@ -1397,8 +1397,8 @@ export default function StandbysPage() {
                 <span className="text-sm font-medium">Email Preview</span>
               </div>
               <iframe
-                key={`standby-ticket-preview-${selectedRecordDay}`}
-                src={`/api/email-preview/standby-ticket?recordDayId=${selectedRecordDay}&t=${Date.now()}`}
+                key={`standby-ticket-preview-${selectedRecordDayId}`}
+                src={`/api/email-preview/standby-ticket?recordDayId=${selectedRecordDayId}&t=${Date.now()}`}
                 className="w-full h-[300px] bg-white"
                 title="Standby Ticket Email Preview"
               />
