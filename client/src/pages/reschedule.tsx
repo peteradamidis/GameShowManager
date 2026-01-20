@@ -337,7 +337,7 @@ export default function ReschedulePage() {
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name..."
+                placeholder="Search name or attending with..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8 w-64"
@@ -407,7 +407,10 @@ export default function ReschedulePage() {
                 {canceledAssignments
                   .filter((cancellation: any) => {
                     const matchesDate = filterOriginalRecordDayId === "all" || cancellation.recordDayId === filterOriginalRecordDayId;
-                    const matchesSearch = !searchQuery || cancellation.contestant?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+                    const searchLower = searchQuery.toLowerCase();
+                    const matchesSearch = !searchQuery || 
+                      cancellation.contestant?.name?.toLowerCase().includes(searchLower) ||
+                      cancellation.contestant?.attendingWith?.toLowerCase().includes(searchLower);
                     const matchesType = filterType === "all" || 
                       (filterType === "standby" && cancellation.isFromStandby) || 
                       (filterType === "canceled" && !cancellation.isFromStandby);
