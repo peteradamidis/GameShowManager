@@ -422,6 +422,10 @@ export default function ReschedulePage() {
                             <Badge variant="outline" className="border-blue-300 bg-blue-100 text-blue-700 dark:border-blue-700 dark:bg-blue-900 dark:text-blue-300 text-[10px]">
                               NPB
                             </Badge>
+                          ) : cancellation.reason?.includes('Not Seated') ? (
+                            <Badge variant="outline" className="border-gray-300 bg-gray-100 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 text-[10px]">
+                              NS
+                            </Badge>
                           ) : null}
                         </div>
                       ) : (

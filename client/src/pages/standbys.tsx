@@ -142,7 +142,7 @@ export default function StandbysPage() {
   // Move attended standby to reschedule dialog state
   const [moveToRescheduleDialogOpen, setMoveToRescheduleDialogOpen] = useState(false);
   const [moveToRescheduleStandby, setMoveToRescheduleStandby] = useState<StandbyAssignment | null>(null);
-  const [attendedBlockType, setAttendedBlockType] = useState<"PB" | "NPB">("NPB");
+  const [attendedBlockType, setAttendedBlockType] = useState<"PB" | "NPB" | "NS">("NPB");
   const [attendedNotes, setAttendedNotes] = useState("");
 
   // Fetch record days
@@ -414,9 +414,9 @@ export default function StandbysPage() {
 
   // Move attended standby to reschedule mutation
   const moveAttendedToRescheduleMutation = useMutation({
-    mutationFn: async ({ standby, blockType, notes }: { standby: StandbyAssignment; blockType: "PB" | "NPB"; notes: string }) => {
+    mutationFn: async ({ standby, blockType, notes }: { standby: StandbyAssignment; blockType: "PB" | "NPB" | "NS"; notes: string }) => {
       // Build reason with block type and optional notes
-      const blockLabel = blockType === 'PB' ? 'Podium Block' : 'Non-Playing Block';
+      const blockLabel = blockType === 'PB' ? 'Podium Block' : blockType === 'NPB' ? 'Non-Playing Block' : 'Not Seated';
       const reason = notes.trim() 
         ? `STANDBY ATTENDED - ${blockLabel} - ${notes.trim()}`
         : `STANDBY ATTENDED - ${blockLabel}`;
@@ -1450,10 +1450,10 @@ export default function StandbysPage() {
 
           <div className="space-y-4 py-4">
             <div className="space-y-3">
-              <Label className="text-sm font-medium">Where did they sit during the show?</Label>
+              <Label className="text-sm font-medium">What was their seating status?</Label>
               <RadioGroup 
                 value={attendedBlockType} 
-                onValueChange={(v) => setAttendedBlockType(v as "PB" | "NPB")}
+                onValueChange={(v) => setAttendedBlockType(v as "PB" | "NPB" | "NS")}
                 className="space-y-2"
               >
                 <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
@@ -1476,6 +1476,18 @@ export default function StandbysPage() {
                     </Label>
                     <span className="text-sm text-muted-foreground">
                       They sat in a non-playing block during the show. This also applies to standbys that have been added into PBs after they have already played.
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
+                  <RadioGroupItem value="NS" id="block-ns" data-testid="radio-block-ns" className="mt-1" />
+                  <div className="flex flex-col">
+                    <Label htmlFor="block-ns" className="font-medium cursor-pointer">
+                      Not Seated (NS)
+                    </Label>
+                    <span className="text-sm text-muted-foreground">
+                      They attended as a standby but did not get a seat inside the studio because there weren't any seats available.
                     </span>
                   </div>
                 </div>
