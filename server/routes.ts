@@ -2039,21 +2039,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete contestant (individual)
   app.delete("/api/contestants/:id", async (req, res) => {
     try {
-      const contestant = await storage.getContestantById(req.params.id);
+      const { id } = req.params;
+      const contestant = await storage.getContestantById(id);
       if (!contestant) {
         return res.status(404).json({ error: "Contestant not found" });
       }
-      
-      // Check if contestant has any seat assignments
-      const assignments = await storage.getAllSeatAssignments();
-      const hasAssignments = assignments.some((a: any) => a.contestantId === req.params.id);
-      if (hasAssignments) {
-        return res.status(400).json({ error: "Cannot delete contestant with active seat assignments" });
+
+      const isTestSubject = ['Peter Adamidis', 'Kathleen Reynolds'].includes(contestant.name);
+
+      if (isTestSubject) {
+        // For test subjects, we want a clean wipe of all related data before deleting the contestant
+        // This handles foreign key constraints like standby_confirmation_tokens -> standby_assignments
+        
+        // 1. Delete standby confirmation tokens
+        await db.execute(sql`
+          DELETE FROM standby_confirmation_tokens 
+          WHERE standby_assignment_id IN (
+            SELECT id FROM standby_assignments WHERE contestant_id = ${id}
+          )
+        `);
+
+        // 2. Delete standby assignments
+        await db.execute(sql`DELETE FROM standby_assignments WHERE contestant_id = ${id}`);
+        
+        // 3. Delete booking confirmation tokens and messages
+        await db.execute(sql`
+          DELETE FROM booking_messages 
+          WHERE confirmation_id IN (
+            SELECT id FROM booking_confirmation_tokens 
+            WHERE seat_assignment_id IN (
+              SELECT id FROM seat_assignments WHERE contestant_id = ${id}
+            )
+          )
+        `);
+        await db.execute(sql`
+          DELETE FROM booking_confirmation_tokens 
+          WHERE seat_assignment_id IN (
+            SELECT id FROM seat_assignments WHERE contestant_id = ${id}
+          )
+        `);
+
+        // 4. Delete seat assignments
+        await db.execute(sql`DELETE FROM seat_assignments WHERE contestant_id = ${id}`);
+
+        // 5. Delete canceled assignments
+        await db.execute(sql`DELETE FROM canceled_assignments WHERE contestant_id = ${id}`);
+
+        // 6. Delete availability tokens
+        await db.execute(sql`DELETE FROM availability_tokens WHERE contestant_id = ${id}`);
+
+        // 7. Delete contestant availability
+        await db.execute(sql`DELETE FROM contestant_availability WHERE contestant_id = ${id}`);
+
+        // 8. Delete prize winners
+        await db.execute(sql`DELETE FROM prize_winners WHERE contestant_id = ${id}`);
+
+        // 9. Delete standby attendance history
+        await db.execute(sql`DELETE FROM standby_attendance_history WHERE contestant_id = ${id}`);
+
+        // 10. Delete rebooking history
+        await db.execute(sql`DELETE FROM rebooking_history WHERE contestant_id = ${id}`);
+      } else {
+        // Check if regular contestant has any seat assignments
+        const assignments = await storage.getAllSeatAssignments();
+        const hasAssignments = assignments.some((a: any) => a.contestantId === id);
+        if (hasAssignments) {
+          return res.status(400).json({ error: "Cannot delete contestant with active seat assignments" });
+        }
       }
 
-      await storage.deleteContestant(req.params.id);
+      await storage.deleteContestant(id);
       res.json({ message: "Contestant deleted successfully" });
     } catch (error: any) {
+      console.error("Delete contestant error:", error);
       res.status(500).json({ error: error.message });
     }
   });
