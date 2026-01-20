@@ -433,9 +433,9 @@ export default function StandbysPage() {
         originalAttendanceDate: standby.recordDay?.date ? new Date(standby.recordDay.date) : new Date(),
       });
       
-      // Also update the standby status to 'declined' so the button changes
+      // Also update the standby status to 'rescheduled' so the button changes
       return apiRequest('PATCH', `/api/standbys/${standby.id}`, {
-        status: 'declined',
+        status: 'rescheduled',
         movedToReschedule: true,
         movedToRescheduleAt: new Date().toISOString(),
         notes: reason,
@@ -467,7 +467,7 @@ export default function StandbysPage() {
         ? `DECLINED STANDBY INVITATION - ${reason.trim()}` 
         : `DECLINED STANDBY INVITATION`;
       return apiRequest('PATCH', `/api/standbys/${id}`, {
-        status: 'declined',
+        status: 'rescheduled',
         movedToReschedule: true,
         movedToRescheduleAt: new Date().toISOString(),
         notes: `[${movedBy}] ${fullReason}`,
@@ -1096,7 +1096,7 @@ export default function StandbysPage() {
                         </TableCell>
                         {/* Actions */}
                         <TableCell className="py-1 px-2">
-                          {standby.status === 'declined' ? (
+                          {standby.status === 'rescheduled' ? (
                             <span className="text-xs text-muted-foreground">Moved to Reschedule</span>
                           ) : standby.signedIn ? (
                             <Button

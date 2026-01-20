@@ -8728,8 +8728,8 @@ Thank you.`;
         return res.status(404).json({ error: "Standby assignment not found" });
       }
 
-      // If the standby is being declined and moved to reschedule, create a canceled assignment
-      if (updateData.status === 'declined' && updateData.movedToReschedule) {
+      // If the standby is being rescheduled, create a canceled assignment
+      if (updateData.status === 'rescheduled' && updateData.movedToReschedule) {
         // Create a canceled assignment record for the reschedule page
         // Use isFromStandby: false so it shows "Canceled" tag, not "Standby"
         await storage.createCanceledAssignment({
