@@ -12,6 +12,21 @@ import {
   useDroppable,
   DragOverlay,
 } from "@dnd-kit/core";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { SeatCard, SeatData } from "./seat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -327,6 +342,7 @@ function SortableStandbyItem({
             } ${
               isInGroup ? 'ml-3 border-l-2 border-l-purple-400 dark:border-l-purple-600' : ''
             } ${isLocked ? 'cursor-grab active:cursor-grabbing' : 'cursor-not-allowed'} hover:bg-muted/50 transition-colors`}
+            onClick={() => isLocked && onSeatSelect && onSeatSelect(standby)}
           >
             {/* Drag handle icon */}
             <div 
@@ -1006,6 +1022,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   const [standbyBlockType, setStandbyBlockType] = useState<'PB' | 'NPB'>('NPB');
   // Seat selection dialog for standbys (alternative to drag-and-drop)
   const [seatSelectionStandby, setSeatSelectionStandby] = useState<StandbyData | null>(null);
+  const [selectedSeatForStandby, setSelectedSeatForStandby] = useState<string>("");
   // Prize winner toggle states: { winnerId: { prize: boolean, briefcase: boolean } }
   const [prizeWinnerToggles, setPrizeWinnerToggles] = useState<Record<string, { prize: boolean; briefcase: boolean }>>({});
   const { toast } = useToast();
@@ -1458,15 +1475,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     await executeSwap(sourceSeat, targetSeat, sourceLocation, targetLocation, false);
   };
   
-  // Handle standby seat assignment
-  const handleConfirmStandbyAssign = async () => {
-    if (!pendingStandbyAssign) return;
-    
-    const { standby, targetBlockNumber, targetSeatLabel } = pendingStandbyAssign;
-    const blockType = standbyBlockType; // Capture current selection
-    setPendingStandbyAssign(null);
-    setStandbyBlockType('NPB'); // Reset for next time
-    
+  const handleConfirmStandbyAssignInternal = async (standby: StandbyData, targetBlockNumber: number, targetSeatLabel: string, blockType: 'PB' | 'NPB') => {
     try {
       // First update the standby status to 'seated' - this removes the standby block
       await apiRequest('PATCH', `/api/standbys/${standby.id}`, {
@@ -1502,6 +1511,18 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         variant: "destructive",
       });
     }
+  };
+
+  // Handle standby seat assignment
+  const handleConfirmStandbyAssign = async () => {
+    if (!pendingStandbyAssign) return;
+    
+    const { standby, targetBlockNumber, targetSeatLabel } = pendingStandbyAssign;
+    const blockType = standbyBlockType; // Capture current selection
+    setPendingStandbyAssign(null);
+    setStandbyBlockType('NPB'); // Reset for next time
+    
+    await handleConfirmStandbyAssignInternal(standby, targetBlockNumber, targetSeatLabel, blockType);
   };
 
   // Handle confirmation of locked swap
@@ -1816,6 +1837,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                       isFirstInGroup={item.isFirstInGroup}
                                       isLastInGroup={item.isLastInGroup}
                                       groupMemberNames={item.groupMemberNames}
+                                      onSeatSelect={setSeatSelectionStandby}
                                     />
                                   ))}
                                 </div>
@@ -1964,6 +1986,90 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
             </div>
           ) : null}
         </DragOverlay>
+
+        {/* Standby Seat Selection Dialog */}
+        <Dialog open={!!seatSelectionStandby} onOpenChange={(open) => !open && setSeatSelectionStandby(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Assign Standby to Seat</DialogTitle>
+              <DialogDescription>
+                Select an available seat for {seatSelectionStandby?.contestant.name}.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Select Available Seat</Label>
+                <Select value={selectedSeatForStandby} onValueChange={setSelectedSeatForStandby}>
+                  <SelectTrigger data-testid="select-standby-seat">
+                    <SelectValue placeholder="Choose a seat..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {blocks.map((block, bIdx) => {
+                      const emptySeats = block.filter(s => !s.contestantName);
+                      if (emptySeats.length === 0) return null;
+                      return (
+                        <div key={bIdx}>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
+                            Block {bIdx + 1}
+                          </div>
+                          {emptySeats.map(seat => {
+                            const label = seat.id.split('-').pop() || '';
+                            return (
+                              <SelectItem key={seat.id} value={seat.id}>
+                                Block {bIdx + 1} - {label}
+                              </SelectItem>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Block Role</Label>
+                <RadioGroup 
+                  value={standbyBlockType} 
+                  onValueChange={(v: 'PB' | 'NPB') => setStandbyBlockType(v)}
+                  className="flex gap-4 pt-1"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="PB" id="role-pb-dialog" />
+                    <Label htmlFor="role-pb-dialog" className="font-normal cursor-pointer">Case Holder (PB)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="NPB" id="role-npb-dialog" />
+                    <Label htmlFor="role-npb-dialog" className="font-normal cursor-pointer">Non Playing Block (NPB)</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => {
+                setSeatSelectionStandby(null);
+                setSelectedSeatForStandby("");
+              }}>
+                Cancel
+              </Button>
+              <Button 
+                disabled={!selectedSeatForStandby}
+                onClick={async () => {
+                  if (!seatSelectionStandby || !selectedSeatForStandby) return;
+                  const { blockNumber, seatLabel } = getBlockAndSeat(selectedSeatForStandby);
+                  await handleConfirmStandbyAssignInternal(seatSelectionStandby, blockNumber, seatLabel, standbyBlockType);
+                  setSeatSelectionStandby(null);
+                  setSelectedSeatForStandby("");
+                }}
+                data-testid="button-confirm-standby-seat"
+              >
+                Confirm Seating
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Locked Swap Confirmation Dialog */}
         <AlertDialog open={!!pendingSwap} onOpenChange={(open) => !open && handleCancelLockedSwap()}>
