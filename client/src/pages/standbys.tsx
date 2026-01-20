@@ -1021,7 +1021,7 @@ export default function StandbysPage() {
                             </Badge>
                           ) : standby.status === 'rescheduled' ? (
                             <Badge className="bg-purple-500/20 text-purple-700 border-purple-300 dark:text-purple-400 text-[10px] px-1.5 py-0">
-                              Rescheduled
+                              Reschedule
                             </Badge>
                           ) : standby.standbyEmailSent ? (
                             <Badge className="bg-amber-500/20 text-amber-700 border-amber-300 dark:text-amber-400 text-[10px] px-1.5 py-0">
