@@ -241,6 +241,14 @@ export const standbyAssignments = pgTable("standby_assignments", {
   assignedAt: timestamp("assigned_at"), // When they were assigned to a seat
   movedToReschedule: boolean("moved_to_reschedule").default(false), // True when moved to reschedule tab
   movedToRescheduleAt: timestamp("moved_to_reschedule_at"), // When they were moved
+  // Workflow tracking fields (matching seat assignment workflow)
+  bookingEmailSent: timestamp("booking_email_sent"),
+  confirmedRsvp: timestamp("confirmed_rsvp"),
+  paperworkSent: timestamp("paperwork_sent"),
+  paperworkReceived: timestamp("paperwork_received"),
+  paperworkOnDay: timestamp("paperwork_on_day"),
+  signedIn: timestamp("signed_in"),
+  otdNotes: text("otd_notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   // Ensure one standby entry per contestant per record day

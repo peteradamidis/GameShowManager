@@ -8570,6 +8570,25 @@ ${finalEmailFooter}`;
       if (updateData.movedToRescheduleAt && typeof updateData.movedToRescheduleAt === 'string') {
         updateData.movedToRescheduleAt = new Date(updateData.movedToRescheduleAt);
       }
+      // Workflow tracking fields
+      if (updateData.bookingEmailSent && typeof updateData.bookingEmailSent === 'string') {
+        updateData.bookingEmailSent = new Date(updateData.bookingEmailSent);
+      }
+      if (updateData.confirmedRsvp && typeof updateData.confirmedRsvp === 'string') {
+        updateData.confirmedRsvp = new Date(updateData.confirmedRsvp);
+      }
+      if (updateData.paperworkSent && typeof updateData.paperworkSent === 'string') {
+        updateData.paperworkSent = new Date(updateData.paperworkSent);
+      }
+      if (updateData.paperworkReceived && typeof updateData.paperworkReceived === 'string') {
+        updateData.paperworkReceived = new Date(updateData.paperworkReceived);
+      }
+      if (updateData.paperworkOnDay && typeof updateData.paperworkOnDay === 'string') {
+        updateData.paperworkOnDay = new Date(updateData.paperworkOnDay);
+      }
+      if (updateData.signedIn && typeof updateData.signedIn === 'string') {
+        updateData.signedIn = new Date(updateData.signedIn);
+      }
 
       // Get the standby first to have access to contestant/recordDay data
       const allStandbys = await storage.getStandbyAssignments();
@@ -8604,6 +8623,32 @@ ${finalEmailFooter}`;
 
         // Update contestant status to 'rescheduled'
         await storage.updateContestantAvailability(standby.contestantId, 'rescheduled');
+      }
+
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update standby workflow fields (for Booking Master standby section)
+  app.patch("/api/standbys/:id/workflow", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = { ...req.body };
+      
+      // Convert string dates to Date objects for workflow timestamp columns
+      const timestampFields = ['bookingEmailSent', 'confirmedRsvp', 'paperworkSent', 'paperworkReceived', 'paperworkOnDay', 'signedIn'];
+      for (const field of timestampFields) {
+        if (updateData[field] && typeof updateData[field] === 'string') {
+          updateData[field] = new Date(updateData[field]);
+        }
+      }
+
+      const updated = await storage.updateStandbyAssignment(id, updateData);
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Standby assignment not found" });
       }
 
       res.json(updated);

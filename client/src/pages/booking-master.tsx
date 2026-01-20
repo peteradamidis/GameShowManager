@@ -195,6 +195,14 @@ interface StandbyAssignment {
   confirmedAt: string | null;
   notes: string | null;
   assignedToSeat: string | null;
+  // Workflow tracking fields
+  bookingEmailSent: string | null;
+  confirmedRsvp: string | null;
+  paperworkSent: string | null;
+  paperworkReceived: string | null;
+  paperworkOnDay: string | null;
+  signedIn: string | null;
+  otdNotes: string | null;
   contestant: {
     id: string;
     name: string;
@@ -445,6 +453,76 @@ export default function BookingMaster() {
       broadcastBookingChange(selectedRecordDay);
     },
   });
+
+  // Mutation for updating standby workflow fields
+  const updateStandbyWorkflowMutation = useMutation({
+    mutationFn: async ({ standbyId, fields }: { standbyId: string; fields: Record<string, any> }) => {
+      return await apiRequest("PATCH", `/api/standbys/${standbyId}/workflow`, fields);
+    },
+    onMutate: async ({ standbyId, fields }) => {
+      await queryClient.cancelQueries({ queryKey: ['/api/standbys'] });
+      const previousStandbys = queryClient.getQueryData<StandbyAssignment[]>(['/api/standbys']);
+      if (previousStandbys) {
+        queryClient.setQueryData<StandbyAssignment[]>(
+          ['/api/standbys'],
+          previousStandbys.map(s => s.id === standbyId ? { ...s, ...fields } : s)
+        );
+      }
+      return { previousStandbys };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousStandbys) {
+        queryClient.setQueryData(['/api/standbys'], context.previousStandbys);
+      }
+      toast({
+        title: "Update failed",
+        description: "Could not save standby changes. Please try again.",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      broadcastBookingChange(selectedRecordDay);
+    },
+  });
+
+  const handleStandbyWorkflowUpdate = (standbyId: string, field: string, value: any) => {
+    updateStandbyWorkflowMutation.mutate({
+      standbyId,
+      fields: { [field]: value },
+    });
+  };
+
+  const handleStandbyCheckboxToggle = (standbyId: string, field: string, currentValue: any, standbyName: string) => {
+    const newValue = !currentValue;
+    if (currentValue) {
+      setUntickPending({
+        assignmentId: standbyId,
+        field,
+        fieldLabel: getFieldLabel(field),
+        contestantName: standbyName,
+      });
+      setUntickConfirmOpen(true);
+    } else {
+      handleStandbyWorkflowUpdate(standbyId, field, new Date().toISOString());
+    }
+  };
+
+  const handleStandbyDebouncedTextUpdate = (standbyId: string, field: string, value: string) => {
+    const key = `standby-${standbyId}-${field}`;
+    pendingTextUpdatesRef.current[key] = value;
+    if (debounceTimersRef.current[key]) {
+      clearTimeout(debounceTimersRef.current[key]);
+    }
+    debounceTimersRef.current[key] = setTimeout(() => {
+      updateStandbyWorkflowMutation.mutate({
+        standbyId,
+        fields: { [field]: value },
+      });
+      delete pendingTextUpdatesRef.current[key];
+      delete debounceTimersRef.current[key];
+    }, 500);
+  };
 
   const sendBookingEmailsMutation = useMutation({
     mutationFn: async ({ seatAssignmentIds, emailSubject, emailBody, attachmentPaths }: { seatAssignmentIds: string[]; emailSubject: string; emailBody?: string; attachmentPaths?: string[] }) => {
@@ -984,8 +1062,13 @@ export default function BookingMaster() {
                   {isColumnVisible("mobilityNotes") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 text-white font-semibold border-r border-purple-500 dark:border-purple-700">MEDICAL -<br/>AUD</TableHead>}
                   {isColumnVisible("criminal") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 w-20 text-center text-white font-semibold border-r border-purple-500 dark:border-purple-700">CRIMINAL /<br/>BANKRUPTCY</TableHead>}
                   {isColumnVisible("notes") && <TableHead className={`sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 border-r-4 border-r-purple-400 text-white font-semibold ${isFullscreen ? 'min-w-[150px]' : 'min-w-[200px]'}`}>NOTES</TableHead>}
-                  {isColumnVisible("emailSent") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">STANDBY<br/>EMAIL<br/>SENT</TableHead>}
-                  {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">CONFIRM<br/>ED</TableHead>}
+                  {isColumnVisible("emailSent") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">BOOKING<br/>EMAIL<br/>SENT</TableHead>}
+                  {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">CONFIRM<br/>ED RSVP</TableHead>}
+                  {isColumnVisible("paperworkSent") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">PAPER<br/>WORK<br/>SENT</TableHead>}
+                  {isColumnVisible("paperworkReceived") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">PAPER<br/>WORK<br/>RECV</TableHead>}
+                  {isColumnVisible("otdHardCopy") && <TableHead className="sticky top-0 bg-amber-400 dark:bg-amber-700 z-50 text-[10px] py-1 px-2 text-center w-14 text-amber-900 dark:text-white font-semibold border-r border-amber-500 dark:border-amber-600">OTD<br/>PAPER<br/>WORK</TableHead>}
+                  {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-green-200 dark:bg-green-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-green-900 dark:text-white font-semibold border-r border-green-300 dark:border-green-600">SIGNED<br/>IN</TableHead>}
+                  {isColumnVisible("otdNotes") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center min-w-[120px] text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">OTD NOTES</TableHead>}
                   <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-20 text-purple-900 dark:text-white font-semibold">ASSIGNED<br/>TO SEAT</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1036,23 +1119,74 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("emailSent") && (
-                          <TableCell className="py-0.5 h-7 text-center border-r border-purple-200 dark:border-purple-800">
-                            {standby.standbyEmailSent ? (
-                              <CheckCircle className="h-4 w-4 text-green-600 mx-auto" />
-                            ) : (
-                              <XCircle className="h-4 w-4 text-gray-300 mx-auto" />
-                            )}
+                          <TableCell className="py-0.5 h-7 text-center border-r border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/20">
+                            <Checkbox
+                              checked={!!standby.bookingEmailSent}
+                              onCheckedChange={() => handleStandbyCheckboxToggle(standby.id, 'bookingEmailSent', standby.bookingEmailSent, standby.contestant.name)}
+                              className="h-4 w-4"
+                              data-testid={`checkbox-standby-booking-email-${standby.id}`}
+                            />
                           </TableCell>
                         )}
                         {isColumnVisible("rsvp") && (
-                          <TableCell className="py-0.5 h-7 text-center border-r border-purple-200 dark:border-purple-800">
-                            {standby.confirmedAt ? (
-                              <CheckCircle className="h-4 w-4 text-green-600 mx-auto" />
-                            ) : standby.status === 'declined' ? (
-                              <XCircle className="h-4 w-4 text-red-500 mx-auto" />
-                            ) : (
-                              <span className="text-xs text-muted-foreground">-</span>
-                            )}
+                          <TableCell className="py-0.5 h-7 text-center border-r border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/20">
+                            <Checkbox
+                              checked={!!standby.confirmedRsvp}
+                              onCheckedChange={() => handleStandbyCheckboxToggle(standby.id, 'confirmedRsvp', standby.confirmedRsvp, standby.contestant.name)}
+                              className="h-4 w-4"
+                              data-testid={`checkbox-standby-rsvp-${standby.id}`}
+                            />
+                          </TableCell>
+                        )}
+                        {isColumnVisible("paperworkSent") && (
+                          <TableCell className="py-0.5 h-7 text-center border-r border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/20">
+                            <Checkbox
+                              checked={!!standby.paperworkSent}
+                              onCheckedChange={() => handleStandbyCheckboxToggle(standby.id, 'paperworkSent', standby.paperworkSent, standby.contestant.name)}
+                              className="h-4 w-4"
+                              data-testid={`checkbox-standby-paperwork-sent-${standby.id}`}
+                            />
+                          </TableCell>
+                        )}
+                        {isColumnVisible("paperworkReceived") && (
+                          <TableCell className="py-0.5 h-7 text-center border-r border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/20">
+                            <Checkbox
+                              checked={!!standby.paperworkReceived}
+                              onCheckedChange={() => handleStandbyCheckboxToggle(standby.id, 'paperworkReceived', standby.paperworkReceived, standby.contestant.name)}
+                              className="h-4 w-4"
+                              data-testid={`checkbox-standby-paperwork-recv-${standby.id}`}
+                            />
+                          </TableCell>
+                        )}
+                        {isColumnVisible("otdHardCopy") && (
+                          <TableCell className="py-0.5 h-7 text-center border-r border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20">
+                            <Checkbox
+                              checked={!!standby.paperworkOnDay}
+                              onCheckedChange={() => handleStandbyCheckboxToggle(standby.id, 'paperworkOnDay', standby.paperworkOnDay, standby.contestant.name)}
+                              className="h-4 w-4"
+                              data-testid={`checkbox-standby-otd-paperwork-${standby.id}`}
+                            />
+                          </TableCell>
+                        )}
+                        {isColumnVisible("signedIn") && (
+                          <TableCell className="py-0.5 h-7 text-center border-r border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20">
+                            <Checkbox
+                              checked={!!standby.signedIn}
+                              onCheckedChange={() => handleStandbyCheckboxToggle(standby.id, 'signedIn', standby.signedIn, standby.contestant.name)}
+                              className="h-4 w-4"
+                              data-testid={`checkbox-standby-signed-in-${standby.id}`}
+                            />
+                          </TableCell>
+                        )}
+                        {isColumnVisible("otdNotes") && (
+                          <TableCell className="py-0.5 h-7 border-r border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/20">
+                            <Input
+                              defaultValue={standby.otdNotes || ""}
+                              placeholder="OTD Notes"
+                              onChange={(e) => handleStandbyDebouncedTextUpdate(standby.id, 'otdNotes', e.target.value)}
+                              className="h-5 text-xs border-0 bg-transparent px-1"
+                              data-testid={`input-standby-otd-notes-${standby.id}`}
+                            />
                           </TableCell>
                         )}
                         <TableCell className="py-0.5 h-7 text-center">
@@ -1069,7 +1203,7 @@ export default function BookingMaster() {
                   })}
                 {standbysForRecordDay.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={15} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={20} className="text-center py-8 text-muted-foreground">
                       <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
                       No standbys assigned for this record day
                     </TableCell>
