@@ -1099,11 +1099,20 @@ export default function StandbysPage() {
                                 setMoveToRescheduleStandby(standby);
                                 setMoveToRescheduleDialogOpen(true);
                               }}
-                              disabled={moveAttendedToRescheduleMutation.isPending}
+                              disabled={moveAttendedToRescheduleMutation.isPending && moveToRescheduleStandby?.id === standby.id}
                               data-testid={`button-move-to-reschedule-${standby.id}`}
                             >
-                              <CalendarPlus className="h-2.5 w-2.5 mr-0.5" />
-                              Reschedule
+                              {moveAttendedToRescheduleMutation.isPending && moveToRescheduleStandby?.id === standby.id ? (
+                                <>
+                                  <Loader2 className="h-2.5 w-2.5 mr-0.5 animate-spin" />
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  <CalendarPlus className="h-2.5 w-2.5 mr-0.5" />
+                                  Reschedule
+                                </>
+                              )}
                             </Button>
                           ) : standby.status === 'confirmed' ? (
                             <Button
