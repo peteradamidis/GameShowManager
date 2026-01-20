@@ -379,6 +379,25 @@ export default function StandbysPage() {
     },
   });
 
+  // Unconfirm standby mutation (revert back to awaiting response state)
+  const unconfirmStandbyMutation = useMutation({
+    mutationFn: async (standby: StandbyAssignment) => {
+      // Revert to email_sent if email was sent, otherwise pending
+      const newStatus = standby.standbyEmailSent ? 'email_sent' : 'pending';
+      return apiRequest('PATCH', `/api/standbys/${standby.id}`, {
+        status: newStatus,
+        confirmedAt: null,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      toast({ title: "Confirmation cancelled", description: "Standby is back to awaiting response" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
   // Decline standby mutation (with reason and move to reschedule)
   const declineStandbyMutation = useMutation({
     mutationFn: async ({ id, reason, movedBy }: { id: string; reason: string; movedBy: string }) => {
@@ -996,7 +1015,8 @@ export default function StandbysPage() {
                               size="sm"
                               variant="outline"
                               className="h-5 px-1.5 text-[10px]"
-                              onClick={() => handleDeclineClick(standby)}
+                              onClick={() => unconfirmStandbyMutation.mutate(standby)}
+                              disabled={unconfirmStandbyMutation.isPending}
                               data-testid={`button-cancel-confirm-${standby.id}`}
                             >
                               <XCircle className="h-2.5 w-2.5 mr-0.5" />
