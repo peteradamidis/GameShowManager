@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { format, differenceInDays, subDays, startOfWeek, endOfWeek, addWeeks, formatDistanceToNow } from "date-fns";
+import { format, differenceInDays, subDays, startOfWeek, endOfWeek, addWeeks, formatDistanceToNow, startOfDay } from "date-fns";
 
 interface NoticeboardPost {
   id: string;
@@ -110,8 +110,8 @@ export default function Dashboard() {
     return aIndex - bIndex;
   });
 
-  // Today's date
-  const today = new Date();
+  // Today's date - normalize to start of day for accurate day comparisons
+  const today = startOfDay(new Date());
   const formattedToday = format(today, "EEEE, MMMM d, yyyy");
 
   // Calculate deadlines
@@ -121,7 +121,7 @@ export default function Dashboard() {
   
   // First, get all future record days sorted by date
   const futureRecordDays = recordDaysData
-    .filter(rd => new Date(rd.date) >= today)
+    .filter(rd => startOfDay(new Date(rd.date)) >= today)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   
   // Find the first upcoming record date and calculate the 2-week calendar window
@@ -133,9 +133,10 @@ export default function Dashboard() {
   
   const deadlineInfos: DeadlineInfo[] = futureRecordDays
     .map(rd => {
-      const recordDate = new Date(rd.date);
-      const emailDeadline = subDays(recordDate, SENDING_EMAIL_LEAD_DAYS);
-      const confirmationDeadline = subDays(recordDate, CONFIRMATION_LEAD_DAYS);
+      // Normalize all dates to start of day for accurate day counting
+      const recordDate = startOfDay(new Date(rd.date));
+      const emailDeadline = startOfDay(subDays(recordDate, SENDING_EMAIL_LEAD_DAYS));
+      const confirmationDeadline = startOfDay(subDays(recordDate, CONFIRMATION_LEAD_DAYS));
       const daysUntilEmailDeadline = differenceInDays(emailDeadline, today);
       const daysUntilConfirmationDeadline = differenceInDays(confirmationDeadline, today);
       const daysUntilRecordDate = differenceInDays(recordDate, today);
