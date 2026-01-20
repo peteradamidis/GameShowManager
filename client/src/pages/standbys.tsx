@@ -862,9 +862,9 @@ export default function StandbysPage() {
                       <TableRow 
                         key={standby.id} 
                         data-testid={`row-standby-${standby.id}`}
-                        className={`${standby.isInGroup ? 'bg-muted/30' : ''} ${
+                        className={`${
                           standby.isLastInGroup 
-                            ? '!border-b-[3px] !border-b-border' 
+                            ? '!border-b-[3px] !border-b-muted-foreground/30' 
                             : standby.isInGroup 
                               ? '!border-b-transparent' 
                               : ''
