@@ -1576,7 +1576,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
               </div>
               
               {/* Standbys Panel - Redesigned with static tier numbers */}
-              <Card className="w-full max-w-xs" data-testid="standbys-panel">
+              <Card className="w-full max-w-sm" data-testid="standbys-panel">
                 <CardHeader className="pb-2">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-sm">Standbys</span>
@@ -1701,7 +1701,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
               
               {/* Prize Winners Panel - Only visible in RX mode */}
               {isLocked && (
-                <Card className="w-full max-w-xs bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800" data-testid="prize-winners-panel">
+                <Card className="w-full max-w-sm bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800" data-testid="prize-winners-panel">
                   <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
                       <Gift className="h-4 w-4 text-amber-600 dark:text-amber-400" />
