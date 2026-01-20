@@ -148,6 +148,7 @@ interface SeatingChartProps {
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onPrizeWinner?: (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => void;
   onEditTempContestant?: (contestantId: string) => void;
+  onDeleteTestSubject?: (contestantId: string) => void;
   isLocked?: boolean; // RX Day Mode - when true, use tracked swap endpoint
   standbys?: StandbyData[]; // Standbys for this record day
   onStandbySeated?: () => void; // Callback when standby is seated
@@ -173,6 +174,7 @@ function DraggableDroppableSeat({
   onEarlyLeaver,
   onPrizeWinner,
   onEditTempContestant,
+  onDeleteTestSubject,
 }: {
   seat: SeatData;
   blockIndex: number;
@@ -191,6 +193,7 @@ function DraggableDroppableSeat({
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onPrizeWinner?: (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => void;
   onEditTempContestant?: (contestantId: string) => void;
+  onDeleteTestSubject?: (contestantId: string) => void;
 }) {
   // Make occupied seats draggable
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
@@ -239,6 +242,7 @@ function DraggableDroppableSeat({
         onEarlyLeaver={onEarlyLeaver}
         onPrizeWinner={onPrizeWinner}
         onEditTempContestant={onEditTempContestant}
+        onDeleteTestSubject={onDeleteTestSubject}
       />
     </div>
   );
@@ -260,6 +264,7 @@ function SortableStandbyItem({
   isFirstInGroup,
   isLastInGroup,
   groupMemberNames,
+  onSeatSelect,
 }: {
   standby: StandbyData;
   isLocked?: boolean;
@@ -267,6 +272,7 @@ function SortableStandbyItem({
   isFirstInGroup?: boolean;
   isLastInGroup?: boolean;
   groupMemberNames?: string[];
+  onSeatSelect?: (standby: StandbyData) => void;
 }) {
   const {
     attributes,
@@ -575,6 +581,7 @@ function SeatingBlock({
   onEarlyLeaver,
   onPrizeWinner,
   onEditTempContestant,
+  onDeleteTestSubject,
   blockType,
   onBlockTypeChange,
   isPodiumVisualizerMode = false,
@@ -597,6 +604,7 @@ function SeatingBlock({
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onPrizeWinner?: (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => void;
   onEditTempContestant?: (contestantId: string) => void;
+  onDeleteTestSubject?: (contestantId: string) => void;
   blockType?: 'PB' | 'NPB';
   onBlockTypeChange?: (blockNumber: number, newType: 'PB' | 'NPB') => void;
   isPodiumVisualizerMode?: boolean;
@@ -841,6 +849,7 @@ function SeatingBlock({
                           onEarlyLeaver={onEarlyLeaver}
                           onPrizeWinner={onPrizeWinner}
                           onEditTempContestant={onEditTempContestant}
+                          onDeleteTestSubject={onDeleteTestSubject}
                         />
                         {/* Horizontal link to next seat in same row */}
                         {hasLinkToNext && (
@@ -935,7 +944,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "" }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "" }: SeatingChartProps) {
   // Use initialSeats as source of truth - derive blocks from props, not state
   // Only use local state for temporary overrides during active drag operations
   const defaultBlocks = useMemo(() => 
@@ -992,6 +1001,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     targetBlockNumber: number;
     targetSeatLabel: string;
   } | null>(null);
+  // Seat selection dialog for standbys (alternative to drag-and-drop)
+  const [seatSelectionStandby, setSeatSelectionStandby] = useState<StandbyData | null>(null);
   // Prize winner toggle states: { winnerId: { prize: boolean, briefcase: boolean } }
   const [prizeWinnerToggles, setPrizeWinnerToggles] = useState<Record<string, { prize: boolean; briefcase: boolean }>>({});
   const { toast } = useToast();
@@ -1574,6 +1585,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onEarlyLeaver={onEarlyLeaver}
                   onPrizeWinner={onPrizeWinner}
                   onEditTempContestant={onEditTempContestant}
+                  onDeleteTestSubject={onDeleteTestSubject}
                   blockType={blockTypeMap[idx + 1]}
                   onBlockTypeChange={handleBlockTypeChange}
                   isPodiumVisualizerMode={isPodiumVisualizerMode}
@@ -1639,6 +1651,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     onEarlyLeaver={onEarlyLeaver}
                     onPrizeWinner={onPrizeWinner}
                     onEditTempContestant={onEditTempContestant}
+                    onDeleteTestSubject={onDeleteTestSubject}
                     blockType={blockTypeMap[originalIdx + 1]}
                     onBlockTypeChange={handleBlockTypeChange}
                     isPodiumVisualizerMode={isPodiumVisualizerMode}
@@ -1676,6 +1689,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onEarlyLeaver={onEarlyLeaver}
                   onPrizeWinner={onPrizeWinner}
                   onEditTempContestant={onEditTempContestant}
+                  onDeleteTestSubject={onDeleteTestSubject}
                   blockType={blockTypeMap[7]}
                   onBlockTypeChange={handleBlockTypeChange}
                   isPodiumVisualizerMode={isPodiumVisualizerMode}

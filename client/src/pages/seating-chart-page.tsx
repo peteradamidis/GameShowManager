@@ -1124,6 +1124,25 @@ export default function SeatingChartPage() {
     setEditTempContestantDialogOpen(true);
   };
 
+  // Handler to delete test subject contestants
+  const handleDeleteTestSubject = async (contestantId: string) => {
+    try {
+      await apiRequest('DELETE', `/api/contestants/${contestantId}`);
+      toast({
+        title: "Test subject removed",
+        description: "The contestant has been deleted from the system.",
+      });
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+    } catch (error: any) {
+      toast({
+        title: "Failed to delete",
+        description: error?.message || "Could not delete contestant.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Find current winning money data for the selected assignment
   const currentAssignment = assignments?.find((a: any) => a.id === selectedAssignmentId);
   const currentWinningMoneyData = {
@@ -1555,6 +1574,7 @@ export default function SeatingChartPage() {
             onEarlyLeaver={isLocked ? handleEarlyLeaver : undefined}
             onPrizeWinner={isLocked ? handlePrizeWinner : undefined}
             onEditTempContestant={handleEditTempContestant}
+            onDeleteTestSubject={handleDeleteTestSubject}
             isLocked={isLocked}
             standbys={standbys}
             onStandbySeated={() => {

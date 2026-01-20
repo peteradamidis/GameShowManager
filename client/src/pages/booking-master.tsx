@@ -49,7 +49,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Calendar, Mail, Maximize2, Minimize2, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle, FileText, Sparkles, Users, AlertTriangle, Copy, Pencil } from "lucide-react";
+import { Download, Calendar, Mail, Maximize2, Minimize2, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle, FileText, Sparkles, Users, AlertTriangle, Copy, Pencil, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -492,6 +492,25 @@ export default function BookingMaster() {
       standbyId,
       fields: { [field]: value },
     });
+  };
+
+  // Handler to delete test subject contestants
+  const handleDeleteTestSubject = async (contestantId: string) => {
+    try {
+      await apiRequest('DELETE', `/api/contestants/${contestantId}`);
+      toast({
+        title: "Test subject removed",
+        description: "The contestant has been deleted from the system.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+    } catch (error: any) {
+      toast({
+        title: "Failed to delete",
+        description: error?.message || "Could not delete contestant.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleStandbyCheckboxToggle = (standbyId: string, field: string, currentValue: any, standbyName: string) => {
@@ -1112,7 +1131,26 @@ export default function BookingMaster() {
                         </TableCell>
                         {isColumnVisible("name") && (
                           <TableCell className="font-medium text-xs min-w-[150px] py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">
-                            {standby.contestant.name}
+                            <div className="flex items-center gap-1">
+                              {standby.contestant.name}
+                              {['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name) && standby.contestantId && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-4 w-4 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (confirm(`Remove test subject ${standby.contestant.name}?`)) {
+                                      handleDeleteTestSubject(standby.contestantId);
+                                    }
+                                  }}
+                                  title="Remove test subject"
+                                  data-testid={`button-delete-standby-test-subject-${standby.contestantId}`}
+                                >
+                                  <Trash2 className="h-2.5 w-2.5" />
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         )}
                         {isColumnVisible("mobile") && <TableCell className="text-xs min-w-[120px] py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{standby.contestant.phone || ""}</TableCell>}
@@ -1293,9 +1331,28 @@ export default function BookingMaster() {
                         {isColumnVisible("name") && (
                           <TableCell className="font-medium text-xs min-w-[150px] py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
                             {row.contestant?.name ? (
-                              <span className={row.assignment?.standbyReplacementSwaps && row.assignment.standbyReplacementSwaps !== "none" ? "text-red-600 line-through" : ""}>
-                                {row.contestant.name}
-                              </span>
+                              <div className="flex items-center gap-1">
+                                <span className={row.assignment?.standbyReplacementSwaps && row.assignment.standbyReplacementSwaps !== "none" ? "text-red-600 line-through" : ""}>
+                                  {row.contestant.name}
+                                </span>
+                                {row.contestant?.id && ['Peter Adamidis', 'Kathleen Reynolds'].includes(row.contestant.name) && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-4 w-4 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (confirm(`Remove test subject ${row.contestant!.name}?`)) {
+                                        handleDeleteTestSubject(row.contestant!.id);
+                                      }
+                                    }}
+                                    title="Remove test subject"
+                                    data-testid={`button-delete-test-subject-${row.contestant.id}`}
+                                  >
+                                    <Trash2 className="h-2.5 w-2.5" />
+                                  </Button>
+                                )}
+                              </div>
                             ) : (
                               <span className="text-muted-foreground italic">Empty</span>
                             )}

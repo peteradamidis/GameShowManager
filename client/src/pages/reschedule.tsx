@@ -265,6 +265,25 @@ export default function ReschedulePage() {
     }
   };
 
+  // Handler to delete test subject contestants
+  const handleDeleteTestSubject = async (contestantId: string) => {
+    try {
+      await apiRequest('DELETE', `/api/contestants/${contestantId}`);
+      toast({
+        title: "Test subject removed",
+        description: "The contestant has been deleted from the system.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+    } catch (error: any) {
+      toast({
+        title: "Failed to delete",
+        description: error?.message || "Could not delete contestant.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleReturnToContestants = async (cancellationId: string, contestantName: string) => {
     if (!confirm(`Return ${contestantName} to the contestants tab? They will be marked as available for booking.`)) {
       return;
@@ -396,6 +415,23 @@ export default function ReschedulePage() {
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-1.5">
                         <span>{cancellation.contestant.name}</span>
+                        {['Peter Adamidis', 'Kathleen Reynolds'].includes(cancellation.contestant.name) && cancellation.contestant.id && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm(`Remove test subject ${cancellation.contestant.name}?`)) {
+                                handleDeleteTestSubject(cancellation.contestant.id);
+                              }
+                            }}
+                            title="Remove test subject"
+                            data-testid={`button-delete-test-subject-${cancellation.contestant.id}`}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
                         {cancellation.paperworkReceived && (
                           <Badge variant="outline" className="border-teal-300 bg-teal-500/20 text-teal-800 dark:border-teal-700 dark:text-teal-400 text-xs px-1.5" title="Paperwork received">
                             <FileCheck className="h-3 w-3" />

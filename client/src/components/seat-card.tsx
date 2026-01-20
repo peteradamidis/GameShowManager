@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert, Pencil, MessageSquare, UserCheck, Gift } from "lucide-react";
+import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert, Pencil, MessageSquare, UserCheck, Gift, Trash2 } from "lucide-react";
 import { getDistanceFromDocklands } from "@/components/contestant-table";
 
 // Helper function to check if a medical field has meaningful content (not NA/N/A/No/None/empty)
@@ -82,6 +82,7 @@ interface SeatCardProps {
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onPrizeWinner?: (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => void;
   onEditTempContestant?: (contestantId: string) => void;
+  onDeleteTestSubject?: (contestantId: string) => void;
 }
 
 const groupColors = [
@@ -124,6 +125,7 @@ export function SeatCard({
   onEarlyLeaver,
   onPrizeWinner,
   onEditTempContestant,
+  onDeleteTestSubject,
 }: SeatCardProps) {
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [localNotes, setLocalNotes] = useState(seat.notes || '');
@@ -825,6 +827,24 @@ export function SeatCard({
                   >
                     <Pencil className="h-3 w-3 mr-1" />
                     Edit Temporary Contestant
+                  </Button>
+                )}
+                {/* Test subject delete button */}
+                {seat.contestantName && ['Peter Adamidis', 'Kathleen Reynolds'].includes(seat.contestantName) && seat.contestantId && onDeleteTestSubject && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full text-destructive border-destructive/50 hover:bg-destructive/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Remove test subject ${seat.contestantName}?`)) {
+                        onDeleteTestSubject(seat.contestantId!);
+                      }
+                    }}
+                    data-testid={`button-delete-test-subject-${seat.contestantId}`}
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Remove Test Subject
                   </Button>
                 )}
                 {isRXDayLocked && seat.winningMoneyAmount > 0 && (

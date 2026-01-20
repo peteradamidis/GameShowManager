@@ -1127,6 +1127,7 @@ export function ContestantTable({
               >
                 <div className="flex items-center">Criminal{getSortIcon('criminalRecord')}</div>
               </TableHead>
+              <TableHead className="w-10"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -1252,6 +1253,25 @@ export function ContestantTable({
                   </TableCell>
                   <TableCell className="max-w-[150px] truncate text-xs" title={contestant.criminalRecord || ""}>
                     {contestant.criminalRecord || "-"}
+                  </TableCell>
+                  <TableCell className="p-1">
+                    {['Peter Adamidis', 'Kathleen Reynolds'].includes(contestant.name) && onDeleteContestant && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Remove test subject ${contestant.name}?`)) {
+                            onDeleteContestant(contestant.id);
+                          }
+                        }}
+                        title="Remove test subject"
+                        data-testid={`button-delete-test-subject-${contestant.id}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               );
