@@ -3252,6 +3252,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // via the Contestants page or Reschedule page to ensure proper tracking and control
       let availableAll = allContestants.filter((c) => c.availabilityStatus === "available");
       
+      // ROBUST CHECK: Also exclude any contestant in the canceled_assignments table (reschedule list)
+      // This catches cases where a contestant was moved to reschedule but their status wasn't updated
+      const canceledForRescheduleCheck = await storage.getCanceledAssignments();
+      const rescheduledContestantIds = new Set(canceledForRescheduleCheck.map(ca => ca.contestantId));
+      availableAll = availableAll.filter(c => !rescheduledContestantIds.has(c.id));
+      
       // Get existing seat assignments for this record day to exclude already-assigned contestants
       const currentAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
       const alreadyAssignedIds = new Set(currentAssignments.map(a => a.contestantId));
