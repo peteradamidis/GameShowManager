@@ -11624,9 +11624,26 @@ ${finalEmailFooter}`;
       const ticketImportant = await storage.getSystemConfig('standby_ticket_important') || 'IMPORTANT: As a standby contestant, you may be selected to join our studio recording should any positions become available on the day. Please read the attached PDF carefully.';
       const ticketFooter = await storage.getSystemConfig('standby_ticket_footer') || 'This is an automated email from the Deal or No Deal production team.';
       
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 14);
-      const sampleDate = futureDate.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+      // Use actual record day date if provided, otherwise fallback to sample date
+      let sampleDate: string;
+      let rxNumber = 'RX01';
+      const recordDayId = req.query.recordDayId as string | undefined;
+      
+      if (recordDayId) {
+        const recordDay = await storage.getRecordDayById(recordDayId);
+        if (recordDay) {
+          sampleDate = new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+          rxNumber = recordDay.name || 'RX01';
+        } else {
+          const futureDate = new Date();
+          futureDate.setDate(futureDate.getDate() + 14);
+          sampleDate = futureDate.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+        }
+      } else {
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + 14);
+        sampleDate = futureDate.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+      }
       
       const html = `<!DOCTYPE html>
 <html>
@@ -11692,7 +11709,7 @@ ${finalEmailFooter}`;
                         <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">TIME:</span><span style="color: #333; font-size: 14px; font-weight: bold;">8:00 AM</span></td></tr>
                         <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">LOCATION:</span><span style="color: #333; font-size: 14px; font-weight: bold;">Docklands Studios Melbourne</span></td></tr>
                         <tr><td style="padding: 5px 0 0 80px;"><span style="color: #666; font-size: 13px;">476 Docklands Drive, Docklands, VIC 3008</span></td></tr>
-                        <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">RX:</span><span style="color: #333; font-size: 14px; font-weight: bold;">RX01</span></td></tr>
+                        <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">RX:</span><span style="color: #333; font-size: 14px; font-weight: bold;">${rxNumber}</span></td></tr>
                       </table>
                     </td>
                   </tr>
