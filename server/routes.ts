@@ -9415,12 +9415,6 @@ ${finalEmailFooter}`;
                           <span style="color: #666; font-size: 13px;">476 Docklands Drive, Docklands, VIC 3008</span>
                         </td>
                       </tr>
-                      <tr>
-                        <td style="padding: 5px 0;">
-                          <span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">RX:</span>
-                          <span style="color: #333; font-size: 14px; font-weight: bold;">${recordDay.rxNumber || 'TBC'}</span>
-                        </td>
-                      </tr>
                     </table>
                   </td>
                 </tr>
@@ -9663,7 +9657,6 @@ ${finalEmailFooter}`;
                       <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">TIME:</span><span style="color: #333; font-size: 14px; font-weight: bold;">8:00 AM</span></td></tr>
                       <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">LOCATION:</span><span style="color: #333; font-size: 14px; font-weight: bold;">Docklands Studios Melbourne</span></td></tr>
                       <tr><td style="padding: 5px 0 0 80px;"><span style="color: #666; font-size: 13px;">476 Docklands Drive, Docklands, VIC 3008</span></td></tr>
-                      <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">RX:</span><span style="color: #333; font-size: 14px; font-weight: bold;">${recordDay.rxNumber || 'TBC'}</span></td></tr>
                     </table>
                   </td>
                 </tr>
@@ -11709,7 +11702,6 @@ ${finalEmailFooter}`;
                         <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">TIME:</span><span style="color: #333; font-size: 14px; font-weight: bold;">8:00 AM</span></td></tr>
                         <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">LOCATION:</span><span style="color: #333; font-size: 14px; font-weight: bold;">Docklands Studios Melbourne</span></td></tr>
                         <tr><td style="padding: 5px 0 0 80px;"><span style="color: #666; font-size: 13px;">476 Docklands Drive, Docklands, VIC 3008</span></td></tr>
-                        <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">RX:</span><span style="color: #333; font-size: 14px; font-weight: bold;">${rxNumber}</span></td></tr>
                       </table>
                     </td>
                   </tr>
