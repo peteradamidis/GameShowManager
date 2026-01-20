@@ -57,6 +57,7 @@ export default function ReschedulePage() {
   const [editFormData, setEditFormData] = useState<any>({});
   const [filterOriginalRecordDayId, setFilterOriginalRecordDayId] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [filterType, setFilterType] = useState<string>("all");
 
   const handleRowClick = (contestant: any) => {
     setSelectedContestant(contestant);
@@ -344,6 +345,19 @@ export default function ReschedulePage() {
               />
             </div>
             <div className="flex items-center gap-2">
+              <Label htmlFor="filter-type" className="text-sm font-medium whitespace-nowrap">Type:</Label>
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger id="filter-type" className="w-32" data-testid="select-filter-type">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="standby">Standby</SelectItem>
+                  <SelectItem value="canceled">Canceled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
               <Label htmlFor="filter-original-day" className="text-sm font-medium whitespace-nowrap">Original Date:</Label>
               <Select value={filterOriginalRecordDayId} onValueChange={setFilterOriginalRecordDayId}>
                 <SelectTrigger id="filter-original-day" className="w-64" data-testid="select-filter-original-day">
@@ -394,7 +408,10 @@ export default function ReschedulePage() {
                   .filter((cancellation: any) => {
                     const matchesDate = filterOriginalRecordDayId === "all" || cancellation.recordDayId === filterOriginalRecordDayId;
                     const matchesSearch = !searchQuery || cancellation.contestant?.name?.toLowerCase().includes(searchQuery.toLowerCase());
-                    return matchesDate && matchesSearch;
+                    const matchesType = filterType === "all" || 
+                      (filterType === "standby" && cancellation.isFromStandby) || 
+                      (filterType === "canceled" && !cancellation.isFromStandby);
+                    return matchesDate && matchesSearch && matchesType;
                   })
                   .map((cancellation: any) => (
                   <TableRow 
