@@ -380,6 +380,7 @@ export default function ReschedulePage() {
                   <TableHead>Rating</TableHead>
                   <TableHead>Age</TableHead>
                   <TableHead>Gender</TableHead>
+                  <TableHead>Attending With</TableHead>
                   <TableHead>Original Attendance</TableHead>
                   <TableHead>Original Seat</TableHead>
                   <TableHead>Added At</TableHead>
@@ -485,6 +486,11 @@ export default function ReschedulePage() {
                       <Badge variant="secondary">
                         {cancellation.contestant.gender}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-xs text-muted-foreground truncate max-w-[150px] block" title={cancellation.contestant.attendingWith}>
+                        {cancellation.contestant.attendingWith || "—"}
+                      </span>
                     </TableCell>
                     <TableCell>
                       {cancellation.isFromStandby && cancellation.originalAttendanceDate ? (
