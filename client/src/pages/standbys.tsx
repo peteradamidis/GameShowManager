@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users, RefreshCw, CheckCircle, Loader2 } from "lucide-react";
+import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users, RefreshCw, CheckCircle, Loader2, Ticket } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface RecordDay {
@@ -61,6 +61,7 @@ interface StandbyAssignment {
   recordDayId: string;
   status: string;
   standbyEmailSent: string | null;
+  standbyTicketSent: string | null;
   confirmedAt: string | null;
   notes: string | null;
   assignedToSeat: string | null;
@@ -385,6 +386,19 @@ export default function StandbysPage() {
     },
   });
 
+  const sendTicketMutation = useMutation({
+    mutationFn: async (standbyId: string) => {
+      return apiRequest('POST', `/api/standbys/${standbyId}/send-ticket`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      toast({ title: "Standby ticket sent successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error sending ticket", description: error.message, variant: "destructive" });
+    },
+  });
+
   const handleSelectAll = () => {
     if (selectedStandbys.length === standbysForRecordDay.length) {
       setSelectedStandbys([]);
@@ -695,10 +709,24 @@ export default function StandbysPage() {
                         <TableCell>
                           {/* Booking Status based on standby status */}
                           {standby.status === 'confirmed' ? (
-                            <Badge className="bg-green-500/20 text-green-700 border-green-300 dark:text-green-400">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Confirmed
-                            </Badge>
+                            <div className="flex items-center gap-1">
+                              <Badge className="bg-green-500/20 text-green-700 border-green-300 dark:text-green-400">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Confirmed
+                              </Badge>
+                              {standby.standbyTicketSent && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge className="bg-amber-500/20 text-amber-700 border-amber-300 dark:text-amber-400 cursor-help">
+                                      <Ticket className="h-3 w-3" />
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Ticket sent: {new Date(standby.standbyTicketSent).toLocaleDateString('en-AU')}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
+                            </div>
                           ) : standby.status === 'declined' ? (
                             <Badge className="bg-red-500/20 text-red-700 border-red-300 dark:text-red-400">
                               <XCircle className="h-3 w-3 mr-1" />
@@ -779,6 +807,34 @@ export default function StandbysPage() {
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>Resend email</TooltipContent>
+                              </Tooltip>
+                            )}
+                            {/* Send Ticket button - only for confirmed standbys */}
+                            {standby.status === 'confirmed' && standby.contestant.email && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className={`h-7 w-7 ${standby.standbyTicketSent 
+                                      ? 'text-green-600 hover:text-green-700 hover:bg-green-100' 
+                                      : 'text-amber-600 hover:text-amber-700 hover:bg-amber-100'}`}
+                                    onClick={() => sendTicketMutation.mutate(standby.id)}
+                                    disabled={sendTicketMutation.isPending}
+                                    data-testid={`button-send-ticket-${standby.id}`}
+                                  >
+                                    {sendTicketMutation.isPending ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Ticket className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {standby.standbyTicketSent 
+                                    ? `Ticket sent ${new Date(standby.standbyTicketSent).toLocaleDateString('en-AU')} - Click to resend` 
+                                    : 'Send standby ticket'}
+                                </TooltipContent>
                               </Tooltip>
                             )}
                           </div>

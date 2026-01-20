@@ -9119,6 +9119,504 @@ ${finalEmailFooter}`;
     }
   });
 
+  // Send standby ticket email with PDF attachment
+  app.post("/api/standbys/:id/send-ticket", async (req, res) => {
+    try {
+      // Check if email is configured
+      if (!await isEmailAvailable()) {
+        return res.status(503).json({ 
+          code: 'INTEGRATION_DISABLED',
+          error: "Email sending is not available. Please configure SMTP settings in the Settings page." 
+        });
+      }
+
+      const { id } = req.params;
+      
+      // Get standby assignment with contestant and record day data
+      const allStandbys = await storage.getStandbyAssignments();
+      const standby = allStandbys.find(s => s.id === id);
+      
+      if (!standby) {
+        return res.status(404).json({ error: "Standby assignment not found" });
+      }
+
+      // Require standby to be confirmed before sending ticket
+      if (standby.status !== 'confirmed') {
+        return res.status(400).json({ error: "Cannot send ticket before standby booking is confirmed" });
+      }
+
+      const contestant = standby.contestant;
+      const recordDay = await storage.getRecordDayById(standby.recordDayId);
+
+      if (!contestant || !recordDay) {
+        return res.status(404).json({ error: "Contestant or record day not found" });
+      }
+
+      if (!contestant.email) {
+        return res.status(400).json({ error: "Contestant has no email address" });
+      }
+
+      // Format date
+      const recordDate = new Date(recordDay.date).toLocaleDateString('en-AU', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+
+      // Read the static PDF file for attachment
+      const pdfPath = path.join(process.cwd(), 'server', 'assets', 'Contestant_Information.pdf');
+      let pdfBuffer: Buffer;
+      try {
+        pdfBuffer = fs.readFileSync(pdfPath);
+      } catch (error) {
+        console.error("Error reading PDF file:", error);
+        return res.status(500).json({ error: "Contestant information PDF not found" });
+      }
+
+      // Prepare banner image for CID embedding
+      const ticketBannerCid = 'ticket-banner-image';
+      let ticketBannerBuffer: Buffer | null = null;
+      let ticketBannerContentType = 'image/png';
+      let ticketBannerFilename = 'dond_banner.png';
+      let bannerUrl = '';
+      
+      // Get banner URL from system config or use default
+      const bannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
+      
+      // Prepare banner for CID embedding
+      bannerUrl = `cid:${ticketBannerCid}`;
+      
+      if (bannerUrlConfig.startsWith('/')) {
+        const bannerPath = path.join(process.cwd(), bannerUrlConfig.replace(/^\//, ''));
+        try {
+          if (fs.existsSync(bannerPath)) {
+            ticketBannerBuffer = fs.readFileSync(bannerPath);
+            const ext = path.extname(bannerPath).toLowerCase().replace('.', '');
+            ticketBannerContentType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+            ticketBannerFilename = path.basename(bannerPath);
+          }
+        } catch (error) {
+          console.warn(`Warning: Could not read banner image at ${bannerPath}:`, error);
+          bannerUrl = bannerUrlConfig;  // Fallback to URL
+        }
+      } else {
+        bannerUrl = bannerUrlConfig;  // External URL
+      }
+      
+      // Get configurable text from system config with defaults - STANDBY specific
+      const ticketHeadline = await storage.getSystemConfig('standby_ticket_headline') || 'Your STANDBY Ticket';
+      const ticketIntro = await storage.getSystemConfig('standby_ticket_intro') || 'Thank you for confirming your attendance as a <strong>STANDBY CONTESTANT</strong>! This is your official standby ticket for the Deal or No Deal recording.';
+      const ticketImportant = await storage.getSystemConfig('standby_ticket_important') || 'IMPORTANT: As a standby contestant, you may be selected to join our studio recording should any positions become available on the day. Please read the attached PDF carefully.';
+      const ticketFooter = await storage.getSystemConfig('standby_ticket_footer') || 'This is an automated email from the Deal or No Deal production team.';
+      
+      // Create email HTML with banner - STANDBY version
+      const emailHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    
+    <!-- Full-width Banner Image -->
+    <tr>
+      <td style="padding: 0; line-height: 0;">
+        <img src="${bannerUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />
+      </td>
+    </tr>
+    
+    <!-- STANDBY Badge -->
+    <tr>
+      <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 15px 30px; text-align: center;">
+        <span style="display: inline-block; background: #D97706; color: white; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;">
+          STANDBY TICKET
+        </span>
+      </td>
+    </tr>
+    
+    <!-- Gold Title Bar -->
+    <tr>
+      <td style="background: linear-gradient(180deg, #2a0a0a 0%, #3d0c0c 100%); padding: 20px 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          ${ticketHeadline}
+        </h1>
+      </td>
+    </tr>
+    
+    <!-- Content Card -->
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+          <tr>
+            <td style="padding: 30px;">
+              <!-- Standby Notice -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #FEF3C7; border: 2px solid #D97706; border-radius: 6px; margin: 0 0 20px 0;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <p style="color: #92400E; font-size: 14px; font-weight: bold; margin: 0;">
+                      ${ticketImportant}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                Hi ${contestant.name.split(' ')[0]},
+              </p>
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                ${ticketIntro.split('\n\n').map((paragraph: string) => 
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
+              
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border-radius: 8px; border-left: 5px solid #D97706; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 style="color: #92400E; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase;">
+                      Your Standby Booking Details
+                    </h2>
+                    <table role="presentation" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="padding: 5px 0;">
+                          <span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">DATE:</span>
+                          <span style="color: #333; font-size: 14px; font-weight: bold;">${recordDate.toUpperCase()}</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 5px 0;">
+                          <span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">TIME:</span>
+                          <span style="color: #333; font-size: 14px; font-weight: bold;">8:00 AM</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 5px 0;">
+                          <span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">LOCATION:</span>
+                          <span style="color: #333; font-size: 14px; font-weight: bold;">Docklands Studios Melbourne</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 5px 0 0 80px;">
+                          <span style="color: #666; font-size: 13px;">476 Docklands Drive, Docklands, VIC 3008</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 5px 0;">
+                          <span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">RX:</span>
+                          <span style="color: #333; font-size: 14px; font-weight: bold;">${recordDay.rxNumber || 'TBC'}</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">
+                Please ensure you bring your own water bottle.
+              </p>
+              
+              <p style="color: #333333; font-size: 15px; margin: 0 0 10px 0;">
+                We look forward to seeing you on the day!<br/>
+                Kind Regards,<br/>
+                <strong>The Deal Or No Deal Team</strong>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    
+    <!-- Footer -->
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 25px; text-align: center;">
+        <p style="color: #999999; font-size: 12px; line-height: 1.5; margin: 0;">
+          ${ticketFooter}
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+      // Prepare attachments array
+      const attachments: Array<{
+        filename: string;
+        content: Buffer;
+        contentType?: string;
+        cid?: string;
+      }> = [
+        {
+          filename: 'Record_Day_Information.pdf',
+          content: pdfBuffer,
+          contentType: 'application/pdf',
+        },
+      ];
+      
+      // Add banner image as CID attachment if available
+      if (ticketBannerBuffer) {
+        attachments.push({
+          filename: ticketBannerFilename,
+          content: ticketBannerBuffer,
+          contentType: ticketBannerContentType,
+          cid: ticketBannerCid,
+        });
+      }
+
+      const senderNameConfig = await storage.getSystemConfig('email_sender_name');
+      const emailConfig: EmailConfig = {
+        senderName: senderNameConfig || 'Deal or No Deal',
+      };
+      
+      // Send the standby ticket email
+      await sendEmail(emailConfig, {
+        to: contestant.email,
+        subject: `STANDBY TICKET - Deal or No Deal - ${recordDate}`,
+        html: emailHtml,
+        attachments,
+      });
+
+      // Update standbyTicketSent timestamp
+      await storage.updateStandbyAssignment(id, {
+        standbyTicketSent: new Date().toISOString(),
+      });
+
+      res.json({
+        success: true,
+        message: `Standby ticket email sent to ${contestant.email}`,
+        contestantName: contestant.name,
+        email: contestant.email,
+      });
+    } catch (error: any) {
+      console.error("Error sending standby ticket email:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Bulk send standby ticket emails
+  app.post("/api/standbys/bulk-send-ticket", async (req, res) => {
+    try {
+      // Check if email is configured
+      if (!await isEmailAvailable()) {
+        return res.status(503).json({ 
+          code: 'INTEGRATION_DISABLED',
+          error: "Email sending is not available. Please configure SMTP settings in the Settings page." 
+        });
+      }
+
+      const { standbyIds } = req.body;
+      
+      if (!standbyIds || !Array.isArray(standbyIds) || standbyIds.length === 0) {
+        return res.status(400).json({ error: "standbyIds array is required" });
+      }
+
+      // Get all standbys
+      const allStandbys = await storage.getStandbyAssignments();
+      const selectedStandbys = allStandbys.filter(s => standbyIds.includes(s.id));
+
+      if (selectedStandbys.length === 0) {
+        return res.status(404).json({ error: "No standbys found" });
+      }
+
+      // Filter to only confirmed standbys with emails that haven't received tickets yet
+      const eligibleStandbys = selectedStandbys.filter(s => 
+        s.status === 'confirmed' && 
+        s.contestant.email && 
+        !s.standbyTicketSent
+      );
+
+      if (eligibleStandbys.length === 0) {
+        return res.status(400).json({ 
+          error: "No eligible standbys found. Standbys must be confirmed and have email addresses." 
+        });
+      }
+
+      let successCount = 0;
+      let failCount = 0;
+      const results: Array<{ standbyId: string; success: boolean; error?: string }> = [];
+
+      for (const standby of eligibleStandbys) {
+        try {
+          // Call the single send endpoint internally
+          const recordDay = await storage.getRecordDayById(standby.recordDayId);
+          if (!recordDay) {
+            throw new Error("Record day not found");
+          }
+
+          const recordDate = new Date(recordDay.date).toLocaleDateString('en-AU', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          });
+
+          // Read PDF
+          const pdfPath = path.join(process.cwd(), 'server', 'assets', 'Contestant_Information.pdf');
+          let pdfBuffer: Buffer;
+          try {
+            pdfBuffer = fs.readFileSync(pdfPath);
+          } catch (error) {
+            throw new Error("Contestant information PDF not found");
+          }
+
+          // Get banner
+          const ticketBannerCid = 'ticket-banner-image';
+          let ticketBannerBuffer: Buffer | null = null;
+          let ticketBannerContentType = 'image/png';
+          let ticketBannerFilename = 'dond_banner.png';
+          let bannerUrl = '';
+          
+          const bannerUrlConfig = await storage.getSystemConfig('email_banner_url') || `/uploads/branding/dond_banner.png`;
+          bannerUrl = `cid:${ticketBannerCid}`;
+          
+          if (bannerUrlConfig.startsWith('/')) {
+            const bannerPath = path.join(process.cwd(), bannerUrlConfig.replace(/^\//, ''));
+            try {
+              if (fs.existsSync(bannerPath)) {
+                ticketBannerBuffer = fs.readFileSync(bannerPath);
+                const ext = path.extname(bannerPath).toLowerCase().replace('.', '');
+                ticketBannerContentType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+                ticketBannerFilename = path.basename(bannerPath);
+              }
+            } catch (error) {
+              bannerUrl = bannerUrlConfig;
+            }
+          } else {
+            bannerUrl = bannerUrlConfig;
+          }
+          
+          const ticketHeadline = await storage.getSystemConfig('standby_ticket_headline') || 'Your STANDBY Ticket';
+          const ticketIntro = await storage.getSystemConfig('standby_ticket_intro') || 'Thank you for confirming your attendance as a <strong>STANDBY CONTESTANT</strong>! This is your official standby ticket for the Deal or No Deal recording.';
+          const ticketImportant = await storage.getSystemConfig('standby_ticket_important') || 'IMPORTANT: As a standby contestant, you may be selected to join our studio recording should any positions become available on the day. Please read the attached PDF carefully.';
+          const ticketFooter = await storage.getSystemConfig('standby_ticket_footer') || 'This is an automated email from the Deal or No Deal production team.';
+          
+          const emailHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    <tr>
+      <td style="padding: 0; line-height: 0;">
+        <img src="${bannerUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />
+      </td>
+    </tr>
+    <tr>
+      <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 15px 30px; text-align: center;">
+        <span style="display: inline-block; background: #D97706; color: white; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;">
+          STANDBY TICKET
+        </span>
+      </td>
+    </tr>
+    <tr>
+      <td style="background: linear-gradient(180deg, #2a0a0a 0%, #3d0c0c 100%); padding: 20px 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          ${ticketHeadline}
+        </h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+          <tr>
+            <td style="padding: 30px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #FEF3C7; border: 2px solid #D97706; border-radius: 6px; margin: 0 0 20px 0;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <p style="color: #92400E; font-size: 14px; font-weight: bold; margin: 0;">
+                      ${ticketImportant}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                Hi ${standby.contestant.name.split(' ')[0]},
+              </p>
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                ${ticketIntro}
+              </div>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border-radius: 8px; border-left: 5px solid #D97706; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 style="color: #92400E; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase;">
+                      Your Standby Booking Details
+                    </h2>
+                    <table role="presentation" cellspacing="0" cellpadding="0">
+                      <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">DATE:</span><span style="color: #333; font-size: 14px; font-weight: bold;">${recordDate.toUpperCase()}</span></td></tr>
+                      <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">TIME:</span><span style="color: #333; font-size: 14px; font-weight: bold;">8:00 AM</span></td></tr>
+                      <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">LOCATION:</span><span style="color: #333; font-size: 14px; font-weight: bold;">Docklands Studios Melbourne</span></td></tr>
+                      <tr><td style="padding: 5px 0 0 80px;"><span style="color: #666; font-size: 13px;">476 Docklands Drive, Docklands, VIC 3008</span></td></tr>
+                      <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">RX:</span><span style="color: #333; font-size: 14px; font-weight: bold;">${recordDay.rxNumber || 'TBC'}</span></td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">Please ensure you bring your own water bottle.</p>
+              <p style="color: #333333; font-size: 15px; margin: 0 0 10px 0;">We look forward to seeing you on the day!<br/>Kind Regards,<br/><strong>The Deal Or No Deal Team</strong></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 25px; text-align: center;">
+        <p style="color: #999999; font-size: 12px; line-height: 1.5; margin: 0;">${ticketFooter}</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+          const attachments: Array<{ filename: string; content: Buffer; contentType?: string; cid?: string; }> = [
+            { filename: 'Record_Day_Information.pdf', content: pdfBuffer, contentType: 'application/pdf' },
+          ];
+          
+          if (ticketBannerBuffer) {
+            attachments.push({
+              filename: ticketBannerFilename,
+              content: ticketBannerBuffer,
+              contentType: ticketBannerContentType,
+              cid: ticketBannerCid,
+            });
+          }
+
+          const senderNameConfig = await storage.getSystemConfig('email_sender_name');
+          const emailConfig: EmailConfig = { senderName: senderNameConfig || 'Deal or No Deal' };
+          
+          await sendEmail(emailConfig, {
+            to: standby.contestant.email!,
+            subject: `STANDBY TICKET - Deal or No Deal - ${recordDate}`,
+            html: emailHtml,
+            attachments,
+          });
+
+          await storage.updateStandbyAssignment(standby.id, {
+            standbyTicketSent: new Date().toISOString(),
+          });
+
+          successCount++;
+          results.push({ standbyId: standby.id, success: true });
+        } catch (error: any) {
+          failCount++;
+          results.push({ standbyId: standby.id, success: false, error: error.message });
+        }
+      }
+
+      res.json({
+        success: successCount > 0,
+        message: `Sent ${successCount} standby ticket email(s)${failCount > 0 ? `, ${failCount} failed` : ''}`,
+        results,
+        successCount,
+        failCount,
+      });
+    } catch (error: any) {
+      console.error("Error sending bulk standby ticket emails:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get standby confirmation by token (public endpoint)
   app.get("/api/standby-confirmation/:token", async (req, res) => {
     try {
@@ -10990,6 +11488,122 @@ ${finalEmailFooter}`;
       res.send(html);
     } catch (error: any) {
       console.error("Error generating standby email preview:", error);
+      res.setHeader('Content-Type', 'text/html');
+      res.status(500).send(`<!DOCTYPE html><html><head><title>Preview Error</title></head><body style="font-family: Arial, sans-serif; padding: 40px; text-align: center; background: #fee2e2;"><h2 style="color: #dc2626;">Preview Error</h2><p style="color: #7f1d1d;">${error.message || 'Failed to load preview'}</p></body></html>`);
+    }
+  });
+
+  // Standby Ticket Email Preview endpoint
+  app.get("/api/email-preview/standby-ticket", async (req, res) => {
+    res.removeHeader('X-Frame-Options');
+    res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    try {
+      const ticketHeadline = await storage.getSystemConfig('standby_ticket_headline') || 'Your STANDBY Ticket';
+      const ticketIntro = await storage.getSystemConfig('standby_ticket_intro') || 'Thank you for confirming your attendance as a <strong>STANDBY CONTESTANT</strong>! This is your official standby ticket for the Deal or No Deal recording.';
+      const ticketImportant = await storage.getSystemConfig('standby_ticket_important') || 'IMPORTANT: As a standby contestant, you may be selected to join our studio recording should any positions become available on the day. Please read the attached PDF carefully.';
+      const ticketFooter = await storage.getSystemConfig('standby_ticket_footer') || 'This is an automated email from the Deal or No Deal production team.';
+      
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 14);
+      const sampleDate = futureDate.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+      
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Standby Ticket Email Preview</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5;">
+  <div style="text-align: center; margin-bottom: 20px;">
+    <span style="background: #D97706; color: white; padding: 8px 16px; border-radius: 4px; font-size: 14px;">LIVE PREVIEW - Standby Ticket Template</span>
+  </div>
+  <div style="max-width: 600px; margin: 0 auto; background-color: #2a0a0a;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      <tr>
+        <td style="padding: 0; line-height: 0; background: linear-gradient(135deg, #4a1a1a 0%, #2a0a0a 100%); text-align: center; padding: 30px;">
+          <h2 style="color: #D4AF37; font-size: 28px; margin: 0; letter-spacing: 2px;">DEAL OR NO DEAL</h2>
+          <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 14px;">BANNER IMAGE APPEARS HERE</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 15px 30px; text-align: center;">
+          <span style="display: inline-block; background: #D97706; color: white; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;">
+            STANDBY TICKET
+          </span>
+        </td>
+      </tr>
+      <tr>
+        <td style="background: linear-gradient(180deg, #2a0a0a 0%, #3d0c0c 100%); padding: 20px 30px; text-align: center;">
+          <h1 style="color: #D4AF37; font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+            ${ticketHeadline}
+          </h1>
+        </td>
+      </tr>
+      <tr>
+        <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+            <tr>
+              <td style="padding: 30px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #FEF3C7; border: 2px solid #D97706; border-radius: 6px; margin: 0 0 20px 0;">
+                  <tr>
+                    <td style="padding: 15px;">
+                      <p style="color: #92400E; font-size: 14px; font-weight: bold; margin: 0;">
+                        ${ticketImportant}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+                <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                  Hi Sarah,
+                </p>
+                <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                  ${ticketIntro}
+                </div>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border-radius: 8px; border-left: 5px solid #D97706; margin: 0 0 25px 0;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <h2 style="color: #92400E; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase;">
+                        Your Standby Booking Details
+                      </h2>
+                      <table role="presentation" cellspacing="0" cellpadding="0">
+                        <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">DATE:</span><span style="color: #333; font-size: 14px; font-weight: bold;">${sampleDate}</span></td></tr>
+                        <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">TIME:</span><span style="color: #333; font-size: 14px; font-weight: bold;">8:00 AM</span></td></tr>
+                        <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">LOCATION:</span><span style="color: #333; font-size: 14px; font-weight: bold;">Docklands Studios Melbourne</span></td></tr>
+                        <tr><td style="padding: 5px 0 0 80px;"><span style="color: #666; font-size: 13px;">476 Docklands Drive, Docklands, VIC 3008</span></td></tr>
+                        <tr><td style="padding: 5px 0;"><span style="color: #666; font-size: 13px; width: 80px; display: inline-block;">RX:</span><span style="color: #333; font-size: 14px; font-weight: bold;">RX01</span></td></tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+                <p style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 20px 0;">Please ensure you bring your own water bottle.</p>
+                <p style="color: #333333; font-size: 15px; margin: 0 0 10px 0;">We look forward to seeing you on the day!<br/>Kind Regards,<br/><strong>The Deal Or No Deal Team</strong></p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="background-color: #2a0a0a; padding: 25px; text-align: center;">
+          <p style="color: #999999; font-size: 12px; line-height: 1.5; margin: 0;">${ticketFooter}</p>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div style="text-align: center; margin-top: 20px; padding: 15px; background: #FEF3C7; border-radius: 6px; max-width: 600px; margin: 20px auto;">
+    <p style="color: #92400E; font-size: 13px; margin: 0;"><strong>Note:</strong> In the actual email, a PDF attachment (Record_Day_Information.pdf) will be included.</p>
+  </div>
+</body>
+</html>`;
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error: any) {
+      console.error("Error generating standby ticket email preview:", error);
       res.setHeader('Content-Type', 'text/html');
       res.status(500).send(`<!DOCTYPE html><html><head><title>Preview Error</title></head><body style="font-family: Arial, sans-serif; padding: 40px; text-align: center; background: #fee2e2;"><h2 style="color: #dc2626;">Preview Error</h2><p style="color: #7f1d1d;">${error.message || 'Failed to load preview'}</p></body></html>`);
     }

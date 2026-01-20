@@ -234,6 +234,7 @@ export const standbyAssignments = pgTable("standby_assignments", {
   status: standbyStatusEnum("status").default('pending').notNull(),
   priority: integer("priority").default(0), // Lower number = higher priority (1 = first in line)
   standbyEmailSent: timestamp("standby_email_sent"),
+  standbyTicketSent: timestamp("standby_ticket_sent"),
   confirmedAt: timestamp("confirmed_at"),
   notes: text("notes"),
   assignedToSeat: varchar("assigned_to_seat", { length: 10 }), // Seat label when standby is used (e.g., "1A3")
