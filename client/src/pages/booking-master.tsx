@@ -250,6 +250,7 @@ export default function BookingMaster() {
     field: string;
     fieldLabel: string;
     contestantName: string;
+    isStandby?: boolean;
   } | null>(null);
   const [emailSubject, setEmailSubject] = useState("Deal or No Deal - Booking Confirmation");
   const [selectedAttachments, setSelectedAttachments] = useState<string[]>([]);
@@ -501,6 +502,7 @@ export default function BookingMaster() {
         field,
         fieldLabel: getFieldLabel(field),
         contestantName: standbyName,
+        isStandby: true,
       });
       setUntickConfirmOpen(true);
     } else {
@@ -702,7 +704,13 @@ export default function BookingMaster() {
 
   const handleConfirmUntick = () => {
     if (untickPending) {
-      handleFieldUpdate(untickPending.assignmentId, untickPending.field, false);
+      if (untickPending.isStandby) {
+        // Use standby workflow update for standbys
+        handleStandbyWorkflowUpdate(untickPending.assignmentId, untickPending.field, null);
+      } else {
+        // Use regular assignment update
+        handleFieldUpdate(untickPending.assignmentId, untickPending.field, false);
+      }
       toast({ 
         title: `${untickPending.fieldLabel} unticked`,
         description: `Cleared for ${untickPending.contestantName}`
