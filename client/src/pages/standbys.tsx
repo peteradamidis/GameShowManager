@@ -334,7 +334,7 @@ export default function StandbysPage() {
     },
   });
 
-  // Send emails mutation
+  // Send emails mutation - runs in background after dialog closes
   const sendEmailsMutation = useMutation({
     mutationFn: async (standbyIds: string[]) => {
       const response = await apiRequest('POST', '/api/standbys/send-emails', { standbyIds });
@@ -345,10 +345,8 @@ export default function StandbysPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
-      setPreviewDialogOpen(false);
-      setSelectedStandbys([]);
       toast({ 
-        title: "Emails sent", 
+        title: "Standby emails complete", 
         description: `Sent ${data.sent} standby booking emails${data.failed > 0 ? `, ${data.failed} failed` : ''}`,
       });
     },
@@ -601,6 +599,17 @@ export default function StandbysPage() {
   const handleSendEmails = () => {
     if (!previewData || previewData.recipients.length === 0) return;
     const standbyIds = previewData.recipients.map((r: any) => r.standbyId);
+    const count = standbyIds.length;
+    
+    // Close dialog immediately and show "sending" message
+    setPreviewDialogOpen(false);
+    setSelectedStandbys([]);
+    toast({ 
+      title: "Sending standby emails...", 
+      description: `Sending ${count} email${count !== 1 ? 's' : ''} in the background. You'll be notified when complete.`,
+    });
+    
+    // Fire off mutation in background
     sendEmailsMutation.mutate(standbyIds);
   };
 
