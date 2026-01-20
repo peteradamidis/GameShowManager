@@ -129,6 +129,9 @@ export default function StandbysPage() {
   const [declineMovedBy, setDeclineMovedBy] = useState("");
   const [rebookRecordDayId, setRebookRecordDayId] = useState<string>("");
 
+  // Send ticket dialog state
+  const [sendTicketDialogOpen, setSendTicketDialogOpen] = useState(false);
+
   // Fetch record days
   const { data: recordDays = [], isLoading: recordDaysLoading } = useQuery<RecordDay[]>({
     queryKey: ['/api/record-days'],
@@ -454,6 +457,44 @@ export default function StandbysPage() {
     },
   });
 
+  // Bulk send ticket mutation
+  const bulkSendTicketMutation = useMutation({
+    mutationFn: async (standbyIds: string[]) => {
+      return apiRequest('POST', '/api/standbys/bulk-send-ticket', { standbyIds });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      toast({ 
+        title: "Ticket emails sent", 
+        description: `Successfully sent ${data.sent || 0} ticket(s)` 
+      });
+      setSendTicketDialogOpen(false);
+      setSelectedStandbys([]);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error sending tickets", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Calculate confirmed standbys eligible for ticket sending
+  const selectedConfirmedWithoutTicket = useMemo(() => {
+    return standbysForRecordDay.filter(s => 
+      selectedStandbys.includes(s.id) && 
+      s.status === 'confirmed' && 
+      !s.standbyTicketSent &&
+      s.contestant.email
+    );
+  }, [standbysForRecordDay, selectedStandbys]);
+
+  const selectedConfirmedNoEmail = useMemo(() => {
+    return standbysForRecordDay.filter(s => 
+      selectedStandbys.includes(s.id) && 
+      s.status === 'confirmed' && 
+      !s.standbyTicketSent &&
+      !s.contestant.email
+    );
+  }, [standbysForRecordDay, selectedStandbys]);
+
   const handleSelectAll = () => {
     if (selectedStandbys.length === standbysForRecordDay.length) {
       setSelectedStandbys([]);
@@ -654,6 +695,17 @@ export default function StandbysPage() {
                     >
                       <Mail className="h-4 w-4 mr-2" />
                       Send Standby Email ({selectedStandbys.length})
+                    </Button>
+                  )}
+                  {/* Send Ticket button - for confirmed standbys without ticket */}
+                  {selectedConfirmedWithoutTicket.length > 0 && (
+                    <Button 
+                      onClick={() => setSendTicketDialogOpen(true)}
+                      className="bg-green-600 hover:bg-green-700"
+                      data-testid="button-send-ticket-email"
+                    >
+                      <Ticket className="h-4 w-4 mr-2" />
+                      Send Ticket ({selectedConfirmedWithoutTicket.length})
                     </Button>
                   )}
                 </div>
@@ -1192,6 +1244,92 @@ export default function StandbysPage() {
                 {declineStandbyMutation.isPending ? "Processing..." : "Move to Reschedule"}
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Ticket Email Dialog */}
+      <Dialog open={sendTicketDialogOpen} onOpenChange={setSendTicketDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Ticket className="h-5 w-5 text-green-600" />
+              Send Standby Ticket Emails
+            </DialogTitle>
+            <DialogDescription>
+              Send ticket emails with PDF attachment to {selectedConfirmedWithoutTicket.length} confirmed standby(s)
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {selectedConfirmedNoEmail.length > 0 && (
+              <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-3 rounded-lg">
+                <h4 className="font-medium text-sm mb-2 text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                  <XCircle className="h-4 w-4" />
+                  {selectedConfirmedNoEmail.length} standby(s) will be skipped (no email)
+                </h4>
+                <div className="max-h-20 overflow-y-auto text-sm space-y-1 text-amber-700 dark:text-amber-300">
+                  {selectedConfirmedNoEmail.map(standby => (
+                    <div key={standby.id}>{standby.contestant.name}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="bg-muted p-3 rounded-lg">
+              <h4 className="font-medium text-sm mb-2">Recipients ({selectedConfirmedWithoutTicket.length})</h4>
+              {selectedConfirmedWithoutTicket.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No confirmed standbys with email addresses selected</p>
+              ) : (
+                <div className="max-h-48 overflow-y-auto text-sm space-y-1">
+                  {selectedConfirmedWithoutTicket.map(standby => (
+                    <div key={standby.id} className="flex justify-between">
+                      <span>{standby.contestant.name}</span>
+                      <span className="text-muted-foreground">{standby.contestant.email}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Each recipient will receive a standby ticket email with the Record Day Information PDF attached.
+            </p>
+            
+            <div className="border rounded-lg overflow-hidden">
+              <div className="bg-muted px-3 py-2 border-b">
+                <span className="text-sm font-medium">Email Preview</span>
+              </div>
+              <iframe
+                src={`/api/email-preview/standby-ticket${selectedRecordDay ? `?recordDayId=${selectedRecordDay}` : ''}`}
+                className="w-full h-[300px] bg-white"
+                title="Standby Ticket Email Preview"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSendTicketDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => bulkSendTicketMutation.mutate(selectedConfirmedWithoutTicket.map(s => s.id))}
+              disabled={bulkSendTicketMutation.isPending || selectedConfirmedWithoutTicket.length === 0}
+              className="bg-green-600 hover:bg-green-700"
+              data-testid="button-confirm-send-ticket-email"
+            >
+              {bulkSendTicketMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Ticket className="h-4 w-4 mr-2" />
+                  Send to {selectedConfirmedWithoutTicket.length} Standby(s)
+                </>
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
