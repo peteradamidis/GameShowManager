@@ -127,6 +127,10 @@ export const seatAssignments = pgTable("seat_assignments", {
   mobilityNotesOverride: text("mobility_notes_override"), // Override for mobility/medical notes (when original changes after invitation)
   castingCardUrl: text("casting_card_url"), // URL to uploaded casting card PDF for players
   
+  // Standby seating tracking - when a standby is moved into a seat
+  seatedAsBlockType: blockTypeEnum("seated_as_block_type"), // PB (Case Holder) or NPB (Non Playing Block) - set when standby seated
+  seatedFromStandby: boolean("seated_from_standby").default(false), // True if this seat was filled from standby
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   // Ensure one contestant per record day
@@ -161,6 +165,9 @@ export const canceledAssignments = pgTable("canceled_assignments", {
   paperworkReceived: timestamp("paperwork_received"),
   paperworkReceivedBy: text("paperwork_received_by"),
   paperworkOnDay: timestamp("paperwork_on_day"), // Paperwork completed on the day
+  
+  // Standby block type tracking - when standby was originally seated
+  seatedAsBlockType: blockTypeEnum("seated_as_block_type"), // PB (Case Holder) or NPB (Non Playing Block)
 });
 
 // Availability Tokens table - stores unique tokens for availability check responses
