@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users } from "lucide-react";
+import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users, RefreshCw, CheckCircle, Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface RecordDay {
@@ -104,12 +104,15 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
+type StandbyStatusFilter = "all" | "not_sent" | "awaiting" | "confirmed" | "declined";
+
 export default function StandbysPage() {
   const { toast } = useToast();
   const [selectedRecordDayId, setSelectedRecordDayId] = useState<string>("");
   const [selectedStandbys, setSelectedStandbys] = useState<string[]>([]);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [previewData, setPreviewData] = useState<any>(null);
+  const [statusFilter, setStatusFilter] = useState<StandbyStatusFilter>("all");
 
   // Fetch record days
   const { data: recordDays = [], isLoading: recordDaysLoading } = useQuery<RecordDay[]>({
@@ -127,9 +130,38 @@ export default function StandbysPage() {
     return allStandbys.filter(s => s.recordDayId === selectedRecordDayId);
   }, [allStandbys, selectedRecordDayId]);
 
+  // Calculate stats for the selected record day
+  const stats = useMemo(() => {
+    const total = standbysForRecordDay.length;
+    const notSent = standbysForRecordDay.filter(s => s.status === 'pending' && !s.standbyEmailSent).length;
+    const awaiting = standbysForRecordDay.filter(s => s.status === 'pending' && s.standbyEmailSent || s.status === 'email_sent').length;
+    const confirmed = standbysForRecordDay.filter(s => s.status === 'confirmed').length;
+    const declined = standbysForRecordDay.filter(s => s.status === 'declined').length;
+    return { total, notSent, awaiting, confirmed, declined };
+  }, [standbysForRecordDay]);
+
+  // Filter by status
+  const filteredStandbysForRecordDay = useMemo(() => {
+    if (statusFilter === "all") return standbysForRecordDay;
+    return standbysForRecordDay.filter(s => {
+      switch (statusFilter) {
+        case "not_sent":
+          return s.status === 'pending' && !s.standbyEmailSent;
+        case "awaiting":
+          return (s.status === 'pending' && s.standbyEmailSent) || s.status === 'email_sent';
+        case "confirmed":
+          return s.status === 'confirmed';
+        case "declined":
+          return s.status === 'declined';
+        default:
+          return true;
+      }
+    });
+  }, [standbysForRecordDay, statusFilter]);
+
   // Group standbys together and sort so groups appear consecutively
   const groupedStandbysForRecordDay = useMemo(() => {
-    if (standbysForRecordDay.length === 0) return [];
+    if (filteredStandbysForRecordDay.length === 0) return [];
     
     // Create a map of contestant ID to their group identifier
     const contestantToGroup = new Map<string, string>();
@@ -146,17 +178,17 @@ export default function StandbysPage() {
     ];
     
     // First pass: assign groups based on groupId
-    standbysForRecordDay.forEach(s => {
+    filteredStandbysForRecordDay.forEach(s => {
       if (s.contestant.groupId) {
         contestantToGroup.set(s.contestantId, `group-${s.contestant.groupId}`);
       }
     });
     
     // Second pass: try to match by attendingWith for contestants without groupId
-    standbysForRecordDay.forEach(s => {
+    filteredStandbysForRecordDay.forEach(s => {
       if (!contestantToGroup.has(s.contestantId) && s.contestant.attendingWith) {
         // Look for other standbys whose name appears in this contestant's attendingWith
-        standbysForRecordDay.forEach(other => {
+        filteredStandbysForRecordDay.forEach(other => {
           if (other.contestantId !== s.contestantId) {
             const attendingWithLower = (s.contestant.attendingWith || '').toLowerCase();
             const nameParts = other.contestant.name.toLowerCase().split(' ');
@@ -187,7 +219,7 @@ export default function StandbysPage() {
     });
     
     // Sort standbys so groups are together
-    const sorted = [...standbysForRecordDay].sort((a, b) => {
+    const sorted = [...filteredStandbysForRecordDay].sort((a, b) => {
       const groupA = contestantToGroup.get(a.contestantId) || '';
       const groupB = contestantToGroup.get(b.contestantId) || '';
       if (groupA && groupB && groupA !== groupB) return groupA.localeCompare(groupB);
@@ -204,12 +236,12 @@ export default function StandbysPage() {
         ? groupStyleMap.get(contestantToGroup.get(s.contestantId)!) 
         : null,
       groupMembers: contestantToGroup.has(s.contestantId)
-        ? standbysForRecordDay
+        ? filteredStandbysForRecordDay
             .filter(other => contestantToGroup.get(other.contestantId) === contestantToGroup.get(s.contestantId))
             .map(m => m.contestant.name)
         : null,
     }));
-  }, [standbysForRecordDay]);
+  }, [filteredStandbysForRecordDay]);
 
   // Group standbys by record day for the overview
   const standbysByRecordDay = useMemo(() => {
@@ -303,6 +335,53 @@ export default function StandbysPage() {
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Confirm standby mutation
+  const confirmStandbyMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest('PATCH', `/api/standbys/${id}`, {
+        status: 'confirmed',
+        confirmedAt: new Date().toISOString(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      toast({ title: "Standby confirmed" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Decline standby mutation
+  const declineStandbyMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest('PATCH', `/api/standbys/${id}`, {
+        status: 'declined',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      toast({ title: "Standby declined" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Resend email mutation (for single standby)
+  const resendEmailMutation = useMutation({
+    mutationFn: async (standbyId: string) => {
+      return apiRequest('POST', '/api/standbys/send-emails', { standbyIds: [standbyId] });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      toast({ title: "Email resent successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error resending email", description: error.message, variant: "destructive" });
     },
   });
 
@@ -452,6 +531,66 @@ export default function StandbysPage() {
                   )}
                 </div>
               </div>
+
+              {/* Status Stats Bar */}
+              {standbysForRecordDay.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t">
+                  <button
+                    onClick={() => setStatusFilter("all")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      statusFilter === "all" ? "bg-primary text-primary-foreground" : "bg-muted hover-elevate"
+                    }`}
+                    data-testid="filter-all"
+                  >
+                    All
+                    <Badge variant="secondary" className="ml-1">{stats.total}</Badge>
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter("not_sent")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      statusFilter === "not_sent" ? "bg-gray-600 text-white" : "bg-gray-100 dark:bg-gray-800 hover-elevate"
+                    }`}
+                    data-testid="filter-not-sent"
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                    Not Sent
+                    <Badge variant="secondary" className="ml-1">{stats.notSent}</Badge>
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter("awaiting")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      statusFilter === "awaiting" ? "bg-amber-600 text-white" : "bg-amber-100 dark:bg-amber-900/30 hover-elevate"
+                    }`}
+                    data-testid="filter-awaiting"
+                  >
+                    <Clock className="h-3.5 w-3.5" />
+                    Awaiting Reply
+                    <Badge variant="secondary" className="ml-1">{stats.awaiting}</Badge>
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter("confirmed")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      statusFilter === "confirmed" ? "bg-green-600 text-white" : "bg-green-100 dark:bg-green-900/30 hover-elevate"
+                    }`}
+                    data-testid="filter-confirmed"
+                  >
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    Confirmed
+                    <Badge variant="secondary" className="ml-1">{stats.confirmed}</Badge>
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter("declined")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      statusFilter === "declined" ? "bg-red-600 text-white" : "bg-red-100 dark:bg-red-900/30 hover-elevate"
+                    }`}
+                    data-testid="filter-declined"
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                    Declined
+                    <Badge variant="secondary" className="ml-1">{stats.declined}</Badge>
+                  </button>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               {standbysForRecordDay.length === 0 ? (
@@ -479,9 +618,9 @@ export default function StandbysPage() {
                       <TableHead>Rating</TableHead>
                       <TableHead>Gender</TableHead>
                       <TableHead>Email</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>Booking Status</TableHead>
+                      <TableHead>Actions</TableHead>
                       <TableHead>Assigned Seat</TableHead>
-                      <TableHead>Email Sent</TableHead>
                       <TableHead>Reschedule</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
@@ -553,11 +692,96 @@ export default function StandbysPage() {
                         <TableCell className="text-sm text-muted-foreground">
                           {standby.contestant.email || "-"}
                         </TableCell>
-                        <TableCell className="space-x-2 flex items-center flex-wrap gap-2">
-                          <StatusBadge status={standby.contestant.availabilityStatus} />
-                          <Badge variant="outline" className="border-yellow-300 bg-yellow-500/20 text-yellow-800 dark:border-yellow-700 dark:text-yellow-400">
-                            Standby
-                          </Badge>
+                        <TableCell>
+                          {/* Booking Status based on standby status */}
+                          {standby.status === 'confirmed' ? (
+                            <Badge className="bg-green-500/20 text-green-700 border-green-300 dark:text-green-400">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Confirmed
+                            </Badge>
+                          ) : standby.status === 'declined' ? (
+                            <Badge className="bg-red-500/20 text-red-700 border-red-300 dark:text-red-400">
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Declined
+                            </Badge>
+                          ) : standby.standbyEmailSent ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge className="bg-amber-500/20 text-amber-700 border-amber-300 dark:text-amber-400 cursor-help">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  Awaiting Reply
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Email sent: {new Date(standby.standbyEmailSent).toLocaleDateString('en-AU')}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <Badge variant="outline" className="text-muted-foreground">
+                              <Mail className="h-3 w-3 mr-1" />
+                              Not Sent
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-1">
+                            {standby.status !== 'confirmed' && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-100"
+                                    onClick={() => confirmStandbyMutation.mutate(standby.id)}
+                                    disabled={confirmStandbyMutation.isPending}
+                                    data-testid={`button-confirm-${standby.id}`}
+                                  >
+                                    <CheckCircle className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Confirm booking</TooltipContent>
+                              </Tooltip>
+                            )}
+                            {standby.status !== 'declined' && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-100"
+                                    onClick={() => declineStandbyMutation.mutate(standby.id)}
+                                    disabled={declineStandbyMutation.isPending}
+                                    data-testid={`button-decline-${standby.id}`}
+                                  >
+                                    <XCircle className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Decline booking</TooltipContent>
+                              </Tooltip>
+                            )}
+                            {standby.standbyEmailSent && standby.contestant.email && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+                                    onClick={() => resendEmailMutation.mutate(standby.id)}
+                                    disabled={resendEmailMutation.isPending}
+                                    data-testid={`button-resend-${standby.id}`}
+                                  >
+                                    {resendEmailMutation.isPending ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <RefreshCw className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Resend email</TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="font-mono text-sm">
                           {standby.assignedToSeat ? (
@@ -567,12 +791,6 @@ export default function StandbysPage() {
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {standby.standbyEmailSent 
-                            ? new Date(standby.standbyEmailSent).toLocaleDateString('en-AU')
-                            : "-"
-                          }
                         </TableCell>
                         <TableCell>
                           {standby.movedToReschedule ? (
