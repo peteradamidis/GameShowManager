@@ -30,7 +30,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
-import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical, Briefcase } from "lucide-react";
+import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical, Briefcase, MapPin, ShieldAlert, Heart } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   HoverCard,
   HoverCardContent,
@@ -122,6 +123,14 @@ interface StandbyData {
     attendingWith?: string | null;
     groupId?: string | null;
     suburb?: string | null;
+    location?: string | null;
+    photoUrl?: string | null;
+    medicalInfo?: string | null;
+    mobilityNotes?: string | null;
+    criminalRecord?: string | null;
+    availabilityNotes?: string | null;
+    availabilityStatus?: string | null;
+    podiumStory?: boolean;
   };
 }
 
@@ -234,6 +243,14 @@ function DraggableDroppableSeat({
     </div>
   );
 }
+
+// Helper function to check if a medical field has meaningful content (not NA/N/A/No/None/empty)
+const hasMeaningfulMedicalNote = (value: string | undefined | null): boolean => {
+  if (!value) return false;
+  const trimmed = value.trim().toUpperCase();
+  const ignoredValues = ['', 'NA', 'N/A', 'N / A', 'NO', 'N', 'NONE', '-'];
+  return !ignoredValues.includes(trimmed);
+};
 
 // Sortable Standby Item with hover card
 function SortableStandbyItem({
@@ -350,25 +367,45 @@ function SortableStandbyItem({
             </Badge>
           </div>
         </HoverCardTrigger>
-        <HoverCardContent className="w-72" side="left" align="start">
+        <HoverCardContent className="w-80" side="left" align="start">
           <div className="space-y-3">
-            <div>
-              <h4 className="font-semibold text-sm">{standby.contestant.name}</h4>
-              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                <span>{standby.contestant.gender}</span>
-                <span>-</span>
-                <span>{standby.contestant.age} years old</span>
-                {standby.contestant.auditionRating && (
-                  <>
-                    <span>-</span>
-                    <Badge className={`text-[10px] px-1 py-0 h-4 ${ratingColors[standby.contestant.auditionRating] || 'bg-gray-500 text-white'}`}>
+            {/* Header with photo and basic info */}
+            <div className="flex items-center gap-3">
+              <Avatar className="h-12 w-12">
+                {standby.contestant.photoUrl ? (
+                  <AvatarImage 
+                    src={standby.contestant.photoUrl} 
+                    alt={standby.contestant.name}
+                    className="object-cover"
+                  />
+                ) : null}
+                <AvatarFallback>
+                  {standby.contestant.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold">{standby.contestant.name}</h4>
+                  {standby.contestant.auditionRating && (
+                    <span className={`text-sm font-bold ${
+                      standby.contestant.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
+                      standby.contestant.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
+                      standby.contestant.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
+                      standby.contestant.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
+                      standby.contestant.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' : ''
+                    }`}>
                       {standby.contestant.auditionRating}
-                    </Badge>
-                  </>
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">{standby.contestant.age} years old • {standby.contestant.gender}</p>
+                {standby.contestant.location && (
+                  <p className="text-xs text-muted-foreground">{standby.contestant.location}</p>
                 )}
               </div>
             </div>
-            
+
+            {/* Contact info */}
             {standby.contestant.phone && (
               <div className="flex items-center gap-2 text-xs">
                 <Phone className="h-3 w-3 text-muted-foreground" />
@@ -382,28 +419,78 @@ function SortableStandbyItem({
                 <span className="truncate">{standby.contestant.email}</span>
               </div>
             )}
-            
-            {standby.contestant.suburb && (
-              <div className="text-xs text-muted-foreground">
-                {standby.contestant.suburb}
-              </div>
-            )}
-            
-            {groupMemberNames && groupMemberNames.length > 0 && (
-              <div className="pt-2 border-t">
-                <div className="flex items-center gap-1.5 text-xs font-medium text-purple-600 dark:text-purple-400">
+
+            {/* Attending With */}
+            {(standby.contestant.attendingWith || (groupMemberNames && groupMemberNames.length > 0)) && (
+              <div className="text-sm">
+                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
                   <Users className="h-3 w-3" />
-                  <span>Attending With</span>
-                </div>
-                <ul className="mt-1 space-y-0.5">
-                  {groupMemberNames.map((name, idx) => (
-                    <li key={idx} className="text-xs text-muted-foreground pl-4">
-                      {name}
-                    </li>
-                  ))}
-                </ul>
+                  Attending With
+                </label>
+                {standby.contestant.attendingWith ? (
+                  <p className="text-xs mt-0.5">{standby.contestant.attendingWith}</p>
+                ) : groupMemberNames && groupMemberNames.length > 0 ? (
+                  <ul className="mt-0.5 space-y-0.5">
+                    {groupMemberNames.map((name, idx) => (
+                      <li key={idx} className="text-xs text-muted-foreground">
+                        {name}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
             )}
+
+            {/* Availability Notes */}
+            {standby.contestant.availabilityNotes && (
+              <div className="text-sm">
+                <label className="text-xs font-medium text-muted-foreground">Availability Notes</label>
+                <p className="text-xs">{standby.contestant.availabilityNotes}</p>
+              </div>
+            )}
+
+            {/* Medical Info */}
+            {hasMeaningfulMedicalNote(standby.contestant.medicalInfo) && (
+              <div className="text-sm">
+                <label className="text-xs font-medium text-muted-foreground">Medical Info</label>
+                <p className="text-xs">{standby.contestant.medicalInfo}</p>
+              </div>
+            )}
+
+            {/* Mobility/Access Notes */}
+            {hasMeaningfulMedicalNote(standby.contestant.mobilityNotes) && (
+              <div className="text-sm p-2 bg-amber-50 dark:bg-amber-950/50 rounded-md border border-amber-200 dark:border-amber-800">
+                <label className="text-xs font-medium text-amber-700 dark:text-amber-300 flex items-center gap-1">
+                  <ShieldAlert className="h-3 w-3" />
+                  Mobility/Access Notes
+                </label>
+                <p className="text-xs mt-0.5">{standby.contestant.mobilityNotes}</p>
+              </div>
+            )}
+
+            {/* Criminal Record */}
+            {standby.contestant.criminalRecord && (
+              <div className="text-sm">
+                <label className="text-xs font-medium text-muted-foreground">Criminal Record</label>
+                <p className="text-xs">{standby.contestant.criminalRecord}</p>
+              </div>
+            )}
+
+            {/* Status */}
+            <div className="text-sm">
+              <label className="text-xs font-medium text-muted-foreground">Status</label>
+              <div className="mt-1">
+                <Badge variant="secondary">
+                  {standby.contestant.availabilityStatus || 'Standby'}
+                </Badge>
+                {standby.contestant.podiumStory && (
+                  <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0 h-4 bg-pink-50 dark:bg-pink-950 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800">
+                    <Heart className="h-2.5 w-2.5 mr-0.5" />
+                    Story
+                  </Badge>
+                )}
+              </div>
+            </div>
           </div>
         </HoverCardContent>
       </HoverCard>
