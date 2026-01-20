@@ -862,6 +862,7 @@ export default function StandbysPage() {
                       <TableHead className="font-semibold text-xs text-center">Status</TableHead>
                       <TableHead className="font-semibold text-xs text-center">Ticket</TableHead>
                       <TableHead className="font-semibold text-xs text-center">Signed In</TableHead>
+                      <TableHead className="font-semibold text-xs text-center">Assigned<br/>Seat</TableHead>
                       <TableHead className="font-semibold text-xs">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -1071,6 +1072,16 @@ export default function StandbysPage() {
                                 </span>
                               </div>
                             </div>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
+                        </TableCell>
+                        {/* Assigned Seat */}
+                        <TableCell className="text-center py-1 px-2">
+                          {standby.assignedToSeat ? (
+                            <Badge variant="outline" className="text-[10px] bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900 dark:text-purple-300 dark:border-purple-700">
+                              Block {standby.assignedToSeat.charAt(0)}, {standby.assignedToSeat.substring(1)}
+                            </Badge>
                           ) : (
                             <span className="text-muted-foreground text-xs">-</span>
                           )}
