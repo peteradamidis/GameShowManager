@@ -2057,6 +2057,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // 1. Delete standby confirmation tokens
+        // Must delete tokens FIRST because they reference standby_assignments
         await database.execute(sql`
           DELETE FROM standby_confirmation_tokens 
           WHERE standby_assignment_id IN (
@@ -2068,6 +2069,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await database.execute(sql`DELETE FROM standby_assignments WHERE contestant_id = ${id}`);
         
         // 3. Delete booking confirmation tokens and messages
+        // Must delete messages FIRST because they reference booking_confirmation_tokens
         await database.execute(sql`
           DELETE FROM booking_messages 
           WHERE confirmation_id IN (
@@ -2077,6 +2079,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             )
           )
         `);
+        // Then delete tokens because they reference seat_assignments
         await database.execute(sql`
           DELETE FROM booking_confirmation_tokens 
           WHERE seat_assignment_id IN (
@@ -2104,6 +2107,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // 10. Delete rebooking history
         await database.execute(sql`DELETE FROM rebooking_history WHERE contestant_id = ${id}`);
+        
+        // 11. Remove any group associations
+        // We do this by setting group_id to null on the contestant record itself before storage.deleteContestant
+        await database.execute(sql`UPDATE contestants SET group_id = NULL WHERE id = ${id}`);
       } else {
         // Check if regular contestant has any seat assignments
         const assignments = await storage.getAllSeatAssignments();
