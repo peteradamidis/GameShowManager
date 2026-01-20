@@ -8552,7 +8552,24 @@ ${finalEmailFooter}`;
   app.patch("/api/standbys/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const updateData = req.body;
+      const updateData = { ...req.body };
+      
+      // Convert string dates to Date objects for timestamp columns
+      if (updateData.confirmedAt && typeof updateData.confirmedAt === 'string') {
+        updateData.confirmedAt = new Date(updateData.confirmedAt);
+      }
+      if (updateData.standbyEmailSent && typeof updateData.standbyEmailSent === 'string') {
+        updateData.standbyEmailSent = new Date(updateData.standbyEmailSent);
+      }
+      if (updateData.standbyTicketSent && typeof updateData.standbyTicketSent === 'string') {
+        updateData.standbyTicketSent = new Date(updateData.standbyTicketSent);
+      }
+      if (updateData.assignedAt && typeof updateData.assignedAt === 'string') {
+        updateData.assignedAt = new Date(updateData.assignedAt);
+      }
+      if (updateData.movedToRescheduleAt && typeof updateData.movedToRescheduleAt === 'string') {
+        updateData.movedToRescheduleAt = new Date(updateData.movedToRescheduleAt);
+      }
 
       const updated = await storage.updateStandbyAssignment(id, updateData);
       
