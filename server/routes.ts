@@ -5210,6 +5210,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Seat assignment not found" });
       }
 
+      // Check if the record day is locked - prevent removal on locked days
+      const recordDay = await storage.getRecordDay(assignment.recordDayId);
+      if (recordDay?.isLocked) {
+        return res.status(403).json({ 
+          error: "Cannot remove seat assignment on a locked record day. Unlock the day first or use the seating chart to make changes." 
+        });
+      }
+
       // Delete the assignment (storage handles updating contestant status)
       await storage.deleteSeatAssignment(req.params.id);
       res.json({ message: "Seat assignment removed" });

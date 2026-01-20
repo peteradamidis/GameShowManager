@@ -228,6 +228,13 @@ export default function Contestants() {
     return allSeatAssignments.find((sa: any) => sa.contestantId === contestantId) || null;
   }, [selectedContestants, allSeatAssignments]);
 
+  // Check if the selected contestant's assignment is on a locked day
+  const isSelectedAssignmentOnLockedDay = useMemo(() => {
+    if (!selectedContestantAssignment) return false;
+    const day = recordDays.find((d: any) => d.id === selectedContestantAssignment.recordDayId);
+    return day?.isLocked === true;
+  }, [selectedContestantAssignment, recordDays]);
+
   // Create a map of contestantId to seat assignment for quick lookup
   const seatAssignmentMap = useMemo(() => {
     return new Map(allSeatAssignments.map((sa: any) => [sa.contestantId, sa]));
@@ -995,11 +1002,12 @@ export default function Contestants() {
                   <Button 
                     variant="destructive"
                     onClick={() => removeSeatMutation.mutate(selectedContestantAssignment.id)}
-                    disabled={removeSeatMutation.isPending}
+                    disabled={removeSeatMutation.isPending || isSelectedAssignmentOnLockedDay}
+                    title={isSelectedAssignmentOnLockedDay ? "Cannot remove - day is locked" : undefined}
                     data-testid="button-remove-from-seat"
                   >
                     <UserMinus className="h-4 w-4 mr-2" />
-                    {removeSeatMutation.isPending ? "Removing..." : "Remove from Seat"}
+                    {removeSeatMutation.isPending ? "Removing..." : isSelectedAssignmentOnLockedDay ? "Day Locked" : "Remove from Seat"}
                   </Button>
                 ) : (
                   <>
@@ -1959,11 +1967,12 @@ export default function Contestants() {
                 <Button 
                   variant="destructive"
                   onClick={() => removeSeatMutation.mutate(selectedContestantAssignment.id)}
-                  disabled={removeSeatMutation.isPending}
+                  disabled={removeSeatMutation.isPending || isSelectedAssignmentOnLockedDay}
+                  title={isSelectedAssignmentOnLockedDay ? "Cannot remove - day is locked" : undefined}
                   data-testid="floating-button-remove-from-seat"
                 >
                   <UserMinus className="h-4 w-4 mr-2" />
-                  {removeSeatMutation.isPending ? "Removing..." : "Remove from Seat"}
+                  {removeSeatMutation.isPending ? "Removing..." : isSelectedAssignmentOnLockedDay ? "Day Locked" : "Remove from Seat"}
                 </Button>
               ) : (
                 <>
