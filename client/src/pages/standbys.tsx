@@ -538,7 +538,8 @@ export default function StandbysPage() {
   // Bulk send ticket mutation
   const bulkSendTicketMutation = useMutation({
     mutationFn: async (standbyIds: string[]) => {
-      return apiRequest('POST', '/api/standbys/bulk-send-ticket', { standbyIds });
+      const response = await apiRequest('POST', '/api/standbys/bulk-send-ticket', { standbyIds });
+      return response.json();
     },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
