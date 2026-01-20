@@ -1097,7 +1097,7 @@ export default function StandbysPage() {
                         {/* Actions */}
                         <TableCell className="py-1 px-2">
                           {standby.status === 'declined' ? (
-                            <span className="text-xs text-muted-foreground">Rescheduled</span>
+                            <span className="text-xs text-muted-foreground">Moved to Reschedule</span>
                           ) : standby.signedIn ? (
                             <Button
                               size="sm"
