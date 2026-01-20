@@ -423,7 +423,7 @@ export function SeatCard({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div data-testid={`rescheduled-icon-${seat.assignmentId}`}>
-                    <Clock className="h-3 w-3 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+                    <Clock className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400 flex-shrink-0" style={{ strokeWidth: 2.5 }} />
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
@@ -444,7 +444,7 @@ export function SeatCard({
                 {seat.playerType === 'player' ? 'P' : seat.playerType === 'backup' ? 'B' : 'PP'}
               </Badge>
             )}
-            {isRXDayLocked && seat.winningMoneyAmount > 0 && (
+            {isRXDayLocked && (seat.winningMoneyAmount ?? 0) > 0 && (
               <div title={`$${seat.winningMoneyAmount}`}>
                 <DollarSign className="h-3 w-3 text-green-600 dark:text-green-400 flex-shrink-0" />
               </div>
