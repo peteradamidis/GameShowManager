@@ -12583,9 +12583,9 @@ Thank you.`;
   app.post("/api/attendance-issues/:id/move-to-reschedule", async (req, res) => {
     try {
       const { id } = req.params;
-      const { movedBy } = req.body;
+      const { movedBy, reason } = req.body;
       
-      const result = await storage.moveAttendanceIssueToReschedule(id, movedBy);
+      const result = await storage.moveAttendanceIssueToReschedule(id, { movedBy, reason });
       res.json(result);
     } catch (error: any) {
       console.error("Error moving attendance issue to reschedule:", error);

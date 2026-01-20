@@ -4,9 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { AlertTriangle, Clock, CalendarPlus, Check, Trash2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -15,6 +18,10 @@ import { useToast } from "@/hooks/use-toast";
 export default function AttendanceIssuesPage() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
+  const [selectedIssue, setSelectedIssue] = useState<any>(null);
+  const [rescheduleReason, setRescheduleReason] = useState("");
+  const [producerInitials, setProducerInitials] = useState("");
   const { toast } = useToast();
 
   const { data: issues, isLoading } = useQuery<any[]>({
@@ -48,14 +55,19 @@ export default function AttendanceIssuesPage() {
   const earlyLeaverCount = issues?.filter(i => i.issueType === 'early_leaver').length || 0;
 
   const moveToRescheduleMutation = useMutation({
-    mutationFn: async (issueId: string) => {
+    mutationFn: async ({ issueId, reason, movedBy }: { issueId: string; reason: string; movedBy: string }) => {
       return apiRequest('POST', `/api/attendance-issues/${issueId}/move-to-reschedule`, {
-        movedBy: 'producer',
+        reason,
+        movedBy,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/attendance-issues'] });
       queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'] });
+      setRescheduleDialogOpen(false);
+      setSelectedIssue(null);
+      setRescheduleReason("");
+      setProducerInitials("");
       toast({
         title: "Moved to Reschedule",
         description: "Contestant has been added to the reschedule list.",
@@ -69,6 +81,33 @@ export default function AttendanceIssuesPage() {
       });
     },
   });
+
+  const handleOpenRescheduleDialog = (issue: any) => {
+    setSelectedIssue(issue);
+    // Pre-fill reason based on issue type
+    const defaultReason = issue.issueType === 'no_show' 
+      ? 'No-show - eligible for reschedule' 
+      : 'Early leaver - eligible for reschedule';
+    setRescheduleReason(defaultReason);
+    setProducerInitials("");
+    setRescheduleDialogOpen(true);
+  };
+
+  const handleSubmitReschedule = () => {
+    if (!selectedIssue || !producerInitials.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please enter producer initials.",
+        variant: "destructive",
+      });
+      return;
+    }
+    moveToRescheduleMutation.mutate({
+      issueId: selectedIssue.id,
+      reason: rescheduleReason.trim() || 'Moved to reschedule',
+      movedBy: producerInitials.trim().toUpperCase(),
+    });
+  };
 
   const removeIssueMutation = useMutation({
     mutationFn: async (issueId: string) => {
@@ -232,7 +271,7 @@ export default function AttendanceIssuesPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => moveToRescheduleMutation.mutate(issue.id)}
+                              onClick={() => handleOpenRescheduleDialog(issue)}
                               disabled={moveToRescheduleMutation.isPending}
                               data-testid={`button-move-to-reschedule-${issue.id}`}
                             >
@@ -282,6 +321,59 @@ export default function AttendanceIssuesPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Move to Reschedule Dialog */}
+      <Dialog open={rescheduleDialogOpen} onOpenChange={setRescheduleDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Move to Reschedule</DialogTitle>
+            <DialogDescription>
+              {selectedIssue && contestantMap.get(selectedIssue.contestantId)?.name} will be added to the reschedule list.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="reason">Reason</Label>
+              <Textarea
+                id="reason"
+                placeholder="Enter reason for reschedule..."
+                value={rescheduleReason}
+                onChange={(e) => setRescheduleReason(e.target.value)}
+                rows={3}
+                data-testid="textarea-reschedule-reason"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="initials">Producer Initials *</Label>
+              <Input
+                id="initials"
+                placeholder="e.g. JD"
+                value={producerInitials}
+                onChange={(e) => setProducerInitials(e.target.value.toUpperCase())}
+                maxLength={5}
+                className="w-24"
+                data-testid="input-producer-initials"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRescheduleDialogOpen(false)}
+              data-testid="button-cancel-reschedule"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitReschedule}
+              disabled={moveToRescheduleMutation.isPending || !producerInitials.trim()}
+              data-testid="button-confirm-reschedule"
+            >
+              {moveToRescheduleMutation.isPending ? "Moving..." : "Move to Reschedule"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

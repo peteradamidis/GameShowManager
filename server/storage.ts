@@ -352,7 +352,7 @@ export interface IStorage {
   getAttendanceIssues(): Promise<Array<AttendanceIssue & { contestant: Contestant; recordDay: RecordDay }>>;
   getAttendanceIssuesByRecordDay(recordDayId: string): Promise<Array<AttendanceIssue & { contestant: Contestant }>>;
   deleteAttendanceIssue(id: string): Promise<void>;
-  moveAttendanceIssueToReschedule(id: string, movedBy?: string): Promise<{ attendanceIssue: AttendanceIssue; canceledAssignment: CanceledAssignment }>;
+  moveAttendanceIssueToReschedule(id: string, options?: { movedBy?: string; reason?: string }): Promise<{ attendanceIssue: AttendanceIssue; canceledAssignment: CanceledAssignment }>;
   
   // Noticeboard
   createNoticeboardPost(post: InsertNoticeboardPost): Promise<NoticeboardPost>;
@@ -2243,7 +2243,7 @@ export class DbStorage implements IStorage {
     });
   }
 
-  async moveAttendanceIssueToReschedule(id: string, movedBy?: string): Promise<{ attendanceIssue: AttendanceIssue; canceledAssignment: CanceledAssignment }> {
+  async moveAttendanceIssueToReschedule(id: string, options?: { movedBy?: string; reason?: string }): Promise<{ attendanceIssue: AttendanceIssue; canceledAssignment: CanceledAssignment }> {
     // Get the attendance issue
     const [issue] = await db
       .select()
@@ -2258,6 +2258,11 @@ export class DbStorage implements IStorage {
       throw new Error("This attendance issue has already been moved to reschedule");
     }
     
+    // Use provided values or defaults
+    const defaultReason = issue.issueType === 'no_show' ? 'No-show - eligible for reschedule' : 'Early leaver - eligible for reschedule';
+    const reason = options?.reason || defaultReason;
+    const movedBy = options?.movedBy || issue.markedBy;
+    
     return await db.transaction(async (tx) => {
       // Create a canceled assignment for the reschedule list
       const [canceledAssignment] = await tx
@@ -2267,8 +2272,8 @@ export class DbStorage implements IStorage {
           recordDayId: issue.recordDayId,
           blockNumber: issue.blockNumber,
           seatLabel: issue.seatLabel,
-          reason: issue.issueType === 'no_show' ? 'No-show - eligible for reschedule' : 'Early leaver - eligible for reschedule',
-          movedBy: movedBy || issue.markedBy,
+          reason,
+          movedBy,
         })
         .returning();
       
