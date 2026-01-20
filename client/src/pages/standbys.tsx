@@ -143,6 +143,7 @@ export default function StandbysPage() {
   const [moveToRescheduleDialogOpen, setMoveToRescheduleDialogOpen] = useState(false);
   const [moveToRescheduleStandby, setMoveToRescheduleStandby] = useState<StandbyAssignment | null>(null);
   const [attendedBlockType, setAttendedBlockType] = useState<"PB" | "NPB">("NPB");
+  const [attendedNotes, setAttendedNotes] = useState("");
 
   // Fetch record days
   const { data: recordDays = [], isLoading: recordDaysLoading } = useQuery<RecordDay[]>({
@@ -413,14 +414,20 @@ export default function StandbysPage() {
 
   // Move attended standby to reschedule mutation
   const moveAttendedToRescheduleMutation = useMutation({
-    mutationFn: async ({ standby, blockType }: { standby: StandbyAssignment; blockType: "PB" | "NPB" }) => {
+    mutationFn: async ({ standby, blockType, notes }: { standby: StandbyAssignment; blockType: "PB" | "NPB"; notes: string }) => {
+      // Build reason with block type and optional notes
+      const blockLabel = blockType === 'PB' ? 'Podium Block' : 'Non-Playing Block';
+      const reason = notes.trim() 
+        ? `STANDBY ATTENDED - ${blockLabel} - ${notes.trim()}`
+        : `STANDBY ATTENDED - ${blockLabel}`;
+      
       // Create canceled assignment with isFromStandby: true and the block type info
       return apiRequest('POST', '/api/canceled-assignments', {
         contestantId: standby.contestantId,
         recordDayId: standby.recordDayId,
         blockNumber: null, // Standbys don't have fixed block numbers
         seatLabel: standby.assignedToSeat || null,
-        reason: `STANDBY ATTENDED - ${blockType === 'PB' ? 'Podium Block' : 'Non-Playing Block'}`,
+        reason,
         movedBy: 'SYSTEM',
         isFromStandby: true,
         originalAttendanceDate: standby.recordDay?.date ? new Date(standby.recordDay.date) : new Date(),
@@ -437,6 +444,7 @@ export default function StandbysPage() {
       setMoveToRescheduleDialogOpen(false);
       setMoveToRescheduleStandby(null);
       setAttendedBlockType("NPB");
+      setAttendedNotes("");
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -1462,16 +1470,34 @@ export default function StandbysPage() {
                 </div>
               </RadioGroup>
             </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Additional Notes (Optional)</Label>
+              <Textarea
+                placeholder="Add any additional notes about this standby's attendance..."
+                value={attendedNotes}
+                onChange={(e) => setAttendedNotes(e.target.value)}
+                className="min-h-[60px] text-sm"
+                data-testid="input-attended-notes"
+              />
+              <p className="text-xs text-muted-foreground">
+                These notes will appear in the Reason column on the Reschedule page.
+              </p>
+            </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setMoveToRescheduleDialogOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setMoveToRescheduleDialogOpen(false);
+              setAttendedNotes("");
+            }}>
               Cancel
             </Button>
             <Button 
               onClick={() => moveToRescheduleStandby && moveAttendedToRescheduleMutation.mutate({
                 standby: moveToRescheduleStandby,
-                blockType: attendedBlockType
+                blockType: attendedBlockType,
+                notes: attendedNotes
               })}
               disabled={moveAttendedToRescheduleMutation.isPending}
               className="bg-amber-600 hover:bg-amber-700"
