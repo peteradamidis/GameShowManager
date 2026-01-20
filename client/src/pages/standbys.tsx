@@ -31,7 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users, RefreshCw, CheckCircle, Loader2, Ticket } from "lucide-react";
+import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users, RefreshCw, CheckCircle, Loader2, Ticket, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface RecordDay {
@@ -114,6 +115,7 @@ export default function StandbysPage() {
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [previewData, setPreviewData] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<StandbyStatusFilter>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Fetch record days
   const { data: recordDays = [], isLoading: recordDaysLoading } = useQuery<RecordDay[]>({
@@ -125,11 +127,27 @@ export default function StandbysPage() {
     queryKey: ['/api/standbys'],
   });
 
+  // Global search - searches all record days
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return null;
+    const query = searchQuery.toLowerCase().trim();
+    return allStandbys.filter(s => 
+      s.contestant.name.toLowerCase().includes(query) ||
+      s.contestant.email?.toLowerCase().includes(query) ||
+      s.contestant.phone?.toLowerCase().includes(query) ||
+      s.contestant.attendingWith?.toLowerCase().includes(query)
+    );
+  }, [allStandbys, searchQuery]);
+
+  // Determine if we're in search mode
+  const isSearchMode = searchQuery.trim().length > 0;
+
   // Filter standbys by selected record day
   const standbysForRecordDay = useMemo(() => {
+    if (isSearchMode) return searchResults || [];
     if (!selectedRecordDayId) return [];
     return allStandbys.filter(s => s.recordDayId === selectedRecordDayId);
-  }, [allStandbys, selectedRecordDayId]);
+  }, [allStandbys, selectedRecordDayId, isSearchMode, searchResults]);
 
   // Calculate stats for the selected record day
   const stats = useMemo(() => {
@@ -166,17 +184,6 @@ export default function StandbysPage() {
     
     // Create a map of contestant ID to their group identifier
     const contestantToGroup = new Map<string, string>();
-    // Use different background colors for each group so they're easy to identify
-    const groupStyles = [
-      "bg-blue-100 dark:bg-blue-900/40",
-      "bg-purple-100 dark:bg-purple-900/40", 
-      "bg-green-100 dark:bg-green-900/40",
-      "bg-orange-100 dark:bg-orange-900/40",
-      "bg-pink-100 dark:bg-pink-900/40",
-      "bg-teal-100 dark:bg-teal-900/40",
-      "bg-amber-100 dark:bg-amber-900/40",
-      "bg-rose-100 dark:bg-rose-900/40",
-    ];
     
     // First pass: assign groups based on groupId
     filteredStandbysForRecordDay.forEach(s => {
@@ -212,13 +219,6 @@ export default function StandbysPage() {
       }
     });
     
-    // Get unique groups and assign styles
-    const uniqueGroups = Array.from(new Set(contestantToGroup.values()));
-    const groupStyleMap = new Map<string, string>();
-    uniqueGroups.forEach((groupId, index) => {
-      groupStyleMap.set(groupId, groupStyles[index % groupStyles.length]);
-    });
-    
     // Sort standbys so groups are together
     const sorted = [...filteredStandbysForRecordDay].sort((a, b) => {
       const groupA = contestantToGroup.get(a.contestantId) || '';
@@ -229,19 +229,28 @@ export default function StandbysPage() {
       return a.contestant.name.localeCompare(b.contestant.name);
     });
     
-    // Return with group info
-    return sorted.map(s => ({
-      ...s,
-      groupIdentifier: contestantToGroup.get(s.contestantId) || null,
-      groupStyle: contestantToGroup.has(s.contestantId) 
-        ? groupStyleMap.get(contestantToGroup.get(s.contestantId)!) 
-        : null,
-      groupMembers: contestantToGroup.has(s.contestantId)
-        ? filteredStandbysForRecordDay
-            .filter(other => contestantToGroup.get(other.contestantId) === contestantToGroup.get(s.contestantId))
-            .map(m => m.contestant.name)
-        : null,
-    }));
+    // Return with group info including isLastInGroup for border styling
+    return sorted.map((s, index) => {
+      const currentGroup = contestantToGroup.get(s.contestantId) || null;
+      const nextStandby = sorted[index + 1];
+      const nextGroup = nextStandby ? contestantToGroup.get(nextStandby.contestantId) || null : null;
+      
+      // Check if this is the last person in a group (next person is in a different group or not in any group)
+      const isLastInGroup = currentGroup !== null && currentGroup !== nextGroup;
+      const isInGroup = currentGroup !== null;
+      
+      return {
+        ...s,
+        groupIdentifier: currentGroup,
+        isInGroup,
+        isLastInGroup,
+        groupMembers: contestantToGroup.has(s.contestantId)
+          ? filteredStandbysForRecordDay
+              .filter(other => contestantToGroup.get(other.contestantId) === contestantToGroup.get(s.contestantId))
+              .map(m => m.contestant.name)
+          : null,
+      };
+    });
   }, [filteredStandbysForRecordDay]);
 
   // Group standbys by record day for the overview
@@ -525,14 +534,34 @@ export default function StandbysPage() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <CardTitle className="text-lg">
-                    Standbys for {selectedRecordDay ? formatDate(selectedRecordDay.date) : 'Selected Day'}
+                    {isSearchMode 
+                      ? `Search Results for "${searchQuery}"` 
+                      : `Standbys for ${selectedRecordDay ? formatDate(selectedRecordDay.date) : 'Selected Day'}`}
                   </CardTitle>
                   <CardDescription>
                     {standbysForRecordDay.length} standby contestant{standbysForRecordDay.length !== 1 ? 's' : ''}
+                    {isSearchMode && ' (across all record days)'}
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                  {selectedStandbys.length > 0 && (
+                  {/* Search Input */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Search all standbys..."
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        // Clear selections when entering/exiting search mode
+                        setSelectedStandbys([]);
+                      }}
+                      className="pl-9 w-64"
+                      data-testid="input-search-standbys"
+                    />
+                  </div>
+                  {/* Hide bulk actions in search mode */}
+                  {!isSearchMode && selectedStandbys.length > 0 && (
                     <Button 
                       onClick={handlePreviewEmails}
                       disabled={previewEmailsMutation.isPending}
@@ -546,8 +575,8 @@ export default function StandbysPage() {
                 </div>
               </div>
 
-              {/* Status Stats Bar */}
-              {standbysForRecordDay.length > 0 && (
+              {/* Status Stats Bar - Hide in search mode */}
+              {!isSearchMode && standbysForRecordDay.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t">
                   <button
                     onClick={() => setStatusFilter("all")}
@@ -619,15 +648,18 @@ export default function StandbysPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-12">
-                        <Checkbox
-                          checked={selectedStandbys.length === standbysForRecordDay.length && standbysForRecordDay.length > 0}
-                          onCheckedChange={handleSelectAll}
-                          data-testid="checkbox-select-all-standbys"
-                        />
-                      </TableHead>
+                      {!isSearchMode && (
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={selectedStandbys.length === standbysForRecordDay.length && standbysForRecordDay.length > 0}
+                            onCheckedChange={handleSelectAll}
+                            data-testid="checkbox-select-all-standbys"
+                          />
+                        </TableHead>
+                      )}
                       <TableHead className="w-16">Photo</TableHead>
                       <TableHead>Name</TableHead>
+                      {isSearchMode && <TableHead>Record Day</TableHead>}
                       <TableHead>Attending With</TableHead>
                       <TableHead>Rating</TableHead>
                       <TableHead>Gender</TableHead>
@@ -644,15 +676,23 @@ export default function StandbysPage() {
                       <TableRow 
                         key={standby.id} 
                         data-testid={`row-standby-${standby.id}`}
-                        className={standby.groupStyle || ''}
+                        className={`${standby.isInGroup ? 'bg-muted/30' : ''} ${
+                          standby.isLastInGroup 
+                            ? '!border-b-[3px] !border-b-border' 
+                            : standby.isInGroup 
+                              ? '!border-b-transparent' 
+                              : ''
+                        }`}
                       >
-                        <TableCell>
-                          <Checkbox
-                            checked={selectedStandbys.includes(standby.id)}
-                            onCheckedChange={() => handleSelectStandby(standby.id)}
-                            data-testid={`checkbox-standby-${standby.id}`}
-                          />
-                        </TableCell>
+                        {!isSearchMode && (
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedStandbys.includes(standby.id)}
+                              onCheckedChange={() => handleSelectStandby(standby.id)}
+                              data-testid={`checkbox-standby-${standby.id}`}
+                            />
+                          </TableCell>
+                        )}
                         <TableCell>
                           <Avatar className="h-10 w-10">
                             {standby.contestant.photoUrl && (
@@ -686,6 +726,19 @@ export default function StandbysPage() {
                             )}
                           </div>
                         </TableCell>
+                        {isSearchMode && (
+                          <TableCell className="text-sm">
+                            {(() => {
+                              const rd = recordDays.find(r => r.id === standby.recordDayId);
+                              return rd ? (
+                                <div>
+                                  <div className="font-medium">{formatDate(rd.date)}</div>
+                                  {rd.rxNumber && <div className="text-xs text-muted-foreground">{rd.rxNumber}</div>}
+                                </div>
+                              ) : '-';
+                            })()}
+                          </TableCell>
+                        )}
                         <TableCell className="text-sm text-muted-foreground">
                           {standby.contestant.attendingWith || "-"}
                         </TableCell>
