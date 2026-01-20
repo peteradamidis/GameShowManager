@@ -58,6 +58,7 @@ export default function ReschedulePage() {
   const [filterOriginalRecordDayId, setFilterOriginalRecordDayId] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterType, setFilterType] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
 
   const handleRowClick = (contestant: any) => {
     setSelectedContestant(contestant);
@@ -345,6 +346,25 @@ export default function ReschedulePage() {
               />
             </div>
             <div className="flex items-center gap-2">
+              <Label htmlFor="filter-status" className="text-sm font-medium whitespace-nowrap">Status:</Label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger id="filter-status" className="w-40" data-testid="select-filter-status">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="potential">Potential</SelectItem>
+                  <SelectItem value="called">Called</SelectItem>
+                  <SelectItem value="booked">Booked</SelectItem>
+                  <SelectItem value="standby">Standby</SelectItem>
+                  <SelectItem value="backup">Backup</SelectItem>
+                  <SelectItem value="declined">Declined</SelectItem>
+                  <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                  <SelectItem value="available">Available</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
               <Label htmlFor="filter-type" className="text-sm font-medium whitespace-nowrap">Type:</Label>
               <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger id="filter-type" className="w-32" data-testid="select-filter-type">
@@ -411,7 +431,8 @@ export default function ReschedulePage() {
                     const matchesType = filterType === "all" || 
                       (filterType === "standby" && cancellation.isFromStandby) || 
                       (filterType === "canceled" && !cancellation.isFromStandby);
-                    return matchesDate && matchesSearch && matchesType;
+                    const matchesStatus = filterStatus === "all" || cancellation.contestant?.availabilityStatus === filterStatus;
+                    return matchesDate && matchesSearch && matchesType && matchesStatus;
                   })
                   .map((cancellation: any) => (
                   <TableRow 
