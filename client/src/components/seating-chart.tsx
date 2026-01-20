@@ -30,7 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
-import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical } from "lucide-react";
+import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical, Briefcase, Trophy } from "lucide-react";
 import {
   HoverCard,
   HoverCardContent,
@@ -905,6 +905,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     targetBlockNumber: number;
     targetSeatLabel: string;
   } | null>(null);
+  // Prize winner toggle states: { winnerId: { prize: boolean, briefcase: boolean } }
+  const [prizeWinnerToggles, setPrizeWinnerToggles] = useState<Record<string, { prize: boolean; briefcase: boolean }>>({});
   const { toast } = useToast();
 
   // Fetch block types for this record day
@@ -1719,32 +1721,74 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                       </p>
                     ) : (
                       <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                        {prizeWinners.map((winner) => (
-                          <div 
-                            key={winner.id} 
-                            className="flex items-center justify-between gap-2 p-2 rounded-md bg-amber-100/50 dark:bg-amber-900/30 border border-amber-200/50 dark:border-amber-800/50"
-                            data-testid={`prize-winner-${winner.id}`}
-                          >
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm truncate text-amber-900 dark:text-amber-100">
-                                {winner.contestantName}
-                              </p>
-                              <p className="text-[10px] text-amber-600 dark:text-amber-400">
-                                Block {winner.blockNumber} - {winner.seatLabel}
-                              </p>
-                            </div>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6 text-amber-600 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
-                              onClick={() => removePrizeWinnerMutation.mutate(winner.id)}
-                              disabled={removePrizeWinnerMutation.isPending}
-                              data-testid={`button-remove-prize-winner-${winner.id}`}
+                        {prizeWinners.map((winner) => {
+                          const toggleState = prizeWinnerToggles[winner.id] || { prize: false, briefcase: false };
+                          return (
+                            <div 
+                              key={winner.id} 
+                              className="flex items-center justify-between gap-2 p-2 rounded-md bg-amber-100/50 dark:bg-amber-900/30 border border-amber-200/50 dark:border-amber-800/50"
+                              data-testid={`prize-winner-${winner.id}`}
                             >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm truncate text-amber-900 dark:text-amber-100">
+                                  {winner.contestantName}
+                                </p>
+                                <p className="text-[10px] text-amber-600 dark:text-amber-400">
+                                  Block {winner.blockNumber} - {winner.seatLabel}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {/* Prize toggle button */}
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className={`h-6 w-6 transition-colors ${
+                                    toggleState.prize 
+                                      ? 'text-yellow-500 bg-yellow-100 dark:bg-yellow-900/50 hover:bg-yellow-200 dark:hover:bg-yellow-800/50' 
+                                      : 'text-amber-400/50 hover:text-yellow-500 hover:bg-yellow-100/50 dark:hover:bg-yellow-900/30'
+                                  }`}
+                                  onClick={() => setPrizeWinnerToggles(prev => ({
+                                    ...prev,
+                                    [winner.id]: { ...toggleState, prize: !toggleState.prize }
+                                  }))}
+                                  data-testid={`button-prize-toggle-${winner.id}`}
+                                  title={toggleState.prize ? "Prize selected" : "Select prize"}
+                                >
+                                  <Trophy className="h-3.5 w-3.5" />
+                                </Button>
+                                {/* Briefcase toggle button */}
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className={`h-6 w-6 transition-colors ${
+                                    toggleState.briefcase 
+                                      ? 'text-blue-500 bg-blue-100 dark:bg-blue-900/50 hover:bg-blue-200 dark:hover:bg-blue-800/50' 
+                                      : 'text-amber-400/50 hover:text-blue-500 hover:bg-blue-100/50 dark:hover:bg-blue-900/30'
+                                  }`}
+                                  onClick={() => setPrizeWinnerToggles(prev => ({
+                                    ...prev,
+                                    [winner.id]: { ...toggleState, briefcase: !toggleState.briefcase }
+                                  }))}
+                                  data-testid={`button-briefcase-toggle-${winner.id}`}
+                                  title={toggleState.briefcase ? "Briefcase selected" : "Select briefcase"}
+                                >
+                                  <Briefcase className="h-3.5 w-3.5" />
+                                </Button>
+                                {/* Remove button */}
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 text-amber-600 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
+                                  onClick={() => removePrizeWinnerMutation.mutate(winner.id)}
+                                  disabled={removePrizeWinnerMutation.isPending}
+                                  data-testid={`button-remove-prize-winner-${winner.id}`}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </CardContent>
