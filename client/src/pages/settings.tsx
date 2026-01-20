@@ -875,7 +875,7 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 max-w-xl">
+        <TabsList className="grid w-full grid-cols-5 max-w-2xl">
           <TabsTrigger value="general" data-testid="tab-general">
             <Lock className="w-4 h-4 mr-2" />
             General
@@ -891,6 +891,10 @@ export default function Settings() {
           <TabsTrigger value="backup" data-testid="tab-backup">
             <Database className="w-4 h-4 mr-2" />
             Backup
+          </TabsTrigger>
+          <TabsTrigger value="maintenance" data-testid="tab-maintenance">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Maintenance
           </TabsTrigger>
         </TabsList>
 
@@ -2173,6 +2177,11 @@ export default function Settings() {
         <TabsContent value="backup">
           <div className="grid gap-6 max-w-2xl">
             <BackupSection />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="maintenance">
+          <div className="grid gap-6 max-w-2xl">
             <DataMaintenanceSection />
           </div>
         </TabsContent>
