@@ -337,7 +337,8 @@ export default function StandbysPage() {
   // Send emails mutation
   const sendEmailsMutation = useMutation({
     mutationFn: async (standbyIds: string[]) => {
-      return apiRequest('POST', '/api/standbys/send-emails', { standbyIds });
+      const response = await apiRequest('POST', '/api/standbys/send-emails', { standbyIds });
+      return response.json();
     },
     onSuccess: (data: any) => {
       // Invalidate ALL related queries for consistent state across tabs
