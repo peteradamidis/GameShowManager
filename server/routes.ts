@@ -8969,11 +8969,12 @@ Thank you.`;
       }
 
       // Update the standby with the seat assignment
-      // When clearing (seatLabel is null/empty), reset status to 'pending'
+      // When clearing (seatLabel is null/empty), reset status to 'pending' and clear block type
       const updated = await storage.updateStandbyAssignment(matchingStandby.id, {
         assignedToSeat: seatLabel || null,
         assignedAt: seatLabel ? new Date() : null,
         status: seatLabel ? 'seated' : 'pending',
+        seatedAsBlockType: seatLabel ? matchingStandby.seatedAsBlockType : null,
       });
 
       // Update contestant status to assigned when standby is seated

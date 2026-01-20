@@ -282,6 +282,7 @@ function SortableStandbyItem({
   isLastInGroup,
   groupMemberNames,
   onSeatSelect,
+  onUnseat,
 }: {
   standby: StandbyData;
   isLocked?: boolean;
@@ -290,6 +291,7 @@ function SortableStandbyItem({
   isLastInGroup?: boolean;
   groupMemberNames?: string[];
   onSeatSelect?: (standby: StandbyData) => void;
+  onUnseat?: (standby: StandbyData) => void;
 }) {
   const {
     attributes,
@@ -377,18 +379,44 @@ function SortableStandbyItem({
               </div>
             </div>
             
-            <Badge 
-              variant="secondary" 
-              className={`text-[10px] h-5 flex-shrink-0 ${
-                standby.status === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' :
-                'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
-              }`}
-            >
-              {standby.status === 'pending' ? 'Assigned' : 
-               standby.status === 'email_sent' ? 'Invited' : 
-               standby.status === 'seated' ? 'Assigned' :
-               standby.status}
-            </Badge>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {standby.status === 'seated' && standby.assignedToSeat && (
+                <Badge 
+                  variant="outline" 
+                  className="text-[10px] h-5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                >
+                  {standby.assignedToSeat}
+                </Badge>
+              )}
+              <Badge 
+                variant="secondary" 
+                className={`text-[10px] h-5 ${
+                  standby.status === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' :
+                  standby.status === 'seated' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100' :
+                  'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
+                }`}
+              >
+                {standby.status === 'pending' ? 'Assigned' : 
+                 standby.status === 'email_sent' ? 'Invited' : 
+                 standby.status === 'seated' ? 'Seated' :
+                 standby.status}
+              </Badge>
+              {standby.status === 'seated' && onUnseat && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-5 px-1.5 text-[10px] text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUnseat(standby);
+                  }}
+                  title="Remove from seat and return to standby list"
+                  data-testid={`unseat-standby-${standby.id}`}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
           </div>
         </HoverCardTrigger>
         <HoverCardContent className="w-80" side="left" align="start">
@@ -1119,6 +1147,40 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     updateBlockTypeMutation.mutate({ blockNumber, blockType: newType });
   };
 
+  // Mutation to unseat a standby (remove from seat and return to standby list)
+  const unseatStandbyMutation = useMutation({
+    mutationFn: async (standby: StandbyData) => {
+      // Call the assign-seat endpoint with empty seatLabel to clear the seat
+      const response = await apiRequest('POST', '/api/standbys/assign-seat', {
+        recordDayId,
+        contestantName: standby.contestant.name,
+        seatLabel: null, // Clear the seat assignment
+      });
+      return response.json();
+    },
+    onSuccess: (_, standby) => {
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys/record-day', recordDayId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/record-days', recordDayId, 'seat-assignments'] });
+      toast({
+        title: "Standby unseated",
+        description: `${standby.contestant.name} has been returned to the standby list.`,
+      });
+    },
+    onError: (error: any, standby) => {
+      toast({
+        title: "Error unseating standby",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleUnseatStandby = (standby: StandbyData) => {
+    unseatStandbyMutation.mutate(standby);
+  };
+
   // Standby reorder handler
   const handleStandbyReorder = async (
     standbyId: string, 
@@ -1829,6 +1891,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                       isLastInGroup={item.isLastInGroup}
                                       groupMemberNames={item.groupMemberNames}
                                       onSeatSelect={setSeatSelectionStandby}
+                                      onUnseat={handleUnseatStandby}
                                     />
                                   </div>
                                 </div>
