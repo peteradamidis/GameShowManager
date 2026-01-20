@@ -916,11 +916,24 @@ export default function StandbysPage() {
                         {/* Sent status */}
                         <TableCell className="text-center py-1 px-2">
                           {standby.standbyEmailSent ? (
-                            <div className="flex items-center justify-center gap-1 text-green-600 dark:text-green-400">
-                              <CheckCircle className="h-3 w-3" />
-                              <span className="text-[10px]">
-                                {format(new Date(standby.standbyEmailSent), "d/M")}
-                              </span>
+                            <div className="flex flex-col items-center gap-0.5">
+                              <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                                <CheckCircle className="h-3 w-3" />
+                                <span className="text-[10px]">
+                                  {format(new Date(standby.standbyEmailSent), "d/M")}
+                                </span>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-5 px-1.5 text-[10px]"
+                                onClick={() => resendEmailMutation.mutate(standby.id)}
+                                disabled={resendEmailMutation.isPending}
+                                data-testid={`button-resend-email-${standby.id}`}
+                              >
+                                <RefreshCw className="h-2.5 w-2.5 mr-0.5" />
+                                Resend
+                              </Button>
                             </div>
                           ) : (
                             <span className="text-muted-foreground text-xs">-</span>
