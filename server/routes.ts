@@ -9188,7 +9188,7 @@ Thank you.`;
           const standbyFooterText = savedStandbyFooter || "This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.";
 
           // Build email content matching booking email style with dark maroon/gold theme
-          const subject = `Deal or No Deal - Standby Booking for ${formattedDate}`;
+          const subject = `Standby Invitation - ${formattedDate}`;
           const htmlBody = `<!DOCTYPE html>
 <html>
 <head>
