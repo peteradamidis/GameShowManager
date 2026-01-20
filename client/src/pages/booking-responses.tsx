@@ -2073,7 +2073,8 @@ export default function BookingResponses() {
                 <span className="text-sm font-medium">Email Preview</span>
               </div>
               <iframe
-                src={`/api/email-preview/ticket${selectedRecordDay ? `?recordDayId=${selectedRecordDay}` : ''}`}
+                key={`ticket-preview-${selectedRecordDay}`}
+                src={`/api/email-preview/ticket?recordDayId=${selectedRecordDay}&t=${Date.now()}`}
                 className="w-full h-[300px] bg-white"
                 title="Ticket Email Preview"
               />
