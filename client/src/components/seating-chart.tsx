@@ -905,53 +905,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     targetBlockNumber: number;
     targetSeatLabel: string;
   } | null>(null);
-  const [selectedAttendedStandbys, setSelectedAttendedStandbys] = useState<Set<string>>(new Set());
   const { toast } = useToast();
-
-  // Mutation to mark standbys as attended
-  const markAttendedMutation = useMutation({
-    mutationFn: async (standbyIds: string[]) => {
-      const response = await apiRequest('POST', '/api/standbys/mark-attended', { 
-        standbyIds,
-        confirmedAttendance: true 
-      });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/standby-attendance', recordDayId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
-      setSelectedAttendedStandbys(new Set());
-      toast({
-        title: "Standbys marked as attended",
-        description: `${data.processed} standby(s) recorded in attendance history`,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error marking attendance",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleToggleAttended = (standbyId: string) => {
-    setSelectedAttendedStandbys(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(standbyId)) {
-        newSet.delete(standbyId);
-      } else {
-        newSet.add(standbyId);
-      }
-      return newSet;
-    });
-  };
-
-  const handleMarkSelectedAsAttended = () => {
-    if (selectedAttendedStandbys.size === 0) return;
-    markAttendedMutation.mutate(Array.from(selectedAttendedStandbys));
-  };
 
   // Fetch block types for this record day
   const { data: blockTypesData } = useQuery<BlockType[]>({
@@ -1695,24 +1649,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     
                     return (
                       <>
-                        {isLocked && activeStandbys.length > 0 && (
-                          <div className="mb-2 flex items-center justify-between gap-2">
-                            <p className="text-xs text-muted-foreground">
-                              Select standbys who attended
-                            </p>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800"
-                              disabled={selectedAttendedStandbys.size === 0 || markAttendedMutation.isPending}
-                              onClick={handleMarkSelectedAsAttended}
-                              data-testid="button-mark-attended"
-                            >
-                              <Check className="h-3 w-3 mr-1" />
-                              Mark Attended ({selectedAttendedStandbys.size})
-                            </Button>
-                          </div>
-                        )}
                         <div className="max-h-[400px] overflow-y-auto">
                           <div className="flex">
                             {/* Static tier numbers column */}
@@ -1740,26 +1676,15 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                               >
                                 <div className="space-y-1">
                                   {flatListWithGroupInfo.map((item) => (
-                                    <div key={item.standby.id} className="flex items-start gap-1">
-                                      {isLocked && (
-                                        <Checkbox
-                                          checked={selectedAttendedStandbys.has(item.standby.id)}
-                                          onCheckedChange={() => handleToggleAttended(item.standby.id)}
-                                          className="mt-3 flex-shrink-0"
-                                          data-testid={`checkbox-attended-${item.standby.id}`}
-                                        />
-                                      )}
-                                      <div className="flex-1 min-w-0">
-                                        <SortableStandbyItem
-                                          standby={item.standby}
-                                          isLocked={isLocked}
-                                          isInGroup={item.isInGroup}
-                                          isFirstInGroup={item.isFirstInGroup}
-                                          isLastInGroup={item.isLastInGroup}
-                                          groupMemberNames={item.groupMemberNames}
-                                        />
-                                      </div>
-                                    </div>
+                                    <SortableStandbyItem
+                                      key={item.standby.id}
+                                      standby={item.standby}
+                                      isLocked={isLocked}
+                                      isInGroup={item.isInGroup}
+                                      isFirstInGroup={item.isFirstInGroup}
+                                      isLastInGroup={item.isLastInGroup}
+                                      groupMemberNames={item.groupMemberNames}
+                                    />
                                   ))}
                                 </div>
                               </SortableContext>
