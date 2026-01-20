@@ -1310,7 +1310,7 @@ export default function Settings() {
             
             <div className="space-y-2">
               <Label htmlFor="email-intro">Introduction Paragraph</Label>
-              <p className="text-xs text-muted-foreground">Shown after "Hi [Name]," - can include HTML for styling</p>
+              <p className="text-xs text-muted-foreground">Shown after "Hi [Name]," - can include HTML or use <code className="bg-muted px-1 rounded">[link text](url)</code> for hyperlinks</p>
               <Textarea
                 id="email-intro"
                 value={emailIntro}
@@ -1342,7 +1342,7 @@ export default function Settings() {
             
             <div className="space-y-2">
               <Label htmlFor="email-additional-instructions">Additional Instructions</Label>
-              <p className="text-xs text-muted-foreground">Text shown below the button - appears in a bordered box. Use blank lines to separate paragraphs.</p>
+              <p className="text-xs text-muted-foreground">Text shown below the button. Use blank lines for paragraphs. Use <code className="bg-muted px-1 rounded">[link text](url)</code> for hyperlinks.</p>
               <Textarea
                 id="email-additional-instructions"
                 value={emailAdditionalInstructions}
@@ -1605,7 +1605,7 @@ export default function Settings() {
             
             <div className="space-y-2">
               <Label htmlFor="standby-email-intro">Introduction Paragraph</Label>
-              <p className="text-xs text-muted-foreground">Shown after "Hi [Name]," greeting. Separate paragraphs with blank lines.</p>
+              <p className="text-xs text-muted-foreground">Shown after "Hi [Name]," greeting. Use <code className="bg-muted px-1 rounded">[link text](url)</code> for hyperlinks.</p>
               <Textarea
                 id="standby-email-intro"
                 value={standbyEmailIntro}
@@ -1621,7 +1621,7 @@ export default function Settings() {
             
             <div className="space-y-2">
               <Label htmlFor="standby-email-instructions">Instructions</Label>
-              <p className="text-xs text-muted-foreground">Shown after the "CAN YOU ATTEND?" button. Include fast-tracking info here. Separate paragraphs with blank lines.</p>
+              <p className="text-xs text-muted-foreground">Shown after the button. Use <code className="bg-muted px-1 rounded">[link text](url)</code> for hyperlinks. Blank lines = new paragraphs.</p>
               <Textarea
                 id="standby-email-instructions"
                 value={standbyEmailInstructions}

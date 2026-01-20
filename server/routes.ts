@@ -49,6 +49,19 @@ function appendNgrokSkip(url: string): string {
   return url;
 }
 
+// Helper function to convert markdown-style links [text](url) to HTML <a> tags
+// Also handles plain URLs and makes them clickable
+function convertLinksToHtml(text: string): string {
+  // First, convert markdown-style links: [link text](url)
+  let result = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: #8B0000; text-decoration: underline;">$1</a>');
+  
+  // Then, convert standalone URLs that aren't already in href attributes
+  // Match URLs that start with http:// or https:// and aren't preceded by href=" or >
+  result = result.replace(/(?<!href="|>)(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color: #8B0000; text-decoration: underline;">$1</a>');
+  
+  return result;
+}
+
 // Helper function to get base URL for email links
 function getBaseUrl(req?: Request): string {
   // 1. Check for explicit BASE_URL (for offline/self-hosted deployments)
@@ -7274,7 +7287,7 @@ Thank you.`;
               
               <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                 ${sharedConfig.emailIntro.split('\n\n').map((paragraph: string) => 
-                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                  `<p style="margin: 0 0 12px 0;">${convertLinksToHtml(paragraph.replace(/\n/g, '<br/>'))}</p>`
                 ).join('')}
               </div>
               
@@ -7317,7 +7330,7 @@ Thank you.`;
               <!-- Additional Instructions -->
               <div style="margin: 20px 0 25px 0; padding-top: 20px; border-top: 1px solid #e0e0e0;">
                 ${sharedConfig.emailAdditionalInstructions.split('\n\n').map((paragraph: string) => 
-                  `<p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                  `<p style="color: #444444; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">${convertLinksToHtml(paragraph.replace(/\n/g, '<br/>'))}</p>`
                 ).join('')}
               </div>
               ` : ''}
@@ -9079,7 +9092,7 @@ Thank you.`;
               
               <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                 ${standbyIntro.split('\n\n').map((paragraph: string) => 
-                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                  `<p style="margin: 0 0 12px 0;">${convertLinksToHtml(paragraph.replace(/\n/g, '<br/>'))}</p>`
                 ).join('')}
               </div>
               
@@ -9120,7 +9133,7 @@ Thank you.`;
               
               <div style="color: #444444; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
                 ${standbyInstructions.split('\n\n').map((paragraph: string) => 
-                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                  `<p style="margin: 0 0 12px 0;">${convertLinksToHtml(paragraph.replace(/\n/g, '<br/>'))}</p>`
                 ).join('')}
               </div>
               
