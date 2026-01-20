@@ -6059,6 +6059,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const finalEmailButtonText = emailButtonText || 'Click Here To Respond';
       const finalEmailFooter = emailFooter || savedAvailFooter || 'This is an automated message from the Deal or No Deal production team. Please do not forward this email as it contains a unique response link.';
 
+      // Rate limiting for bulk emails to avoid triggering spam filters (e.g., BigPond)
+      const DELAY_BETWEEN_EMAILS_MS = 1500; // 1.5 second delay between emails
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+      let emailCount = 0;
+
       for (const contestantId of contestantIds) {
         const contestant = await storage.getContestantById(contestantId);
         if (!contestant) continue;
@@ -6315,6 +6320,13 @@ ${finalEmailFooter}`;
             email: contestant.email,
             recordDayId: null,
           });
+          
+          // Add delay between emails to avoid triggering spam filters
+          emailCount++;
+          if (emailCount < contestantIds.length) {
+            console.log(`📧 Availability email: Sent ${emailCount}/${contestantIds.length}, waiting ${DELAY_BETWEEN_EMAILS_MS}ms...`);
+            await delay(DELAY_BETWEEN_EMAILS_MS);
+          }
         } catch (emailError: any) {
           console.error(`Failed to send email to ${contestant.email}:`, emailError);
           emailsFailed.push({
@@ -9062,6 +9074,11 @@ Thank you.`;
         errors: [] as string[],
       };
 
+      // Rate limiting for bulk emails to avoid triggering spam filters (e.g., BigPond)
+      const DELAY_BETWEEN_EMAILS_MS = 1500; // 1.5 second delay between emails
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+      let emailCount = 0;
+
       for (const standby of standbysWithEmail) {
         try {
           // Generate confirmation token
@@ -9339,6 +9356,13 @@ Thank you.`;
           });
 
           results.sent++;
+          
+          // Add delay between emails to avoid triggering spam filters
+          emailCount++;
+          if (emailCount < standbysWithEmail.length) {
+            console.log(`📧 Standby booking email: Sent ${emailCount}/${standbysWithEmail.length}, waiting ${DELAY_BETWEEN_EMAILS_MS}ms...`);
+            await delay(DELAY_BETWEEN_EMAILS_MS);
+          }
         } catch (error: any) {
           results.failed++;
           results.errors.push(`${standby.contestant.name}: ${error.message}`);
@@ -9756,6 +9780,11 @@ Thank you.`;
       let failCount = 0;
       const results: Array<{ standbyId: string; success: boolean; error?: string }> = [];
 
+      // Rate limiting for bulk emails to avoid triggering spam filters (e.g., BigPond)
+      const DELAY_BETWEEN_EMAILS_MS = 1500; // 1.5 second delay between emails
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+      let emailCount = 0;
+
       for (const standby of eligibleStandbys) {
         try {
           // Call the single send endpoint internally
@@ -9919,6 +9948,13 @@ Thank you.`;
 
           successCount++;
           results.push({ standbyId: standby.id, success: true });
+          
+          // Add delay between emails to avoid triggering spam filters
+          emailCount++;
+          if (emailCount < eligibleStandbys.length) {
+            console.log(`📧 Standby ticket email: Sent ${emailCount}/${eligibleStandbys.length}, waiting ${DELAY_BETWEEN_EMAILS_MS}ms...`);
+            await delay(DELAY_BETWEEN_EMAILS_MS);
+          }
         } catch (error: any) {
           failCount++;
           results.push({ standbyId: standby.id, success: false, error: error.message });
