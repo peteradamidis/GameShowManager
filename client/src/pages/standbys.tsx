@@ -125,9 +125,8 @@ export default function StandbysPage() {
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [declineStandby, setDeclineStandby] = useState<StandbyAssignment | null>(null);
   const [declineReason, setDeclineReason] = useState("");
-  const [declineAction, setDeclineAction] = useState<"reschedule" | "rebook">("reschedule");
+  const [declineAction, setDeclineAction] = useState<"reschedule" | "return_pool">("reschedule");
   const [declineMovedBy, setDeclineMovedBy] = useState("");
-  const [rebookRecordDayId, setRebookRecordDayId] = useState<string>("");
 
   // Send ticket dialog state
   const [sendTicketDialogOpen, setSendTicketDialogOpen] = useState(false);
@@ -407,30 +406,23 @@ export default function StandbysPage() {
     },
   });
 
-  // Rebook standby to different day mutation
-  const rebookStandbyMutation = useMutation({
-    mutationFn: async ({ oldId, newRecordDayId, contestantId }: { oldId: string; newRecordDayId: string; contestantId: string }) => {
-      // First decline/delete the old standby
-      await apiRequest('DELETE', `/api/standbys/${oldId}`);
-      // Then create new standby on the new day
-      return apiRequest('POST', `/api/standbys`, {
-        contestantId,
-        recordDayId: newRecordDayId,
-        status: 'pending',
-        notes: '[REBOOKED] from previous day',
-      });
+  // Return to contestant pool mutation
+  const returnToPoolMutation = useMutation({
+    mutationFn: async (standbyId: string) => {
+      // Just delete the standby - the server will set contestant status back to available
+      return apiRequest('DELETE', `/api/standbys/${standbyId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
-      toast({ title: "Standby rebooked", description: "Moved to new record day" });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
+      toast({ title: "Returned to pool", description: "Standby removed and contestant is available again" });
       setDeclineDialogOpen(false);
       setDeclineStandby(null);
       setDeclineReason("");
       setDeclineMovedBy("");
-      setRebookRecordDayId("");
     },
     onError: (error: Error) => {
-      toast({ title: "Error rebooking", description: error.message, variant: "destructive" });
+      toast({ title: "Error returning to pool", description: error.message, variant: "destructive" });
     },
   });
 
@@ -545,7 +537,6 @@ export default function StandbysPage() {
     setDeclineReason("");
     setDeclineAction("reschedule");
     setDeclineMovedBy("");
-    setRebookRecordDayId("");
     setDeclineDialogOpen(true);
   };
 
@@ -553,18 +544,11 @@ export default function StandbysPage() {
   const handleDeclineSubmit = () => {
     if (!declineStandby) return;
 
-    if (declineAction === "rebook") {
-      if (!rebookRecordDayId) {
-        toast({ title: "Please select a record day", variant: "destructive" });
-        return;
-      }
-      rebookStandbyMutation.mutate({
-        oldId: declineStandby.id,
-        newRecordDayId: rebookRecordDayId,
-        contestantId: declineStandby.contestantId,
-      });
+    if (declineAction === "return_pool") {
+      // Just delete the standby and return contestant to pool - no additional info needed
+      returnToPoolMutation.mutate(declineStandby.id);
     } else {
-      // Reschedule action
+      // Reschedule action - requires initials
       if (!declineMovedBy.trim()) {
         toast({ title: "Please enter your initials", variant: "destructive" });
         return;
@@ -1163,7 +1147,7 @@ export default function StandbysPage() {
           <div className="space-y-4 py-4">
             <RadioGroup 
               value={declineAction} 
-              onValueChange={(v) => setDeclineAction(v as "reschedule" | "rebook")}
+              onValueChange={(v) => setDeclineAction(v as "reschedule" | "return_pool")}
               className="space-y-3"
             >
               <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
@@ -1179,37 +1163,17 @@ export default function StandbysPage() {
               </div>
               
               <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
-                <RadioGroupItem value="rebook" id="action-rebook" data-testid="radio-rebook" />
+                <RadioGroupItem value="return_pool" id="action-return-pool" data-testid="radio-return-pool" />
                 <div className="flex flex-col">
-                  <Label htmlFor="action-rebook" className="font-medium cursor-pointer">
-                    Rebook to Different Day
+                  <Label htmlFor="action-return-pool" className="font-medium cursor-pointer">
+                    Return to Contestant Pool
                   </Label>
                   <span className="text-sm text-muted-foreground">
-                    Move standby to a different record day
+                    Remove from standbys and make available again
                   </span>
                 </div>
               </div>
             </RadioGroup>
-
-            {declineAction === "rebook" && (
-              <div className="space-y-3 pt-2">
-                <Label htmlFor="rebook-day">Select New Record Day</Label>
-                <Select value={rebookRecordDayId} onValueChange={setRebookRecordDayId}>
-                  <SelectTrigger id="rebook-day" data-testid="select-rebook-day">
-                    <SelectValue placeholder="Select a record day" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {recordDays
-                      .filter(rd => rd.id !== declineStandby?.recordDayId)
-                      .map(rd => (
-                        <SelectItem key={rd.id} value={rd.id}>
-                          {format(new Date(rd.date), "d MMM yyyy")} {rd.rxNumber && `(${rd.rxNumber})`}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
 
             {declineAction === "reschedule" && (
               <div className="space-y-3 pt-2">
@@ -1244,13 +1208,13 @@ export default function StandbysPage() {
             <Button variant="outline" onClick={() => setDeclineDialogOpen(false)}>
               Cancel
             </Button>
-            {declineAction === "rebook" ? (
+            {declineAction === "return_pool" ? (
               <Button
                 onClick={handleDeclineSubmit}
-                disabled={!rebookRecordDayId || rebookStandbyMutation.isPending}
-                data-testid="button-submit-rebook"
+                disabled={returnToPoolMutation.isPending}
+                data-testid="button-submit-return-pool"
               >
-                {rebookStandbyMutation.isPending ? "Rebooking..." : "Rebook Standby"}
+                {returnToPoolMutation.isPending ? "Returning..." : "Return to Pool"}
               </Button>
             ) : (
               <Button
