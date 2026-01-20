@@ -7055,6 +7055,7 @@ ${finalEmailFooter}`;
         emailFooter,
         bookingReplyToEmail,
         senderNameConfig,
+        bookingMailtoBodyConfig,
         smtpConfig,
       ] = await Promise.all([
         storage.getSystemConfig('email_banner_url'),
@@ -7066,8 +7067,43 @@ ${finalEmailFooter}`;
         storage.getSystemConfig('booking_email_footer'),
         storage.getSystemConfig('booking_reply_to_email'),
         storage.getSystemConfig('email_sender_name'),
+        storage.getSystemConfig('booking_mailto_body'),
         getSmtpConfig(),
       ]);
+
+      // Default mailto body template
+      const defaultBookingMailtoBody = `Hi Deal or No Deal Team,
+
+Name: {{name}}
+Date: {{date}}
+
+CAN YOU ATTEND? (mark with X)
+[ ] YES - I confirm my attendance
+[ ] NO - I cannot attend (Reason: )
+
+Group members attending (please provide FULL NAMES):
+Note - group members must have attended an audition.
+
+--- REQUIRED INFORMATION (if attending) ---
+
+Do you have any medical conditions?
+If yes, please describe:
+
+Do you have any mobility requirements? (i.e. issues climbing stairs or standing for extended periods)
+Answer:
+
+Emergency contact name & phone number:
+Answer:
+
+Dietary requirements (mark with X):
+[ ] Vegetarian
+[ ] Vegan
+[ ] Gluten Free
+[ ] Dairy Free
+
+Please note that all our meals are nut-free. If your dietary requirements fall outside the options, we won't be able to cater to them, so we kindly ask that you bring your own meals.
+
+Thank you.`;
 
       // Prepare shared config values
       const sharedConfig = {
@@ -7080,6 +7116,7 @@ ${finalEmailFooter}`;
         emailFooter: emailFooter || 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.',
         bookingReplyToEmail: bookingReplyToEmail || smtpConfig.fromEmail || 'noreply@example.com',
         senderName: senderNameConfig || 'Deal or No Deal',
+        bookingMailtoBody: bookingMailtoBodyConfig || defaultBookingMailtoBody,
       };
 
       // Pre-load banner image once
@@ -7271,7 +7308,7 @@ ${finalEmailFooter}`;
                     <p style="color: #ffffff; font-size: 15px; margin: 0 0 20px 0;">
                       Please respond YES or NO and confirm the members of your auditioned group who will be attending ASAP.
                     </p>
-                    <a href="mailto:${sharedConfig.bookingReplyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${contestant.name} - ${recordDate}`)}&body=${`Hi%20Deal%20or%20No%20Deal%20Team,%0D%0A%0D%0AName%3A%20${encodeURIComponent(contestant.name)}%0D%0ADate%3A%20${encodeURIComponent(recordDate)}%0D%0A%0D%0ACAN%20YOU%20ATTEND%3F%20%28mark%20with%20X%29%0D%0A%5B%20%5D%20YES%20-%20I%20confirm%20my%20attendance%0D%0A%5B%20%5D%20NO%20-%20I%20cannot%20attend%20%28Reason%3A%20%29%0D%0A%0D%0AGroup%20members%20attending%20%28please%20provide%20FULL%20NAMES%29%3A%0D%0ANote%20-%20group%20members%20must%20have%20attended%20an%20audition.%0D%0A%0D%0A---%20REQUIRED%20INFORMATION%20%28if%20attending%29%20---%0D%0A%0D%0ADo%20you%20have%20any%20medical%20conditions%3F%0D%0AIf%20yes%2C%20please%20describe%3A%0D%0A%0D%0ADo%20you%20have%20any%20mobility%20requirements%3F%20%28i.e.%20issues%20climbing%20stairs%20or%20standing%20for%20extended%20periods%29%0D%0AAnswer%3A%0D%0A%0D%0AEmergency%20contact%20name%20%26%20phone%20number%3A%0D%0AAnswer%3A%0D%0A%0D%0ADietary%20requirements%20%28mark%20with%20X%29%3A%0D%0A%5B%20%5D%20Vegetarian%0D%0A%5B%20%5D%20Vegan%0D%0A%5B%20%5D%20Gluten%20Free%0D%0A%5B%20%5D%20Dairy%20Free%0D%0A%0D%0APlease%20note%20that%20all%20our%20meals%20are%20nut-free.%20If%20your%20dietary%20requirements%20fall%20outside%20the%20options%2C%20we%20won%27t%20be%20able%20to%20cater%20to%20them%2C%20so%20we%20kindly%20ask%20that%20you%20bring%20your%20own%20meals.%0D%0A%0D%0AThank%20you.`}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
+                    <a href="mailto:${sharedConfig.bookingReplyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${contestant.name} - ${recordDate}`)}&body=${encodeURIComponent(sharedConfig.bookingMailtoBody.replace(/\{\{name\}\}/g, contestant.name).replace(/\{\{date\}\}/g, recordDate))}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
                   </td>
                 </tr>
               </table>
@@ -8949,6 +8986,43 @@ ${finalEmailFooter}`;
           const savedStandbyIntro = await storage.getSystemConfig('standby_email_intro');
           const savedStandbyInstructions = await storage.getSystemConfig('standby_email_instructions');
           const savedStandbyFooter = await storage.getSystemConfig('standby_email_footer');
+          const savedStandbyMailtoBody = await storage.getSystemConfig('standby_mailto_body');
+          
+          // Default standby mailto body template
+          const defaultStandbyMailtoBody = `Hi Deal or No Deal Team,
+
+Name: {{name}}
+Date: {{date}}
+
+CAN YOU ATTEND AS STANDBY? (mark with X)
+[ ] YES - I confirm my attendance
+[ ] NO - I cannot attend (Reason: )
+
+Group members attending (please provide FULL NAMES):
+Note - group members must have attended an audition.
+
+--- REQUIRED INFORMATION (if attending) ---
+
+Do you have any medical conditions?
+If yes, please describe:
+
+Do you have any mobility requirements? (i.e. issues climbing stairs or standing for extended periods)
+Answer:
+
+Emergency contact name & phone number:
+Answer:
+
+Dietary requirements (mark with X):
+[ ] Vegetarian
+[ ] Vegan
+[ ] Gluten Free
+[ ] Dairy Free
+
+Please note that all our meals are nut-free. If your dietary requirements fall outside the options, we won't be able to cater to them, so we kindly ask that you bring your own meals.
+
+Thank you.`;
+          
+          const standbyMailtoBody = savedStandbyMailtoBody || defaultStandbyMailtoBody;
           
           // Use saved values with fallback defaults
           const standbyHeadline = savedStandbyHeadline || "You've Been Selected to be a Standby Contestant!";
@@ -9039,7 +9113,7 @@ ${finalEmailFooter}`;
                     <p style="color: #ffffff; font-size: 15px; margin: 0 0 20px 0;">
                       Please RSVP for you and your AUDITIONED group by replying to this email ASAP.
                     </p>
-                    <a href="mailto:${standbyReplyToEmail}?subject=${encodeURIComponent(`STANDBY RESPONSE - ${standby.contestant.name} - ${formattedDate}`)}&body=${`Hi%20Deal%20or%20No%20Deal%20Team,%0D%0A%0D%0AName%3A%20${encodeURIComponent(standby.contestant.name)}%0D%0ADate%3A%20${encodeURIComponent(formattedDate)}%0D%0A%0D%0ACAN%20YOU%20ATTEND%20AS%20STANDBY%3F%20%28mark%20with%20X%29%0D%0A%5B%20%5D%20YES%20-%20I%20confirm%20my%20attendance%0D%0A%5B%20%5D%20NO%20-%20I%20cannot%20attend%20%28Reason%3A%20%29%0D%0A%0D%0AGroup%20members%20attending%20%28please%20provide%20FULL%20NAMES%29%3A%0D%0ANote%20-%20group%20members%20must%20have%20attended%20an%20audition.%0D%0A%0D%0A---%20REQUIRED%20INFORMATION%20%28if%20attending%29%20---%0D%0A%0D%0ADo%20you%20have%20any%20medical%20conditions%3F%0D%0AIf%20yes%2C%20please%20describe%3A%0D%0A%0D%0ADo%20you%20have%20any%20mobility%20requirements%3F%20%28i.e.%20issues%20climbing%20stairs%20or%20standing%20for%20extended%20periods%29%0D%0AAnswer%3A%0D%0A%0D%0AEmergency%20contact%20name%20%26%20phone%20number%3A%0D%0AAnswer%3A%0D%0A%0D%0ADietary%20requirements%20%28mark%20with%20X%29%3A%0D%0A%5B%20%5D%20Vegetarian%0D%0A%5B%20%5D%20Vegan%0D%0A%5B%20%5D%20Gluten%20Free%0D%0A%5B%20%5D%20Dairy%20Free%0D%0A%0D%0APlease%20note%20that%20all%20our%20meals%20are%20nut-free.%20If%20your%20dietary%20requirements%20fall%20outside%20the%20options%2C%20we%20won%27t%20be%20able%20to%20cater%20to%20them%2C%20so%20we%20kindly%20ask%20that%20you%20bring%20your%20own%20meals.%0D%0A%0D%0AThank%20you.`}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
+                    <a href="mailto:${standbyReplyToEmail}?subject=${encodeURIComponent(`STANDBY RESPONSE - ${standby.contestant.name} - ${formattedDate}`)}&body=${encodeURIComponent(standbyMailtoBody.replace(/\{\{name\}\}/g, standby.contestant.name).replace(/\{\{date\}\}/g, formattedDate))}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
                   </td>
                 </tr>
               </table>
@@ -10001,6 +10075,40 @@ ${finalEmailFooter}`;
       const emailButtonText = await storage.getSystemConfig('booking_email_button_text') || 'Confirm Attendance';
       const emailAdditionalInstructions = await storage.getSystemConfig('booking_email_additional_instructions') || '';
       const emailFooter = await storage.getSystemConfig('booking_email_footer') || 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.';
+      const mailtoBodyConfig = await storage.getSystemConfig('booking_mailto_body');
+      const defaultMailtoBody = `Hi Deal or No Deal Team,
+
+Name: {{name}}
+Date: {{date}}
+
+CAN YOU ATTEND? (mark with X)
+[ ] YES - I confirm my attendance
+[ ] NO - I cannot attend (Reason: )
+
+Group members attending (please provide FULL NAMES):
+Note - group members must have attended an audition.
+
+--- REQUIRED INFORMATION (if attending) ---
+
+Do you have any medical conditions?
+If yes, please describe:
+
+Do you have any mobility requirements? (i.e. issues climbing stairs or standing for extended periods)
+Answer:
+
+Emergency contact name & phone number:
+Answer:
+
+Dietary requirements (mark with X):
+[ ] Vegetarian
+[ ] Vegan
+[ ] Gluten Free
+[ ] Dairy Free
+
+Please note that all our meals are nut-free. If your dietary requirements fall outside the options, we won't be able to cater to them, so we kindly ask that you bring your own meals.
+
+Thank you.`;
+      const mailtoBody = mailtoBodyConfig || defaultMailtoBody;
       
       const replyToEmail = smtpConfig.fromEmail || 'noreply@example.com';
       
@@ -10111,7 +10219,7 @@ ${finalEmailFooter}`;
                     <p style="color: #ffffff; font-size: 15px; margin: 0 0 20px 0;">
                       Please respond YES or NO and confirm the members of your auditioned group who will be attending ASAP.
                     </p>
-                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${testContestantName} - ${testRecordDate}`)}&body=${`Hi%20Deal%20or%20No%20Deal%20Team,%0D%0A%0D%0AName%3A%20${encodeURIComponent(testContestantName)}%0D%0ADate%3A%20${encodeURIComponent(testRecordDate)}%0D%0A%0D%0ACAN%20YOU%20ATTEND%3F%20%28mark%20with%20X%29%0D%0A%5B%20%5D%20YES%20-%20I%20confirm%20my%20attendance%0D%0A%5B%20%5D%20NO%20-%20I%20cannot%20attend%20%28Reason%3A%20%29%0D%0A%0D%0AGroup%20members%20attending%20%28please%20provide%20FULL%20NAMES%29%3A%0D%0ANote%20-%20group%20members%20must%20have%20attended%20an%20audition.%0D%0A%0D%0A---%20REQUIRED%20INFORMATION%20%28if%20attending%29%20---%0D%0A%0D%0ADo%20you%20have%20any%20medical%20conditions%3F%0D%0AIf%20yes%2C%20please%20describe%3A%0D%0A%0D%0ADo%20you%20have%20any%20mobility%20requirements%3F%20%28i.e.%20issues%20climbing%20stairs%20or%20standing%20for%20extended%20periods%29%0D%0AAnswer%3A%0D%0A%0D%0AEmergency%20contact%20name%20%26%20phone%20number%3A%0D%0AAnswer%3A%0D%0A%0D%0ADietary%20requirements%20%28mark%20with%20X%29%3A%0D%0A%5B%20%5D%20Vegetarian%0D%0A%5B%20%5D%20Vegan%0D%0A%5B%20%5D%20Gluten%20Free%0D%0A%5B%20%5D%20Dairy%20Free%0D%0A%0D%0APlease%20note%20that%20all%20our%20meals%20are%20nut-free.%20If%20your%20dietary%20requirements%20fall%20outside%20the%20options%2C%20we%20won%27t%20be%20able%20to%20cater%20to%20them%2C%20so%20we%20kindly%20ask%20that%20you%20bring%20your%20own%20meals.%0D%0A%0D%0AThank%20you.`}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
+                    <a href="mailto:${replyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${testContestantName} - ${testRecordDate}`)}&body=${encodeURIComponent(mailtoBody.replace(/\{\{name\}\}/g, testContestantName).replace(/\{\{date\}\}/g, testRecordDate))}" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #D4AF37 0%, #b8962e 100%); color: #2a0a0a; text-decoration: none; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-radius: 8px; box-shadow: 0 4px 12px rgba(212,175,55,0.4);">CLICK HERE TO REPLY</a>
                   </td>
                 </tr>
               </table>
@@ -10961,6 +11069,40 @@ ${finalEmailFooter}`;
       const additionalInstructions = await storage.getSystemConfig('booking_email_additional_instructions') || 'We will be recording multiple episodes on the day. The recording of these shows will take approximately 10 hours. Please be prepared to make yourself available for the full length of time.';
       const footer = await storage.getSystemConfig('booking_email_footer') || 'This is an automated message from the Deal or No Deal production team.<br/>If you have questions, please use the confirmation form to submit them.';
       const replyToEmail = await storage.getSystemConfig('booking_reply_to_email') || 'bookings@dealornodeal.example.com';
+      const mailtoBodyConfig = await storage.getSystemConfig('booking_mailto_body');
+      const defaultMailtoBody = `Hi Deal or No Deal Team,
+
+Name: {{name}}
+Date: {{date}}
+
+CAN YOU ATTEND? (mark with X)
+[ ] YES - I confirm my attendance
+[ ] NO - I cannot attend (Reason: )
+
+Group members attending (please provide FULL NAMES):
+Note - group members must have attended an audition.
+
+--- REQUIRED INFORMATION (if attending) ---
+
+Do you have any medical conditions?
+If yes, please describe:
+
+Do you have any mobility requirements? (i.e. issues climbing stairs or standing for extended periods)
+Answer:
+
+Emergency contact name & phone number:
+Answer:
+
+Dietary requirements (mark with X):
+[ ] Vegetarian
+[ ] Vegan
+[ ] Gluten Free
+[ ] Dairy Free
+
+Please note that all our meals are nut-free. If your dietary requirements fall outside the options, we won't be able to cater to them, so we kindly ask that you bring your own meals.
+
+Thank you.`;
+      const mailtoBody = mailtoBodyConfig || defaultMailtoBody;
       
       // Get record day data if provided
       const recordDayId = req.query.recordDayId as string | undefined;
@@ -10986,7 +11128,7 @@ ${finalEmailFooter}`;
       }
       
       // Build single mailto link like actual emails
-      const replyMailto = `mailto:${replyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${sampleName} - ${sampleDate}`)}&body=${`Hi%20Deal%20or%20No%20Deal%20Team,%0D%0A%0D%0AName%3A%20${encodeURIComponent(sampleName)}%0D%0ADate%3A%20${encodeURIComponent(sampleDate)}%0D%0A%0D%0ACAN%20YOU%20ATTEND%3F%20%28mark%20with%20X%29%0D%0A%5B%20%5D%20YES%20-%20I%20confirm%20my%20attendance%0D%0A%5B%20%5D%20NO%20-%20I%20cannot%20attend%20%28Reason%3A%20%29%0D%0A%0D%0AGroup%20members%20attending%20%28please%20provide%20FULL%20NAMES%29%3A%0D%0ANote%20-%20group%20members%20must%20have%20attended%20an%20audition.%0D%0A%0D%0A---%20REQUIRED%20INFORMATION%20%28if%20attending%29%20---%0D%0A%0D%0ADo%20you%20have%20any%20medical%20conditions%3F%0D%0AIf%20yes%2C%20please%20describe%3A%0D%0A%0D%0ADo%20you%20have%20any%20mobility%20requirements%3F%20%28i.e.%20issues%20climbing%20stairs%20or%20standing%20for%20extended%20periods%29%0D%0AAnswer%3A%0D%0A%0D%0AEmergency%20contact%20name%20%26%20phone%20number%3A%0D%0AAnswer%3A%0D%0A%0D%0ADietary%20requirements%20%28mark%20with%20X%29%3A%0D%0A%5B%20%5D%20Vegetarian%0D%0A%5B%20%5D%20Vegan%0D%0A%5B%20%5D%20Gluten%20Free%0D%0A%5B%20%5D%20Dairy%20Free%0D%0A%0D%0APlease%20note%20that%20all%20our%20meals%20are%20nut-free.%20If%20your%20dietary%20requirements%20fall%20outside%20the%20options%2C%20we%20won%27t%20be%20able%20to%20cater%20to%20them%2C%20so%20we%20kindly%20ask%20that%20you%20bring%20your%20own%20meals.%0D%0A%0D%0AThank%20you.`}`;
+      const replyMailto = `mailto:${replyToEmail}?subject=${encodeURIComponent(`BOOKING RESPONSE - ${sampleName} - ${sampleDate}`)}&body=${encodeURIComponent(mailtoBody.replace(/\{\{name\}\}/g, sampleName).replace(/\{\{date\}\}/g, sampleDate))}`;
       
       const html = `<!DOCTYPE html>
 <html>
@@ -11439,6 +11581,40 @@ ${finalEmailFooter}`;
       const intro = await storage.getSystemConfig('standby_email_intro') || "We enjoyed meeting you at our auditions and would love to invite you to be a <strong>STANDBY CONTESTANT</strong> on Deal or No Deal. <strong><u>As a standby contestant, you may be selected to join our studio recording should any positions become available on the day.</u></strong>";
       const instructions = await storage.getSystemConfig('standby_email_instructions') || "If you're selected to participate in studio, you will be required for the full day.\n\nAfter being a Standby Contestant, you are eligible to be FAST-TRACKED into the next available record date to attend a full day in studio. That's double the chances! You must email dond.standby@endemolshine.com.au to be rebooked to return.\n\nPlease find attached important information relating to your attendance at the Deal or No Deal recording. Please read this attachment thoroughly and get in touch ASAP should there be any issues.\n\nYou will receive another email closer to your record date with additional paperwork.";
       const footer = await storage.getSystemConfig('standby_email_footer') || 'This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.';
+      const mailtoBodyConfig = await storage.getSystemConfig('standby_mailto_body');
+      const defaultMailtoBody = `Hi Deal or No Deal Team,
+
+Name: {{name}}
+Date: {{date}}
+
+CAN YOU ATTEND AS STANDBY? (mark with X)
+[ ] YES - I confirm my attendance
+[ ] NO - I cannot attend (Reason: )
+
+Group members attending (please provide FULL NAMES):
+Note - group members must have attended an audition.
+
+--- REQUIRED INFORMATION (if attending) ---
+
+Do you have any medical conditions?
+If yes, please describe:
+
+Do you have any mobility requirements? (i.e. issues climbing stairs or standing for extended periods)
+Answer:
+
+Emergency contact name & phone number:
+Answer:
+
+Dietary requirements (mark with X):
+[ ] Vegetarian
+[ ] Vegan
+[ ] Gluten Free
+[ ] Dairy Free
+
+Please note that all our meals are nut-free. If your dietary requirements fall outside the options, we won't be able to cater to them, so we kindly ask that you bring your own meals.
+
+Thank you.`;
+      const mailtoBody = mailtoBodyConfig || defaultMailtoBody;
       
       // Get reply-to email (from system config or fallback to SMTP)
       const savedReplyTo = await storage.getSystemConfig('standby_reply_to_email');
@@ -11470,7 +11646,7 @@ ${finalEmailFooter}`;
       }
       
       // Build mailto link
-      const replyMailto = `mailto:${replyToEmail}?subject=${encodeURIComponent(`STANDBY RESPONSE - ${sampleName} - ${sampleDate}`)}&body=${`Hi%20Deal%20or%20No%20Deal%20Team,%0D%0A%0D%0AName%3A%20${encodeURIComponent(sampleName)}%0D%0ADate%3A%20${encodeURIComponent(sampleDate)}%0D%0A%0D%0ACAN%20YOU%20ATTEND%20AS%20STANDBY%3F%20%28mark%20with%20X%29%0D%0A%5B%20%5D%20YES%20-%20I%20confirm%20my%20attendance%0D%0A%5B%20%5D%20NO%20-%20I%20cannot%20attend%20%28Reason%3A%20%29%0D%0A%0D%0AGroup%20members%20attending%20%28please%20provide%20FULL%20NAMES%29%3A%0D%0ANote%20-%20group%20members%20must%20have%20attended%20an%20audition.%0D%0A%0D%0A---%20REQUIRED%20INFORMATION%20%28if%20attending%29%20---%0D%0A%0D%0ADo%20you%20have%20any%20medical%20conditions%3F%0D%0AIf%20yes%2C%20please%20describe%3A%0D%0A%0D%0ADo%20you%20have%20any%20mobility%20requirements%3F%20%28i.e.%20issues%20climbing%20stairs%20or%20standing%20for%20extended%20periods%29%0D%0AAnswer%3A%0D%0A%0D%0AEmergency%20contact%20name%20%26%20phone%20number%3A%0D%0AAnswer%3A%0D%0A%0D%0ADietary%20requirements%20%28mark%20with%20X%29%3A%0D%0A%5B%20%5D%20Vegetarian%0D%0A%5B%20%5D%20Vegan%0D%0A%5B%20%5D%20Gluten%20Free%0D%0A%5B%20%5D%20Dairy%20Free%0D%0A%0D%0APlease%20note%20that%20all%20our%20meals%20are%20nut-free.%20If%20your%20dietary%20requirements%20fall%20outside%20the%20options%2C%20we%20won%27t%20be%20able%20to%20cater%20to%20them%2C%20so%20we%20kindly%20ask%20that%20you%20bring%20your%20own%20meals.%0D%0A%0D%0AThank%20you.`}`;
+      const replyMailto = `mailto:${replyToEmail}?subject=${encodeURIComponent(`STANDBY RESPONSE - ${sampleName} - ${sampleDate}`)}&body=${encodeURIComponent(mailtoBody.replace(/\{\{name\}\}/g, sampleName).replace(/\{\{date\}\}/g, sampleDate))}`;
       
       const html = `<!DOCTYPE html>
 <html>

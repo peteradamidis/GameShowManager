@@ -261,6 +261,71 @@ const EMAIL_TEMPLATE_DEFAULTS = {
   ticket_email_intro: 'Thank you for confirming your attendance! This is your official ticket for the Deal or No Deal recording.',
   ticket_email_important: 'IMPORTANT INFORMATION is attached in the PDF. Please read it carefully before your record day.',
   ticket_email_footer: 'This is an automated email from the Deal or No Deal production team.',
+  // Mailto body templates (use {{name}} and {{date}} as placeholders)
+  booking_mailto_body: `Hi Deal or No Deal Team,
+
+Name: {{name}}
+Date: {{date}}
+
+CAN YOU ATTEND? (mark with X)
+[ ] YES - I confirm my attendance
+[ ] NO - I cannot attend (Reason: )
+
+Group members attending (please provide FULL NAMES):
+Note - group members must have attended an audition.
+
+--- REQUIRED INFORMATION (if attending) ---
+
+Do you have any medical conditions?
+If yes, please describe:
+
+Do you have any mobility requirements? (i.e. issues climbing stairs or standing for extended periods)
+Answer:
+
+Emergency contact name & phone number:
+Answer:
+
+Dietary requirements (mark with X):
+[ ] Vegetarian
+[ ] Vegan
+[ ] Gluten Free
+[ ] Dairy Free
+
+Please note that all our meals are nut-free. If your dietary requirements fall outside the options, we won't be able to cater to them, so we kindly ask that you bring your own meals.
+
+Thank you.`,
+  standby_mailto_body: `Hi Deal or No Deal Team,
+
+Name: {{name}}
+Date: {{date}}
+
+CAN YOU ATTEND AS STANDBY? (mark with X)
+[ ] YES - I confirm my attendance
+[ ] NO - I cannot attend (Reason: )
+
+Group members attending (please provide FULL NAMES):
+Note - group members must have attended an audition.
+
+--- REQUIRED INFORMATION (if attending) ---
+
+Do you have any medical conditions?
+If yes, please describe:
+
+Do you have any mobility requirements? (i.e. issues climbing stairs or standing for extended periods)
+Answer:
+
+Emergency contact name & phone number:
+Answer:
+
+Dietary requirements (mark with X):
+[ ] Vegetarian
+[ ] Vegan
+[ ] Gluten Free
+[ ] Dairy Free
+
+Please note that all our meals are nut-free. If your dietary requirements fall outside the options, we won't be able to cater to them, so we kindly ask that you bring your own meals.
+
+Thank you.`,
 };
 
 export default function Settings() {
@@ -296,6 +361,10 @@ export default function Settings() {
   // Reply-to mailto addresses for emails
   const [bookingReplyToEmail, setBookingReplyToEmail] = useState('');
   const [standbyReplyToEmail, setStandbyReplyToEmail] = useState('');
+  
+  // Mailto body templates
+  const [bookingMailtoBody, setBookingMailtoBody] = useState(EMAIL_TEMPLATE_DEFAULTS.booking_mailto_body);
+  const [standbyMailtoBody, setStandbyMailtoBody] = useState(EMAIL_TEMPLATE_DEFAULTS.standby_mailto_body);
   
   // Ticket email template state
   const [ticketEmailHeadline, setTicketEmailHeadline] = useState(EMAIL_TEMPLATE_DEFAULTS.ticket_email_headline);
@@ -337,6 +406,10 @@ export default function Settings() {
   // Fetch saved reply-to email addresses
   const { data: savedBookingReplyToEmail } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_reply_to_email"] });
   const { data: savedStandbyReplyToEmail } = useQuery<string | null>({ queryKey: ["/api/system-config/standby_reply_to_email"] });
+  
+  // Fetch saved mailto body templates
+  const { data: savedBookingMailtoBody } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_mailto_body"] });
+  const { data: savedStandbyMailtoBody } = useQuery<string | null>({ queryKey: ["/api/system-config/standby_mailto_body"] });
   
   // Fetch saved ticket email template values
   const { data: savedTicketHeadline } = useQuery<string | null>({ queryKey: ["/api/system-config/ticket_email_headline"] });
@@ -413,6 +486,14 @@ export default function Settings() {
     if (savedStandbyReplyToEmail) setStandbyReplyToEmail(savedStandbyReplyToEmail);
   }, [savedStandbyReplyToEmail]);
   
+  // Load saved mailto body templates
+  useEffect(() => {
+    if (savedBookingMailtoBody) setBookingMailtoBody(savedBookingMailtoBody);
+  }, [savedBookingMailtoBody]);
+  useEffect(() => {
+    if (savedStandbyMailtoBody) setStandbyMailtoBody(savedStandbyMailtoBody);
+  }, [savedStandbyMailtoBody]);
+  
   // Load saved ticket email template values
   useEffect(() => {
     if (savedTicketHeadline) setTicketEmailHeadline(savedTicketHeadline);
@@ -464,6 +545,7 @@ export default function Settings() {
         apiRequest("PUT", "/api/system-config/booking_email_additional_instructions", { value: emailAdditionalInstructions }),
         apiRequest("PUT", "/api/system-config/booking_email_footer", { value: emailFooter }),
         apiRequest("PUT", "/api/system-config/booking_reply_to_email", { value: bookingReplyToEmail }),
+        apiRequest("PUT", "/api/system-config/booking_mailto_body", { value: bookingMailtoBody }),
       ]);
     },
     onSuccess: () => {
@@ -475,6 +557,7 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_email_additional_instructions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_email_footer"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_reply_to_email"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/booking_mailto_body"] });
     },
     onError: (error: any) => {
       toast({ title: "Error saving template", description: error.message, variant: "destructive" });
@@ -515,6 +598,7 @@ export default function Settings() {
         apiRequest("PUT", "/api/system-config/standby_email_instructions", { value: standbyEmailInstructions }),
         apiRequest("PUT", "/api/system-config/standby_email_footer", { value: standbyEmailFooter }),
         apiRequest("PUT", "/api/system-config/standby_reply_to_email", { value: standbyReplyToEmail }),
+        apiRequest("PUT", "/api/system-config/standby_mailto_body", { value: standbyMailtoBody }),
       ]);
     },
     onSuccess: () => {
@@ -525,6 +609,7 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/standby_email_instructions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/standby_email_footer"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/standby_reply_to_email"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/standby_mailto_body"] });
     },
     onError: (error: any) => {
       toast({ title: "Error saving template", description: error.message, variant: "destructive" });
@@ -1307,6 +1392,24 @@ export default function Settings() {
               />
             </div>
             
+            <div className="space-y-2">
+              <Label htmlFor="booking-mailto-body">Reply Email Body Template</Label>
+              <p className="text-xs text-muted-foreground">
+                The pre-filled email body when contestants click "CLICK HERE TO REPLY". Use <code className="bg-muted px-1 rounded">{"{{name}}"}</code> and <code className="bg-muted px-1 rounded">{"{{date}}"}</code> as placeholders for contestant name and record date.
+              </p>
+              <Textarea
+                id="booking-mailto-body"
+                value={bookingMailtoBody}
+                onChange={(e) => {
+                  setBookingMailtoBody(e.target.value);
+                  setEmailTemplateChanged(true);
+                }}
+                placeholder="Hi Deal or No Deal Team,..."
+                className="min-h-[300px] font-mono text-xs"
+                data-testid="input-booking-mailto-body"
+              />
+            </div>
+            
             <div className="flex justify-end pt-2">
               <Button
                 onClick={() => saveEmailTemplateMutation.mutate()}
@@ -1565,6 +1668,24 @@ export default function Settings() {
                 }}
                 placeholder="e.g., dond.standby@endemolshine.com.au"
                 data-testid="input-standby-reply-to-email"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="standby-mailto-body">Reply Email Body Template</Label>
+              <p className="text-xs text-muted-foreground">
+                The pre-filled email body when standbys click "CLICK HERE TO REPLY". Use <code className="bg-muted px-1 rounded">{"{{name}}"}</code> and <code className="bg-muted px-1 rounded">{"{{date}}"}</code> as placeholders for contestant name and record date.
+              </p>
+              <Textarea
+                id="standby-mailto-body"
+                value={standbyMailtoBody}
+                onChange={(e) => {
+                  setStandbyMailtoBody(e.target.value);
+                  setStandbyTemplateChanged(true);
+                }}
+                placeholder="Hi Deal or No Deal Team,..."
+                className="min-h-[300px] font-mono text-xs"
+                data-testid="input-standby-mailto-body"
               />
             </div>
             
