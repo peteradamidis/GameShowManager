@@ -1064,8 +1064,8 @@ export default function BookingMaster() {
                   {isColumnVisible("notes") && <TableHead className={`sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 border-r-4 border-r-purple-400 text-white font-semibold ${isFullscreen ? 'min-w-[150px]' : 'min-w-[200px]'}`}>NOTES</TableHead>}
                   {isColumnVisible("emailSent") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">BOOKING<br/>EMAIL<br/>SENT</TableHead>}
                   {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">CONFIRM<br/>ED RSVP</TableHead>}
-                  {isColumnVisible("paperworkSent") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">PAPER<br/>WORK<br/>SENT</TableHead>}
-                  {isColumnVisible("paperworkReceived") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">PAPER<br/>WORK<br/>RECV</TableHead>}
+                  {isColumnVisible("paperSent") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">PAPER<br/>WORK<br/>SENT</TableHead>}
+                  {isColumnVisible("paperReceived") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">PAPER<br/>WORK<br/>RECV<br/>& LOGGED</TableHead>}
                   {isColumnVisible("otdHardCopy") && <TableHead className="sticky top-0 bg-amber-400 dark:bg-amber-700 z-50 text-[10px] py-1 px-2 text-center w-14 text-amber-900 dark:text-white font-semibold border-r border-amber-500 dark:border-amber-600">OTD<br/>PAPER<br/>WORK</TableHead>}
                   {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-green-200 dark:bg-green-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-green-900 dark:text-white font-semibold border-r border-green-300 dark:border-green-600">SIGNED<br/>IN</TableHead>}
                   {isColumnVisible("otdNotes") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center min-w-[120px] text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">OTD NOTES</TableHead>}
@@ -1138,7 +1138,7 @@ export default function BookingMaster() {
                             />
                           </TableCell>
                         )}
-                        {isColumnVisible("paperworkSent") && (
+                        {isColumnVisible("paperSent") && (
                           <TableCell className="py-0.5 h-7 text-center border-r border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/20">
                             <Checkbox
                               checked={!!standby.paperworkSent}
@@ -1148,7 +1148,7 @@ export default function BookingMaster() {
                             />
                           </TableCell>
                         )}
-                        {isColumnVisible("paperworkReceived") && (
+                        {isColumnVisible("paperReceived") && (
                           <TableCell className="py-0.5 h-7 text-center border-r border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/20">
                             <Checkbox
                               checked={!!standby.paperworkReceived}
