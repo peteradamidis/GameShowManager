@@ -34,6 +34,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users, RefreshCw, CheckCircle, Loader2, Ticket, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { format } from "date-fns";
 
 interface RecordDay {
   id: string;
@@ -116,6 +120,14 @@ export default function StandbysPage() {
   const [previewData, setPreviewData] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<StandbyStatusFilter>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  
+  // Decline dialog state (matching booking-responses)
+  const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
+  const [declineStandby, setDeclineStandby] = useState<StandbyAssignment | null>(null);
+  const [declineReason, setDeclineReason] = useState("");
+  const [declineAction, setDeclineAction] = useState<"reschedule" | "rebook">("reschedule");
+  const [declineMovedBy, setDeclineMovedBy] = useState("");
+  const [rebookRecordDayId, setRebookRecordDayId] = useState<string>("");
 
   // Fetch record days
   const { data: recordDays = [], isLoading: recordDaysLoading } = useQuery<RecordDay[]>({
@@ -365,19 +377,53 @@ export default function StandbysPage() {
     },
   });
 
-  // Decline standby mutation
+  // Decline standby mutation (with reason and move to reschedule)
   const declineStandbyMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, reason, movedBy }: { id: string; reason: string; movedBy: string }) => {
       return apiRequest('PATCH', `/api/standbys/${id}`, {
         status: 'declined',
+        movedToReschedule: true,
+        movedToRescheduleAt: new Date().toISOString(),
+        notes: reason ? `[DECLINED by ${movedBy}] ${reason}` : `[DECLINED by ${movedBy}]`,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
-      toast({ title: "Standby declined" });
+      toast({ title: "Standby declined", description: "Moved to reschedule list" });
+      setDeclineDialogOpen(false);
+      setDeclineStandby(null);
+      setDeclineReason("");
+      setDeclineMovedBy("");
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Rebook standby to different day mutation
+  const rebookStandbyMutation = useMutation({
+    mutationFn: async ({ oldId, newRecordDayId, contestantId }: { oldId: string; newRecordDayId: string; contestantId: string }) => {
+      // First decline/delete the old standby
+      await apiRequest('DELETE', `/api/standbys/${oldId}`);
+      // Then create new standby on the new day
+      return apiRequest('POST', `/api/standbys`, {
+        contestantId,
+        recordDayId: newRecordDayId,
+        status: 'pending',
+        notes: '[REBOOKED] from previous day',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      toast({ title: "Standby rebooked", description: "Moved to new record day" });
+      setDeclineDialogOpen(false);
+      setDeclineStandby(null);
+      setDeclineReason("");
+      setDeclineMovedBy("");
+      setRebookRecordDayId("");
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error rebooking", description: error.message, variant: "destructive" });
     },
   });
 
@@ -446,6 +492,44 @@ export default function StandbysPage() {
       month: 'short',
       year: 'numeric',
     });
+  };
+
+  // Handle decline button click - opens dialog
+  const handleDeclineClick = (standby: StandbyAssignment) => {
+    setDeclineStandby(standby);
+    setDeclineReason("");
+    setDeclineAction("reschedule");
+    setDeclineMovedBy("");
+    setRebookRecordDayId("");
+    setDeclineDialogOpen(true);
+  };
+
+  // Handle decline dialog submit
+  const handleDeclineSubmit = () => {
+    if (!declineStandby) return;
+
+    if (declineAction === "rebook") {
+      if (!rebookRecordDayId) {
+        toast({ title: "Please select a record day", variant: "destructive" });
+        return;
+      }
+      rebookStandbyMutation.mutate({
+        oldId: declineStandby.id,
+        newRecordDayId: rebookRecordDayId,
+        contestantId: declineStandby.contestantId,
+      });
+    } else {
+      // Reschedule action
+      if (!declineMovedBy.trim()) {
+        toast({ title: "Please enter your initials", variant: "destructive" });
+        return;
+      }
+      declineStandbyMutation.mutate({
+        id: declineStandby.id,
+        reason: declineReason,
+        movedBy: declineMovedBy,
+      });
+    }
   };
 
   const selectedRecordDay = recordDays.find(rd => rd.id === selectedRecordDayId);
@@ -657,18 +741,15 @@ export default function StandbysPage() {
                           />
                         </TableHead>
                       )}
-                      <TableHead className="w-16">Photo</TableHead>
-                      <TableHead>Name</TableHead>
-                      {isSearchMode && <TableHead>Record Day</TableHead>}
-                      <TableHead>Attending With</TableHead>
-                      <TableHead>Rating</TableHead>
-                      <TableHead>Gender</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Booking Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                      <TableHead>Assigned Seat</TableHead>
-                      <TableHead>Reschedule</TableHead>
-                      <TableHead className="w-12"></TableHead>
+                      <TableHead className="font-semibold text-xs">Name</TableHead>
+                      <TableHead className="font-semibold text-xs">Rating</TableHead>
+                      <TableHead className="font-semibold text-xs">Attending<br/>With</TableHead>
+                      {isSearchMode && <TableHead className="font-semibold text-xs whitespace-nowrap">Date /<br/>RX</TableHead>}
+                      <TableHead className="font-semibold text-xs">Email</TableHead>
+                      <TableHead className="font-semibold text-xs text-center">Sent</TableHead>
+                      <TableHead className="font-semibold text-xs text-center">Status</TableHead>
+                      <TableHead className="font-semibold text-xs text-center">Ticket</TableHead>
+                      <TableHead className="font-semibold text-xs">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -685,7 +766,7 @@ export default function StandbysPage() {
                         }`}
                       >
                         {!isSearchMode && (
-                          <TableCell>
+                          <TableCell className="px-2">
                             <Checkbox
                               checked={selectedStandbys.includes(standby.id)}
                               onCheckedChange={() => handleSelectStandby(standby.id)}
@@ -693,24 +774,23 @@ export default function StandbysPage() {
                             />
                           </TableCell>
                         )}
-                        <TableCell>
-                          <Avatar className="h-10 w-10">
-                            {standby.contestant.photoUrl && (
-                              <AvatarImage src={standby.contestant.photoUrl} alt={standby.contestant.name} />
-                            )}
-                            <AvatarFallback>
-                              {standby.contestant.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                        </TableCell>
-                        <TableCell className="font-medium">
+                        {/* Name with photo */}
+                        <TableCell className="py-1">
                           <div className="flex items-center gap-2">
-                            {standby.contestant.name}
+                            <Avatar className="h-6 w-6">
+                              {standby.contestant.photoUrl && (
+                                <AvatarImage src={standby.contestant.photoUrl} alt={standby.contestant.name} />
+                              )}
+                              <AvatarFallback className="text-[10px]">
+                                {standby.contestant.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium text-xs">{standby.contestant.name}</span>
                             {standby.groupMembers && standby.groupMembers.length > 1 && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Badge variant="outline" className="text-xs px-1.5 py-0 cursor-help">
-                                    <Users className="h-3 w-3 mr-1" />
+                                  <Badge variant="outline" className="text-[10px] px-1 py-0 cursor-help">
+                                    <Users className="h-2.5 w-2.5 mr-0.5" />
                                     {standby.groupMembers.length}
                                   </Badge>
                                 </TooltipTrigger>
@@ -726,223 +806,176 @@ export default function StandbysPage() {
                             )}
                           </div>
                         </TableCell>
+                        {/* Rating */}
+                        <TableCell className="py-1">
+                          {standby.contestant.auditionRating ? (
+                            <Badge 
+                              variant="outline" 
+                              className={`text-[10px] px-1.5 py-0 ${
+                                standby.contestant.auditionRating === 'A+' ? 'border-green-500 text-green-600 dark:text-green-400' :
+                                standby.contestant.auditionRating === 'A' ? 'border-green-400 text-green-500 dark:text-green-300' :
+                                standby.contestant.auditionRating === 'B+' ? 'border-blue-400 text-blue-500 dark:text-blue-300' :
+                                standby.contestant.auditionRating === 'B' ? 'border-blue-300 text-blue-400 dark:text-blue-200' :
+                                standby.contestant.auditionRating === 'C' ? 'border-orange-400 text-orange-500 dark:text-orange-300' : ''
+                              }`}
+                            >
+                              {standby.contestant.auditionRating}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        {/* Attending With */}
+                        <TableCell className="py-1 max-w-[160px]">
+                          {standby.contestant.attendingWith ? (
+                            <div className="flex flex-col text-xs text-muted-foreground">
+                              {standby.contestant.attendingWith.split(/[,&]/).map((name, idx) => (
+                                <span key={idx} className="truncate" title={name.trim()}>{name.trim()}</span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        {/* Date/RX - only in search mode */}
                         {isSearchMode && (
-                          <TableCell className="text-sm">
-                            {(() => {
-                              const rd = recordDays.find(r => r.id === standby.recordDayId);
-                              return rd ? (
-                                <div>
-                                  <div className="font-medium">{formatDate(rd.date)}</div>
-                                  {rd.rxNumber && <div className="text-xs text-muted-foreground">{rd.rxNumber}</div>}
-                                </div>
-                              ) : '-';
-                            })()}
+                          <TableCell className="py-1">
+                            <div className="flex flex-col text-xs">
+                              {(() => {
+                                const rd = recordDays.find(r => r.id === standby.recordDayId);
+                                return rd ? (
+                                  <>
+                                    <span>{format(new Date(rd.date), "MMM d")}</span>
+                                    {rd.rxNumber && (
+                                      <span className="text-muted-foreground text-[10px]">{rd.rxNumber}</span>
+                                    )}
+                                  </>
+                                ) : '-';
+                              })()}
+                            </div>
                           </TableCell>
                         )}
-                        <TableCell className="text-sm text-muted-foreground">
-                          {standby.contestant.attendingWith || "-"}
+                        {/* Email */}
+                        <TableCell className="py-1">
+                          <span className="text-xs text-muted-foreground truncate max-w-[120px] block">
+                            {standby.contestant.email || "-"}
+                          </span>
                         </TableCell>
-                        <TableCell>
-                          {standby.contestant.auditionRating ? (
-                            <span className={`font-semibold ${
-                              standby.contestant.auditionRating === 'A+' ? 'text-emerald-600' :
-                              standby.contestant.auditionRating === 'A' ? 'text-green-600' :
-                              standby.contestant.auditionRating === 'B+' ? 'text-amber-600' :
-                              standby.contestant.auditionRating === 'B' ? 'text-orange-600' :
-                              standby.contestant.auditionRating === 'C' ? 'text-red-500' : ''
-                            }`}>
-                              {standby.contestant.auditionRating}
-                            </span>
-                          ) : "-"}
-                        </TableCell>
-                        <TableCell>{standby.contestant.gender}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {standby.contestant.email || "-"}
-                        </TableCell>
-                        <TableCell>
-                          {/* Booking Status based on standby status */}
-                          {standby.status === 'confirmed' ? (
-                            <div className="flex items-center gap-1">
-                              <Badge className="bg-green-500/20 text-green-700 border-green-300 dark:text-green-400">
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Confirmed
-                              </Badge>
-                              {standby.standbyTicketSent && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Badge className="bg-amber-500/20 text-amber-700 border-amber-300 dark:text-amber-400 cursor-help">
-                                      <Ticket className="h-3 w-3" />
-                                    </Badge>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Ticket sent: {new Date(standby.standbyTicketSent).toLocaleDateString('en-AU')}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              )}
+                        {/* Sent status */}
+                        <TableCell className="text-center py-1 px-2">
+                          {standby.standbyEmailSent ? (
+                            <div className="flex items-center justify-center gap-1 text-green-600 dark:text-green-400">
+                              <CheckCircle className="h-3 w-3" />
+                              <span className="text-[10px]">
+                                {format(new Date(standby.standbyEmailSent), "M/d")}
+                              </span>
                             </div>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
+                        </TableCell>
+                        {/* Status */}
+                        <TableCell className="text-center py-1 px-2">
+                          {standby.status === 'confirmed' ? (
+                            <Badge className="bg-green-500/20 text-green-700 border-green-300 dark:text-green-400 text-[10px] px-1.5 py-0">
+                              Confirmed
+                            </Badge>
                           ) : standby.status === 'declined' ? (
-                            <Badge className="bg-red-500/20 text-red-700 border-red-300 dark:text-red-400">
-                              <XCircle className="h-3 w-3 mr-1" />
+                            <Badge className="bg-red-500/20 text-red-700 border-red-300 dark:text-red-400 text-[10px] px-1.5 py-0">
                               Declined
                             </Badge>
                           ) : standby.standbyEmailSent ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge className="bg-amber-500/20 text-amber-700 border-amber-300 dark:text-amber-400 cursor-help">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  Awaiting Reply
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Email sent: {new Date(standby.standbyEmailSent).toLocaleDateString('en-AU')}</p>
-                              </TooltipContent>
-                            </Tooltip>
+                            <Badge className="bg-amber-500/20 text-amber-700 border-amber-300 dark:text-amber-400 text-[10px] px-1.5 py-0">
+                              Awaiting
+                            </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-muted-foreground">
-                              <Mail className="h-3 w-3 mr-1" />
+                            <Badge variant="outline" className="text-muted-foreground text-[10px] px-1.5 py-0">
                               Not Sent
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell>
-                          {/* Action Buttons */}
-                          <div className="flex items-center gap-1">
-                            {standby.status !== 'confirmed' && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-100"
-                                    onClick={() => confirmStandbyMutation.mutate(standby.id)}
-                                    disabled={confirmStandbyMutation.isPending}
-                                    data-testid={`button-confirm-${standby.id}`}
-                                  >
-                                    <CheckCircle className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Confirm booking</TooltipContent>
-                              </Tooltip>
-                            )}
-                            {standby.status !== 'declined' && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-100"
-                                    onClick={() => declineStandbyMutation.mutate(standby.id)}
-                                    disabled={declineStandbyMutation.isPending}
-                                    data-testid={`button-decline-${standby.id}`}
-                                  >
-                                    <XCircle className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Decline booking</TooltipContent>
-                              </Tooltip>
-                            )}
-                            {standby.standbyEmailSent && standby.contestant.email && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-blue-600 hover:text-blue-700 hover:bg-blue-100"
-                                    onClick={() => resendEmailMutation.mutate(standby.id)}
-                                    disabled={resendEmailMutation.isPending}
-                                    data-testid={`button-resend-${standby.id}`}
-                                  >
-                                    {resendEmailMutation.isPending ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <RefreshCw className="h-4 w-4" />
-                                    )}
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Resend email</TooltipContent>
-                              </Tooltip>
-                            )}
-                            {/* Send Ticket button - only for confirmed standbys */}
-                            {standby.status === 'confirmed' && standby.contestant.email && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className={`h-7 w-7 ${standby.standbyTicketSent 
-                                      ? 'text-green-600 hover:text-green-700 hover:bg-green-100' 
-                                      : 'text-amber-600 hover:text-amber-700 hover:bg-amber-100'}`}
-                                    onClick={() => sendTicketMutation.mutate(standby.id)}
-                                    disabled={sendTicketMutation.isPending}
-                                    data-testid={`button-send-ticket-${standby.id}`}
-                                  >
-                                    {sendTicketMutation.isPending ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <Ticket className="h-4 w-4" />
-                                    )}
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {standby.standbyTicketSent 
-                                    ? `Ticket sent ${new Date(standby.standbyTicketSent).toLocaleDateString('en-AU')} - Click to resend` 
-                                    : 'Send standby ticket'}
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {standby.assignedToSeat ? (
-                            <Badge variant="outline" className="bg-purple-500/10 text-purple-700 border-purple-200">
-                              {standby.assignedToSeat}
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {standby.movedToReschedule ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge 
-                                  variant="outline" 
-                                  className="bg-green-500/10 text-green-700 border-green-200 cursor-help"
+                        {/* Ticket */}
+                        <TableCell className="text-center py-1 px-2">
+                          {standby.status === 'confirmed' ? (
+                            standby.standbyTicketSent ? (
+                              <div className="flex flex-col items-center gap-0.5">
+                                <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                                  <Ticket className="h-3 w-3" />
+                                  <span className="text-[10px]">
+                                    {format(new Date(standby.standbyTicketSent), "M/d")}
+                                  </span>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-5 px-1.5 text-[10px]"
+                                  onClick={() => sendTicketMutation.mutate(standby.id)}
+                                  disabled={sendTicketMutation.isPending}
+                                  data-testid={`button-resend-ticket-${standby.id}`}
                                 >
-                                  Moved to Reschedule
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Added to reschedule tab on {standby.movedToRescheduleAt 
-                                  ? new Date(standby.movedToRescheduleAt).toLocaleDateString('en-AU')
-                                  : 'N/A'}
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
+                                  <RefreshCw className="h-2.5 w-2.5 mr-0.5" />
+                                  Resend
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-5 px-1.5 text-[10px]"
+                                onClick={() => sendTicketMutation.mutate(standby.id)}
+                                disabled={sendTicketMutation.isPending || !standby.contestant.email}
+                                data-testid={`button-send-ticket-${standby.id}`}
+                              >
+                                <Ticket className="h-2.5 w-2.5 mr-0.5" />
+                                Send
+                              </Button>
+                            )
                           ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => moveToRescheduleMutation.mutate(standby.id)}
-                              disabled={moveToRescheduleMutation.isPending}
-                              className="h-7 text-xs"
-                              data-testid={`button-move-reschedule-${standby.id}`}
-                            >
-                              <ArrowRightLeft className="h-3 w-3 mr-1" />
-                              Move to Reschedule
-                            </Button>
+                            <span className="text-muted-foreground text-xs">-</span>
                           )}
                         </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteStandbyMutation.mutate(standby.id)}
-                            disabled={deleteStandbyMutation.isPending}
-                            data-testid={`button-delete-standby-${standby.id}`}
-                          >
-                            <Trash2 className="h-4 w-4 text-muted-foreground" />
-                          </Button>
+                        {/* Actions */}
+                        <TableCell className="py-1 px-2">
+                          {standby.status === 'declined' ? (
+                            <span className="text-xs text-muted-foreground">Rescheduled</span>
+                          ) : standby.status === 'confirmed' ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-5 px-1.5 text-[10px]"
+                              onClick={() => handleDeclineClick(standby)}
+                              data-testid={`button-cancel-confirm-${standby.id}`}
+                            >
+                              <XCircle className="h-2.5 w-2.5 mr-0.5" />
+                              Cancel
+                            </Button>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="h-5 px-1.5 text-[10px]"
+                                onClick={() => confirmStandbyMutation.mutate(standby.id)}
+                                disabled={confirmStandbyMutation.isPending}
+                                title="Confirm booking"
+                                data-testid={`button-confirm-${standby.id}`}
+                              >
+                                <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
+                                Confirm
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-5 px-1.5 text-[10px]"
+                                onClick={() => handleDeclineClick(standby)}
+                                title="Decline booking"
+                                data-testid={`button-decline-${standby.id}`}
+                              >
+                                <XCircle className="h-2.5 w-2.5 mr-0.5" />
+                                Decline
+                              </Button>
+                            </div>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -1040,6 +1073,125 @@ export default function StandbysPage() {
                 </>
               )}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Decline Dialog */}
+      <Dialog open={declineDialogOpen} onOpenChange={setDeclineDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]" data-testid="dialog-decline-standby">
+          <DialogHeader>
+            <DialogTitle>Decline Standby Booking</DialogTitle>
+            <DialogDescription>
+              {declineStandby && (
+                <>
+                  <strong>{declineStandby.contestant.name}</strong> cannot attend on this date.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <RadioGroup 
+              value={declineAction} 
+              onValueChange={(v) => setDeclineAction(v as "reschedule" | "rebook")}
+              className="space-y-3"
+            >
+              <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
+                <RadioGroupItem value="reschedule" id="action-reschedule" data-testid="radio-reschedule" />
+                <div className="flex flex-col">
+                  <Label htmlFor="action-reschedule" className="font-medium cursor-pointer">
+                    Move to Reschedule list
+                  </Label>
+                  <span className="text-sm text-muted-foreground">
+                    Remove from standbys and add to reschedule tab for later
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
+                <RadioGroupItem value="rebook" id="action-rebook" data-testid="radio-rebook" />
+                <div className="flex flex-col">
+                  <Label htmlFor="action-rebook" className="font-medium cursor-pointer">
+                    Rebook to Different Day
+                  </Label>
+                  <span className="text-sm text-muted-foreground">
+                    Move standby to a different record day
+                  </span>
+                </div>
+              </div>
+            </RadioGroup>
+
+            {declineAction === "rebook" && (
+              <div className="space-y-3 pt-2">
+                <Label htmlFor="rebook-day">Select New Record Day</Label>
+                <Select value={rebookRecordDayId} onValueChange={setRebookRecordDayId}>
+                  <SelectTrigger id="rebook-day" data-testid="select-rebook-day">
+                    <SelectValue placeholder="Select a record day" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {recordDays
+                      .filter(rd => rd.id !== declineStandby?.recordDayId)
+                      .map(rd => (
+                        <SelectItem key={rd.id} value={rd.id}>
+                          {format(new Date(rd.date), "MMM d, yyyy")} {rd.rxNumber && `(${rd.rxNumber})`}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {declineAction === "reschedule" && (
+              <div className="space-y-3 pt-2">
+                <div className="space-y-2">
+                  <Label htmlFor="decline-reason">Reason for decline</Label>
+                  <Textarea
+                    id="decline-reason"
+                    placeholder="Optional: Why can't they attend?"
+                    value={declineReason}
+                    onChange={(e) => setDeclineReason(e.target.value)}
+                    data-testid="input-decline-reason"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="decline-moved-by">Your Initials <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="decline-moved-by"
+                    placeholder="e.g. JD"
+                    value={declineMovedBy}
+                    onChange={(e) => setDeclineMovedBy(e.target.value.toUpperCase())}
+                    maxLength={3}
+                    className="w-20"
+                    data-testid="input-decline-moved-by"
+                  />
+                  <p className="text-xs text-muted-foreground">Required for tracking who processed this decline</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeclineDialogOpen(false)}>
+              Cancel
+            </Button>
+            {declineAction === "rebook" ? (
+              <Button
+                onClick={handleDeclineSubmit}
+                disabled={!rebookRecordDayId || rebookStandbyMutation.isPending}
+                data-testid="button-submit-rebook"
+              >
+                {rebookStandbyMutation.isPending ? "Rebooking..." : "Rebook Standby"}
+              </Button>
+            ) : (
+              <Button
+                onClick={handleDeclineSubmit}
+                disabled={!declineMovedBy.trim() || declineStandbyMutation.isPending}
+                data-testid="button-submit-decline"
+              >
+                {declineStandbyMutation.isPending ? "Processing..." : "Move to Reschedule"}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
