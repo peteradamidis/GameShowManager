@@ -1127,31 +1127,71 @@ export default function StandbysPage() {
                         {/* Actions */}
                         <TableCell className="py-1 px-2">
                           {standby.status === 'rescheduled' ? (
-                            <span className="text-xs text-muted-foreground">Moved to Reschedule</span>
-                          ) : standby.signedIn ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-5 px-1.5 text-[10px] bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100 dark:bg-amber-950 dark:border-amber-700 dark:text-amber-300"
-                              onClick={() => {
-                                setMoveToRescheduleStandby(standby);
-                                setMoveToRescheduleDialogOpen(true);
-                              }}
-                              disabled={moveAttendedToRescheduleMutation.isPending && moveToRescheduleStandby?.id === standby.id}
-                              data-testid={`button-move-to-reschedule-${standby.id}`}
-                            >
-                              {moveAttendedToRescheduleMutation.isPending && moveToRescheduleStandby?.id === standby.id ? (
-                                <>
-                                  <Loader2 className="h-2.5 w-2.5 mr-0.5 animate-spin" />
-                                  Processing...
-                                </>
-                              ) : (
-                                <>
-                                  <CalendarPlus className="h-2.5 w-2.5 mr-0.5" />
-                                  Reschedule
-                                </>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-muted-foreground">Moved to Reschedule</span>
+                              {/* Test subjects only - can be fully removed */}
+                              {['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name) && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-5 w-5 p-0 text-destructive hover:text-destructive"
+                                  onClick={() => {
+                                    if (confirm(`Remove test subject ${standby.contestant.name} from standby list?`)) {
+                                      deleteStandbyMutation.mutate(standby.id);
+                                    }
+                                  }}
+                                  disabled={deleteStandbyMutation.isPending}
+                                  title="Remove test subject from standby list"
+                                  data-testid={`button-remove-${standby.id}`}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
                               )}
-                            </Button>
+                            </div>
+                          ) : standby.signedIn ? (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-5 px-1.5 text-[10px] bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100 dark:bg-amber-950 dark:border-amber-700 dark:text-amber-300"
+                                onClick={() => {
+                                  setMoveToRescheduleStandby(standby);
+                                  setMoveToRescheduleDialogOpen(true);
+                                }}
+                                disabled={moveAttendedToRescheduleMutation.isPending && moveToRescheduleStandby?.id === standby.id}
+                                data-testid={`button-move-to-reschedule-${standby.id}`}
+                              >
+                                {moveAttendedToRescheduleMutation.isPending && moveToRescheduleStandby?.id === standby.id ? (
+                                  <>
+                                    <Loader2 className="h-2.5 w-2.5 mr-0.5 animate-spin" />
+                                    Processing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <CalendarPlus className="h-2.5 w-2.5 mr-0.5" />
+                                    Reschedule
+                                  </>
+                                )}
+                              </Button>
+                              {/* Test subjects only - can be fully removed */}
+                              {['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name) && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-5 w-5 p-0 text-destructive hover:text-destructive"
+                                  onClick={() => {
+                                    if (confirm(`Remove test subject ${standby.contestant.name} from standby list?`)) {
+                                      deleteStandbyMutation.mutate(standby.id);
+                                    }
+                                  }}
+                                  disabled={deleteStandbyMutation.isPending}
+                                  title="Remove test subject from standby list"
+                                  data-testid={`button-remove-${standby.id}`}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
                           ) : standby.status === 'confirmed' ? (
                             <div className="flex items-center gap-1">
                               <Button
@@ -1166,13 +1206,13 @@ export default function StandbysPage() {
                                 Cancel
                               </Button>
                               {/* Test subjects only - can be fully removed */}
-                              {['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestantName) && (
+                              {['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name) && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
                                   className="h-5 w-5 p-0 text-destructive hover:text-destructive"
                                   onClick={() => {
-                                    if (confirm(`Remove test subject ${standby.contestantName} from standby list?`)) {
+                                    if (confirm(`Remove test subject ${standby.contestant.name} from standby list?`)) {
                                       deleteStandbyMutation.mutate(standby.id);
                                     }
                                   }}
@@ -1210,13 +1250,13 @@ export default function StandbysPage() {
                                 Decline
                               </Button>
                               {/* Test subjects only - can be fully removed */}
-                              {['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestantName) && (
+                              {['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name) && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
                                   className="h-5 w-5 p-0 text-destructive hover:text-destructive"
                                   onClick={() => {
-                                    if (confirm(`Remove test subject ${standby.contestantName} from standby list?`)) {
+                                    if (confirm(`Remove test subject ${standby.contestant.name} from standby list?`)) {
                                       deleteStandbyMutation.mutate(standby.id);
                                     }
                                   }}
