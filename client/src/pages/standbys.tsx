@@ -1458,46 +1458,46 @@ export default function StandbysPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            <div className="space-y-3">
+          <div className="space-y-3 py-2">
+            <div className="space-y-2">
               <Label className="text-sm font-medium">What was their seating status?</Label>
               <RadioGroup 
                 value={attendedBlockType} 
                 onValueChange={(v) => setAttendedBlockType(v as "PB" | "NPB" | "NS")}
-                className="space-y-2"
+                className="space-y-1.5"
               >
-                <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
-                  <RadioGroupItem value="PB" id="block-pb" data-testid="radio-block-pb" className="mt-1" />
-                  <div className="flex flex-col">
-                    <Label htmlFor="block-pb" className="font-medium cursor-pointer">
+                <div className="flex items-start space-x-2 p-2 border rounded-md hover:bg-muted/50">
+                  <RadioGroupItem value="PB" id="block-pb" data-testid="radio-block-pb" className="mt-0.5" />
+                  <div className="flex flex-col gap-0.5">
+                    <Label htmlFor="block-pb" className="text-sm font-medium cursor-pointer">
                       Podium Block (PB)
                     </Label>
-                    <span className="text-sm text-muted-foreground">
-                      They sat in a podium block during the show. This should only be selected if they appeared on the podium as a case holder. This does not apply to blocks that already played before the standbys were added in.
+                    <span className="text-[11px] text-muted-foreground leading-tight">
+                      Sat in a podium block as a case holder. Does not apply to blocks that already played.
                     </span>
                   </div>
                 </div>
                 
-                <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
-                  <RadioGroupItem value="NPB" id="block-npb" data-testid="radio-block-npb" className="mt-1" />
-                  <div className="flex flex-col">
-                    <Label htmlFor="block-npb" className="font-medium cursor-pointer">
+                <div className="flex items-start space-x-2 p-2 border rounded-md hover:bg-muted/50">
+                  <RadioGroupItem value="NPB" id="block-npb" data-testid="radio-block-npb" className="mt-0.5" />
+                  <div className="flex flex-col gap-0.5">
+                    <Label htmlFor="block-npb" className="text-sm font-medium cursor-pointer">
                       Non-Playing Block (NPB)
                     </Label>
-                    <span className="text-sm text-muted-foreground">
-                      They sat in a non-playing block during the show. This also applies to standbys that have been added into PBs after they have already played.
+                    <span className="text-[11px] text-muted-foreground leading-tight">
+                      Sat in a non-playing block, or added to a PB after it had already played.
                     </span>
                   </div>
                 </div>
                 
-                <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
-                  <RadioGroupItem value="NS" id="block-ns" data-testid="radio-block-ns" className="mt-1" />
-                  <div className="flex flex-col">
-                    <Label htmlFor="block-ns" className="font-medium cursor-pointer">
+                <div className="flex items-start space-x-2 p-2 border rounded-md hover:bg-muted/50">
+                  <RadioGroupItem value="NS" id="block-ns" data-testid="radio-block-ns" className="mt-0.5" />
+                  <div className="flex flex-col gap-0.5">
+                    <Label htmlFor="block-ns" className="text-sm font-medium cursor-pointer">
                       Not Seated (NS)
                     </Label>
-                    <span className="text-sm text-muted-foreground">
-                      They attended as a standby but did not get a seat inside the studio because there weren't any seats available.
+                    <span className="text-[11px] text-muted-foreground leading-tight">
+                      Attended but did not get a seat because none were available.
                     </span>
                   </div>
                 </div>
