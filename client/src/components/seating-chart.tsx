@@ -307,23 +307,23 @@ function SortableStandbyItem({
       className={`relative ${isDragging ? 'opacity-50 z-50' : ''}`}
       data-testid={`standby-item-${standby.id}`}
     >
-      <HoverCard openDelay={200} closeDelay={100}>
+      <HoverCard openDelay={300} closeDelay={50}>
         <HoverCardTrigger asChild>
           <div 
+            {...attributes}
+            {...listeners}
             className={`flex items-center gap-2 p-2 rounded-md bg-background border ${groupBorderClass} ${
               isInGroup && !isFirstInGroup ? 'rounded-t-none border-t-0' : ''
             } ${
               isInGroup && !isLastInGroup ? 'rounded-b-none' : ''
             } ${
               isInGroup ? 'ml-3 border-l-2 border-l-purple-400 dark:border-l-purple-600' : ''
-            } hover:bg-muted/50 transition-colors`}
+            } ${isLocked ? 'cursor-grab active:cursor-grabbing' : 'cursor-not-allowed'} hover:bg-muted/50 transition-colors`}
           >
-            {/* Drag handle */}
+            {/* Drag handle icon */}
             <div 
-              {...attributes}
-              {...listeners}
-              className={`flex-shrink-0 p-1 rounded ${isLocked ? 'cursor-grab hover:bg-muted' : 'cursor-not-allowed opacity-40'}`}
-              title={isLocked ? "Drag to reorder" : "Lock RX Day to reorder"}
+              className={`flex-shrink-0 p-1 rounded ${isLocked ? '' : 'opacity-40'}`}
+              title={isLocked ? "Drag to reorder or drop on a seat" : "Lock RX Day to enable dragging"}
             >
               <GripVertical className="h-4 w-4 text-muted-foreground" />
             </div>
