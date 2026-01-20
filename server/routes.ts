@@ -8571,10 +8571,39 @@ ${finalEmailFooter}`;
         updateData.movedToRescheduleAt = new Date(updateData.movedToRescheduleAt);
       }
 
+      // Get the standby first to have access to contestant/recordDay data
+      const allStandbys = await storage.getStandbyAssignments();
+      const standby = allStandbys.find(s => s.id === id);
+      
+      if (!standby) {
+        return res.status(404).json({ error: "Standby assignment not found" });
+      }
+
       const updated = await storage.updateStandbyAssignment(id, updateData);
       
       if (!updated) {
         return res.status(404).json({ error: "Standby assignment not found" });
+      }
+
+      // If the standby is being declined and moved to reschedule, create a canceled assignment
+      if (updateData.status === 'declined' && updateData.movedToReschedule) {
+        // Create a canceled assignment record for the reschedule page
+        // Use isFromStandby: false so it shows "Canceled" tag, not "Standby"
+        await storage.createCanceledAssignment({
+          contestantId: standby.contestantId,
+          recordDayId: standby.recordDayId,
+          blockNumber: null, // Standbys don't have a block number
+          seatLabel: standby.assignedToSeat || null,
+          reason: updateData.notes || 'DECLINED STANDBY INVITATION',
+          movedBy: updateData.notes?.match(/\[([^\]]+)\]/)?.[1] || 'SYSTEM', // Extract initials from notes
+          isFromStandby: false, // Show "Canceled" tag, not "Standby"
+          wasDeclined: true,
+          declinedAt: new Date(),
+          originalAttendanceDate: standby.recordDay?.date ? new Date(standby.recordDay.date) : null,
+        });
+
+        // Update contestant status to 'rescheduled'
+        await storage.updateContestantAvailability(standby.contestantId, 'rescheduled');
       }
 
       res.json(updated);

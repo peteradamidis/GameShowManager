@@ -383,11 +383,15 @@ export default function StandbysPage() {
   // Decline standby mutation (with reason and move to reschedule)
   const declineStandbyMutation = useMutation({
     mutationFn: async ({ id, reason, movedBy }: { id: string; reason: string; movedBy: string }) => {
+      // Reason format: "DECLINED STANDBY INVITATION - [optional notes]"
+      const fullReason = reason.trim() 
+        ? `DECLINED STANDBY INVITATION - ${reason.trim()}` 
+        : `DECLINED STANDBY INVITATION`;
       return apiRequest('PATCH', `/api/standbys/${id}`, {
         status: 'declined',
         movedToReschedule: true,
         movedToRescheduleAt: new Date().toISOString(),
-        notes: reason ? `[DECLINED by ${movedBy}] ${reason}` : `[DECLINED by ${movedBy}]`,
+        notes: `[${movedBy}] ${fullReason}`,
       });
     },
     onSuccess: () => {
