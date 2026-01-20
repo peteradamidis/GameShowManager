@@ -672,7 +672,7 @@ export default function StandbysPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {/* Record Day Selector */}
           <Card className="lg:col-span-1">
             <CardHeader>
@@ -722,7 +722,7 @@ export default function StandbysPage() {
           </Card>
 
           {/* Standbys List */}
-          <Card className="lg:col-span-3">
+          <Card className="lg:col-span-4">
             <CardHeader>
               <div className="flex items-center justify-between gap-4">
                 <div>
