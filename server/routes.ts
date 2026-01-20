@@ -8706,6 +8706,73 @@ ${finalEmailFooter}`;
     }
   });
 
+  // Move an attended standby to the reschedule tab (only for standbys who actually attended)
+  app.post("/api/standbys/:id/move-attended-to-reschedule", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { blockType, notes, movedBy } = req.body;
+
+      if (!movedBy) {
+        return res.status(400).json({ error: "movedBy (initials) is required" });
+      }
+
+      // Get the standby assignment with contestant and record day info
+      const allStandbys = await storage.getStandbyAssignments();
+      const standby = allStandbys.find(s => s.id === id);
+
+      if (!standby) {
+        return res.status(404).json({ error: "Standby assignment not found" });
+      }
+
+      // Check if they actually signed in (attended)
+      if (!(standby as any).signedIn) {
+        return res.status(400).json({ error: "This standby has not attended (not signed in)" });
+      }
+
+      // Check if already moved to reschedule
+      if (standby.movedToReschedule) {
+        return res.status(400).json({ error: "This standby has already been moved to reschedule" });
+      }
+
+      // Build the reason with block type info
+      const reasonParts = [`ATTENDED STANDBY - ${blockType || 'NPB'}`];
+      if (notes) {
+        reasonParts.push(notes);
+      }
+      const reason = reasonParts.join(' - ');
+
+      // Create a canceled assignment entry for the reschedule tab
+      const canceledAssignment = await storage.createCanceledAssignment({
+        contestantId: standby.contestantId,
+        recordDayId: standby.recordDayId,
+        blockNumber: null,
+        seatLabel: standby.assignedToSeat || null,
+        reason,
+        movedBy,
+        isFromStandby: true,
+        originalAttendanceDate: new Date(standby.recordDay.date),
+      });
+
+      // Update the standby to mark it as moved to reschedule
+      const updatedStandby = await storage.updateStandbyAssignment(id, {
+        movedToReschedule: true,
+        movedToRescheduleAt: new Date(),
+      });
+
+      // Update contestant status to 'rescheduled' so they are identifiable across all tabs
+      await storage.updateContestantAvailability(standby.contestantId, 'rescheduled');
+
+      res.json({
+        message: "Attended standby moved to reschedule tab",
+        standby: updatedStandby,
+        canceledAssignment,
+      });
+    } catch (error: any) {
+      console.error("Error moving attended standby to reschedule:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Assign a standby to a seat (called from booking master when standby is selected)
   app.post("/api/standbys/assign-seat", async (req, res) => {
     try {

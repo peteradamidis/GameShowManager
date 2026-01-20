@@ -45,6 +45,7 @@ interface RecordDay {
   date: string;
   rxNumber: string | null;
   status: string;
+  lockedAt: string | null;
 }
 
 interface Contestant {
@@ -132,6 +133,13 @@ export default function StandbysPage() {
   // Send ticket dialog state
   const [sendTicketDialogOpen, setSendTicketDialogOpen] = useState(false);
 
+  // Move attended standby to reschedule dialog state
+  const [moveAttendedDialogOpen, setMoveAttendedDialogOpen] = useState(false);
+  const [moveAttendedStandby, setMoveAttendedStandby] = useState<StandbyAssignment | null>(null);
+  const [attendedBlockType, setAttendedBlockType] = useState<"PB" | "NPB">("NPB");
+  const [moveAttendedNotes, setMoveAttendedNotes] = useState("");
+  const [moveAttendedBy, setMoveAttendedBy] = useState("");
+
   // Fetch record days
   const { data: recordDays = [], isLoading: recordDaysLoading } = useQuery<RecordDay[]>({
     queryKey: ['/api/record-days'],
@@ -173,6 +181,13 @@ export default function StandbysPage() {
     const declined = standbysForRecordDay.filter(s => s.status === 'declined').length;
     return { total, notSent, awaiting, confirmed, declined };
   }, [standbysForRecordDay]);
+
+  // Get selected record day and check if locked (for showing move-to-reschedule button)
+  const selectedRecordDay = useMemo(() => {
+    return recordDays.find(rd => rd.id === selectedRecordDayId);
+  }, [recordDays, selectedRecordDayId]);
+
+  const isRecordDayLocked = selectedRecordDay?.lockedAt !== null && selectedRecordDay?.lockedAt !== undefined;
 
   // Filter by status
   const filteredStandbysForRecordDay = useMemo(() => {
@@ -493,6 +508,35 @@ export default function StandbysPage() {
     },
   });
 
+  // Move attended standby to reschedule mutation
+  const moveAttendedToRescheduleMutation = useMutation({
+    mutationFn: async ({ standbyId, blockType, notes, movedBy }: { 
+      standbyId: string; 
+      blockType: "PB" | "NPB"; 
+      notes: string; 
+      movedBy: string; 
+    }) => {
+      return apiRequest('POST', `/api/standbys/${standbyId}/move-attended-to-reschedule`, { 
+        blockType, 
+        notes, 
+        movedBy 
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false });
+      toast({ title: "Moved to reschedule", description: "Attended standby moved to reschedule list" });
+      setMoveAttendedDialogOpen(false);
+      setMoveAttendedStandby(null);
+      setAttendedBlockType("NPB");
+      setMoveAttendedNotes("");
+      setMoveAttendedBy("");
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
   // Calculate confirmed standbys eligible for ticket sending
   const selectedConfirmedWithoutTicket = useMemo(() => {
     return standbysForRecordDay.filter(s => 
@@ -581,8 +625,6 @@ export default function StandbysPage() {
       });
     }
   };
-
-  const selectedRecordDay = recordDays.find(rd => rd.id === selectedRecordDayId);
 
   if (recordDaysLoading || standbysLoading) {
     return (
@@ -811,6 +853,7 @@ export default function StandbysPage() {
                       <TableHead className="font-semibold text-xs text-center whitespace-nowrap">Paperwork<br/>Received &<br/>Logged</TableHead>
                       <TableHead className="font-semibold text-xs text-center bg-amber-100 dark:bg-amber-900/30 whitespace-nowrap">OTD<br/>Paperwork</TableHead>
                       <TableHead className="font-semibold text-xs text-center bg-green-100 dark:bg-green-900/30 whitespace-nowrap">Signed<br/>In</TableHead>
+                      <TableHead className="font-semibold text-xs text-center bg-purple-100 dark:bg-purple-900/30 whitespace-nowrap">Attended</TableHead>
                       <TableHead className="font-semibold text-xs">OTD Notes</TableHead>
                       <TableHead className="font-semibold text-xs text-center">Ticket</TableHead>
                       <TableHead className="font-semibold text-xs">Actions</TableHead>
@@ -979,6 +1022,33 @@ export default function StandbysPage() {
                             })}
                             data-testid={`checkbox-signed-in-${standby.id}`}
                           />
+                        </TableCell>
+                        {/* Attended - shows if signed in and day is locked */}
+                        <TableCell className="text-center py-1 px-2 bg-purple-50 dark:bg-purple-900/20">
+                          {(standby as any).signedIn ? (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <Badge className="bg-purple-500/20 text-purple-700 border-purple-300 dark:text-purple-400 text-[10px] px-1.5 py-0">
+                                Attended
+                              </Badge>
+                              {isRecordDayLocked && !standby.movedToReschedule && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-5 px-1.5 text-[10px]"
+                                  onClick={() => {
+                                    setMoveAttendedStandby(standby);
+                                    setMoveAttendedDialogOpen(true);
+                                  }}
+                                  data-testid={`button-move-attended-${standby.id}`}
+                                >
+                                  <ArrowRightLeft className="h-2.5 w-2.5 mr-0.5" />
+                                  Rebook
+                                </Button>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
                         </TableCell>
                         {/* OTD Notes */}
                         <TableCell className="py-1">
@@ -1355,6 +1425,103 @@ export default function StandbysPage() {
                 <>
                   <Ticket className="h-4 w-4 mr-2" />
                   Send to {selectedConfirmedWithoutTicket.length} Standby(s)
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Move Attended Standby to Reschedule Dialog */}
+      <Dialog open={moveAttendedDialogOpen} onOpenChange={setMoveAttendedDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="h-5 w-5 text-purple-600" />
+              Move Attended Standby to Reschedule
+            </DialogTitle>
+            <DialogDescription>
+              {moveAttendedStandby?.contestant.name} attended as a standby. Move them to the reschedule list for rebooking.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Block Type</Label>
+              <p className="text-xs text-muted-foreground">Did they end up on the podium or in a non-playing block?</p>
+              <RadioGroup 
+                value={attendedBlockType} 
+                onValueChange={(v) => setAttendedBlockType(v as "PB" | "NPB")}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="PB" id="block-pb" />
+                  <Label htmlFor="block-pb" className="font-normal cursor-pointer">
+                    PB (Podium Block)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="NPB" id="block-npb" />
+                  <Label htmlFor="block-npb" className="font-normal cursor-pointer">
+                    NPB (Non-Playing Block)
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="move-attended-notes">Notes (Optional)</Label>
+              <Textarea
+                id="move-attended-notes"
+                value={moveAttendedNotes}
+                onChange={(e) => setMoveAttendedNotes(e.target.value)}
+                placeholder="Any additional notes..."
+                className="h-20"
+                data-testid="input-move-attended-notes"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="move-attended-by">Processed By (Initials) *</Label>
+              <Input
+                id="move-attended-by"
+                value={moveAttendedBy}
+                onChange={(e) => setMoveAttendedBy(e.target.value)}
+                placeholder="e.g. JD"
+                className="h-8"
+                data-testid="input-move-attended-by"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMoveAttendedDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (moveAttendedStandby) {
+                  moveAttendedToRescheduleMutation.mutate({
+                    standbyId: moveAttendedStandby.id,
+                    blockType: attendedBlockType,
+                    notes: moveAttendedNotes,
+                    movedBy: moveAttendedBy,
+                  });
+                }
+              }}
+              disabled={moveAttendedToRescheduleMutation.isPending || !moveAttendedBy.trim()}
+              className="bg-purple-600 hover:bg-purple-700"
+              data-testid="button-confirm-move-attended"
+            >
+              {moveAttendedToRescheduleMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Moving...
+                </>
+              ) : (
+                <>
+                  <ArrowRightLeft className="h-4 w-4 mr-2" />
+                  Move to Reschedule
                 </>
               )}
             </Button>
