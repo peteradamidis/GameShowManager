@@ -8783,8 +8783,8 @@ Thank you.`;
 
   // Update standby assignment
   app.patch("/api/standbys/:id", async (req, res) => {
+    const { id } = req.params;
     try {
-      const { id } = req.params;
       console.log(`[Standby Update] ID: ${id}, Body:`, req.body);
       const updateData = { ...req.body };
       
