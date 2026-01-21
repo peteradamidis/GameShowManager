@@ -8824,8 +8824,7 @@ Thank you.`;
       }
 
       // Get the standby first to have access to contestant/recordDay data
-      const allStandbys = await storage.getStandbyAssignments();
-      const standby = allStandbys.find(s => s.id === id);
+      const standby = await storage.getStandbyAssignment(id);
       
       if (!standby) {
         return res.status(404).json({ error: "Standby assignment not found" });
@@ -8896,8 +8895,7 @@ Thank you.`;
       const { id } = req.params;
       
       // Get the standby to find the contestant
-      const allStandbys = await storage.getStandbyAssignments();
-      const standby = allStandbys.find(s => s.id === id);
+      const standby = await storage.getStandbyAssignment(id);
       
       await storage.deleteStandbyAssignment(id);
       
