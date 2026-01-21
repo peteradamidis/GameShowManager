@@ -1127,6 +1127,7 @@ Deal or No Deal Production Team`);
                       <TableHead className="font-semibold">Record Day</TableHead>
                       <TableHead className="font-semibold">Seat</TableHead>
                       <TableHead className="font-semibold">Email</TableHead>
+                      <TableHead className="font-semibold">Phone</TableHead>
                       <TableHead className="font-semibold text-center">Booking Status</TableHead>
                       <TableHead className="font-semibold text-center">Paperwork Sent</TableHead>
                       <TableHead className="font-semibold text-center">Paperwork Received</TableHead>
@@ -1180,6 +1181,13 @@ Deal or No Deal Production Team`);
                           data-testid={`email-${item.id}`}
                         >
                           {item.contestant?.email || "-"}
+                        </TableCell>
+                        <TableCell 
+                          className="text-sm select-all cursor-text"
+                          title="Click to select, then Ctrl+C to copy"
+                          data-testid={`phone-${item.id}`}
+                        >
+                          {item.contestant?.phone || "-"}
                         </TableCell>
                         <TableCell className="text-center">
                           {item.confirmedRsvp ? (
@@ -1286,6 +1294,12 @@ Deal or No Deal Production Team`);
                           title="Click to select, then Ctrl+C to copy"
                         >
                           {item.contestant?.email || "-"}
+                        </TableCell>
+                        <TableCell 
+                          className="text-sm select-all cursor-text"
+                          title="Click to select, then Ctrl+C to copy"
+                        >
+                          {item.contestant?.phone || "-"}
                         </TableCell>
                         <TableCell className="text-center">
                           <Badge variant="destructive">
