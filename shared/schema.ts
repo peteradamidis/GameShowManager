@@ -258,6 +258,7 @@ export const standbyAssignments = pgTable("standby_assignments", {
   paperworkOnDay: timestamp("paperwork_on_day"),
   signedIn: timestamp("signed_in"),
   otdNotes: text("otd_notes"),
+  standbyMovementNotes: text("standby_movement_notes"), // Notes about standby movement (e.g., "Replaced players")
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   // Ensure one standby entry per contestant per record day
