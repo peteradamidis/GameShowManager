@@ -63,6 +63,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import stageBackdropImage from "@/assets/stage-backdrop.png";
 import podiumSetImage from "@/assets/podium-set.png";
 import centreStageImage from "@/assets/centre-stage.png";
@@ -1047,10 +1048,11 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     targetBlockNumber: number;
     targetSeatLabel: string;
   } | null>(null);
-  const [standbyBlockType, setStandbyBlockType] = useState<'PB' | 'NPB'>('NPB');
+  const [standbyMovementNotes, setStandbyMovementNotes] = useState("");
   // Seat selection dialog for standbys (alternative to drag-and-drop)
   const [seatSelectionStandby, setSeatSelectionStandby] = useState<StandbyData | null>(null);
   const [selectedSeatForStandby, setSelectedSeatForStandby] = useState<string>("");
+  const [seatSelectionNotes, setSeatSelectionNotes] = useState("");
   // Prize winner toggle states: { winnerId: { prize: boolean, briefcase: boolean } }
   const [prizeWinnerToggles, setPrizeWinnerToggles] = useState<Record<string, { prize: boolean; briefcase: boolean }>>({});
   const { toast } = useToast();
@@ -1537,8 +1539,11 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     await executeSwap(sourceSeat, targetSeat, sourceLocation, targetLocation, false);
   };
   
-  const handleConfirmStandbyAssignInternal = async (standby: StandbyData, targetBlockNumber: number, targetSeatLabel: string, blockType: 'PB' | 'NPB') => {
+  const handleConfirmStandbyAssignInternal = async (standby: StandbyData, targetBlockNumber: number, targetSeatLabel: string, notes?: string) => {
     try {
+      // Get block type from the block configuration (default to NPB if not configured)
+      const blockType = blockTypeMap[targetBlockNumber] || 'NPB';
+      
       // First update the standby status to 'seated' - this removes the standby block
       await apiRequest('PATCH', `/api/standbys/${standby.id}`, {
         status: 'seated',
@@ -1546,7 +1551,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
       });
       
       // Now create the seat assignment (standby check will pass since status is 'seated')
-      // Include the block type (Case Holder = PB, Non Playing Block = NPB)
+      // Block type is automatically determined from the block configuration
       await apiRequest('POST', `/api/seat-assignments`, {
         recordDayId,
         contestantId: standby.contestantId,
@@ -1554,6 +1559,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         seatLabel: targetSeatLabel,
         seatedAsBlockType: blockType,
         seatedFromStandby: true,
+        standbyMovementNotes: notes || undefined,
       });
       
       const blockTypeLabel = blockType === 'PB' ? 'Case Holder' : 'Non Playing Block';
@@ -1580,11 +1586,11 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     if (!pendingStandbyAssign) return;
     
     const { standby, targetBlockNumber, targetSeatLabel } = pendingStandbyAssign;
-    const blockType = standbyBlockType; // Capture current selection
+    const notes = standbyMovementNotes.trim();
     setPendingStandbyAssign(null);
-    setStandbyBlockType('NPB'); // Reset for next time
+    setStandbyMovementNotes(""); // Reset for next time
     
-    await handleConfirmStandbyAssignInternal(standby, targetBlockNumber, targetSeatLabel, blockType);
+    await handleConfirmStandbyAssignInternal(standby, targetBlockNumber, targetSeatLabel, notes || undefined);
   };
 
   // Handle confirmation of locked swap
@@ -2042,12 +2048,18 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         </DragOverlay>
 
         {/* Standby Seat Selection Dialog */}
-        <Dialog open={!!seatSelectionStandby} onOpenChange={(open) => !open && setSeatSelectionStandby(null)}>
+        <Dialog open={!!seatSelectionStandby} onOpenChange={(open) => { 
+          if (!open) {
+            setSeatSelectionStandby(null);
+            setSelectedSeatForStandby("");
+            setSeatSelectionNotes("");
+          }
+        }}>
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Assign Standby to Seat</DialogTitle>
               <DialogDescription>
-                Select an available seat for {seatSelectionStandby?.contestant.name}.
+                Select an available seat for {seatSelectionStandby?.contestant.name}. The block type (PB/NPB) is determined automatically from the block configuration.
               </DialogDescription>
             </DialogHeader>
 
@@ -2062,10 +2074,11 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     {blocks.map((block, bIdx) => {
                       const emptySeats = block.filter(s => !s.contestantName);
                       if (emptySeats.length === 0) return null;
+                      const blockType = blockTypeMap[bIdx + 1] || 'NPB';
                       return (
                         <div key={bIdx}>
                           <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
-                            Block {bIdx + 1}
+                            Block {bIdx + 1} ({blockType})
                           </div>
                           {emptySeats.map(seat => {
                             const label = seat.id.split('-').pop() || '';
@@ -2083,21 +2096,28 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
               </div>
 
               <div className="space-y-2">
-                <Label>Block Role</Label>
-                <RadioGroup 
-                  value={standbyBlockType} 
-                  onValueChange={(v: 'PB' | 'NPB') => setStandbyBlockType(v)}
-                  className="flex gap-4 pt-1"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="PB" id="role-pb-dialog" />
-                    <Label htmlFor="role-pb-dialog" className="font-normal cursor-pointer">Case Holder (PB)</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="NPB" id="role-npb-dialog" />
-                    <Label htmlFor="role-npb-dialog" className="font-normal cursor-pointer">Non Playing Block (NPB)</Label>
-                  </div>
-                </RadioGroup>
+                <div className="flex items-center justify-between">
+                  <Label>Movement Notes (Optional)</Label>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => setSeatSelectionNotes(prev => 
+                      prev ? `${prev}\nReplaced player` : "Replaced player"
+                    )}
+                    data-testid="button-replaced-players"
+                  >
+                    Replaced Players
+                  </Button>
+                </div>
+                <Textarea
+                  placeholder="Record any movement details..."
+                  value={seatSelectionNotes}
+                  onChange={(e) => setSeatSelectionNotes(e.target.value)}
+                  className="min-h-[80px]"
+                  data-testid="input-movement-notes"
+                />
               </div>
             </div>
 
@@ -2105,6 +2125,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
               <Button variant="outline" onClick={() => {
                 setSeatSelectionStandby(null);
                 setSelectedSeatForStandby("");
+                setSeatSelectionNotes("");
               }}>
                 Cancel
               </Button>
@@ -2113,9 +2134,11 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 onClick={async () => {
                   if (!seatSelectionStandby || !selectedSeatForStandby) return;
                   const { blockNumber, seatLabel } = getBlockAndSeat(selectedSeatForStandby);
-                  await handleConfirmStandbyAssignInternal(seatSelectionStandby, blockNumber, seatLabel, standbyBlockType);
+                  const notes = seatSelectionNotes.trim();
+                  await handleConfirmStandbyAssignInternal(seatSelectionStandby, blockNumber, seatLabel, notes || undefined);
                   setSeatSelectionStandby(null);
                   setSelectedSeatForStandby("");
+                  setSeatSelectionNotes("");
                 }}
                 data-testid="button-confirm-standby-seat"
               >
@@ -2197,7 +2220,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         <AlertDialog open={!!pendingStandbyAssign} onOpenChange={(open) => { 
           if (!open) {
             setPendingStandbyAssign(null);
-            setStandbyBlockType('NPB');
+            setStandbyMovementNotes("");
           }
         }}>
           <AlertDialogContent data-testid="dialog-standby-assign">
@@ -2216,38 +2239,41 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                       <span className="block font-medium text-foreground">
                         Assign <span className="text-primary">{pendingStandbyAssign.standby.contestant.name}</span>
                         {' '}to seat <strong>{String(pendingStandbyAssign.targetBlockNumber).padStart(2, '0')}-{pendingStandbyAssign.targetSeatLabel}</strong>
+                        {' '}as <strong>{blockTypeMap[pendingStandbyAssign.targetBlockNumber] || 'NPB'}</strong>
                       </span>
                     </div>
                   )}
                   <div className="space-y-2">
-                    <span className="block font-medium text-foreground text-sm">
-                      How is this standby being seated?
-                    </span>
-                    <RadioGroup 
-                      value={standbyBlockType} 
-                      onValueChange={(value) => setStandbyBlockType(value as 'PB' | 'NPB')}
-                      className="flex gap-4"
-                      data-testid="radio-standby-block-type"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="PB" id="block-type-pb" data-testid="radio-pb" />
-                        <Label htmlFor="block-type-pb" className="text-sm font-normal cursor-pointer">
-                          Case Holder (PB)
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="NPB" id="block-type-npb" data-testid="radio-npb" />
-                        <Label htmlFor="block-type-npb" className="text-sm font-normal cursor-pointer">
-                          Non Playing Block (NPB)
-                        </Label>
-                      </div>
-                    </RadioGroup>
+                    <div className="flex items-center justify-between">
+                      <span className="block font-medium text-foreground text-sm">
+                        Movement Notes (Optional)
+                      </span>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => setStandbyMovementNotes(prev => 
+                          prev ? `${prev}\nReplaced player` : "Replaced player"
+                        )}
+                        data-testid="button-replaced-players-drag"
+                      >
+                        Replaced Players
+                      </Button>
+                    </div>
+                    <Textarea
+                      placeholder="Record any movement details..."
+                      value={standbyMovementNotes}
+                      onChange={(e) => setStandbyMovementNotes(e.target.value)}
+                      className="min-h-[80px]"
+                      data-testid="input-movement-notes-drag"
+                    />
                   </div>
                 </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel data-testid="button-standby-assign-cancel">Cancel</AlertDialogCancel>
+              <AlertDialogCancel data-testid="button-standby-assign-cancel" onClick={() => setStandbyMovementNotes("")}>Cancel</AlertDialogCancel>
               <AlertDialogAction 
                 data-testid="button-standby-assign-confirm"
                 className="bg-amber-500 hover:bg-amber-600 text-white"

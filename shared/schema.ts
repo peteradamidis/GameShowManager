@@ -130,6 +130,7 @@ export const seatAssignments = pgTable("seat_assignments", {
   // Standby seating tracking - when a standby is moved into a seat
   seatedAsBlockType: blockTypeEnum("seated_as_block_type"), // PB (Case Holder) or NPB (Non Playing Block) - set when standby seated
   seatedFromStandby: boolean("seated_from_standby").default(false), // True if this seat was filled from standby
+  standbyMovementNotes: text("standby_movement_notes"), // Notes about standby movement (e.g., "Replaced player")
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
@@ -168,6 +169,7 @@ export const canceledAssignments = pgTable("canceled_assignments", {
   
   // Standby block type tracking - when standby was originally seated
   seatedAsBlockType: blockTypeEnum("seated_as_block_type"), // PB (Case Holder) or NPB (Non Playing Block)
+  standbyMovementNotes: text("standby_movement_notes"), // Notes about standby movement (e.g., "Replaced player")
 });
 
 // Availability Tokens table - stores unique tokens for availability check responses

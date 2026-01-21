@@ -1138,6 +1138,7 @@ export class DbStorage implements IStorage {
           paperworkOnDay: assignment.paperworkOnDay,
           // Carry over standby block type (if from standby)
           seatedAsBlockType: assignment.seatedAsBlockType,
+          standbyMovementNotes: assignment.standbyMovementNotes,
         })
         .returning();
 
@@ -1177,6 +1178,7 @@ export class DbStorage implements IStorage {
         paperworkReceivedBy: canceledAssignments.paperworkReceivedBy,
         paperworkOnDay: canceledAssignments.paperworkOnDay,
         seatedAsBlockType: canceledAssignments.seatedAsBlockType,
+        standbyMovementNotes: canceledAssignments.standbyMovementNotes,
         contestant: contestants,
         recordDay: recordDays,
       })

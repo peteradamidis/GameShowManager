@@ -544,7 +544,15 @@ export default function ReschedulePage() {
                       {format(new Date(cancellation.canceledAt), 'dd MMM yyyy HH:mm')}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
-                      {cancellation.reason || '—'}
+                      <div className="space-y-1">
+                        {cancellation.reason && <span>{cancellation.reason}</span>}
+                        {(cancellation as any).standbyMovementNotes && (
+                          <span className={cancellation.reason ? "block text-purple-600 dark:text-purple-400" : ""}>
+                            {(cancellation as any).standbyMovementNotes}
+                          </span>
+                        )}
+                        {!cancellation.reason && !(cancellation as any).standbyMovementNotes && '—'}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {cancellation.movedBy ? (
