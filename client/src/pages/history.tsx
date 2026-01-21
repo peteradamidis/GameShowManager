@@ -13,6 +13,7 @@ interface HistoryEvent {
   type: 'rebooking' | 'attendance_issue' | 'standby_attendance';
   contestantId: string;
   contestantName: string;
+  contestantEmail: string;
   timestamp: string;
   description: string;
   details: Record<string, any>;
@@ -65,6 +66,7 @@ export default function HistoryPage() {
         type: 'rebooking',
         contestantId: r.contestantId,
         contestantName: contestant?.name || 'Unknown',
+        contestantEmail: contestant?.email || '',
         timestamp: r.rebookedAt,
         description: `Moved from ${formatRecordDay(r.fromRecordDayId)} (Block ${r.fromBlockNumber}, Seat ${r.fromSeatLabel}) to ${formatRecordDay(r.toRecordDayId)} (Block ${r.toBlockNumber}, Seat ${r.toSeatLabel})`,
         details: {
@@ -88,6 +90,7 @@ export default function HistoryPage() {
         type: 'attendance_issue',
         contestantId: a.contestantId,
         contestantName: contestant?.name || 'Unknown',
+        contestantEmail: contestant?.email || '',
         timestamp: a.createdAt,
         description: `${issueLabel} on ${formatRecordDay(a.recordDayId)} (Block ${a.blockNumber}, Seat ${a.seatLabel})`,
         details: {
@@ -109,6 +112,7 @@ export default function HistoryPage() {
         type: 'standby_attendance',
         contestantId: s.contestantId,
         contestantName: contestant?.name || 'Unknown',
+        contestantEmail: contestant?.email || '',
         timestamp: s.attendedAt,
         description: `Attended as standby on ${formatRecordDay(s.recordDayId)} (Block ${s.blockNumber}, ${s.blockType?.toUpperCase() || 'Unknown'})`,
         details: {
@@ -129,9 +133,11 @@ export default function HistoryPage() {
   const filteredEvents = useMemo(() => {
     return combinedEvents.filter(event => {
       const matchesType = typeFilter === "all" || event.type === typeFilter;
+      const searchLower = searchQuery.toLowerCase();
       const matchesSearch = searchQuery === "" || 
-        event.contestantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchQuery.toLowerCase());
+        event.contestantName.toLowerCase().includes(searchLower) ||
+        event.contestantEmail.toLowerCase().includes(searchLower) ||
+        event.description.toLowerCase().includes(searchLower);
       return matchesType && matchesSearch;
     });
   }, [combinedEvents, typeFilter, searchQuery]);
@@ -232,7 +238,7 @@ export default function HistoryPage() {
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search contestant or details..."
+                  placeholder="Search name, email, or details..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-8 w-full sm:w-64"
