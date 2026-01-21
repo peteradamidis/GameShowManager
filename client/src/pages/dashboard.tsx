@@ -72,10 +72,10 @@ function RxDayCountdown({ targetDate, rxNumber }: { targetDate: Date; rxNumber?:
               <Clapperboard className="h-8 w-8 text-orange-400" />
             </div>
             <div className="text-center lg:text-left">
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-xl font-semibold text-white">
                 {isToday ? "It's Showtime!" : "Next Record Day"}
               </h3>
-              <p className="text-orange-300 font-medium">
+              <p className="text-lg text-orange-300 font-medium">
                 {rxNumber ? `RX ${rxNumber} - ` : ''}{format(targetDate, "EEEE, d MMMM yyyy")}
               </p>
             </div>
