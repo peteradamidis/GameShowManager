@@ -1153,7 +1153,10 @@ export default function BookingMaster() {
                 {standbysForRecordDay
                   .filter(standby => {
                     if (!searchName) return true;
-                    return standby.contestant.name.toLowerCase().includes(searchName.toLowerCase());
+                    const search = searchName.toLowerCase();
+                    const nameMatch = standby.contestant.name.toLowerCase().includes(search);
+                    const attendingWithMatch = standby.contestant.attendingWith?.toLowerCase().includes(search) || false;
+                    return nameMatch || attendingWithMatch;
                   })
                   .map((standby, index) => {
                     const contestant = contestants.find(c => c.id === standby.contestantId);
