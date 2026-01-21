@@ -388,20 +388,20 @@ export default function ReschedulePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-16">Photo</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Rating</TableHead>
-                  <TableHead>Age</TableHead>
-                  <TableHead>Gender</TableHead>
-                  <TableHead>Attending With</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Original Attendance</TableHead>
-                  <TableHead>Original Seat</TableHead>
-                  <TableHead>Added At</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Moved By</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="w-12">Photo</TableHead>
+                  <TableHead className="min-w-[120px]">Name</TableHead>
+                  <TableHead className="w-20">Type</TableHead>
+                  <TableHead className="w-14">Rating</TableHead>
+                  <TableHead className="w-12">Age</TableHead>
+                  <TableHead className="w-14">Gender</TableHead>
+                  <TableHead className="w-28">Attending With</TableHead>
+                  <TableHead className="w-36">Email</TableHead>
+                  <TableHead className="w-24">Orig. Day</TableHead>
+                  <TableHead className="w-20">Orig. Seat</TableHead>
+                  <TableHead className="w-24">Added At</TableHead>
+                  <TableHead className="min-w-[180px]">Reason</TableHead>
+                  <TableHead className="w-16">By</TableHead>
+                  <TableHead className="w-20 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -551,19 +551,19 @@ export default function ReschedulePage() {
                       {format(new Date(cancellation.canceledAt), 'dd MMM yyyy HH:mm')}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
-                      <div className="space-y-1">
-                        {cancellation.reason && <span>{cancellation.reason}</span>}
+                      <div className="space-y-1 max-w-[200px]">
+                        {cancellation.reason && <span className="break-words">{cancellation.reason}</span>}
                         {(cancellation as any).standbyMovementNotes && (
-                          <span className={cancellation.reason ? "block text-purple-600 dark:text-purple-400" : ""}>
+                          <span className={`break-words ${cancellation.reason ? "block text-purple-600 dark:text-purple-400" : ""}`}>
                             {(cancellation as any).standbyMovementNotes}
                           </span>
                         )}
                         {!cancellation.reason && !(cancellation as any).standbyMovementNotes && '—'}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       {cancellation.movedBy ? (
-                        <Badge variant="outline" className="font-mono">
+                        <Badge variant="outline" className="font-mono text-xs">
                           {cancellation.movedBy}
                         </Badge>
                       ) : (
