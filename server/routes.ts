@@ -6379,6 +6379,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const canceled = await storage.cancelSeatAssignment(req.params.id, reason);
       
+      // Log movement to reschedule
+      const movedBy = (req as any).session?.user?.username || 'system';
+      await storage.logMovement({
+        contestantId: assignment.contestantId,
+        movementType: 'added_to_reschedule',
+        recordDayId: assignment.recordDayId,
+        fromBlockNumber: assignment.blockNumber,
+        fromSeatLabel: assignment.seatLabel,
+        notes: reason || 'Moved to reschedule list',
+        movedBy,
+      });
+      
       // If they were confirmed, override status to 'invited' instead of 'available'
       if (wasConfirmed) {
         await storage.updateContestantAvailability(canceled.contestantId, 'invited');
@@ -6756,6 +6768,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Carry over paperwork status from canceled assignment
         paperworkSent: canceled.paperworkSent || undefined,
         paperworkReceived: canceled.paperworkReceived || undefined,
+      });
+
+      // Log movement from reschedule to seat
+      const movedBy = (req as any).session?.user?.username || 'system';
+      await storage.logMovement({
+        contestantId: canceled.contestantId,
+        movementType: 'removed_from_reschedule',
+        recordDayId: recordDayId,
+        fromBlockNumber: canceled.blockNumber || undefined,
+        fromSeatLabel: canceled.seatLabel || undefined,
+        toBlockNumber: blockNumber,
+        toSeatLabel: seatLabel,
+        notes: 'Rebooked from reschedule list',
+        movedBy,
       });
 
       // Delete the canceled assignment
