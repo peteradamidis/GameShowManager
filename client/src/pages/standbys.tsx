@@ -143,7 +143,6 @@ export default function StandbysPage() {
   // Move attended standby to reschedule dialog state
   const [moveToRescheduleDialogOpen, setMoveToRescheduleDialogOpen] = useState(false);
   const [moveToRescheduleStandby, setMoveToRescheduleStandby] = useState<StandbyAssignment | null>(null);
-  const [attendedBlockType, setAttendedBlockType] = useState<"PB" | "NPB" | "NS">("NPB");
   const [attendedNotes, setAttendedNotes] = useState("");
 
   // Fetch record days
@@ -414,12 +413,11 @@ export default function StandbysPage() {
 
   // Move attended standby to reschedule mutation
   const moveAttendedToRescheduleMutation = useMutation({
-    mutationFn: async ({ standby, blockType, notes }: { standby: StandbyAssignment; blockType: "PB" | "NPB" | "NS"; notes: string }) => {
-      // Build reason with block type and optional notes
-      const blockLabel = blockType === 'PB' ? 'Podium Block' : blockType === 'NPB' ? 'Non-Playing Block' : 'Not Seated';
+    mutationFn: async ({ standby, notes }: { standby: StandbyAssignment; notes: string }) => {
+      // Build reason with optional notes
       const reason = notes.trim() 
-        ? `STANDBY ATTENDED - ${blockLabel} - ${notes.trim()}`
-        : `STANDBY ATTENDED - ${blockLabel}`;
+        ? `STANDBY ATTENDED - ${notes.trim()}`
+        : `STANDBY ATTENDED`;
       
       // Create canceled assignment with isFromStandby: true and the block type info
       await apiRequest('POST', '/api/canceled-assignments', {
@@ -447,11 +445,10 @@ export default function StandbysPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
       toast({ 
         title: "Moved to Reschedule", 
-        description: "Attended standby has been added to the reschedule list with Standby type" 
+        description: "Standby has been added to the reschedule list" 
       });
       setMoveToRescheduleDialogOpen(false);
       setMoveToRescheduleStandby(null);
-      setAttendedBlockType("NPB");
       setAttendedNotes("");
     },
     onError: (error: Error) => {
@@ -1595,57 +1592,12 @@ export default function StandbysPage() {
 
           <div className="space-y-3 py-2">
             <div className="space-y-2">
-              <Label className="text-sm font-medium">What was their seating status?</Label>
-              <RadioGroup 
-                value={attendedBlockType} 
-                onValueChange={(v) => setAttendedBlockType(v as "PB" | "NPB" | "NS")}
-                className="space-y-1.5"
-              >
-                <div className="flex items-start space-x-2 p-2 border rounded-md hover:bg-muted/50">
-                  <RadioGroupItem value="PB" id="block-pb" data-testid="radio-block-pb" className="mt-0.5" />
-                  <div className="flex flex-col gap-0.5">
-                    <Label htmlFor="block-pb" className="text-sm font-medium cursor-pointer">
-                      Podium Block (PB)
-                    </Label>
-                    <span className="text-[11px] text-muted-foreground leading-tight">
-                      Sat in a podium block as a case holder. Does not apply to blocks that already played.
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-2 p-2 border rounded-md hover:bg-muted/50">
-                  <RadioGroupItem value="NPB" id="block-npb" data-testid="radio-block-npb" className="mt-0.5" />
-                  <div className="flex flex-col gap-0.5">
-                    <Label htmlFor="block-npb" className="text-sm font-medium cursor-pointer">
-                      Non-Playing Block (NPB)
-                    </Label>
-                    <span className="text-[11px] text-muted-foreground leading-tight">
-                      Sat in a non-playing block, or added to a PB after it had already played.
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-2 p-2 border rounded-md hover:bg-muted/50">
-                  <RadioGroupItem value="NS" id="block-ns" data-testid="radio-block-ns" className="mt-0.5" />
-                  <div className="flex flex-col gap-0.5">
-                    <Label htmlFor="block-ns" className="text-sm font-medium cursor-pointer">
-                      Not Seated (NS)
-                    </Label>
-                    <span className="text-[11px] text-muted-foreground leading-tight">
-                      Attended but did not get a seat because none were available.
-                    </span>
-                  </div>
-                </div>
-              </RadioGroup>
-            </div>
-
-            <div className="space-y-2">
               <Label className="text-sm font-medium">Additional Notes (Optional)</Label>
               <Textarea
-                placeholder="Add any additional notes about this standby's attendance..."
+                placeholder="Add any notes about this standby..."
                 value={attendedNotes}
                 onChange={(e) => setAttendedNotes(e.target.value)}
-                className="min-h-[60px] text-sm"
+                className="min-h-[80px] text-sm"
                 data-testid="input-attended-notes"
               />
               <p className="text-xs text-muted-foreground">
@@ -1664,7 +1616,6 @@ export default function StandbysPage() {
             <Button 
               onClick={() => moveToRescheduleStandby && moveAttendedToRescheduleMutation.mutate({
                 standby: moveToRescheduleStandby,
-                blockType: attendedBlockType,
                 notes: attendedNotes
               })}
               disabled={moveAttendedToRescheduleMutation.isPending}
