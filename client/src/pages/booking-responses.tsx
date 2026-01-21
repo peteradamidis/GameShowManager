@@ -751,18 +751,13 @@ export default function BookingResponses() {
   });
 
   // Use stats from API (computed from record-day-filtered but not status-filtered data)
-  // Plus add canceled assignments with wasDeclined to declined count
+  // Note: stats.declined already includes both active declined assignments AND canceled assignments with wasDeclined
   const totalCount = stats.total;
   const notSentCount = stats.notSent;
   const awaitingCount = stats.awaiting;
   const confirmedCount = stats.confirmed;
-  // Include both active declined assignments and canceled assignments that were declined
-  const rescheduledDeclinedCount = canceledAssignments.filter(ca => {
-    if (!ca.wasDeclined) return false;
-    if (selectedRecordDay && ca.recordDayId !== selectedRecordDay) return false;
-    return true;
-  }).length;
-  const declinedCount = stats.declined + rescheduledDeclinedCount;
+  // stats.declined already includes canceled assignments - no need to add them again
+  const declinedCount = stats.declined;
   
   // Helper to check if assignment is declined
   const isDeclined = (a: BookingAssignment) => a.notes?.startsWith('[DECLINED]');
