@@ -521,6 +521,41 @@ export const insertAttendanceIssueSchema = createInsertSchema(attendanceIssues).
 export type InsertAttendanceIssue = z.infer<typeof insertAttendanceIssueSchema>;
 export type AttendanceIssue = typeof attendanceIssues.$inferSelect;
 
+// Movement History enum and table - tracks all contestant movements
+export const movementTypeEnum = pgEnum('movement_type', [
+  'seat_change',           // Moved within same record day (different seat/block)
+  'added_to_reschedule',   // Moved from seat to reschedule list
+  'removed_from_reschedule', // Moved from reschedule to a seat
+  'standby_added',         // Added to standby list
+  'standby_removed',       // Removed from standby list
+  'standby_seated',        // Standby moved to a seat
+]);
+
+export const movementHistory = pgTable("movement_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contestantId: varchar("contestant_id").references(() => contestants.id).notNull(),
+  movementType: movementTypeEnum("movement_type").notNull(),
+  recordDayId: varchar("record_day_id").references(() => recordDays.id), // May be null for some movements
+  // From position (may be null for additions)
+  fromBlockNumber: integer("from_block_number"),
+  fromSeatLabel: text("from_seat_label"),
+  // To position (may be null for removals)
+  toBlockNumber: integer("to_block_number"),
+  toSeatLabel: text("to_seat_label"),
+  // Metadata
+  notes: text("notes"),
+  movedBy: text("moved_by"), // Who performed the movement
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertMovementHistorySchema = createInsertSchema(movementHistory).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertMovementHistory = z.infer<typeof insertMovementHistorySchema>;
+export type MovementHistory = typeof movementHistory.$inferSelect;
+
 // Noticeboard Posts table - social media style posts for crew
 export const noticeboardPosts = pgTable("noticeboard_posts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
