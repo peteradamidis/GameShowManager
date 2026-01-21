@@ -106,6 +106,22 @@ const DEFAULT_VISIBLE_COLUMNS: Record<ColumnId, boolean> = {
 
 const STORAGE_KEY = "booking-master-visible-columns";
 
+// Check In mode columns - only these columns are visible in Check In mode
+const CHECK_IN_COLUMNS: ColumnId[] = [
+  "seat",
+  "name", 
+  "email",
+  "attendingWith",
+  "medicalQ",
+  "mobilityNotes",
+  "notes",
+  "paperSent",
+  "paperReceived",
+  "otdHardCopy",
+  "signedIn",
+  "otdNotes",
+];
+
 interface SharePointConfig {
   sharePointUrl: string | null;
   isConfigured: boolean;
@@ -261,6 +277,8 @@ export default function BookingMaster() {
   const [filterPaperworkNotSent, setFilterPaperworkNotSent] = useState(false);
   const [isStandbyMode, setIsStandbyMode] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isCheckInMode, setIsCheckInMode] = useState(false);
+  const [savedColumnsBeforeCheckIn, setSavedColumnsBeforeCheckIn] = useState<Record<ColumnId, boolean> | null>(null);
   // Use refs instead of state for pending text updates to avoid re-renders
   const pendingTextUpdatesRef = useRef<Record<string, string>>({});
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnId, boolean>>(() => {
@@ -310,6 +328,25 @@ export default function BookingMaster() {
       ...prev,
       [columnId]: !prev[columnId],
     }));
+  };
+
+  const toggleCheckInMode = () => {
+    if (!isCheckInMode) {
+      // Entering Check In mode - save current columns and apply check-in columns
+      setSavedColumnsBeforeCheckIn(visibleColumns);
+      const checkInVisibility: Record<ColumnId, boolean> = {} as Record<ColumnId, boolean>;
+      COLUMN_CONFIG.forEach(col => {
+        checkInVisibility[col.id] = CHECK_IN_COLUMNS.includes(col.id);
+      });
+      setVisibleColumns(checkInVisibility);
+    } else {
+      // Exiting Check In mode - restore saved columns
+      if (savedColumnsBeforeCheckIn) {
+        setVisibleColumns(savedColumnsBeforeCheckIn);
+      }
+      setSavedColumnsBeforeCheckIn(null);
+    }
+    setIsCheckInMode(!isCheckInMode);
   };
 
   const isColumnVisible = (columnId: ColumnId) => visibleColumns[columnId];
@@ -943,6 +980,17 @@ export default function BookingMaster() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          
+          <Button 
+            onClick={toggleCheckInMode}
+            variant={isCheckInMode ? "default" : "outline"}
+            className={isCheckInMode ? "bg-teal-600 hover:bg-teal-700 text-white" : "border-teal-500 text-teal-600 hover:bg-teal-50 dark:border-teal-400 dark:text-teal-400 dark:hover:bg-teal-950"}
+            title={isCheckInMode ? "Exit Check In mode" : "Enter Check In mode - shows only check-in relevant columns"}
+            data-testid="button-check-in-mode"
+          >
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Check In
+          </Button>
           
           <Button 
             onClick={() => {
