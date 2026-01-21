@@ -2920,12 +2920,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Check for duplicate assignments - contestant should not be seated in ANY record day
+      // Check for duplicate assignments - contestant should not be seated or standby in ANY record day
       const allAssignments = await storage.getAllSeatAssignments();
       const existingAssignments = await storage.getSeatAssignmentsByRecordDay(recordDayId);
-      const existingStandbys = await storage.getStandbyAssignmentsByRecordDay(recordDayId);
+      const allStandbys = await storage.getStandbyAssignments();
       
-      // Check if any contestant is already seated in ANY record day or a standby in this record day
+      // Check if any contestant is already seated in ANY record day or a standby in ANY record day
       for (const contestantId of contestantIds) {
         const existingAssignment = allAssignments.find((a: any) => a.contestantId === contestantId);
         if (existingAssignment) {
@@ -2937,11 +2937,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(409).json({ error: `${contestant?.name || 'Contestant'} is already seated in ${dayName} (Block ${existingAssignment.blockNumber}, Seat ${existingAssignment.seatLabel})` });
         }
         
-        const standbyAssignment = existingStandbys.find((s: any) => s.contestantId === contestantId);
+        const standbyAssignment = allStandbys.find((s: any) => s.contestantId === contestantId);
         // Allow rebooking if they've been moved to reschedule OR status is 'seated', otherwise block if still active standby
         if (standbyAssignment && !standbyAssignment.movedToReschedule && standbyAssignment.status !== 'seated') {
           const contestant = await storage.getContestantById(contestantId);
-          return res.status(409).json({ error: `${contestant?.name || 'A contestant'} is already a standby for this record day. Remove them from standbys first.` });
+          const standbyRecordDay = await storage.getRecordDayById(standbyAssignment.recordDayId);
+          const dayName = standbyRecordDay?.date 
+            ? new Date(standbyRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
+            : 'another day';
+          return res.status(409).json({ error: `${contestant?.name || 'A contestant'} is already a standby for ${dayName}. Remove them from standbys first.` });
         }
       }
       
@@ -4755,12 +4759,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const createdAssignments: any[] = [];
       const contestantUpdates: string[] = [];
       
+      // Get all assignments and standbys for duplicate checking
+      const allSeatAssignments = await storage.getAllSeatAssignments();
+      const allStandbys = await storage.getStandbyAssignments();
+      
       try {
         for (const item of deduplicatedPlan) {
-          // Double-check that this contestant isn't already assigned in database (defensive check)
-          const existingAssign = await storage.getSeatAssignmentByRecordDayAndContestant(recordDayId, item.contestant.id);
+          // Double-check that this contestant isn't already assigned in ANY record day (defensive check)
+          const existingAssign = allSeatAssignments.find((a: any) => a.contestantId === item.contestant.id);
           if (existingAssign) {
-            console.log(`Skipping assignment for contestant ${item.contestant.id} - already in database`);
+            console.log(`Skipping assignment for contestant ${item.contestant.id} - already seated in record day ${existingAssign.recordDayId}`);
+            continue;
+          }
+          
+          // Check if contestant is already a standby in ANY record day
+          const existingStandby = allStandbys.find((s: any) => s.contestantId === item.contestant.id && !s.movedToReschedule && s.status !== 'seated');
+          if (existingStandby) {
+            console.log(`Skipping assignment for contestant ${item.contestant.id} - already a standby in record day ${existingStandby.recordDayId}`);
             continue;
           }
           
@@ -5946,6 +5961,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contestant = await storage.getContestantById(canceled.contestantId);
       if (contestant?.auditionRating?.toUpperCase().trim() === 'DNU') {
         return res.status(400).json({ error: "Cannot rebook a DNU-rated contestant (Do Not Use)" });
+      }
+
+      // Check if contestant is already seated in ANY record day
+      const allSeatAssignments = await storage.getAllSeatAssignments();
+      const existingSeat = allSeatAssignments.find((a: any) => a.contestantId === canceled.contestantId);
+      if (existingSeat) {
+        const existingRecordDay = await storage.getRecordDayById(existingSeat.recordDayId);
+        const dayName = existingRecordDay?.date 
+          ? new Date(existingRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
+          : 'another day';
+        return res.status(409).json({ error: `${contestant?.name || 'Contestant'} is already seated in ${dayName} (Block ${existingSeat.blockNumber}, Seat ${existingSeat.seatLabel})` });
+      }
+
+      // Check if contestant is already a standby in ANY record day
+      const allStandbys = await storage.getStandbyAssignments();
+      const existingStandby = allStandbys.find((s: any) => s.contestantId === canceled.contestantId && !s.movedToReschedule && s.status !== 'seated');
+      if (existingStandby) {
+        const standbyRecordDay = await storage.getRecordDayById(existingStandby.recordDayId);
+        const dayName = standbyRecordDay?.date 
+          ? new Date(standbyRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
+          : 'another day';
+        return res.status(409).json({ error: `${contestant?.name || 'Contestant'} is already a standby for ${dayName}. Remove them from standbys first.` });
       }
 
       // Create new seat assignment with paperwork status carried over
