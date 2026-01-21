@@ -6,11 +6,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
-import { History, ArrowRightLeft, AlertTriangle, UserCheck, Search } from "lucide-react";
+import { History, ArrowRightLeft, AlertTriangle, UserCheck, Search, MoveHorizontal, Calendar, UserMinus, UserPlus } from "lucide-react";
+
+type MovementType = 'seat_change' | 'added_to_reschedule' | 'removed_from_reschedule' | 'standby_added' | 'standby_removed' | 'standby_seated';
 
 interface HistoryEvent {
   id: string;
-  type: 'rebooking' | 'attendance_issue' | 'standby_attendance';
+  type: 'rebooking' | 'attendance_issue' | 'standby_attendance' | 'movement';
+  movementType?: MovementType;
   contestantId: string;
   contestantName: string;
   contestantEmail: string;
@@ -27,6 +30,7 @@ export default function HistoryPage() {
     rebookings: any[];
     attendanceIssues: any[];
     standbyAttendance: any[];
+    movements: any[];
   }>({
     queryKey: ['/api/history'],
   });
@@ -125,6 +129,37 @@ export default function HistoryPage() {
       });
     });
 
+    historyData.movements?.forEach((m: any) => {
+      const movementDescriptions: Record<MovementType, string> = {
+        'seat_change': `Moved from Block ${m.fromBlockNumber} ${m.fromSeatLabel} to Block ${m.toBlockNumber} ${m.toSeatLabel}${m.recordDayId ? ` on ${formatRecordDay(m.recordDayId)}` : ''}`,
+        'added_to_reschedule': `Added to reschedule list from Block ${m.fromBlockNumber} ${m.fromSeatLabel}${m.recordDayId ? ` on ${formatRecordDay(m.recordDayId)}` : ''}`,
+        'removed_from_reschedule': `Removed from reschedule and placed in Block ${m.toBlockNumber} ${m.toSeatLabel}${m.recordDayId ? ` on ${formatRecordDay(m.recordDayId)}` : ''}`,
+        'standby_added': `Added as standby${m.recordDayId ? ` for ${formatRecordDay(m.recordDayId)}` : ''}`,
+        'standby_removed': `Removed from standby list${m.recordDayId ? ` for ${formatRecordDay(m.recordDayId)}` : ''}`,
+        'standby_seated': `Standby seated${m.toSeatLabel ? ` in ${m.toSeatLabel}` : ''}${m.recordDayId ? ` on ${formatRecordDay(m.recordDayId)}` : ''}`,
+      };
+      
+      events.push({
+        id: m.id,
+        type: 'movement',
+        movementType: m.movementType,
+        contestantId: m.contestantId,
+        contestantName: m.contestant?.name || 'Unknown',
+        contestantEmail: m.contestant?.email || '',
+        timestamp: m.createdAt,
+        description: movementDescriptions[m.movementType as MovementType] || m.notes || 'Movement',
+        details: {
+          recordDay: m.recordDayId ? formatRecordDay(m.recordDayId) : null,
+          fromBlock: m.fromBlockNumber,
+          fromSeat: m.fromSeatLabel,
+          toBlock: m.toBlockNumber,
+          toSeat: m.toSeatLabel,
+          notes: m.notes,
+          movedBy: m.movedBy,
+        },
+      });
+    });
+
     return events.sort((a, b) => 
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
@@ -145,8 +180,9 @@ export default function HistoryPage() {
   const rebookingCount = historyData?.rebookings?.length || 0;
   const issueCount = historyData?.attendanceIssues?.length || 0;
   const standbyCount = historyData?.standbyAttendance?.length || 0;
+  const movementCount = historyData?.movements?.length || 0;
 
-  const getEventIcon = (type: string) => {
+  const getEventIcon = (type: string, movementType?: MovementType) => {
     switch (type) {
       case 'rebooking':
         return <ArrowRightLeft className="h-4 w-4" />;
@@ -154,12 +190,29 @@ export default function HistoryPage() {
         return <AlertTriangle className="h-4 w-4" />;
       case 'standby_attendance':
         return <UserCheck className="h-4 w-4" />;
+      case 'movement':
+        switch (movementType) {
+          case 'seat_change':
+            return <MoveHorizontal className="h-4 w-4" />;
+          case 'added_to_reschedule':
+            return <Calendar className="h-4 w-4" />;
+          case 'removed_from_reschedule':
+            return <Calendar className="h-4 w-4" />;
+          case 'standby_added':
+            return <UserPlus className="h-4 w-4" />;
+          case 'standby_removed':
+            return <UserMinus className="h-4 w-4" />;
+          case 'standby_seated':
+            return <UserCheck className="h-4 w-4" />;
+          default:
+            return <MoveHorizontal className="h-4 w-4" />;
+        }
       default:
         return <History className="h-4 w-4" />;
     }
   };
 
-  const getEventBadge = (type: string, details?: Record<string, any>) => {
+  const getEventBadge = (type: string, details?: Record<string, any>, movementType?: MovementType) => {
     switch (type) {
       case 'rebooking':
         return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">Rebooking</Badge>;
@@ -170,6 +223,17 @@ export default function HistoryPage() {
         return <Badge className="bg-amber-500 hover:bg-amber-600">Early Leaver</Badge>;
       case 'standby_attendance':
         return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800">Standby Attended</Badge>;
+      case 'movement':
+        const movementLabels: Record<MovementType, { label: string; className: string }> = {
+          'seat_change': { label: 'Seat Change', className: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800' },
+          'added_to_reschedule': { label: 'To Reschedule', className: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800' },
+          'removed_from_reschedule': { label: 'From Reschedule', className: 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800' },
+          'standby_added': { label: 'Standby Added', className: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800' },
+          'standby_removed': { label: 'Standby Removed', className: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800' },
+          'standby_seated': { label: 'Standby Seated', className: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800' },
+        };
+        const config = movementLabels[movementType as MovementType] || { label: 'Movement', className: '' };
+        return <Badge variant="outline" className={config.className}>{config.label}</Badge>;
       default:
         return <Badge variant="secondary">Unknown</Badge>;
     }
@@ -195,7 +259,18 @@ export default function HistoryPage() {
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card data-testid="stat-movements">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Movements</CardTitle>
+            <MoveHorizontal className="h-4 w-4 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{movementCount}</div>
+            <p className="text-xs text-muted-foreground">Seat changes & movements</p>
+          </CardContent>
+        </Card>
+
         <Card data-testid="stat-rebookings">
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Rebookings</CardTitle>
@@ -203,7 +278,7 @@ export default function HistoryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{rebookingCount}</div>
-            <p className="text-xs text-muted-foreground">Contestants moved between days</p>
+            <p className="text-xs text-muted-foreground">Between record days</p>
           </CardContent>
         </Card>
 
@@ -214,7 +289,7 @@ export default function HistoryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{issueCount}</div>
-            <p className="text-xs text-muted-foreground">No-shows and early leavers</p>
+            <p className="text-xs text-muted-foreground">No-shows & early leavers</p>
           </CardContent>
         </Card>
 
@@ -251,6 +326,7 @@ export default function HistoryPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Events</SelectItem>
+                  <SelectItem value="movement">Movements</SelectItem>
                   <SelectItem value="rebooking">Rebookings</SelectItem>
                   <SelectItem value="attendance_issue">Attendance Issues</SelectItem>
                   <SelectItem value="standby_attendance">Standby Attendance</SelectItem>
@@ -283,10 +359,10 @@ export default function HistoryPage() {
                   {filteredEvents.map((event) => (
                     <TableRow key={`${event.type}-${event.id}`} data-testid={`row-event-${event.id}`}>
                       <TableCell className="text-center">
-                        {getEventIcon(event.type)}
+                        {getEventIcon(event.type, event.movementType)}
                       </TableCell>
                       <TableCell>
-                        {getEventBadge(event.type, event.details)}
+                        {getEventBadge(event.type, event.details, event.movementType)}
                       </TableCell>
                       <TableCell className="font-medium" data-testid={`text-contestant-${event.id}`}>
                         {event.contestantName}
@@ -295,14 +371,14 @@ export default function HistoryPage() {
                         <div className="truncate" title={event.description}>
                           {event.description}
                         </div>
-                        {event.details.reason && (
+                        {(event.details.reason || event.details.notes) && (
                           <div className="text-xs mt-1 italic">
-                            Reason: {event.details.reason}
+                            {event.details.reason ? `Reason: ${event.details.reason}` : event.details.notes}
                           </div>
                         )}
                       </TableCell>
                       <TableCell className="hidden lg:table-cell text-sm">
-                        {event.details.rebookedBy || event.details.markedBy || '-'}
+                        {event.details.rebookedBy || event.details.markedBy || event.details.movedBy || '-'}
                       </TableCell>
                       <TableCell className="text-sm whitespace-nowrap">
                         {format(new Date(event.timestamp), "dd/MM/yyyy HH:mm")}
