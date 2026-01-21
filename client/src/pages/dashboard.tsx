@@ -65,7 +65,7 @@ function RxDayCountdown({ targetDate, rxNumber }: { targetDate: Date; rxNumber?:
   
   return (
     <Card className="overflow-hidden border-0 bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800">
-      <CardContent className="p-6">
+      <CardContent className="p-4">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-full bg-orange-500/20">
