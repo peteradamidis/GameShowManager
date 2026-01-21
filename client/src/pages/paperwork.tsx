@@ -1355,7 +1355,14 @@ Deal or No Deal Production Team`);
                         return s.contestant?.name?.toLowerCase().includes(searchLower) || 
                                s.contestant?.email?.toLowerCase().includes(searchLower);
                       })
-                      .sort((a, b) => (a.priority || 999) - (b.priority || 999))
+                      .sort((a, b) => {
+                        // Sort by confirmation status first (confirmed at top)
+                        const confirmedA = a.confirmedRsvp ? new Date(a.confirmedRsvp).getTime() : 0;
+                        const confirmedB = b.confirmedRsvp ? new Date(b.confirmedRsvp).getTime() : 0;
+                        if (confirmedA !== confirmedB) return confirmedB - confirmedA;
+                        // Then by priority within each group
+                        return (a.priority || 999) - (b.priority || 999);
+                      })
                       .map((standby) => (
                         <TableRow 
                           key={`standby-${standby.id}`}
