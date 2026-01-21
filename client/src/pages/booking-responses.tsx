@@ -1825,7 +1825,7 @@ export default function BookingResponses() {
                         <div className="flex flex-col">
                           <span className="font-medium text-xs">{item.contestant?.name || 'Unknown'}</span>
                           <Badge variant="outline" className="w-fit text-[9px] px-1 py-0 border-amber-500 text-amber-600">
-                            Rescheduled
+                            Reschedule
                           </Badge>
                         </div>
                       </div>
