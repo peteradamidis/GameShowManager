@@ -87,7 +87,8 @@ export default function HistoryPage() {
     });
 
     historyData.attendanceIssues?.forEach((a: any) => {
-      const contestant = contestantMap.get(a.contestantId);
+      // Use embedded contestant data from API, fallback to lookup
+      const contestant = a.contestant || contestantMap.get(a.contestantId);
       const issueLabel = a.issueType === 'no_show' ? 'No-Show' : 'Early Leaver';
       events.push({
         id: a.id,
@@ -110,7 +111,8 @@ export default function HistoryPage() {
     });
 
     historyData.standbyAttendance?.forEach((s: any) => {
-      const contestant = contestantMap.get(s.contestantId);
+      // Use embedded contestant data from API, fallback to lookup
+      const contestant = s.contestant || contestantMap.get(s.contestantId);
       events.push({
         id: s.id,
         type: 'standby_attendance',
