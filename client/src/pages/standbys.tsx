@@ -902,6 +902,7 @@ export default function StandbysPage() {
                       <TableHead className="font-semibold text-xs">Rating</TableHead>
                       <TableHead className="font-semibold text-xs">Attending<br/>With</TableHead>
                       {isSearchMode && <TableHead className="font-semibold text-xs whitespace-nowrap">Date /<br/>RX</TableHead>}
+                      <TableHead className="font-semibold text-xs">City</TableHead>
                       <TableHead className="font-semibold text-xs">Email</TableHead>
                       <TableHead className="font-semibold text-xs text-center">Sent</TableHead>
                       <TableHead className="font-semibold text-xs text-center">Status</TableHead>
@@ -1014,6 +1015,12 @@ export default function StandbysPage() {
                             </div>
                           </TableCell>
                         )}
+                        {/* City */}
+                        <TableCell className="py-1">
+                          <span className="text-xs text-muted-foreground truncate max-w-[100px] block">
+                            {standby.contestant.city || "-"}
+                          </span>
+                        </TableCell>
                         {/* Email */}
                         <TableCell className="py-1">
                           <span className="text-xs text-muted-foreground truncate max-w-[120px] block">
