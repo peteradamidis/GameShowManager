@@ -9044,7 +9044,7 @@ Thank you.`;
     }
   });
 
-  // Send standby booking emails
+  // Send standby booking emails - runs in background to avoid gateway timeouts
   app.post("/api/standbys/send-emails", async (req, res) => {
     try {
       const { standbyIds } = req.body;
@@ -9068,19 +9068,32 @@ Thank you.`;
         return res.status(400).json({ error: "No standbys have email addresses" });
       }
 
-      const results = {
-        sent: 0,
+      // Return immediately - emails will be sent in background
+      const totalToSend = standbysWithEmail.length;
+      res.json({
+        message: `Processing ${totalToSend} standby booking emails in background`,
+        sent: totalToSend, // Optimistic count
         failed: 0,
-        errors: [] as string[],
-      };
+        processing: true,
+      });
 
-      // Rate limiting for bulk emails to avoid triggering spam filters (e.g., BigPond)
-      const DELAY_BETWEEN_EMAILS_MS = 1500; // 1.5 second delay between emails
-      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-      let emailCount = 0;
+      // Process emails in background (after response is sent)
+      setImmediate(async () => {
+        console.log(`📧 Starting background standby email send for ${totalToSend} recipients...`);
+        
+        const results = {
+          sent: 0,
+          failed: 0,
+          errors: [] as string[],
+        };
 
-      for (const standby of standbysWithEmail) {
-        try {
+        // Rate limiting for bulk emails to avoid triggering spam filters (e.g., BigPond)
+        const DELAY_BETWEEN_EMAILS_MS = 1500; // 1.5 second delay between emails
+        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+        let emailCount = 0;
+
+        for (const standby of standbysWithEmail) {
+          try {
           // Generate confirmation token
           const tokenString = crypto.randomBytes(32).toString('hex');
           const expiresAt = new Date();
@@ -9355,24 +9368,27 @@ Thank you.`;
             lastSentAt: new Date(),
           });
 
-          results.sent++;
-          
-          // Add delay between emails to avoid triggering spam filters
-          emailCount++;
-          if (emailCount < standbysWithEmail.length) {
-            console.log(`📧 Standby booking email: Sent ${emailCount}/${standbysWithEmail.length}, waiting ${DELAY_BETWEEN_EMAILS_MS}ms...`);
-            await delay(DELAY_BETWEEN_EMAILS_MS);
+            results.sent++;
+            
+            // Add delay between emails to avoid triggering spam filters
+            emailCount++;
+            if (emailCount < standbysWithEmail.length) {
+              console.log(`📧 Standby booking email: Sent ${emailCount}/${standbysWithEmail.length}, waiting ${DELAY_BETWEEN_EMAILS_MS}ms...`);
+              await delay(DELAY_BETWEEN_EMAILS_MS);
+            }
+          } catch (error: any) {
+            results.failed++;
+            results.errors.push(`${standby.contestant.name}: ${error.message}`);
+            console.error(`📧 Standby email failed for ${standby.contestant.name}:`, error.message);
           }
-        } catch (error: any) {
-          results.failed++;
-          results.errors.push(`${standby.contestant.name}: ${error.message}`);
         }
-      }
 
-      res.json({
-        message: `Sent ${results.sent} standby booking emails`,
-        ...results,
+        console.log(`📧 Background standby email send complete: ${results.sent} sent, ${results.failed} failed`);
+        if (results.errors.length > 0) {
+          console.error(`📧 Email errors:`, results.errors);
+        }
       });
+
     } catch (error: any) {
       console.error("Error sending standby emails:", error);
       res.status(500).json({ error: error.message });
