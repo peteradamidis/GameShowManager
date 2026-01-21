@@ -2143,7 +2143,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                       await apiRequest("PATCH", `/api/standbys/${seatSelectionStandby.id}`, {
                         standbyMovementNotes: notes
                       });
-                      queryClient.invalidateQueries({ queryKey: [`/api/record-days/${recordDayId}/standbys`] });
+                      queryClient.invalidateQueries({ queryKey: ['/api/standbys/record-day', recordDayId] });
                       toast({
                         title: "Notes Updated",
                         description: `Notes for ${seatSelectionStandby.contestant.name} have been saved.`,
@@ -2316,7 +2316,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                       await apiRequest("PATCH", `/api/standbys/${pendingStandbyAssign.standby.id}`, {
                         standbyMovementNotes: notes
                       });
-                      queryClient.invalidateQueries({ queryKey: [`/api/record-days/${recordDayId}/standbys`] });
+                      queryClient.invalidateQueries({ queryKey: ['/api/standbys/record-day', recordDayId] });
                       toast({
                         title: "Notes Updated",
                         description: `Notes for ${pendingStandbyAssign.standby.contestant.name} have been saved.`,
