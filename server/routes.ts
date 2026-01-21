@@ -13335,23 +13335,75 @@ Thank you.`;
   });
 
   // =============================================
-  // Farewell Video Settings
+  // Popup Settings (Customizable Announcements)
   // =============================================
 
-  app.get("/api/farewell-video/status", requireAuth, async (req, res) => {
+  app.get("/api/popup/config", requireAuth, async (req, res) => {
     try {
-      const enabled = await storage.getSystemConfig("farewell_video_enabled");
-      res.json({ enabled: enabled === "true" });
+      const [enabled, title, description, mediaType, mediaUrl] = await Promise.all([
+        storage.getSystemConfig("popup_enabled"),
+        storage.getSystemConfig("popup_title"),
+        storage.getSystemConfig("popup_description"),
+        storage.getSystemConfig("popup_media_type"),
+        storage.getSystemConfig("popup_media_url"),
+      ]);
+      res.json({
+        enabled: enabled === "true",
+        title: title || "Announcement",
+        description: description || "",
+        mediaType: mediaType || "none",
+        mediaUrl: mediaUrl || "",
+      });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
 
-  app.post("/api/farewell-video/toggle", requireAuth, async (req, res) => {
+  app.post("/api/popup/config", requireAuth, async (req, res) => {
     try {
-      const { enabled } = req.body;
-      await storage.setSystemConfig("farewell_video_enabled", String(enabled));
-      res.json({ enabled });
+      const { enabled, title, description, mediaType, mediaUrl } = req.body;
+      
+      if (enabled !== undefined) await storage.setSystemConfig("popup_enabled", String(enabled));
+      if (title !== undefined) await storage.setSystemConfig("popup_title", title);
+      if (description !== undefined) await storage.setSystemConfig("popup_description", description);
+      if (mediaType !== undefined) await storage.setSystemConfig("popup_media_type", mediaType);
+      if (mediaUrl !== undefined) await storage.setSystemConfig("popup_media_url", mediaUrl);
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/popup/upload", requireAuth, upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const file = req.file;
+      const ext = path.extname(file.originalname).toLowerCase();
+      const isVideo = ['.mp4', '.webm', '.mov', '.avi'].includes(ext);
+      const isImage = ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
+
+      if (!isVideo && !isImage) {
+        return res.status(400).json({ error: "Only image or video files are allowed" });
+      }
+
+      const fileName = `popup-media${ext}`;
+      const filePath = path.join('client/public', fileName);
+      
+      await fs.promises.writeFile(filePath, file.buffer);
+      
+      const mediaType = isVideo ? 'video' : 'image';
+      await storage.setSystemConfig("popup_media_type", mediaType);
+      await storage.setSystemConfig("popup_media_url", `/${fileName}`);
+
+      res.json({ 
+        success: true, 
+        mediaType,
+        mediaUrl: `/${fileName}`,
+      });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

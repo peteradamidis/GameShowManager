@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LogOut } from "lucide-react";
 import { initCrossTabSync, closeCrossTabSync } from "./lib/crossTabSync";
 import { MoneyRain } from "@/components/money-rain";
-import { FarewellVideoModal } from "@/components/farewell-video-modal";
+import { AnnouncementPopupModal } from "@/components/farewell-video-modal";
 import Dashboard from "@/pages/dashboard";
 import Contestants from "@/pages/contestants";
 import RecordDays from "@/pages/record-days";
@@ -182,7 +182,7 @@ function AuthenticatedApp() {
         </div>
       </div>
       <Toaster />
-      <FarewellVideoModal />
+      <AnnouncementPopupModal />
     </SidebarProvider>
     </>
   );
