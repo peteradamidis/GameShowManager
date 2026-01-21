@@ -13390,6 +13390,28 @@ Thank you.`;
   });
 
   // =============================================
+  // History - Combined audit trail
+  // =============================================
+
+  app.get("/api/history", requireAuth, async (req, res) => {
+    try {
+      const [rebookings, attendanceIssues, standbyAttendance] = await Promise.all([
+        storage.getAllRebookingHistory(),
+        storage.getAttendanceIssues(),
+        storage.getStandbyAttendanceHistory(),
+      ]);
+      res.json({
+        rebookings,
+        attendanceIssues,
+        standbyAttendance,
+      });
+    } catch (error: any) {
+      console.error("Error fetching history:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // =============================================
   // Attendance Issues (No-Shows and Early Leavers)
   // =============================================
 

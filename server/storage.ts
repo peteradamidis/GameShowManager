@@ -68,7 +68,7 @@ import {
   type PostRecordTracking,
   type InsertPostRecordTracking,
 } from "@shared/schema";
-import { eq, and, sql, inArray } from "drizzle-orm";
+import { eq, and, sql, inArray, desc } from "drizzle-orm";
 
 // Log database configuration status (don't crash - let app start for health checks)
 if (!process.env.DATABASE_URL) {
@@ -333,6 +333,7 @@ export interface IStorage {
   
   // Rebooking History
   logRebooking(data: InsertRebookingHistory): Promise<RebookingHistory>;
+  getAllRebookingHistory(): Promise<Array<RebookingHistory>>;
   getRebookingHistoryByContestant(contestantId: string): Promise<Array<RebookingHistory & { fromRecordDay: RecordDay; toRecordDay: RecordDay }>>;
   getRebookingHistoryByRecordDay(recordDayId: string): Promise<Array<RebookingHistory & { contestant: Contestant; fromRecordDay: RecordDay; toRecordDay: RecordDay }>>;
   
@@ -1928,6 +1929,14 @@ export class DbStorage implements IStorage {
   async logRebooking(data: InsertRebookingHistory): Promise<RebookingHistory> {
     const [created] = await getDb().insert(rebookingHistory).values(data).returning();
     return created;
+  }
+
+  async getAllRebookingHistory(): Promise<Array<RebookingHistory>> {
+    const results = await getDb()
+      .select()
+      .from(rebookingHistory)
+      .orderBy(desc(rebookingHistory.rebookedAt));
+    return results;
   }
 
   async getRebookingHistoryByContestant(contestantId: string): Promise<Array<RebookingHistory & { fromRecordDay: RecordDay; toRecordDay: RecordDay }>> {

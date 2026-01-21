@@ -1,4 +1,4 @@
-import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList, UserCheck, MessageSquareText, FileText, Trophy, AlertTriangle, Star, Megaphone, FileCheck2 } from "lucide-react";
+import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList, UserCheck, MessageSquareText, FileText, Trophy, AlertTriangle, Star, Megaphone, FileCheck2, History } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -86,6 +86,11 @@ const menuItems = [
     title: "Post Record",
     url: "/post-record",
     icon: FileCheck2,
+  },
+  {
+    title: "History",
+    url: "/history",
+    icon: History,
   },
   {
     title: "Settings",
