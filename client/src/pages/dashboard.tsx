@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { StatsCard } from "@/components/stats-card";
 import { RecordDayCard, RecordDay } from "@/components/record-day-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,15 +51,26 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
 }
 
 function RxDayCountdown({ targetDate, rxNumber }: { targetDate: Date; rxNumber?: string | null }) {
-  const [timeRemaining, setTimeRemaining] = useState<CountdownTime>(calculateTimeRemaining(targetDate));
+  // Set target time to 7:30 AM AEDT (UTC+11)
+  // AEDT is UTC+11, so 7:30 AM AEDT = 20:30 UTC previous day
+  const targetWithTime = useMemo(() => {
+    const date = new Date(targetDate);
+    // Set to 7:30 AM in local AEDT time
+    // Since we're working in AEDT (UTC+11), we set the UTC time to be 7:30 - 11 = -3:30 = 20:30 previous day
+    date.setUTCHours(20, 30, 0, 0); // 20:30 UTC = 7:30 AM AEDT next day
+    date.setUTCDate(date.getUTCDate() - 1); // Adjust to previous day since we want this time on the target day
+    return date;
+  }, [targetDate]);
+  
+  const [timeRemaining, setTimeRemaining] = useState<CountdownTime>(calculateTimeRemaining(targetWithTime));
   
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeRemaining(calculateTimeRemaining(targetDate));
+      setTimeRemaining(calculateTimeRemaining(targetWithTime));
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [targetDate]);
+  }, [targetWithTime]);
   
   const isToday = timeRemaining.days === 0 && timeRemaining.hours === 0 && timeRemaining.minutes === 0 && timeRemaining.seconds === 0;
   
@@ -76,7 +87,7 @@ function RxDayCountdown({ targetDate, rxNumber }: { targetDate: Date; rxNumber?:
                 {isToday ? "It's Showtime!" : "Next Record Day"}
               </h3>
               <p className="text-lg text-orange-300 font-medium">
-                {rxNumber ? `${rxNumber} - ` : ''}{format(targetDate, "EEEE, d MMMM yyyy")}
+                {rxNumber ? `${rxNumber} - ` : ''}{format(targetDate, "EEEE, d MMMM yyyy")} at 7:30 AM
               </p>
             </div>
           </div>
