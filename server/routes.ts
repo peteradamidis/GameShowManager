@@ -2742,6 +2742,218 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Preview reminder email for a record day
+  app.get("/api/record-days/:id/preview-reminder", requireAuth, async (req, res) => {
+    try {
+      const recordDayId = req.params.id;
+      const type = req.query.type as string || 'contestant';
+      
+      // Get record day
+      const recordDay = await storage.getRecordDayById(recordDayId);
+      if (!recordDay) {
+        return res.status(404).json({ error: "Record day not found" });
+      }
+      
+      // Format record date
+      const recordDate = new Date(recordDay.date);
+      const formattedDate = recordDate.toLocaleDateString('en-AU', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+      
+      // Get email banner as data URL for preview
+      let bannerDataUrl = '';
+      try {
+        const ticketBanner = await storage.getSystemConfig('ticket_email_banner');
+        if (ticketBanner) {
+          bannerDataUrl = ticketBanner;
+        }
+      } catch (e) {
+        console.log('No banner configured');
+      }
+      
+      if (type === 'standby') {
+        // Standby reminder preview
+        const reminderHeadline = await storage.getSystemConfig('standby_reminder_headline') || 'Standby Reminder: Be Ready!';
+        const reminderIntro = await storage.getSystemConfig('standby_reminder_intro') || 
+          'This is a friendly reminder that you are on standby for an upcoming Deal or No Deal recording. Please be prepared to attend if called upon!';
+        const reminderFooter = await storage.getSystemConfig('standby_reminder_footer') || 'This is an automated reminder from the Deal or No Deal production team.';
+        
+        const emailHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    <tr>
+      <td style="padding: 0; line-height: 0;">
+        ${bannerDataUrl ? `<img src="${bannerDataUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />` : ''}
+      </td>
+    </tr>
+    <tr>
+      <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          ${reminderHeadline}
+        </h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+          <tr>
+            <td style="padding: 30px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 0 0 20px 0;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0;">
+                      You are on STANDBY for this record day. We may contact you on the day if a seat becomes available.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                Hi [Standby Name],
+              </p>
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                ${reminderIntro.split('\n\n').map((paragraph: string) => 
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase;">
+                      Record Day Details
+                    </h2>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                      <strong style="color: #8B0000;">DATE:</strong> ${formattedDate.toUpperCase()}
+                    </p>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30 AM (if called)
+                    </p>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
+                      <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
+                Please ensure your phone is on and you are available if we need to call you.
+              </p>
+              <p style="color: #333333; font-size: 15px; margin: 0;">
+                Kind Regards,<br/>
+                <strong>The Deal Or No Deal Team</strong>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
+        <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
+          ${reminderFooter}
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+        
+        res.json({ html: emailHtml, type: 'standby' });
+      } else {
+        // Contestant reminder preview
+        const reminderHeadline = await storage.getSystemConfig('contestant_reminder_headline') || 'Reminder: Your Record Day Is Coming Up!';
+        const reminderIntro = await storage.getSystemConfig('contestant_reminder_intro') || 
+          'This is a friendly reminder that your Deal or No Deal recording is coming up! Please ensure you have all necessary documents ready and arrive on time.';
+        const reminderFooter = await storage.getSystemConfig('contestant_reminder_footer') || 'This is an automated reminder from the Deal or No Deal production team.';
+        
+        const emailHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    <tr>
+      <td style="padding: 0; line-height: 0;">
+        ${bannerDataUrl ? `<img src="${bannerDataUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />` : ''}
+      </td>
+    </tr>
+    <tr>
+      <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          ${reminderHeadline}
+        </h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+          <tr>
+            <td style="padding: 30px;">
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                Hi [Contestant Name],
+              </p>
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                ${reminderIntro.split('\n\n').map((paragraph: string) => 
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase;">
+                      Your Booking Details
+                    </h2>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                      <strong style="color: #8B0000;">DATE:</strong> ${formattedDate.toUpperCase()}
+                    </p>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30 AM
+                    </p>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
+                      <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
+                We look forward to seeing you there!
+              </p>
+              <p style="color: #333333; font-size: 15px; margin: 0;">
+                Kind Regards,<br/>
+                <strong>The Deal Or No Deal Team</strong>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
+        <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
+          ${reminderFooter}
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+        
+        res.json({ html: emailHtml, type: 'contestant' });
+      }
+    } catch (error: any) {
+      console.error("Error generating reminder preview:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Send reminder emails to contestants for a record day
   app.post("/api/record-days/:id/send-contestant-reminder", requireAuth, async (req, res) => {
     try {
@@ -2751,6 +2963,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const recordDay = await storage.getRecordDayById(recordDayId);
       if (!recordDay) {
         return res.status(404).json({ error: "Record day not found" });
+      }
+      
+      // Validate 48-hour window - can only send reminders within 48 hours of record day
+      const now = new Date();
+      const recordDate = new Date(recordDay.date);
+      recordDate.setHours(7, 30, 0, 0); // 7:30 AM on record day
+      const hoursUntilRecordDay = (recordDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursUntilRecordDay > 48) {
+        return res.status(400).json({ 
+          error: `Reminder emails can only be sent within 48 hours of the record day. This record day is ${Math.round(hoursUntilRecordDay)} hours away.` 
+        });
+      }
+      
+      if (hoursUntilRecordDay < 0) {
+        return res.status(400).json({ error: "Cannot send reminders for past record days" });
       }
       
       // Get all confirmed seat assignments for this day
@@ -2765,8 +2993,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No confirmed contestants with email addresses found for this record day" });
       }
       
-      // Format record date
-      const recordDate = new Date(recordDay.date);
+      // Format record date (reuse recordDate from validation above)
       const formattedDate = recordDate.toLocaleDateString('en-AU', {
         weekday: 'long',
         day: 'numeric',
@@ -2946,6 +3173,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Record day not found" });
       }
       
+      // Validate 48-hour window - can only send reminders within 48 hours of record day
+      const now = new Date();
+      const recordDate = new Date(recordDay.date);
+      recordDate.setHours(7, 30, 0, 0); // 7:30 AM on record day
+      const hoursUntilRecordDay = (recordDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursUntilRecordDay > 48) {
+        return res.status(400).json({ 
+          error: `Reminder emails can only be sent within 48 hours of the record day. This record day is ${Math.round(hoursUntilRecordDay)} hours away.` 
+        });
+      }
+      
+      if (hoursUntilRecordDay < 0) {
+        return res.status(400).json({ error: "Cannot send reminders for past record days" });
+      }
+      
       // Get all standbys for this day
       const standbys = await storage.getStandbyAssignmentsByRecordDay(recordDayId);
       const confirmedStandbys = standbys.filter(s => 
@@ -2957,8 +3200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No standbys with email addresses found for this record day" });
       }
       
-      // Format record date
-      const recordDate = new Date(recordDay.date);
+      // Format record date (reuse recordDate from validation above)
       const formattedDate = recordDate.toLocaleDateString('en-AU', {
         weekday: 'long',
         day: 'numeric',

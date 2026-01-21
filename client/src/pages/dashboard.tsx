@@ -4,7 +4,8 @@ import { RecordDayCard, RecordDay } from "@/components/record-day-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight, Clapperboard, Bell, Send, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight, Clapperboard, Bell, Send, Loader2, Eye } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -213,6 +214,33 @@ export default function Dashboard() {
   // Track which record day IDs are currently pending for each reminder type (as Sets for concurrent requests)
   const [pendingContestantReminders, setPendingContestantReminders] = useState<Set<string>>(new Set());
   const [pendingStandbyReminders, setPendingStandbyReminders] = useState<Set<string>>(new Set());
+  
+  // Preview dialog state
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState<string>('');
+  const [previewType, setPreviewType] = useState<'contestant' | 'standby'>('contestant');
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  // Function to open email preview
+  const openPreview = async (recordDayId: string, type: 'contestant' | 'standby') => {
+    setPreviewLoading(true);
+    setPreviewType(type);
+    setPreviewOpen(true);
+    try {
+      const res = await apiRequest('GET', `/api/record-days/${recordDayId}/preview-reminder?type=${type}`);
+      const data = await res.json();
+      setPreviewHtml(data.html);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load preview",
+        variant: "destructive",
+      });
+      setPreviewOpen(false);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
 
   // Mutation for sending contestant reminders
   const sendContestantReminderMutation = useMutation({
@@ -500,42 +528,64 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant={reminder.contestantReminderSent ? "outline" : "default"}
-                    onClick={() => sendContestantReminderMutation.mutate(reminder.id)}
-                    disabled={pendingContestantReminders.has(reminder.id)}
-                    className="gap-1"
-                    data-testid={`button-send-contestant-reminder-${reminder.id}`}
-                  >
-                    {pendingContestantReminders.has(reminder.id) ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Send className="h-3 w-3" />
-                    )}
-                    {reminder.contestantReminderSent ? 'Resend to Contestants' : 'Send to Contestants'}
-                    {reminder.contestantReminderSent && (
-                      <CheckCircle className="h-3 w-3 text-green-600 ml-1" />
-                    )}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={reminder.standbyReminderSent ? "outline" : "secondary"}
-                    onClick={() => sendStandbyReminderMutation.mutate(reminder.id)}
-                    disabled={pendingStandbyReminders.has(reminder.id)}
-                    className="gap-1"
-                    data-testid={`button-send-standby-reminder-${reminder.id}`}
-                  >
-                    {pendingStandbyReminders.has(reminder.id) ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Send className="h-3 w-3" />
-                    )}
-                    {reminder.standbyReminderSent ? 'Resend to Standbys' : 'Send to Standbys'}
-                    {reminder.standbyReminderSent && (
-                      <CheckCircle className="h-3 w-3 text-green-600 ml-1" />
-                    )}
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => openPreview(reminder.id, 'contestant')}
+                      className="gap-1 px-2"
+                      data-testid={`button-preview-contestant-${reminder.id}`}
+                    >
+                      <Eye className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={reminder.contestantReminderSent ? "outline" : "default"}
+                      onClick={() => sendContestantReminderMutation.mutate(reminder.id)}
+                      disabled={pendingContestantReminders.has(reminder.id)}
+                      className="gap-1"
+                      data-testid={`button-send-contestant-reminder-${reminder.id}`}
+                    >
+                      {pendingContestantReminders.has(reminder.id) ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Send className="h-3 w-3" />
+                      )}
+                      {reminder.contestantReminderSent ? 'Resend to Contestants' : 'Send to Contestants'}
+                      {reminder.contestantReminderSent && (
+                        <CheckCircle className="h-3 w-3 text-green-600 ml-1" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => openPreview(reminder.id, 'standby')}
+                      className="gap-1 px-2"
+                      data-testid={`button-preview-standby-${reminder.id}`}
+                    >
+                      <Eye className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={reminder.standbyReminderSent ? "outline" : "secondary"}
+                      onClick={() => sendStandbyReminderMutation.mutate(reminder.id)}
+                      disabled={pendingStandbyReminders.has(reminder.id)}
+                      className="gap-1"
+                      data-testid={`button-send-standby-reminder-${reminder.id}`}
+                    >
+                      {pendingStandbyReminders.has(reminder.id) ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Send className="h-3 w-3" />
+                      )}
+                      {reminder.standbyReminderSent ? 'Resend to Standbys' : 'Send to Standbys'}
+                      {reminder.standbyReminderSent && (
+                        <CheckCircle className="h-3 w-3 text-green-600 ml-1" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -759,6 +809,30 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Email Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" data-testid="dialog-email-preview">
+          <DialogHeader>
+            <DialogTitle>
+              {previewType === 'contestant' ? 'Contestant' : 'Standby'} Reminder Email Preview
+            </DialogTitle>
+            <DialogDescription>
+              This is how the reminder email will appear to recipients.
+            </DialogDescription>
+          </DialogHeader>
+          {previewLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div 
+              className="border rounded-lg overflow-hidden"
+              dangerouslySetInnerHTML={{ __html: previewHtml }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
