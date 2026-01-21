@@ -1372,7 +1372,7 @@ export default function BookingMaster() {
                           </TableCell>
                         </TableRow>
                       )}
-                      <TableRow key={row.seatId} className={`${!row.assignment ? "bg-muted/20" : row.assignment.isFromReschedule ? "bg-red-50 dark:bg-red-900/20" : row.assignment.wasStandby ? "bg-purple-100 dark:bg-purple-900/30" : row.assignment.swappedAt ? "bg-amber-100 dark:bg-amber-900/30" : "bg-white dark:bg-background"} h-7 border-b border-gray-200 dark:border-gray-700`}>
+                      <TableRow key={row.seatId} className={`${!row.assignment ? "bg-muted/20" : row.assignment.wasStandby ? "bg-purple-100 dark:bg-purple-900/30" : row.assignment.swappedAt ? "bg-amber-100 dark:bg-amber-900/30" : "bg-white dark:bg-background"} h-7 border-b border-gray-200 dark:border-gray-700`}>
                         <TableCell className="py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
                           {row.assignment && (
                             <Checkbox
