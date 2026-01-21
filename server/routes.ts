@@ -8785,42 +8785,47 @@ Thank you.`;
   app.patch("/api/standbys/:id", async (req, res) => {
     try {
       const { id } = req.params;
+      console.log(`[Standby Update] ID: ${id}, Body:`, req.body);
       const updateData = { ...req.body };
       
+      // Filter out fields that shouldn't be updated directly on standbyAssignment table
+      // or that cause issues if passed incorrectly
+      const { contestant, recordDay, ...filteredUpdateData } = updateData;
+      
       // Convert string dates to Date objects for timestamp columns
-      if (updateData.confirmedAt && typeof updateData.confirmedAt === 'string') {
-        updateData.confirmedAt = new Date(updateData.confirmedAt);
+      if (filteredUpdateData.confirmedAt && typeof filteredUpdateData.confirmedAt === 'string') {
+        filteredUpdateData.confirmedAt = new Date(filteredUpdateData.confirmedAt);
       }
-      if (updateData.standbyEmailSent && typeof updateData.standbyEmailSent === 'string') {
-        updateData.standbyEmailSent = new Date(updateData.standbyEmailSent);
+      if (filteredUpdateData.standbyEmailSent && typeof filteredUpdateData.standbyEmailSent === 'string') {
+        filteredUpdateData.standbyEmailSent = new Date(filteredUpdateData.standbyEmailSent);
       }
-      if (updateData.standbyTicketSent && typeof updateData.standbyTicketSent === 'string') {
-        updateData.standbyTicketSent = new Date(updateData.standbyTicketSent);
+      if (filteredUpdateData.standbyTicketSent && typeof filteredUpdateData.standbyTicketSent === 'string') {
+        filteredUpdateData.standbyTicketSent = new Date(filteredUpdateData.standbyTicketSent);
       }
-      if (updateData.assignedAt && typeof updateData.assignedAt === 'string') {
-        updateData.assignedAt = new Date(updateData.assignedAt);
+      if (filteredUpdateData.assignedAt && typeof filteredUpdateData.assignedAt === 'string') {
+        filteredUpdateData.assignedAt = new Date(filteredUpdateData.assignedAt);
       }
-      if (updateData.movedToRescheduleAt && typeof updateData.movedToRescheduleAt === 'string') {
-        updateData.movedToRescheduleAt = new Date(updateData.movedToRescheduleAt);
+      if (filteredUpdateData.movedToRescheduleAt && typeof filteredUpdateData.movedToRescheduleAt === 'string') {
+        filteredUpdateData.movedToRescheduleAt = new Date(filteredUpdateData.movedToRescheduleAt);
       }
       // Workflow tracking fields
-      if (updateData.bookingEmailSent && typeof updateData.bookingEmailSent === 'string') {
-        updateData.bookingEmailSent = new Date(updateData.bookingEmailSent);
+      if (filteredUpdateData.bookingEmailSent && typeof filteredUpdateData.bookingEmailSent === 'string') {
+        filteredUpdateData.bookingEmailSent = new Date(filteredUpdateData.bookingEmailSent);
       }
-      if (updateData.confirmedRsvp && typeof updateData.confirmedRsvp === 'string') {
-        updateData.confirmedRsvp = new Date(updateData.confirmedRsvp);
+      if (filteredUpdateData.confirmedRsvp && typeof filteredUpdateData.confirmedRsvp === 'string') {
+        filteredUpdateData.confirmedRsvp = new Date(filteredUpdateData.confirmedRsvp);
       }
-      if (updateData.paperworkSent && typeof updateData.paperworkSent === 'string') {
-        updateData.paperworkSent = new Date(updateData.paperworkSent);
+      if (filteredUpdateData.paperworkSent && typeof filteredUpdateData.paperworkSent === 'string') {
+        filteredUpdateData.paperworkSent = new Date(filteredUpdateData.paperworkSent);
       }
-      if (updateData.paperworkReceived && typeof updateData.paperworkReceived === 'string') {
-        updateData.paperworkReceived = new Date(updateData.paperworkReceived);
+      if (filteredUpdateData.paperworkReceived && typeof filteredUpdateData.paperworkReceived === 'string') {
+        filteredUpdateData.paperworkReceived = new Date(filteredUpdateData.paperworkReceived);
       }
-      if (updateData.paperworkOnDay && typeof updateData.paperworkOnDay === 'string') {
-        updateData.paperworkOnDay = new Date(updateData.paperworkOnDay);
+      if (filteredUpdateData.paperworkOnDay && typeof filteredUpdateData.paperworkOnDay === 'string') {
+        filteredUpdateData.paperworkOnDay = new Date(filteredUpdateData.paperworkOnDay);
       }
-      if (updateData.signedIn && typeof updateData.signedIn === 'string') {
-        updateData.signedIn = new Date(updateData.signedIn);
+      if (filteredUpdateData.signedIn && typeof filteredUpdateData.signedIn === 'string') {
+        filteredUpdateData.signedIn = new Date(filteredUpdateData.signedIn);
       }
 
       // Get the standby first to have access to contestant/recordDay data
@@ -8830,14 +8835,14 @@ Thank you.`;
         return res.status(404).json({ error: "Standby assignment not found" });
       }
 
-      const updated = await storage.updateStandbyAssignment(id, updateData);
+      const updated = await storage.updateStandbyAssignment(id, filteredUpdateData);
       
       if (!updated) {
         return res.status(404).json({ error: "Standby assignment not found" });
       }
 
       // If the standby is being rescheduled, create a canceled assignment
-      if (updateData.status === 'rescheduled' && updateData.movedToReschedule) {
+      if (filteredUpdateData.status === 'rescheduled' && filteredUpdateData.movedToReschedule) {
         // Create a canceled assignment record for the reschedule page
         // Use isFromStandby: false so it shows "Canceled" tag, not "Standby"
         await storage.createCanceledAssignment({
@@ -8845,8 +8850,8 @@ Thank you.`;
           recordDayId: standby.recordDayId,
           blockNumber: null, // Standbys don't have a block number
           seatLabel: standby.assignedToSeat || null,
-          reason: updateData.notes || 'DECLINED STANDBY INVITATION',
-          movedBy: updateData.notes?.match(/\[([^\]]+)\]/)?.[1] || 'SYSTEM', // Extract initials from notes
+          reason: filteredUpdateData.notes || 'DECLINED STANDBY INVITATION',
+          movedBy: filteredUpdateData.notes?.match(/\[([^\]]+)\]/)?.[1] || 'SYSTEM', // Extract initials from notes
           isFromStandby: false, // Show "Canceled" tag, not "Standby"
           wasDeclined: true,
           declinedAt: new Date(),
