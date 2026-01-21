@@ -398,13 +398,13 @@ export default function Dashboard() {
       </div>
 
       {/* Ratings Breakdown */}
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-3">
         {sortedRatings.map(([rating, count]) => (
-          <Card key={rating} className="bg-muted/30 flex-1 min-w-[100px]">
-            <CardContent className="pt-4 pb-4">
+          <Card key={rating} className="bg-muted/30 flex-1 min-w-[90px]">
+            <CardContent className="py-2 px-3">
               <div className="text-center">
-                <p className="text-sm font-medium text-muted-foreground mb-1">Rating {rating}</p>
-                <div className="text-2xl font-bold">{count}</div>
+                <p className="text-xs font-medium text-muted-foreground">Rating {rating}</p>
+                <div className="text-xl font-bold">{count}</div>
               </div>
             </CardContent>
           </Card>
