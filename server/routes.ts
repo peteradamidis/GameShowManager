@@ -6059,17 +6059,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const finalEmailButtonText = emailButtonText || 'Click Here To Respond';
       const finalEmailFooter = emailFooter || savedAvailFooter || 'This is an automated message from the Deal or No Deal production team. Please do not forward this email as it contains a unique response link.';
 
-      // Rate limiting for bulk emails to avoid triggering spam filters (e.g., BigPond)
-      const DELAY_BETWEEN_EMAILS_MS = 1500; // 1.5 second delay between emails
-      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-      let emailCount = 0;
+      // Return immediately - emails will be sent in background
+      const totalToSend = contestantIds.length;
+      res.json({
+        message: `Processing ${totalToSend} availability check emails in background`,
+        emailsSent: totalToSend, // Optimistic count
+        emailsFailed: 0,
+        processing: true,
+      });
 
-      for (const contestantId of contestantIds) {
-        const contestant = await storage.getContestantById(contestantId);
-        if (!contestant) continue;
+      // Process emails in background (after response is sent)
+      setImmediate(async () => {
+        console.log(`📧 Starting background availability email send for ${totalToSend} recipients...`);
+        
+        // Rate limiting for bulk emails to avoid triggering spam filters (e.g., BigPond)
+        const DELAY_BETWEEN_EMAILS_MS = 1500; // 1.5 second delay between emails
+        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+        let emailCount = 0;
 
-        // Revoke any existing active tokens for this contestant
-        await storage.revokeContestantTokens(contestantId);
+        for (const contestantId of contestantIds) {
+          const contestant = await storage.getContestantById(contestantId);
+          if (!contestant) continue;
+
+          // Revoke any existing active tokens for this contestant
+          await storage.revokeContestantTokens(contestantId);
 
         // Generate new cryptographically strong token
         const token = crypto.randomBytes(32).toString('hex');
@@ -6321,29 +6334,28 @@ ${finalEmailFooter}`;
             recordDayId: null,
           });
           
-          // Add delay between emails to avoid triggering spam filters
-          emailCount++;
-          if (emailCount < contestantIds.length) {
-            console.log(`📧 Availability email: Sent ${emailCount}/${contestantIds.length}, waiting ${DELAY_BETWEEN_EMAILS_MS}ms...`);
-            await delay(DELAY_BETWEEN_EMAILS_MS);
+            // Add delay between emails to avoid triggering spam filters
+            emailCount++;
+            if (emailCount < contestantIds.length) {
+              console.log(`📧 Availability email: Sent ${emailCount}/${contestantIds.length}, waiting ${DELAY_BETWEEN_EMAILS_MS}ms...`);
+              await delay(DELAY_BETWEEN_EMAILS_MS);
+            }
+          } catch (emailError: any) {
+            console.error(`Failed to send email to ${contestant.email}:`, emailError);
+            emailsFailed.push({
+              contestantId,
+              email: contestant.email,
+              error: emailError.message,
+            });
           }
-        } catch (emailError: any) {
-          console.error(`Failed to send email to ${contestant.email}:`, emailError);
-          emailsFailed.push({
-            contestantId,
-            email: contestant.email,
-            error: emailError.message,
-          });
         }
-      }
 
-      res.json({
-        message: `Processed ${tokensCreated.length} contestants`,
-        emailsSent: emailsSent.length,
-        emailsFailed: emailsFailed.length,
-        tokens: tokensCreated,
-        failures: emailsFailed.length > 0 ? emailsFailed : undefined,
+        console.log(`📧 Background availability email send complete: ${emailsSent.length} sent, ${emailsFailed.length} failed`);
+        if (emailsFailed.length > 0) {
+          console.error(`📧 Availability email errors:`, emailsFailed);
+        }
       });
+
     } catch (error: any) {
       console.error("Error sending availability checks:", error);
       res.status(500).json({ error: error.message });
@@ -8073,41 +8085,52 @@ Thank you.`;
         }
       };
 
-      // Process in batches to avoid overloading - with delay between batches
-      const BATCH_SIZE = 3; // Reduced batch size
-      const DELAY_BETWEEN_BATCHES_MS = 2000; // 2 second delay between batches
-      const results: {
-        seatAssignmentId: string;
-        success: boolean;
-        contestantName?: string;
-        email?: string;
-        error?: string;
-      }[] = [];
-
-      // Helper to delay execution
-      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-      for (let i = 0; i < seatAssignmentIds.length; i += BATCH_SIZE) {
-        const batch = seatAssignmentIds.slice(i, i + BATCH_SIZE);
-        const batchResults = await Promise.all(batch.map(processAssignment));
-        results.push(...batchResults);
-        
-        // Add delay between batches to avoid overwhelming the mail server
-        if (i + BATCH_SIZE < seatAssignmentIds.length) {
-          console.log(`📧 Bulk email: Sent batch ${Math.floor(i / BATCH_SIZE) + 1}, waiting ${DELAY_BETWEEN_BATCHES_MS}ms before next batch...`);
-          await delay(DELAY_BETWEEN_BATCHES_MS);
-        }
-      }
-
-      const successCount = results.filter(r => r.success).length;
-      const failCount = results.filter(r => !r.success).length;
-
+      // Return immediately - emails will be sent in background
+      const totalToSend = seatAssignmentIds.length;
       res.json({
-        message: `Sent ${successCount} ticket email(s)${failCount > 0 ? `, ${failCount} failed` : ''}`,
-        results,
-        successCount,
-        failCount,
+        message: `Processing ${totalToSend} ticket email(s) in background`,
+        successCount: totalToSend, // Optimistic count
+        failCount: 0,
+        processing: true,
       });
+
+      // Process in background (after response is sent)
+      setImmediate(async () => {
+        console.log(`📧 Starting background ticket email send for ${totalToSend} recipients...`);
+        
+        const BATCH_SIZE = 3; // Reduced batch size
+        const DELAY_BETWEEN_BATCHES_MS = 2000; // 2 second delay between batches
+        const results: {
+          seatAssignmentId: string;
+          success: boolean;
+          contestantName?: string;
+          email?: string;
+          error?: string;
+        }[] = [];
+
+        // Helper to delay execution
+        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+        for (let i = 0; i < seatAssignmentIds.length; i += BATCH_SIZE) {
+          const batch = seatAssignmentIds.slice(i, i + BATCH_SIZE);
+          const batchResults = await Promise.all(batch.map(processAssignment));
+          results.push(...batchResults);
+          
+          // Add delay between batches to avoid overwhelming the mail server
+          if (i + BATCH_SIZE < seatAssignmentIds.length) {
+            console.log(`📧 Bulk ticket email: Sent batch ${Math.floor(i / BATCH_SIZE) + 1}, waiting ${DELAY_BETWEEN_BATCHES_MS}ms before next batch...`);
+            await delay(DELAY_BETWEEN_BATCHES_MS);
+          }
+        }
+
+        const successCount = results.filter(r => r.success).length;
+        const failCount = results.filter(r => !r.success).length;
+        console.log(`📧 Background ticket email send complete: ${successCount} sent, ${failCount} failed`);
+        if (failCount > 0) {
+          console.error(`📧 Ticket email errors:`, results.filter(r => !r.success));
+        }
+      });
+
     } catch (error: any) {
       console.error("Error sending bulk ticket emails:", error);
       res.status(500).json({ error: error.message });
@@ -9792,19 +9815,33 @@ Thank you.`;
         });
       }
 
-      let successCount = 0;
-      let failCount = 0;
-      const results: Array<{ standbyId: string; success: boolean; error?: string }> = [];
+      // Return immediately - emails will be sent in background
+      const totalToSend = eligibleStandbys.length;
+      res.json({
+        success: true,
+        message: `Processing ${totalToSend} standby ticket email(s) in background`,
+        successCount: totalToSend, // Optimistic count
+        failCount: 0,
+        processing: true,
+      });
 
-      // Rate limiting for bulk emails to avoid triggering spam filters (e.g., BigPond)
-      const DELAY_BETWEEN_EMAILS_MS = 1500; // 1.5 second delay between emails
-      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-      let emailCount = 0;
+      // Process in background (after response is sent)
+      setImmediate(async () => {
+        console.log(`📧 Starting background standby ticket email send for ${totalToSend} recipients...`);
+        
+        let successCount = 0;
+        let failCount = 0;
+        const results: Array<{ standbyId: string; success: boolean; error?: string }> = [];
 
-      for (const standby of eligibleStandbys) {
-        try {
-          // Call the single send endpoint internally
-          const recordDay = await storage.getRecordDayById(standby.recordDayId);
+        // Rate limiting for bulk emails to avoid triggering spam filters (e.g., BigPond)
+        const DELAY_BETWEEN_EMAILS_MS = 1500; // 1.5 second delay between emails
+        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+        let emailCount = 0;
+
+        for (const standby of eligibleStandbys) {
+          try {
+            // Call the single send endpoint internally
+            const recordDay = await storage.getRecordDayById(standby.recordDayId);
           if (!recordDay) {
             throw new Error("Record day not found");
           }
@@ -9962,28 +9999,28 @@ Thank you.`;
             standbyTicketSent: new Date().toISOString(),
           });
 
-          successCount++;
-          results.push({ standbyId: standby.id, success: true });
-          
-          // Add delay between emails to avoid triggering spam filters
-          emailCount++;
-          if (emailCount < eligibleStandbys.length) {
-            console.log(`📧 Standby ticket email: Sent ${emailCount}/${eligibleStandbys.length}, waiting ${DELAY_BETWEEN_EMAILS_MS}ms...`);
-            await delay(DELAY_BETWEEN_EMAILS_MS);
+            successCount++;
+            results.push({ standbyId: standby.id, success: true });
+            
+            // Add delay between emails to avoid triggering spam filters
+            emailCount++;
+            if (emailCount < eligibleStandbys.length) {
+              console.log(`📧 Standby ticket email: Sent ${emailCount}/${eligibleStandbys.length}, waiting ${DELAY_BETWEEN_EMAILS_MS}ms...`);
+              await delay(DELAY_BETWEEN_EMAILS_MS);
+            }
+          } catch (error: any) {
+            failCount++;
+            results.push({ standbyId: standby.id, success: false, error: error.message });
+            console.error(`📧 Standby ticket email failed for standby ${standby.id}:`, error.message);
           }
-        } catch (error: any) {
-          failCount++;
-          results.push({ standbyId: standby.id, success: false, error: error.message });
         }
-      }
 
-      res.json({
-        success: successCount > 0,
-        message: `Sent ${successCount} standby ticket email(s)${failCount > 0 ? `, ${failCount} failed` : ''}`,
-        results,
-        successCount,
-        failCount,
+        console.log(`📧 Background standby ticket email send complete: ${successCount} sent, ${failCount} failed`);
+        if (failCount > 0) {
+          console.error(`📧 Standby ticket email errors:`, results.filter(r => !r.success));
+        }
       });
+
     } catch (error: any) {
       console.error("Error sending bulk standby ticket emails:", error);
       res.status(500).json({ error: error.message });
@@ -10907,33 +10944,46 @@ Thank you.`;
         }
       }
       
-      let sent = 0;
-      let failed = 0;
-      const errors: string[] = [];
-      
-      // Rate limiting for bulk emails
-      const DELAY_BETWEEN_EMAILS_MS = 1500; // 1.5 second delay between emails
-      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-      let emailCount = 0;
-      
-      for (const assignmentId of assignmentIds) {
-        try {
-          const assignment = await storage.getSeatAssignmentById(assignmentId);
-          if (!assignment) {
-            failed++;
-            errors.push(`Assignment ${assignmentId} not found`);
-            continue;
-          }
-          
-          const contestant = contestants.find(c => c.id === assignment.contestantId);
-          if (!contestant?.email) {
-            failed++;
-            errors.push(`No email for contestant ${contestant?.name || assignmentId}`);
-            continue;
-          }
-          
-          // Get record day info for context
-          const recordDay = await storage.getRecordDay(assignment.recordDayId);
+      // Return immediately - emails will be sent in background
+      const totalToSend = assignmentIds.length;
+      res.json({ 
+        success: true,
+        sent: totalToSend, // Optimistic count
+        failed: 0,
+        processing: true,
+      });
+
+      // Process in background (after response is sent)
+      setImmediate(async () => {
+        console.log(`📧 Starting background paperwork email send for ${totalToSend} recipients...`);
+        
+        let sent = 0;
+        let failed = 0;
+        const errors: string[] = [];
+        
+        // Rate limiting for bulk emails
+        const DELAY_BETWEEN_EMAILS_MS = 1500; // 1.5 second delay between emails
+        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+        let emailCount = 0;
+        
+        for (const assignmentId of assignmentIds) {
+          try {
+            const assignment = await storage.getSeatAssignmentById(assignmentId);
+            if (!assignment) {
+              failed++;
+              errors.push(`Assignment ${assignmentId} not found`);
+              continue;
+            }
+            
+            const contestant = contestants.find(c => c.id === assignment.contestantId);
+            if (!contestant?.email) {
+              failed++;
+              errors.push(`No email for contestant ${contestant?.name || assignmentId}`);
+              continue;
+            }
+            
+            // Get record day info for context
+            const recordDay = await storage.getRecordDay(assignment.recordDayId);
           const formattedDate = recordDay?.date 
             ? new Date(recordDay.date).toLocaleDateString('en-AU', { 
                 weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
@@ -11076,30 +11126,30 @@ Thank you.`;
               value: now,
             });
             
-            sent++;
-            emailCount++;
-            
-            // Add delay after sending to avoid overwhelming mail server
-            if (emailCount < assignmentIds.length) {
-              console.log(`📧 Paperwork bulk email: Sent ${emailCount}/${assignmentIds.length}, waiting ${DELAY_BETWEEN_EMAILS_MS}ms before next...`);
-              await delay(DELAY_BETWEEN_EMAILS_MS);
+              sent++;
+              emailCount++;
+              
+              // Add delay after sending to avoid overwhelming mail server
+              if (emailCount < assignmentIds.length) {
+                console.log(`📧 Paperwork bulk email: Sent ${emailCount}/${assignmentIds.length}, waiting ${DELAY_BETWEEN_EMAILS_MS}ms before next...`);
+                await delay(DELAY_BETWEEN_EMAILS_MS);
+              }
+            } else {
+              failed++;
+              errors.push(`Failed to send to ${contestant.email}: ${emailResult.error}`);
             }
-          } else {
+          } catch (err: any) {
             failed++;
-            errors.push(`Failed to send to ${contestant.email}: ${emailResult.error}`);
+            errors.push(`Error processing ${assignmentId}: ${err.message}`);
           }
-        } catch (err: any) {
-          failed++;
-          errors.push(`Error processing ${assignmentId}: ${err.message}`);
         }
-      }
-      
-      res.json({ 
-        success: true,
-        sent,
-        failed,
-        errors: errors.length > 0 ? errors : undefined,
+        
+        console.log(`📧 Background paperwork email send complete: ${sent} sent, ${failed} failed`);
+        if (failed > 0) {
+          console.error(`📧 Paperwork email errors:`, errors);
+        }
       });
+
     } catch (error: any) {
       console.error("Error bulk sending paperwork:", error);
       res.status(500).json({ error: error.message });
