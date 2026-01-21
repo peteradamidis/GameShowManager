@@ -70,7 +70,7 @@ interface AdobeSignConfig {
 type StatusFilter = "all" | "invited" | "confirmed" | "declined";
 type PaperworkStatusFilter = "all" | "ready_to_send" | "awaiting_return" | "complete" | "new_only";
 type BlockFilter = "all" | "1" | "2" | "3" | "4" | "5" | "6" | "7";
-type ViewMode = "seats" | "standbys";
+type ViewMode = "all" | "seats" | "standbys";
 
 const PAPERWORK_TRACKER_STORAGE_KEY = 'paperwork-tracker-state';
 
@@ -136,10 +136,10 @@ export default function Paperwork() {
       const saved = localStorage.getItem(PAPERWORK_TRACKER_STORAGE_KEY);
       if (saved) {
         const state: PaperworkTrackerState = JSON.parse(saved);
-        return state.viewMode || "seats";
+        return state.viewMode || "all";
       }
     } catch {}
-    return "seats";
+    return "all";
   });
   
   const [searchName, setSearchName] = useState("");
@@ -247,7 +247,7 @@ Deal or No Deal Production Team`);
       if (!response.ok) throw new Error('Failed to fetch standbys');
       return response.json();
     },
-    enabled: viewMode === "standbys",
+    enabled: viewMode === "standbys" || viewMode === "all",
   });
 
   // Query for canceled assignments (declined contestants on reschedule list)
@@ -429,6 +429,36 @@ Deal or No Deal Production Team`);
   const handleCancelUntick = () => {
     setUntickConfirmOpen(false);
     setUntickPending(null);
+  };
+
+  // Standby paperwork mutation
+  const standbyPaperworkMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Record<string, any> }) => {
+      const response = await apiRequest("PATCH", `/api/standbys/${id}/workflow`, updates);
+      return response.json();
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["/api/standbys/record-day"] });
+    },
+  });
+
+  // Handler for standby paperwork checkbox changes
+  const handleStandbyPaperworkCheckbox = (
+    standby: StandbyWithContestant,
+    field: "paperworkSent" | "paperworkReceived",
+    checked: boolean
+  ) => {
+    const updates: Record<string, any> = {};
+    if (field === "paperworkSent") {
+      updates.paperworkSent = checked ? new Date().toISOString() : null;
+      // Also clear received if we're clearing sent
+      if (!checked) {
+        updates.paperworkReceived = null;
+      }
+    } else {
+      updates.paperworkReceived = checked ? new Date().toISOString() : null;
+    }
+    standbyPaperworkMutation.mutate({ id: standby.id, updates });
   };
 
   const bulkMarkCopiedMutation = useMutation({
@@ -698,6 +728,7 @@ Deal or No Deal Production Team`);
                     <SelectValue placeholder="Seats" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all">All Bookings</SelectItem>
                     <SelectItem value="seats">Seat Bookings</SelectItem>
                     <SelectItem value="standbys">Standbys</SelectItem>
                   </SelectContent>
@@ -901,7 +932,7 @@ Deal or No Deal Production Team`);
 
           {/* Main Table */}
           {viewMode === "standbys" ? (
-            /* Standbys Table */
+            /* Standbys Only Table */
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between flex-wrap gap-4">
@@ -1030,14 +1061,23 @@ Deal or No Deal Production Team`);
                       <Users className="h-5 w-5" />
                       {statusFilter === "declined" 
                         ? `Declined Contestants (${filteredCanceledAssignments.length})`
-                        : `Invited Contestants (${totalInvitedCount})`}
+                        : viewMode === "all"
+                          ? `All Bookings (${totalInvitedCount + standbyData.filter(s => {
+                              if (!searchName) return true;
+                              const searchLower = searchName.toLowerCase();
+                              return s.contestant?.name?.toLowerCase().includes(searchLower) || 
+                                     s.contestant?.email?.toLowerCase().includes(searchLower);
+                            }).length})`
+                          : `Invited Contestants (${totalInvitedCount})`}
                     </CardTitle>
                     <CardDescription>
                       {statusFilter === "declined"
                         ? "Contestants who have declined their booking and are on the reschedule list"
-                        : statusFilter === "all" && declinedCount > 0
-                          ? `Contestants who have been sent a booking invitation (including ${declinedCount} declined)`
-                          : "Contestants who have been sent a booking invitation"}
+                        : viewMode === "all"
+                          ? `Seat bookings and standbys combined${declinedCount > 0 ? ` (including ${declinedCount} declined)` : ''}`
+                          : statusFilter === "all" && declinedCount > 0
+                            ? `Contestants who have been sent a booking invitation (including ${declinedCount} declined)`
+                            : "Contestants who have been sent a booking invitation"}
                     </CardDescription>
                   </div>
                   <Button 
@@ -1304,6 +1344,123 @@ Deal or No Deal Production Team`);
                         </TableCell>
                       </TableRow>
                     ))}
+                    
+                    {/* Standbys - only show in "all" view mode */}
+                    {viewMode === "all" && standbyData
+                      .filter(s => {
+                        if (!searchName) return true;
+                        const searchLower = searchName.toLowerCase();
+                        return s.contestant?.name?.toLowerCase().includes(searchLower) || 
+                               s.contestant?.email?.toLowerCase().includes(searchLower);
+                      })
+                      .sort((a, b) => (a.priority || 999) - (b.priority || 999))
+                      .map((standby) => (
+                        <TableRow 
+                          key={`standby-${standby.id}`}
+                          className={`
+                            ${standby.paperworkReceived ? 'bg-teal-50 dark:bg-teal-900/20' : 
+                              standby.paperworkSent ? 'bg-amber-50 dark:bg-amber-900/10' : 
+                              'bg-amber-50/50 dark:bg-amber-900/5'}
+                          `}
+                          data-testid={`row-paperwork-standby-${standby.id}`}
+                        >
+                          <TableCell className="px-2">
+                            <span className="text-xs text-muted-foreground">-</span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{standby.contestant?.name || "Unknown"}</span>
+                              <Badge className="w-fit text-[10px] px-1 py-0 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 mt-1">
+                                Standby #{standby.priority || '-'}
+                              </Badge>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3 text-muted-foreground" />
+                              {standby.recordDay ? format(new Date(standby.recordDay.date), "d MMM yyyy") : 
+                                (selectedRecordDay !== "all" ? 
+                                  sortedRecordDays.find(rd => rd.id === selectedRecordDay)?.date ? 
+                                    format(new Date(sortedRecordDays.find(rd => rd.id === selectedRecordDay)!.date), "d MMM yyyy") : "N/A"
+                                  : "N/A")}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className="bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700">
+                              Standby
+                            </Badge>
+                          </TableCell>
+                          <TableCell 
+                            className="text-sm select-all cursor-text"
+                            title="Click to select, then Ctrl+C to copy"
+                          >
+                            {standby.contestant?.email || "-"}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {standby.confirmedAt ? (
+                              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Confirmed
+                              </Badge>
+                            ) : standby.status === 'pending' ? (
+                              <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                                <Clock className="h-3 w-3 mr-1" />
+                                Pending
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-muted-foreground">
+                                Not Invited
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Checkbox
+                              checked={!!standby.paperworkSent}
+                              onCheckedChange={(checked) => handleStandbyPaperworkCheckbox(standby, "paperworkSent", checked === true)}
+                              disabled={standbyPaperworkMutation.isPending}
+                              data-testid={`checkbox-standby-sent-${standby.id}`}
+                            />
+                            {standby.paperworkSent && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {format(new Date(standby.paperworkSent), "d MMM")}
+                              </p>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Checkbox
+                              checked={!!standby.paperworkReceived}
+                              onCheckedChange={(checked) => handleStandbyPaperworkCheckbox(standby, "paperworkReceived", checked === true)}
+                              disabled={!standby.paperworkSent || standbyPaperworkMutation.isPending}
+                              data-testid={`checkbox-standby-received-${standby.id}`}
+                            />
+                            {standby.paperworkReceived && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {format(new Date(standby.paperworkReceived), "d MMM")}
+                              </p>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col gap-1 items-start">
+                              {standby.paperworkReceived ? (
+                                <Badge className="bg-teal-600 text-white dark:bg-teal-600">
+                                  <FileCheck className="h-3 w-3 mr-1" />
+                                  Complete
+                                </Badge>
+                              ) : standby.paperworkSent ? (
+                                <Badge className="bg-amber-500 text-white dark:bg-amber-500">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  Awaiting Return
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                                  <Send className="h-3 w-3 mr-1" />
+                                  Ready To Send
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
               )}
