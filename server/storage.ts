@@ -20,6 +20,7 @@ import {
   users,
   rebookingHistory,
   attendanceIssues,
+  movementHistory,
   noticeboardPosts,
   noticeboardComments,
   noticeboardLikes,
@@ -59,6 +60,8 @@ import {
   type InsertRebookingHistory,
   type AttendanceIssue,
   type InsertAttendanceIssue,
+  type MovementHistory,
+  type InsertMovementHistory,
   type NoticeboardPost,
   type InsertNoticeboardPost,
   type NoticeboardComment,
@@ -354,6 +357,12 @@ export interface IStorage {
   getAttendanceIssuesByRecordDay(recordDayId: string): Promise<Array<AttendanceIssue & { contestant: Contestant }>>;
   deleteAttendanceIssue(id: string): Promise<void>;
   moveAttendanceIssueToReschedule(id: string, options?: { movedBy?: string; reason?: string }): Promise<{ attendanceIssue: AttendanceIssue; canceledAssignment: CanceledAssignment }>;
+  
+  // Movement History
+  logMovement(data: InsertMovementHistory): Promise<MovementHistory>;
+  getMovementHistory(): Promise<Array<MovementHistory & { contestant: Contestant; recordDay?: RecordDay }>>;
+  getMovementHistoryByRecordDay(recordDayId: string): Promise<Array<MovementHistory & { contestant: Contestant }>>;
+  getMovementHistoryByContestant(contestantId: string): Promise<Array<MovementHistory & { recordDay?: RecordDay }>>;
   
   // Noticeboard
   createNoticeboardPost(post: InsertNoticeboardPost): Promise<NoticeboardPost>;
@@ -2318,6 +2327,68 @@ export class DbStorage implements IStorage {
         canceledAssignment,
       };
     });
+  }
+
+  // Movement History
+  async logMovement(data: InsertMovementHistory): Promise<MovementHistory> {
+    const [created] = await db
+      .insert(movementHistory)
+      .values(data)
+      .returning();
+    return created;
+  }
+
+  async getMovementHistory(): Promise<Array<MovementHistory & { contestant: Contestant; recordDay?: RecordDay }>> {
+    const results = await db
+      .select({
+        movementHistory: movementHistory,
+        contestant: contestants,
+        recordDay: recordDays,
+      })
+      .from(movementHistory)
+      .innerJoin(contestants, eq(movementHistory.contestantId, contestants.id))
+      .leftJoin(recordDays, eq(movementHistory.recordDayId, recordDays.id))
+      .orderBy(desc(movementHistory.createdAt));
+    
+    return results.map(r => ({
+      ...r.movementHistory,
+      contestant: r.contestant,
+      recordDay: r.recordDay || undefined,
+    }));
+  }
+
+  async getMovementHistoryByRecordDay(recordDayId: string): Promise<Array<MovementHistory & { contestant: Contestant }>> {
+    const results = await db
+      .select({
+        movementHistory: movementHistory,
+        contestant: contestants,
+      })
+      .from(movementHistory)
+      .innerJoin(contestants, eq(movementHistory.contestantId, contestants.id))
+      .where(eq(movementHistory.recordDayId, recordDayId))
+      .orderBy(desc(movementHistory.createdAt));
+    
+    return results.map(r => ({
+      ...r.movementHistory,
+      contestant: r.contestant,
+    }));
+  }
+
+  async getMovementHistoryByContestant(contestantId: string): Promise<Array<MovementHistory & { recordDay?: RecordDay }>> {
+    const results = await db
+      .select({
+        movementHistory: movementHistory,
+        recordDay: recordDays,
+      })
+      .from(movementHistory)
+      .leftJoin(recordDays, eq(movementHistory.recordDayId, recordDays.id))
+      .where(eq(movementHistory.contestantId, contestantId))
+      .orderBy(desc(movementHistory.createdAt));
+    
+    return results.map(r => ({
+      ...r.movementHistory,
+      recordDay: r.recordDay || undefined,
+    }));
   }
 
   // Prize Winners
