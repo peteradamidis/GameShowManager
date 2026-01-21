@@ -61,6 +61,8 @@ export const recordDays = pgTable("record_days", {
   status: recordDayStatusEnum("status").default('draft').notNull(),
   producer: text("producer"), // Producer assigned to this record day
   lockedAt: timestamp("locked_at"), // When record day is locked for RX Day Mode
+  contestantReminderSentAt: timestamp("contestant_reminder_sent_at"), // When 48-hour reminder was sent to contestants
+  standbyReminderSentAt: timestamp("standby_reminder_sent_at"), // When 48-hour reminder was sent to standbys
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

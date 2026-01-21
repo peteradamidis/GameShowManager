@@ -4,9 +4,11 @@ import { RecordDayCard, RecordDay } from "@/components/record-day-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight, Clapperboard } from "lucide-react";
+import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight, Clapperboard, Bell, Send, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { format, differenceInDays, subDays, startOfWeek, endOfWeek, addWeeks, formatDistanceToNow, startOfDay } from "date-fns";
 
 interface CountdownTime {
@@ -151,6 +153,16 @@ interface SeatAssignment {
   confirmedRsvp?: string | null;
 }
 
+interface UpcomingReminder {
+  id: string;
+  date: string;
+  rxNumber?: string | null;
+  contestantReminderSent: boolean;
+  standbyReminderSent: boolean;
+  contestantReminderSentAt?: string | null;
+  standbyReminderSentAt?: string | null;
+}
+
 type DeadlineStatus = 'overdue' | 'due-soon' | 'on-track';
 
 interface DeadlineInfo {
@@ -188,6 +200,80 @@ export default function Dashboard() {
   // Fetch recent noticeboard posts
   const { data: recentPosts = [] } = useQuery<NoticeboardPost[]>({
     queryKey: ['/api/noticeboard/posts/recent'],
+  });
+
+  // Fetch upcoming record days that need reminders (within 48 hours)
+  const { data: upcomingReminders = [] } = useQuery<UpcomingReminder[]>({
+    queryKey: ['/api/record-days/upcoming-reminders'],
+    refetchInterval: 60000, // Refresh every minute
+  });
+
+  const { toast } = useToast();
+
+  // Track which record day IDs are currently pending for each reminder type (as Sets for concurrent requests)
+  const [pendingContestantReminders, setPendingContestantReminders] = useState<Set<string>>(new Set());
+  const [pendingStandbyReminders, setPendingStandbyReminders] = useState<Set<string>>(new Set());
+
+  // Mutation for sending contestant reminders
+  const sendContestantReminderMutation = useMutation({
+    mutationFn: async (recordDayId: string) => {
+      setPendingContestantReminders(prev => new Set([...prev, recordDayId]));
+      const res = await apiRequest('POST', `/api/record-days/${recordDayId}/send-contestant-reminder`);
+      return res.json();
+    },
+    onSettled: (_data, _error, variables) => {
+      // variables is the recordDayId passed to mutate()
+      setPendingContestantReminders(prev => {
+        const next = new Set(prev);
+        next.delete(variables);
+        return next;
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Reminders Sent",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/record-days/upcoming-reminders'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send reminders",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation for sending standby reminders
+  const sendStandbyReminderMutation = useMutation({
+    mutationFn: async (recordDayId: string) => {
+      setPendingStandbyReminders(prev => new Set([...prev, recordDayId]));
+      const res = await apiRequest('POST', `/api/record-days/${recordDayId}/send-standby-reminder`);
+      return res.json();
+    },
+    onSettled: (_data, _error, variables) => {
+      // variables is the recordDayId passed to mutate()
+      setPendingStandbyReminders(prev => {
+        const next = new Set(prev);
+        next.delete(variables);
+        return next;
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Reminders Sent",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/record-days/upcoming-reminders'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send reminders",
+        variant: "destructive",
+      });
+    },
   });
 
   // Calculate new posts since last visit
@@ -386,6 +472,75 @@ export default function Dashboard() {
           targetDate={firstRecordDate} 
           rxNumber={futureRecordDays[0]?.rxNumber}
         />
+      )}
+
+      {/* 48-Hour Reminder Alert */}
+      {upcomingReminders.length > 0 && (
+        <Card className="border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30" data-testid="card-reminder-alert">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg text-amber-800 dark:text-amber-300">
+              <Bell className="h-5 w-5" />
+              48-Hour Reminder Emails
+              <Badge variant="outline" className="ml-2 border-amber-400 text-amber-700 dark:text-amber-400">
+                {upcomingReminders.length} day{upcomingReminders.length !== 1 ? 's' : ''} coming up
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {upcomingReminders.map((reminder) => (
+              <div 
+                key={reminder.id} 
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-white dark:bg-slate-900 border"
+                data-testid={`reminder-day-${reminder.id}`}
+              >
+                <div>
+                  <p className="font-medium">
+                    {reminder.rxNumber && <span className="text-muted-foreground mr-2">{reminder.rxNumber}</span>}
+                    {format(new Date(reminder.date), "EEEE, d MMMM yyyy")}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant={reminder.contestantReminderSent ? "outline" : "default"}
+                    onClick={() => sendContestantReminderMutation.mutate(reminder.id)}
+                    disabled={pendingContestantReminders.has(reminder.id)}
+                    className="gap-1"
+                    data-testid={`button-send-contestant-reminder-${reminder.id}`}
+                  >
+                    {pendingContestantReminders.has(reminder.id) ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Send className="h-3 w-3" />
+                    )}
+                    {reminder.contestantReminderSent ? 'Resend to Contestants' : 'Send to Contestants'}
+                    {reminder.contestantReminderSent && (
+                      <CheckCircle className="h-3 w-3 text-green-600 ml-1" />
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={reminder.standbyReminderSent ? "outline" : "secondary"}
+                    onClick={() => sendStandbyReminderMutation.mutate(reminder.id)}
+                    disabled={pendingStandbyReminders.has(reminder.id)}
+                    className="gap-1"
+                    data-testid={`button-send-standby-reminder-${reminder.id}`}
+                  >
+                    {pendingStandbyReminders.has(reminder.id) ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Send className="h-3 w-3" />
+                    )}
+                    {reminder.standbyReminderSent ? 'Resend to Standbys' : 'Send to Standbys'}
+                    {reminder.standbyReminderSent && (
+                      <CheckCircle className="h-3 w-3 text-green-600 ml-1" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

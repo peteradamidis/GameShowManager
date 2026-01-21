@@ -2710,6 +2710,433 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get record days that need reminder emails (within 48 hours)
+  app.get("/api/record-days/upcoming-reminders", async (req, res) => {
+    try {
+      const allRecordDays = await storage.getRecordDays();
+      const now = new Date();
+      const in48Hours = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+      
+      // Filter record days within the next 48 hours
+      // Only show days where at least one reminder type hasn't been sent yet
+      const upcomingDays = allRecordDays
+        .filter(day => {
+          const dayDate = new Date(day.date);
+          // Set to 7:30 AM AEDT for the record day
+          dayDate.setHours(7, 30, 0, 0);
+          const inWindow = dayDate >= now && dayDate <= in48Hours;
+          // Exclude days where BOTH contestant AND standby reminders have been sent
+          const needsAnyReminder = !day.contestantReminderSentAt || !day.standbyReminderSentAt;
+          return inWindow && needsAnyReminder;
+        })
+        .map(day => ({
+          ...day,
+          contestantReminderSent: !!day.contestantReminderSentAt,
+          standbyReminderSent: !!day.standbyReminderSentAt,
+        }))
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      
+      res.json(upcomingDays);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Send reminder emails to contestants for a record day
+  app.post("/api/record-days/:id/send-contestant-reminder", requireAuth, async (req, res) => {
+    try {
+      const recordDayId = req.params.id;
+      
+      // Get record day
+      const recordDay = await storage.getRecordDayById(recordDayId);
+      if (!recordDay) {
+        return res.status(404).json({ error: "Record day not found" });
+      }
+      
+      // Get all confirmed seat assignments for this day
+      const allAssignments = await storage.getAllSeatAssignments();
+      const dayAssignments = allAssignments.filter(a => 
+        a.recordDayId === recordDayId && 
+        a.confirmedRsvp && 
+        a.contestant?.email
+      );
+      
+      if (dayAssignments.length === 0) {
+        return res.status(400).json({ error: "No confirmed contestants with email addresses found for this record day" });
+      }
+      
+      // Format record date
+      const recordDate = new Date(recordDay.date);
+      const formattedDate = recordDate.toLocaleDateString('en-AU', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+      
+      // Get email banner
+      let bannerUrl = '';
+      let ticketBannerBuffer: Buffer | null = null;
+      let ticketBannerFilename = '';
+      let ticketBannerContentType = 'image/png';
+      let ticketBannerCid = 'ticket-banner';
+      
+      try {
+        const ticketBanner = await storage.getSystemConfig('ticket_email_banner');
+        if (ticketBanner && ticketBanner.startsWith('data:')) {
+          const match = ticketBanner.match(/^data:([^;]+);base64,(.+)$/);
+          if (match) {
+            ticketBannerContentType = match[1];
+            ticketBannerBuffer = Buffer.from(match[2], 'base64');
+            const ext = ticketBannerContentType.split('/')[1] || 'png';
+            ticketBannerFilename = `banner.${ext}`;
+            bannerUrl = `cid:${ticketBannerCid}`;
+          }
+        }
+      } catch (e) {
+        console.log('No banner configured');
+      }
+      
+      // Get reminder email template settings
+      const reminderHeadline = await storage.getSystemConfig('contestant_reminder_headline') || 'Reminder: Your Record Day Is Coming Up!';
+      const reminderIntro = await storage.getSystemConfig('contestant_reminder_intro') || 
+        'This is a friendly reminder that your Deal or No Deal recording is coming up! Please ensure you have all necessary documents ready and arrive on time.';
+      const reminderFooter = await storage.getSystemConfig('contestant_reminder_footer') || 'This is an automated reminder from the Deal or No Deal production team.';
+      
+      let emailsSent = 0;
+      const emailErrors: string[] = [];
+      
+      for (const assignment of dayAssignments) {
+        if (!assignment.contestant?.email) continue;
+        
+        const emailHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    
+    <!-- Full-width Banner Image -->
+    <tr>
+      <td style="padding: 0; line-height: 0;">
+        ${bannerUrl ? `<img src="${bannerUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />` : ''}
+      </td>
+    </tr>
+    
+    <!-- Gold Title Bar -->
+    <tr>
+      <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          ${reminderHeadline}
+        </h1>
+      </td>
+    </tr>
+    
+    <!-- Content Card -->
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+          <tr>
+            <td style="padding: 30px;">
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                Hi ${assignment.contestant.name.split(' ')[0]},
+              </p>
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                ${reminderIntro.split('\n\n').map((paragraph: string) => 
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
+              
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase;">
+                      Your Booking Details
+                    </h2>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                      <strong style="color: #8B0000;">DATE:</strong> ${formattedDate.toUpperCase()}
+                    </p>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30 AM
+                    </p>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
+                      <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
+                We look forward to seeing you!
+              </p>
+              <p style="color: #333333; font-size: 15px; margin: 0;">
+                Kind Regards,<br/>
+                <strong>The Deal Or No Deal Team</strong>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    
+    <!-- Footer -->
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
+        <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
+          ${reminderFooter}
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+        try {
+          const attachments: any[] = [];
+          if (ticketBannerBuffer) {
+            attachments.push({
+              filename: ticketBannerFilename,
+              content: ticketBannerBuffer,
+              contentType: ticketBannerContentType,
+              cid: ticketBannerCid
+            });
+          }
+          
+          const senderNameConfig = await storage.getSystemConfig('email_sender_name');
+          await sendEmailWithAttachment(
+            assignment.contestant.email,
+            `Deal or No Deal - Reminder: ${formattedDate}`,
+            emailHtml,
+            attachments,
+            { senderName: senderNameConfig || 'Deal or No Deal' }
+          );
+          emailsSent++;
+        } catch (err: any) {
+          emailErrors.push(`${assignment.contestant.name}: ${err.message}`);
+        }
+      }
+      
+      // Update record day to mark reminder as sent
+      await storage.updateRecordDay(recordDayId, {
+        contestantReminderSentAt: new Date(),
+      });
+      
+      res.json({
+        success: true,
+        message: `Reminder emails sent to ${emailsSent} contestants`,
+        emailsSent,
+        errors: emailErrors.length > 0 ? emailErrors : undefined
+      });
+    } catch (error: any) {
+      console.error("Error sending contestant reminders:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Send reminder emails to standbys for a record day
+  app.post("/api/record-days/:id/send-standby-reminder", requireAuth, async (req, res) => {
+    try {
+      const recordDayId = req.params.id;
+      
+      // Get record day
+      const recordDay = await storage.getRecordDayById(recordDayId);
+      if (!recordDay) {
+        return res.status(404).json({ error: "Record day not found" });
+      }
+      
+      // Get all standbys for this day
+      const standbys = await storage.getStandbyAssignmentsByRecordDay(recordDayId);
+      const confirmedStandbys = standbys.filter(s => 
+        (s.status === 'confirmed' || s.status === 'pending' || s.status === 'email_sent') && 
+        s.contestant?.email
+      );
+      
+      if (confirmedStandbys.length === 0) {
+        return res.status(400).json({ error: "No standbys with email addresses found for this record day" });
+      }
+      
+      // Format record date
+      const recordDate = new Date(recordDay.date);
+      const formattedDate = recordDate.toLocaleDateString('en-AU', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+      
+      // Get email banner
+      let bannerUrl = '';
+      let ticketBannerBuffer: Buffer | null = null;
+      let ticketBannerFilename = '';
+      let ticketBannerContentType = 'image/png';
+      let ticketBannerCid = 'ticket-banner';
+      
+      try {
+        const ticketBanner = await storage.getSystemConfig('ticket_email_banner');
+        if (ticketBanner && ticketBanner.startsWith('data:')) {
+          const match = ticketBanner.match(/^data:([^;]+);base64,(.+)$/);
+          if (match) {
+            ticketBannerContentType = match[1];
+            ticketBannerBuffer = Buffer.from(match[2], 'base64');
+            const ext = ticketBannerContentType.split('/')[1] || 'png';
+            ticketBannerFilename = `banner.${ext}`;
+            bannerUrl = `cid:${ticketBannerCid}`;
+          }
+        }
+      } catch (e) {
+        console.log('No banner configured');
+      }
+      
+      // Get standby reminder email template settings
+      const reminderHeadline = await storage.getSystemConfig('standby_reminder_headline') || 'Standby Reminder: Be Ready!';
+      const reminderIntro = await storage.getSystemConfig('standby_reminder_intro') || 
+        'This is a friendly reminder that you are on standby for an upcoming Deal or No Deal recording. Please be prepared to attend if called upon!';
+      const reminderFooter = await storage.getSystemConfig('standby_reminder_footer') || 'This is an automated reminder from the Deal or No Deal production team.';
+      
+      let emailsSent = 0;
+      const emailErrors: string[] = [];
+      
+      for (const standby of confirmedStandbys) {
+        if (!standby.contestant?.email) continue;
+        
+        const emailHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #2a0a0a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+    
+    <!-- Full-width Banner Image -->
+    <tr>
+      <td style="padding: 0; line-height: 0;">
+        ${bannerUrl ? `<img src="${bannerUrl}" alt="Deal or No Deal" style="width: 100%; height: auto; display: block;" />` : ''}
+      </td>
+    </tr>
+    
+    <!-- Gold Title Bar -->
+    <tr>
+      <td style="background: linear-gradient(180deg, #3d0c0c 0%, #2a0a0a 100%); padding: 25px 30px; text-align: center;">
+        <h1 style="color: #D4AF37; font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          ${reminderHeadline}
+        </h1>
+      </td>
+    </tr>
+    
+    <!-- Content Card -->
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 0 20px 25px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+          <tr>
+            <td style="padding: 30px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 0 0 20px 0;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <p style="color: #856404; font-size: 14px; font-weight: bold; margin: 0;">
+                      You are on STANDBY for this record day. We may contact you on the day if a seat becomes available.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                Hi ${standby.contestant.name.split(' ')[0]},
+              </p>
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                ${reminderIntro.split('\n\n').map((paragraph: string) => 
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
+              
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%); border-radius: 8px; border-left: 5px solid #D4AF37; margin: 0 0 25px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 style="color: #8B0000; font-size: 14px; font-weight: bold; margin: 0 0 15px 0; text-transform: uppercase;">
+                      Record Day Details
+                    </h2>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                      <strong style="color: #8B0000;">DATE:</strong> ${formattedDate.toUpperCase()}
+                    </p>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30 AM (if called)
+                    </p>
+                    <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
+                      <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
+                Please ensure your phone is on and you are available if we need to call you.
+              </p>
+              <p style="color: #333333; font-size: 15px; margin: 0;">
+                Kind Regards,<br/>
+                <strong>The Deal Or No Deal Team</strong>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    
+    <!-- Footer -->
+    <tr>
+      <td style="background-color: #2a0a0a; padding: 15px 30px 30px 30px; text-align: center;">
+        <p style="color: #aa8888; font-size: 11px; line-height: 1.6; margin: 0;">
+          ${reminderFooter}
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+        try {
+          const attachments: any[] = [];
+          if (ticketBannerBuffer) {
+            attachments.push({
+              filename: ticketBannerFilename,
+              content: ticketBannerBuffer,
+              contentType: ticketBannerContentType,
+              cid: ticketBannerCid
+            });
+          }
+          
+          const senderNameConfig = await storage.getSystemConfig('email_sender_name');
+          await sendEmailWithAttachment(
+            standby.contestant.email,
+            `Deal or No Deal Standby - Reminder: ${formattedDate}`,
+            emailHtml,
+            attachments,
+            { senderName: senderNameConfig || 'Deal or No Deal' }
+          );
+          emailsSent++;
+        } catch (err: any) {
+          emailErrors.push(`${standby.contestant.name}: ${err.message}`);
+        }
+      }
+      
+      // Update record day to mark standby reminder as sent
+      await storage.updateRecordDay(recordDayId, {
+        standbyReminderSentAt: new Date(),
+      });
+      
+      res.json({
+        success: true,
+        message: `Reminder emails sent to ${emailsSent} standbys`,
+        emailsSent,
+        errors: emailErrors.length > 0 ? emailErrors : undefined
+      });
+    } catch (error: any) {
+      console.error("Error sending standby reminders:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Assign contestants to a record day
   app.post("/api/record-days/:id/contestants", async (req, res) => {
     try {
