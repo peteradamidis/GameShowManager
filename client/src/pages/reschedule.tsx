@@ -395,6 +395,7 @@ export default function ReschedulePage() {
                   <TableHead>Age</TableHead>
                   <TableHead>Gender</TableHead>
                   <TableHead>Attending With</TableHead>
+                  <TableHead>Email</TableHead>
                   <TableHead>Original Attendance</TableHead>
                   <TableHead>Original Seat</TableHead>
                   <TableHead>Added At</TableHead>
@@ -410,7 +411,8 @@ export default function ReschedulePage() {
                     const searchLower = searchQuery.toLowerCase();
                     const matchesSearch = !searchQuery || 
                       cancellation.contestant?.name?.toLowerCase().includes(searchLower) ||
-                      cancellation.contestant?.attendingWith?.toLowerCase().includes(searchLower);
+                      cancellation.contestant?.attendingWith?.toLowerCase().includes(searchLower) ||
+                      cancellation.contestant?.email?.toLowerCase().includes(searchLower);
                     const matchesType = filterType === "all" || 
                       (filterType === "standby" && cancellation.isFromStandby) || 
                       (filterType === "canceled" && !cancellation.isFromStandby);
@@ -510,6 +512,11 @@ export default function ReschedulePage() {
                     <TableCell>
                       <span className="text-xs text-muted-foreground truncate max-w-[150px] block" title={cancellation.contestant.attendingWith}>
                         {cancellation.contestant.attendingWith || "—"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-xs text-muted-foreground truncate max-w-[180px] block" title={cancellation.contestant.email}>
+                        {cancellation.contestant.email || "—"}
                       </span>
                     </TableCell>
                     <TableCell>
