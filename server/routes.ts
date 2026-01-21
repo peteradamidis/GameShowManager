@@ -8790,54 +8790,34 @@ Thank you.`;
       
       // Filter out fields that shouldn't be updated directly on standbyAssignment table
       // or that cause issues if passed incorrectly
-      const { contestant, recordDay, ...filteredUpdateData } = updateData;
+      const { contestant, recordDay, originalAttendanceDate, ...filteredUpdateData } = updateData;
       
       // Convert string dates to Date objects for timestamp columns
-      if (filteredUpdateData.confirmedAt && typeof filteredUpdateData.confirmedAt === 'string') {
-        filteredUpdateData.confirmedAt = new Date(filteredUpdateData.confirmedAt);
-      }
-      if (filteredUpdateData.standbyEmailSent && typeof filteredUpdateData.standbyEmailSent === 'string') {
-        filteredUpdateData.standbyEmailSent = new Date(filteredUpdateData.standbyEmailSent);
-      }
-      if (filteredUpdateData.standbyTicketSent && typeof filteredUpdateData.standbyTicketSent === 'string') {
-        filteredUpdateData.standbyTicketSent = new Date(filteredUpdateData.standbyTicketSent);
-      }
-      if (filteredUpdateData.assignedAt && typeof filteredUpdateData.assignedAt === 'string') {
-        filteredUpdateData.assignedAt = new Date(filteredUpdateData.assignedAt);
-      }
-      if (filteredUpdateData.movedToRescheduleAt && typeof filteredUpdateData.movedToRescheduleAt === 'string') {
-        filteredUpdateData.movedToRescheduleAt = new Date(filteredUpdateData.movedToRescheduleAt);
-      }
-      // Workflow tracking fields
-      if (filteredUpdateData.bookingEmailSent && typeof filteredUpdateData.bookingEmailSent === 'string') {
-        filteredUpdateData.bookingEmailSent = new Date(filteredUpdateData.bookingEmailSent);
-      }
-      if (filteredUpdateData.confirmedRsvp && typeof filteredUpdateData.confirmedRsvp === 'string') {
-        filteredUpdateData.confirmedRsvp = new Date(filteredUpdateData.confirmedRsvp);
-      }
-      if (filteredUpdateData.paperworkSent && typeof filteredUpdateData.paperworkSent === 'string') {
-        filteredUpdateData.paperworkSent = new Date(filteredUpdateData.paperworkSent);
-      }
-      if (filteredUpdateData.paperworkReceived && typeof filteredUpdateData.paperworkReceived === 'string') {
-        filteredUpdateData.paperworkReceived = new Date(filteredUpdateData.paperworkReceived);
-      }
-      if (filteredUpdateData.paperworkOnDay && typeof filteredUpdateData.paperworkOnDay === 'string') {
-        filteredUpdateData.paperworkOnDay = new Date(filteredUpdateData.paperworkOnDay);
-      }
-      if (filteredUpdateData.signedIn && typeof filteredUpdateData.signedIn === 'string') {
-        filteredUpdateData.signedIn = new Date(filteredUpdateData.signedIn);
+      const timestampFields = [
+        'confirmedAt', 'standbyEmailSent', 'standbyTicketSent', 
+        'assignedAt', 'movedToRescheduleAt', 'bookingEmailSent', 
+        'confirmedRsvp', 'paperworkSent', 'paperworkReceived', 
+        'paperworkOnDay', 'signedIn'
+      ];
+
+      for (const field of timestampFields) {
+        if (filteredUpdateData[field] && typeof filteredUpdateData[field] === 'string') {
+          filteredUpdateData[field] = new Date(filteredUpdateData[field]);
+        }
       }
 
       // Get the standby first to have access to contestant/recordDay data
-      const standby = await storage.getStandbyAssignment(id);
+      const standby = await storage.getStandbyAssignmentById(id);
       
       if (!standby) {
+        console.error(`[Standby Update] Standby ${id} not found`);
         return res.status(404).json({ error: "Standby assignment not found" });
       }
 
       const updated = await storage.updateStandbyAssignment(id, filteredUpdateData);
       
       if (!updated) {
+        console.error(`[Standby Update] Update failed for ${id}`);
         return res.status(404).json({ error: "Standby assignment not found" });
       }
 
@@ -8855,7 +8835,7 @@ Thank you.`;
           isFromStandby: false, // Show "Canceled" tag, not "Standby"
           wasDeclined: true,
           declinedAt: new Date(),
-          originalAttendanceDate: standby.recordDay?.date ? new Date(standby.recordDay.date) : null,
+          originalAttendanceDate: standby.recordDayId ? (await storage.getRecordDayById(standby.recordDayId))?.date : null,
         });
 
         // Update contestant status to 'rescheduled'
@@ -8864,6 +8844,7 @@ Thank you.`;
 
       res.json(updated);
     } catch (error: any) {
+      console.error(`[Standby Update] Catch error for ${id}:`, error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -8900,7 +8881,7 @@ Thank you.`;
       const { id } = req.params;
       
       // Get the standby to find the contestant
-      const standby = await storage.getStandbyAssignment(id);
+      const standby = await storage.getStandbyAssignmentById(id);
       
       await storage.deleteStandbyAssignment(id);
       
