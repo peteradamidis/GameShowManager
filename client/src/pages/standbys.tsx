@@ -73,6 +73,7 @@ interface StandbyAssignment {
   assignedAt: string | null;
   movedToReschedule: boolean;
   movedToRescheduleAt: string | null;
+  standbyMovementNotes: string | null;
   // Workflow tracking fields
   signedIn: string | null;
   bookingEmailSent: string | null;
@@ -1171,6 +1172,7 @@ export default function StandbysPage() {
                                 className="h-5 px-1.5 text-[10px] bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100 dark:bg-amber-950 dark:border-amber-700 dark:text-amber-300"
                                 onClick={() => {
                                   setMoveToRescheduleStandby(standby);
+                                  setAttendedNotes(standby.standbyMovementNotes || "");
                                   setMoveToRescheduleDialogOpen(true);
                                 }}
                                 disabled={moveAttendedToRescheduleMutation.isPending && moveToRescheduleStandby?.id === standby.id}
@@ -1592,7 +1594,7 @@ export default function StandbysPage() {
 
           <div className="space-y-3 py-2">
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Additional Notes (Optional)</Label>
+              <Label className="text-sm font-medium">Movement Notes</Label>
               <Textarea
                 placeholder="Add any notes about this standby..."
                 value={attendedNotes}
@@ -1601,7 +1603,7 @@ export default function StandbysPage() {
                 data-testid="input-attended-notes"
               />
               <p className="text-xs text-muted-foreground">
-                These notes will appear in the Reason column on the Reschedule page.
+                Any notes entered when seating this standby are shown above. You can add to these notes if needed. These notes will appear in the Reason column on the Reschedule page.
               </p>
             </div>
           </div>
