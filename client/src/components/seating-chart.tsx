@@ -2104,7 +2104,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     size="sm"
                     className="h-7 text-xs"
                     onClick={() => setSeatSelectionNotes(prev => 
-                      prev ? `${prev}\nReplaced player` : "Replaced player"
+                      prev ? `${prev}\nReplaced players` : "Replaced players"
                     )}
                     data-testid="button-replaced-players"
                   >
@@ -2130,19 +2130,40 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 Cancel
               </Button>
               <Button 
-                disabled={!selectedSeatForStandby}
                 onClick={async () => {
-                  if (!seatSelectionStandby || !selectedSeatForStandby) return;
-                  const { blockNumber, seatLabel } = getBlockAndSeat(selectedSeatForStandby);
+                  if (!seatSelectionStandby) return;
                   const notes = seatSelectionNotes.trim();
-                  await handleConfirmStandbyAssignInternal(seatSelectionStandby, blockNumber, seatLabel, notes || undefined);
+                  
+                  if (selectedSeatForStandby) {
+                    const { blockNumber, seatLabel } = getBlockAndSeat(selectedSeatForStandby);
+                    await handleConfirmStandbyAssignInternal(seatSelectionStandby, blockNumber, seatLabel, notes || undefined);
+                  } else if (notes) {
+                    // Just update the standby with notes without seating them
+                    try {
+                      await apiRequest("PATCH", `/api/standbys/${seatSelectionStandby.id}`, {
+                        standbyMovementNotes: notes
+                      });
+                      queryClient.invalidateQueries({ queryKey: [`/api/record-days/${recordDayId}/standbys`] });
+                      toast({
+                        title: "Notes Updated",
+                        description: `Notes for ${seatSelectionStandby.contestant.name} have been saved.`,
+                      });
+                    } catch (error) {
+                      toast({
+                        title: "Error",
+                        description: "Failed to update movement notes.",
+                        variant: "destructive",
+                      });
+                    }
+                  }
+                  
                   setSeatSelectionStandby(null);
                   setSelectedSeatForStandby("");
                   setSeatSelectionNotes("");
                 }}
                 data-testid="button-confirm-standby-seat"
               >
-                Confirm Seating
+                Confirm {selectedSeatForStandby ? "Seating" : "Notes Only"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -2254,7 +2275,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                         size="sm"
                         className="h-7 text-xs"
                         onClick={() => setStandbyMovementNotes(prev => 
-                          prev ? `${prev}\nReplaced player` : "Replaced player"
+                          prev ? `${prev}\nReplaced players` : "Replaced players"
                         )}
                         data-testid="button-replaced-players-drag"
                       >
