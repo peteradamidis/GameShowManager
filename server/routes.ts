@@ -5560,6 +5560,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "seatLabel must be a string" });
       }
 
+      // Get source assignment before swap to know original position
+      const sourceAssignment = await storage.getSeatAssignmentById(sourceAssignmentId);
+      let targetAssignment = targetAssignmentId ? await storage.getSeatAssignmentById(targetAssignmentId) : null;
+      
+      if (!sourceAssignment) {
+        return res.status(404).json({ error: "Source assignment not found" });
+      }
+
       // Use atomic storage method with database transaction and row locking
       const result = await storage.atomicSwapSeats(
         sourceAssignmentId,
@@ -5567,6 +5575,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         blockNumber,
         seatLabel
       );
+
+      // Log movements to history
+      const movedBy = (req as any).session?.user?.username || 'system';
+      
+      if (targetAssignmentId && targetAssignment) {
+        // Both contestants swapped seats - log both movements
+        await storage.logMovement({
+          contestantId: sourceAssignment.contestantId,
+          movementType: 'seat_change',
+          recordDayId: sourceAssignment.recordDayId,
+          fromBlockNumber: sourceAssignment.blockNumber,
+          fromSeatLabel: sourceAssignment.seatLabel,
+          toBlockNumber: targetAssignment.blockNumber,
+          toSeatLabel: targetAssignment.seatLabel,
+          notes: `Swapped seats with ${targetAssignment.contestantId}`,
+          movedBy,
+        });
+        await storage.logMovement({
+          contestantId: targetAssignment.contestantId,
+          movementType: 'seat_change',
+          recordDayId: targetAssignment.recordDayId,
+          fromBlockNumber: targetAssignment.blockNumber,
+          fromSeatLabel: targetAssignment.seatLabel,
+          toBlockNumber: sourceAssignment.blockNumber,
+          toSeatLabel: sourceAssignment.seatLabel,
+          notes: `Swapped seats with ${sourceAssignment.contestantId}`,
+          movedBy,
+        });
+      } else {
+        // Single move to empty seat
+        await storage.logMovement({
+          contestantId: sourceAssignment.contestantId,
+          movementType: 'seat_change',
+          recordDayId: sourceAssignment.recordDayId,
+          fromBlockNumber: sourceAssignment.blockNumber,
+          fromSeatLabel: sourceAssignment.seatLabel,
+          toBlockNumber: blockNumber,
+          toSeatLabel: seatLabel,
+          notes: 'Moved to empty seat',
+          movedBy,
+        });
+      }
 
       res.json({
         message: targetAssignmentId ? "Seats swapped successfully" : "Seat moved successfully",
@@ -5781,6 +5831,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         assignment2.seatLabel
       );
       
+      // Log movements to history
+      const movedBy = (req as any).session?.user?.username || 'system';
+      await storage.logMovement({
+        contestantId: assignment1.contestantId,
+        movementType: 'seat_change',
+        recordDayId: assignment1.recordDayId,
+        fromBlockNumber: assignment1.blockNumber,
+        fromSeatLabel: assignment1.seatLabel,
+        toBlockNumber: assignment2.blockNumber,
+        toSeatLabel: assignment2.seatLabel,
+        notes: `Swapped seats (RX Day Mode)`,
+        movedBy,
+      });
+      await storage.logMovement({
+        contestantId: assignment2.contestantId,
+        movementType: 'seat_change',
+        recordDayId: assignment2.recordDayId,
+        fromBlockNumber: assignment2.blockNumber,
+        fromSeatLabel: assignment2.seatLabel,
+        toBlockNumber: assignment1.blockNumber,
+        toSeatLabel: assignment1.seatLabel,
+        notes: `Swapped seats (RX Day Mode)`,
+        movedBy,
+      });
+      
       res.json(swapped);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -5817,12 +5892,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Store original position before the move
+      const originalBlockNumber = assignment.blockNumber;
+      const originalSeatLabel = assignment.seatLabel;
+      
       // Perform the move with original seat tracking
       const updated = await storage.moveSeatAssignmentWithTracking(
         sourceAssignmentId, 
         blockNumber,
         seatLabel
       );
+      
+      // Log movement to history
+      const movedBy = (req as any).session?.user?.username || 'system';
+      await storage.logMovement({
+        contestantId: assignment.contestantId,
+        movementType: 'seat_change',
+        recordDayId: assignment.recordDayId,
+        fromBlockNumber: originalBlockNumber,
+        fromSeatLabel: originalSeatLabel,
+        toBlockNumber: blockNumber,
+        toSeatLabel: seatLabel,
+        notes: 'Moved to empty seat (RX Day Mode)',
+        movedBy,
+      });
       
       res.json({ message: "Seat moved successfully with tracking", assignment: updated });
     } catch (error: any) {
