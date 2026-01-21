@@ -2059,7 +2059,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
             <DialogHeader>
               <DialogTitle>Assign Standby to Seat</DialogTitle>
               <DialogDescription>
-                Select an available seat for {seatSelectionStandby?.contestant.name}. The block type (PB/NPB) is determined automatically from the block configuration.
+                Select an available seat for {seatSelectionStandby?.contestant.name}. The block type (PB/NPB) is determined automatically from the block configuration. You can also record any movement details in the notes box below.
               </DialogDescription>
             </DialogHeader>
 
@@ -2111,6 +2111,9 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     Replaced Players
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Record any standby movements such as who they replaced, seat swaps, or other seating changes made during the day.
+                </p>
                 <Textarea
                   placeholder="Record any movement details..."
                   value={seatSelectionNotes}
