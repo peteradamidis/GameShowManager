@@ -87,7 +87,7 @@ function RxDayCountdown({ targetDate, rxNumber }: { targetDate: Date; rxNumber?:
                 {isToday ? "It's Showtime!" : "Next Record Day"}
               </h3>
               <p className="text-lg text-orange-300 font-medium">
-                {rxNumber ? `${rxNumber} - ` : ''}{format(targetDate, "EEEE, d MMMM yyyy")} at 7:30 AM
+                {rxNumber ? `${rxNumber} - ` : ''}{format(targetDate, "EEEE, d MMMM yyyy")}
               </p>
             </div>
           </div>
