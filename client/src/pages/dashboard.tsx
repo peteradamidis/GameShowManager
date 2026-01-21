@@ -1,12 +1,106 @@
+import { useState, useEffect } from "react";
 import { StatsCard } from "@/components/stats-card";
 import { RecordDayCard, RecordDay } from "@/components/record-day-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight } from "lucide-react";
+import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight, Clapperboard } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { format, differenceInDays, subDays, startOfWeek, endOfWeek, addWeeks, formatDistanceToNow, startOfDay } from "date-fns";
+
+interface CountdownTime {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+}
+
+function calculateTimeRemaining(targetDate: Date): CountdownTime {
+  const now = new Date();
+  const diff = targetDate.getTime() - now.getTime();
+  
+  if (diff <= 0) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+  }
+  
+  return {
+    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+    minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+    seconds: Math.floor((diff % (1000 * 60)) / 1000),
+  };
+}
+
+function CountdownUnit({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
+          <span className="text-2xl sm:text-3xl font-bold text-white tabular-nums">
+            {value.toString().padStart(2, '0')}
+          </span>
+        </div>
+        <div className="absolute -inset-0.5 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl opacity-50 blur-sm -z-10" />
+      </div>
+      <span className="mt-2 text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function RxDayCountdown({ targetDate, rxNumber }: { targetDate: Date; rxNumber?: string | null }) {
+  const [timeRemaining, setTimeRemaining] = useState<CountdownTime>(calculateTimeRemaining(targetDate));
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeRemaining(calculateTimeRemaining(targetDate));
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [targetDate]);
+  
+  const isToday = timeRemaining.days === 0 && timeRemaining.hours === 0 && timeRemaining.minutes === 0 && timeRemaining.seconds === 0;
+  
+  return (
+    <Card className="overflow-hidden border-0 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <CardContent className="p-6">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-full bg-orange-500/20">
+              <Clapperboard className="h-8 w-8 text-orange-400" />
+            </div>
+            <div className="text-center lg:text-left">
+              <h3 className="text-lg font-semibold text-white">
+                {isToday ? "It's Showtime!" : "Next Record Day"}
+              </h3>
+              <p className="text-orange-300 font-medium">
+                {rxNumber ? `RX ${rxNumber} - ` : ''}{format(targetDate, "EEEE, d MMMM yyyy")}
+              </p>
+            </div>
+          </div>
+          
+          {!isToday ? (
+            <div className="flex items-center gap-3 sm:gap-4">
+              <CountdownUnit value={timeRemaining.days} label="Days" />
+              <div className="text-2xl font-bold text-orange-400 animate-pulse">:</div>
+              <CountdownUnit value={timeRemaining.hours} label="Hours" />
+              <div className="text-2xl font-bold text-orange-400 animate-pulse">:</div>
+              <CountdownUnit value={timeRemaining.minutes} label="Mins" />
+              <div className="text-2xl font-bold text-orange-400 animate-pulse">:</div>
+              <CountdownUnit value={timeRemaining.seconds} label="Secs" />
+            </div>
+          ) : (
+            <div className="px-6 py-3 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 shadow-lg shadow-green-500/30">
+              <span className="text-xl font-bold text-white">Recording Today!</span>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 interface NoticeboardPost {
   id: string;
@@ -274,6 +368,14 @@ export default function Dashboard() {
           <span className="font-medium" data-testid="text-today-date">{formattedToday}</span>
         </div>
       </div>
+
+      {/* Countdown to First RX Day */}
+      {firstRecordDate && (
+        <RxDayCountdown 
+          targetDate={firstRecordDate} 
+          rxNumber={futureRecordDays[0]?.rxNumber}
+        />
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatsCard
