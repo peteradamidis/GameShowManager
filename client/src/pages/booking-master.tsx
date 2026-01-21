@@ -1214,7 +1214,7 @@ export default function BookingMaster() {
                         {isColumnVisible("criminal") && <TableCell className="text-xs py-0.5 h-7 w-20 text-center border-r border-purple-200 dark:border-purple-800">{contestant?.criminalRecord || ""}</TableCell>}
                         {isColumnVisible("notes") && (
                           <TableCell className="border-r-4 border-r-purple-400 py-0.5 text-xs">
-                            {standby.notes || ""}
+                            {(standby as any).standbyMovementNotes || standby.notes || ""}
                           </TableCell>
                         )}
                         {isColumnVisible("emailSent") && (

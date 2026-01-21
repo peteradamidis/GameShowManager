@@ -45,7 +45,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
-import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical, Briefcase, MapPin, ShieldAlert, Heart } from "lucide-react";
+import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical, Briefcase, MapPin, ShieldAlert, Heart, StickyNote } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   HoverCard,
@@ -130,6 +130,8 @@ interface StandbyData {
   status: string;
   priority?: number;
   standbyGroupId?: string | null;
+  standbyMovementNotes?: string | null;
+  assignedToSeat?: string | null;
   contestant: {
     id: string;
     name: string;
@@ -526,6 +528,17 @@ function SortableStandbyItem({
               <div className="text-sm">
                 <label className="text-xs font-medium text-muted-foreground">Criminal Record</label>
                 <p className="text-xs">{standby.contestant.criminalRecord}</p>
+              </div>
+            )}
+
+            {/* Movement Notes */}
+            {standby.standbyMovementNotes && (
+              <div className="text-sm p-2 bg-blue-50 dark:bg-blue-950/50 rounded-md border border-blue-200 dark:border-blue-800">
+                <label className="text-xs font-medium text-blue-700 dark:text-blue-300 flex items-center gap-1">
+                  <StickyNote className="h-3 w-3" />
+                  Movement Notes
+                </label>
+                <p className="text-xs mt-0.5">{standby.standbyMovementNotes}</p>
               </div>
             )}
 
