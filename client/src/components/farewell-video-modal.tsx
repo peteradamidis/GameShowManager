@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useQuery } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Play, X, Heart } from "lucide-react";
 
-const STORAGE_KEY = "farewell_video_seen";
 const VIDEO_URL = "/farewell-video.mp4";
 
 export function FarewellVideoModal() {
@@ -11,18 +11,21 @@ export function FarewellVideoModal() {
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const { data: videoStatus } = useQuery<{ enabled: boolean }>({
+    queryKey: ['/api/farewell-video/status'],
+    refetchOnWindowFocus: false,
+  });
+
   useEffect(() => {
-    const hasSeenVideo = localStorage.getItem(STORAGE_KEY);
-    if (!hasSeenVideo) {
+    if (videoStatus?.enabled) {
       const timer = setTimeout(() => {
         setOpen(true);
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [videoStatus?.enabled]);
 
   const handleClose = () => {
-    localStorage.setItem(STORAGE_KEY, "true");
     setOpen(false);
     if (videoRef.current) {
       videoRef.current.pause();
@@ -40,6 +43,10 @@ export function FarewellVideoModal() {
     setIsPlaying(false);
   };
 
+  if (!videoStatus?.enabled) {
+    return null;
+  }
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
@@ -48,6 +55,9 @@ export function FarewellVideoModal() {
             <Heart className="h-5 w-5 text-red-500 fill-red-500" />
             A Special Farewell Message
           </DialogTitle>
+          <DialogDescription>
+            Watch this special video before continuing
+          </DialogDescription>
         </DialogHeader>
         
         <div className="relative bg-black rounded-lg overflow-hidden">

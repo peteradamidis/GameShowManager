@@ -11,7 +11,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail, Download, Database, Clock, RefreshCw, Lock, Server, Send, Eye, ClipboardCheck, Ticket, AlertCircle } from "lucide-react";
+import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail, Download, Database, Clock, RefreshCw, Lock, Server, Send, Eye, ClipboardCheck, Ticket, AlertCircle, Heart, Video } from "lucide-react";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -329,6 +329,74 @@ Please note that all our meals are nut-free. If your dietary requirements fall o
 
 Thank you.`,
 };
+
+function FarewellVideoCard() {
+  const { toast } = useToast();
+
+  const { data: videoStatus, isLoading } = useQuery<{ enabled: boolean }>({
+    queryKey: ['/api/farewell-video/status'],
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      return await apiRequest("POST", "/api/farewell-video/toggle", { enabled });
+    },
+    onSuccess: (_, enabled) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/farewell-video/status'] });
+      toast({
+        title: enabled ? "Video enabled" : "Video disabled",
+        description: enabled 
+          ? "The farewell video will now appear when users open the app."
+          : "The farewell video popup has been disabled.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update video setting",
+        variant: "destructive",
+      });
+    },
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Heart className="w-5 h-5 text-red-500" />
+          Farewell Video Popup
+        </CardTitle>
+        <CardDescription>
+          Show a one-time video popup when users open the app
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label>Show Video Popup</Label>
+            <p className="text-sm text-muted-foreground">
+              When enabled, a video popup will appear each time the app is opened
+            </p>
+          </div>
+          <Switch
+            checked={videoStatus?.enabled || false}
+            onCheckedChange={(checked) => toggleMutation.mutate(checked)}
+            disabled={isLoading || toggleMutation.isPending}
+            data-testid="switch-farewell-video"
+          />
+        </div>
+        {videoStatus?.enabled && (
+          <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950 rounded-md border border-green-200 dark:border-green-800">
+            <Video className="w-4 h-4 text-green-600 dark:text-green-400" />
+            <span className="text-sm text-green-700 dark:text-green-300">
+              Video popup is currently active
+            </span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Settings() {
   const { toast } = useToast();
@@ -937,6 +1005,8 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+
+        <FarewellVideoCard />
 
         <Card>
           <CardHeader>

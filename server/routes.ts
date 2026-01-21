@@ -13335,6 +13335,29 @@ Thank you.`;
   });
 
   // =============================================
+  // Farewell Video Settings
+  // =============================================
+
+  app.get("/api/farewell-video/status", requireAuth, async (req, res) => {
+    try {
+      const enabled = await storage.getSystemConfig("farewell_video_enabled");
+      res.json({ enabled: enabled === "true" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/farewell-video/toggle", requireAuth, async (req, res) => {
+    try {
+      const { enabled } = req.body;
+      await storage.setSystemConfig("farewell_video_enabled", String(enabled));
+      res.json({ enabled });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // =============================================
   // Backup / Export Routes
   // =============================================
 
