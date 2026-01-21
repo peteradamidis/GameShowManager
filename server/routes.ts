@@ -9592,6 +9592,18 @@ Thank you.`;
         await storage.updateContestantAvailability(contestantId, 'assigned');
       }
       
+      // Log standby additions to movement history
+      const movedBy = (req as any).session?.user?.username || 'system';
+      for (const contestantId of contestantIds) {
+        await storage.logMovement({
+          contestantId,
+          movementType: 'standby_added',
+          recordDayId,
+          notes: 'Added to standby list',
+          movedBy,
+        });
+      }
+      
       res.json({
         message: `Created ${created.length} standby assignments`,
         count: created.length,
@@ -9728,6 +9740,18 @@ Thank you.`;
       // Get the standby to find the contestant
       const standby = await storage.getStandbyAssignmentById(id);
       
+      if (standby) {
+        // Log standby removal to movement history before deletion
+        const movedBy = (req as any).session?.user?.username || 'system';
+        await storage.logMovement({
+          contestantId: standby.contestantId,
+          movementType: 'standby_removed',
+          recordDayId: standby.recordDayId,
+          notes: 'Removed from standby list',
+          movedBy,
+        });
+      }
+      
       await storage.deleteStandbyAssignment(id);
       
       // Update contestant status back to available if they're not seated/assigned elsewhere
@@ -9845,6 +9869,17 @@ Thank you.`;
       // Update contestant status to assigned when standby is seated
       if (seatLabel) {
         await storage.updateContestantAvailability(matchingStandby.contestantId, 'assigned');
+        
+        // Log standby seating to movement history
+        const movedBy = (req as any).session?.user?.username || 'system';
+        await storage.logMovement({
+          contestantId: matchingStandby.contestantId,
+          movementType: 'standby_seated',
+          recordDayId,
+          toSeatLabel: seatLabel,
+          notes: 'Standby seated in audience',
+          movedBy,
+        });
       }
 
       res.json(updated);
