@@ -54,6 +54,7 @@ export interface SeatData {
   winningMoneyRole?: string; // RX Day Mode - 'player' or 'case_holder'
   winningMoneyAmount?: number; // RX Day Mode - winning money amount
   wasStandby?: boolean; // True if contestant was seated from standby list
+  isFromReschedule?: boolean; // True if contestant was rebooked from reschedule list
   isGroupSeparated?: boolean; // True if contestant has a partner/group member not sitting adjacent
   photoUrl?: string; // Contestant photo URL for podium visualiser
   contestantLocation?: string; // Contestant's location for 60km distance check
@@ -331,10 +332,20 @@ export function SeatCard({
           <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
             <span>{seatLabel}</span>
           </div>
-          <div className="flex items-center gap-1 min-w-0">
-            <p className="font-medium text-xs flex-1 truncate min-w-0" title={seat.contestantName}>
+          <div className="flex items-center gap-1 min-w-0 flex-wrap">
+            <p className="font-medium text-xs truncate min-w-0 max-w-[80px]" title={seat.contestantName}>
               {seat.contestantName}
             </p>
+            {seat.isFromReschedule && (
+              <Badge variant="outline" className="text-[7px] px-0.5 py-0 h-3 border-red-400 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300" title="Rebooked from reschedule list">
+                RSCH
+              </Badge>
+            )}
+            {seat.wasStandby && (
+              <Badge variant="outline" className="text-[7px] px-0.5 py-0 h-3 border-purple-400 bg-purple-100 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300" title="Originally booked as standby">
+                STBY
+              </Badge>
+            )}
             {seat.isGroupSeparated && (
               <Tooltip>
                 <TooltipTrigger asChild>

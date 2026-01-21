@@ -560,6 +560,7 @@ export default function SeatingChartPage() {
               mobilityNotes: assignment.mobilityNotes,
               medicalInfo: assignment.medicalInfo,
               wasStandby: assignment.wasStandby,
+              isFromReschedule: assignment.isFromReschedule,
               photoUrl: assignment.photoUrl,
               contestantLocation: assignment.contestantLocation,
               criminalRecord: assignment.criminalRecord,

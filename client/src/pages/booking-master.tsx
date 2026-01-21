@@ -189,6 +189,8 @@ interface SeatAssignment {
   swappedAt?: string;
   // Standby tracking
   wasStandby?: boolean;
+  // Reschedule tracking
+  isFromReschedule?: boolean;
   // Override fields (for changes after invitations sent)
   attendingWithOverride?: string;
   mobilityNotesOverride?: string;
@@ -1370,7 +1372,7 @@ export default function BookingMaster() {
                           </TableCell>
                         </TableRow>
                       )}
-                      <TableRow key={row.seatId} className={`${!row.assignment ? "bg-muted/20" : row.assignment.wasStandby ? "bg-purple-100 dark:bg-purple-900/30" : row.assignment.swappedAt ? "bg-amber-100 dark:bg-amber-900/30" : "bg-white dark:bg-background"} h-7 border-b border-gray-200 dark:border-gray-700`}>
+                      <TableRow key={row.seatId} className={`${!row.assignment ? "bg-muted/20" : row.assignment.isFromReschedule ? "bg-red-50 dark:bg-red-900/20" : row.assignment.wasStandby ? "bg-purple-100 dark:bg-purple-900/30" : row.assignment.swappedAt ? "bg-amber-100 dark:bg-amber-900/30" : "bg-white dark:bg-background"} h-7 border-b border-gray-200 dark:border-gray-700`}>
                         <TableCell className="py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
                           {row.assignment && (
                             <Checkbox
@@ -1384,10 +1386,20 @@ export default function BookingMaster() {
                         {isColumnVisible("name") && (
                           <TableCell className="font-medium text-xs min-w-[150px] py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
                             {row.contestant?.name ? (
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1 flex-wrap">
                                 <span className={row.assignment?.standbyReplacementSwaps && row.assignment.standbyReplacementSwaps !== "none" ? "text-red-600 line-through" : ""}>
                                   {row.contestant.name}
                                 </span>
+                                {row.assignment?.isFromReschedule && (
+                                  <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-red-400 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300" title="Rebooked from reschedule list">
+                                    RSCH
+                                  </Badge>
+                                )}
+                                {row.assignment?.wasStandby && (
+                                  <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-purple-400 bg-purple-100 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300" title="Originally booked as standby">
+                                    STBY
+                                  </Badge>
+                                )}
                                 {row.contestant?.id && ['Peter Adamidis', 'Kathleen Reynolds'].includes(row.contestant.name) && (
                                   <Button
                                     variant="ghost"

@@ -45,6 +45,8 @@ import type { RecordDay, Contestant, SeatAssignment, StandbyAssignment, Canceled
 interface PaperworkAssignment extends SeatAssignment {
   contestant: Contestant | null;
   recordDay: RecordDay | null;
+  wasStandby?: boolean;
+  isFromReschedule?: boolean;
 }
 
 interface StandbyWithContestant extends StandbyAssignment {
@@ -1162,7 +1164,19 @@ Deal or No Deal Production Team`);
                           />
                         </TableCell>
                         <TableCell className="font-medium">
-                          {item.contestant?.name || "Unknown"}
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <span>{item.contestant?.name || "Unknown"}</span>
+                            {item.isFromReschedule && (
+                              <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-red-400 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300" title="Rebooked from reschedule list">
+                                RSCH
+                              </Badge>
+                            )}
+                            {item.wasStandby && (
+                              <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-purple-400 bg-purple-100 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300" title="Originally booked as standby">
+                                STBY
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
