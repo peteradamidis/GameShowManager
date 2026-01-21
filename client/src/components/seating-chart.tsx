@@ -2134,12 +2134,12 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   if (!seatSelectionStandby) return;
                   const notes = seatSelectionNotes.trim();
                   
-                  if (selectedSeatForStandby) {
-                    const { blockNumber, seatLabel } = getBlockAndSeat(selectedSeatForStandby);
-                    await handleConfirmStandbyAssignInternal(seatSelectionStandby, blockNumber, seatLabel, notes || undefined);
-                  } else if (notes) {
-                    // Just update the standby with notes without seating them
-                    try {
+                  try {
+                    if (selectedSeatForStandby) {
+                      const { blockNumber, seatLabel } = getBlockAndSeat(selectedSeatForStandby);
+                      await handleConfirmStandbyAssignInternal(seatSelectionStandby, blockNumber, seatLabel, notes || undefined);
+                    } else if (notes) {
+                      // Just update the standby with notes without seating them
                       await apiRequest("PATCH", `/api/standbys/${seatSelectionStandby.id}`, {
                         standbyMovementNotes: notes
                       });
@@ -2148,13 +2148,13 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                         title: "Notes Updated",
                         description: `Notes for ${seatSelectionStandby.contestant.name} have been saved.`,
                       });
-                    } catch (error) {
-                      toast({
-                        title: "Error",
-                        description: "Failed to update movement notes.",
-                        variant: "destructive",
-                      });
                     }
+                  } catch (error) {
+                    toast({
+                      title: "Error",
+                      description: "Failed to update standby. Please try again.",
+                      variant: "destructive",
+                    });
                   }
                   
                   setSeatSelectionStandby(null);
@@ -2294,14 +2294,48 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel data-testid="button-standby-assign-cancel" onClick={() => setStandbyMovementNotes("")}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel data-testid="button-standby-assign-cancel" onClick={() => {
+                setPendingStandbyAssign(null);
+                setStandbyMovementNotes("");
+              }}>Cancel</AlertDialogCancel>
               <AlertDialogAction 
                 data-testid="button-standby-assign-confirm"
                 className="bg-amber-500 hover:bg-amber-600 text-white"
                 onClick={handleConfirmStandbyAssign}
               >
-                Confirm Assignment
+                Confirm Seating
               </AlertDialogAction>
+              <Button
+                variant="outline"
+                className="border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                onClick={async () => {
+                  if (!pendingStandbyAssign) return;
+                  const notes = standbyMovementNotes.trim();
+                  if (notes) {
+                    try {
+                      await apiRequest("PATCH", `/api/standbys/${pendingStandbyAssign.standby.id}`, {
+                        standbyMovementNotes: notes
+                      });
+                      queryClient.invalidateQueries({ queryKey: [`/api/record-days/${recordDayId}/standbys`] });
+                      toast({
+                        title: "Notes Updated",
+                        description: `Notes for ${pendingStandbyAssign.standby.contestant.name} have been saved.`,
+                      });
+                    } catch (error) {
+                      toast({
+                        title: "Error",
+                        description: "Failed to update movement notes.",
+                        variant: "destructive",
+                      });
+                    }
+                  }
+                  setPendingStandbyAssign(null);
+                  setStandbyMovementNotes("");
+                }}
+                data-testid="button-standby-notes-only"
+              >
+                Notes Only
+              </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
