@@ -71,19 +71,21 @@ const DISPLAY_NAME_KEY = "noticeboard_display_name";
 const getStoredDisplayName = () => localStorage.getItem(DISPLAY_NAME_KEY) || "";
 const setStoredDisplayName = (name: string) => localStorage.setItem(DISPLAY_NAME_KEY, name);
 
-// Helper to get/generate unique browser ID for likes tracking
-const BROWSER_ID_KEY = "noticeboard_browser_id";
-const getBrowserId = (): string => {
-  let browserId = localStorage.getItem(BROWSER_ID_KEY);
-  if (!browserId) {
-    browserId = crypto.randomUUID();
-    localStorage.setItem(BROWSER_ID_KEY, browserId);
+// Helper to get/generate unique session ID for likes tracking
+// Uses sessionStorage so each browser window/tab gets a fresh session
+// This allows multiple people on the same shared computer to each like posts
+const SESSION_ID_KEY = "noticeboard_session_id";
+const getSessionId = (): string => {
+  let sessionId = sessionStorage.getItem(SESSION_ID_KEY);
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    sessionStorage.setItem(SESSION_ID_KEY, sessionId);
   }
-  return browserId;
+  return sessionId;
 };
 
 
-function PostCard({ post, onRefresh, displayName, browserId }: { post: Post; onRefresh: () => void; displayName: string; browserId: string }) {
+function PostCard({ post, onRefresh, displayName, sessionId }: { post: Post; onRefresh: () => void; displayName: string; sessionId: string }) {
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [commentName, setCommentName] = useState("");
@@ -96,7 +98,7 @@ function PostCard({ post, onRefresh, displayName, browserId }: { post: Post; onR
   });
 
   const likeMutation = useMutation({
-    mutationFn: () => apiRequest("POST", `/api/noticeboard/posts/${post.id}/like`, { browserId }),
+    mutationFn: () => apiRequest("POST", `/api/noticeboard/posts/${post.id}/like`, { browserId: sessionId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/noticeboard/posts"] });
     },
@@ -510,13 +512,13 @@ function CreatePostForm({ onSuccess, displayName, onDisplayNameChange, onCancel 
 
 export default function NoticeboardPage() {
   const [displayName, setDisplayName] = useState(() => getStoredDisplayName());
-  const [browserId] = useState(() => getBrowserId());
+  const [sessionId] = useState(() => getSessionId());
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   const { data: posts = [], isLoading, refetch } = useQuery<Post[]>({
-    queryKey: ["/api/noticeboard/posts", { browserId }],
+    queryKey: ["/api/noticeboard/posts", { sessionId }],
     queryFn: async () => {
-      const response = await fetch(`/api/noticeboard/posts?browserId=${browserId}`, {
+      const response = await fetch(`/api/noticeboard/posts?browserId=${sessionId}`, {
         credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to fetch posts');
@@ -588,7 +590,7 @@ export default function NoticeboardPage() {
           </Card>
         ) : (
           posts.map((post) => (
-            <PostCard key={post.id} post={post} onRefresh={() => refetch()} displayName={displayName} browserId={browserId} />
+            <PostCard key={post.id} post={post} onRefresh={() => refetch()} displayName={displayName} sessionId={sessionId} />
           ))
         )}
         
