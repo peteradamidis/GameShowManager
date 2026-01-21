@@ -482,7 +482,9 @@ export default function BookingMaster() {
       });
     },
     onSettled: () => {
+      // Invalidate all standby-related queries to sync with Paperwork Tracker
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys/record-day'], exact: false });
       broadcastBookingChange(selectedRecordDay);
     },
   });

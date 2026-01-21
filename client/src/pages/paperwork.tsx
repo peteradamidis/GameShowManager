@@ -438,7 +438,9 @@ Deal or No Deal Production Team`);
       return response.json();
     },
     onSuccess: async () => {
+      // Invalidate both query keys so changes sync between Paperwork Tracker and Booking Master
       await queryClient.invalidateQueries({ queryKey: ["/api/standbys/record-day"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/standbys"] });
     },
   });
 
