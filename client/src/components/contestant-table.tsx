@@ -1255,7 +1255,7 @@ export function ContestantTable({
                     {contestant.criminalRecord || "-"}
                   </TableCell>
                   <TableCell className="p-1">
-                    {['Peter Adamidis', 'Kathleen Reynolds'].includes(contestant.name) && onDeleteContestant && (
+                    {(contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(contestant.name)) && onDeleteContestant && (
                       <Button
                         variant="ghost"
                         size="icon"

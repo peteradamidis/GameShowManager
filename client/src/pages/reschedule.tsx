@@ -438,7 +438,7 @@ export default function ReschedulePage() {
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-1.5">
                         <span>{cancellation.contestant.name}</span>
-                        {['Peter Adamidis', 'Kathleen Reynolds'].includes(cancellation.contestant.name) && cancellation.contestant.id && (
+                        {(cancellation.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(cancellation.contestant.name)) && cancellation.contestant.id && (
                           <Button
                             variant="ghost"
                             size="icon"

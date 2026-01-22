@@ -60,6 +60,7 @@ export interface SeatData {
   contestantLocation?: string; // Contestant's location for 60km distance check
   criminalRecord?: string; // Criminal record notes
   isTemporary?: boolean; // True if contestant was created as temporary (not from Cast It Reach)
+  isTestSubject?: boolean; // True if contestant is a test subject that can be deleted from any page
   notes?: string; // Notes (syncs with Booking Master NOTES column)
   attendingWithOverride?: string; // Override for attending with when it changes after invitation
   mobilityNotesOverride?: string; // Override for mobility/medical notes when they change after invitation
@@ -853,7 +854,7 @@ export function SeatCard({
                   </Button>
                 )}
                 {/* Test subject delete button */}
-                {seat.contestantName && ['Peter Adamidis', 'Kathleen Reynolds'].includes(seat.contestantName) && seat.contestantId && onDeleteTestSubject && (
+                {seat.contestantId && (seat.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(seat.contestantName || '')) && onDeleteTestSubject && (
                   <Button
                     size="sm"
                     variant="outline"

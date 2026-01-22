@@ -49,6 +49,7 @@ export const contestants = pgTable("contestants", {
   noShowCount: integer("no_show_count").default(0), // Number of times contestant was a no-show
   earlyLeaverCount: integer("early_leaver_count").default(0), // Number of times contestant left early
   isTemporary: boolean("is_temporary").default(false), // Temporary contestant added on-the-fly, pending proper audition/import
+  isTestSubject: boolean("is_test_subject").default(false), // Test contestant for system testing, can be deleted from any page
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

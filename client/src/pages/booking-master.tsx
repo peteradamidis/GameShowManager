@@ -1188,7 +1188,7 @@ export default function BookingMaster() {
                           <TableCell className="font-medium text-xs min-w-[150px] py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">
                             <div className="flex items-center gap-1">
                               {standby.contestant.name}
-                              {['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name) && standby.contestantId && (
+                              {(standby.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name)) && standby.contestantId && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -1400,7 +1400,7 @@ export default function BookingMaster() {
                                     STBY
                                   </Badge>
                                 )}
-                                {row.contestant?.id && ['Peter Adamidis', 'Kathleen Reynolds'].includes(row.contestant.name) && (
+                                {row.contestant?.id && (row.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(row.contestant.name)) && (
                                   <Button
                                     variant="ghost"
                                     size="icon"

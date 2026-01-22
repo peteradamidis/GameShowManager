@@ -150,6 +150,14 @@ export default function Contestants() {
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [unlinkDialogOpen, setUnlinkDialogOpen] = useState(false);
   const [removeSeatDialogOpen, setRemoveSeatDialogOpen] = useState(false);
+  const [testContestantDialogOpen, setTestContestantDialogOpen] = useState(false);
+  const [testContestantForm, setTestContestantForm] = useState({
+    name: "",
+    gender: "Female" as "Male" | "Female",
+    age: "",
+    phone: "",
+    email: "",
+  });
   
   const ITEMS_PER_PAGE = 50;
 
@@ -749,6 +757,30 @@ export default function Contestants() {
     },
   });
 
+  const createTestContestantMutation = useMutation({
+    mutationFn: async (data: { name: string; gender: string; age?: number; phone?: string; email?: string }) => {
+      const res = await apiRequest('POST', '/api/contestants/test-subject', data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      broadcastContestantChange();
+      setTestContestantDialogOpen(false);
+      setTestContestantForm({ name: "", gender: "Female", age: "", phone: "", email: "" });
+      toast({
+        title: "Test contestant created",
+        description: "The test contestant has been added and can be deleted from any page.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to create test contestant",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Fetch occupied seats for the selected record day
   const { data: occupiedSeats = [] } = useQuery({
     queryKey: ['/api/seat-assignments', selectedRecordDay],
@@ -1051,9 +1083,18 @@ export default function Contestants() {
           </div>
         </div>
         {/* Import buttons - always visible */}
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-2 justify-end flex-wrap">
           <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
           <ImportGalleryDialog />
+          <Button 
+            variant="outline"
+            className="border-amber-300 text-amber-600 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-950"
+            onClick={() => setTestContestantDialogOpen(true)}
+            data-testid="button-create-test-contestant"
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            Add Test Contestant
+          </Button>
           <Button 
             variant="outline"
             className="border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
@@ -2280,6 +2321,101 @@ export default function Contestants() {
               data-testid="button-confirm-remove-seat"
             >
               {removeSeatMutation.isPending ? "Removing..." : "Yes, Remove"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Test Contestant Dialog */}
+      <Dialog open={testContestantDialogOpen} onOpenChange={setTestContestantDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <UserPlus className="h-5 w-5" />
+              Create Test Contestant
+            </DialogTitle>
+            <DialogDescription>
+              Create a test contestant that can be deleted from any page in the system. Useful for testing workflows.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Name *</label>
+              <Input
+                value={testContestantForm.name}
+                onChange={(e) => setTestContestantForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Test Contestant Name"
+                data-testid="input-test-contestant-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Gender *</label>
+              <Select 
+                value={testContestantForm.gender} 
+                onValueChange={(v) => setTestContestantForm(prev => ({ ...prev, gender: v as "Male" | "Female" }))}
+              >
+                <SelectTrigger data-testid="select-test-contestant-gender">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Female">Female</SelectItem>
+                  <SelectItem value="Male">Male</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Age</label>
+              <Input
+                type="number"
+                value={testContestantForm.age}
+                onChange={(e) => setTestContestantForm(prev => ({ ...prev, age: e.target.value }))}
+                placeholder="30"
+                data-testid="input-test-contestant-age"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Phone</label>
+              <Input
+                value={testContestantForm.phone}
+                onChange={(e) => setTestContestantForm(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="0400 000 000"
+                data-testid="input-test-contestant-phone"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Email</label>
+              <Input
+                type="email"
+                value={testContestantForm.email}
+                onChange={(e) => setTestContestantForm(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="test@example.com"
+                data-testid="input-test-contestant-email"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTestContestantDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+              onClick={() => {
+                if (!testContestantForm.name.trim()) {
+                  toast({ title: "Name is required", variant: "destructive" });
+                  return;
+                }
+                createTestContestantMutation.mutate({
+                  name: testContestantForm.name.trim(),
+                  gender: testContestantForm.gender,
+                  age: testContestantForm.age ? parseInt(testContestantForm.age) : undefined,
+                  phone: testContestantForm.phone.trim() || undefined,
+                  email: testContestantForm.email.trim() || undefined,
+                });
+              }}
+              disabled={createTestContestantMutation.isPending}
+              data-testid="button-confirm-create-test-contestant"
+            >
+              {createTestContestantMutation.isPending ? "Creating..." : "Create Test Contestant"}
             </Button>
           </DialogFooter>
         </DialogContent>

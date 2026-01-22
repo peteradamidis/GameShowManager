@@ -1146,7 +1146,7 @@ export default function StandbysPage() {
                             <div className="flex items-center gap-1">
                               <span className="text-xs text-muted-foreground">Moved to Reschedule</span>
                               {/* Test subjects only - can be fully removed */}
-                              {['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name) && (
+                              {(standby.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name)) && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
@@ -1191,7 +1191,7 @@ export default function StandbysPage() {
                                 )}
                               </Button>
                               {/* Test subjects only - can be fully removed */}
-                              {['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name) && (
+                              {(standby.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name)) && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
@@ -1223,7 +1223,7 @@ export default function StandbysPage() {
                                 Cancel
                               </Button>
                               {/* Test subjects only - can be fully removed */}
-                              {['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name) && (
+                              {(standby.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name)) && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
@@ -1267,7 +1267,7 @@ export default function StandbysPage() {
                                 Decline
                               </Button>
                               {/* Test subjects only - can be fully removed */}
-                              {['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name) && (
+                              {(standby.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name)) && (
                                 <Button
                                   size="sm"
                                   variant="ghost"

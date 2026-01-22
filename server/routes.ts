@@ -2036,6 +2036,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create test contestant
+  app.post("/api/contestants/test-subject", async (req, res) => {
+    try {
+      const { name, gender, age, phone, email } = req.body;
+      
+      if (!name || !gender) {
+        return res.status(400).json({ error: "Name and gender are required" });
+      }
+
+      const newContestant = await storage.createContestant({
+        name: name.trim(),
+        gender,
+        age: age ? parseInt(age) : null,
+        phone: phone?.trim() || null,
+        email: email?.trim() || null,
+        availabilityStatus: 'available',
+        isTestSubject: true,
+      });
+
+      console.log(`[Test Subject] Created test contestant: ${newContestant.name} (ID: ${newContestant.id})`);
+      res.json(newContestant);
+    } catch (error: any) {
+      console.error("[Test Subject] Error creating test contestant:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Delete contestant (individual)
   app.delete("/api/contestants/:id", async (req, res) => {
     try {
@@ -2045,7 +2072,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Contestant not found" });
       }
 
-      const isTestSubject = ['Peter Adamidis', 'Kathleen Reynolds'].includes(contestant.name);
+      const isTestSubject = contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(contestant.name);
 
       if (isTestSubject) {
         // For test subjects, we want a clean wipe of all related data before deleting the contestant
@@ -3934,6 +3961,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           photoUrl: contestant?.photoUrl,
           contestantLocation: contestant?.location,
           criminalRecord: contestant?.criminalRecord,
+          isTestSubject: contestant?.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(contestant?.name || ''),
           podiumStory: contestant?.podiumStory,
           attendingWithOverride: assignment.attendingWithOverride,
           mobilityNotesOverride: assignment.mobilityNotesOverride,
