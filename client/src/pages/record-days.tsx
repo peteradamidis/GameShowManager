@@ -159,10 +159,13 @@ export default function RecordDays() {
       const dayAssignments = allAssignments.find((a) => a.recordDayId === day.id)?.assignments || [];
       const filledSeats = dayAssignments.length;
       const confirmedSeats = dayAssignments.filter((a: any) => a.confirmedRsvp).length;
+      // Parse date parts from ISO string to avoid timezone issues
+      const [year, month, dayNum] = day.date.split('T')[0].split('-').map(Number);
+      const localDate = new Date(year, month - 1, dayNum);
 
       return {
         id: day.id,
-        date: new Date(day.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }),
+        date: localDate.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }),
         rxNumber: day.rxNumber,
         totalSeats: day.totalSeats || 154,
         filledSeats,
@@ -251,7 +254,8 @@ export default function RecordDays() {
     // Add all days in the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
-      const dateStr = date.toISOString().split('T')[0];
+      // Format as YYYY-MM-DD in local timezone (don't use toISOString which converts to UTC)
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       
       // Find if there's a record day on this date
       const recordDay = apiRecordDays.find(rd => rd.date.split('T')[0] === dateStr);
@@ -259,9 +263,12 @@ export default function RecordDays() {
       
       if (recordDay) {
         const dayAssignments = allAssignments.find((a) => a.recordDayId === recordDay.id)?.assignments || [];
+        // Parse date parts from ISO string to avoid timezone issues
+        const [rdYear, rdMonth, rdDay] = recordDay.date.split('T')[0].split('-').map(Number);
+        const localDate = new Date(rdYear, rdMonth - 1, rdDay);
         enrichedRecordDay = {
           id: recordDay.id,
-          date: new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }),
+          date: localDate.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }),
           rawDate: recordDay.date,
           rxNumber: recordDay.rxNumber,
           totalSeats: recordDay.totalSeats || 154,
@@ -501,12 +508,15 @@ export default function RecordDays() {
               <p>
                 <strong>Warning:</strong> You are about to permanently delete the record day on{" "}
                 <strong>
-                  {deleteRecordDay && new Date(deleteRecordDay.date).toLocaleDateString('en-AU', { 
-                    weekday: 'long',
-                    day: 'numeric', 
-                    month: 'long', 
-                    year: 'numeric' 
-                  })}
+                  {deleteRecordDay && (() => {
+                    const [year, month, day] = deleteRecordDay.date.split('T')[0].split('-').map(Number);
+                    return new Date(year, month - 1, day).toLocaleDateString('en-AU', { 
+                      weekday: 'long',
+                      day: 'numeric', 
+                      month: 'long', 
+                      year: 'numeric' 
+                    });
+                  })()}
                 </strong>
                 {deleteRecordDay?.rxNumber && ` (${deleteRecordDay.rxNumber})`}.
               </p>
