@@ -150,6 +150,10 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
   const [viewingContestant, setViewingContestant] = useState<Contestant | null>(null);
   const [viewMode, setViewMode] = useState<'single' | 'weekly'>('single');
   const [hideNPBs, setHideNPBs] = useState(false);
+  const [bookingContestant, setBookingContestant] = useState<Contestant | null>(null);
+  const [bookingDayId, setBookingDayId] = useState<string>('');
+  const [selectedBlock, setSelectedBlock] = useState<string>('');
+  const [selectedSeat, setSelectedSeat] = useState<string>('');
 
   // Fetch block types from API - refetch when tab is shown to sync with seating chart changes
   const { data: blockTypes = [] } = useQuery<BlockTypeData[]>({
@@ -157,6 +161,78 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
     enabled: !!selectedDayId,
     staleTime: 0, // Always fetch fresh data to sync with seating chart
     refetchOnMount: 'always', // Refetch when component mounts (e.g., tab switch)
+  });
+
+  // Fetch groups for booking dialog
+  const { data: groups = [] } = useQuery<any[]>({
+    queryKey: ['/api/groups'],
+  });
+
+  // Fetch seat assignments for the booking day to check availability
+  const { data: bookingDayAssignments = [] } = useQuery<any[]>({
+    queryKey: ['/api/seat-assignments', bookingDayId],
+    enabled: !!bookingDayId,
+  });
+
+  // Fetch block types for the booking day specifically
+  const { data: bookingDayBlockTypes = [] } = useQuery<BlockTypeData[]>({
+    queryKey: ['/api/record-days', bookingDayId, 'block-types'],
+    enabled: !!bookingDayId,
+  });
+
+  // Book contestant mutation
+  const bookContestantMutation = useMutation({
+    mutationFn: async ({ recordDayId, contestantId, blockNumber, seatLabel }: { 
+      recordDayId: string; contestantId: string; blockNumber: number; seatLabel: string 
+    }) => {
+      const response = await apiRequest('POST', '/api/seat-assignments', {
+        recordDayId,
+        contestantId,
+        blockNumber,
+        seatLabel,
+        playerType: 'regular',
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      toast({ title: "Booked!", description: "Contestant has been assigned to the seat" });
+      setBookingContestant(null);
+      setBookingDayId('');
+      setSelectedBlock('');
+      setSelectedSeat('');
+    },
+    onError: (error: any) => {
+      toast({ title: "Booking failed", description: error.message || "Failed to book contestant", variant: "destructive" });
+    },
+  });
+
+  // Book group mutation
+  const bookGroupMutation = useMutation({
+    mutationFn: async ({ recordDayId, contestantIds, blockNumber, startingSeat }: { 
+      recordDayId: string; contestantIds: string[]; blockNumber: number; startingSeat: string 
+    }) => {
+      const response = await apiRequest('POST', '/api/seat-assignments/group', {
+        recordDayId,
+        contestantIds,
+        blockNumber,
+        startingSeat,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      toast({ title: "Group Booked!", description: "All group members have been assigned consecutive seats" });
+      setBookingContestant(null);
+      setBookingDayId('');
+      setSelectedBlock('');
+      setSelectedSeat('');
+    },
+    onError: (error: any) => {
+      toast({ title: "Group booking failed", description: error.message || "Failed to book group", variant: "destructive" });
+    },
   });
 
   const updateBlockTypeMutation = useMutation({
@@ -412,6 +488,76 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
   // Find full contestant record by ID
   const findContestant = (id: string) => contestants.find(c => c.id === id);
 
+  // Get group members for a contestant
+  const getGroupMembers = (contestant: Contestant): Contestant[] => {
+    const contestantGroupId = (contestant as any).groupId;
+    if (!contestantGroupId) return [];
+    return contestants.filter(c => (c as any).groupId === contestantGroupId && c.id !== contestant.id);
+  };
+
+  // Open booking dialog for a contestant
+  const openBookingDialog = (contestant: Contestant, dayId: string) => {
+    setBookingContestant(contestant);
+    setBookingDayId(dayId);
+    setSelectedBlock('');
+    setSelectedSeat('');
+  };
+
+  // Handle booking confirmation
+  const handleBooking = () => {
+    if (!bookingContestant || !bookingDayId || !selectedBlock || !selectedSeat) return;
+    
+    const groupMembers = getGroupMembers(bookingContestant);
+    
+    if (groupMembers.length > 0) {
+      // Book as a group
+      const allContestantIds = [bookingContestant.id, ...groupMembers.map(m => m.id)];
+      bookGroupMutation.mutate({
+        recordDayId: bookingDayId,
+        contestantIds: allContestantIds,
+        blockNumber: parseInt(selectedBlock),
+        startingSeat: selectedSeat,
+      });
+    } else {
+      // Book single contestant
+      bookContestantMutation.mutate({
+        recordDayId: bookingDayId,
+        contestantId: bookingContestant.id,
+        blockNumber: parseInt(selectedBlock),
+        seatLabel: selectedSeat,
+      });
+    }
+  };
+
+  // Get available seats for a block
+  const getAvailableSeats = (blockNumber: string): string[] => {
+    const SEAT_ROWS: Record<string, number> = { A: 5, B: 5, C: 4, D: 4, E: 4 };
+    const allSeats: string[] = [];
+    Object.entries(SEAT_ROWS).forEach(([row, count]) => {
+      for (let i = 1; i <= count; i++) {
+        allSeats.push(`${row}${i}`);
+      }
+    });
+    
+    // Filter out occupied seats
+    const occupiedSeats = new Set(
+      bookingDayAssignments
+        .filter((a: any) => a.blockNumber === parseInt(blockNumber))
+        .map((a: any) => a.seatLabel)
+    );
+    
+    return allSeats.filter(seat => !occupiedSeats.has(seat));
+  };
+
+  // Get PB blocks for the booking day
+  const getBookingDayPBBlocks = (): string[] => {
+    // Use the booking day's block types (not the selected day's)
+    return bookingDayBlockTypes
+      .filter(b => b.blockType === 'PB')
+      .map(b => String(b.blockNumber))
+      .sort((a, b) => parseInt(a) - parseInt(b));
+  };
+
   const clearDayPlan = () => {
     if (!selectedDayId) return;
     setPlanningData(prev => {
@@ -620,7 +766,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                           draggable
                           onDragStart={() => handleDragStart(planned, { type: 'pool' })}
                           onDragEnd={handleDragEnd}
-                          onClick={() => setViewingContestant(c)}
+                          onClick={() => openBookingDialog(c, selectedDayId)}
                           className="p-2 rounded-lg border bg-card hover:bg-accent/50 cursor-grab active:cursor-grabbing transition-colors"
                           data-testid={`draggable-contestant-${c.id}`}
                         >
@@ -721,7 +867,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                                   draggable
                                   onDragStart={() => handleDragStart(c, { type: 'block', block: blockNum, dayId: selectedDayId })}
                                   onDragEnd={handleDragEnd}
-                                  onClick={() => { const full = findContestant(c.id); if (full) setViewingContestant(full); }}
+                                  onClick={() => { const full = findContestant(c.id); if (full) openBookingDialog(full, selectedDayId); }}
                                   className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-grab group ${isPB ? 'bg-blue-500/10 border border-blue-500/30' : 'bg-green-500/10 border border-green-500/30'}`}
                                   data-testid={`planned-contestant-${blockNum}-${c.id}`}
                                 >
@@ -799,7 +945,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                                         draggable
                                         onDragStart={() => handleDragStart(c, { type: 'block', block: blockNum, dayId: day.id })}
                                         onDragEnd={handleDragEnd}
-                                        onClick={() => { const full = findContestant(c.id); if (full) setViewingContestant(full); }}
+                                        onClick={() => { const full = findContestant(c.id); if (full) openBookingDialog(full, day.id); }}
                                         className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border cursor-grab group"
                                         data-testid={`weekly-contestant-${day.id}-${blockNum}-${c.id}`}
                                       >
@@ -936,6 +1082,134 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                     <p className="text-sm">{viewingContestant.medicalMobilityNotes}</p>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Booking Dialog */}
+      <Dialog open={!!bookingContestant} onOpenChange={(open) => !open && setBookingContestant(null)}>
+        <DialogContent className="max-w-lg" data-testid="dialog-booking">
+          <DialogHeader>
+            <DialogTitle>Book for RX Day</DialogTitle>
+          </DialogHeader>
+          {bookingContestant && (
+            <div className="space-y-4">
+              {/* Contestant Info */}
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                <Avatar className="h-12 w-12 rounded-lg">
+                  <AvatarImage src={bookingContestant.photoUrl || undefined} className="object-cover" />
+                  <AvatarFallback className="rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+                    {bookingContestant.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold">{bookingContestant.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {bookingContestant.gender === 'Female' ? 'F' : 'M'} • {bookingContestant.age}y • {bookingContestant.auditionRating}
+                  </p>
+                </div>
+              </div>
+
+              {/* Group Members */}
+              {getGroupMembers(bookingContestant).length > 0 && (
+                <div className="p-3 rounded-lg border border-purple-500/30 bg-purple-500/5">
+                  <p className="text-sm font-medium text-purple-700 dark:text-purple-400 mb-2">
+                    Group Members (will be booked together):
+                  </p>
+                  <div className="space-y-1">
+                    {getGroupMembers(bookingContestant).map(m => (
+                      <div key={m.id} className="flex items-center gap-2 text-sm">
+                        <Avatar className="h-6 w-6 rounded">
+                          <AvatarImage src={m.photoUrl || undefined} />
+                          <AvatarFallback className="text-[10px]">{m.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}</AvatarFallback>
+                        </Avatar>
+                        <span>{m.name}</span>
+                        <span className="text-muted-foreground">({m.gender === 'Female' ? 'F' : 'M'} • {m.age}y)</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Day Selection */}
+              <div>
+                <label className="text-sm font-medium mb-1 block">Record Day</label>
+                <Select value={bookingDayId} onValueChange={setBookingDayId}>
+                  <SelectTrigger data-testid="select-booking-day">
+                    <SelectValue placeholder="Select day..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sortedRecordDays.map(day => (
+                      <SelectItem key={day.id} value={day.id}>
+                        {day.rxNumber} - {format(new Date(day.date), 'EEE dd/MM/yyyy')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Block Selection */}
+              {bookingDayId && (
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Block (PB only)</label>
+                  <Select value={selectedBlock} onValueChange={(v) => { setSelectedBlock(v); setSelectedSeat(''); }}>
+                    <SelectTrigger data-testid="select-booking-block">
+                      <SelectValue placeholder="Select block..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getBookingDayPBBlocks().length === 0 ? (
+                        <SelectItem value="_none" disabled>No PB blocks configured</SelectItem>
+                      ) : (
+                        getBookingDayPBBlocks().map(block => (
+                          <SelectItem key={block} value={block}>
+                            Block {block}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Seat Selection */}
+              {selectedBlock && (
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Starting Seat {getGroupMembers(bookingContestant).length > 0 && `(${getGroupMembers(bookingContestant).length + 1} consecutive seats needed)`}
+                  </label>
+                  <Select value={selectedSeat} onValueChange={setSelectedSeat}>
+                    <SelectTrigger data-testid="select-booking-seat">
+                      <SelectValue placeholder="Select seat..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAvailableSeats(selectedBlock).length === 0 ? (
+                        <SelectItem value="_none" disabled>No seats available</SelectItem>
+                      ) : (
+                        getAvailableSeats(selectedBlock).map(seat => (
+                          <SelectItem key={seat} value={seat}>
+                            Seat {seat}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-2 justify-end pt-2">
+                <Button variant="outline" onClick={() => setBookingContestant(null)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleBooking}
+                  disabled={!bookingDayId || !selectedBlock || !selectedSeat || bookContestantMutation.isPending || bookGroupMutation.isPending}
+                  data-testid="button-confirm-booking"
+                >
+                  {bookContestantMutation.isPending || bookGroupMutation.isPending ? 'Booking...' : 'Book Now'}
+                </Button>
               </div>
             </div>
           )}
