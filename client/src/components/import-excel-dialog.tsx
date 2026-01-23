@@ -24,7 +24,13 @@ interface DuplicateInfo {
     name: string;
     email: string | null;
     phone: string | null;
+    isTemporary?: boolean;
   };
+}
+
+interface TemporaryUpdateInfo {
+  existingId: string;
+  importName: string;
 }
 
 interface PreviewData {
@@ -32,6 +38,8 @@ interface PreviewData {
   uniqueCount: number;
   duplicateCount: number;
   duplicates: DuplicateInfo[];
+  temporaryUpdatesCount: number;
+  temporaryUpdates: TemporaryUpdateInfo[];
 }
 
 interface ImportExcelDialogProps {
@@ -217,20 +225,41 @@ export function ImportExcelDialog({ onImport }: ImportExcelDialogProps) {
 
         {step === 'preview' && previewData && (
           <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               <div className="p-3 rounded-lg border bg-muted/50">
                 <p className="text-2xl font-bold">{previewData.totalInFile}</p>
                 <p className="text-sm text-muted-foreground">Total in file</p>
               </div>
               <div className="p-3 rounded-lg border bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
                 <p className="text-2xl font-bold text-green-700 dark:text-green-400">{previewData.uniqueCount}</p>
-                <p className="text-sm text-green-600 dark:text-green-500">New contestants</p>
+                <p className="text-sm text-green-600 dark:text-green-500">New</p>
+              </div>
+              <div className="p-3 rounded-lg border bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">{previewData.temporaryUpdatesCount}</p>
+                <p className="text-sm text-blue-600 dark:text-blue-500">Temp Updates</p>
               </div>
               <div className="p-3 rounded-lg border bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
                 <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{previewData.duplicateCount}</p>
-                <p className="text-sm text-amber-600 dark:text-amber-500">Duplicates found</p>
+                <p className="text-sm text-amber-600 dark:text-amber-500">Duplicates</p>
               </div>
             </div>
+
+            {previewData.temporaryUpdatesCount > 0 && (
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className="h-4 w-4 text-blue-500" />
+                  <span className="text-sm font-medium">Temporary Contestants Found (Will be updated)</span>
+                </div>
+                <div className="max-h-[150px] overflow-y-auto border rounded-lg p-2 space-y-1">
+                  {previewData.temporaryUpdates.map((t, i) => (
+                    <div key={i} className="text-xs p-1.5 rounded bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 flex justify-between items-center">
+                      <span>{t.importName}</span>
+                      <Badge variant="outline" className="text-[9px] bg-blue-100 text-blue-700">TEMP</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {previewData.duplicateCount > 0 ? (
               <div className="flex-1 overflow-hidden flex flex-col">
@@ -309,11 +338,11 @@ export function ImportExcelDialog({ onImport }: ImportExcelDialogProps) {
               </Button>
               <Button 
                 onClick={handleImport} 
-                disabled={previewData?.uniqueCount === 0}
+                disabled={previewData?.uniqueCount === 0 && previewData?.temporaryUpdatesCount === 0}
                 data-testid="button-process-import"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Import {previewData?.uniqueCount || 0} New Contestants
+                Import {(previewData?.uniqueCount || 0) + (previewData?.temporaryUpdatesCount || 0)} Contestants
               </Button>
             </>
           )}

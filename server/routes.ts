@@ -1209,14 +1209,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       // Build lookup maps for existing contestants
-      const existingByName = new Map<string, typeof existingContestants[0]>();
-      const existingByEmail = new Map<string, typeof existingContestants[0]>();
-      const existingByPhone = new Map<string, typeof existingContestants[0]>();
+      const existingByName = new Map<string, any>();
+      const existingByEmail = new Map<string, any>();
+      const existingByPhone = new Map<string, any>();
       
       existingContestants.forEach((c: any) => {
         if (c.name) {
           const nameKey = c.name.toLowerCase().trim();
-          // Prefer non-temporary contestants in the map if there's a conflict
+          // ALWAYS prefer non-temporary contestants in the map if there's a conflict
           if (!existingByName.has(nameKey) || !c.isTemporary) {
             existingByName.set(nameKey, c);
           }
@@ -1263,11 +1263,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (nameMatch) {
           // If the existing contestant is temporary, allow import to update them
           if (nameMatch.isTemporary) {
-            console.log(`[Import] Found temporary match by name: ${normalizedName}. Redirecting to temporaryUpdates.`);
+            console.log(`[Import Preview] Found temporary match by name: ${normalizedName} (ID: ${nameMatch.id}). Redirecting to temporaryUpdates.`);
             temporaryContestantsToUpdate.push({ existingId: nameMatch.id, importData: contestant });
             continue;
           }
-          console.log(`[Import] Found duplicate by name: ${normalizedName}`);
+          console.log(`[Import Preview] Found REAL duplicate by name: ${normalizedName} (ID: ${nameMatch.id})`);
           duplicates.push({
             importName: contestant.name,
             importEmail: contestant.email,
@@ -1290,11 +1290,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (emailMatch) {
             // If the existing contestant is temporary, allow import to update them
             if (emailMatch.isTemporary) {
-              console.log(`[Import] Found temporary match by email: ${contestant.email}. Redirecting to temporaryUpdates.`);
+              console.log(`[Import Preview] Found temporary match by email: ${contestant.email} (ID: ${emailMatch.id}). Redirecting to temporaryUpdates.`);
               temporaryContestantsToUpdate.push({ existingId: emailMatch.id, importData: contestant });
               continue;
             }
-            console.log(`[Import] Found duplicate by email: ${contestant.email}`);
+            console.log(`[Import Preview] Found REAL duplicate by email: ${contestant.email} (ID: ${emailMatch.id})`);
             duplicates.push({
               importName: contestant.name,
               importEmail: contestant.email,
@@ -1318,11 +1318,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (phoneMatch) {
             // If the existing contestant is temporary, allow import to update them
             if (phoneMatch.isTemporary) {
-              console.log(`[Import] Found temporary match by phone: ${normalizedPhone}. Redirecting to temporaryUpdates.`);
+              console.log(`[Import Preview] Found temporary match by phone: ${normalizedPhone} (ID: ${phoneMatch.id}). Redirecting to temporaryUpdates.`);
               temporaryContestantsToUpdate.push({ existingId: phoneMatch.id, importData: contestant });
               continue;
             }
-            console.log(`[Import] Found duplicate by phone: ${normalizedPhone}`);
+            console.log(`[Import Preview] Found REAL duplicate by phone: ${normalizedPhone} (ID: ${phoneMatch.id})`);
             duplicates.push({
               importName: contestant.name,
               importEmail: contestant.email,
@@ -1372,6 +1372,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
       }
+
+      console.log(`[Import] Starting import for file: ${req.file.originalname}`);
 
       let rawData: any[];
       
@@ -1744,15 +1746,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       // Build lookup maps for existing contestants - include isTemporary flag
-      const existingByNameMap = new Map<string, { id: number; isTemporary: boolean }>();
-      const existingByEmailMap = new Map<string, { id: number; isTemporary: boolean }>();
-      const existingByPhoneMap = new Map<string, { id: number; isTemporary: boolean }>();
+      const existingByNameMap = new Map<string, { id: string; isTemporary: boolean }>();
+      const existingByEmailMap = new Map<string, { id: string; isTemporary: boolean }>();
+      const existingByPhoneMap = new Map<string, { id: string; isTemporary: boolean }>();
       
       existingContestants.forEach((c: any) => {
-        if (c.name) existingByNameMap.set(c.name.toLowerCase().trim(), { id: c.id, isTemporary: !!c.isTemporary });
-        if (c.email) existingByEmailMap.set(c.email.toLowerCase().trim(), { id: c.id, isTemporary: !!c.isTemporary });
+        if (c.name) {
+          const nameKey = c.name.toLowerCase().trim();
+          if (!existingByNameMap.has(nameKey) || !c.isTemporary) {
+            existingByNameMap.set(nameKey, { id: c.id, isTemporary: !!c.isTemporary });
+          }
+        }
+        if (c.email) {
+          const emailKey = c.email.toLowerCase().trim();
+          if (!existingByEmailMap.has(emailKey) || !c.isTemporary) {
+            existingByEmailMap.set(emailKey, { id: c.id, isTemporary: !!c.isTemporary });
+          }
+        }
         const normalizedPhone = normalizePhone(c.phone);
-        if (normalizedPhone) existingByPhoneMap.set(normalizedPhone, { id: c.id, isTemporary: !!c.isTemporary });
+        if (normalizedPhone) {
+          if (!existingByPhoneMap.has(normalizedPhone) || !c.isTemporary) {
+            existingByPhoneMap.set(normalizedPhone, { id: c.id, isTemporary: !!c.isTemporary });
+          }
+        }
       });
       
       // Track which names/emails/phones we've processed in this import
@@ -1789,6 +1805,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                           (phoneMatch?.isTemporary ? phoneMatch : null);
         
         if (tempMatch) {
+          console.log(`[Import] Found temporary match for ${row.name} (ID: ${tempMatch.id}). Updating record.`);
           // Update the temporary contestant with the imported data
           const updatedContestant = await storage.updateContestant(tempMatch.id, {
             name: row.name,
