@@ -58,6 +58,8 @@ export interface Contestant {
   groupSize?: number | null;
   podiumStory?: boolean;
   availableForStandby?: boolean;
+  isTemporary?: boolean;
+  isTestSubject?: boolean;
 }
 
 interface SeatAssignment {
