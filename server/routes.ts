@@ -9646,7 +9646,7 @@ Thank you.`;
       const allStandbyContestantIds = new Map(allStandbys.map(s => [s.contestantId, s]));
       
       // Get ALL seat assignments across ALL record days
-      const allSeatAssignments = await storage.getSeatAssignments();
+      const allSeatAssignments = await storage.getAllSeatAssignments();
       const allSeatedContestantIds = new Map(allSeatAssignments.map((a: any) => [a.contestantId, a]));
       
       // Check if any contestant is already a standby for ANY record day
