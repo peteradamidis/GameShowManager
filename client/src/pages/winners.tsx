@@ -248,7 +248,7 @@ export default function WinnersPage() {
                   <TableHead className="bg-green-50 dark:bg-green-950">QUICK CASH</TableHead>
                   <TableHead className="bg-green-50 dark:bg-green-950 text-center">BANK OFFER</TableHead>
                   <TableHead className="bg-green-50 dark:bg-green-950 text-center">SPIN WHEEL</TableHead>
-                  <TableHead className="bg-green-50 dark:bg-green-950">PRIZE</TableHead>
+                  <TableHead className="bg-green-50 dark:bg-green-950">WHEEL PRIZE</TableHead>
                   <TableHead className="bg-green-50 dark:bg-green-950 text-right">AMOUNT WON</TableHead>
                 </TableRow>
               </TableHeader>
@@ -357,7 +357,7 @@ export default function WinnersPage() {
                       </>
                     )}
                     <TableCell className="text-xs font-semibold">
-                      {winner.winningMoneyRole === 'player' ? 'Player' : 'Case Holder'}
+                      {winner.winningMoneyRole === 'player' ? 'Player' : 'Case'}
                     </TableCell>
                     <TableCell className="text-xs min-w-40">{winner.contestantName}</TableCell>
                     <TableCell className="text-xs min-w-32">{winner.phone || '-'}</TableCell>

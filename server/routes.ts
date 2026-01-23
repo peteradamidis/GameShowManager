@@ -3916,7 +3916,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'RX Date': recordDay?.date ? new Date(recordDay.date).toLocaleDateString() : '',
           'RX Day': a.rxNumber || '',
           'RX Ep No.': a.rxEpNumber || '',
-          'Contestant Type': a.winningMoneyRole === 'player' ? 'Player' : 'Case Holder',
+          'Contestant Type': a.winningMoneyRole === 'player' ? 'Player' : 'Case',
           'Contestant Name': contestant?.name,
           'Phone': contestant?.phone || '',
           'Email': contestant?.email || '',
@@ -3924,7 +3924,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Case Amount': a.caseAmount || '',
           'Bank Offer Taken': a.bankOfferTaken ? 'Yes' : 'No',
           'Spin the Wheel': a.spinTheWheel ? 'Yes' : 'No',
-          'Prize': a.prize || '',
+          'Wheel Prize': a.prize || '',
           'Amount Won': a.winningMoneyAmount || '',
         };
       });
