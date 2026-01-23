@@ -1796,9 +1796,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Check for duplicate (non-temporary) by name (exact match), email, or phone
-        const isDuplicateName = normalizedName && (existingByNameMap.has(normalizedName) || processedNames.has(normalizedName));
-        const isDuplicateEmail = normalizedEmail && (existingByEmailMap.has(normalizedEmail) || processedEmails.has(normalizedEmail));
-        const isDuplicatePhone = normalizedPhone && (existingByPhoneMap.has(normalizedPhone) || processedPhones.has(normalizedPhone));
+        // Only flag as duplicate if the match is NOT a temporary contestant
+        const nameMapEntry = normalizedName ? existingByNameMap.get(normalizedName) : null;
+        const emailMapEntry = normalizedEmail ? existingByEmailMap.get(normalizedEmail) : null;
+        const phoneMapEntry = normalizedPhone ? existingByPhoneMap.get(normalizedPhone) : null;
+        
+        const isDuplicateName = normalizedName && ((nameMapEntry && !nameMapEntry.isTemporary) || processedNames.has(normalizedName));
+        const isDuplicateEmail = normalizedEmail && ((emailMapEntry && !emailMapEntry.isTemporary) || processedEmails.has(normalizedEmail));
+        const isDuplicatePhone = normalizedPhone && ((phoneMapEntry && !phoneMapEntry.isTemporary) || processedPhones.has(normalizedPhone));
         
         if (isDuplicateName || isDuplicateEmail || isDuplicatePhone) {
           skippedDuplicates.push({
