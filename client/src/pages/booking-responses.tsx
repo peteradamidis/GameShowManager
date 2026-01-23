@@ -1979,11 +1979,16 @@ export default function BookingResponses() {
             </p>
             
             <div className="border rounded-lg overflow-hidden">
-              <div className="bg-muted px-3 py-2 border-b">
+              <div className="bg-muted px-3 py-2 border-b flex items-center justify-between">
                 <span className="text-sm font-medium">Email Preview</span>
+                {!selectedRecordDay && selectedNotSentWithEmail.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    Preview showing: {sortedRecordDays.find(rd => rd.id === selectedNotSentWithEmail[0]?.recordDayId)?.rxNumber || 'Sample'}
+                  </span>
+                )}
               </div>
               <iframe
-                src={`/api/email-preview/booking${selectedRecordDay ? `?recordDayId=${selectedRecordDay}` : ''}`}
+                src={`/api/email-preview/booking?recordDayId=${selectedRecordDay || selectedNotSentWithEmail[0]?.recordDayId || ''}&t=${Date.now()}`}
                 className="w-full h-[300px] bg-white"
                 title="Booking Email Preview"
               />
@@ -2064,12 +2069,17 @@ export default function BookingResponses() {
             </p>
             
             <div className="border rounded-lg overflow-hidden">
-              <div className="bg-muted px-3 py-2 border-b">
+              <div className="bg-muted px-3 py-2 border-b flex items-center justify-between">
                 <span className="text-sm font-medium">Email Preview</span>
+                {!selectedRecordDay && selectedConfirmedWithoutTicket.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    Preview showing: {sortedRecordDays.find(rd => rd.id === selectedConfirmedWithoutTicket[0]?.recordDayId)?.rxNumber || 'Sample'}
+                  </span>
+                )}
               </div>
               <iframe
-                key={`ticket-preview-${selectedRecordDay}`}
-                src={`/api/email-preview/ticket?recordDayId=${selectedRecordDay}&t=${Date.now()}`}
+                key={`ticket-preview-${selectedRecordDay || selectedConfirmedWithoutTicket[0]?.recordDayId}`}
+                src={`/api/email-preview/ticket?recordDayId=${selectedRecordDay || selectedConfirmedWithoutTicket[0]?.recordDayId || ''}&t=${Date.now()}`}
                 className="w-full h-[300px] bg-white"
                 title="Ticket Email Preview"
               />
