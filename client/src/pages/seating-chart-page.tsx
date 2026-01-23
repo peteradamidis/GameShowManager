@@ -1595,7 +1595,7 @@ export default function SeatingChartPage() {
 
       {/* Assign Contestant to Empty Seat Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-2xl max-h-[95vh] flex flex-col gap-4 overflow-hidden" data-testid="dialog-assign-contestant-to-seat">
+        <DialogContent className="w-[95vw] max-w-5xl max-h-[90vh] flex flex-col gap-4 overflow-hidden" data-testid="dialog-assign-contestant-to-seat">
           <DialogHeader className="pb-2">
             <DialogTitle className="flex items-center gap-2">
               Assign to Block {selectedBlock}, Seat {selectedSeat}
