@@ -690,6 +690,7 @@ export function ContestantTable({
         criminalRecord: contestantDetails.criminalRecord || '',
         auditionRating: contestantDetails.auditionRating || '',
         playerType: (assignment as any)?.playerType || '',
+        availabilityStatus: contestantDetails.availabilityStatus || 'available',
       });
     }
   }, [contestantDetails, selectedContestantId]);
@@ -798,6 +799,7 @@ export function ContestantTable({
         criminalRecord: contestantDetails.criminalRecord || '',
         auditionRating: contestantDetails.auditionRating || '',
         playerType: (assignment as any)?.playerType || '',
+        availabilityStatus: contestantDetails.availabilityStatus || 'available',
       });
     }
     setIsEditMode(false);
@@ -1484,6 +1486,30 @@ export function ContestantTable({
                             <SelectItem value="player">Player</SelectItem>
                             <SelectItem value="backup">Backup</SelectItem>
                             <SelectItem value="player_partner">Partner</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <div className="space-y-1 col-span-1">
+                        <Label htmlFor="edit-status" className="text-xs flex items-center gap-1">
+                          Status
+                          <span className="text-[10px] text-amber-600 dark:text-amber-400">(Manual)</span>
+                        </Label>
+                        <Select 
+                          value={editFormData.availabilityStatus || ''} 
+                          onValueChange={(value) => handleEditFormChange('availabilityStatus', value)}
+                        >
+                          <SelectTrigger data-testid="select-edit-status" className="h-8 text-xs">
+                            <SelectValue placeholder="Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="available">Available</SelectItem>
+                            <SelectItem value="assigned">Assigned</SelectItem>
+                            <SelectItem value="invited">Invited</SelectItem>
+                            <SelectItem value="confirmed">Confirmed</SelectItem>
+                            <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                            <SelectItem value="returning_standby">Returning Standby</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
