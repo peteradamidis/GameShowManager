@@ -133,8 +133,10 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
   const [ageFilter, setAgeFilter] = useState<string>('all');
   const [planningData, setPlanningData] = useState<RXPlanningData>(loadPlanningData);
   const [draggedContestant, setDraggedContestant] = useState<PlannedContestant | null>(null);
-  const [dragSource, setDragSource] = useState<{ type: 'pool' | 'block'; block?: string } | null>(null);
+  const [dragSource, setDragSource] = useState<{ type: 'pool' | 'block'; block?: string; dayId?: string } | null>(null);
   const [viewingPhoto, setViewingPhoto] = useState<{ url: string; name: string } | null>(null);
+  const [viewingContestant, setViewingContestant] = useState<Contestant | null>(null);
+  const [viewMode, setViewMode] = useState<'single' | 'weekly'>('single');
 
   // Fetch block types from API - refetch when tab is shown to sync with seating chart changes
   const { data: blockTypes = [] } = useQuery<BlockTypeData[]>({
@@ -201,8 +203,10 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
 
   // Filtered contestant pool (not yet assigned to any block)
   const filteredPool = useMemo(() => {
+    // In weekly view, exclude contestants planned in any of the week's days
+    const excludeIds = viewMode === 'weekly' ? weekPlannedContestantIds : plannedContestantIds;
     return eligibleContestants.filter(c => {
-      if (plannedContestantIds.has(c.id)) return false;
+      if (excludeIds.has(c.id)) return false;
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         if (!c.name.toLowerCase().includes(term) && 
@@ -227,7 +231,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
       }
       return true;
     });
-  }, [eligibleContestants, plannedContestantIds, searchTerm, ratingFilter, genderFilter, ageFilter]);
+  }, [eligibleContestants, plannedContestantIds, weekPlannedContestantIds, viewMode, searchTerm, ratingFilter, genderFilter, ageFilter]);
 
   // Get blocks for current day
   const currentDayBlocks = useMemo(() => {
@@ -250,29 +254,33 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
     setDragSource(null);
   };
 
-  const handleDrop = (targetBlock: string) => {
-    if (!draggedContestant || !selectedDayId) return;
+  const handleDrop = (targetBlock: string, targetDayId?: string) => {
+    if (!draggedContestant) return;
+    const dropDayId = targetDayId || selectedDayId;
+    if (!dropDayId) return;
 
     setPlanningData(prev => {
       const updated = { ...prev };
-      if (!updated[selectedDayId]) {
-        updated[selectedDayId] = { blocks: { '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [] } };
+      if (!updated[dropDayId]) {
+        updated[dropDayId] = { blocks: { '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [] } };
       }
 
       // Remove from source if coming from a block
       if (dragSource?.type === 'block' && dragSource.block) {
-        updated[selectedDayId].blocks[dragSource.block] = 
-          (updated[selectedDayId].blocks[dragSource.block] || [])
-            .filter(c => c.id !== draggedContestant.id);
+        const sourceDayId = dragSource.dayId || selectedDayId;
+        if (sourceDayId && updated[sourceDayId]?.blocks[dragSource.block]) {
+          updated[sourceDayId].blocks[dragSource.block] = 
+            updated[sourceDayId].blocks[dragSource.block].filter(c => c.id !== draggedContestant.id);
+        }
       }
 
       // Add to target block
-      if (!updated[selectedDayId].blocks[targetBlock]) {
-        updated[selectedDayId].blocks[targetBlock] = [];
+      if (!updated[dropDayId].blocks[targetBlock]) {
+        updated[dropDayId].blocks[targetBlock] = [];
       }
       // Avoid duplicates
-      if (!updated[selectedDayId].blocks[targetBlock].find(c => c.id === draggedContestant.id)) {
-        updated[selectedDayId].blocks[targetBlock].push(draggedContestant);
+      if (!updated[dropDayId].blocks[targetBlock].find(c => c.id === draggedContestant.id)) {
+        updated[dropDayId].blocks[targetBlock].push(draggedContestant);
       }
 
       savePlanningData(updated);
@@ -283,18 +291,55 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
     handleDragEnd();
   };
 
-  const removeFromBlock = (blockNumber: string, contestantId: string) => {
-    if (!selectedDayId) return;
+  const removeFromBlock = (blockNumber: string, contestantId: string, dayId?: string) => {
+    const removeDayId = dayId || selectedDayId;
+    if (!removeDayId) return;
     setPlanningData(prev => {
       const updated = { ...prev };
-      if (updated[selectedDayId]?.blocks[blockNumber]) {
-        updated[selectedDayId].blocks[blockNumber] = 
-          updated[selectedDayId].blocks[blockNumber].filter(c => c.id !== contestantId);
+      if (updated[removeDayId]?.blocks[blockNumber]) {
+        updated[removeDayId].blocks[blockNumber] = 
+          updated[removeDayId].blocks[blockNumber].filter(c => c.id !== contestantId);
       }
       savePlanningData(updated);
       return updated;
     });
   };
+
+  // Get week's worth of RX days starting from selected day
+  const weekDays = useMemo(() => {
+    if (!selectedDayId) return [];
+    const selectedIdx = sortedRecordDays.findIndex(d => d.id === selectedDayId);
+    if (selectedIdx === -1) return [];
+    // Get up to 4 consecutive days starting from selected
+    return sortedRecordDays.slice(selectedIdx, selectedIdx + 4);
+  }, [selectedDayId, sortedRecordDays]);
+
+  // Get blocks for a specific day
+  const getBlocksForDay = (dayId: string) => {
+    const blocks: { [key: string]: PlannedContestant[] } = { '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [] };
+    if (planningData[dayId]?.blocks) {
+      Object.keys(blocks).forEach(block => {
+        blocks[block] = planningData[dayId].blocks[block] || [];
+      });
+    }
+    return blocks;
+  };
+
+  // Get all planned contestant IDs across week (for filtering pool)
+  const weekPlannedContestantIds = useMemo(() => {
+    const ids = new Set<string>();
+    weekDays.forEach(day => {
+      if (planningData[day.id]?.blocks) {
+        Object.values(planningData[day.id].blocks).forEach(blockContestants => {
+          blockContestants.forEach(c => ids.add(c.id));
+        });
+      }
+    });
+    return ids;
+  }, [weekDays, planningData]);
+
+  // Find full contestant record by ID
+  const findContestant = (id: string) => contestants.find(c => c.id === id);
 
   const clearDayPlan = () => {
     if (!selectedDayId) return;
@@ -326,13 +371,32 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
 
   return (
     <div className="space-y-6">
-      {/* Header with day selector */}
+      {/* Header with day selector and view mode */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold">RX Day Block Planner</h2>
           <p className="text-sm text-muted-foreground">Configure PB/NPB blocks (syncs to seating chart) and plan contestants visually</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* View mode toggle */}
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              variant={viewMode === 'single' ? 'default' : 'outline'}
+              onClick={() => setViewMode('single')}
+              data-testid="button-view-single"
+            >
+              Single Day
+            </Button>
+            <Button
+              size="sm"
+              variant={viewMode === 'weekly' ? 'default' : 'outline'}
+              onClick={() => setViewMode('weekly')}
+              data-testid="button-view-weekly"
+            >
+              Weekly ({weekDays.length} days)
+            </Button>
+          </div>
           <Select value={selectedDayId} onValueChange={setSelectedDayId}>
             <SelectTrigger className="w-[220px]" data-testid="select-planning-day">
               <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -354,13 +418,13 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
             data-testid="button-clear-plan"
           >
             <Trash2 className="h-4 w-4 mr-1" />
-            Clear Plan
+            Clear
           </Button>
         </div>
       </div>
 
-      {/* PB/NPB counter */}
-      {selectedDayId && (
+      {/* PB/NPB counter - only show in single day mode */}
+      {selectedDayId && viewMode === 'single' && (
         <div className="flex items-center gap-4">
           <Badge className={`${pbCount === 5 ? 'bg-blue-500' : 'bg-muted'}`}>
             PB: {pbCount}/5
@@ -379,10 +443,10 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
           Select an RX Day to start planning blocks
         </Card>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+        <div className="flex gap-6">
           {/* Contestant Pool - Left side */}
-          <div className="xl:col-span-1">
-            <Card className="h-full">
+          <div className="w-80 flex-shrink-0">
+            <Card className="h-full sticky top-4">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Star className="h-5 w-5 text-amber-500" />
@@ -439,8 +503,8 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                   </Select>
                 </div>
               </CardHeader>
-              <CardContent className="max-h-[700px] overflow-y-auto">
-                <div className="space-y-3">
+              <CardContent className="max-h-[600px] overflow-y-auto">
+                <div className="space-y-2">
                   {filteredPool.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-4">
                       {eligibleContestants.length === 0 ? 'No A+ or A rated contestants found' : 'All matching contestants have been planned'}
@@ -454,47 +518,30 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                           draggable
                           onDragStart={() => handleDragStart(planned, { type: 'pool' })}
                           onDragEnd={handleDragEnd}
-                          className="p-3 rounded-lg border bg-card hover:bg-accent/50 cursor-grab active:cursor-grabbing transition-colors"
+                          onClick={() => setViewingContestant(c)}
+                          className="p-2 rounded-lg border bg-card hover:bg-accent/50 cursor-grab active:cursor-grabbing transition-colors"
                           data-testid={`draggable-contestant-${c.id}`}
                         >
-                          <div className="flex gap-3">
-                            <Avatar 
-                              className={`h-16 w-16 rounded-lg border-2 ${c.photoUrl ? 'cursor-pointer hover:ring-2 hover:ring-primary' : ''}`}
-                              onClick={() => c.photoUrl && setViewingPhoto({ url: c.photoUrl, name: c.name })}
-                              data-testid={`avatar-pool-${c.id}`}
-                            >
+                          <div className="flex gap-2 items-center">
+                            <Avatar className="h-10 w-10 rounded-lg border flex-shrink-0">
                               <AvatarImage src={c.photoUrl || undefined} className="object-cover" />
-                              <AvatarFallback className="text-lg rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+                              <AvatarFallback className="text-xs rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white">
                                 {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-semibold truncate">{c.name}</span>
-                                <Badge variant="outline" className={c.auditionRating === 'A+' ? 'bg-amber-500/10 text-amber-700 border-amber-300' : 'bg-blue-500/10 text-blue-700 border-blue-300'}>
+                              <div className="flex items-center gap-1">
+                                <span className="font-medium text-sm truncate">{c.name}</span>
+                                <Badge variant="outline" className={`text-[10px] px-1 py-0 ${c.auditionRating === 'A+' ? 'bg-amber-500/10 text-amber-700 border-amber-300' : 'bg-blue-500/10 text-blue-700 border-blue-300'}`}>
                                   {c.auditionRating}
                                 </Badge>
                               </div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                                <Badge variant="outline" className={c.gender === 'Female' ? 'bg-pink-500/10 text-pink-700 border-pink-300' : 'bg-blue-500/10 text-blue-700 border-blue-300'}>
-                                  {c.gender === 'Female' ? 'F' : 'M'}
-                                </Badge>
-                                {c.age && <span>{c.age}y</span>}
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <span>{c.gender === 'Female' ? 'F' : 'M'}</span>
+                                {c.age && <><span>•</span><span>{c.age}y</span></>}
+                                {c.suburb && <><span>•</span><span className="truncate max-w-[80px]">{c.suburb}</span></>}
                               </div>
-                              {c.suburb && (
-                                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                  <MapPin className="h-3 w-3" />
-                                  <span className="truncate">{c.suburb}</span>
-                                </div>
-                              )}
-                              {c.attendingWith && (
-                                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                  <Users className="h-3 w-3" />
-                                  <span className="truncate">{c.attendingWith}</span>
-                                </div>
-                              )}
                             </div>
-                            <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
                           </div>
                         </div>
                       );
@@ -505,110 +552,173 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
             </Card>
           </div>
 
-          {/* Block Slots - Right side */}
-          <div className="xl:col-span-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {['1', '2', '3', '4', '5', '6', '7'].map(blockNum => {
-                const blockContestants = currentDayBlocks[blockNum] || [];
-                const blockType = getBlockType(parseInt(blockNum));
-                const isPB = blockType === 'PB';
-                const isNPB = blockType === 'NPB';
-                
-                return (
-                  <Card 
-                    key={blockNum}
-                    className={`transition-colors ${draggedContestant ? 'border-dashed border-2 border-primary/50' : ''} ${isPB ? 'border-blue-500/50' : isNPB ? 'border-amber-500/50' : ''}`}
-                    onDragOver={e => e.preventDefault()}
-                    onDrop={() => handleDrop(blockNum)}
-                    data-testid={`block-drop-zone-${blockNum}`}
-                  >
-                    <CardHeader className="pb-2 pt-3 px-3">
-                      <CardTitle className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Badge className={`text-base px-3 py-1 ${isPB ? 'bg-blue-500' : isNPB ? 'bg-amber-500' : 'bg-muted text-muted-foreground'}`}>
+          {/* Days/Blocks - Right side */}
+          <div className="flex-1 overflow-x-auto">
+            {viewMode === 'single' ? (
+              /* Single Day View - Vertical Blocks */
+              <div className="space-y-3">
+                {['1', '2', '3', '4', '5', '6', '7'].map(blockNum => {
+                  const blockContestants = currentDayBlocks[blockNum] || [];
+                  const blockType = getBlockType(parseInt(blockNum));
+                  const isPB = blockType === 'PB';
+                  const isNPB = blockType === 'NPB';
+                  
+                  return (
+                    <Card 
+                      key={blockNum}
+                      className={`transition-colors ${draggedContestant ? 'border-dashed border-2 border-primary/50' : ''} ${isPB ? 'border-blue-500/50' : isNPB ? 'border-amber-500/50' : ''}`}
+                      onDragOver={e => e.preventDefault()}
+                      onDrop={() => handleDrop(blockNum)}
+                      data-testid={`block-drop-zone-${blockNum}`}
+                    >
+                      <div className="flex items-center gap-4 p-3">
+                        <div className="flex items-center gap-2 w-32 flex-shrink-0">
+                          <Badge className={`px-3 py-1 ${isPB ? 'bg-blue-500' : isNPB ? 'bg-amber-500' : 'bg-muted text-muted-foreground'}`}>
                             Block {blockNum}
                           </Badge>
-                        </div>
-                        {/* PB/NPB Toggle */}
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            variant={isPB ? "default" : "outline"}
-                            onClick={() => handleBlockTypeChange(parseInt(blockNum), 'PB')}
-                            disabled={updateBlockTypeMutation.isPending}
-                            data-testid={`button-set-pb-${blockNum}`}
-                          >
-                            PB
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={isNPB ? "default" : "outline"}
-                            onClick={() => handleBlockTypeChange(parseInt(blockNum), 'NPB')}
-                            disabled={updateBlockTypeMutation.isPending}
-                            data-testid={`button-set-npb-${blockNum}`}
-                          >
-                            NPB
-                          </Button>
-                        </div>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pb-3 px-3">
-                      {blockContestants.length === 0 ? (
-                        <div className="py-4 text-center text-muted-foreground text-xs border-2 border-dashed rounded-lg">
-                          Drop contestants here
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          {blockContestants.map(c => (
-                            <div
-                              key={c.id}
-                              draggable
-                              onDragStart={() => handleDragStart(c, { type: 'block', block: blockNum })}
-                              onDragEnd={handleDragEnd}
-                              className={`p-2 rounded-lg cursor-grab active:cursor-grabbing group ${isPB ? 'bg-blue-500/10 border border-blue-500/30' : isNPB ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-green-500/10 border border-green-500/30'}`}
-                              data-testid={`planned-contestant-${blockNum}-${c.id}`}
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant={isPB ? "default" : "outline"}
+                              className="h-6 px-2 text-xs"
+                              onClick={() => handleBlockTypeChange(parseInt(blockNum), 'PB')}
+                              disabled={updateBlockTypeMutation.isPending}
+                              data-testid={`button-set-pb-${blockNum}`}
                             >
-                              <div className="flex items-start gap-2">
-                                <Avatar 
-                                  className={`h-12 w-12 rounded-lg ${c.photoUrl ? 'cursor-pointer' : ''}`}
-                                  onClick={() => c.photoUrl && setViewingPhoto({ url: c.photoUrl, name: c.name })}
-                                  data-testid={`avatar-block-${blockNum}-${c.id}`}
-                                >
+                              PB
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={isNPB ? "default" : "outline"}
+                              className="h-6 px-2 text-xs"
+                              onClick={() => handleBlockTypeChange(parseInt(blockNum), 'NPB')}
+                              disabled={updateBlockTypeMutation.isPending}
+                              data-testid={`button-set-npb-${blockNum}`}
+                            >
+                              NPB
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="flex-1 flex gap-2 flex-wrap min-h-[48px] p-2 rounded-lg border-2 border-dashed border-muted">
+                          {blockContestants.length === 0 ? (
+                            <span className="text-xs text-muted-foreground self-center">Drop contestants here</span>
+                          ) : (
+                            blockContestants.map(c => (
+                              <div
+                                key={c.id}
+                                draggable
+                                onDragStart={() => handleDragStart(c, { type: 'block', block: blockNum, dayId: selectedDayId })}
+                                onDragEnd={handleDragEnd}
+                                onClick={() => { const full = findContestant(c.id); if (full) setViewingContestant(full); }}
+                                className={`flex items-center gap-2 px-2 py-1 rounded-lg cursor-grab group ${isPB ? 'bg-blue-500/10 border border-blue-500/30' : isNPB ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-green-500/10 border border-green-500/30'}`}
+                                data-testid={`planned-contestant-${blockNum}-${c.id}`}
+                              >
+                                <Avatar className="h-8 w-8 rounded-lg">
                                   <AvatarImage src={c.photoUrl || undefined} className="object-cover" />
-                                  <AvatarFallback className="text-sm rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 text-white">
+                                  <AvatarFallback className="text-xs rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 text-white">
                                     {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-medium text-sm truncate">{c.name}</span>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
-                                      onClick={() => removeFromBlock(blockNum, c.id)}
-                                      data-testid={`remove-contestant-${blockNum}-${c.id}`}
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                    <span>{c.rating}</span>
-                                    <span>•</span>
-                                    <span>{c.gender === 'Female' ? 'F' : 'M'}</span>
-                                    {c.age && <><span>•</span><span>{c.age}y</span></>}
-                                  </div>
+                                <div className="text-sm">
+                                  <span className="font-medium">{c.name}</span>
+                                  <span className="text-xs text-muted-foreground ml-1">
+                                    {c.gender === 'Female' ? 'F' : 'M'}{c.age ? `/${c.age}` : ''}
+                                  </span>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-5 w-5 opacity-0 group-hover:opacity-100"
+                                  onClick={(e) => { e.stopPropagation(); removeFromBlock(blockNum, c.id); }}
+                                  data-testid={`remove-contestant-${blockNum}-${c.id}`}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              /* Weekly View - Multiple Days Side by Side */
+              <div className="flex gap-4">
+                {weekDays.map(day => {
+                  const dayBlocks = getBlocksForDay(day.id);
+                  return (
+                    <div key={day.id} className="min-w-[280px] flex-shrink-0">
+                      <Card className="mb-3">
+                        <CardHeader className="py-2 px-3">
+                          <CardTitle className="text-sm flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            {day.rxNumber} - {format(new Date(day.date), 'EEE dd/MM')}
+                          </CardTitle>
+                        </CardHeader>
+                      </Card>
+                      <div className="space-y-2">
+                        {['1', '2', '3', '4', '5', '6', '7'].map(blockNum => {
+                          const blockContestants = dayBlocks[blockNum] || [];
+                          return (
+                            <Card 
+                              key={blockNum}
+                              className={`transition-colors ${draggedContestant ? 'border-dashed border-primary/50' : ''}`}
+                              onDragOver={e => e.preventDefault()}
+                              onDrop={() => handleDrop(blockNum, day.id)}
+                              data-testid={`weekly-block-${day.id}-${blockNum}`}
+                            >
+                              <div className="p-2">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Badge variant="outline" className="text-xs">B{blockNum}</Badge>
+                                  <span className="text-xs text-muted-foreground">{blockContestants.length} planned</span>
+                                </div>
+                                <div className="space-y-1 min-h-[32px]">
+                                  {blockContestants.length === 0 ? (
+                                    <div className="text-[10px] text-muted-foreground text-center py-1 border border-dashed rounded">
+                                      Drop here
+                                    </div>
+                                  ) : (
+                                    blockContestants.map(c => (
+                                      <div
+                                        key={c.id}
+                                        draggable
+                                        onDragStart={() => handleDragStart(c, { type: 'block', block: blockNum, dayId: day.id })}
+                                        onDragEnd={handleDragEnd}
+                                        onClick={() => { const full = findContestant(c.id); if (full) setViewingContestant(full); }}
+                                        className="flex items-center gap-1 px-1 py-0.5 rounded bg-muted/50 cursor-grab group text-xs"
+                                        data-testid={`weekly-contestant-${day.id}-${blockNum}-${c.id}`}
+                                      >
+                                        <Avatar className="h-5 w-5 rounded">
+                                          <AvatarImage src={c.photoUrl || undefined} />
+                                          <AvatarFallback className="text-[8px]">
+                                            {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <span className="truncate flex-1">{c.name}</span>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-4 w-4 opacity-0 group-hover:opacity-100"
+                                          onClick={(e) => { e.stopPropagation(); removeFromBlock(blockNum, c.id, day.id); }}
+                                        >
+                                          <X className="h-2 w-2" />
+                                        </Button>
+                                      </div>
+                                    ))
+                                  )}
                                 </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -635,6 +745,98 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                 data-testid="img-lightbox-photo"
               />
               <p className="mt-4 text-lg font-medium" data-testid="text-lightbox-name">{viewingPhoto.name}</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Contestant Detail Dialog */}
+      <Dialog open={!!viewingContestant} onOpenChange={(open) => !open && setViewingContestant(null)}>
+        <DialogContent className="max-w-2xl" data-testid="dialog-contestant-detail">
+          <DialogHeader>
+            <DialogTitle>Contestant Details</DialogTitle>
+          </DialogHeader>
+          {viewingContestant && (
+            <div className="flex gap-6">
+              {/* Photo */}
+              <div className="flex-shrink-0">
+                <Avatar 
+                  className="h-32 w-32 rounded-xl border-2 cursor-pointer"
+                  onClick={() => viewingContestant.photoUrl && setViewingPhoto({ url: viewingContestant.photoUrl, name: viewingContestant.name })}
+                >
+                  <AvatarImage src={viewingContestant.photoUrl || undefined} className="object-cover" />
+                  <AvatarFallback className="text-3xl rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+                    {viewingContestant.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              {/* Info */}
+              <div className="flex-1 space-y-4">
+                <div>
+                  <h3 className="text-xl font-semibold">{viewingContestant.name}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className={viewingContestant.auditionRating === 'A+' ? 'bg-amber-500/10 text-amber-700 border-amber-300' : viewingContestant.auditionRating === 'A' ? 'bg-blue-500/10 text-blue-700 border-blue-300' : ''}>
+                      {viewingContestant.auditionRating || 'Unrated'}
+                    </Badge>
+                    <Badge variant="outline" className={viewingContestant.gender === 'Female' ? 'bg-pink-500/10 text-pink-700 border-pink-300' : 'bg-blue-500/10 text-blue-700 border-blue-300'}>
+                      {viewingContestant.gender || 'Unknown'}
+                    </Badge>
+                    {viewingContestant.age && (
+                      <Badge variant="outline">{viewingContestant.age} years old</Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  {viewingContestant.email && (
+                    <div>
+                      <span className="text-muted-foreground">Email:</span>
+                      <p className="font-medium">{viewingContestant.email}</p>
+                    </div>
+                  )}
+                  {viewingContestant.phone && (
+                    <div>
+                      <span className="text-muted-foreground">Phone:</span>
+                      <p className="font-medium">{viewingContestant.phone}</p>
+                    </div>
+                  )}
+                  {viewingContestant.suburb && (
+                    <div>
+                      <span className="text-muted-foreground">Location:</span>
+                      <p className="font-medium">{viewingContestant.suburb}</p>
+                    </div>
+                  )}
+                  {viewingContestant.attendingWith && (
+                    <div>
+                      <span className="text-muted-foreground">Attending With:</span>
+                      <p className="font-medium">{viewingContestant.attendingWith}</p>
+                    </div>
+                  )}
+                  {viewingContestant.occupation && (
+                    <div>
+                      <span className="text-muted-foreground">Occupation:</span>
+                      <p className="font-medium">{viewingContestant.occupation}</p>
+                    </div>
+                  )}
+                  {viewingContestant.status && (
+                    <div>
+                      <span className="text-muted-foreground">Status:</span>
+                      <p className="font-medium capitalize">{viewingContestant.status.replace('_', ' ')}</p>
+                    </div>
+                  )}
+                </div>
+                {viewingContestant.medicalMobilityNotes && (
+                  <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                    <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">Medical/Mobility Notes:</span>
+                    <p className="text-sm">{viewingContestant.medicalMobilityNotes}</p>
+                  </div>
+                )}
+                {viewingContestant.notes && (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Notes:</span>
+                    <p>{viewingContestant.notes}</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>
