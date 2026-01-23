@@ -2227,7 +2227,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // 10. Delete rebooking history
         await database.execute(sql`DELETE FROM rebooking_history WHERE contestant_id = ${id}`);
         
-        // 11. Remove any group associations
+        // 11. Delete movement history
+        await database.execute(sql`DELETE FROM movement_history WHERE contestant_id = ${id}`);
+        
+        // 12. Remove any group associations
         // We do this by setting group_id to null on the contestant record itself before storage.deleteContestant
         await database.execute(sql`UPDATE contestants SET group_id = NULL WHERE id = ${id}`);
       } else {
@@ -2237,6 +2240,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (hasAssignments) {
           return res.status(400).json({ error: "Cannot delete contestant with active seat assignments" });
         }
+      }
+
+      // Delete movement history for all contestants (not just test subjects)
+      const database = db;
+      if (database) {
+        await database.execute(sql`DELETE FROM movement_history WHERE contestant_id = ${id}`);
       }
 
       await storage.deleteContestant(id);
