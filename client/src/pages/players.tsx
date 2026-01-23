@@ -149,6 +149,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
   const [viewingPhoto, setViewingPhoto] = useState<{ url: string; name: string } | null>(null);
   const [viewingContestant, setViewingContestant] = useState<Contestant | null>(null);
   const [viewMode, setViewMode] = useState<'single' | 'weekly'>('single');
+  const [hideNPBs, setHideNPBs] = useState(false);
 
   // Fetch block types from API - refetch when tab is shown to sync with seating chart changes
   const { data: blockTypes = [] } = useQuery<BlockTypeData[]>({
@@ -503,6 +504,15 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
           )}
 
           <Button 
+            variant={hideNPBs ? "default" : "outline"}
+            size="sm"
+            onClick={() => setHideNPBs(!hideNPBs)}
+            data-testid="button-hide-npbs"
+          >
+            {hideNPBs ? "Show NPBs" : "Hide NPBs"}
+          </Button>
+
+          <Button 
             variant="outline" 
             size="sm"
             onClick={clearDayPlan}
@@ -654,6 +664,9 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                   const blockType = getBlockType(parseInt(blockNum));
                   const isPB = blockType === 'PB';
                   const isNPB = blockType === 'NPB';
+                  
+                  // Hide NPB blocks if toggle is on
+                  if (hideNPBs && isNPB) return null;
                   
                   return (
                     <Card 
