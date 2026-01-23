@@ -1753,29 +1753,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
                           (phoneMatch?.isTemporary ? phoneMatch : null);
         
         if (tempMatch) {
-          console.log(`[Import] Found temporary match for ${row.name} (ID: ${tempMatch.id}). Updating record.`);
-          // Update the temporary contestant with the imported data
-          const updatedContestant = await storage.updateContestant(tempMatch.id, {
-            name: row.name,
-            age: row.age,
-            gender: row.gender,
-            attendingWith: row.attendingWith,
-            email: row.email,
-            phone: row.phone,
-            location: row.location,
-            postcode: row.postcode,
-            state: row.state,
-            medicalInfo: row.medicalInfo,
-            mobilityNotes: row.mobilityNotes,
-            criminalRecord: row.criminalRecord,
-            auditionRating: row.auditionRating,
-            groupSize: row.groupSize,
-            groupId: nameToGroupId.get(row.name) || null,
-            availableForStandby: row.availableForStandby,
-            podiumStory: row.podiumStory,
-            availabilityNotes: row.availabilityNotes,
-            isTemporary: false, // Mark as no longer temporary
-          });
+          console.log(`[Import] Found temporary match for ${row.name} (ID: ${tempMatch.id}). Updating record while preserving existing data.`);
+          
+          // Build update object - only include fields that have actual values from import
+          // This preserves any existing data (notes, status, etc.) that was already on the temp contestant
+          const updateData: Record<string, any> = {
+            isTemporary: false, // Always mark as no longer temporary
+          };
+          
+          // Core fields - always update from import
+          if (row.name) updateData.name = row.name;
+          if (row.age !== undefined && row.age !== null) updateData.age = row.age;
+          if (row.gender) updateData.gender = row.gender;
+          
+          // Contact fields - only update if import has value
+          if (row.email) updateData.email = row.email;
+          if (row.phone) updateData.phone = row.phone;
+          
+          // Optional fields - only update if import has value (preserves existing if import is empty)
+          if (row.attendingWith) updateData.attendingWith = row.attendingWith;
+          if (row.location) updateData.location = row.location;
+          if (row.postcode) updateData.postcode = row.postcode;
+          if (row.state) updateData.state = row.state;
+          if (row.medicalInfo) updateData.medicalInfo = row.medicalInfo;
+          if (row.mobilityNotes) updateData.mobilityNotes = row.mobilityNotes;
+          if (row.criminalRecord) updateData.criminalRecord = row.criminalRecord;
+          if (row.auditionRating) updateData.auditionRating = row.auditionRating;
+          if (row.groupSize !== undefined && row.groupSize !== null) updateData.groupSize = row.groupSize;
+          if (row.availabilityNotes) updateData.availabilityNotes = row.availabilityNotes;
+          if (row.podiumStory !== undefined) updateData.podiumStory = row.podiumStory;
+          if (row.availableForStandby !== undefined) updateData.availableForStandby = row.availableForStandby;
+          
+          // Group ID from the import's group detection
+          const detectedGroupId = nameToGroupId.get(row.name);
+          if (detectedGroupId) updateData.groupId = detectedGroupId;
+          
+          const updatedContestant = await storage.updateContestant(tempMatch.id, updateData);
           updatedTemporaryContestants.push(updatedContestant);
           
           // CRITICAL: Update the lookup maps so later rows in the same file don't treat this as a duplicate
