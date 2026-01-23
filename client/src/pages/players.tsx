@@ -683,7 +683,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                             </Button>
                           </div>
                         </div>
-                        <div className="flex-1 flex gap-2 flex-wrap min-h-[48px] p-2 rounded-lg border-2 border-dashed border-muted">
+                        <div className="flex-1 flex gap-3 flex-wrap min-h-[60px] p-3 rounded-lg border-2 border-dashed border-muted">
                           {blockContestants.length === 0 ? (
                             <span className="text-xs text-muted-foreground self-center">Drop contestants here</span>
                           ) : (
@@ -694,29 +694,29 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                                 onDragStart={() => handleDragStart(c, { type: 'block', block: blockNum, dayId: selectedDayId })}
                                 onDragEnd={handleDragEnd}
                                 onClick={() => { const full = findContestant(c.id); if (full) setViewingContestant(full); }}
-                                className={`flex items-center gap-2 px-2 py-1 rounded-lg cursor-grab group ${isPB ? 'bg-blue-500/10 border border-blue-500/30' : isNPB ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-green-500/10 border border-green-500/30'}`}
+                                className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-grab group ${isPB ? 'bg-blue-500/10 border border-blue-500/30' : isNPB ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-green-500/10 border border-green-500/30'}`}
                                 data-testid={`planned-contestant-${blockNum}-${c.id}`}
                               >
-                                <Avatar className="h-8 w-8 rounded-lg">
+                                <Avatar className="h-12 w-12 rounded-lg flex-shrink-0">
                                   <AvatarImage src={c.photoUrl || undefined} className="object-cover" />
-                                  <AvatarFallback className="text-xs rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 text-white">
+                                  <AvatarFallback className="text-sm rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 text-white">
                                     {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
-                                <div className="text-sm">
-                                  <span className="font-medium">{c.name}</span>
-                                  <span className="text-xs text-muted-foreground ml-1">
-                                    {c.gender === 'Female' ? 'F' : 'M'}{c.age ? `/${c.age}` : ''}
+                                <div className="text-sm min-w-0">
+                                  <span className="font-medium block truncate">{c.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {c.gender === 'Female' ? 'F' : 'M'}{c.age ? ` • ${c.age}y` : ''}
                                   </span>
                                 </div>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-5 w-5 opacity-0 group-hover:opacity-100"
+                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 flex-shrink-0"
                                   onClick={(e) => { e.stopPropagation(); removeFromBlock(blockNum, c.id); }}
                                   data-testid={`remove-contestant-${blockNum}-${c.id}`}
                                 >
-                                  <X className="h-3 w-3" />
+                                  <X className="h-4 w-4" />
                                 </Button>
                               </div>
                             ))
@@ -758,9 +758,9 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                                   <Badge variant="outline" className="text-xs">B{blockNum}</Badge>
                                   <span className="text-xs text-muted-foreground">{blockContestants.length} planned</span>
                                 </div>
-                                <div className="space-y-1 min-h-[32px]">
+                                <div className="space-y-2 min-h-[48px]">
                                   {blockContestants.length === 0 ? (
-                                    <div className="text-[10px] text-muted-foreground text-center py-1 border border-dashed rounded">
+                                    <div className="text-xs text-muted-foreground text-center py-2 border border-dashed rounded">
                                       Drop here
                                     </div>
                                   ) : (
@@ -771,23 +771,28 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                                         onDragStart={() => handleDragStart(c, { type: 'block', block: blockNum, dayId: day.id })}
                                         onDragEnd={handleDragEnd}
                                         onClick={() => { const full = findContestant(c.id); if (full) setViewingContestant(full); }}
-                                        className="flex items-center gap-1 px-1 py-0.5 rounded bg-muted/50 cursor-grab group text-xs"
+                                        className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border cursor-grab group"
                                         data-testid={`weekly-contestant-${day.id}-${blockNum}-${c.id}`}
                                       >
-                                        <Avatar className="h-5 w-5 rounded">
-                                          <AvatarImage src={c.photoUrl || undefined} />
-                                          <AvatarFallback className="text-[8px]">
-                                            {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                        <Avatar className="h-10 w-10 rounded-lg flex-shrink-0">
+                                          <AvatarImage src={c.photoUrl || undefined} className="object-cover" />
+                                          <AvatarFallback className="text-xs rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+                                            {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                                           </AvatarFallback>
                                         </Avatar>
-                                        <span className="truncate flex-1">{c.name}</span>
+                                        <div className="min-w-0 flex-1">
+                                          <span className="text-sm font-medium truncate block">{c.name}</span>
+                                          <span className="text-xs text-muted-foreground">
+                                            {c.gender === 'Female' ? 'F' : 'M'}{c.age ? ` • ${c.age}y` : ''}
+                                          </span>
+                                        </div>
                                         <Button
                                           variant="ghost"
                                           size="icon"
-                                          className="h-4 w-4 opacity-0 group-hover:opacity-100"
+                                          className="h-6 w-6 opacity-0 group-hover:opacity-100 flex-shrink-0"
                                           onClick={(e) => { e.stopPropagation(); removeFromBlock(blockNum, c.id, day.id); }}
                                         >
-                                          <X className="h-2 w-2" />
+                                          <X className="h-3 w-3" />
                                         </Button>
                                       </div>
                                     ))
