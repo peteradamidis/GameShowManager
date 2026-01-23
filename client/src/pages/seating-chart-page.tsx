@@ -2,7 +2,7 @@ import { SeatingChart } from "@/components/seating-chart";
 import { WinningMoneyModal } from "@/components/winning-money-modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check, Eye, User, Mail, Phone, MapPin, ArrowLeftRight, Camera, UserPlus, Pencil, ClipboardCheck, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check, Eye, User, Mail, Phone, MapPin, ArrowLeftRight, Camera, UserPlus, Pencil, ClipboardCheck, CheckCircle2, XCircle, AlertCircle, PartyPopper } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,7 +12,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { broadcastSeatingChange, broadcastRecordDayChange } from "@/lib/crossTabSync";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import confetti from "canvas-confetti";
 import { format } from "date-fns";
 import { getGroupSizeFromAttendingWith, getPartnerNames, attendingWithMentionsName, isSoloContestant } from "@shared/attendingWithParser";
 import {
@@ -429,6 +430,86 @@ export default function SeatingChartPage() {
       };
     });
   }, [assignments]);
+
+  // Track if we've already celebrated this record day to prevent repeated confetti
+  const hasCelebratedRef = useRef<string | null>(null);
+  
+  // Fun celebration messages
+  const celebrationMessages = [
+    "We're fully booked, baby!",
+    "That's a wrap on bookings!",
+    "All seats confirmed! Time for a cuppa!",
+    "100% confirmed! You absolute legend!",
+    "Bookings complete! High fives all round!",
+    "Full house! Deal or No Deal is GO!",
+    "Every seat's got a bum! Brilliant!",
+  ];
+
+  // Trigger confetti when 100% confirmed
+  const triggerCelebration = useCallback(() => {
+    // Fire confetti from both sides
+    const duration = 3000;
+    const end = Date.now() + duration;
+    
+    const colors = ['#FFD700', '#FFA500', '#FF6347', '#00CED1', '#9370DB', '#32CD32'];
+    
+    const frame = () => {
+      confetti({
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.7 },
+        colors: colors,
+      });
+      confetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.7 },
+        colors: colors,
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    };
+    
+    frame();
+    
+    // Also burst from center
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: colors,
+    });
+  }, []);
+
+  // Check for 100% confirmation and celebrate
+  useEffect(() => {
+    if (!blockReadiness || !recordDayId || !assignments) return;
+    
+    const totalFilled = blockReadiness.reduce((sum, b) => sum + b.filledSeats, 0);
+    const totalConfirmed = blockReadiness.reduce((sum, b) => sum + b.confirmedSeats, 0);
+    
+    // Only celebrate if we have some seats filled and all are confirmed
+    if (totalFilled > 0 && totalFilled === totalConfirmed && hasCelebratedRef.current !== recordDayId) {
+      hasCelebratedRef.current = recordDayId;
+      
+      // Small delay so user sees the final update first
+      setTimeout(() => {
+        triggerCelebration();
+        
+        // Show fun toast message
+        const randomMessage = celebrationMessages[Math.floor(Math.random() * celebrationMessages.length)];
+        toast({
+          title: randomMessage,
+          description: `All ${totalConfirmed} seats are confirmed for this record day!`,
+          duration: 5000,
+        });
+      }, 300);
+    }
+  }, [blockReadiness, recordDayId, assignments, triggerCelebration, toast]);
 
   // Lock/Unlock mutations
   const lockMutation = useMutation({
