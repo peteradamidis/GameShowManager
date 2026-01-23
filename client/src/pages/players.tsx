@@ -130,6 +130,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
   const [searchTerm, setSearchTerm] = useState('');
   const [ratingFilter, setRatingFilter] = useState<string>('all');
   const [genderFilter, setGenderFilter] = useState<string>('all');
+  const [ageFilter, setAgeFilter] = useState<string>('all');
   const [planningData, setPlanningData] = useState<RXPlanningData>(loadPlanningData);
   const [draggedContestant, setDraggedContestant] = useState<PlannedContestant | null>(null);
   const [dragSource, setDragSource] = useState<{ type: 'pool' | 'block'; block?: string } | null>(null);
@@ -210,9 +211,23 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
       }
       if (ratingFilter !== 'all' && c.auditionRating?.toUpperCase() !== ratingFilter) return false;
       if (genderFilter !== 'all' && c.gender?.toLowerCase() !== genderFilter.toLowerCase()) return false;
+      // Age filter
+      if (ageFilter !== 'all' && c.age) {
+        const age = c.age;
+        switch (ageFilter) {
+          case '18-29': if (age < 18 || age > 29) return false; break;
+          case '30-39': if (age < 30 || age > 39) return false; break;
+          case '40-49': if (age < 40 || age > 49) return false; break;
+          case '50-59': if (age < 50 || age > 59) return false; break;
+          case '60-69': if (age < 60 || age > 69) return false; break;
+          case '70+': if (age < 70) return false; break;
+        }
+      } else if (ageFilter !== 'all' && !c.age) {
+        return false; // Exclude contestants without age data when filtering by age
+      }
       return true;
     });
-  }, [eligibleContestants, plannedContestantIds, searchTerm, ratingFilter, genderFilter]);
+  }, [eligibleContestants, plannedContestantIds, searchTerm, ratingFilter, genderFilter, ageFilter]);
 
   // Get blocks for current day
   const currentDayBlocks = useMemo(() => {
@@ -408,6 +423,20 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                       </SelectContent>
                     </Select>
                   </div>
+                  <Select value={ageFilter} onValueChange={setAgeFilter}>
+                    <SelectTrigger data-testid="select-age-filter">
+                      <SelectValue placeholder="Age Range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Ages</SelectItem>
+                      <SelectItem value="18-29">18-29</SelectItem>
+                      <SelectItem value="30-39">30-39</SelectItem>
+                      <SelectItem value="40-49">40-49</SelectItem>
+                      <SelectItem value="50-59">50-59</SelectItem>
+                      <SelectItem value="60-69">60-69</SelectItem>
+                      <SelectItem value="70+">70+</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardHeader>
               <CardContent className="max-h-[700px] overflow-y-auto">
