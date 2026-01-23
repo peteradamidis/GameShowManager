@@ -338,10 +338,18 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
     setDragSource(null);
   };
 
-  const handleDrop = (targetBlock: string, targetDayId?: string) => {
+  const handleDrop = (targetBlock: string, targetDayId?: string, blockTypeOverride?: 'PB' | 'NPB' | null) => {
     if (!draggedContestant) return;
     const dropDayId = targetDayId || selectedDayId;
     if (!dropDayId) return;
+
+    // Don't allow drops on NPB blocks
+    const targetBlockType = blockTypeOverride !== undefined ? blockTypeOverride : getBlockType(parseInt(targetBlock));
+    if (targetBlockType === 'NPB') {
+      toast({ title: "Cannot add to NPB", description: "Players can only be placed in PB blocks", variant: "destructive" });
+      handleDragEnd();
+      return;
+    }
 
     setPlanningData(prev => {
       const updated = { ...prev };
@@ -436,8 +444,8 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
       {/* Header with day selector and view mode */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold">RX Day Block Planner</h2>
-          <p className="text-sm text-muted-foreground">Configure PB/NPB blocks (syncs to seating chart) and plan contestants visually</p>
+          <h2 className="text-xl font-semibold">RX Day Player Planner</h2>
+          <p className="text-sm text-muted-foreground">Configure PB/NPB blocks (syncs to seating chart) and plan players visually</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           {/* View mode toggle */}
@@ -650,13 +658,13 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                   return (
                     <Card 
                       key={blockNum}
-                      className={`transition-colors ${draggedContestant ? 'border-dashed border-2 border-primary/50' : ''} ${isPB ? 'border-blue-500/50' : isNPB ? 'border-amber-500/50' : ''}`}
-                      onDragOver={e => e.preventDefault()}
+                      className={`transition-colors ${draggedContestant && !isNPB ? 'border-dashed border-2 border-primary/50' : ''} ${isPB ? 'border-blue-500/50' : isNPB ? 'border-amber-500/50' : ''}`}
+                      onDragOver={e => !isNPB && e.preventDefault()}
                       onDrop={() => handleDrop(blockNum)}
                       data-testid={`block-drop-zone-${blockNum}`}
                     >
-                      <div className="p-3">
-                        <div className="flex items-center gap-2 mb-3">
+                      <div className={isNPB ? "p-2" : "p-3"}>
+                        <div className="flex items-center gap-2">
                           <Badge className={`px-3 py-1 ${isPB ? 'bg-blue-500' : isNPB ? 'bg-amber-500' : 'bg-muted text-muted-foreground'}`}>
                             Block {blockNum}
                           </Badge>
@@ -682,47 +690,54 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                               NPB
                             </Button>
                           </div>
-                          <span className="text-xs text-muted-foreground ml-auto">{blockContestants.length} planned</span>
-                        </div>
-                        <div className="flex gap-3 flex-wrap min-h-[70px] p-3 rounded-lg border-2 border-dashed border-muted bg-muted/20">
-                          {blockContestants.length === 0 ? (
-                            <span className="text-xs text-muted-foreground self-center">Drop contestants here</span>
+                          {isNPB ? (
+                            <span className="text-xs text-amber-600 dark:text-amber-400 ml-auto">No players (NPB)</span>
                           ) : (
-                            blockContestants.map(c => (
-                              <div
-                                key={c.id}
-                                draggable
-                                onDragStart={() => handleDragStart(c, { type: 'block', block: blockNum, dayId: selectedDayId })}
-                                onDragEnd={handleDragEnd}
-                                onClick={() => { const full = findContestant(c.id); if (full) setViewingContestant(full); }}
-                                className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-grab group ${isPB ? 'bg-blue-500/10 border border-blue-500/30' : isNPB ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-green-500/10 border border-green-500/30'}`}
-                                data-testid={`planned-contestant-${blockNum}-${c.id}`}
-                              >
-                                <Avatar className="h-12 w-12 rounded-lg flex-shrink-0">
-                                  <AvatarImage src={c.photoUrl || undefined} className="object-cover" />
-                                  <AvatarFallback className="text-sm rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 text-white">
-                                    {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="text-sm min-w-0">
-                                  <span className="font-medium block truncate">{c.name}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {c.gender === 'Female' ? 'F' : 'M'}{c.age ? ` • ${c.age}y` : ''}
-                                  </span>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 flex-shrink-0"
-                                  onClick={(e) => { e.stopPropagation(); removeFromBlock(blockNum, c.id); }}
-                                  data-testid={`remove-contestant-${blockNum}-${c.id}`}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ))
+                            <span className="text-xs text-muted-foreground ml-auto">{blockContestants.length} planned</span>
                           )}
                         </div>
+                        {/* Only show drop zone for PB blocks or unassigned blocks */}
+                        {!isNPB && (
+                          <div className="flex gap-3 flex-wrap min-h-[70px] p-3 mt-3 rounded-lg border-2 border-dashed border-muted bg-muted/20">
+                            {blockContestants.length === 0 ? (
+                              <span className="text-xs text-muted-foreground self-center">Drop players here</span>
+                            ) : (
+                              blockContestants.map(c => (
+                                <div
+                                  key={c.id}
+                                  draggable
+                                  onDragStart={() => handleDragStart(c, { type: 'block', block: blockNum, dayId: selectedDayId })}
+                                  onDragEnd={handleDragEnd}
+                                  onClick={() => { const full = findContestant(c.id); if (full) setViewingContestant(full); }}
+                                  className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-grab group ${isPB ? 'bg-blue-500/10 border border-blue-500/30' : 'bg-green-500/10 border border-green-500/30'}`}
+                                  data-testid={`planned-contestant-${blockNum}-${c.id}`}
+                                >
+                                  <Avatar className="h-12 w-12 rounded-lg flex-shrink-0">
+                                    <AvatarImage src={c.photoUrl || undefined} className="object-cover" />
+                                    <AvatarFallback className="text-sm rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 text-white">
+                                      {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="text-sm min-w-0">
+                                    <span className="font-medium block truncate">{c.name}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {c.gender === 'Female' ? 'F' : 'M'}{c.age ? ` • ${c.age}y` : ''}
+                                    </span>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 opacity-0 group-hover:opacity-100 flex-shrink-0"
+                                    onClick={(e) => { e.stopPropagation(); removeFromBlock(blockNum, c.id); }}
+                                    data-testid={`remove-contestant-${blockNum}-${c.id}`}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        )}
                       </div>
                     </Card>
                   );
