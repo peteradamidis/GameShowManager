@@ -13988,7 +13988,7 @@ Thank you.`;
         return res.status(401).json({ error: "User not found" });
       }
       
-      const { content, imageUrl, authorName } = req.body;
+      const { content, imageUrl, videoUrl, authorName } = req.body;
       
       if (!content || content.trim().length === 0) {
         return res.status(400).json({ error: "Post content is required" });
@@ -14002,6 +14002,7 @@ Thank you.`;
         authorName: displayName,
         content: content.trim(),
         imageUrl: imageUrl || null,
+        videoUrl: videoUrl || null,
       });
       
       res.json({ ...post, likeCount: 0, commentCount: 0, likedByCurrentUser: false });
