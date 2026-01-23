@@ -1236,6 +1236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const duplicates: DuplicateInfo[] = [];
       const uniqueContestants: typeof importedContestants = [];
+      const temporaryContestantsToUpdate: Array<{ existingId: number; importData: typeof importedContestants[0] }> = [];
       const seenInImport = new Set<string>();
       
       for (const contestant of importedContestants) {
@@ -1245,6 +1246,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Check for exact name match
         const nameMatch = existingByName.get(normalizedName);
         if (nameMatch) {
+          // If the existing contestant is temporary, allow import to update them
+          if (nameMatch.isTemporary) {
+            temporaryContestantsToUpdate.push({ existingId: nameMatch.id, importData: contestant });
+            continue;
+          }
           duplicates.push({
             importName: contestant.name,
             importEmail: contestant.email,
@@ -1264,6 +1270,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (contestant.email) {
           const emailMatch = existingByEmail.get(contestant.email);
           if (emailMatch) {
+            // If the existing contestant is temporary, allow import to update them
+            if (emailMatch.isTemporary) {
+              temporaryContestantsToUpdate.push({ existingId: emailMatch.id, importData: contestant });
+              continue;
+            }
             duplicates.push({
               importName: contestant.name,
               importEmail: contestant.email,
@@ -1284,6 +1295,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (normalizedPhone && normalizedPhone.length >= 8) {
           const phoneMatch = existingByPhone.get(normalizedPhone);
           if (phoneMatch) {
+            // If the existing contestant is temporary, allow import to update them
+            if (phoneMatch.isTemporary) {
+              temporaryContestantsToUpdate.push({ existingId: phoneMatch.id, importData: contestant });
+              continue;
+            }
             duplicates.push({
               importName: contestant.name,
               importEmail: contestant.email,
@@ -1314,6 +1330,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         uniqueCount: uniqueContestants.length,
         duplicateCount: duplicates.length,
         duplicates: duplicates,
+        temporaryUpdatesCount: temporaryContestantsToUpdate.length,
+        temporaryUpdates: temporaryContestantsToUpdate.map(t => ({
+          existingId: t.existingId,
+          importName: t.importData.name,
+        })),
       });
     } catch (error: any) {
       console.error("Import preview error:", error);
@@ -1690,12 +1711,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get existing contestants to check for duplicates
       const existingContestants = await storage.getContestants();
-      const existingNames = new Set(
-        existingContestants.map((c: any) => c.name?.toLowerCase().trim()).filter(Boolean)
-      );
-      const existingEmails = new Set(
-        existingContestants.map((c: any) => c.email?.toLowerCase().trim()).filter(Boolean)
-      );
       
       // Normalize phone function - remove all non-digits
       const normalizePhone = (phone: string | null | undefined): string | null => {
@@ -1704,13 +1719,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return normalized.length >= 8 ? normalized : null;
       };
       
-      // Build phone lookup
-      const existingPhones = new Set(
-        existingContestants.map((c: any) => normalizePhone(c.phone)).filter(Boolean)
-      );
+      // Build lookup maps for existing contestants - include isTemporary flag
+      const existingByNameMap = new Map<string, { id: number; isTemporary: boolean }>();
+      const existingByEmailMap = new Map<string, { id: number; isTemporary: boolean }>();
+      const existingByPhoneMap = new Map<string, { id: number; isTemporary: boolean }>();
+      
+      existingContestants.forEach((c: any) => {
+        if (c.name) existingByNameMap.set(c.name.toLowerCase().trim(), { id: c.id, isTemporary: !!c.isTemporary });
+        if (c.email) existingByEmailMap.set(c.email.toLowerCase().trim(), { id: c.id, isTemporary: !!c.isTemporary });
+        const normalizedPhone = normalizePhone(c.phone);
+        if (normalizedPhone) existingByPhoneMap.set(normalizedPhone, { id: c.id, isTemporary: !!c.isTemporary });
+      });
+      
+      // Track which names/emails/phones we've processed in this import
+      const processedNames = new Set<string>();
+      const processedEmails = new Set<string>();
+      const processedPhones = new Set<string>();
       
       // Create contestants, skipping duplicates and DNU-rated contestants
       const createdContestants = [];
+      const updatedTemporaryContestants: any[] = [];
       const skippedDuplicates = [];
       const skippedDNU = [];
       
@@ -1725,10 +1753,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
           continue;
         }
         
-        // Check for duplicate by name (exact match), email, or phone
-        const isDuplicateName = normalizedName && existingNames.has(normalizedName);
-        const isDuplicateEmail = normalizedEmail && existingEmails.has(normalizedEmail);
-        const isDuplicatePhone = normalizedPhone && existingPhones.has(normalizedPhone);
+        // Check for match with existing contestant
+        const nameMatch = normalizedName ? existingByNameMap.get(normalizedName) : null;
+        const emailMatch = normalizedEmail ? existingByEmailMap.get(normalizedEmail) : null;
+        const phoneMatch = normalizedPhone ? existingByPhoneMap.get(normalizedPhone) : null;
+        
+        // If match is a temporary contestant, update it instead of skipping
+        const tempMatch = (nameMatch?.isTemporary ? nameMatch : null) || 
+                          (emailMatch?.isTemporary ? emailMatch : null) || 
+                          (phoneMatch?.isTemporary ? phoneMatch : null);
+        
+        if (tempMatch) {
+          // Update the temporary contestant with the imported data
+          const updatedContestant = await storage.updateContestant(tempMatch.id, {
+            name: row.name,
+            age: row.age,
+            gender: row.gender,
+            attendingWith: row.attendingWith,
+            email: row.email,
+            phone: row.phone,
+            location: row.location,
+            postcode: row.postcode,
+            state: row.state,
+            medicalInfo: row.medicalInfo,
+            mobilityNotes: row.mobilityNotes,
+            criminalRecord: row.criminalRecord,
+            auditionRating: row.auditionRating,
+            groupSize: row.groupSize,
+            groupId: nameToGroupId.get(row.name) || null,
+            availableForStandby: row.availableForStandby,
+            podiumStory: row.podiumStory,
+            availabilityNotes: row.availabilityNotes,
+            isTemporary: false, // Mark as no longer temporary
+          });
+          updatedTemporaryContestants.push(updatedContestant);
+          
+          // Update lookup maps to prevent duplicates within same import
+          if (normalizedName) processedNames.add(normalizedName);
+          if (normalizedEmail) processedEmails.add(normalizedEmail);
+          if (normalizedPhone) processedPhones.add(normalizedPhone);
+          continue;
+        }
+        
+        // Check for duplicate (non-temporary) by name (exact match), email, or phone
+        const isDuplicateName = normalizedName && (existingByNameMap.has(normalizedName) || processedNames.has(normalizedName));
+        const isDuplicateEmail = normalizedEmail && (existingByEmailMap.has(normalizedEmail) || processedEmails.has(normalizedEmail));
+        const isDuplicatePhone = normalizedPhone && (existingByPhoneMap.has(normalizedPhone) || processedPhones.has(normalizedPhone));
         
         if (isDuplicateName || isDuplicateEmail || isDuplicatePhone) {
           skippedDuplicates.push({
@@ -1768,17 +1838,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       let message = `Successfully imported ${createdContestants.length} contestants`;
-      if (skippedDuplicates.length > 0 || skippedDNU.length > 0) {
-        const parts = [];
-        if (skippedDuplicates.length > 0) parts.push(`${skippedDuplicates.length} duplicates`);
-        if (skippedDNU.length > 0) parts.push(`${skippedDNU.length} DNU-rated`);
-        message = `Imported ${createdContestants.length} contestants, skipped ${parts.join(' and ')}`;
+      const messageParts = [];
+      if (updatedTemporaryContestants.length > 0) {
+        messageParts.push(`updated ${updatedTemporaryContestants.length} temporary contestants`);
+      }
+      if (skippedDuplicates.length > 0) messageParts.push(`skipped ${skippedDuplicates.length} duplicates`);
+      if (skippedDNU.length > 0) messageParts.push(`skipped ${skippedDNU.length} DNU-rated`);
+      
+      if (messageParts.length > 0) {
+        message = `Imported ${createdContestants.length} contestants, ${messageParts.join(', ')}`;
       }
 
       res.json({
         message,
         contestants: createdContestants,
         contestantsCreated: createdContestants.length,
+        temporaryContestantsUpdated: updatedTemporaryContestants.length,
         groupsCreated: createdGroups.size,
         skippedDuplicates: skippedDuplicates.length,
         skippedDNU: skippedDNU.length,
@@ -3961,6 +4036,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           photoUrl: contestant?.photoUrl,
           contestantLocation: contestant?.location,
           criminalRecord: contestant?.criminalRecord,
+          isTemporary: contestant?.isTemporary || false,
           isTestSubject: contestant?.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(contestant?.name || ''),
           podiumStory: contestant?.podiumStory,
           attendingWithOverride: assignment.attendingWithOverride,

@@ -510,6 +510,11 @@ export function SeatCard({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
                         <h4 className="text-sm font-semibold">{contestantDetails.name}</h4>
+                        {contestantDetails.isTemporary && (
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700">
+                            TEMP
+                          </Badge>
+                        )}
                         {contestantDetails.isTestSubject && (
                           <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700">
                             TEST

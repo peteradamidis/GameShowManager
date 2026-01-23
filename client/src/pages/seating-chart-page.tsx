@@ -564,6 +564,7 @@ export default function SeatingChartPage() {
               photoUrl: assignment.photoUrl,
               contestantLocation: assignment.contestantLocation,
               criminalRecord: assignment.criminalRecord,
+              isTemporary: assignment.isTemporary,
               isTestSubject: assignment.isTestSubject,
               notes: assignment.notes,
               attendingWithOverride: assignment.attendingWithOverride,
