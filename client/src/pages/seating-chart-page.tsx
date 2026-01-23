@@ -1699,8 +1699,11 @@ export default function SeatingChartPage() {
                       <SelectContent>
                         <SelectItem value="all">All</SelectItem>
                         <SelectItem value="available">Available</SelectItem>
+                        <SelectItem value="assigned">Assigned</SelectItem>
                         <SelectItem value="invited">Invited</SelectItem>
                         <SelectItem value="confirmed">Confirmed</SelectItem>
+                        <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                        <SelectItem value="returning_standby">Returning Standby</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1744,15 +1747,19 @@ export default function SeatingChartPage() {
                       };
                       const statusColors: Record<string, string> = {
                         'available': 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+                        'assigned': 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
                         'invited': 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
                         'confirmed': 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
-                        'assigned': 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
+                        'rescheduled': 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300',
+                        'returning_standby': 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
                       };
                       const statusLabels: Record<string, string> = {
                         'available': 'Avail',
+                        'assigned': 'Asgnd',
                         'invited': 'Invited',
                         'confirmed': 'Conf',
-                        'assigned': 'Asgnd',
+                        'rescheduled': 'Resch',
+                        'returning_standby': 'RetSB',
                       };
                       const hasGroup = !!contestant.attendingWith;
                       const isAvailableForStandby = !!contestant.availableForStandby;
