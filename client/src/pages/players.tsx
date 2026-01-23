@@ -655,8 +655,8 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                       onDrop={() => handleDrop(blockNum)}
                       data-testid={`block-drop-zone-${blockNum}`}
                     >
-                      <div className="flex items-center gap-4 p-3">
-                        <div className="flex items-center gap-2 w-32 flex-shrink-0">
+                      <div className="p-3">
+                        <div className="flex items-center gap-2 mb-3">
                           <Badge className={`px-3 py-1 ${isPB ? 'bg-blue-500' : isNPB ? 'bg-amber-500' : 'bg-muted text-muted-foreground'}`}>
                             Block {blockNum}
                           </Badge>
@@ -682,8 +682,9 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                               NPB
                             </Button>
                           </div>
+                          <span className="text-xs text-muted-foreground ml-auto">{blockContestants.length} planned</span>
                         </div>
-                        <div className="flex-1 flex gap-3 flex-wrap min-h-[60px] p-3 rounded-lg border-2 border-dashed border-muted">
+                        <div className="flex gap-3 flex-wrap min-h-[70px] p-3 rounded-lg border-2 border-dashed border-muted bg-muted/20">
                           {blockContestants.length === 0 ? (
                             <span className="text-xs text-muted-foreground self-center">Drop contestants here</span>
                           ) : (
