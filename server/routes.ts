@@ -1832,9 +1832,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdContestants.push(contestant);
         
         // Add to existing sets to prevent duplicates within same import
-        if (normalizedName) existingNames.add(normalizedName);
-        if (normalizedEmail) existingEmails.add(normalizedEmail);
-        if (normalizedPhone) existingPhones.add(normalizedPhone);
+        if (normalizedName) processedNames.add(normalizedName);
+        if (normalizedEmail) processedEmails.add(normalizedEmail);
+        if (normalizedPhone) processedPhones.add(normalizedPhone);
       }
 
       let message = `Successfully imported ${createdContestants.length} contestants`;
