@@ -698,7 +698,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                         </div>
                         {/* Only show drop zone for PB blocks or unassigned blocks */}
                         {!isNPB && (
-                          <div className="flex gap-3 flex-wrap min-h-[70px] p-3 mt-3 rounded-lg border-2 border-dashed border-muted bg-muted/20">
+                          <div className="flex gap-3 flex-wrap min-h-[50px] p-2 mt-2 rounded-lg border-2 border-dashed border-muted bg-muted/20">
                             {blockContestants.length === 0 ? (
                               <span className="text-xs text-muted-foreground self-center">Drop players here</span>
                             ) : (
