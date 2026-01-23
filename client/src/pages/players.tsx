@@ -125,10 +125,20 @@ function savePlanningData(data: RXPlanningData) {
   localStorage.setItem(PLANNING_STORAGE_KEY, JSON.stringify(data));
 }
 
+// Helper to get ISO week number
+function getWeekNumber(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
 // RX Planning Tab Component
 function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; contestants: Contestant[] }) {
   const { toast } = useToast();
   const [selectedDayId, setSelectedDayId] = useState<string>('');
+  const [selectedWeekKey, setSelectedWeekKey] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [ratingFilter, setRatingFilter] = useState<string>('all');
   const [genderFilter, setGenderFilter] = useState<string>('all');
@@ -173,11 +183,63 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
     return [...recordDays].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [recordDays]);
 
+  // Group record days by calendar week
+  const weekGroups = useMemo(() => {
+    const groups: { key: string; label: string; days: RecordDay[] }[] = [];
+    let currentWeek: RecordDay[] = [];
+    let currentWeekNum = -1;
+    let currentYear = -1;
+
+    sortedRecordDays.forEach((day, idx) => {
+      const date = new Date(day.date);
+      const weekNum = getWeekNumber(date);
+      const year = date.getFullYear();
+
+      if (currentWeekNum === -1 || (weekNum === currentWeekNum && year === currentYear)) {
+        currentWeek.push(day);
+        currentWeekNum = weekNum;
+        currentYear = year;
+      } else {
+        // Save current week and start new one
+        if (currentWeek.length > 0) {
+          const firstRx = currentWeek[0].rxNumber || `Day ${sortedRecordDays.indexOf(currentWeek[0]) + 1}`;
+          const lastRx = currentWeek[currentWeek.length - 1].rxNumber || `Day ${sortedRecordDays.indexOf(currentWeek[currentWeek.length - 1]) + 1}`;
+          const rxRange = currentWeek.length === 1 ? firstRx : `${firstRx} - ${lastRx}`;
+          groups.push({
+            key: `${currentYear}-${currentWeekNum}`,
+            label: rxRange,
+            days: [...currentWeek],
+          });
+        }
+        currentWeek = [day];
+        currentWeekNum = weekNum;
+        currentYear = year;
+      }
+    });
+
+    // Don't forget the last week
+    if (currentWeek.length > 0) {
+      const firstRx = currentWeek[0].rxNumber || `Day ${sortedRecordDays.indexOf(currentWeek[0]) + 1}`;
+      const lastRx = currentWeek[currentWeek.length - 1].rxNumber || `Day ${sortedRecordDays.indexOf(currentWeek[currentWeek.length - 1]) + 1}`;
+      const rxRange = currentWeek.length === 1 ? firstRx : `${firstRx} - ${lastRx}`;
+      groups.push({
+        key: `${currentYear}-${currentWeekNum}`,
+        label: rxRange,
+        days: [...currentWeek],
+      });
+    }
+
+    return groups;
+  }, [sortedRecordDays]);
+
   useEffect(() => {
     if (!selectedDayId && sortedRecordDays.length > 0) {
       setSelectedDayId(sortedRecordDays[0].id);
     }
-  }, [sortedRecordDays, selectedDayId]);
+    if (!selectedWeekKey && weekGroups.length > 0) {
+      setSelectedWeekKey(weekGroups[0].key);
+    }
+  }, [sortedRecordDays, selectedDayId, weekGroups, selectedWeekKey]);
 
   // Get block type for a specific block
   const getBlockType = (blockNumber: number): 'PB' | 'NPB' | null => {
@@ -203,13 +265,12 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
     return ids;
   }, [selectedDayId, planningData]);
 
-  // Get week's worth of RX days starting from selected day (needed for weekPlannedContestantIds)
+  // Get the days for the selected week (for weekly view)
   const weekDays = useMemo(() => {
-    if (!selectedDayId) return [];
-    const selectedIdx = sortedRecordDays.findIndex(d => d.id === selectedDayId);
-    if (selectedIdx === -1) return [];
-    return sortedRecordDays.slice(selectedIdx, selectedIdx + 4);
-  }, [selectedDayId, sortedRecordDays]);
+    if (!selectedWeekKey) return [];
+    const week = weekGroups.find(w => w.key === selectedWeekKey);
+    return week?.days || [];
+  }, [selectedWeekKey, weekGroups]);
 
   // Get all planned contestant IDs across week (for filtering pool in weekly view)
   const weekPlannedContestantIds = useMemo(() => {
@@ -395,22 +456,44 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
               onClick={() => setViewMode('weekly')}
               data-testid="button-view-weekly"
             >
-              Weekly ({weekDays.length} days)
+              Weekly
             </Button>
           </div>
-          <Select value={selectedDayId} onValueChange={setSelectedDayId}>
-            <SelectTrigger className="w-[220px]" data-testid="select-planning-day">
-              <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-              <SelectValue placeholder="Select RX Day..." />
-            </SelectTrigger>
-            <SelectContent>
-              {sortedRecordDays.map(day => (
-                <SelectItem key={day.id} value={day.id}>
-                  {day.rxNumber} - {format(new Date(day.date), 'dd/MM/yyyy')}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+
+          {/* Single Day Selector */}
+          {viewMode === 'single' && (
+            <Select value={selectedDayId} onValueChange={setSelectedDayId}>
+              <SelectTrigger className="w-[220px]" data-testid="select-planning-day">
+                <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder="Select RX Day..." />
+              </SelectTrigger>
+              <SelectContent>
+                {sortedRecordDays.map(day => (
+                  <SelectItem key={day.id} value={day.id}>
+                    {day.rxNumber} - {format(new Date(day.date), 'EEE dd/MM')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Week Selector (for weekly view) */}
+          {viewMode === 'weekly' && (
+            <Select value={selectedWeekKey} onValueChange={setSelectedWeekKey}>
+              <SelectTrigger className="w-[200px]" data-testid="select-planning-week">
+                <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder="Select Week..." />
+              </SelectTrigger>
+              <SelectContent>
+                {weekGroups.map(week => (
+                  <SelectItem key={week.key} value={week.key}>
+                    {week.label} ({week.days.length} {week.days.length === 1 ? 'day' : 'days'})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
           <Button 
             variant="outline" 
             size="sm"
