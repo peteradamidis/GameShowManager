@@ -1188,6 +1188,11 @@ export default function BookingMaster() {
                           <TableCell className="font-medium text-xs min-w-[150px] py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">
                             <div className="flex items-center gap-1">
                               {standby.contestant.name}
+                              {(standby.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name)) && (
+                                <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700">
+                                  TEST
+                                </Badge>
+                              )}
                               {(standby.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name)) && standby.contestantId && (
                                 <Button
                                   variant="ghost"
@@ -1390,6 +1395,11 @@ export default function BookingMaster() {
                                 <span className={row.assignment?.standbyReplacementSwaps && row.assignment.standbyReplacementSwaps !== "none" ? "text-red-600 line-through" : ""}>
                                   {row.contestant.name}
                                 </span>
+                                {(row.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(row.contestant.name)) && (
+                                  <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700">
+                                    TEST
+                                  </Badge>
+                                )}
                                 {row.assignment?.isFromReschedule && (
                                   <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-red-400 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300" title="Rebooked from reschedule list">
                                     RSCH

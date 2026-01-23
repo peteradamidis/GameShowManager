@@ -944,6 +944,11 @@ export default function StandbysPage() {
                               </AvatarFallback>
                             </Avatar>
                             <span className="font-medium text-xs">{standby.contestant.name}</span>
+                            {(standby.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name)) && (
+                              <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700">
+                                TEST
+                              </Badge>
+                            )}
                             {standby.groupMembers && standby.groupMembers.length > 1 && (
                               <Tooltip>
                                 <TooltipTrigger asChild>

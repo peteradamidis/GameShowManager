@@ -1218,7 +1218,16 @@ export function ContestantTable({
                     ) : "-"}
                   </TableCell>
                   <TableCell>{contestant.age}</TableCell>
-                  <TableCell className="font-medium">{contestant.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-1">
+                      {contestant.name}
+                      {(contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(contestant.name)) && (
+                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700">
+                          TEST
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{contestant.phone || "-"}</TableCell>
                   <TableCell>{contestant.email || "-"}</TableCell>
                   <TableCell>{contestant.attendingWith || "-"}</TableCell>

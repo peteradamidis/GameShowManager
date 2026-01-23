@@ -508,7 +508,14 @@ export function SeatCard({
                   </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-semibold">{contestantDetails.name}</h4>
+                      <div className="flex items-center gap-1">
+                        <h4 className="text-sm font-semibold">{contestantDetails.name}</h4>
+                        {contestantDetails.isTestSubject && (
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700">
+                            TEST
+                          </Badge>
+                        )}
+                      </div>
                       {contestantDetails.auditionRating && (
                         <span className={`text-sm font-bold ${
                           contestantDetails.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
