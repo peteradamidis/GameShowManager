@@ -1759,6 +1759,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const phoneMatch = normalizedPhone ? existingByPhoneMap.get(normalizedPhone) : null;
         
         // If match is a temporary contestant, update it instead of skipping
+        // Prioritize name match for temp contestants since that's what producers usually enter
         const tempMatch = (nameMatch?.isTemporary ? nameMatch : null) || 
                           (emailMatch?.isTemporary ? emailMatch : null) || 
                           (phoneMatch?.isTemporary ? phoneMatch : null);
@@ -1788,10 +1789,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           updatedTemporaryContestants.push(updatedContestant);
           
-          // Update lookup maps to prevent duplicates within same import
-          if (normalizedName) processedNames.add(normalizedName);
-          if (normalizedEmail) processedEmails.add(normalizedEmail);
-          if (normalizedPhone) processedPhones.add(normalizedPhone);
+          // CRITICAL: Update the lookup maps so later rows in the same file don't treat this as a duplicate
+          if (normalizedName) {
+            existingByNameMap.set(normalizedName, { id: tempMatch.id, isTemporary: false });
+            processedNames.add(normalizedName);
+          }
+          if (normalizedEmail) {
+            existingByEmailMap.set(normalizedEmail, { id: tempMatch.id, isTemporary: false });
+            processedEmails.add(normalizedEmail);
+          }
+          if (normalizedPhone) {
+            existingByPhoneMap.set(normalizedPhone, { id: tempMatch.id, isTemporary: false });
+            processedPhones.add(normalizedPhone);
+          }
           continue;
         }
         
