@@ -24,7 +24,7 @@ interface DuplicateInfo {
     name: string;
     email: string | null;
     phone: string | null;
-    isTemporary?: boolean;
+    isTemporary: boolean;
   };
 }
 

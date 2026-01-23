@@ -1246,98 +1246,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: string;
           email: string | null;
           phone: string | null;
+          isTemporary: boolean;
         };
       }
       
       const duplicates: DuplicateInfo[] = [];
       const uniqueContestants: typeof importedContestants = [];
-      const temporaryContestantsToUpdate: Array<{ existingId: number; importData: typeof importedContestants[0] }> = [];
+      const temporaryContestantsToUpdate: Array<{ existingId: string; importName: string }> = [];
       const seenInImport = new Set<string>();
       
       for (const contestant of importedContestants) {
         const normalizedName = contestant.name.toLowerCase().trim();
         const normalizedPhone = normalizePhone(contestant.phone);
         
-        // Check for exact name match
+        // Check for match with existing contestant
         const nameMatch = existingByName.get(normalizedName);
-        if (nameMatch) {
+        const emailMatch = contestant.email ? existingByEmail.get(contestant.email) : null;
+        const phoneMatch = normalizedPhone ? existingByPhone.get(normalizedPhone) : null;
+
+        const match = nameMatch || emailMatch || phoneMatch;
+        
+        if (match) {
           // If the existing contestant is temporary, allow import to update them
-          if (nameMatch.isTemporary) {
-            console.log(`[Import Preview] Found temporary match by name: ${normalizedName} (ID: ${nameMatch.id}). Redirecting to temporaryUpdates.`);
-            temporaryContestantsToUpdate.push({ existingId: nameMatch.id, importData: contestant });
+          if (match.isTemporary) {
+            console.log(`[Import Preview] Found temporary match for ${contestant.name} (ID: ${match.id}). Redirecting to temporaryUpdates.`);
+            temporaryContestantsToUpdate.push({ existingId: match.id.toString(), importName: contestant.name });
             continue;
           }
-          console.log(`[Import Preview] Found REAL duplicate by name: ${normalizedName} (ID: ${nameMatch.id})`);
+          
+          console.log(`[Import Preview] Found REAL duplicate for ${contestant.name} (ID: ${match.id})`);
           duplicates.push({
             importName: contestant.name,
             importEmail: contestant.email,
             importPhone: contestant.phone,
-            matchType: 'exact_name',
+            matchType: nameMatch ? 'exact_name' : (emailMatch ? 'email' : 'phone'),
             existingContestant: {
-              id: nameMatch.id.toString(),
-              name: nameMatch.name,
-              email: nameMatch.email,
-              phone: nameMatch.phone,
-              isTemporary: nameMatch.isTemporary
+              id: match.id.toString(),
+              name: match.name,
+              email: match.email,
+              phone: match.phone,
+              isTemporary: !!match.isTemporary
             }
           });
           continue;
-        }
-        
-        // Check for email match
-        if (contestant.email) {
-          const emailMatch = existingByEmail.get(contestant.email);
-          if (emailMatch) {
-            // If the existing contestant is temporary, allow import to update them
-            if (emailMatch.isTemporary) {
-              console.log(`[Import Preview] Found temporary match by email: ${contestant.email} (ID: ${emailMatch.id}). Redirecting to temporaryUpdates.`);
-              temporaryContestantsToUpdate.push({ existingId: emailMatch.id, importData: contestant });
-              continue;
-            }
-            console.log(`[Import Preview] Found REAL duplicate by email: ${contestant.email} (ID: ${emailMatch.id})`);
-            duplicates.push({
-              importName: contestant.name,
-              importEmail: contestant.email,
-              importPhone: contestant.phone,
-              matchType: 'email',
-              existingContestant: {
-                id: emailMatch.id.toString(),
-                name: emailMatch.name,
-                email: emailMatch.email,
-                phone: emailMatch.phone,
-                isTemporary: emailMatch.isTemporary
-              }
-            });
-            continue;
-          }
-        }
-        
-        // Check for phone match
-        if (normalizedPhone && normalizedPhone.length >= 8) {
-          const phoneMatch = existingByPhone.get(normalizedPhone);
-          if (phoneMatch) {
-            // If the existing contestant is temporary, allow import to update them
-            if (phoneMatch.isTemporary) {
-              console.log(`[Import Preview] Found temporary match by phone: ${normalizedPhone} (ID: ${phoneMatch.id}). Redirecting to temporaryUpdates.`);
-              temporaryContestantsToUpdate.push({ existingId: phoneMatch.id, importData: contestant });
-              continue;
-            }
-            console.log(`[Import Preview] Found REAL duplicate by phone: ${normalizedPhone} (ID: ${phoneMatch.id})`);
-            duplicates.push({
-              importName: contestant.name,
-              importEmail: contestant.email,
-              importPhone: contestant.phone,
-              matchType: 'phone',
-              existingContestant: {
-                id: phoneMatch.id.toString(),
-                name: phoneMatch.name,
-                email: phoneMatch.email,
-                phone: phoneMatch.phone,
-                isTemporary: phoneMatch.isTemporary
-              }
-            });
-            continue;
-          }
         }
         
         // Check for duplicates within the import file itself
@@ -1355,10 +1306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         duplicateCount: duplicates.length,
         duplicates: duplicates,
         temporaryUpdatesCount: temporaryContestantsToUpdate.length,
-        temporaryUpdates: temporaryContestantsToUpdate.map(t => ({
-          existingId: t.existingId,
-          importName: t.importData.name,
-        })),
+        temporaryUpdates: temporaryContestantsToUpdate,
       });
     } catch (error: any) {
       console.error("Import preview error:", error);
