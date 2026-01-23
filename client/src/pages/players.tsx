@@ -1,7 +1,9 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -9,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, Mail, MapPin, Upload, FileText, X } from "lucide-react";
+import { User, Users, Play, Phone, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -75,6 +77,410 @@ interface EpisodeGroup {
   episodeNumber: string;
   players: SeatAssignment[];
   backups: SeatAssignment[];
+}
+
+// RX Planning types - stored in localStorage only (visual planning tool)
+interface PlannedContestant {
+  id: string;
+  name: string;
+  gender: string;
+  age: number | null;
+  rating: string | null;
+  location: string | null;
+  phone: string | null;
+  email: string | null;
+  photoUrl: string | null;
+  attendingWith: string | null;
+}
+
+interface RXPlanningData {
+  [recordDayId: string]: {
+    episodes: {
+      [episodeNumber: string]: PlannedContestant[];
+    };
+  };
+}
+
+const PLANNING_STORAGE_KEY = 'rx-planning-data';
+
+function loadPlanningData(): RXPlanningData {
+  try {
+    const stored = localStorage.getItem(PLANNING_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+}
+
+function savePlanningData(data: RXPlanningData) {
+  localStorage.setItem(PLANNING_STORAGE_KEY, JSON.stringify(data));
+}
+
+// RX Planning Tab Component
+function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; contestants: Contestant[] }) {
+  const { toast } = useToast();
+  const [selectedDayId, setSelectedDayId] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [ratingFilter, setRatingFilter] = useState<string>('all');
+  const [genderFilter, setGenderFilter] = useState<string>('all');
+  const [planningData, setPlanningData] = useState<RXPlanningData>(loadPlanningData);
+  const [draggedContestant, setDraggedContestant] = useState<PlannedContestant | null>(null);
+  const [dragSource, setDragSource] = useState<{ type: 'pool' | 'episode'; episode?: string } | null>(null);
+
+  const sortedRecordDays = useMemo(() => {
+    return [...recordDays].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [recordDays]);
+
+  useEffect(() => {
+    if (!selectedDayId && sortedRecordDays.length > 0) {
+      setSelectedDayId(sortedRecordDays[0].id);
+    }
+  }, [sortedRecordDays, selectedDayId]);
+
+  // Filter to A+ and A contestants only
+  const eligibleContestants = useMemo(() => {
+    return contestants.filter(c => {
+      const rating = c.auditionRating?.toUpperCase();
+      return rating === 'A+' || rating === 'A';
+    });
+  }, [contestants]);
+
+  // Get contestants already planned for current day
+  const plannedContestantIds = useMemo(() => {
+    if (!selectedDayId || !planningData[selectedDayId]) return new Set<string>();
+    const ids = new Set<string>();
+    Object.values(planningData[selectedDayId].episodes || {}).forEach(epContestants => {
+      epContestants.forEach(c => ids.add(c.id));
+    });
+    return ids;
+  }, [selectedDayId, planningData]);
+
+  // Filtered contestant pool (not yet assigned to any episode)
+  const filteredPool = useMemo(() => {
+    return eligibleContestants.filter(c => {
+      if (plannedContestantIds.has(c.id)) return false;
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        if (!c.name.toLowerCase().includes(term) && 
+            !c.email?.toLowerCase().includes(term) &&
+            !c.phone?.includes(term)) return false;
+      }
+      if (ratingFilter !== 'all' && c.auditionRating?.toUpperCase() !== ratingFilter) return false;
+      if (genderFilter !== 'all' && c.gender?.toLowerCase() !== genderFilter.toLowerCase()) return false;
+      return true;
+    });
+  }, [eligibleContestants, plannedContestantIds, searchTerm, ratingFilter, genderFilter]);
+
+  // Get episodes for current day
+  const currentDayEpisodes = useMemo(() => {
+    const episodes: { [key: string]: PlannedContestant[] } = { '1': [], '2': [], '3': [], '4': [], '5': [] };
+    if (selectedDayId && planningData[selectedDayId]?.episodes) {
+      Object.keys(episodes).forEach(ep => {
+        episodes[ep] = planningData[selectedDayId].episodes[ep] || [];
+      });
+    }
+    return episodes;
+  }, [selectedDayId, planningData]);
+
+  const handleDragStart = (contestant: PlannedContestant, source: { type: 'pool' | 'episode'; episode?: string }) => {
+    setDraggedContestant(contestant);
+    setDragSource(source);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedContestant(null);
+    setDragSource(null);
+  };
+
+  const handleDrop = (targetEpisode: string) => {
+    if (!draggedContestant || !selectedDayId) return;
+
+    setPlanningData(prev => {
+      const updated = { ...prev };
+      if (!updated[selectedDayId]) {
+        updated[selectedDayId] = { episodes: { '1': [], '2': [], '3': [], '4': [], '5': [] } };
+      }
+
+      // Remove from source if coming from an episode
+      if (dragSource?.type === 'episode' && dragSource.episode) {
+        updated[selectedDayId].episodes[dragSource.episode] = 
+          (updated[selectedDayId].episodes[dragSource.episode] || [])
+            .filter(c => c.id !== draggedContestant.id);
+      }
+
+      // Add to target episode
+      if (!updated[selectedDayId].episodes[targetEpisode]) {
+        updated[selectedDayId].episodes[targetEpisode] = [];
+      }
+      // Avoid duplicates
+      if (!updated[selectedDayId].episodes[targetEpisode].find(c => c.id === draggedContestant.id)) {
+        updated[selectedDayId].episodes[targetEpisode].push(draggedContestant);
+      }
+
+      savePlanningData(updated);
+      return updated;
+    });
+
+    toast({ title: "Added to Episode " + targetEpisode });
+    handleDragEnd();
+  };
+
+  const removeFromEpisode = (episodeNumber: string, contestantId: string) => {
+    if (!selectedDayId) return;
+    setPlanningData(prev => {
+      const updated = { ...prev };
+      if (updated[selectedDayId]?.episodes[episodeNumber]) {
+        updated[selectedDayId].episodes[episodeNumber] = 
+          updated[selectedDayId].episodes[episodeNumber].filter(c => c.id !== contestantId);
+      }
+      savePlanningData(updated);
+      return updated;
+    });
+  };
+
+  const clearDayPlan = () => {
+    if (!selectedDayId) return;
+    setPlanningData(prev => {
+      const updated = { ...prev };
+      delete updated[selectedDayId];
+      savePlanningData(updated);
+      return updated;
+    });
+    toast({ title: "Plan cleared", description: "All contestants removed from this day's plan" });
+  };
+
+  const convertToPlannedContestant = (c: Contestant): PlannedContestant => ({
+    id: c.id,
+    name: c.name,
+    gender: c.gender,
+    age: c.age,
+    rating: c.auditionRating,
+    location: c.suburb,
+    phone: c.phone,
+    email: c.email,
+    photoUrl: c.photoUrl,
+    attendingWith: c.attendingWith,
+  });
+
+  const selectedDay = sortedRecordDays.find(d => d.id === selectedDayId);
+
+  return (
+    <div className="space-y-6">
+      {/* Header with day selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold">RX Day Episode Planner</h2>
+          <p className="text-sm text-muted-foreground">Drag A+ and A rated contestants into episode slots (visual planning only)</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Select value={selectedDayId} onValueChange={setSelectedDayId}>
+            <SelectTrigger className="w-[220px]" data-testid="select-planning-day">
+              <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Select RX Day..." />
+            </SelectTrigger>
+            <SelectContent>
+              {sortedRecordDays.map(day => (
+                <SelectItem key={day.id} value={day.id}>
+                  {day.rxNumber} - {format(new Date(day.date), 'dd/MM/yyyy')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={clearDayPlan}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+            data-testid="button-clear-plan"
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Clear Plan
+          </Button>
+        </div>
+      </div>
+
+      {!selectedDayId ? (
+        <Card className="p-8 text-center text-muted-foreground">
+          Select an RX Day to start planning episodes
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Contestant Pool - Left side */}
+          <div className="lg:col-span-1">
+            <Card className="h-full">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Star className="h-5 w-5 text-amber-500" />
+                  A+ / A Contestants
+                  <Badge variant="secondary">{filteredPool.length}</Badge>
+                </CardTitle>
+                {/* Filters */}
+                <div className="space-y-2 pt-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search name, email, phone..."
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      className="pl-9"
+                      data-testid="input-planning-search"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Select value={ratingFilter} onValueChange={setRatingFilter}>
+                      <SelectTrigger className="flex-1" data-testid="select-rating-filter">
+                        <SelectValue placeholder="Rating" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Ratings</SelectItem>
+                        <SelectItem value="A+">A+ Only</SelectItem>
+                        <SelectItem value="A">A Only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={genderFilter} onValueChange={setGenderFilter}>
+                      <SelectTrigger className="flex-1" data-testid="select-gender-filter">
+                        <SelectValue placeholder="Gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Genders</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="male">Male</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="max-h-[600px] overflow-y-auto">
+                <div className="space-y-2">
+                  {filteredPool.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      {eligibleContestants.length === 0 ? 'No A+ or A rated contestants found' : 'All matching contestants have been planned'}
+                    </p>
+                  ) : (
+                    filteredPool.map(c => {
+                      const planned = convertToPlannedContestant(c);
+                      return (
+                        <div
+                          key={c.id}
+                          draggable
+                          onDragStart={() => handleDragStart(planned, { type: 'pool' })}
+                          onDragEnd={handleDragEnd}
+                          className="flex items-center gap-3 p-2 rounded-lg border bg-card hover:bg-accent/50 cursor-grab active:cursor-grabbing transition-colors"
+                          data-testid={`draggable-contestant-${c.id}`}
+                        >
+                          <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <Avatar className="h-9 w-9">
+                            <AvatarImage src={c.photoUrl || undefined} />
+                            <AvatarFallback className="text-xs">
+                              {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm truncate">{c.name}</span>
+                              <Badge variant="outline" className={c.auditionRating === 'A+' ? 'bg-amber-500/10 text-amber-700 border-amber-300' : 'bg-blue-500/10 text-blue-700 border-blue-300'}>
+                                {c.auditionRating}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span>{c.gender}</span>
+                              {c.age && <span>• {c.age}y</span>}
+                              {c.suburb && <span>• {c.suburb}</span>}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Episode Slots - Right side */}
+          <div className="lg:col-span-2">
+            <div className="space-y-4">
+              {['1', '2', '3', '4', '5'].map(epNum => {
+                const epContestants = currentDayEpisodes[epNum] || [];
+                return (
+                  <Card 
+                    key={epNum}
+                    className={`transition-colors ${draggedContestant ? 'border-dashed border-2 border-primary/50' : ''}`}
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={() => handleDrop(epNum)}
+                    data-testid={`episode-drop-zone-${epNum}`}
+                  >
+                    <CardHeader className="pb-2 pt-3">
+                      <CardTitle className="flex items-center gap-3">
+                        <Badge className={`text-base px-3 py-1 ${epContestants.length > 0 ? 'bg-green-500' : 'bg-muted text-muted-foreground'}`}>
+                          EP {epNum}
+                        </Badge>
+                        <span className="text-sm font-normal text-muted-foreground">
+                          {epContestants.length === 0 ? 'Drop contestants here' : `${epContestants.length} contestant${epContestants.length !== 1 ? 's' : ''} planned`}
+                        </span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pb-3">
+                      {epContestants.length === 0 ? (
+                        <div className="py-6 text-center text-muted-foreground text-sm border-2 border-dashed rounded-lg">
+                          Drag A+ or A contestants here
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {epContestants.map(c => (
+                            <div
+                              key={c.id}
+                              draggable
+                              onDragStart={() => handleDragStart(c, { type: 'episode', episode: epNum })}
+                              onDragEnd={handleDragEnd}
+                              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/30 cursor-grab active:cursor-grabbing group"
+                              data-testid={`planned-contestant-${epNum}-${c.id}`}
+                            >
+                              <Avatar className="h-7 w-7">
+                                <AvatarImage src={c.photoUrl || undefined} />
+                                <AvatarFallback className="text-xs bg-green-500/20 text-green-700">
+                                  {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex flex-col">
+                                <span className="font-medium text-sm">{c.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {c.rating} • {c.gender}{c.age ? ` • ${c.age}y` : ''}
+                                </span>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity ml-1"
+                                onClick={() => removeFromEpisode(epNum, c.id)}
+                                data-testid={`remove-contestant-${epNum}-${c.id}`}
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Info notice */}
+      <Card className="bg-blue-500/5 border-blue-500/20">
+        <CardContent className="py-3">
+          <p className="text-sm text-blue-700 dark:text-blue-400 flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            <strong>Note:</strong> This is a visual planning tool only. Changes here do not affect contestant bookings, statuses, or the seating chart. Use this to plan your ideal episode lineup before making actual assignments.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 export default function PlayersPage() {
@@ -428,30 +834,45 @@ export default function PlayersPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Players & Backups</h1>
-          <p className="text-muted-foreground text-sm">Assign episode order for the day (5 episodes per day)</p>
+      <Tabs defaultValue="players" className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold">Players</h1>
+            <TabsList>
+              <TabsTrigger value="players" data-testid="tab-players">
+                <User className="h-4 w-4 mr-2" />
+                Players & Backups
+              </TabsTrigger>
+              <TabsTrigger value="planning" data-testid="tab-planning">
+                <Calendar className="h-4 w-4 mr-2" />
+                RX Planning
+              </TabsTrigger>
+            </TabsList>
+          </div>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">RX Day:</span>
-          <Select value={selectedRecordDayId} onValueChange={setSelectedRecordDayId}>
-            <SelectTrigger className="w-[220px]" data-testid="select-record-day-filter">
-              <SelectValue placeholder="Select record day..." />
-            </SelectTrigger>
-            <SelectContent>
-              {sortedRecordDays.map(day => (
-                <SelectItem key={day.id} value={day.id}>
-                  {day.rxNumber} - {format(new Date(day.date), 'dd/MM/yyyy')}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+        <TabsContent value="players" className="mt-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <p className="text-muted-foreground text-sm">Assign episode order for the day (5 episodes per day)</p>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">RX Day:</span>
+              <Select value={selectedRecordDayId} onValueChange={setSelectedRecordDayId}>
+                <SelectTrigger className="w-[220px]" data-testid="select-record-day-filter">
+                  <SelectValue placeholder="Select record day..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {sortedRecordDays.map(day => (
+                    <SelectItem key={day.id} value={day.id}>
+                      {day.rxNumber} - {format(new Date(day.date), 'dd/MM/yyyy')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 mb-6">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
@@ -576,21 +997,27 @@ export default function PlayersPage() {
         </Card>
       )}
 
-      {/* Photo lightbox dialog */}
-      <Dialog open={!!viewingPhoto} onOpenChange={(open) => !open && setViewingPhoto(null)}>
-        <DialogContent className="max-w-5xl max-h-[95vh] p-4">
-          {viewingPhoto && (
-            <div className="flex flex-col items-center">
-              <img
-                src={viewingPhoto.url}
-                alt={viewingPhoto.name}
-                className="max-h-[85vh] max-w-full object-contain rounded-lg"
-              />
-              <p className="mt-4 text-xl font-medium">{viewingPhoto.name}</p>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          {/* Photo lightbox dialog */}
+          <Dialog open={!!viewingPhoto} onOpenChange={(open) => !open && setViewingPhoto(null)}>
+            <DialogContent className="max-w-5xl max-h-[95vh] p-4">
+              {viewingPhoto && (
+                <div className="flex flex-col items-center">
+                  <img
+                    src={viewingPhoto.url}
+                    alt={viewingPhoto.name}
+                    className="max-h-[85vh] max-w-full object-contain rounded-lg"
+                  />
+                  <p className="mt-4 text-xl font-medium">{viewingPhoto.name}</p>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        </TabsContent>
+
+        <TabsContent value="planning" className="mt-0">
+          <RXPlanningTab recordDays={recordDays} contestants={contestants} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
