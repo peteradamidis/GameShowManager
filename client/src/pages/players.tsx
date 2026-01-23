@@ -15,6 +15,8 @@ import { User, Users, Play, Phone, Mail, MapPin, Upload, FileText, X, GripVertic
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
