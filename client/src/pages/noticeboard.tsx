@@ -16,6 +16,7 @@ import {
   MessageCircle, 
   Send, 
   Image as ImageIcon, 
+  Video,
   Pin, 
   Trash2, 
   MoreVertical,
@@ -49,6 +50,7 @@ interface Post {
   authorName: string;
   content: string;
   imageUrl: string | null;
+  videoUrl: string | null;
   isPinned: boolean;
   createdAt: string;
   updatedAt: string;
@@ -215,6 +217,17 @@ function PostCard({ post, onRefresh, displayName, sessionId }: { post: Post; onR
             />
           </div>
         )}
+        
+        {post.videoUrl && (
+          <div className="relative rounded-lg overflow-hidden">
+            <video
+              src={post.videoUrl}
+              controls
+              className="w-full max-h-96 rounded-lg"
+              data-testid={`video-post-${post.id}`}
+            />
+          </div>
+        )}
       </CardContent>
       
       <CardFooter className="flex flex-col gap-2 items-stretch">
@@ -334,16 +347,20 @@ function CreatePostForm({ onSuccess, displayName, onDisplayNameChange, onCancel 
   const [content, setContent] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
   const createMutation = useMutation({
-    mutationFn: async (data: { content: string; imageUrl?: string; authorName?: string }) =>
+    mutationFn: async (data: { content: string; imageUrl?: string; videoUrl?: string; authorName?: string }) =>
       apiRequest("POST", "/api/noticeboard/posts", data),
     onSuccess: () => {
       setContent("");
       setImageFile(null);
       setImagePreview(null);
+      setVideoFile(null);
+      setVideoPreview(null);
       onSuccess();
       toast({ title: "Post created!" });
     },
@@ -368,6 +385,8 @@ function CreatePostForm({ onSuccess, displayName, onDisplayNameChange, onCancel 
         return;
       }
       setImageFile(file);
+      setVideoFile(null);
+      setVideoPreview(null);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -376,14 +395,35 @@ function CreatePostForm({ onSuccess, displayName, onDisplayNameChange, onCancel 
     }
   };
 
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 100 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Video must be less than 100MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      setVideoFile(file);
+      setImageFile(null);
+      setImagePreview(null);
+      const url = URL.createObjectURL(file);
+      setVideoPreview(url);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) return;
 
     let imageUrl: string | undefined;
+    let videoUrl: string | undefined;
+
+    setIsUploading(true);
 
     if (imageFile) {
-      setIsUploading(true);
       try {
         const formData = new FormData();
         formData.append("image", imageFile);
@@ -404,12 +444,37 @@ function CreatePostForm({ onSuccess, displayName, onDisplayNameChange, onCancel 
         setIsUploading(false);
         return;
       }
-      setIsUploading(false);
     }
+
+    if (videoFile) {
+      try {
+        const formData = new FormData();
+        formData.append("video", videoFile);
+        const response = await fetch("/api/noticeboard/upload-video", {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        });
+        if (!response.ok) throw new Error("Failed to upload video");
+        const data = await response.json();
+        videoUrl = data.videoUrl;
+      } catch (error) {
+        toast({
+          title: "Upload failed",
+          description: "Could not upload video",
+          variant: "destructive",
+        });
+        setIsUploading(false);
+        return;
+      }
+    }
+
+    setIsUploading(false);
 
     createMutation.mutate({ 
       content: content.trim(), 
       imageUrl,
+      videoUrl,
       authorName: displayName || undefined 
     });
   };
@@ -417,6 +482,14 @@ function CreatePostForm({ onSuccess, displayName, onDisplayNameChange, onCancel 
   const clearImage = () => {
     setImageFile(null);
     setImagePreview(null);
+  };
+
+  const clearVideo = () => {
+    if (videoPreview) {
+      URL.revokeObjectURL(videoPreview);
+    }
+    setVideoFile(null);
+    setVideoPreview(null);
   };
 
   return (
@@ -459,6 +532,25 @@ function CreatePostForm({ onSuccess, displayName, onDisplayNameChange, onCancel 
               </Button>
             </div>
           )}
+
+          {videoPreview && (
+            <div className="relative inline-block">
+              <video
+                src={videoPreview}
+                className="max-h-40 rounded-lg"
+                controls
+              />
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute -top-2 -right-2 h-6 w-6"
+                onClick={clearVideo}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
           
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -469,6 +561,13 @@ function CreatePostForm({ onSuccess, displayName, onDisplayNameChange, onCancel 
                 id="image-upload"
                 onChange={handleImageSelect}
               />
+              <input
+                type="file"
+                accept="video/*"
+                className="hidden"
+                id="video-upload"
+                onChange={handleVideoSelect}
+              />
               <Button
                 type="button"
                 variant="ghost"
@@ -478,6 +577,16 @@ function CreatePostForm({ onSuccess, displayName, onDisplayNameChange, onCancel 
               >
                 <ImageIcon className="h-4 w-4 mr-2" />
                 Add Photo
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => document.getElementById("video-upload")?.click()}
+                data-testid="button-add-video"
+              >
+                <Video className="h-4 w-4 mr-2" />
+                Add Video
               </Button>
             </div>
             

@@ -564,6 +564,7 @@ export const noticeboardPosts = pgTable("noticeboard_posts", {
   authorName: text("author_name").notNull(), // Denormalized for display
   content: text("content").notNull(),
   imageUrl: text("image_url"), // Optional image attachment
+  videoUrl: text("video_url"), // Optional video attachment
   isPinned: boolean("is_pinned").default(false), // Pinned posts appear at top
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

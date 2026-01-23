@@ -14178,6 +14178,37 @@ Thank you.`;
     }
   });
 
+  // Upload video for noticeboard post
+  app.post("/api/noticeboard/upload-video", requireAuth, upload.single('video'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No video file provided" });
+      }
+      
+      // Check file size (100MB limit for videos)
+      if (req.file.size > 100 * 1024 * 1024) {
+        return res.status(400).json({ error: "Video must be less than 100MB" });
+      }
+      
+      const filename = `noticeboard_video_${Date.now()}_${req.file.originalname}`;
+      const uploadDir = path.join(process.cwd(), 'uploads', 'noticeboard');
+      
+      // Ensure directory exists
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      const filepath = path.join(uploadDir, filename);
+      fs.writeFileSync(filepath, req.file.buffer);
+      
+      const videoUrl = `/uploads/noticeboard/${filename}`;
+      res.json({ videoUrl });
+    } catch (error: any) {
+      console.error("Error uploading noticeboard video:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // ============================================
   // Post-Record Tracking API endpoints
   // ============================================
