@@ -209,6 +209,7 @@ interface StandbyAssignment {
   contestantId: string;
   recordDayId: string;
   status: string;
+  priority: number | null;
   standbyEmailSent: string | null;
   confirmedAt: string | null;
   notes: string | null;
@@ -221,6 +222,7 @@ interface StandbyAssignment {
   paperworkOnDay: string | null;
   signedIn: string | null;
   otdNotes: string | null;
+  standbyMovementNotes: string | null;
   contestant: {
     id: string;
     name: string;
@@ -230,6 +232,13 @@ interface StandbyAssignment {
     age: number;
     photoUrl: string | null;
     auditionRating: string | null;
+    attendingWith: string | null;
+    location: string | null;
+    medicalInfo: string | null;
+    mobilityNotes: string | null;
+    criminalRecord: string | null;
+    isTemporary: boolean | null;
+    isTestSubject: boolean | null;
   };
 }
 
@@ -843,7 +852,7 @@ export default function BookingMaster() {
     const dayDate = selectedDay ? format(new Date(selectedDay.date), "d MMMM yyyy") : "";
 
     const headers = [
-      "SEAT", "NAME", "MOBILE", "EMAIL", "ATTENDING WITH", "LOCATION", 
+      "SEAT", "NAME", "MOBILE", "EMAIL", "AGE", "ATTENDING WITH", "LOCATION", 
       "MEDICAL - APP", "MEDICAL - AUD", "CRIMINAL / BANKRUPTCY", 
       "CASTING CATEGORY", "NOTES", "BOOKING EMAIL SENT", "CONFIRMED RSVP", 
       "PAPERWORK SENT", "PAPERWORK ✓", "OTD PAPER WORK", "SIGNED-IN", "OTD NOTES", 
@@ -885,6 +894,7 @@ export default function BookingMaster() {
         row.contestant?.name || "",
         row.contestant?.phone || "",
         row.contestant?.email || "",
+        row.contestant?.age || "",
         row.contestant?.attendingWith || "",
         row.contestant?.location || "",
         row.contestant?.medicalInfo || "",
@@ -903,6 +913,44 @@ export default function BookingMaster() {
       ]);
     }
 
+    // Add standbys section at the bottom
+    if (standbysForRecordDay.length > 0) {
+      exportRows.push([]);
+      exportRows.push([]);
+      const standbyCount = standbysForRecordDay.length;
+      exportRows.push([`STANDBYS - ${standbyCount} total`]);
+      exportRows.push(headers);
+
+      // Sort standbys by priority (lower number = higher priority)
+      const sortedStandbys = [...standbysForRecordDay].sort((a, b) => (a.priority || 999) - (b.priority || 999));
+
+      for (const standby of sortedStandbys) {
+        const contestant = standby.contestant;
+        exportRows.push([
+          `S${standby.priority || "-"}`, // Use priority as "seat" indicator
+          contestant?.name || "",
+          contestant?.phone || "",
+          contestant?.email || "",
+          contestant?.age || "",
+          contestant?.attendingWith || "",
+          contestant?.location || "",
+          contestant?.medicalInfo || "",
+          contestant?.mobilityNotes || "",
+          contestant?.criminalRecord || "",
+          "", // No casting category for standbys
+          standby.notes || "",
+          standby.bookingEmailSent ? "✓" : "",
+          standby.confirmedRsvp ? "✓" : "",
+          standby.paperworkSent ? "✓" : "",
+          standby.paperworkReceived ? "✓" : "",
+          standby.paperworkOnDay ? "✓" : "",
+          standby.signedIn ? "✓" : "",
+          standby.otdNotes || "",
+          standby.standbyMovementNotes || "",
+        ]);
+      }
+    }
+
     const ws = XLSX.utils.aoa_to_sheet(exportRows);
     const wb = XLSX.utils.book_new();
     
@@ -913,6 +961,7 @@ export default function BookingMaster() {
       { wch: 20 },  // NAME
       { wch: 15 },  // MOBILE
       { wch: 25 },  // EMAIL
+      { wch: 6 },   // AGE
       { wch: 15 },  // ATTENDING WITH
       { wch: 15 },  // LOCATION
       { wch: 15 },  // MEDICAL - APP
