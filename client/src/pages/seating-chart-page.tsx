@@ -1726,7 +1726,7 @@ export default function SeatingChartPage() {
               </div>
               
               {/* Contestant List */}
-              <ScrollArea className="h-[220px] border rounded-md bg-muted/20">
+              <ScrollArea className="h-[400px] border rounded-md bg-muted/20">
                 <div className="p-2 space-y-1">
                   {filteredContestants.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-6">
