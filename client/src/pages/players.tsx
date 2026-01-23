@@ -203,6 +203,27 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
     return ids;
   }, [selectedDayId, planningData]);
 
+  // Get week's worth of RX days starting from selected day (needed for weekPlannedContestantIds)
+  const weekDays = useMemo(() => {
+    if (!selectedDayId) return [];
+    const selectedIdx = sortedRecordDays.findIndex(d => d.id === selectedDayId);
+    if (selectedIdx === -1) return [];
+    return sortedRecordDays.slice(selectedIdx, selectedIdx + 4);
+  }, [selectedDayId, sortedRecordDays]);
+
+  // Get all planned contestant IDs across week (for filtering pool in weekly view)
+  const weekPlannedContestantIds = useMemo(() => {
+    const ids = new Set<string>();
+    weekDays.forEach(day => {
+      if (planningData[day.id]?.blocks) {
+        Object.values(planningData[day.id].blocks).forEach(blockContestants => {
+          blockContestants.forEach(c => ids.add(c.id));
+        });
+      }
+    });
+    return ids;
+  }, [weekDays, planningData]);
+
   // Filtered contestant pool (not yet assigned to any block)
   const filteredPool = useMemo(() => {
     // In weekly view, exclude contestants planned in any of the week's days
@@ -246,7 +267,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
     return blocks;
   }, [selectedDayId, planningData]);
 
-  const handleDragStart = (contestant: PlannedContestant, source: { type: 'pool' | 'block'; block?: string }) => {
+  const handleDragStart = (contestant: PlannedContestant, source: { type: 'pool' | 'block'; block?: string; dayId?: string }) => {
     setDraggedContestant(contestant);
     setDragSource(source);
   };
@@ -307,16 +328,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
     });
   };
 
-  // Get week's worth of RX days starting from selected day
-  const weekDays = useMemo(() => {
-    if (!selectedDayId) return [];
-    const selectedIdx = sortedRecordDays.findIndex(d => d.id === selectedDayId);
-    if (selectedIdx === -1) return [];
-    // Get up to 4 consecutive days starting from selected
-    return sortedRecordDays.slice(selectedIdx, selectedIdx + 4);
-  }, [selectedDayId, sortedRecordDays]);
-
-  // Get blocks for a specific day
+  // Get blocks for a specific day (for weekly view)
   const getBlocksForDay = (dayId: string) => {
     const blocks: { [key: string]: PlannedContestant[] } = { '1': [], '2': [], '3': [], '4': [], '5': [], '6': [], '7': [] };
     if (planningData[dayId]?.blocks) {
@@ -326,19 +338,6 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
     }
     return blocks;
   };
-
-  // Get all planned contestant IDs across week (for filtering pool)
-  const weekPlannedContestantIds = useMemo(() => {
-    const ids = new Set<string>();
-    weekDays.forEach(day => {
-      if (planningData[day.id]?.blocks) {
-        Object.values(planningData[day.id].blocks).forEach(blockContestants => {
-          blockContestants.forEach(c => ids.add(c.id));
-        });
-      }
-    });
-    return ids;
-  }, [weekDays, planningData]);
 
   // Find full contestant record by ID
   const findContestant = (id: string) => contestants.find(c => c.id === id);
@@ -813,29 +812,11 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                       <p className="font-medium">{viewingContestant.attendingWith}</p>
                     </div>
                   )}
-                  {viewingContestant.occupation && (
-                    <div>
-                      <span className="text-muted-foreground">Occupation:</span>
-                      <p className="font-medium">{viewingContestant.occupation}</p>
-                    </div>
-                  )}
-                  {viewingContestant.status && (
-                    <div>
-                      <span className="text-muted-foreground">Status:</span>
-                      <p className="font-medium capitalize">{viewingContestant.status.replace('_', ' ')}</p>
-                    </div>
-                  )}
                 </div>
                 {viewingContestant.medicalMobilityNotes && (
                   <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
                     <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">Medical/Mobility Notes:</span>
                     <p className="text-sm">{viewingContestant.medicalMobilityNotes}</p>
-                  </div>
-                )}
-                {viewingContestant.notes && (
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Notes:</span>
-                    <p>{viewingContestant.notes}</p>
                   </div>
                 )}
               </div>
