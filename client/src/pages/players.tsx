@@ -135,10 +135,12 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
   const [dragSource, setDragSource] = useState<{ type: 'pool' | 'block'; block?: string } | null>(null);
   const [viewingPhoto, setViewingPhoto] = useState<{ url: string; name: string } | null>(null);
 
-  // Fetch block types from API
+  // Fetch block types from API - refetch when tab is shown to sync with seating chart changes
   const { data: blockTypes = [] } = useQuery<BlockTypeData[]>({
     queryKey: ['/api/record-days', selectedDayId, 'block-types'],
     enabled: !!selectedDayId,
+    staleTime: 0, // Always fetch fresh data to sync with seating chart
+    refetchOnMount: 'always', // Refetch when component mounts (e.g., tab switch)
   });
 
   const updateBlockTypeMutation = useMutation({
