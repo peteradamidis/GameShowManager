@@ -3923,9 +3923,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Case Number': a.caseNumber || '',
           'Case Amount': a.caseAmount || '',
           'Bank Offer Taken': a.bankOfferTaken ? 'Yes' : 'No',
-          'Amount Won': a.winningMoneyAmount || '',
           'Spin the Wheel': a.spinTheWheel ? 'Yes' : 'No',
           'Prize': a.prize || '',
+          'Amount Won': a.winningMoneyAmount || '',
         };
       });
 
