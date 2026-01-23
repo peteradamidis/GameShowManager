@@ -1214,10 +1214,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingByPhone = new Map<string, typeof existingContestants[0]>();
       
       existingContestants.forEach((c: any) => {
-        if (c.name) existingByName.set(c.name.toLowerCase().trim(), c);
-        if (c.email) existingByEmail.set(c.email.toLowerCase().trim(), c);
+        if (c.name) {
+          const nameKey = c.name.toLowerCase().trim();
+          // Prefer non-temporary contestants in the map if there's a conflict
+          if (!existingByName.has(nameKey) || !c.isTemporary) {
+            existingByName.set(nameKey, c);
+          }
+        }
+        if (c.email) {
+          const emailKey = c.email.toLowerCase().trim();
+          if (!existingByEmail.has(emailKey) || !c.isTemporary) {
+            existingByEmail.set(emailKey, c);
+          }
+        }
         const normalizedPhone = normalizePhone(c.phone);
-        if (normalizedPhone && normalizedPhone.length >= 8) existingByPhone.set(normalizedPhone, c);
+        if (normalizedPhone && normalizedPhone.length >= 8) {
+          if (!existingByPhone.has(normalizedPhone) || !c.isTemporary) {
+            existingByPhone.set(normalizedPhone, c);
+          }
+        }
       });
 
       // Check for duplicates
@@ -1248,9 +1263,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (nameMatch) {
           // If the existing contestant is temporary, allow import to update them
           if (nameMatch.isTemporary) {
+            console.log(`[Import] Found temporary match by name: ${normalizedName}. Redirecting to temporaryUpdates.`);
             temporaryContestantsToUpdate.push({ existingId: nameMatch.id, importData: contestant });
             continue;
           }
+          console.log(`[Import] Found duplicate by name: ${normalizedName}`);
           duplicates.push({
             importName: contestant.name,
             importEmail: contestant.email,
@@ -1261,6 +1278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               name: nameMatch.name,
               email: nameMatch.email,
               phone: nameMatch.phone,
+              isTemporary: nameMatch.isTemporary
             }
           });
           continue;
@@ -1272,9 +1290,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (emailMatch) {
             // If the existing contestant is temporary, allow import to update them
             if (emailMatch.isTemporary) {
+              console.log(`[Import] Found temporary match by email: ${contestant.email}. Redirecting to temporaryUpdates.`);
               temporaryContestantsToUpdate.push({ existingId: emailMatch.id, importData: contestant });
               continue;
             }
+            console.log(`[Import] Found duplicate by email: ${contestant.email}`);
             duplicates.push({
               importName: contestant.name,
               importEmail: contestant.email,
@@ -1285,6 +1305,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 name: emailMatch.name,
                 email: emailMatch.email,
                 phone: emailMatch.phone,
+                isTemporary: emailMatch.isTemporary
               }
             });
             continue;
@@ -1297,9 +1318,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (phoneMatch) {
             // If the existing contestant is temporary, allow import to update them
             if (phoneMatch.isTemporary) {
+              console.log(`[Import] Found temporary match by phone: ${normalizedPhone}. Redirecting to temporaryUpdates.`);
               temporaryContestantsToUpdate.push({ existingId: phoneMatch.id, importData: contestant });
               continue;
             }
+            console.log(`[Import] Found duplicate by phone: ${normalizedPhone}`);
             duplicates.push({
               importName: contestant.name,
               importEmail: contestant.email,
@@ -1310,6 +1333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 name: phoneMatch.name,
                 email: phoneMatch.email,
                 phone: phoneMatch.phone,
+                isTemporary: phoneMatch.isTemporary
               }
             });
             continue;
