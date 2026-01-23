@@ -527,7 +527,8 @@ export function SeatCard({
                           contestantDetails.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
                           contestantDetails.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
                           contestantDetails.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
-                          contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' : ''
+                          contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' :
+                          contestantDetails.auditionRating === 'P' ? 'text-purple-600 dark:text-purple-400' : ''
                         }`}>
                           {contestantDetails.auditionRating}
                         </span>

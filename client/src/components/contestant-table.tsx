@@ -1211,7 +1211,8 @@ export function ContestantTable({
                         contestant.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
                         contestant.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
                         contestant.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
-                        contestant.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' : ''
+                        contestant.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' :
+                        contestant.auditionRating === 'P' ? 'text-purple-600 dark:text-purple-400' : ''
                       }`}>
                         {contestant.auditionRating}
                       </span>
@@ -1463,6 +1464,7 @@ export function ContestantTable({
                             <SelectItem value="B+">B+</SelectItem>
                             <SelectItem value="B">B</SelectItem>
                             <SelectItem value="C">C</SelectItem>
+                            <SelectItem value="P">P</SelectItem>
                             <SelectItem value="DNU">DNU (Do Not Use)</SelectItem>
                           </SelectContent>
                         </Select>
@@ -1648,7 +1650,8 @@ export function ContestantTable({
                             contestantDetails.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
                             contestantDetails.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
                             contestantDetails.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
-                            contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' : 'text-muted-foreground'
+                            contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' :
+                            contestantDetails.auditionRating === 'P' ? 'text-purple-600 dark:text-purple-400' : 'text-muted-foreground'
                           }`}>
                             {contestantDetails.auditionRating || '-'}
                           </p>
