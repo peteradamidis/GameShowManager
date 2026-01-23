@@ -1150,8 +1150,10 @@ export default function SeatingChartPage() {
   // Find current winning money data for the selected assignment
   const currentAssignment = assignments?.find((a: any) => a.id === selectedAssignmentId);
   const currentWinningMoneyData = {
-    rxNumber: currentAssignment?.rxNumber || "",
-    rxEpNumber: currentAssignment?.rxEpNumber || "",
+    // Prefill RX Day from record day if no existing value
+    rxNumber: currentAssignment?.rxNumber || currentRecordDay?.rxNumber || "",
+    // Prefill RX Ep No with "30XX" if no existing value
+    rxEpNumber: currentAssignment?.rxEpNumber || "30XX",
     caseNumber: currentAssignment?.caseNumber || "",
     role: currentAssignment?.winningMoneyRole || "player",
     amount: currentAssignment?.winningMoneyAmount || 0,
