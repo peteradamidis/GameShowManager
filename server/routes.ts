@@ -1257,7 +1257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             importPhone: contestant.phone,
             matchType: 'exact_name',
             existingContestant: {
-              id: nameMatch.id,
+              id: nameMatch.id.toString(),
               name: nameMatch.name,
               email: nameMatch.email,
               phone: nameMatch.phone,
@@ -1281,7 +1281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               importPhone: contestant.phone,
               matchType: 'email',
               existingContestant: {
-                id: emailMatch.id,
+                id: emailMatch.id.toString(),
                 name: emailMatch.name,
                 email: emailMatch.email,
                 phone: emailMatch.phone,
@@ -1306,7 +1306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               importPhone: contestant.phone,
               matchType: 'phone',
               existingContestant: {
-                id: phoneMatch.id,
+                id: phoneMatch.id.toString(),
                 name: phoneMatch.name,
                 email: phoneMatch.email,
                 phone: phoneMatch.phone,
