@@ -298,7 +298,7 @@ export default function BookingResponses() {
         if (!response.ok) throw new Error('Failed to fetch standbys');
         return response.json();
       }
-      const response = await fetch(`/api/standbys/record-day/${selectedRecordDay}`, { credentials: 'include' });
+      const response = await fetch(`/api/standbys/record-day/${selectedRecordDay}?all=true`, { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch standbys');
       return response.json();
     },

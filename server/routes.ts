@@ -9611,12 +9611,21 @@ Thank you.`;
     }
   });
 
-  // Get standbys for a specific record day
+  // Get standbys for a specific record day (only confirmed standbys for seating chart)
   app.get("/api/standbys/record-day/:recordDayId", async (req, res) => {
     try {
       const { recordDayId } = req.params;
+      const { all } = req.query; // Use ?all=true to get all standbys (for other pages)
       const standbys = await storage.getStandbyAssignmentsByRecordDay(recordDayId);
-      res.json(standbys);
+      
+      // By default, only return confirmed standbys (for seating chart use)
+      // Use ?all=true query param to get all standbys (for booking master, etc.)
+      if (all === 'true') {
+        res.json(standbys);
+      } else {
+        const confirmedStandbys = standbys.filter(s => s.status === 'confirmed');
+        res.json(confirmedStandbys);
+      }
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
