@@ -97,8 +97,8 @@ const groupColors = [
   "border-yellow-500",
 ];
 
-// Rating-based colors - pure inline styles (no Tailwind dependency)
-const ratingColors: Record<string, { bg: string; border: string }> = {
+// Rating-based colors - with light and dark mode variants
+const ratingColorsLight: Record<string, { bg: string; border: string }> = {
   'A+': { bg: '#dcfce7', border: '#16a34a' }, // Bright green
   'A': { bg: '#dbeafe', border: '#3b82f6' }, // Faded blue
   'P': { bg: '#e0f2e0', border: '#6aaa6a' }, // Faded/muted green (less saturated than A+)
@@ -107,8 +107,35 @@ const ratingColors: Record<string, { bg: string; border: string }> = {
   'C': { bg: '#fee2e2', border: '#ef4444' },
 };
 
+const ratingColorsDark: Record<string, { bg: string; border: string }> = {
+  'A+': { bg: '#14532d', border: '#22c55e' }, // Dark green bg, bright green border
+  'A': { bg: '#1e3a5f', border: '#60a5fa' }, // Dark blue bg, bright blue border
+  'P': { bg: '#1a3a1a', border: '#6aaa6a' }, // Dark muted green
+  'B+': { bg: '#451a03', border: '#fbbf24' }, // Dark amber bg, bright amber border
+  'B': { bg: '#431407', border: '#fb923c' }, // Dark orange bg, bright orange border
+  'C': { bg: '#450a0a', border: '#f87171' }, // Dark red bg, bright red border
+};
+
 // Standby styling - purple to distinguish from regular contestants
-const standbyColors = { bg: '#f3e8ff', border: '#9333ea' };
+const standbyColorsLight = { bg: '#f3e8ff', border: '#9333ea' };
+const standbyColorsDark = { bg: '#3b0764', border: '#a855f7' };
+
+// Hook to detect dark mode
+function useIsDarkMode() {
+  const [isDark, setIsDark] = useState(() => 
+    typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+  );
+  
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+  
+  return isDark;
+}
 
 export function SeatCard({ 
   seat, 
@@ -136,6 +163,10 @@ export function SeatCard({
   const [isEditingAttendingWith, setIsEditingAttendingWith] = useState(false);
   const { toast } = useToast();
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isDarkMode = useIsDarkMode();
+  
+  const ratingColors = isDarkMode ? ratingColorsDark : ratingColorsLight;
+  const standbyColors = isDarkMode ? standbyColorsDark : standbyColorsLight;
   
   // Sync local state with prop changes
   useEffect(() => {
@@ -334,7 +365,7 @@ export function SeatCard({
             <span>{seatLabel}</span>
           </div>
           <div className="flex items-center gap-1 min-w-0 flex-wrap">
-            <p className="font-medium text-xs truncate min-w-0 max-w-[80px]" title={seat.contestantName}>
+            <p className="font-medium text-xs truncate min-w-0 max-w-[80px] text-foreground" title={seat.contestantName}>
               {seat.contestantName}
             </p>
             {seat.isFromReschedule && (
