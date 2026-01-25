@@ -715,12 +715,12 @@ export default function StandbysPage() {
                       {rd.rxNumber && (
                         <div className="text-xs text-muted-foreground">{rd.rxNumber}</div>
                       )}
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
                         <Badge variant="outline" className="text-xs">
                           {standbys.length} standby{standbys.length !== 1 ? 's' : ''}
                         </Badge>
                         {confirmed > 0 && (
-                          <Badge variant="outline" className="text-xs text-green-600">
+                          <Badge variant="outline" className="text-xs text-green-600 dark:text-green-400">
                             {confirmed} confirmed
                           </Badge>
                         )}
