@@ -36,6 +36,157 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import React from "react";
+
+// Memoized Temp Contestant Dialog to prevent parent re-renders from affecting typing performance
+const TempContestantDialog = React.memo(function TempContestantDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  isCreating,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (data: { name: string; gender: string; age?: string; phone?: string; email?: string; notes?: string }) => Promise<void>;
+  isCreating: boolean;
+}) {
+  const [name, setName] = useState("");
+  const [gender, setGender] = useState<string>("");
+  const [age, setAge] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [notes, setNotes] = useState("");
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setName("");
+      setGender("");
+      setAge("");
+      setPhone("");
+      setEmail("");
+      setNotes("");
+    }
+  }, [open]);
+
+  const handleSubmit = async () => {
+    await onSubmit({ name, gender, age, phone, email, notes });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md" data-testid="dialog-new-temp-contestant">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <User className="h-5 w-5 text-amber-500" />
+            Add Temporary Contestant
+          </DialogTitle>
+          <DialogDescription>
+            Create a placeholder contestant who hasn't been imported from Cast It Reach yet. They can be updated later after proper audition.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <Label htmlFor="temp-name">Name *</Label>
+              <Input
+                id="temp-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Full name"
+                data-testid="input-temp-name"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="temp-gender">Gender *</Label>
+              <Select value={gender} onValueChange={setGender}>
+                <SelectTrigger data-testid="select-temp-gender">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Female">Female</SelectItem>
+                  <SelectItem value="Male">Male</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="temp-age">Age</Label>
+              <Input
+                id="temp-age"
+                type="number"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                placeholder="Optional"
+                data-testid="input-temp-age"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="temp-phone">Phone</Label>
+              <Input
+                id="temp-phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Optional"
+                data-testid="input-temp-phone"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="temp-email">Email</Label>
+              <Input
+                id="temp-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Optional"
+                data-testid="input-temp-email"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="temp-notes">Notes</Label>
+            <Textarea
+              id="temp-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Any notes about this contestant..."
+              className="h-20 resize-none"
+              data-testid="input-temp-notes"
+            />
+          </div>
+          
+          <div className="p-3 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                This contestant is marked as <strong>temporary</strong> until they complete their audition and are properly imported via Cast It Reach.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit}
+            disabled={isCreating || !name.trim() || !gender}
+            className="bg-amber-600 hover:bg-amber-700"
+            data-testid="button-create-temp-contestant"
+          >
+            {isCreating ? "Creating..." : "Create & Assign to Seat"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+});
 
 // Generate seats with the proper row structure
 const SEAT_ROWS = [
@@ -72,6 +223,15 @@ export default function SeatingChartPage() {
   const [selectedSeat, setSelectedSeat] = useState<string>("");
   const [selectedContestant, setSelectedContestant] = useState<string>("");
   const [contestantSearch, setContestantSearch] = useState<string>("");
+  const [debouncedContestantSearch, setDebouncedContestantSearch] = useState<string>("");
+  
+  // Debounce contestant search for better performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedContestantSearch(contestantSearch);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [contestantSearch]);
   const [filterRating, setFilterRating] = useState<string>("all");
   const [filterGender, setFilterGender] = useState<string>("all");
   const [filterGroupSize, setFilterGroupSize] = useState<string>("all");
@@ -133,12 +293,6 @@ export default function SeatingChartPage() {
   
   // Temporary contestant dialog state
   const [tempContestantDialogOpen, setTempContestantDialogOpen] = useState(false);
-  const [tempContestantName, setTempContestantName] = useState("");
-  const [tempContestantGender, setTempContestantGender] = useState<string>("");
-  const [tempContestantAge, setTempContestantAge] = useState("");
-  const [tempContestantPhone, setTempContestantPhone] = useState("");
-  const [tempContestantEmail, setTempContestantEmail] = useState("");
-  const [tempContestantNotes, setTempContestantNotes] = useState("");
   const [isCreatingTempContestant, setIsCreatingTempContestant] = useState(false);
   
   // Edit temporary contestant dialog state
@@ -333,8 +487,8 @@ export default function SeatingChartPage() {
   const filteredContestants = useMemo(() => {
     return availableContestants.filter((c: any) => {
       // Name search filter
-      if (contestantSearch.trim()) {
-        const searchLower = contestantSearch.toLowerCase();
+      if (debouncedContestantSearch.trim()) {
+        const searchLower = debouncedContestantSearch.toLowerCase();
         const matchesSearch = 
           c.name?.toLowerCase().includes(searchLower) ||
           c.attendingWith?.toLowerCase().includes(searchLower);
@@ -384,7 +538,7 @@ export default function SeatingChartPage() {
       
       return true;
     });
-  }, [availableContestants, contestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby]);
+  }, [availableContestants, debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby]);
 
   // Check if record day is locked (RX Day Mode)
   const isLocked = currentRecordDay?.lockedAt != null;
@@ -1996,15 +2150,7 @@ export default function SeatingChartPage() {
           <DialogFooter className="flex flex-row justify-between w-full gap-2 sm:gap-0">
             <Button 
               variant="outline" 
-              onClick={() => {
-                setTempContestantDialogOpen(true);
-                setTempContestantName("");
-                setTempContestantGender("");
-                setTempContestantAge("");
-                setTempContestantPhone("");
-                setTempContestantEmail("");
-                setTempContestantNotes("");
-              }}
+              onClick={() => setTempContestantDialogOpen(true)}
               className="mr-auto border-dashed border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20"
               data-testid="button-new-temp-contestant"
             >
@@ -2029,174 +2175,69 @@ export default function SeatingChartPage() {
         </DialogContent>
       </Dialog>
 
-      {/* New Temporary Contestant Dialog */}
-      <Dialog open={tempContestantDialogOpen} onOpenChange={setTempContestantDialogOpen}>
-        <DialogContent className="max-w-md" data-testid="dialog-new-temp-contestant">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-amber-500" />
-              Add Temporary Contestant
-            </DialogTitle>
-            <DialogDescription>
-              Create a placeholder contestant who hasn't been imported from Cast It Reach yet. They can be updated later after proper audition.
-            </DialogDescription>
-          </DialogHeader>
+      {/* New Temporary Contestant Dialog - memoized for performance */}
+      <TempContestantDialog
+        open={tempContestantDialogOpen}
+        onOpenChange={setTempContestantDialogOpen}
+        isCreating={isCreatingTempContestant}
+        onSubmit={async (data) => {
+          if (!data.name.trim() || !data.gender) {
+            toast({
+              variant: "destructive",
+              title: "Missing required fields",
+              description: "Name and gender are required.",
+            });
+            return;
+          }
           
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <Label htmlFor="temp-name">Name *</Label>
-                <Input
-                  id="temp-name"
-                  value={tempContestantName}
-                  onChange={(e) => setTempContestantName(e.target.value)}
-                  placeholder="Full name"
-                  data-testid="input-temp-name"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="temp-gender">Gender *</Label>
-                <Select value={tempContestantGender} onValueChange={setTempContestantGender}>
-                  <SelectTrigger data-testid="select-temp-gender">
-                    <SelectValue placeholder="Select..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Female">Female</SelectItem>
-                    <SelectItem value="Male">Male</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="temp-age">Age</Label>
-                <Input
-                  id="temp-age"
-                  type="number"
-                  value={tempContestantAge}
-                  onChange={(e) => setTempContestantAge(e.target.value)}
-                  placeholder="Optional"
-                  data-testid="input-temp-age"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="temp-phone">Phone</Label>
-                <Input
-                  id="temp-phone"
-                  value={tempContestantPhone}
-                  onChange={(e) => setTempContestantPhone(e.target.value)}
-                  placeholder="Optional"
-                  data-testid="input-temp-phone"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="temp-email">Email</Label>
-                <Input
-                  id="temp-email"
-                  type="email"
-                  value={tempContestantEmail}
-                  onChange={(e) => setTempContestantEmail(e.target.value)}
-                  placeholder="Optional"
-                  data-testid="input-temp-email"
-                />
-              </div>
-            </div>
+          setIsCreatingTempContestant(true);
+          try {
+            // Create temporary contestant
+            const res = await apiRequest("POST", "/api/contestants/temporary", {
+              name: data.name.trim(),
+              gender: data.gender,
+              age: data.age || undefined,
+              phone: data.phone || undefined,
+              email: data.email || undefined,
+              notes: data.notes || undefined,
+            });
             
-            <div>
-              <Label htmlFor="temp-notes">Notes</Label>
-              <Textarea
-                id="temp-notes"
-                value={tempContestantNotes}
-                onChange={(e) => setTempContestantNotes(e.target.value)}
-                placeholder="Any notes about this contestant..."
-                className="h-20 resize-none"
-                data-testid="input-temp-notes"
-              />
-            </div>
+            const newContestant = await res.json();
             
-            <div className="p-3 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-amber-700 dark:text-amber-400">
-                  This contestant is marked as <strong>temporary</strong> until they complete their audition and are properly imported via Cast It Reach.
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTempContestantDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={async () => {
-                if (!tempContestantName.trim() || !tempContestantGender) {
-                  toast({
-                    variant: "destructive",
-                    title: "Missing required fields",
-                    description: "Name and gender are required.",
-                  });
-                  return;
-                }
-                
-                setIsCreatingTempContestant(true);
-                try {
-                  // Create temporary contestant
-                  const res = await apiRequest("POST", "/api/contestants/temporary", {
-                    name: tempContestantName.trim(),
-                    gender: tempContestantGender,
-                    age: tempContestantAge || undefined,
-                    phone: tempContestantPhone || undefined,
-                    email: tempContestantEmail || undefined,
-                    notes: tempContestantNotes || undefined,
-                  });
-                  
-                  const newContestant = await res.json();
-                  
-                  // Close temp dialog
-                  setTempContestantDialogOpen(false);
-                  
-                  // Assign to seat
-                  await apiRequest("POST", "/api/seat-assignments", {
-                    recordDayId,
-                    contestantId: newContestant.id,
-                    blockNumber: selectedBlock,
-                    seatLabel: selectedSeat,
-                  });
-                  
-                  toast({
-                    title: "Temporary contestant added",
-                    description: `${newContestant.name} has been created and assigned to Block ${selectedBlock}, Seat ${selectedSeat}.`,
-                  });
-                  
-                  // Refresh data
-                  queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
-                  queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
-                  broadcastSeatingChange();
-                  
-                  // Close assign dialog
-                  setAssignDialogOpen(false);
-                } catch (error: any) {
-                  toast({
-                    variant: "destructive",
-                    title: "Failed to create contestant",
-                    description: error.message,
-                  });
-                } finally {
-                  setIsCreatingTempContestant(false);
-                }
-              }}
-              disabled={isCreatingTempContestant || !tempContestantName.trim() || !tempContestantGender}
-              className="bg-amber-600 hover:bg-amber-700"
-              data-testid="button-create-temp-contestant"
-            >
-              {isCreatingTempContestant ? "Creating..." : "Create & Assign to Seat"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            // Close temp dialog
+            setTempContestantDialogOpen(false);
+            
+            // Assign to seat
+            await apiRequest("POST", "/api/seat-assignments", {
+              recordDayId,
+              contestantId: newContestant.id,
+              blockNumber: selectedBlock,
+              seatLabel: selectedSeat,
+            });
+            
+            toast({
+              title: "Temporary contestant added",
+              description: `${newContestant.name} has been created and assigned to Block ${selectedBlock}, Seat ${selectedSeat}.`,
+            });
+            
+            // Refresh data
+            queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+            queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+            broadcastSeatingChange();
+            
+            // Close assign dialog
+            setAssignDialogOpen(false);
+          } catch (error: any) {
+            toast({
+              variant: "destructive",
+              title: "Failed to create contestant",
+              description: error.message,
+            });
+          } finally {
+            setIsCreatingTempContestant(false);
+          }
+        }}
+      />
 
       {/* Edit Temporary Contestant Dialog */}
       <Dialog open={editTempContestantDialogOpen} onOpenChange={setEditTempContestantDialogOpen}>
