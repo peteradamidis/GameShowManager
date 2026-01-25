@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut } from "lucide-react";
 import { initCrossTabSync, closeCrossTabSync } from "./lib/crossTabSync";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { MoneyRain } from "@/components/money-rain";
 import { AnnouncementPopupModal } from "@/components/farewell-video-modal";
 import Dashboard from "@/pages/dashboard";
@@ -164,6 +165,7 @@ function AuthenticatedApp() {
               <span className="text-sm text-muted-foreground">
                 {authData.user?.username}
               </span>
+              <ThemeToggle />
               <Button 
                 variant="ghost" 
                 size="icon"
