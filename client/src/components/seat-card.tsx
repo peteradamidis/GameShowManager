@@ -97,28 +97,28 @@ const groupColors = [
   "border-yellow-500",
 ];
 
-// Rating-based colors - with light and dark mode variants
-const ratingColorsLight: Record<string, { bg: string; border: string }> = {
-  'A+': { bg: '#dcfce7', border: '#16a34a' }, // Bright green
-  'A': { bg: '#dbeafe', border: '#3b82f6' }, // Faded blue
-  'P': { bg: '#e0f2e0', border: '#6aaa6a' }, // Faded/muted green (less saturated than A+)
-  'B+': { bg: '#fef3c7', border: '#f59e0b' },
-  'B': { bg: '#fed7aa', border: '#f97316' },
-  'C': { bg: '#fee2e2', border: '#ef4444' },
+// Rating-based colors - with light and dark mode variants (including text color for contrast)
+const ratingColorsLight: Record<string, { bg: string; border: string; text: string }> = {
+  'A+': { bg: '#dcfce7', border: '#16a34a', text: '#14532d' }, // Bright green - dark text
+  'A': { bg: '#dbeafe', border: '#3b82f6', text: '#1e3a8a' }, // Faded blue - dark text
+  'P': { bg: '#e0f2e0', border: '#6aaa6a', text: '#1a3a1a' }, // Faded/muted green - dark text
+  'B+': { bg: '#fef3c7', border: '#f59e0b', text: '#78350f' }, // Amber - dark text
+  'B': { bg: '#fed7aa', border: '#f97316', text: '#7c2d12' }, // Orange - dark text
+  'C': { bg: '#fee2e2', border: '#ef4444', text: '#7f1d1d' }, // Red - dark text
 };
 
-const ratingColorsDark: Record<string, { bg: string; border: string }> = {
-  'A+': { bg: '#14532d', border: '#22c55e' }, // Dark green bg, bright green border
-  'A': { bg: '#1e3a5f', border: '#60a5fa' }, // Dark blue bg, bright blue border
-  'P': { bg: '#1a3a1a', border: '#6aaa6a' }, // Dark muted green
-  'B+': { bg: '#451a03', border: '#fbbf24' }, // Dark amber bg, bright amber border
-  'B': { bg: '#431407', border: '#fb923c' }, // Dark orange bg, bright orange border
-  'C': { bg: '#450a0a', border: '#f87171' }, // Dark red bg, bright red border
+const ratingColorsDark: Record<string, { bg: string; border: string; text: string }> = {
+  'A+': { bg: '#14532d', border: '#22c55e', text: '#dcfce7' }, // Dark green bg - light text
+  'A': { bg: '#1e3a5f', border: '#60a5fa', text: '#dbeafe' }, // Dark blue bg - light text
+  'P': { bg: '#1a3a1a', border: '#6aaa6a', text: '#e0f2e0' }, // Dark muted green - light text
+  'B+': { bg: '#451a03', border: '#fbbf24', text: '#fef3c7' }, // Dark amber bg - light text
+  'B': { bg: '#431407', border: '#fb923c', text: '#fed7aa' }, // Dark orange bg - light text
+  'C': { bg: '#450a0a', border: '#f87171', text: '#fee2e2' }, // Dark red bg - light text
 };
 
 // Standby styling - purple to distinguish from regular contestants
-const standbyColorsLight = { bg: '#f3e8ff', border: '#9333ea' };
-const standbyColorsDark = { bg: '#3b0764', border: '#a855f7' };
+const standbyColorsLight = { bg: '#f3e8ff', border: '#9333ea', text: '#581c87' };
+const standbyColorsDark = { bg: '#3b0764', border: '#a855f7', text: '#f3e8ff' };
 
 // Hook to detect dark mode
 function useIsDarkMode() {
@@ -333,6 +333,7 @@ export function SeatCard({
       style={colorInfo ? {
         backgroundColor: colorInfo.bg,
         borderColor: colorInfo.border,
+        color: colorInfo.text,
       } : undefined}
       data-testid={`seat-${blockIndex}-${seatIndex}`}
       onClick={handleClick}
@@ -361,11 +362,11 @@ export function SeatCard({
         </div>
       ) : (
         <div className="space-y-1 overflow-hidden">
-          <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
+          <div className="flex items-center gap-1 text-[10px] font-mono opacity-70">
             <span>{seatLabel}</span>
           </div>
           <div className="flex items-center gap-1 min-w-0 flex-wrap">
-            <p className="font-medium text-xs truncate min-w-0 max-w-[80px] text-foreground" title={seat.contestantName}>
+            <p className="font-medium text-xs truncate min-w-0 max-w-[80px]" title={seat.contestantName}>
               {seat.contestantName}
             </p>
             {seat.isFromReschedule && (
@@ -493,7 +494,7 @@ export function SeatCard({
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground text-[10px]">
+          <div className="flex items-center gap-2 opacity-70 text-[10px]">
             <span>{seat.age}</span>
             <span>•</span>
             <span>{seat.gender?.[0]}</span>
