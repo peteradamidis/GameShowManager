@@ -135,6 +135,10 @@ export const seatAssignments = pgTable("seat_assignments", {
   seatedFromStandby: boolean("seated_from_standby").default(false), // True if this seat was filled from standby
   standbyMovementNotes: text("standby_movement_notes"), // Notes about standby movement (e.g., "Replaced player")
   
+  // Call tracking for players
+  called: boolean("called").default(false), // Whether contestant has been called
+  calledAt: timestamp("called_at"), // When they were called
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   // Ensure one contestant per record day

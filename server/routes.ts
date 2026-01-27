@@ -6101,12 +6101,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'txNumber', 'txDate', 'notifiedOfTx', 'photosSent',
         'attendingWithOverride', // For editing attending with after invitations are sent
         'mobilityNotesOverride', // For editing mobility/medical notes after invitations are sent
-        'emailsCopiedAt' // Track when emails were copied for external paperwork sending
+        'emailsCopiedAt', // Track when emails were copied for external paperwork sending
+        'called', 'calledAt' // Call tracking for players
       ];
       
       const timestampFields = [
         'bookingEmailSent', 'confirmedRsvp', 'paperworkSent', 
-        'paperworkReceived', 'signedIn', 'emailsCopiedAt'
+        'paperworkReceived', 'signedIn', 'emailsCopiedAt', 'calledAt'
       ];
       
       // PROTECTION: Check if bookingEmailSent is being cleared - this is NOT allowed once set

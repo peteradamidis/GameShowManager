@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2 } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +41,10 @@ interface SeatAssignment {
   rxEpNumber: string | null;
   bookingConfirmationStatus: string | null;
   castingCardUrl: string | null;
+  called: boolean | null;
+  calledAt: string | null;
+  bookingEmailSent: string | null;
+  confirmedRsvp: string | null;
   contestant: {
     id: string;
     firstName: string;
@@ -54,6 +58,7 @@ interface SeatAssignment {
     medicalMobilityNotes: string | null;
     attendingWith: string | null;
     photoUrl: string | null;
+    availabilityStatus: string | null;
   } | null;
   medicalMobilityNotesOverride?: string | null;
   attendingWithOverride?: string | null;
@@ -1267,6 +1272,7 @@ export default function PlayersPage() {
           medicalMobilityNotes: contestant.medicalMobilityNotes,
           attendingWith: contestant.attendingWith,
           photoUrl: contestant.photoUrl,
+          availabilityStatus: (contestant as any).availabilityStatus || null,
         } : null,
       };
     });
@@ -1416,6 +1422,45 @@ export default function PlayersPage() {
     input.click();
   };
 
+  const toggleCallMutation = useMutation({
+    mutationFn: async ({ assignmentId, called }: { assignmentId: string; called: boolean }) => {
+      const response = await apiRequest('PATCH', `/api/seat-assignments/${assignmentId}/workflow`, {
+        called,
+        calledAt: called ? new Date().toISOString() : null,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.includes('/api/seat-assignments');
+        }
+      });
+      toast({ title: "Updated", description: "Call status saved" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update", variant: "destructive" });
+    },
+  });
+
+  const getStatusBadge = (assignment: SeatAssignment) => {
+    const status = assignment.contestant?.availabilityStatus;
+    const hasBookingEmail = !!assignment.bookingEmailSent;
+    const hasConfirmed = !!assignment.confirmedRsvp;
+    
+    if (hasConfirmed) {
+      return <Badge className="bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30">Confirmed</Badge>;
+    }
+    if (hasBookingEmail) {
+      return <Badge className="bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30">Invited</Badge>;
+    }
+    if (status === 'assigned') {
+      return <Badge className="bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-500/30">Assigned</Badge>;
+    }
+    return <Badge variant="outline" className="text-muted-foreground">Pending</Badge>;
+  };
+
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
@@ -1452,6 +1497,7 @@ export default function PlayersPage() {
               <Badge variant="outline" className={c.gender === 'Female' ? 'bg-pink-500/10 text-pink-700 dark:text-pink-400' : 'bg-blue-500/10 text-blue-700 dark:text-blue-400'}>
                 {c.gender === 'Female' ? 'F' : 'M'} {c.age || ''}
               </Badge>
+              {getStatusBadge(assignment)}
               {showEpisodeSelector && (
                 <Select 
                   value={assignment.rxEpNumber || 'none'} 
@@ -1473,10 +1519,30 @@ export default function PlayersPage() {
               )}
             </div>
             
-            <div className="flex items-center gap-1 text-sm mb-1">
+            <div className="flex items-center gap-2 text-sm mb-1">
               <Badge className="bg-primary/10 text-primary font-bold">
                 Block {assignment.blockNumber} - Seat {assignment.seatLabel}
               </Badge>
+              <Button
+                size="sm"
+                variant={assignment.called ? "default" : "outline"}
+                className={`h-7 gap-1 text-xs ${assignment.called ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
+                onClick={() => toggleCallMutation.mutate({ assignmentId: assignment.id, called: !assignment.called })}
+                disabled={toggleCallMutation.isPending}
+                data-testid={`button-call-${assignment.id}`}
+              >
+                {assignment.called ? (
+                  <>
+                    <PhoneCall className="h-3 w-3" />
+                    Called
+                  </>
+                ) : (
+                  <>
+                    <Phone className="h-3 w-3" />
+                    Call
+                  </>
+                )}
+              </Button>
             </div>
             
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-muted-foreground mt-2">
