@@ -20,6 +20,7 @@ interface HistoryEvent {
   timestamp: string;
   description: string;
   details: Record<string, any>;
+  recordDayId?: string;
 }
 
 export default function HistoryPage() {
@@ -83,6 +84,7 @@ export default function HistoryPage() {
           reason: r.reason,
           rebookedBy: r.rebookedBy,
         },
+        recordDayId: r.toRecordDayId,
       });
     });
 
@@ -107,6 +109,7 @@ export default function HistoryPage() {
           markedBy: a.markedBy,
           movedToReschedule: a.movedToReschedule,
         },
+        recordDayId: a.recordDayId,
       });
     });
 
@@ -128,6 +131,7 @@ export default function HistoryPage() {
           blockType: s.blockType,
           confirmedAttendance: s.confirmedAttendance,
         },
+        recordDayId: s.recordDayId,
       });
     });
 
@@ -159,6 +163,7 @@ export default function HistoryPage() {
           notes: m.notes,
           movedBy: m.movedBy,
         },
+        recordDayId: m.recordDayId,
       });
     });
 
@@ -352,6 +357,7 @@ export default function HistoryPage() {
                     <TableHead className="w-12"></TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Contestant</TableHead>
+                    <TableHead>RX Date</TableHead>
                     <TableHead className="hidden md:table-cell">Description</TableHead>
                     <TableHead className="hidden lg:table-cell">By</TableHead>
                     <TableHead>Date/Time</TableHead>
@@ -368,6 +374,9 @@ export default function HistoryPage() {
                       </TableCell>
                       <TableCell className="font-medium" data-testid={`text-contestant-${event.id}`}>
                         {event.contestantName}
+                      </TableCell>
+                      <TableCell className="text-sm whitespace-nowrap">
+                        {event.recordDayId ? formatRecordDay(event.recordDayId) : '-'}
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-md">
                         <div className="truncate" title={event.description}>
