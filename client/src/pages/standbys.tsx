@@ -184,7 +184,7 @@ export default function StandbysPage() {
     const notSent = standbysForRecordDay.filter(s => s.status === 'pending' && !s.standbyEmailSent).length;
     const awaiting = standbysForRecordDay.filter(s => s.status === 'pending' && s.standbyEmailSent || s.status === 'email_sent').length;
     const confirmed = standbysForRecordDay.filter(s => s.status === 'confirmed').length;
-    const declined = standbysForRecordDay.filter(s => s.status === 'declined').length;
+    const declined = standbysForRecordDay.filter(s => s.status === 'declined' || s.movedToReschedule).length;
     return { total, notSent, awaiting, confirmed, declined };
   }, [standbysForRecordDay]);
 
@@ -200,7 +200,7 @@ export default function StandbysPage() {
         case "confirmed":
           return s.status === 'confirmed';
         case "declined":
-          return s.status === 'declined';
+          return s.status === 'declined' || s.movedToReschedule;
         default:
           return true;
       }
