@@ -5846,7 +5846,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       // Log movements to history
-      const movedBy = (req as any).session?.user?.username || 'system';
+      const movedBy = (req as any).session?.username || 'system';
       
       if (targetAssignmentId && targetAssignment) {
         // Both contestants swapped seats - log both movements
@@ -6116,7 +6116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       // Log movements to history
-      const movedBy = (req as any).session?.user?.username || 'system';
+      const movedBy = (req as any).session?.username || 'system';
       await storage.logMovement({
         contestantId: assignment1.contestantId,
         movementType: 'seat_change',
@@ -6188,7 +6188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       // Log movement to history
-      const movedBy = (req as any).session?.user?.username || 'system';
+      const movedBy = (req as any).session?.username || 'system';
       await storage.logMovement({
         contestantId: assignment.contestantId,
         movementType: 'seat_change',
@@ -6375,7 +6375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Log the return to pool movement before deletion
-      const movedBy = (req as any).session?.user?.username || 'system';
+      const movedBy = (req as any).session?.username || 'system';
       await storage.logMovement({
         contestantId: assignment.contestantId,
         movementType: 'returned_to_pool',
@@ -6692,7 +6692,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const canceled = await storage.cancelSeatAssignment(req.params.id, reason);
       
       // Log movement to reschedule
-      const movedBy = (req as any).session?.user?.username || 'system';
+      const movedBy = (req as any).session?.username || 'system';
       await storage.logMovement({
         contestantId: assignment.contestantId,
         movementType: 'added_to_reschedule',
@@ -7100,7 +7100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Log movement from reschedule to seat
-      const movedBy = (req as any).session?.user?.username || 'system';
+      const movedBy = (req as any).session?.username || 'system';
       await storage.logMovement({
         contestantId: canceled.contestantId,
         movementType: 'removed_from_reschedule',
@@ -9931,7 +9931,7 @@ Thank you.`;
       }
       
       // Log standby additions to movement history
-      const movedBy = (req as any).session?.user?.username || 'system';
+      const movedBy = (req as any).session?.username || 'system';
       for (const contestantId of contestantIds) {
         await storage.logMovement({
           contestantId,
@@ -10091,7 +10091,7 @@ Thank you.`;
       
       if (standby) {
         // Log standby removal to movement history before deletion
-        const movedBy = (req as any).session?.user?.username || 'system';
+        const movedBy = (req as any).session?.username || 'system';
         await storage.logMovement({
           contestantId: standby.contestantId,
           movementType: 'standby_removed',
@@ -10176,7 +10176,7 @@ Thank you.`;
       await storage.updateContestantAvailability(standby.contestantId, 'rescheduled');
 
       // Log movement to history
-      const movedBy = (req as any).session?.user?.username || 'system';
+      const movedBy = (req as any).session?.username || 'system';
       await storage.logMovement({
         contestantId: standby.contestantId,
         movementType: 'standby_to_reschedule',
@@ -10230,7 +10230,7 @@ Thank you.`;
         await storage.updateContestantAvailability(matchingStandby.contestantId, 'assigned');
         
         // Log standby seating to movement history
-        const movedBy = (req as any).session?.user?.username || 'system';
+        const movedBy = (req as any).session?.username || 'system';
         await storage.logMovement({
           contestantId: matchingStandby.contestantId,
           movementType: 'standby_seated',
