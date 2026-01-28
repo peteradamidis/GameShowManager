@@ -155,6 +155,8 @@ interface CastingCardData {
   // Manual companions (up to 4)
   manualCompanions?: ManualCompanion[] | null;
   useManualCompanions?: boolean;
+  // Card ready status
+  isReady?: boolean;
 }
 
 // Default bullet points for new casting cards
@@ -170,7 +172,7 @@ const defaultBulletPoints = [
 ];
 
 // Casting Cards Tab Component
-function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
+function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: { contestants: Contestant[]; initialContestantId?: string | null; onClearInitial?: () => void }) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [ratingFilter, setRatingFilter] = useState<string>('all');
@@ -180,6 +182,17 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
+
+  // Select initial contestant when navigating from Players tab
+  useEffect(() => {
+    if (initialContestantId && contestants.length > 0) {
+      const contestant = contestants.find(c => c.id === initialContestantId);
+      if (contestant) {
+        setSelectedContestant(contestant);
+        onClearInitial?.();
+      }
+    }
+  }, [initialContestantId, contestants, onClearInitial]);
   
   // Refs for file inputs
   const mainPhotoInputRef = useRef<HTMLInputElement>(null);
@@ -870,8 +883,25 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
           {/* Direct Edit Card - Click any text to edit like PowerPoint */}
           <Card className="h-full flex flex-col">
             <CardHeader className="pb-2 flex-shrink-0">
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle className="text-base">Click any text to edit directly</CardTitle>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <CardTitle className="text-base">Click any text to edit directly</CardTitle>
+                  {/* Ready status toggle */}
+                  <Button
+                    size="sm"
+                    variant={cardData.isReady ? "default" : "outline"}
+                    onClick={() => {
+                      updateField('isReady', !cardData.isReady);
+                      // Auto-save when toggling ready status
+                      setTimeout(() => handleSave(), 100);
+                    }}
+                    className={cardData.isReady ? "bg-green-600 hover:bg-green-700" : ""}
+                    data-testid="btn-toggle-ready"
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-1" />
+                    {cardData.isReady ? 'Ready' : 'Mark Ready'}
+                  </Button>
+                </div>
                 <div className="flex gap-2">
                   <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending} data-testid="btn-save-card">
                     {saveMutation.isPending ? 'Saving...' : 'Save'}
@@ -2364,6 +2394,8 @@ export default function PlayersPage() {
   const { toast } = useToast();
   const [selectedRecordDayId, setSelectedRecordDayId] = useState<string>('');
   const [viewingPhoto, setViewingPhoto] = useState<{ url: string; name: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('players');
+  const [editContestantId, setEditContestantId] = useState<string | null>(null);
 
   const { data: recordDays = [], isLoading: loadingDays } = useQuery<RecordDay[]>({
     queryKey: ['/api/record-days'],
@@ -2372,6 +2404,16 @@ export default function PlayersPage() {
   const { data: contestants = [] } = useQuery<Contestant[]>({
     queryKey: ['/api/contestants'],
   });
+
+  // Fetch all casting cards to show status in Players & Backups tab
+  const { data: allCastingCards = [] } = useQuery<CastingCardData[]>({
+    queryKey: ['/api/casting-cards'],
+  });
+
+  // Map of contestantId -> casting card for quick lookup
+  const castingCardsMap = useMemo(() => {
+    return new Map(allCastingCards.map(card => [card.contestantId, card]));
+  }, [allCastingCards]);
 
   const { data: rawAssignments = [], isLoading: loadingAssignments } = useQuery<any[]>({
     queryKey: ['/api/seat-assignments', selectedRecordDayId || undefined],
@@ -2729,7 +2771,54 @@ export default function PlayersPage() {
             )}
             
             {isPlayer && (
-              <div className="mt-3 flex items-center gap-2">
+              <div className="mt-3 flex items-center gap-2 flex-wrap">
+                {/* System-created casting card status */}
+                {(() => {
+                  const systemCard = c ? castingCardsMap.get(c.id) : null;
+                  if (systemCard) {
+                    return (
+                      <>
+                        <Badge 
+                          className={systemCard.isReady ? "bg-green-600 text-white" : "bg-amber-500 text-white"}
+                        >
+                          <CreditCard className="h-3 w-3 mr-1" />
+                          Card {systemCard.isReady ? 'Ready' : 'Draft'}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 gap-1 text-xs"
+                          onClick={() => {
+                            setEditContestantId(c.id);
+                            setActiveTab('casting');
+                          }}
+                          data-testid={`button-edit-card-${assignment.id}`}
+                        >
+                          <CreditCard className="h-3.5 w-3.5" />
+                          Edit Card
+                        </Button>
+                      </>
+                    );
+                  } else {
+                    return (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 gap-1 text-xs border-dashed"
+                        onClick={() => {
+                          setEditContestantId(c.id);
+                          setActiveTab('casting');
+                        }}
+                        data-testid={`button-create-card-${assignment.id}`}
+                      >
+                        <CreditCard className="h-3.5 w-3.5" />
+                        Create Card
+                      </Button>
+                    );
+                  }
+                })()}
+                
+                {/* Uploaded PowerPoint/PDF casting card */}
                 {assignment.castingCardUrl ? (
                   <>
                     <Button
@@ -2740,7 +2829,7 @@ export default function PlayersPage() {
                       data-testid={`button-view-casting-card-${assignment.id}`}
                     >
                       <FileText className="h-3.5 w-3.5" />
-                      View Casting Card
+                      View PDF
                     </Button>
                     <Button
                       size="sm"
@@ -2763,7 +2852,7 @@ export default function PlayersPage() {
                     data-testid={`button-upload-casting-card-${assignment.id}`}
                   >
                     <Upload className="h-3.5 w-3.5" />
-                    Upload Casting Card
+                    Upload PDF
                   </Button>
                 )}
               </div>
@@ -2786,7 +2875,7 @@ export default function PlayersPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <Tabs defaultValue="players" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold">Players</h1>
@@ -2975,7 +3064,7 @@ export default function PlayersPage() {
         </TabsContent>
 
         <TabsContent value="casting" className="mt-0">
-          <CastingCardsTab contestants={contestants} />
+          <CastingCardsTab contestants={contestants} initialContestantId={editContestantId} onClearInitial={() => setEditContestantId(null)} />
         </TabsContent>
       </Tabs>
     </div>

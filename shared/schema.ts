@@ -717,8 +717,14 @@ export const castingCards = pgTable("casting_cards", {
   companionRelationship: text("companion_relationship"), // Relationship to contestant
   companionPhotoUrl: text("companion_photo_url"), // Photo of companion
   
+  // Manual companions (JSON array of up to 4 companions)
+  manualCompanions: text("manual_companions"), // JSON string of ManualCompanion[]
+  
   // Producer assignment
   producerName: text("producer_name"),
+  
+  // Card status
+  isReady: boolean("is_ready").default(false), // Card marked as ready/complete
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
