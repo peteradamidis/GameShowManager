@@ -503,7 +503,8 @@ export default function Contestants() {
     const search = searchTerm.toLowerCase();
     displayedContestants = displayedContestants.filter(c => 
       c.name.toLowerCase().includes(search) ||
-      (c.attendingWith?.toLowerCase().includes(search) ?? false)
+      (c.attendingWith?.toLowerCase().includes(search) ?? false) ||
+      (c.phone?.toLowerCase().includes(search) ?? false)
     );
   }
 
