@@ -47,6 +47,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
 import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical, Briefcase, MapPin, ShieldAlert, Heart, StickyNote } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   HoverCard,
   HoverCardContent,
@@ -132,6 +133,7 @@ interface StandbyData {
   standbyGroupId?: string | null;
   standbyMovementNotes?: string | null;
   assignedToSeat?: string | null;
+  signedIn?: string | null;
   contestant: {
     id: string;
     name: string;
@@ -363,6 +365,18 @@ function SortableStandbyItem({
                 <p className="font-medium text-sm truncate">{standby.contestant.name}</p>
                 {isInGroup && isFirstInGroup && (
                   <span title="Group"><Users className="h-3 w-3 text-purple-500 flex-shrink-0" /></span>
+                )}
+                {standby.signedIn && isLocked && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-green-500 dark:bg-green-600 flex-shrink-0">
+                        <Check className="h-2.5 w-2.5 text-white" style={{ strokeWidth: 3 }} />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      <p>Signed in</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
               </div>
               <div className="flex items-center gap-1 mt-0.5">
