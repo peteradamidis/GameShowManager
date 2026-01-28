@@ -121,6 +121,14 @@ interface BlockTypeData {
 
 const PLANNING_STORAGE_KEY = 'rx-planning-data-v2';
 
+// Manual companion interface
+interface ManualCompanion {
+  id: string;
+  name: string;
+  relationship: string;
+  photoUrl: string | null;
+}
+
 // Casting Card interface
 interface CastingCardData {
   id?: string;
@@ -144,6 +152,9 @@ interface CastingCardData {
   companionRelationship?: string | null;
   companionPhotoUrl?: string | null;
   producerName?: string | null;
+  // Manual companions (up to 4)
+  manualCompanions?: ManualCompanion[] | null;
+  useManualCompanions?: boolean;
 }
 
 // Default bullet points for new casting cards
@@ -204,6 +215,71 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
     setUploadingPhotoFor(contestantId);
     photoUploadMutation.mutate({ contestantId, file });
   };
+
+  // Handle manual companion photo upload (converts to base64 for storage in card data)
+  const handleCompanionPhotoUpload = (companionId: string, file: File | null) => {
+    if (!file || !cardData) return;
+    setUploadingPhotoFor(companionId);
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      const companions = cardData.manualCompanions || [];
+      const updatedCompanions = companions.map(c => 
+        c.id === companionId ? { ...c, photoUrl: base64 } : c
+      );
+      updateField('manualCompanions', updatedCompanions);
+      setUploadingPhotoFor(null);
+      toast({ title: "Photo added", description: "Companion photo has been updated" });
+    };
+    reader.onerror = () => {
+      setUploadingPhotoFor(null);
+      toast({ title: "Upload failed", description: "Could not read the image file", variant: "destructive" });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Add a manual companion
+  const addManualCompanion = () => {
+    if (!cardData) return;
+    const companions = cardData.manualCompanions || [];
+    if (companions.length >= 4) {
+      toast({ title: "Maximum reached", description: "You can add up to 4 companions", variant: "destructive" });
+      return;
+    }
+    const newCompanion: ManualCompanion = {
+      id: `companion-${Date.now()}`,
+      name: 'Name',
+      relationship: 'Relationship',
+      photoUrl: null
+    };
+    updateField('manualCompanions', [...companions, newCompanion]);
+    updateField('useManualCompanions', true);
+  };
+
+  // Remove a manual companion
+  const removeManualCompanion = (companionId: string) => {
+    if (!cardData) return;
+    const companions = cardData.manualCompanions || [];
+    const updatedCompanions = companions.filter(c => c.id !== companionId);
+    updateField('manualCompanions', updatedCompanions);
+    if (updatedCompanions.length === 0) {
+      updateField('useManualCompanions', false);
+    }
+  };
+
+  // Update a manual companion field
+  const updateCompanionField = (companionId: string, field: keyof ManualCompanion, value: string) => {
+    if (!cardData) return;
+    const companions = cardData.manualCompanions || [];
+    const updatedCompanions = companions.map(c => 
+      c.id === companionId ? { ...c, [field]: value } : c
+    );
+    updateField('manualCompanions', updatedCompanions);
+  };
+
+  // Refs for manual companion photo inputs
+  const companionPhotoRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
 
   // Find all supporters (group members) for the selected contestant
   const supporters = useMemo(() => {
@@ -490,84 +566,99 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                   </div>
                 </div>
                 
-                {/* Attending With section - shows all supporters from group */}
-                {(supporters.length > 0 || selectedContestant.attendingWith) && (
-                  <div className="mt-6 text-center">
-                    <p className="text-sm font-semibold text-gray-600 mb-1">ATTENDING WITH ...</p>
-                    <ArrowDown className="w-5 h-5 text-blue-500 mx-auto mb-2" />
-                    <div className="space-y-3">
-                      {supporters.length > 0 ? (
-                        // Show all group members with their photos - clickable to upload
-                        supporters.map((supporter) => (
-                          <div key={supporter.id}>
+                {/* Attending With section - Manual companions control */}
+                <div className="mt-6 text-center">
+                  <p className="text-sm font-semibold text-gray-600 mb-1">ATTENDING WITH ...</p>
+                  <ArrowDown className="w-5 h-5 text-blue-500 mx-auto mb-2" />
+                  
+                  {/* Manual companions - up to 4 */}
+                  {(() => {
+                    const companions = cardData.manualCompanions || [];
+                    const count = companions.length;
+                    // Size based on count: 1=w-28, 2=w-24, 3=w-20, 4=w-16
+                    const sizeClass = count <= 1 ? 'w-28 h-28' : count === 2 ? 'w-24 h-24' : count === 3 ? 'w-20 h-20' : 'w-16 h-16';
+                    const textSize = count <= 2 ? 'text-sm' : 'text-xs';
+                    const fallbackSize = count <= 1 ? 'text-xl' : count === 2 ? 'text-lg' : 'text-base';
+                    
+                    return (
+                      <div className={count > 2 ? 'grid grid-cols-2 gap-2' : 'space-y-3'}>
+                        {companions.map((companion) => (
+                          <div key={companion.id} className="relative">
                             <input
                               type="file"
                               className="hidden"
                               accept="image/*"
-                              ref={(el) => { supporterPhotoInputRefs.current[supporter.id] = el; }}
+                              ref={(el) => { companionPhotoRefs.current[companion.id] = el; }}
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
-                                if (file) handlePhotoUpload(supporter.id, file);
+                                if (file) handleCompanionPhotoUpload(companion.id, file);
                                 e.target.value = '';
                               }}
                             />
                             <div 
-                              className="border-4 border-amber-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100 relative group cursor-pointer"
-                              onClick={() => supporterPhotoInputRefs.current[supporter.id]?.click()}
-                              data-testid={`upload-supporter-photo-${supporter.id}`}
+                              className={`border-4 border-amber-500 rounded-lg overflow-hidden ${sizeClass} mx-auto bg-gray-100 relative group cursor-pointer`}
+                              onClick={() => companionPhotoRefs.current[companion.id]?.click()}
                             >
                               <Avatar className="w-full h-full rounded-none">
-                                <AvatarImage src={supporter.photoUrl || undefined} className="object-cover" />
-                                <AvatarFallback className="text-xl rounded-none bg-gray-200">
-                                  {supporter.name.split(' ').map(n => n[0]).join('')}
+                                <AvatarImage src={companion.photoUrl || undefined} className="object-cover" />
+                                <AvatarFallback className={`${fallbackSize} rounded-none bg-gray-200`}>
+                                  {companion.name.split(' ').map(n => n[0]).join('') || '?'}
                                 </AvatarFallback>
                               </Avatar>
                               {/* Upload overlay */}
                               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                {uploadingPhotoFor === supporter.id ? (
+                                {uploadingPhotoFor === companion.id ? (
                                   <div className="text-white text-xs">Uploading...</div>
                                 ) : (
                                   <div className="text-center text-white">
-                                    <Upload className="w-5 h-5 mx-auto" />
+                                    <Upload className="w-4 h-4 mx-auto" />
                                     <span className="text-xs">Upload</span>
                                   </div>
                                 )}
                               </div>
                             </div>
-                            <p className="text-sm font-semibold mt-1">{supporter.name}</p>
+                            {/* Remove button */}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); removeManualCompanion(companion.id); }}
+                              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                              title="Remove companion"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                            {/* Editable name */}
+                            <div 
+                              contentEditable
+                              suppressContentEditableWarning
+                              className={`${textSize} font-semibold mt-1 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text`}
+                              onBlur={(e) => updateCompanionField(companion.id, 'name', e.currentTarget.textContent || 'Name')}
+                            >{companion.name}</div>
+                            {/* Editable relationship */}
+                            <div 
+                              contentEditable
+                              suppressContentEditableWarning
+                              className={`${textSize} text-gray-500 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text`}
+                              onBlur={(e) => updateCompanionField(companion.id, 'relationship', e.currentTarget.textContent || 'Relationship')}
+                            >({companion.relationship})</div>
                           </div>
-                        ))
-                      ) : (
-                        // Fallback to manual entry if no group members found
-                        <div>
-                          <div className="border-4 border-amber-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
-                            <Avatar className="w-full h-full rounded-none">
-                              <AvatarImage src={cardData.companionPhotoUrl || undefined} className="object-cover" />
-                              <AvatarFallback className="text-xl rounded-none bg-gray-200">
-                                {(cardData.companionName || selectedContestant.attendingWith || '?').split(' ').map(n => n[0]).join('')}
-                              </AvatarFallback>
-                            </Avatar>
-                          </div>
-                          <div 
-                            contentEditable
-                            suppressContentEditableWarning
-                            className="text-sm font-semibold mt-1 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
-                            onBlur={(e) => {
-                              const text = e.currentTarget.textContent || '';
-                              const match = text.match(/^(.+?)(?:\s*\((.+)\))?$/);
-                              if (match) {
-                                updateField('companionName', match[1].trim());
-                                if (match[2]) updateField('companionRelationship', match[2].trim());
-                              }
-                            }}
-                          >
-                            {cardData.companionName || selectedContestant.attendingWith || 'NAME'} ({cardData.companionRelationship || 'RELATIONSHIP'})
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                        ))}
+                      </div>
+                    );
+                  })()}
+                  
+                  {/* Add companion button */}
+                  {(cardData.manualCompanions?.length || 0) < 4 && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={addManualCompanion}
+                      className="mt-3 text-xs"
+                      data-testid="btn-add-companion"
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Add Partner ({(cardData.manualCompanions?.length || 0)}/4)
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {/* Right side - Details */}
@@ -847,74 +938,88 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                       </div>
                     </div>
                     
-                    {/* Attending With section - shows all supporters from group */}
-                    {(supporters.length > 0 || selectedContestant.attendingWith) && (
-                      <div className="mt-6 text-center" data-testid="preview-companion-section">
-                        <p className="text-sm font-semibold text-gray-600 mb-1">ATTENDING WITH ...</p>
-                        <ArrowDown className="w-5 h-5 text-blue-500 mx-auto mb-2" />
-                        <div className="space-y-3">
-                          {supporters.length > 0 ? (
-                            // Show all group members with their photos - clickable to upload
-                            supporters.map((supporter) => (
-                              <div key={supporter.id}>
+                    {/* Attending With section - Manual companions control */}
+                    <div className="mt-6 text-center" data-testid="preview-companion-section">
+                      <p className="text-sm font-semibold text-gray-600 mb-1">ATTENDING WITH ...</p>
+                      <ArrowDown className="w-5 h-5 text-blue-500 mx-auto mb-2" />
+                      
+                      {/* Manual companions - up to 4 */}
+                      {(() => {
+                        const companions = cardData.manualCompanions || [];
+                        const count = companions.length;
+                        // Size based on count: 1=w-28, 2=w-24, 3=w-20, 4=w-16
+                        const sizeClass = count <= 1 ? 'w-28 h-28' : count === 2 ? 'w-24 h-24' : count === 3 ? 'w-20 h-20' : 'w-16 h-16';
+                        const textSize = count <= 2 ? 'text-sm' : 'text-xs';
+                        const fallbackSize = count <= 1 ? 'text-xl' : count === 2 ? 'text-lg' : 'text-base';
+                        
+                        return (
+                          <div className={count > 2 ? 'grid grid-cols-2 gap-2' : 'space-y-3'}>
+                            {companions.map((companion) => (
+                              <div key={companion.id} className="relative">
                                 <div 
-                                  className="border-4 border-amber-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100 relative group cursor-pointer"
-                                  onClick={() => supporterPhotoInputRefs.current[supporter.id]?.click()}
-                                  data-testid={`upload-supporter-photo-preview-${supporter.id}`}
+                                  className={`border-4 border-amber-500 rounded-lg overflow-hidden ${sizeClass} mx-auto bg-gray-100 relative group cursor-pointer`}
+                                  onClick={() => companionPhotoRefs.current[companion.id]?.click()}
                                 >
                                   <Avatar className="w-full h-full rounded-none">
-                                    <AvatarImage src={supporter.photoUrl || undefined} className="object-cover" />
-                                    <AvatarFallback className="text-xl rounded-none bg-gray-200">
-                                      {supporter.name.split(' ').map(n => n[0]).join('')}
+                                    <AvatarImage src={companion.photoUrl || undefined} className="object-cover" />
+                                    <AvatarFallback className={`${fallbackSize} rounded-none bg-gray-200`}>
+                                      {companion.name.split(' ').map(n => n[0]).join('') || '?'}
                                     </AvatarFallback>
                                   </Avatar>
                                   {/* Upload overlay */}
                                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    {uploadingPhotoFor === supporter.id ? (
+                                    {uploadingPhotoFor === companion.id ? (
                                       <div className="text-white text-xs">Uploading...</div>
                                     ) : (
                                       <div className="text-center text-white">
-                                        <Upload className="w-5 h-5 mx-auto" />
+                                        <Upload className="w-4 h-4 mx-auto" />
                                         <span className="text-xs">Upload</span>
                                       </div>
                                     )}
                                   </div>
                                 </div>
-                                <p className="text-sm font-semibold mt-1">{supporter.name}</p>
+                                {/* Remove button */}
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); removeManualCompanion(companion.id); }}
+                                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 z-10"
+                                  title="Remove companion"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                                {/* Editable name */}
+                                <div 
+                                  contentEditable
+                                  suppressContentEditableWarning
+                                  className={`${textSize} font-semibold mt-1 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text`}
+                                  onBlur={(e) => updateCompanionField(companion.id, 'name', e.currentTarget.textContent || 'Name')}
+                                >{companion.name}</div>
+                                {/* Editable relationship */}
+                                <div 
+                                  contentEditable
+                                  suppressContentEditableWarning
+                                  className={`${textSize} text-gray-500 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text`}
+                                  onBlur={(e) => updateCompanionField(companion.id, 'relationship', e.currentTarget.textContent || 'Relationship')}
+                                >({companion.relationship})</div>
                               </div>
-                            ))
-                          ) : (
-                            // Fallback to manual entry if no group members found
-                            <div>
-                              <div className="border-4 border-amber-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
-                                <Avatar className="w-full h-full rounded-none">
-                                  <AvatarImage src={cardData.companionPhotoUrl || undefined} className="object-cover" />
-                                  <AvatarFallback className="text-xl rounded-none bg-gray-200">
-                                    {(cardData.companionName || selectedContestant.attendingWith || '?').split(' ').map(n => n[0]).join('')}
-                                  </AvatarFallback>
-                                </Avatar>
-                              </div>
-                              <div 
-                                contentEditable
-                                suppressContentEditableWarning
-                                className="text-sm font-semibold mt-1 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
-                                onBlur={(e) => {
-                                  const text = e.currentTarget.textContent || '';
-                                  const match = text.match(/^(.+?)(?:\s*\((.+)\))?$/);
-                                  if (match) {
-                                    updateField('companionName', match[1].trim());
-                                    if (match[2]) updateField('companionRelationship', match[2].trim());
-                                  }
-                                }}
-                                data-testid="edit-companion-name"
-                              >
-                                {cardData.companionName || selectedContestant.attendingWith || 'NAME'} ({cardData.companionRelationship || 'RELATIONSHIP'})
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
+                            ))}
+                          </div>
+                        );
+                      })()}
+                      
+                      {/* Add companion button */}
+                      {(cardData.manualCompanions?.length || 0) < 4 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={addManualCompanion}
+                          className="mt-3 text-xs"
+                          data-testid="btn-add-companion-preview"
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          Add Partner ({(cardData.manualCompanions?.length || 0)}/4)
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Right side - Details */}
