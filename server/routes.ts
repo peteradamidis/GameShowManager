@@ -10792,7 +10792,7 @@ Thank you.`;
 
       // Update standbyTicketSent timestamp
       await storage.updateStandbyAssignment(id, {
-        standbyTicketSent: new Date().toISOString(),
+        standbyTicketSent: new Date(),
       });
 
       res.json({
@@ -11026,7 +11026,7 @@ Thank you.`;
           );
 
           await storage.updateStandbyAssignment(standby.id, {
-            standbyTicketSent: new Date().toISOString(),
+            standbyTicketSent: new Date(),
           });
 
             successCount++;
