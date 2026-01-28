@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function AttendanceIssuesPage() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [recordDayFilter, setRecordDayFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<any>(null);
@@ -41,10 +42,11 @@ export default function AttendanceIssuesPage() {
 
   const filteredIssues = issues?.filter(issue => {
     const matchesType = typeFilter === "all" || issue.issueType === typeFilter;
+    const matchesRecordDay = recordDayFilter === "all" || issue.recordDayId === recordDayFilter;
     const contestant = contestantMap.get(issue.contestantId);
     const matchesSearch = searchQuery === "" || 
       (contestant && contestant.name?.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesType && matchesSearch;
+    return matchesType && matchesRecordDay && matchesSearch;
   }) || [];
 
   const sortedIssues = [...filteredIssues].sort((a, b) => 
@@ -77,6 +79,28 @@ export default function AttendanceIssuesPage() {
       toast({
         title: "Failed to move to reschedule",
         description: error?.message || "Could not move contestant to reschedule list.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const restoreToSeatMutation = useMutation({
+    mutationFn: async (issueId: string) => {
+      return apiRequest('POST', `/api/attendance-issues/${issueId}/restore`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/attendance-issues'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+      toast({
+        title: "Restored to Seat",
+        description: "Contestant has been returned to their original seat and counts updated.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to restore",
+        description: error?.message || "Could not restore contestant to seat. The seat might have been filled already.",
         variant: "destructive",
       });
     },
@@ -189,6 +213,21 @@ export default function AttendanceIssuesPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="w-48">
+              <Select value={recordDayFilter} onValueChange={setRecordDayFilter} data-testid="select-record-day-filter">
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by RX Day" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All RX Days</SelectItem>
+                  {recordDays?.map((rd) => (
+                    <SelectItem key={rd.id} value={rd.id}>
+                      {format(new Date(rd.date), 'd MMM yyyy')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Input
               placeholder="Search by contestant name..."
               value={searchQuery}
@@ -262,6 +301,40 @@ export default function AttendanceIssuesPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
+                          {!issue.movedToReschedule && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-green-600 border-green-600 hover:bg-green-50"
+                                  disabled={restoreToSeatMutation.isPending}
+                                  data-testid={`button-restore-seat-${issue.id}`}
+                                >
+                                  <CalendarPlus className="h-3 w-3 mr-1" />
+                                  Restore to Seat
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Restore to Original Seat?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will return <strong>{contestant?.name}</strong> to Block {issue.blockNumber}, Seat {issue.seatLabel} on {recordDay ? format(new Date(recordDay.date), 'd MMM') : 'the original day'}.
+                                    The no-show/early leaver record will be removed and their counter decremented.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => restoreToSeatMutation.mutate(issue.id)}
+                                    className="bg-green-600 hover:bg-green-700"
+                                  >
+                                    Restore
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
                           {issue.movedToReschedule ? (
                             <Badge variant="outline" className="text-green-600 border-green-600" data-testid={`badge-rescheduled-${issue.id}`}>
                               <Check className="h-3 w-3 mr-1" />
@@ -275,7 +348,7 @@ export default function AttendanceIssuesPage() {
                               disabled={moveToRescheduleMutation.isPending}
                               data-testid={`button-move-to-reschedule-${issue.id}`}
                             >
-                              <CalendarPlus className="h-3 w-3 mr-1" />
+                              <Clock className="h-3 w-3 mr-1" />
                               Move to Reschedule
                             </Button>
                           )}

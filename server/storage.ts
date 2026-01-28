@@ -360,6 +360,7 @@ export interface IStorage {
   getAttendanceIssuesByRecordDay(recordDayId: string): Promise<Array<AttendanceIssue & { contestant: Contestant }>>;
   deleteAttendanceIssue(id: string): Promise<void>;
   moveAttendanceIssueToReschedule(id: string, options?: { movedBy?: string; reason?: string }): Promise<{ attendanceIssue: AttendanceIssue; canceledAssignment: CanceledAssignment }>;
+  restoreAttendanceIssue(id: string): Promise<{ attendanceIssue: AttendanceIssue; seatAssignment: SeatAssignment }>;
   
   // Movement History
   logMovement(data: InsertMovementHistory): Promise<MovementHistory>;
@@ -2269,6 +2270,72 @@ export class DbStorage implements IStorage {
       }
       
       return { success: true, count: createdIssues.length, issues: createdIssues };
+    });
+  }
+
+  async restoreAttendanceIssue(id: string): Promise<{ attendanceIssue: AttendanceIssue; seatAssignment: SeatAssignment }> {
+    return await db.transaction(async (tx) => {
+      // 1. Get the attendance issue
+      const [issue] = await tx
+        .select()
+        .from(attendanceIssues)
+        .where(eq(attendanceIssues.id, id));
+
+      if (!issue) {
+        throw new Error("Attendance issue not found");
+      }
+
+      if (issue.movedToReschedule) {
+        throw new Error("Cannot restore an issue that has already been moved to reschedule");
+      }
+
+      // 2. Check if the seat is still available
+      const [existing] = await tx
+        .select()
+        .from(seatAssignments)
+        .where(
+          and(
+            eq(seatAssignments.recordDayId, issue.recordDayId),
+            eq(seatAssignments.blockNumber, issue.blockNumber),
+            eq(seatAssignments.seatLabel, issue.seatLabel)
+          )
+        );
+
+      if (existing) {
+        throw new Error(`Seat (Block ${issue.blockNumber}, Seat ${issue.seatLabel}) is already occupied`);
+      }
+
+      // 3. Create the seat assignment back
+      const [assignment] = await tx
+        .insert(seatAssignments)
+        .values({
+          contestantId: issue.contestantId,
+          recordDayId: issue.recordDayId,
+          blockNumber: issue.blockNumber,
+          seatLabel: issue.seatLabel,
+          status: 'confirmed'
+        })
+        .returning();
+
+      // 4. Decrement the appropriate counter on the contestant
+      if (issue.issueType === 'no_show') {
+        await tx
+          .update(contestants)
+          .set({ noShowCount: sql`GREATEST(COALESCE(${contestants.noShowCount}, 0) - 1, 0)` })
+          .where(eq(contestants.id, issue.contestantId));
+      } else if (issue.issueType === 'early_leaver') {
+        await tx
+          .update(contestants)
+          .set({ earlyLeaverCount: sql`GREATEST(COALESCE(${contestants.earlyLeaverCount}, 0) - 1, 0)` })
+          .where(eq(contestants.id, issue.contestantId));
+      }
+
+      // 5. Delete the attendance issue record
+      await tx
+        .delete(attendanceIssues)
+        .where(eq(attendanceIssues.id, id));
+
+      return { attendanceIssue: issue, seatAssignment: assignment };
     });
   }
 

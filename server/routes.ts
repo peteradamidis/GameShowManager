@@ -14080,6 +14080,18 @@ Thank you.`;
     }
   });
 
+  // Restore attendance issue back to seat
+  app.post("/api/attendance-issues/:id/restore", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const result = await storage.restoreAttendanceIssue(id);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error restoring attendance issue:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Bulk mark no-shows from Booking Master (atomic transaction)
   app.post("/api/attendance-issues/bulk-no-show", async (req, res) => {
     try {
