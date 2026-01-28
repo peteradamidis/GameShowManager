@@ -366,16 +366,23 @@ export function SeatCard({
           <User className="h-3 w-3" />
           <span className="text-[10px] font-mono">{seatLabel}</span>
           {seat.previouslyCanceled && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center gap-0.5 text-[8px] text-orange-600 dark:text-orange-400">
+            <HoverCard openDelay={100} closeDelay={100}>
+              <HoverCardTrigger asChild>
+                <div className="flex items-center gap-0.5 text-[8px] text-orange-600 dark:text-orange-400 cursor-help">
                   <Ban className="h-2 w-2" />
                   <span className="truncate max-w-[60px]">
                     {seat.previouslyCanceled.wasDeclined ? 'Declined' : 'Cancelled'}
                   </span>
                 </div>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs max-w-[200px] z-[100]">
+              </HoverCardTrigger>
+              <HoverCardContent 
+                side="top" 
+                align="center"
+                sideOffset={8}
+                className="text-xs max-w-[220px] z-[9999] p-3"
+                avoidCollisions={true}
+                collisionPadding={{ top: 50, bottom: 50, left: 20, right: 20 }}
+              >
                 <p className="font-medium">{seat.previouslyCanceled.contestantName}</p>
                 <p className="text-muted-foreground">
                   {seat.previouslyCanceled.wasDeclined ? 'Declined' : 'Cancelled'}
@@ -388,8 +395,8 @@ export function SeatCard({
                     {seat.previouslyCanceled.reason.replace(/^\[DECLINED\]\s*/i, '')}
                   </p>
                 )}
-              </TooltipContent>
-            </Tooltip>
+              </HoverCardContent>
+            </HoverCard>
           )}
         </div>
       ) : (
