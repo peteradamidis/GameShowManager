@@ -690,3 +690,45 @@ export const insertPostRecordTrackingSchema = createInsertSchema(postRecordTrack
 
 export type InsertPostRecordTracking = z.infer<typeof insertPostRecordTrackingSchema>;
 export type PostRecordTracking = typeof postRecordTracking.$inferSelect;
+
+// Casting Cards table - stores casting card data for contestants
+export const castingCards = pgTable("casting_cards", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contestantId: varchar("contestant_id").references(() => contestants.id).notNull().unique(),
+  
+  // Basic info overrides (can differ from contestant record)
+  occupation: text("occupation"),
+  sponsorCategory: text("sponsor_category"),
+  
+  // Card-specific fields
+  tagline: text("tagline"), // Short tagline in green
+  energyLevel: integer("energy_level"), // 1-5
+  characterTraits: text("character_traits"), // Top line character points
+  meetStory: text("meet_story"), // Meet story (if applicable)
+  keyStories: text("key_stories"), // 3 key stories/facts/interesting points
+  prizeGoalHigh: text("prize_goal_high"), // What they'd do with 100K
+  prizeGoalLow: text("prize_goal_low"), // What they'd do with $1000
+  howMuchToWin: text("how_much_to_win"), // How much they want to win
+  playStyle: text("play_style"), // How they might play / Risk taker?
+  previousShows: text("previous_shows"), // Other game shows / prize money won / previously on DOND
+  
+  // Companion info (Attending With section)
+  companionName: text("companion_name"), // Name of companion
+  companionRelationship: text("companion_relationship"), // Relationship to contestant
+  companionPhotoUrl: text("companion_photo_url"), // Photo of companion
+  
+  // Producer assignment
+  producerName: text("producer_name"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCastingCardSchema = createInsertSchema(castingCards).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCastingCard = z.infer<typeof insertCastingCardSchema>;
+export type CastingCard = typeof castingCards.$inferSelect;
