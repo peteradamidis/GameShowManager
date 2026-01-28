@@ -1041,10 +1041,10 @@ export default function StandbysPage() {
                             </div>
                           </TableCell>
                         )}
-                        {/* City */}
+                        {/* Location */}
                         <TableCell className="py-1">
                           <span className="text-xs text-muted-foreground truncate max-w-[100px] block">
-                            {standby.contestant.city || "-"}
+                            {standby.contestant.location || "-"}
                           </span>
                         </TableCell>
                         {/* Email */}
