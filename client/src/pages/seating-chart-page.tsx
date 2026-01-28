@@ -419,7 +419,9 @@ export default function SeatingChartPage() {
         const key = `${c.blockNumber}-${c.seatLabel}`;
         // Only keep the most recent cancellation per position
         const existing = map.get(key);
-        if (!existing || new Date(c.createdAt) > new Date(existing.createdAt)) {
+        const cDate = c.canceledAt || c.declinedAt;
+        const existingDate = existing?.canceledAt || existing?.declinedAt;
+        if (!existing || (cDate && existingDate && new Date(cDate) > new Date(existingDate))) {
           map.set(key, c);
         }
       });
@@ -858,7 +860,7 @@ export default function SeatingChartPage() {
                 ...seat,
                 previouslyCanceled: {
                   contestantName: canceled.contestant?.name || 'Unknown',
-                  canceledAt: canceled.createdAt,
+                  canceledAt: canceled.canceledAt || canceled.declinedAt,
                   reason: canceled.reason,
                   wasDeclined: canceled.wasDeclined,
                 },

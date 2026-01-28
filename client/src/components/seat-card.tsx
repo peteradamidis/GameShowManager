@@ -375,7 +375,7 @@ export function SeatCard({
                   </span>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs max-w-[200px]">
+              <TooltipContent side="top" className="text-xs max-w-[200px] z-[100]">
                 <p className="font-medium">{seat.previouslyCanceled.contestantName}</p>
                 <p className="text-muted-foreground">
                   {seat.previouslyCanceled.wasDeclined ? 'Declined' : 'Cancelled'}
