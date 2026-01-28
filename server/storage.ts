@@ -755,6 +755,8 @@ export class DbStorage implements IStorage {
       attendingWithOverride: workflowFields.attendingWithOverride,
       mobilityNotesOverride: workflowFields.mobilityNotesOverride,
       emailsCopiedAt: workflowFields.emailsCopiedAt,
+      called: workflowFields.called,
+      calledAt: workflowFields.calledAt,
     };
 
     const fieldsToUpdate = Object.fromEntries(
