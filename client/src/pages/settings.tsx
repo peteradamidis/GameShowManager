@@ -2648,6 +2648,8 @@ function DataMaintenanceSection() {
   const [declinedFixResult, setDeclinedFixResult] = useState<{ fixedCount: number; totalCanceled: number } | null>(null);
   const [isFixingReschedule, setIsFixingReschedule] = useState(false);
   const [rescheduleFixResult, setRescheduleFixResult] = useState<{ fixedCount: number; totalInReschedule: number } | null>(null);
+  const [isFixingStandbyReschedule, setIsFixingStandbyReschedule] = useState(false);
+  const [standbyRescheduleFixResult, setStandbyRescheduleFixResult] = useState<{ fixedCount: number; totalRescheduledStandbys: number } | null>(null);
   const { toast } = useToast();
 
   const handleFixStatus = async () => {
@@ -2734,6 +2736,35 @@ function DataMaintenanceSection() {
       });
     } finally {
       setIsFixingReschedule(false);
+    }
+  };
+
+  const handleFixStandbyReschedule = async () => {
+    setIsFixingStandbyReschedule(true);
+    setStandbyRescheduleFixResult(null);
+    try {
+      const response = await apiRequest("POST", "/api/standbys/fix-reschedule-entries");
+      const data = await response.json();
+      
+      if (response.ok) {
+        setStandbyRescheduleFixResult({ fixedCount: data.fixedCount, totalRescheduledStandbys: data.totalRescheduledStandbys });
+        toast({
+          title: "Standby reschedule fix completed",
+          description: data.fixedCount > 0 
+            ? `Created ${data.fixedCount} missing reschedule entries. They will now appear in the Reschedule tab.`
+            : "All rescheduled standbys already have entries in the Reschedule tab.",
+        });
+      } else {
+        throw new Error(data.error || "Fix failed");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Fix failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsFixingStandbyReschedule(false);
     }
   };
 
@@ -2872,6 +2903,46 @@ function DataMaintenanceSection() {
             ) : (
               <p className="text-amber-600 dark:text-amber-400 font-medium">
                 Fixed {rescheduleFixResult.fixedCount} contestant(s) out of {rescheduleFixResult.totalInReschedule} in reschedule list.
+              </p>
+            )}
+          </div>
+        )}
+
+        <Separator className="my-4" />
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Fix Standby Reschedule Entries</p>
+          <p className="text-sm text-muted-foreground">
+            Creates missing Reschedule tab entries for standbys that were previously marked as rescheduled 
+            but don't appear in the Reschedule tab.
+          </p>
+        </div>
+        
+        <Button 
+          onClick={handleFixStandbyReschedule} 
+          disabled={isFixingStandbyReschedule}
+          data-testid="button-fix-standby-reschedule"
+        >
+          {isFixingStandbyReschedule ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Fixing...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Fix Standby Reschedule Entries
+            </>
+          )}
+        </Button>
+        
+        {standbyRescheduleFixResult && (
+          <div className="p-3 rounded-lg bg-muted text-sm">
+            {standbyRescheduleFixResult.fixedCount === 0 ? (
+              <p className="text-green-600 dark:text-green-400">All rescheduled standbys already have entries in the Reschedule tab.</p>
+            ) : (
+              <p className="text-amber-600 dark:text-amber-400 font-medium">
+                Created {standbyRescheduleFixResult.fixedCount} missing entries out of {standbyRescheduleFixResult.totalRescheduledStandbys} rescheduled standbys.
               </p>
             )}
           </div>

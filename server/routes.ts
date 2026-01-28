@@ -2773,6 +2773,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fix standbys that were marked as rescheduled but don't have canceled assignment entries
+  app.post("/api/standbys/fix-reschedule-entries", requireAuth, async (req, res) => {
+    try {
+      // Get all standbys
+      const allStandbys = await storage.getStandbyAssignments();
+      
+      // Find standbys that are marked as rescheduled (either via status or movedToReschedule flag)
+      const rescheduledStandbys = allStandbys.filter(s => 
+        s.status === 'rescheduled' || s.movedToReschedule === true
+      );
+      
+      if (rescheduledStandbys.length === 0) {
+        return res.json({
+          message: "No rescheduled standbys found",
+          fixedCount: 0,
+          fixedRecords: [],
+        });
+      }
+      
+      // Get all canceled assignments to check which standbys already have entries
+      const allCanceled = await storage.getCanceledAssignments();
+      const existingContestantIds = new Set(allCanceled.map(c => c.contestantId));
+      
+      // Find standbys that don't have a canceled assignment entry
+      const standbysNeedingFix = rescheduledStandbys.filter(s => 
+        !existingContestantIds.has(s.contestantId)
+      );
+      
+      // Create canceled assignment entries for each
+      let fixedCount = 0;
+      const fixedRecords: Array<{ standbyId: string; contestantId: string; contestantName: string }> = [];
+      
+      for (const standby of standbysNeedingFix) {
+        await storage.createCanceledAssignment({
+          contestantId: standby.contestantId,
+          recordDayId: standby.recordDayId,
+          blockNumber: null,
+          seatLabel: standby.assignedToSeat || null,
+          reason: standby.notes || 'STANDBY - Moved to reschedule (retroactive fix)',
+          isFromStandby: true,
+          originalAttendanceDate: standby.recordDay?.date ? new Date(standby.recordDay.date) : new Date(),
+        });
+        
+        fixedCount++;
+        fixedRecords.push({
+          standbyId: standby.id,
+          contestantId: standby.contestantId,
+          contestantName: standby.contestant?.name || 'Unknown',
+        });
+      }
+      
+      console.log(`[Fix Standby Reschedule Entries] Created ${fixedCount} missing canceled assignment entries`);
+      
+      res.json({
+        message: `Created ${fixedCount} missing reschedule entries for standbys`,
+        fixedCount,
+        totalRescheduledStandbys: rescheduledStandbys.length,
+        alreadyHadEntries: rescheduledStandbys.length - standbysNeedingFix.length,
+        fixedRecords,
+      });
+    } catch (error: any) {
+      console.error("[Fix Standby Reschedule Entries] Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get all record days
   app.get("/api/record-days", async (req, res) => {
     try {
