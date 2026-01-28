@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert, Pencil, MessageSquare, UserCheck, Gift, Trash2 } from "lucide-react";
+import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert, Pencil, MessageSquare, UserCheck, Gift, Trash2, Check } from "lucide-react";
 import { getDistanceFromDocklands } from "@/components/contestant-table";
 
 // Helper function to check if a medical field has meaningful content (not NA/N/A/No/None/empty)
@@ -65,6 +65,7 @@ export interface SeatData {
   attendingWithOverride?: string; // Override for attending with when it changes after invitation
   mobilityNotesOverride?: string; // Override for mobility/medical notes when they change after invitation
   podiumStory?: boolean; // True if contestant has a podium story
+  signedIn?: string; // Timestamp when contestant signed in on RX day
   previouslyCanceled?: { // Info about who was previously in this seat (if canceled)
     contestantName: string;
     canceledAt?: string;
@@ -417,6 +418,18 @@ export function SeatCard({
               <Badge variant="outline" className="text-[7px] px-0.5 py-0 h-3 border-purple-400 bg-purple-100 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300" title="Originally booked as standby">
                 STBY
               </Badge>
+            )}
+            {seat.signedIn && isRXDayLocked && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div data-testid={`signed-in-icon-${seat.assignmentId}`} className="flex items-center justify-center w-3 h-3 rounded-full bg-green-500 dark:bg-green-600">
+                    <Check className="h-2.5 w-2.5 text-white" style={{ strokeWidth: 3 }} />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  <p>Signed in</p>
+                </TooltipContent>
+              </Tooltip>
             )}
             {seat.isGroupSeparated && (
               <Tooltip>

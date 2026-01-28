@@ -838,6 +838,7 @@ export default function SeatingChartPage() {
               mobilityNotesOverride: assignment.mobilityNotesOverride,
               podiumStory: assignment.podiumStory,
               availabilityStatus: assignment.availabilityStatus,
+              signedIn: assignment.signedIn,
             };
           }
         }
