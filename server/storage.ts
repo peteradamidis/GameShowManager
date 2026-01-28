@@ -25,6 +25,7 @@ import {
   noticeboardComments,
   noticeboardLikes,
   postRecordTracking,
+  castingCards,
   type Contestant,
   type InsertContestant,
   type Group,
@@ -70,6 +71,8 @@ import {
   type InsertNoticeboardLike,
   type PostRecordTracking,
   type InsertPostRecordTracking,
+  type CastingCard,
+  type InsertCastingCard,
 } from "@shared/schema";
 import { eq, and, sql, inArray, desc } from "drizzle-orm";
 
@@ -2899,6 +2902,60 @@ export class DbStorage implements IStorage {
   async deletePostRecordEntry(id: string): Promise<void> {
     const db = getDb();
     await db.delete(postRecordTracking).where(eq(postRecordTracking.id, id));
+  }
+
+  // Casting Cards methods
+  async getCastingCards(): Promise<CastingCard[]> {
+    const db = getDb();
+    return db.select().from(castingCards);
+  }
+
+  async getCastingCardByContestantId(contestantId: string): Promise<CastingCard | undefined> {
+    const db = getDb();
+    const [card] = await db
+      .select()
+      .from(castingCards)
+      .where(eq(castingCards.contestantId, contestantId));
+    return card;
+  }
+
+  async createCastingCard(data: InsertCastingCard): Promise<CastingCard> {
+    const db = getDb();
+    const [created] = await db
+      .insert(castingCards)
+      .values(data)
+      .returning();
+    return created;
+  }
+
+  async updateCastingCard(contestantId: string, data: Partial<InsertCastingCard>): Promise<CastingCard | undefined> {
+    const db = getDb();
+    const [updated] = await db
+      .update(castingCards)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(castingCards.contestantId, contestantId))
+      .returning();
+    return updated;
+  }
+
+  async upsertCastingCard(data: InsertCastingCard): Promise<CastingCard> {
+    const db = getDb();
+    const existing = await this.getCastingCardByContestantId(data.contestantId);
+    if (existing) {
+      const [updated] = await db
+        .update(castingCards)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(castingCards.contestantId, data.contestantId))
+        .returning();
+      return updated;
+    } else {
+      return this.createCastingCard(data);
+    }
+  }
+
+  async deleteCastingCard(contestantId: string): Promise<void> {
+    const db = getDb();
+    await db.delete(castingCards).where(eq(castingCards.contestantId, contestantId));
   }
 }
 

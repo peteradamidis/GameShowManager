@@ -14872,6 +14872,77 @@ Thank you.`;
     }
   });
 
+  // ============ CASTING CARDS API ============
+
+  // Get all casting cards
+  app.get("/api/casting-cards", requireAuth, async (req, res) => {
+    try {
+      const cards = await storage.getCastingCards();
+      res.json(cards);
+    } catch (error: any) {
+      console.error("Error fetching casting cards:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get casting card for a specific contestant
+  app.get("/api/casting-cards/:contestantId", requireAuth, async (req, res) => {
+    try {
+      const { contestantId } = req.params;
+      const card = await storage.getCastingCardByContestantId(contestantId);
+      if (!card) {
+        return res.status(404).json({ error: "Casting card not found" });
+      }
+      res.json(card);
+    } catch (error: any) {
+      console.error("Error fetching casting card:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create or update casting card (upsert)
+  app.post("/api/casting-cards", requireAuth, async (req, res) => {
+    try {
+      const data = req.body;
+      if (!data.contestantId) {
+        return res.status(400).json({ error: "contestantId is required" });
+      }
+      const card = await storage.upsertCastingCard(data);
+      res.json(card);
+    } catch (error: any) {
+      console.error("Error saving casting card:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update casting card
+  app.patch("/api/casting-cards/:contestantId", requireAuth, async (req, res) => {
+    try {
+      const { contestantId } = req.params;
+      const data = req.body;
+      const card = await storage.updateCastingCard(contestantId, data);
+      if (!card) {
+        return res.status(404).json({ error: "Casting card not found" });
+      }
+      res.json(card);
+    } catch (error: any) {
+      console.error("Error updating casting card:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete casting card
+  app.delete("/api/casting-cards/:contestantId", requireAuth, async (req, res) => {
+    try {
+      const { contestantId } = req.params;
+      await storage.deleteCastingCard(contestantId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting casting card:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize WebSocket server for real-time updates

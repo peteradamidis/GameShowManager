@@ -11,7 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -117,6 +119,591 @@ interface BlockTypeData {
 }
 
 const PLANNING_STORAGE_KEY = 'rx-planning-data-v2';
+
+// Casting Card interface
+interface CastingCardData {
+  id?: string;
+  contestantId: string;
+  occupation?: string | null;
+  sponsorCategory?: string | null;
+  tagline?: string | null;
+  energyLevel?: number | null;
+  characterTraits?: string | null;
+  meetStory?: string | null;
+  keyStories?: string | null;
+  prizeGoalHigh?: string | null;
+  prizeGoalLow?: string | null;
+  howMuchToWin?: string | null;
+  playStyle?: string | null;
+  previousShows?: string | null;
+  companionName?: string | null;
+  companionRelationship?: string | null;
+  companionPhotoUrl?: string | null;
+  producerName?: string | null;
+}
+
+// Casting Cards Tab Component
+function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [ratingFilter, setRatingFilter] = useState<string>('all');
+  const [genderFilter, setGenderFilter] = useState<string>('all');
+  const [selectedContestant, setSelectedContestant] = useState<Contestant | null>(null);
+  const [cardData, setCardData] = useState<CastingCardData | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  // Fetch existing casting card data when contestant is selected
+  const { data: existingCard, isLoading: loadingCard } = useQuery<CastingCardData>({
+    queryKey: ['/api/casting-cards', selectedContestant?.id],
+    enabled: !!selectedContestant,
+  });
+
+  // Initialize card data when contestant is selected or existing card loads
+  useEffect(() => {
+    if (selectedContestant) {
+      if (existingCard && existingCard.contestantId === selectedContestant.id) {
+        setCardData(existingCard);
+      } else if (!loadingCard) {
+        setCardData({
+          contestantId: selectedContestant.id,
+          occupation: '',
+          sponsorCategory: '',
+          tagline: '',
+          energyLevel: 3,
+          characterTraits: '',
+          meetStory: '',
+          keyStories: '',
+          prizeGoalHigh: '',
+          prizeGoalLow: '',
+          howMuchToWin: '',
+          playStyle: '',
+          previousShows: '',
+          companionName: selectedContestant.attendingWith || '',
+          companionRelationship: '',
+          companionPhotoUrl: '',
+          producerName: '',
+        });
+      }
+    }
+  }, [selectedContestant, existingCard, loadingCard]);
+
+  // Save casting card mutation
+  const saveMutation = useMutation({
+    mutationFn: async (data: CastingCardData) => {
+      const response = await apiRequest('POST', '/api/casting-cards', data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/casting-cards'] });
+      toast({ title: "Saved!", description: "Casting card has been saved" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Filter contestants
+  const filteredContestants = useMemo(() => {
+    return contestants.filter(c => {
+      const matchesSearch = searchTerm === '' || 
+        c.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRating = ratingFilter === 'all' || 
+        c.auditionRating?.toUpperCase() === ratingFilter.toUpperCase();
+      const matchesGender = genderFilter === 'all' || 
+        c.gender.toLowerCase() === genderFilter.toLowerCase();
+      return matchesSearch && matchesRating && matchesGender;
+    });
+  }, [contestants, searchTerm, ratingFilter, genderFilter]);
+
+  const handleSave = () => {
+    if (cardData) {
+      saveMutation.mutate(cardData);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!selectedContestant || !cardData) return;
+    
+    setIsGeneratingPdf(true);
+    try {
+      // Generate PDF using html2canvas and jspdf approach
+      const cardElement = document.getElementById('casting-card-preview');
+      if (!cardElement) {
+        throw new Error('Card preview not found');
+      }
+
+      // Dynamic import of html2canvas and jspdf
+      const html2canvas = (await import('html2canvas')).default;
+      const { jsPDF } = await import('jspdf');
+
+      const canvas = await html2canvas(cardElement, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = (pdfHeight - imgHeight * ratio) / 2;
+
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      pdf.save(`${selectedContestant.name.replace(/\s+/g, '_')}_CastingCard.pdf`);
+      
+      toast({ title: "PDF Downloaded!", description: "Casting card saved as PDF" });
+    } catch (error: any) {
+      console.error('PDF generation error:', error);
+      toast({ title: "PDF Error", description: error.message || "Failed to generate PDF", variant: "destructive" });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  const updateField = (field: keyof CastingCardData, value: any) => {
+    if (cardData) {
+      setCardData({ ...cardData, [field]: value });
+    }
+  };
+
+  return (
+    <div className="flex gap-6 h-[calc(100vh-200px)]">
+      {/* Left Panel - Contestant Search */}
+      <div className="w-80 flex-shrink-0 flex flex-col">
+        <Card className="flex-1 flex flex-col overflow-hidden">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Select Contestant</CardTitle>
+            <div className="space-y-2 mt-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                  data-testid="input-casting-search"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Select value={ratingFilter} onValueChange={setRatingFilter}>
+                  <SelectTrigger className="flex-1" data-testid="select-casting-rating">
+                    <SelectValue placeholder="Rating" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Ratings</SelectItem>
+                    <SelectItem value="A+">A+</SelectItem>
+                    <SelectItem value="A">A</SelectItem>
+                    <SelectItem value="B+">B+</SelectItem>
+                    <SelectItem value="B">B</SelectItem>
+                    <SelectItem value="C">C</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={genderFilter} onValueChange={setGenderFilter}>
+                  <SelectTrigger className="flex-1" data-testid="select-casting-gender">
+                    <SelectValue placeholder="Gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="male">Male</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-y-auto p-2">
+            <div className="space-y-1">
+              {filteredContestants.map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedContestant(c)}
+                  className={`w-full text-left p-2 rounded-md hover-elevate flex items-center gap-2 ${
+                    selectedContestant?.id === c.id ? 'bg-primary/10 border border-primary' : ''
+                  }`}
+                  data-testid={`btn-contestant-${c.id}`}
+                >
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={c.photoUrl || undefined} />
+                    <AvatarFallback className="text-xs">{c.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{c.name}</p>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <span>{c.age || '?'}</span>
+                      <span>•</span>
+                      <span>{c.gender === 'female' ? 'F' : 'M'}</span>
+                      {c.auditionRating && (
+                        <>
+                          <span>•</span>
+                          <Badge variant="outline" className="text-[10px] px-1 py-0">{c.auditionRating}</Badge>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              ))}
+              {filteredContestants.length === 0 && (
+                <p className="text-center text-muted-foreground text-sm py-4">No contestants found</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Right Panel - Card Editor & Preview */}
+      {selectedContestant && cardData ? (
+        <div className="flex-1 flex gap-4 overflow-hidden">
+          {/* Editor Form */}
+          <Card className="w-96 flex-shrink-0 overflow-y-auto">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Edit Card</CardTitle>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending} data-testid="btn-save-card">
+                    {saveMutation.isPending ? 'Saving...' : 'Save'}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={isGeneratingPdf} data-testid="btn-download-pdf">
+                    <Download className="h-4 w-4 mr-1" />
+                    {isGeneratingPdf ? 'Generating...' : 'PDF'}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Occupation</Label>
+                  <Input
+                    value={cardData.occupation || ''}
+                    onChange={(e) => updateField('occupation', e.target.value)}
+                    placeholder="e.g., Teacher"
+                    data-testid="input-occupation"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Sponsor Category</Label>
+                  <Input
+                    value={cardData.sponsorCategory || ''}
+                    onChange={(e) => updateField('sponsorCategory', e.target.value)}
+                    placeholder="e.g., X"
+                    data-testid="input-sponsor"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-xs">Short Tagline</Label>
+                <Input
+                  value={cardData.tagline || ''}
+                  onChange={(e) => updateField('tagline', e.target.value)}
+                  placeholder="One-liner about contestant"
+                  data-testid="input-tagline"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs">Energy Level (1-5)</Label>
+                <Select 
+                  value={String(cardData.energyLevel || 3)} 
+                  onValueChange={(v) => updateField('energyLevel', parseInt(v))}
+                >
+                  <SelectTrigger data-testid="select-energy">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <SelectItem key={n} value={String(n)}>{n} out of 5</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-xs">Character Traits</Label>
+                <Textarea
+                  value={cardData.characterTraits || ''}
+                  onChange={(e) => updateField('characterTraits', e.target.value)}
+                  placeholder="Top line character points..."
+                  rows={2}
+                  data-testid="input-traits"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs">Meet Story (if applicable)</Label>
+                <Textarea
+                  value={cardData.meetStory || ''}
+                  onChange={(e) => updateField('meetStory', e.target.value)}
+                  placeholder="How they met their companion..."
+                  rows={2}
+                  data-testid="input-meet-story"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs">3 Key Stories / Facts</Label>
+                <Textarea
+                  value={cardData.keyStories || ''}
+                  onChange={(e) => updateField('keyStories', e.target.value)}
+                  placeholder="Interesting points about contestant..."
+                  rows={3}
+                  data-testid="input-key-stories"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs">How Much They Want to Win</Label>
+                <Input
+                  value={cardData.howMuchToWin || ''}
+                  onChange={(e) => updateField('howMuchToWin', e.target.value)}
+                  placeholder="e.g., $50,000"
+                  data-testid="input-win-amount"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Prize Goal (High - 100K)</Label>
+                  <Textarea
+                    value={cardData.prizeGoalHigh || ''}
+                    onChange={(e) => updateField('prizeGoalHigh', e.target.value)}
+                    placeholder="What they'd do with $100K"
+                    rows={2}
+                    data-testid="input-goal-high"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Prize Goal (Low - $1000)</Label>
+                  <Textarea
+                    value={cardData.prizeGoalLow || ''}
+                    onChange={(e) => updateField('prizeGoalLow', e.target.value)}
+                    placeholder="What they'd do with $1000"
+                    rows={2}
+                    data-testid="input-goal-low"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-xs">Play Style / Risk Taker?</Label>
+                <Input
+                  value={cardData.playStyle || ''}
+                  onChange={(e) => updateField('playStyle', e.target.value)}
+                  placeholder="How they might play the game"
+                  data-testid="input-play-style"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs text-red-600">Previous Shows / Prize Won</Label>
+                <Textarea
+                  value={cardData.previousShows || ''}
+                  onChange={(e) => updateField('previousShows', e.target.value)}
+                  placeholder="Other game shows, previously on DOND..."
+                  rows={2}
+                  className="border-red-200"
+                  data-testid="input-previous-shows"
+                />
+              </div>
+
+              <div className="border-t pt-4">
+                <p className="text-sm font-medium mb-2">Attending With</p>
+                <div className="space-y-2">
+                  <div>
+                    <Label className="text-xs">Companion Name</Label>
+                    <Input
+                      value={cardData.companionName || ''}
+                      onChange={(e) => updateField('companionName', e.target.value)}
+                      placeholder="Name of companion"
+                      data-testid="input-companion-name"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Relationship</Label>
+                    <Input
+                      value={cardData.companionRelationship || ''}
+                      onChange={(e) => updateField('companionRelationship', e.target.value)}
+                      placeholder="e.g., Wife, Brother, Friend"
+                      data-testid="input-companion-rel"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <Label className="text-xs">Producer</Label>
+                <Input
+                  value={cardData.producerName || ''}
+                  onChange={(e) => updateField('producerName', e.target.value)}
+                  placeholder="Producer name"
+                  data-testid="input-producer"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Preview */}
+          <Card className="flex-1 overflow-y-auto">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Preview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div 
+                id="casting-card-preview"
+                className="bg-white p-6 rounded-lg border shadow-sm"
+                style={{ minHeight: '500px' }}
+              >
+                {/* Card Layout matching DOND design */}
+                <div className="flex gap-6">
+                  {/* Left side - Photos */}
+                  <div className="w-48 flex-shrink-0 space-y-4">
+                    {/* Main photo */}
+                    <div className="border-4 border-orange-500 rounded-lg overflow-hidden">
+                      <Avatar className="w-full h-48 rounded-none">
+                        <AvatarImage src={selectedContestant.photoUrl || undefined} className="object-cover" />
+                        <AvatarFallback className="text-4xl rounded-none">{selectedContestant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      </Avatar>
+                    </div>
+                    
+                    {/* Attending With section */}
+                    {(cardData.companionName || selectedContestant.attendingWith) && (
+                      <div className="text-center">
+                        <p className="text-sm font-semibold text-gray-600 mb-2">ATTENDING WITH ...</p>
+                        <div className="relative">
+                          <div className="absolute -left-2 top-6 transform -rotate-45">
+                            <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-28 h-28 mx-auto mt-4">
+                          <Avatar className="w-full h-full rounded-none">
+                            <AvatarImage src={cardData.companionPhotoUrl || undefined} className="object-cover" />
+                            <AvatarFallback className="text-xl rounded-none">
+                              {(cardData.companionName || selectedContestant.attendingWith || '?').split(' ').map(n => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                        <p className="text-sm font-semibold mt-2">
+                          {cardData.companionName || selectedContestant.attendingWith}
+                          {cardData.companionRelationship && ` (${cardData.companionRelationship})`}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right side - Details */}
+                  <div className="flex-1">
+                    {/* Header banner */}
+                    <div className="bg-green-700 text-white px-4 py-2 rounded-t-lg flex items-center justify-between mb-2">
+                      <h2 className="text-xl font-bold italic">{selectedContestant.name.toUpperCase()}</h2>
+                      <div className="text-xs text-right">
+                        <div className="font-bold">DEAL</div>
+                        <div className="text-red-500 font-bold">NO DEAL</div>
+                      </div>
+                    </div>
+
+                    {/* Age and details */}
+                    <div className="mb-3">
+                      <p className="text-xl font-bold">
+                        {selectedContestant.age || '?'} ({selectedContestant.suburb || selectedContestant.medicalMobilityNotes?.split(',')[0] || 'Location'})
+                      </p>
+                      <p className="text-lg font-semibold text-gray-700">{cardData.occupation || 'OCCUPATION'}</p>
+                      <p className="text-green-600 font-semibold">SPONSOR CATEGORY: {cardData.sponsorCategory || 'X'}</p>
+                    </div>
+
+                    {/* Tagline */}
+                    {cardData.tagline && (
+                      <h3 className="text-xl font-bold text-green-600 mb-3">{cardData.tagline}</h3>
+                    )}
+
+                    {/* Bullet points */}
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex items-start gap-2">
+                        <span className="text-gray-400">○</span>
+                        <span>Energy Level – <strong>{cardData.energyLevel || 3} out of 5</strong></span>
+                      </li>
+                      {cardData.characterTraits && (
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400">○</span>
+                          <span>{cardData.characterTraits}</span>
+                        </li>
+                      )}
+                      {cardData.meetStory && (
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400">○</span>
+                          <span>Meet story: {cardData.meetStory}</span>
+                        </li>
+                      )}
+                      {cardData.keyStories && (
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400">○</span>
+                          <span>{cardData.keyStories}</span>
+                        </li>
+                      )}
+                      {cardData.howMuchToWin && (
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400">○</span>
+                          <span>How much they want to win - <strong>{cardData.howMuchToWin}</strong></span>
+                        </li>
+                      )}
+                      {(cardData.prizeGoalHigh || cardData.prizeGoalLow) && (
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400">○</span>
+                          <span>
+                            What they'd do with prize money - <strong>{cardData.prizeGoalHigh || '100K'}</strong> 
+                            {cardData.prizeGoalLow && ` and if they win only ${cardData.prizeGoalLow}`}
+                          </span>
+                        </li>
+                      )}
+                      {cardData.playStyle && (
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400">○</span>
+                          <span>How they might play game / Risk taker? <strong>{cardData.playStyle}</strong></span>
+                        </li>
+                      )}
+                      {cardData.previousShows && (
+                        <li className="flex items-start gap-2">
+                          <span className="text-red-500">○</span>
+                          <span className="text-red-600 italic">{cardData.previousShows}</span>
+                        </li>
+                      )}
+                    </ul>
+
+                    {/* Producer */}
+                    <div className="mt-6 border-t pt-3">
+                      <div className="flex items-center gap-2">
+                        <span className="bg-gray-200 px-3 py-1 font-semibold text-sm">PRODUCER:</span>
+                        <span className="bg-yellow-400 px-3 py-1 font-bold text-sm">{cardData.producerName || 'INSERT NAME'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <Card className="flex-1 flex items-center justify-center">
+          <div className="text-center text-muted-foreground">
+            <CreditCard className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            <p>Select a contestant to create or edit their casting card</p>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
 
 function loadPlanningData(): RXPlanningData {
   try {
@@ -1757,6 +2344,10 @@ export default function PlayersPage() {
                 <Calendar className="h-4 w-4 mr-2" />
                 RX Planning
               </TabsTrigger>
+              <TabsTrigger value="casting" data-testid="tab-casting">
+                <CreditCard className="h-4 w-4 mr-2" />
+                Casting Cards
+              </TabsTrigger>
             </TabsList>
           </div>
         </div>
@@ -1926,6 +2517,10 @@ export default function PlayersPage() {
 
         <TabsContent value="planning" className="mt-0">
           <RXPlanningTab recordDays={recordDays} contestants={contestants} />
+        </TabsContent>
+
+        <TabsContent value="casting" className="mt-0">
+          <CastingCardsTab contestants={contestants} />
         </TabsContent>
       </Tabs>
     </div>
