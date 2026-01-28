@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import dondLogo from "@assets/dond-logo.png";
 import { Badge } from "@/components/ui/badge";
@@ -168,6 +168,42 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
   const [cardData, setCardData] = useState<CastingCardData | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
+  
+  // Refs for file inputs
+  const mainPhotoInputRef = useRef<HTMLInputElement>(null);
+  const companionPhotoInputRef = useRef<HTMLInputElement>(null);
+  const supporterPhotoInputRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
+
+  // Photo upload mutation
+  const photoUploadMutation = useMutation({
+    mutationFn: async ({ contestantId, file }: { contestantId: string; file: File }) => {
+      const formData = new FormData();
+      formData.append('photo', file);
+      const response = await fetch(`/api/contestants/${contestantId}/photo`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) throw new Error('Upload failed');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      toast({ title: "Photo uploaded", description: "The photo has been updated successfully" });
+      setUploadingPhotoFor(null);
+    },
+    onError: (error: any) => {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+      setUploadingPhotoFor(null);
+    },
+  });
+
+  // Handle photo file selection
+  const handlePhotoUpload = (contestantId: string, file: File | null) => {
+    if (!file) return;
+    setUploadingPhotoFor(contestantId);
+    photoUploadMutation.mutate({ contestantId, file });
+  };
 
   // Find all supporters (group members) for the selected contestant
   const supporters = useMemo(() => {
@@ -416,12 +452,42 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
               <div className="flex gap-6">
               {/* Left side - Photos */}
               <div className="w-52 flex-shrink-0">
-                {/* Main photo */}
-                <div className="border-4 border-amber-500 rounded-lg overflow-hidden bg-gray-100">
+                {/* Hidden file inputs */}
+                <input
+                  type="file"
+                  ref={mainPhotoInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file && selectedContestant) {
+                      handlePhotoUpload(selectedContestant.id, file);
+                    }
+                    e.target.value = '';
+                  }}
+                />
+                
+                {/* Main photo - clickable to upload */}
+                <div 
+                  className="border-4 border-amber-500 rounded-lg overflow-hidden bg-gray-100 relative group cursor-pointer"
+                  onClick={() => mainPhotoInputRef.current?.click()}
+                  data-testid="upload-main-photo"
+                >
                   <Avatar className="w-full h-56 rounded-none">
                     <AvatarImage src={selectedContestant.photoUrl || undefined} className="object-cover" />
                     <AvatarFallback className="text-5xl rounded-none bg-gray-200">{selectedContestant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                   </Avatar>
+                  {/* Upload overlay */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    {uploadingPhotoFor === selectedContestant.id ? (
+                      <div className="text-white text-sm">Uploading...</div>
+                    ) : (
+                      <div className="text-center text-white">
+                        <Upload className="w-8 h-8 mx-auto mb-1" />
+                        <span className="text-xs">Click to upload</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 {/* Attending With section - shows all supporters from group */}
@@ -431,16 +497,42 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                     <ArrowDown className="w-5 h-5 text-blue-500 mx-auto mb-2" />
                     <div className="space-y-3">
                       {supporters.length > 0 ? (
-                        // Show all group members with their photos
-                        supporters.map((supporter, idx) => (
+                        // Show all group members with their photos - clickable to upload
+                        supporters.map((supporter) => (
                           <div key={supporter.id}>
-                            <div className="border-4 border-amber-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              ref={(el) => { supporterPhotoInputRefs.current[supporter.id] = el; }}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handlePhotoUpload(supporter.id, file);
+                                e.target.value = '';
+                              }}
+                            />
+                            <div 
+                              className="border-4 border-amber-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100 relative group cursor-pointer"
+                              onClick={() => supporterPhotoInputRefs.current[supporter.id]?.click()}
+                              data-testid={`upload-supporter-photo-${supporter.id}`}
+                            >
                               <Avatar className="w-full h-full rounded-none">
                                 <AvatarImage src={supporter.photoUrl || undefined} className="object-cover" />
                                 <AvatarFallback className="text-xl rounded-none bg-gray-200">
                                   {supporter.name.split(' ').map(n => n[0]).join('')}
                                 </AvatarFallback>
                               </Avatar>
+                              {/* Upload overlay */}
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                {uploadingPhotoFor === supporter.id ? (
+                                  <div className="text-white text-xs">Uploading...</div>
+                                ) : (
+                                  <div className="text-center text-white">
+                                    <Upload className="w-5 h-5 mx-auto" />
+                                    <span className="text-xs">Upload</span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                             <p className="text-sm font-semibold mt-1">{supporter.name}</p>
                           </div>
@@ -732,12 +824,27 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                   <div className="flex gap-6">
                   {/* Left side - Photos */}
                   <div className="w-52 flex-shrink-0">
-                    {/* Main photo */}
-                    <div className="border-4 border-amber-500 rounded-lg overflow-hidden bg-gray-100">
+                    {/* Main photo - clickable to upload */}
+                    <div 
+                      className="border-4 border-amber-500 rounded-lg overflow-hidden bg-gray-100 relative group cursor-pointer"
+                      onClick={() => mainPhotoInputRef.current?.click()}
+                      data-testid="upload-main-photo-preview"
+                    >
                       <Avatar className="w-full h-56 rounded-none">
                         <AvatarImage src={selectedContestant.photoUrl || undefined} className="object-cover" />
                         <AvatarFallback className="text-5xl rounded-none bg-gray-200">{selectedContestant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                       </Avatar>
+                      {/* Upload overlay */}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        {uploadingPhotoFor === selectedContestant.id ? (
+                          <div className="text-white text-sm">Uploading...</div>
+                        ) : (
+                          <div className="text-center text-white">
+                            <Upload className="w-8 h-8 mx-auto mb-1" />
+                            <span className="text-xs">Click to upload</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
                     {/* Attending With section - shows all supporters from group */}
@@ -747,16 +854,31 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                         <ArrowDown className="w-5 h-5 text-blue-500 mx-auto mb-2" />
                         <div className="space-y-3">
                           {supporters.length > 0 ? (
-                            // Show all group members with their photos
+                            // Show all group members with their photos - clickable to upload
                             supporters.map((supporter) => (
                               <div key={supporter.id}>
-                                <div className="border-4 border-amber-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
+                                <div 
+                                  className="border-4 border-amber-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100 relative group cursor-pointer"
+                                  onClick={() => supporterPhotoInputRefs.current[supporter.id]?.click()}
+                                  data-testid={`upload-supporter-photo-preview-${supporter.id}`}
+                                >
                                   <Avatar className="w-full h-full rounded-none">
                                     <AvatarImage src={supporter.photoUrl || undefined} className="object-cover" />
                                     <AvatarFallback className="text-xl rounded-none bg-gray-200">
                                       {supporter.name.split(' ').map(n => n[0]).join('')}
                                     </AvatarFallback>
                                   </Avatar>
+                                  {/* Upload overlay */}
+                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    {uploadingPhotoFor === supporter.id ? (
+                                      <div className="text-white text-xs">Uploading...</div>
+                                    ) : (
+                                      <div className="text-center text-white">
+                                        <Upload className="w-5 h-5 mx-auto" />
+                                        <span className="text-xs">Upload</span>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                                 <p className="text-sm font-semibold mt-1">{supporter.name}</p>
                               </div>
