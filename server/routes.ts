@@ -5743,6 +5743,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           notes: 'Moved to empty seat',
           movedBy,
         });
+        
+        // Move any cancelled assignment from the target position to the source position
+        // This keeps the "declined/cancelled" indicator following the empty seat
+        const canceledAtTarget = await storage.getCanceledAssignmentByPosition(
+          sourceAssignment.recordDayId,
+          blockNumber,
+          seatLabel
+        );
+        if (canceledAtTarget) {
+          await storage.updateCanceledAssignmentPosition(
+            canceledAtTarget.id,
+            sourceAssignment.blockNumber,
+            sourceAssignment.seatLabel
+          );
+        }
       }
 
       res.json({
@@ -6043,6 +6058,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: 'Moved to empty seat (RX Day Mode)',
         movedBy,
       });
+      
+      // Move any cancelled assignment from the target position to the source position
+      // This keeps the "declined/cancelled" indicator following the empty seat
+      const canceledAtTarget = await storage.getCanceledAssignmentByPosition(
+        assignment.recordDayId,
+        blockNumber,
+        seatLabel
+      );
+      if (canceledAtTarget) {
+        await storage.updateCanceledAssignmentPosition(
+          canceledAtTarget.id,
+          originalBlockNumber,
+          originalSeatLabel
+        );
+      }
       
       res.json({ message: "Seat moved successfully with tracking", assignment: updated });
     } catch (error: any) {

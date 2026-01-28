@@ -246,7 +246,9 @@ export interface IStorage {
   
   // Canceled Assignments
   getCanceledAssignments(): Promise<Array<CanceledAssignment & { contestant: Contestant; recordDay: RecordDay }>>;
+  getCanceledAssignmentByPosition(recordDayId: string, blockNumber: number, seatLabel: string): Promise<CanceledAssignment | undefined>;
   createCanceledAssignment(data: Partial<InsertCanceledAssignment> & { contestantId: string; recordDayId: string }): Promise<CanceledAssignment>;
+  updateCanceledAssignmentPosition(id: string, blockNumber: number, seatLabel: string): Promise<void>;
   deleteCanceledAssignment(id: string): Promise<void>;
   
   // Availability Tokens
@@ -1199,6 +1201,28 @@ export class DbStorage implements IStorage {
       .innerJoin(recordDays, eq(canceledAssignments.recordDayId, recordDays.id));
 
     return results as any;
+  }
+
+  async getCanceledAssignmentByPosition(recordDayId: string, blockNumber: number, seatLabel: string): Promise<CanceledAssignment | undefined> {
+    const [result] = await db
+      .select()
+      .from(canceledAssignments)
+      .where(
+        and(
+          eq(canceledAssignments.recordDayId, recordDayId),
+          eq(canceledAssignments.blockNumber, blockNumber),
+          eq(canceledAssignments.seatLabel, seatLabel)
+        )
+      )
+      .limit(1);
+    return result;
+  }
+
+  async updateCanceledAssignmentPosition(id: string, blockNumber: number, seatLabel: string): Promise<void> {
+    await db
+      .update(canceledAssignments)
+      .set({ blockNumber, seatLabel })
+      .where(eq(canceledAssignments.id, id));
   }
 
   async updateCanceledAssignment(id: string, data: Partial<CanceledAssignment>): Promise<CanceledAssignment | undefined> {
