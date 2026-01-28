@@ -2306,13 +2306,27 @@ export class DbStorage implements IStorage {
           .set({ noShowCount: sql`COALESCE(${contestants.noShowCount}, 0) + 1` })
           .where(eq(contestants.id, issue.contestantId));
         
-        // Delete the seat assignment to free up the seat
-        await tx.delete(seatAssignments).where(
-          and(
-            eq(seatAssignments.contestantId, issue.contestantId),
-            eq(seatAssignments.recordDayId, issue.recordDayId)
-          )
-        );
+        // Get the seat assignment ID before deleting
+        const [seatAssignment] = await tx
+          .select({ id: seatAssignments.id })
+          .from(seatAssignments)
+          .where(
+            and(
+              eq(seatAssignments.contestantId, issue.contestantId),
+              eq(seatAssignments.recordDayId, issue.recordDayId)
+            )
+          );
+        
+        if (seatAssignment) {
+          // Nullify any post_record_tracking references to this seat assignment
+          await tx
+            .update(postRecordTracking)
+            .set({ seatAssignmentId: null })
+            .where(eq(postRecordTracking.seatAssignmentId, seatAssignment.id));
+          
+          // Delete the seat assignment to free up the seat
+          await tx.delete(seatAssignments).where(eq(seatAssignments.id, seatAssignment.id));
+        }
       }
       
       return { success: true, count: createdIssues.length, issues: createdIssues };
