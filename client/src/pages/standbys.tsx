@@ -459,12 +459,26 @@ export default function StandbysPage() {
 
   // Decline standby mutation (with reason and move to reschedule)
   const declineStandbyMutation = useMutation({
-    mutationFn: async ({ id, reason, movedBy }: { id: string; reason: string; movedBy: string }) => {
+    mutationFn: async ({ standby, reason, movedBy }: { standby: StandbyAssignment; reason: string; movedBy: string }) => {
       // Reason format: "DECLINED STANDBY INVITATION - [optional notes]"
       const fullReason = reason.trim() 
         ? `DECLINED STANDBY INVITATION - ${reason.trim()}` 
         : `DECLINED STANDBY INVITATION`;
-      return apiRequest('PATCH', `/api/standbys/${id}`, {
+      
+      // Create canceled assignment entry so it appears in reschedule tab
+      await apiRequest('POST', '/api/canceled-assignments', {
+        contestantId: standby.contestantId,
+        recordDayId: standby.recordDayId,
+        blockNumber: null,
+        seatLabel: standby.assignedToSeat || null,
+        reason: `[${movedBy}] ${fullReason}`,
+        movedBy: movedBy,
+        isFromStandby: true,
+        originalAttendanceDate: standby.recordDay?.date ? new Date(standby.recordDay.date) : new Date(),
+      });
+      
+      // Update the standby status
+      return apiRequest('PATCH', `/api/standbys/${standby.id}`, {
         status: 'rescheduled',
         movedToReschedule: true,
         movedToRescheduleAt: new Date().toISOString(),
@@ -473,6 +487,7 @@ export default function StandbysPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false });
       toast({ title: "Standby declined", description: "Moved to reschedule list" });
       setDeclineDialogOpen(false);
       setDeclineStandby(null);
@@ -644,7 +659,7 @@ export default function StandbysPage() {
         return;
       }
       declineStandbyMutation.mutate({
-        id: declineStandby.id,
+        standby: declineStandby,
         reason: declineReason,
         movedBy: declineMovedBy,
       });
