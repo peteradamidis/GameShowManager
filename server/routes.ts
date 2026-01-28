@@ -6536,9 +6536,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { reason, moveToReschedule = true, movedBy } = req.body;
       const declineReason = reason ? `[DECLINED] ${reason}` : "[DECLINED] No reason provided";
       
+      // Get the assignment details before canceling for movement logging
+      const assignment = await storage.getSeatAssignmentById(req.params.id);
+      
       if (moveToReschedule) {
         // Move to reschedule list (canceled assignments) with isDecline=true
         const canceled = await storage.cancelSeatAssignment(req.params.id, declineReason, movedBy, true);
+        
+        // Log the decline/reschedule to movement history
+        if (assignment) {
+          await storage.logMovement({
+            contestantId: assignment.contestantId,
+            movementType: 'added_to_reschedule',
+            recordDayId: assignment.recordDayId,
+            fromBlockNumber: assignment.blockNumber,
+            fromSeatLabel: assignment.seatLabel,
+            notes: `Contestant declined and moved to reschedule`,
+            movedBy: movedBy || 'system',
+          });
+        }
+        
         res.json({ moved: true, canceled });
       } else {
         // Just mark as declined but keep in place
@@ -9817,6 +9834,8 @@ Thank you.`;
 
       // If the standby is being rescheduled, create a canceled assignment
       if (filteredUpdateData.status === 'rescheduled' && filteredUpdateData.movedToReschedule) {
+        const movedBy = filteredUpdateData.notes?.match(/\[([^\]]+)\]/)?.[1] || 'SYSTEM';
+        
         // Create a canceled assignment record for the reschedule page
         // Use isFromStandby: false so it shows "Canceled" tag, not "Standby"
         await storage.createCanceledAssignment({
@@ -9825,11 +9844,20 @@ Thank you.`;
           blockNumber: null, // Standbys don't have a block number
           seatLabel: standby.assignedToSeat || null,
           reason: filteredUpdateData.notes || 'DECLINED STANDBY INVITATION',
-          movedBy: filteredUpdateData.notes?.match(/\[([^\]]+)\]/)?.[1] || 'SYSTEM', // Extract initials from notes
+          movedBy,
           isFromStandby: false, // Show "Canceled" tag, not "Standby"
           wasDeclined: true,
           declinedAt: new Date(),
           originalAttendanceDate: standby.recordDayId ? (await storage.getRecordDayById(standby.recordDayId))?.date : null,
+        });
+
+        // Log the standby decline/reschedule to movement history
+        await storage.logMovement({
+          contestantId: standby.contestantId,
+          movementType: 'added_to_reschedule',
+          recordDayId: standby.recordDayId,
+          notes: `Standby declined and moved to reschedule`,
+          movedBy,
         });
 
         // Update contestant status to 'rescheduled'
