@@ -10952,6 +10952,7 @@ Thank you.`;
           const ticketIntro = await storage.getSystemConfig('standby_ticket_intro') || 'Thank you for confirming your attendance as a <strong>STANDBY CONTESTANT</strong>! This is your official standby ticket for the Deal or No Deal recording.';
           const ticketImportant = await storage.getSystemConfig('standby_ticket_important') || 'IMPORTANT: As a standby contestant, you may be selected to join our studio recording should any positions become available on the day. Please read the attached PDF carefully.';
           const ticketFooter = await storage.getSystemConfig('standby_ticket_footer') || 'This is an automated email from the Deal or No Deal production team.';
+          const ticketReminderMessage = await storage.getSystemConfig('email_reminder_message') || 'Please ensure you bring your own water bottle.';
           
           const emailHtml = `<!DOCTYPE html>
 <html>
