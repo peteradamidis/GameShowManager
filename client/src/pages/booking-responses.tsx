@@ -41,7 +41,8 @@ import {
   Ticket,
   History,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Download
 } from "lucide-react";
 import type { RecordDay, Contestant, SeatAssignment, RebookingHistory, StandbyAssignment, CanceledAssignment } from "@shared/schema";
 
@@ -558,6 +559,60 @@ export default function BookingResponses() {
       });
     },
   });
+
+  // Export to Excel state
+  const [isExporting, setIsExporting] = useState(false);
+  
+  // Export filtered data to Excel
+  const handleExportExcel = async () => {
+    if (filteredData.length === 0) {
+      toast({
+        title: "No data to export",
+        description: "Apply filters to select data to export",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsExporting(true);
+    try {
+      const response = await fetch('/api/booking-tracker/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ assignmentIds: filteredData.map(item => item.id) }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Export failed');
+      }
+      
+      // Download the file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `booking-tracker-${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Export successful",
+        description: `Exported ${filteredData.length} records to Excel`
+      });
+    } catch (error: any) {
+      toast({
+        title: "Export failed",
+        description: error.message || "Could not export data",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // Bulk send booking email mutation
   const bulkSendBookingEmailMutation = useMutation({
@@ -1080,14 +1135,29 @@ export default function BookingResponses() {
             Track and manage contestant booking confirmations
           </p>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={() => refetchTracker()}
-          data-testid="button-refresh-tracker"
-        >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleExportExcel}
+            disabled={isExporting || filteredData.length === 0 || viewMode === 'standbys'}
+            data-testid="button-export-excel"
+          >
+            {isExporting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            Export Excel ({filteredData.length})
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => refetchTracker()}
+            data-testid="button-refresh-tracker"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Filters Row */}

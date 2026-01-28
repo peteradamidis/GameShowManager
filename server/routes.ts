@@ -11739,6 +11739,86 @@ Thank you.`;
     }
   });
 
+  // Export booking tracker data to Excel (filtered by assignment IDs)
+  app.post("/api/booking-tracker/export", requireAuth, async (req, res) => {
+    try {
+      const { assignmentIds } = req.body;
+      
+      if (!assignmentIds || !Array.isArray(assignmentIds) || assignmentIds.length === 0) {
+        return res.status(400).json({ error: "Assignment IDs array is required" });
+      }
+      
+      // Get all necessary data
+      const allAssignments = await storage.getAllSeatAssignments();
+      const contestants = await storage.getContestants();
+      const recordDays = await storage.getRecordDays();
+      
+      // Filter to only the requested assignments
+      const filteredAssignments = allAssignments.filter(a => assignmentIds.includes(a.id));
+      
+      // Helper to check if assignment is declined
+      const isDeclined = (a: SeatAssignment) => a.notes?.toUpperCase().includes('DECLINED');
+      
+      // Helper to get status label
+      const getStatus = (a: SeatAssignment) => {
+        if (isDeclined(a)) return 'Declined';
+        if (a.confirmedRsvp) return 'Confirmed';
+        if (a.bookingEmailSent) return 'Awaiting Reply';
+        return 'Not Sent';
+      };
+      
+      // Build export data
+      const exportData = filteredAssignments.map(a => {
+        const contestant = contestants.find(c => c.id === a.contestantId);
+        const recordDay = recordDays.find(rd => rd.id === a.recordDayId);
+        
+        // Format mobile number with comma suffix for mail merge
+        const mobileWithComma = contestant?.phone ? `${contestant.phone},` : '';
+        
+        return {
+          'Name': contestant?.name || '',
+          'Rating': a.rating || contestant?.auditionRating || '',
+          'Gender': contestant?.gender || '',
+          'Age': contestant?.age || '',
+          'Attending With': a.attendingWithOverride || contestant?.attendingWith || '',
+          'RX Date': recordDay?.date ? new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '',
+          'RX Number': recordDay?.rxNumber || '',
+          'Block': a.blockNumber || '',
+          'Seat': a.seatLabel || '',
+          'Email': contestant?.email || '',
+          'Mobile,': mobileWithComma,
+          'Email Sent': a.bookingEmailSent ? 'Yes' : 'No',
+          'Status': getStatus(a),
+          'Ticket Sent': a.ticketEmailSent ? 'Yes' : 'No',
+          'Notes': a.notes || '',
+        };
+      });
+      
+      // Sort by RX date, then block, then seat
+      exportData.sort((a: any, b: any) => {
+        const dateA = a['RX Date'] ? new Date(a['RX Date']).getTime() : 0;
+        const dateB = b['RX Date'] ? new Date(b['RX Date']).getTime() : 0;
+        if (dateA !== dateB) return dateA - dateB;
+        if (a['Block'] !== b['Block']) return Number(a['Block']) - Number(b['Block']);
+        return String(a['Seat'] || '').localeCompare(String(b['Seat'] || ''));
+      });
+      
+      // Create Excel workbook
+      const ws = xlsx.utils.json_to_sheet(exportData);
+      const wb = xlsx.utils.book_new();
+      xlsx.utils.book_append_sheet(wb, ws, 'Booking Tracker');
+      
+      // Send as downloadable file
+      const timestamp = new Date().toISOString().split('T')[0];
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="booking-tracker-${timestamp}.xlsx"`);
+      res.send(xlsx.write(wb, { bookType: 'xlsx', type: 'buffer' }));
+    } catch (error: any) {
+      console.error("Error exporting booking tracker data:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // ==========================================
   // Paperwork Tracking Endpoints
   // ==========================================
