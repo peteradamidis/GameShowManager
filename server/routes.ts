@@ -8517,10 +8517,7 @@ Thank you.`;
 </html>`;
             }
             
-            // Add "UPDATED" prefix for resends to avoid spam filters detecting duplicate emails
-            const isResend = !!assignment.bookingEmailSent;
-            const baseSubject = emailSubject || `Studio Invitation - ${recordDate}`;
-            const subject = isResend ? `UPDATED: ${baseSubject}` : baseSubject;
+            const subject = emailSubject || `Studio Invitation - ${recordDate}`;
             
             const emailConfig: EmailConfig = {
               senderName: sharedConfig.senderName,
