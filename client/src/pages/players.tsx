@@ -464,15 +464,21 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
               {/* Right side - Details */}
               <div className="flex-1">
                 {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 text-white px-4 py-3 rounded flex items-center justify-between mb-4">
+                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 px-4 py-2 rounded flex items-center justify-between mb-4">
                   <h2 
                     contentEditable
                     suppressContentEditableWarning
-                    className="text-2xl font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text drop-shadow-md"
-                    style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.3)' }}
+                    className="text-2xl font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text"
+                    style={{ 
+                      background: 'linear-gradient(180deg, #fef08a 0%, #fbbf24 50%, #d97706 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      textShadow: 'none',
+                      filter: 'drop-shadow(1px 1px 1px rgba(0,0,0,0.4))'
+                    }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
-                  <img src={dondLogo} alt="Deal or No Deal" className="h-10 object-contain" />
+                  <img src={dondLogo} alt="Deal or No Deal" className="h-12 object-contain" />
                 </div>
 
                 {/* Age and details - all editable */}
@@ -755,16 +761,22 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                   {/* Right side - Details */}
                   <div className="flex-1">
                     {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 text-white px-4 py-3 rounded flex items-center justify-between mb-4" data-testid="preview-header-banner">
+                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 px-4 py-2 rounded flex items-center justify-between mb-4" data-testid="preview-header-banner">
                       <h2 
                         contentEditable
                         suppressContentEditableWarning
-                        className="text-2xl font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text drop-shadow-md"
-                        style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.3)' }}
+                        className="text-2xl font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text"
+                        style={{ 
+                          background: 'linear-gradient(180deg, #fef08a 0%, #fbbf24 50%, #d97706 100%)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          textShadow: 'none',
+                          filter: 'drop-shadow(1px 1px 1px rgba(0,0,0,0.4))'
+                        }}
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
                       >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
-                      <img src={dondLogo} alt="Deal or No Deal" className="h-10 object-contain" />
+                      <img src={dondLogo} alt="Deal or No Deal" className="h-12 object-contain" />
                     </div>
 
                     {/* Age and details - all editable */}
