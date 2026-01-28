@@ -573,6 +573,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all users (admin only)
+  app.get("/api/users", requireAuth, async (req, res) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      // Don't send passwords to client
+      const safeUsers = allUsers.map(u => ({ id: u.id, username: u.username }));
+      res.json(safeUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  // Create new user (admin only)
+  app.post("/api/users", requireAuth, async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ error: "Username and password are required" });
+      }
+
+      if (username.length < 3) {
+        return res.status(400).json({ error: "Username must be at least 3 characters" });
+      }
+
+      if (password.length < 4) {
+        return res.status(400).json({ error: "Password must be at least 4 characters" });
+      }
+
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ error: "Username already exists" });
+      }
+
+      // Hash password
+      const hashedPassword = await hashPassword(password);
+      
+      const newUser = await storage.createUser({
+        username,
+        password: hashedPassword,
+      });
+
+      res.json({ id: newUser.id, username: newUser.username });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ error: "Failed to create user" });
+    }
+  });
+
+  // Delete user (admin only)
+  app.delete("/api/users/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Get all users to check count
+      const allUsers = await storage.getAllUsers();
+      
+      if (allUsers.length <= 1) {
+        return res.status(400).json({ error: "Cannot delete the last user" });
+      }
+
+      // Prevent deleting your own account
+      if (id === req.session.userId) {
+        return res.status(400).json({ error: "Cannot delete your own account" });
+      }
+
+      await storage.deleteUser(id);
+      res.json({ success: true, message: "User deleted" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ error: "Failed to delete user" });
+    }
+  });
+
   // ============ PROTECTED API ROUTES ============
   // All routes below this middleware require authentication
   app.use("/api", (req: Request, res: Response, next: NextFunction) => {

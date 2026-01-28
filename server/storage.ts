@@ -335,6 +335,7 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined>;
   updateUsername(id: string, newUsername: string): Promise<User | undefined>;
+  deleteUser(id: string): Promise<void>;
   
   // Rebooking History
   logRebooking(data: InsertRebookingHistory): Promise<RebookingHistory>;
@@ -2001,6 +2002,10 @@ export class DbStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updated;
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    await getDb().delete(users).where(eq(users.id, id));
   }
 
   // Rebooking History

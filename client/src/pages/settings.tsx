@@ -1095,6 +1095,10 @@ export default function Settings() {
             <RefreshCw className="w-4 h-4 mr-2" />
             Maintenance
           </TabsTrigger>
+          <TabsTrigger value="users" data-testid="tab-users">
+            <Lock className="w-4 h-4 mr-2" />
+            Users
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
@@ -2386,6 +2390,12 @@ export default function Settings() {
             <DataMaintenanceSection />
           </div>
         </TabsContent>
+
+        <TabsContent value="users">
+          <div className="grid gap-6 max-w-2xl">
+            <UsersSection />
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
@@ -2946,6 +2956,184 @@ function DataMaintenanceSection() {
               </p>
             )}
           </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+interface SafeUser {
+  id: string;
+  username: string;
+}
+
+function UsersSection() {
+  const { toast } = useToast();
+  const [newUsername, setNewUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  const { data: users, isLoading, refetch } = useQuery<SafeUser[]>({
+    queryKey: ['/api/users'],
+  });
+
+  const createUserMutation = useMutation({
+    mutationFn: async ({ username, password }: { username: string; password: string }) => {
+      return apiRequest('POST', '/api/users', { username, password });
+    },
+    onSuccess: () => {
+      toast({ title: "User created", description: "New user has been added" });
+      setNewUsername("");
+      setNewPassword("");
+      setIsCreating(false);
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to create user", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return apiRequest('DELETE', `/api/users/${userId}`);
+    },
+    onSuccess: () => {
+      toast({ title: "User deleted", description: "User has been removed" });
+      setDeleteConfirmId(null);
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to delete user", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleCreateUser = () => {
+    if (!newUsername.trim() || !newPassword.trim()) {
+      toast({ title: "Error", description: "Username and password are required", variant: "destructive" });
+      return;
+    }
+    createUserMutation.mutate({ username: newUsername.trim(), password: newPassword });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>User Management</CardTitle>
+        <CardDescription>
+          Manage user accounts for the system. All users have full access.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin" />
+          </div>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Current Users ({users?.length || 0})</Label>
+              <div className="border rounded-lg divide-y">
+                {users?.map((user) => (
+                  <div key={user.id} className="flex items-center justify-between p-3">
+                    <div className="flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-medium">{user.username}</span>
+                    </div>
+                    {deleteConfirmId === user.id ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Delete?</span>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => deleteUserMutation.mutate(user.id)}
+                          disabled={deleteUserMutation.isPending}
+                          data-testid={`confirm-delete-user-${user.id}`}
+                        >
+                          {deleteUserMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Yes"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setDeleteConfirmId(null)}
+                          data-testid={`cancel-delete-user-${user.id}`}
+                        >
+                          No
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => setDeleteConfirmId(user.id)}
+                        data-testid={`delete-user-${user.id}`}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
+            {isCreating ? (
+              <div className="space-y-4">
+                <Label className="text-sm font-medium">Add New User</Label>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="new-username" className="text-xs text-muted-foreground">Username</Label>
+                    <Input
+                      id="new-username"
+                      placeholder="Enter username"
+                      value={newUsername}
+                      onChange={(e) => setNewUsername(e.target.value)}
+                      data-testid="input-new-username"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="new-password" className="text-xs text-muted-foreground">Password</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      placeholder="Enter password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      data-testid="input-new-password"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleCreateUser}
+                      disabled={createUserMutation.isPending || !newUsername.trim() || !newPassword.trim()}
+                      data-testid="button-create-user"
+                    >
+                      {createUserMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : null}
+                      Create User
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsCreating(false);
+                        setNewUsername("");
+                        setNewPassword("");
+                      }}
+                      data-testid="button-cancel-create"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <Button onClick={() => setIsCreating(true)} data-testid="button-add-user">
+                Add New User
+              </Button>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
