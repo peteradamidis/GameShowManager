@@ -368,10 +368,13 @@ export function SeatCard({
           {seat.previouslyCanceled && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-0.5 text-[8px] text-orange-600 dark:text-orange-400 cursor-help">
+                <div className="flex items-center gap-0.5 text-[8px] text-orange-600 dark:text-orange-400">
                   <Ban className="h-2 w-2" />
-                  <span className="truncate max-w-[60px]">
+                  <span className="truncate max-w-[70px]">
                     {seat.previouslyCanceled.wasDeclined ? 'Declined' : 'Cancelled'}
+                    {seat.previouslyCanceled.canceledAt && (
+                      <> {new Date(seat.previouslyCanceled.canceledAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}</>
+                    )}
                   </span>
                 </div>
               </TooltipTrigger>
