@@ -373,326 +373,220 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
 
       {/* Right Panel - Card Editor & Preview */}
       {selectedContestant && cardData ? (
-        <div className="flex-1 flex gap-4 overflow-hidden">
-          {/* Editor Form */}
-          <Card className="w-96 flex-shrink-0 overflow-y-auto">
-            <CardHeader className="pb-3">
+        <div className="flex-1 overflow-hidden">
+          {/* Direct Edit Card - Click any text to edit like PowerPoint */}
+          <Card className="flex-1 overflow-y-auto">
+            <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Edit Card</CardTitle>
+                <CardTitle className="text-base">Click any text to edit directly</CardTitle>
                 <div className="flex gap-2">
                   <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending} data-testid="btn-save-card">
                     {saveMutation.isPending ? 'Saving...' : 'Save'}
                   </Button>
                   <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={isGeneratingPdf} data-testid="btn-download-pdf">
                     <Download className="h-4 w-4 mr-1" />
-                    {isGeneratingPdf ? 'Generating...' : 'PDF'}
+                    {isGeneratingPdf ? '...' : 'PDF'}
                   </Button>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs">Occupation</Label>
-                  <Input
-                    value={cardData.occupation || ''}
-                    onChange={(e) => updateField('occupation', e.target.value)}
-                    placeholder="e.g., Teacher"
-                    data-testid="input-occupation"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Sponsor Category</Label>
-                  <Input
-                    value={cardData.sponsorCategory || ''}
-                    onChange={(e) => updateField('sponsorCategory', e.target.value)}
-                    placeholder="e.g., X"
-                    data-testid="input-sponsor"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-xs">Short Tagline</Label>
-                <Input
-                  value={cardData.tagline || ''}
-                  onChange={(e) => updateField('tagline', e.target.value)}
-                  placeholder="One-liner about contestant"
-                  data-testid="input-tagline"
-                />
-              </div>
-
-              <div>
-                <Label className="text-xs">Energy Level (1-5)</Label>
-                <Select 
-                  value={String(cardData.energyLevel || 3)} 
-                  onValueChange={(v) => updateField('energyLevel', parseInt(v))}
-                >
-                  <SelectTrigger data-testid="select-energy">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5].map(n => (
-                      <SelectItem key={n} value={String(n)}>{n} out of 5</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-xs">Character Traits</Label>
-                <Textarea
-                  value={cardData.characterTraits || ''}
-                  onChange={(e) => updateField('characterTraits', e.target.value)}
-                  placeholder="Top line character points..."
-                  rows={2}
-                  data-testid="input-traits"
-                />
-              </div>
-
-              <div>
-                <Label className="text-xs">Meet Story (if applicable)</Label>
-                <Textarea
-                  value={cardData.meetStory || ''}
-                  onChange={(e) => updateField('meetStory', e.target.value)}
-                  placeholder="How they met their companion..."
-                  rows={2}
-                  data-testid="input-meet-story"
-                />
-              </div>
-
-              <div>
-                <Label className="text-xs">3 Key Stories / Facts</Label>
-                <Textarea
-                  value={cardData.keyStories || ''}
-                  onChange={(e) => updateField('keyStories', e.target.value)}
-                  placeholder="Interesting points about contestant..."
-                  rows={3}
-                  data-testid="input-key-stories"
-                />
-              </div>
-
-              <div>
-                <Label className="text-xs">How Much They Want to Win</Label>
-                <Input
-                  value={cardData.howMuchToWin || ''}
-                  onChange={(e) => updateField('howMuchToWin', e.target.value)}
-                  placeholder="e.g., $50,000"
-                  data-testid="input-win-amount"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs">Prize Goal (High - 100K)</Label>
-                  <Textarea
-                    value={cardData.prizeGoalHigh || ''}
-                    onChange={(e) => updateField('prizeGoalHigh', e.target.value)}
-                    placeholder="What they'd do with $100K"
-                    rows={2}
-                    data-testid="input-goal-high"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Prize Goal (Low - $1000)</Label>
-                  <Textarea
-                    value={cardData.prizeGoalLow || ''}
-                    onChange={(e) => updateField('prizeGoalLow', e.target.value)}
-                    placeholder="What they'd do with $1000"
-                    rows={2}
-                    data-testid="input-goal-low"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-xs">Play Style / Risk Taker?</Label>
-                <Input
-                  value={cardData.playStyle || ''}
-                  onChange={(e) => updateField('playStyle', e.target.value)}
-                  placeholder="How they might play the game"
-                  data-testid="input-play-style"
-                />
-              </div>
-
-              <div>
-                <Label className="text-xs text-red-600">Previous Shows / Prize Won</Label>
-                <Textarea
-                  value={cardData.previousShows || ''}
-                  onChange={(e) => updateField('previousShows', e.target.value)}
-                  placeholder="Other game shows, previously on DOND..."
-                  rows={2}
-                  className="border-red-200"
-                  data-testid="input-previous-shows"
-                />
-              </div>
-
-              <div className="border-t pt-4">
-                <p className="text-sm font-medium mb-2">Attending With</p>
-                <div className="space-y-2">
-                  <div>
-                    <Label className="text-xs">Companion Name</Label>
-                    <Input
-                      value={cardData.companionName || ''}
-                      onChange={(e) => updateField('companionName', e.target.value)}
-                      placeholder="Name of companion"
-                      data-testid="input-companion-name"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Relationship</Label>
-                    <Input
-                      value={cardData.companionRelationship || ''}
-                      onChange={(e) => updateField('companionRelationship', e.target.value)}
-                      placeholder="e.g., Wife, Brother, Friend"
-                      data-testid="input-companion-rel"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <Label className="text-xs">Producer</Label>
-                <Input
-                  value={cardData.producerName || ''}
-                  onChange={(e) => updateField('producerName', e.target.value)}
-                  placeholder="Producer name"
-                  data-testid="input-producer"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Preview */}
-          <Card className="flex-1 overflow-y-auto">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Preview</CardTitle>
-            </CardHeader>
             <CardContent>
               <div 
                 id="casting-card-preview"
-                className="bg-white p-6 rounded-lg border shadow-sm"
-                style={{ minHeight: '500px' }}
+                className="bg-white p-8 rounded-lg border shadow-sm"
+                style={{ minHeight: '700px', maxWidth: '900px' }}
               >
-                {/* Card Layout matching DOND design */}
-                <div className="flex gap-6">
+                {/* Card Layout matching DOND PowerPoint design */}
+                <div className="flex gap-8">
                   {/* Left side - Photos */}
-                  <div className="w-48 flex-shrink-0 space-y-4">
+                  <div className="w-52 flex-shrink-0">
                     {/* Main photo */}
-                    <div className="border-4 border-orange-500 rounded-lg overflow-hidden">
-                      <Avatar className="w-full h-48 rounded-none">
+                    <div className="border-4 border-orange-500 rounded-lg overflow-hidden bg-gray-100">
+                      <Avatar className="w-full h-56 rounded-none">
                         <AvatarImage src={selectedContestant.photoUrl || undefined} className="object-cover" />
-                        <AvatarFallback className="text-4xl rounded-none">{selectedContestant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                        <AvatarFallback className="text-5xl rounded-none bg-gray-200">{selectedContestant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                       </Avatar>
                     </div>
                     
                     {/* Attending With section */}
-                    {(cardData.companionName || selectedContestant.attendingWith) && (
-                      <div className="text-center" data-testid="preview-companion-section">
-                        <p className="text-sm font-semibold text-gray-600 mb-2">ATTENDING WITH ...</p>
-                        <div className="flex justify-center mb-2">
-                          <ArrowDown className="w-6 h-6 text-blue-500" />
-                        </div>
-                        <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-28 h-28 mx-auto">
-                          <Avatar className="w-full h-full rounded-none">
-                            <AvatarImage src={cardData.companionPhotoUrl || undefined} className="object-cover" />
-                            <AvatarFallback className="text-xl rounded-none">
-                              {(cardData.companionName || selectedContestant.attendingWith || '?').split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                        <p className="text-sm font-semibold mt-2" data-testid="preview-companion-name">
-                          {cardData.companionName || selectedContestant.attendingWith}
-                          {cardData.companionRelationship && ` (${cardData.companionRelationship})`}
-                        </p>
+                    <div className="mt-6 text-center" data-testid="preview-companion-section">
+                      <p className="text-sm font-semibold text-gray-600 mb-1">ATTENDING WITH ...</p>
+                      <ArrowDown className="w-5 h-5 text-blue-500 mx-auto mb-2" />
+                      <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-32 h-32 mx-auto bg-gray-100">
+                        <Avatar className="w-full h-full rounded-none">
+                          <AvatarImage src={cardData.companionPhotoUrl || undefined} className="object-cover" />
+                          <AvatarFallback className="text-2xl rounded-none bg-gray-200">
+                            {(cardData.companionName || selectedContestant.attendingWith || '?').split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
                       </div>
-                    )}
+                      <div 
+                        contentEditable
+                        suppressContentEditableWarning
+                        className="text-sm font-semibold mt-2 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                        onBlur={(e) => {
+                          const text = e.currentTarget.textContent || '';
+                          const match = text.match(/^(.+?)(?:\s*\((.+)\))?$/);
+                          if (match) {
+                            updateField('companionName', match[1].trim());
+                            if (match[2]) updateField('companionRelationship', match[2].trim());
+                          }
+                        }}
+                        data-testid="edit-companion-name"
+                      >
+                        {cardData.companionName || selectedContestant.attendingWith || 'NAME'} ({cardData.companionRelationship || 'RELATIONSHIP'})
+                      </div>
+                    </div>
                   </div>
 
                   {/* Right side - Details */}
                   <div className="flex-1">
-                    {/* Header banner */}
-                    <div className="bg-green-700 text-white px-4 py-2 rounded-t-lg flex items-center justify-between mb-2" data-testid="preview-header-banner">
-                      <h2 className="text-xl font-bold italic" data-testid="preview-contestant-name">{selectedContestant.name.toUpperCase()}</h2>
-                      <div className="text-xs text-right">
-                        <div className="font-bold">DEAL</div>
-                        <div className="text-red-500 font-bold">NO DEAL</div>
+                    {/* Header banner with DOND logo */}
+                    <div className="bg-green-700 text-white px-4 py-3 rounded flex items-center justify-between mb-4" data-testid="preview-header-banner">
+                      <h2 className="text-2xl font-bold italic tracking-wide" data-testid="preview-contestant-name">{selectedContestant.name.toUpperCase()}</h2>
+                      <div className="text-right border-l border-white/30 pl-3">
+                        <div className="text-xs font-bold leading-tight">DEAL</div>
+                        <div className="text-xs font-bold leading-tight">NO</div>
+                        <div className="text-red-400 text-xs font-bold leading-tight">DEAL</div>
                       </div>
                     </div>
 
                     {/* Age and details */}
-                    <div className="mb-3">
-                      <p className="text-xl font-bold" data-testid="preview-age-location">
-                        {selectedContestant.age || '?'} ({selectedContestant.suburb || selectedContestant.medicalMobilityNotes?.split(',')[0] || 'Location'})
+                    <div className="mb-4">
+                      <p className="text-2xl font-bold" data-testid="preview-age-location">
+                        {selectedContestant.age || 'AGE'} ({selectedContestant.suburb || 'STATE'})
                       </p>
-                      <p className="text-lg font-semibold text-gray-700" data-testid="preview-occupation">{cardData.occupation || 'OCCUPATION'}</p>
-                      <p className="text-green-600 font-semibold" data-testid="preview-sponsor">SPONSOR CATEGORY: {cardData.sponsorCategory || 'X'}</p>
+                      <div
+                        contentEditable
+                        suppressContentEditableWarning
+                        className="text-xl font-bold text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                        onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
+                        data-testid="edit-occupation"
+                      >
+                        {cardData.occupation || 'OCCUPATION'}
+                      </div>
+                      <p className="text-green-600 font-semibold">
+                        SPONSOR CATEGORY: <span
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                          onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
+                          data-testid="edit-sponsor"
+                        >{cardData.sponsorCategory || 'X'}</span>
+                      </p>
                     </div>
 
                     {/* Tagline */}
-                    {cardData.tagline && (
-                      <h3 className="text-xl font-bold text-green-600 mb-3" data-testid="preview-tagline">{cardData.tagline}</h3>
-                    )}
+                    <h3 
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="text-2xl font-bold text-green-600 mb-4 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                      onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
+                      data-testid="edit-tagline"
+                    >
+                      {cardData.tagline || 'SHORT TAGLINE'}
+                    </h3>
 
-                    {/* Bullet points */}
-                    <ul className="space-y-2 text-sm" data-testid="preview-details-list">
+                    {/* Bullet points - all editable */}
+                    <ul className="space-y-3 text-sm" data-testid="preview-details-list">
                       <li className="flex items-start gap-2">
-                        <Circle className="w-3 h-3 mt-1 text-gray-400 flex-shrink-0" />
-                        <span data-testid="preview-energy">Energy Level – <strong>{cardData.energyLevel || 3} out of 5</strong></span>
+                        <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
+                        <span>Energy Level – <strong
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                          onBlur={(e) => updateField('energyLevel', parseInt(e.currentTarget.textContent || '3') || 3)}
+                          data-testid="edit-energy"
+                        >{cardData.energyLevel || 3}</strong> out of 5 – this helps us when booking players for later in the day</span>
                       </li>
-                      {cardData.characterTraits && (
-                        <li className="flex items-start gap-2">
-                          <Circle className="w-3 h-3 mt-1 text-gray-400 flex-shrink-0" />
-                          <span data-testid="preview-traits">{cardData.characterTraits}</span>
-                        </li>
-                      )}
-                      {cardData.meetStory && (
-                        <li className="flex items-start gap-2">
-                          <Circle className="w-3 h-3 mt-1 text-gray-400 flex-shrink-0" />
-                          <span data-testid="preview-meet-story">Meet story: {cardData.meetStory}</span>
-                        </li>
-                      )}
-                      {cardData.keyStories && (
-                        <li className="flex items-start gap-2">
-                          <Circle className="w-3 h-3 mt-1 text-gray-400 flex-shrink-0" />
-                          <span data-testid="preview-stories">{cardData.keyStories}</span>
-                        </li>
-                      )}
-                      {cardData.howMuchToWin && (
-                        <li className="flex items-start gap-2">
-                          <Circle className="w-3 h-3 mt-1 text-gray-400 flex-shrink-0" />
-                          <span data-testid="preview-win-amount">How much they want to win - <strong>{cardData.howMuchToWin}</strong></span>
-                        </li>
-                      )}
-                      {(cardData.prizeGoalHigh || cardData.prizeGoalLow) && (
-                        <li className="flex items-start gap-2">
-                          <Circle className="w-3 h-3 mt-1 text-gray-400 flex-shrink-0" />
-                          <span data-testid="preview-prize-goals">
-                            What they'd do with prize money - <strong>{cardData.prizeGoalHigh || '100K'}</strong> 
-                            {cardData.prizeGoalLow && ` and if they win only ${cardData.prizeGoalLow}`}
-                          </span>
-                        </li>
-                      )}
-                      {cardData.playStyle && (
-                        <li className="flex items-start gap-2">
-                          <Circle className="w-3 h-3 mt-1 text-gray-400 flex-shrink-0" />
-                          <span data-testid="preview-play-style">How they might play game / Risk taker? <strong>{cardData.playStyle}</strong></span>
-                        </li>
-                      )}
-                      {cardData.previousShows && (
-                        <li className="flex items-start gap-2">
-                          <Circle className="w-3 h-3 mt-1 text-red-500 flex-shrink-0" />
-                          <span className="text-red-600 italic" data-testid="preview-previous-shows">{cardData.previousShows}</span>
-                        </li>
-                      )}
+                      <li className="flex items-start gap-2">
+                        <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
+                        <span
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
+                          onBlur={(e) => updateField('characterTraits', e.currentTarget.textContent || '')}
+                          data-testid="edit-traits"
+                        >{cardData.characterTraits || 'Top line character points – we don\'t need to know if they are "bubbly/energetic/likable" as it doesn\'t really help. But if they have traits like – they just don\'t stop talking / they argue with their podium partner as they\'re bossy etc / infectious or funny laugh. That is stuff we can work with in an episode.'}</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
+                        <span
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
+                          onBlur={(e) => updateField('meetStory', e.currentTarget.textContent || '')}
+                          data-testid="edit-meet-story"
+                        >{cardData.meetStory || 'Meet story (if applicable)'}</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
+                        <span
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
+                          onBlur={(e) => updateField('keyStories', e.currentTarget.textContent || '')}
+                          data-testid="edit-stories"
+                        >{cardData.keyStories || '3 key stories/facts/interesting points'}</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
+                        <span>How much they want to win - <span
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                          onBlur={(e) => updateField('howMuchToWin', e.currentTarget.textContent || '')}
+                          data-testid="edit-win-amount"
+                        >{cardData.howMuchToWin || '$XX,XXX'}</span></span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
+                        <span>What they'd do with prize money (high and low) - <strong
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                          onBlur={(e) => updateField('prizeGoalHigh', e.currentTarget.textContent || '')}
+                          data-testid="edit-goal-high"
+                        >{cardData.prizeGoalHigh || '100K'}</strong> and if they win only <strong
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                          onBlur={(e) => updateField('prizeGoalLow', e.currentTarget.textContent || '')}
+                          data-testid="edit-goal-low"
+                        >{cardData.prizeGoalLow || '$1000'}</strong></span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
+                        <span>How they <u>might</u> play game / Risk taker? <span
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                          onBlur={(e) => updateField('playStyle', e.currentTarget.textContent || '')}
+                          data-testid="edit-play-style"
+                        >{cardData.playStyle || ''}</span></span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Circle className="w-3 h-3 mt-1.5 text-red-500 flex-shrink-0" />
+                        <span 
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="text-red-600 italic outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
+                          onBlur={(e) => updateField('previousShows', e.currentTarget.textContent || '')}
+                          data-testid="edit-previous-shows"
+                        >{cardData.previousShows || 'Other game shows / prize money won / previously on DOND'}</span>
+                      </li>
                     </ul>
 
-                    {/* Producer */}
-                    <div className="mt-6 border-t pt-3">
-                      <div className="flex items-center gap-2">
-                        <span className="bg-gray-200 px-3 py-1 font-semibold text-sm">PRODUCER:</span>
-                        <span className="bg-yellow-400 px-3 py-1 font-bold text-sm">{cardData.producerName || 'INSERT NAME'}</span>
-                      </div>
+                    {/* Producer - matching PowerPoint style */}
+                    <div className="mt-6 flex items-center border border-gray-300">
+                      <span className="bg-gray-200 px-4 py-2 font-semibold text-sm border-r border-gray-300">PRODUCER:</span>
+                      <span 
+                        contentEditable
+                        suppressContentEditableWarning
+                        className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text flex-1"
+                        onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
+                        data-testid="edit-producer"
+                      >{cardData.producerName || 'INSERT NAME'}</span>
                     </div>
                   </div>
                 </div>
