@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -98,6 +98,7 @@ interface PlannedContestant {
   email: string | null;
   photoUrl: string | null;
   attendingWith: string | null;
+  isCustom?: boolean; // For manually entered names not in the contestant list
 }
 
 interface RXPlanningData {
@@ -160,6 +161,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
   const [bookingDayId, setBookingDayId] = useState<string>('');
   const [selectedBlock, setSelectedBlock] = useState<string>('');
   const [selectedSeat, setSelectedSeat] = useState<string>('');
+  const [customNameInputs, setCustomNameInputs] = useState<{ [blockKey: string]: string }>({});
 
   // Fetch block types from API - refetch when tab is shown to sync with seating chart changes
   const { data: blockTypes = [] } = useQuery<BlockTypeData[]>({
@@ -477,6 +479,39 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
         updated[removeDayId].blocks[blockNumber] = 
           updated[removeDayId].blocks[blockNumber].filter(c => c.id !== contestantId);
       }
+      savePlanningData(updated);
+      return updated;
+    });
+  };
+
+  // Add custom name to a block (for names not in contestant list)
+  const addCustomToBlock = (blockNumber: string, name: string, dayId?: string) => {
+    const addDayId = dayId || selectedDayId;
+    if (!addDayId || !name.trim()) return;
+    
+    const customContestant: PlannedContestant = {
+      id: `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: name.trim(),
+      gender: '',
+      age: null,
+      rating: null,
+      location: null,
+      phone: null,
+      email: null,
+      photoUrl: null,
+      attendingWith: null,
+      isCustom: true,
+    };
+    
+    setPlanningData(prev => {
+      const updated = { ...prev };
+      if (!updated[addDayId]) {
+        updated[addDayId] = { blocks: {} };
+      }
+      if (!updated[addDayId].blocks[blockNumber]) {
+        updated[addDayId].blocks[blockNumber] = [];
+      }
+      updated[addDayId].blocks[blockNumber].push(customContestant);
       savePlanningData(updated);
       return updated;
     });
@@ -881,44 +916,84 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                         </div>
                         {/* Only show drop zone for PB blocks or unassigned blocks */}
                         {!isNPB && (
-                          <div className="flex gap-3 flex-wrap min-h-[50px] p-2 mt-2 rounded-lg border-2 border-dashed border-muted bg-muted/20">
-                            {blockContestants.length === 0 ? (
-                              <span className="text-xs text-muted-foreground self-center">Drop players here</span>
-                            ) : (
-                              blockContestants.map(c => (
-                                <div
-                                  key={c.id}
-                                  draggable
-                                  onDragStart={() => handleDragStart(c, { type: 'block', block: blockNum, dayId: selectedDayId })}
-                                  onDragEnd={handleDragEnd}
-                                  onClick={() => { const full = findContestant(c.id); if (full) openBookingDialog(full, selectedDayId); }}
-                                  className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-grab group ${isPB ? 'bg-blue-500/10 border border-blue-500/30' : 'bg-green-500/10 border border-green-500/30'}`}
-                                  data-testid={`planned-contestant-${blockNum}-${c.id}`}
-                                >
-                                  <Avatar className="h-12 w-12 rounded-lg flex-shrink-0">
-                                    <AvatarImage src={c.photoUrl || undefined} className="object-cover" />
-                                    <AvatarFallback className="text-sm rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 text-white">
-                                      {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="text-sm min-w-0">
-                                    <span className="font-medium block truncate">{c.name}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                      {c.gender === 'Female' ? 'F' : 'M'}{c.age ? ` • ${c.age}y` : ''}
-                                    </span>
-                                  </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 opacity-0 group-hover:opacity-100 flex-shrink-0"
-                                    onClick={(e) => { e.stopPropagation(); removeFromBlock(blockNum, c.id); }}
-                                    data-testid={`remove-contestant-${blockNum}-${c.id}`}
+                          <div className="flex flex-col gap-2 min-h-[50px] p-2 mt-2 rounded-lg border-2 border-dashed border-muted bg-muted/20">
+                            <div className="flex gap-3 flex-wrap">
+                              {blockContestants.length === 0 ? (
+                                <span className="text-xs text-muted-foreground self-center">Drop players here or type a name below</span>
+                              ) : (
+                                blockContestants.map(c => (
+                                  <div
+                                    key={c.id}
+                                    draggable={!c.isCustom}
+                                    onDragStart={() => !c.isCustom && handleDragStart(c, { type: 'block', block: blockNum, dayId: selectedDayId })}
+                                    onDragEnd={handleDragEnd}
+                                    onClick={() => { if (!c.isCustom) { const full = findContestant(c.id); if (full) openBookingDialog(full, selectedDayId); } }}
+                                    className={`flex items-center gap-3 px-3 py-2 rounded-lg group ${c.isCustom ? 'bg-purple-500/10 border border-purple-500/30 cursor-default' : `cursor-grab ${isPB ? 'bg-blue-500/10 border border-blue-500/30' : 'bg-green-500/10 border border-green-500/30'}`}`}
+                                    data-testid={`planned-contestant-${blockNum}-${c.id}`}
                                   >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              ))
-                            )}
+                                    <Avatar className="h-12 w-12 rounded-lg flex-shrink-0">
+                                      <AvatarImage src={c.photoUrl || undefined} className="object-cover" />
+                                      <AvatarFallback className={`text-sm rounded-lg text-white ${c.isCustom ? 'bg-gradient-to-br from-purple-400 to-pink-500' : 'bg-gradient-to-br from-blue-400 to-purple-500'}`}>
+                                        {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="text-sm min-w-0">
+                                      <span className="font-medium block truncate">{c.name}</span>
+                                      {c.isCustom ? (
+                                        <span className="text-xs text-purple-600 dark:text-purple-400">Custom entry</span>
+                                      ) : (
+                                        <span className="text-xs text-muted-foreground">
+                                          {c.gender === 'Female' ? 'F' : 'M'}{c.age ? ` • ${c.age}y` : ''}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 opacity-0 group-hover:opacity-100 flex-shrink-0"
+                                      onClick={(e) => { e.stopPropagation(); removeFromBlock(blockNum, c.id); }}
+                                      data-testid={`remove-contestant-${blockNum}-${c.id}`}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                            {/* Custom name input */}
+                            <div className="flex gap-2 mt-1">
+                              <Input
+                                placeholder="Add custom name..."
+                                className="h-8 text-sm flex-1"
+                                value={customNameInputs[`${selectedDayId}-${blockNum}`] || ''}
+                                onChange={(e) => setCustomNameInputs(prev => ({ ...prev, [`${selectedDayId}-${blockNum}`]: e.target.value }))}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    const value = customNameInputs[`${selectedDayId}-${blockNum}`];
+                                    if (value?.trim()) {
+                                      addCustomToBlock(blockNum, value);
+                                      setCustomNameInputs(prev => ({ ...prev, [`${selectedDayId}-${blockNum}`]: '' }));
+                                    }
+                                  }
+                                }}
+                                data-testid={`input-custom-name-${blockNum}`}
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8"
+                                onClick={() => {
+                                  const value = customNameInputs[`${selectedDayId}-${blockNum}`];
+                                  if (value?.trim()) {
+                                    addCustomToBlock(blockNum, value);
+                                    setCustomNameInputs(prev => ({ ...prev, [`${selectedDayId}-${blockNum}`]: '' }));
+                                  }
+                                }}
+                                data-testid={`button-add-custom-${blockNum}`}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         )}
                       </div>
