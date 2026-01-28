@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { History, ArrowRightLeft, AlertTriangle, UserCheck, Search, MoveHorizontal, Calendar, UserMinus, UserPlus, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
-type MovementType = 'seat_change' | 'added_to_reschedule' | 'removed_from_reschedule' | 'standby_added' | 'standby_removed' | 'standby_seated';
+type MovementType = 'seat_change' | 'added_to_reschedule' | 'removed_from_reschedule' | 'standby_added' | 'standby_removed' | 'standby_seated' | 'returned_to_pool' | 'standby_to_reschedule';
 
 interface HistoryEvent {
   id: string;
@@ -147,6 +147,8 @@ export default function HistoryPage() {
         'standby_added': `Added as standby${m.recordDayId ? ` for ${formatRecordDay(m.recordDayId)}` : ''}`,
         'standby_removed': `Removed from standby list${m.recordDayId ? ` for ${formatRecordDay(m.recordDayId)}` : ''}`,
         'standby_seated': `Standby seated${m.toSeatLabel ? ` in ${m.toSeatLabel}` : ''}${m.recordDayId ? ` on ${formatRecordDay(m.recordDayId)}` : ''}`,
+        'returned_to_pool': `Returned to available pool from Block ${m.fromBlockNumber} ${m.fromSeatLabel}${m.recordDayId ? ` on ${formatRecordDay(m.recordDayId)}` : ''}`,
+        'standby_to_reschedule': `Standby moved to reschedule list${m.recordDayId ? ` from ${formatRecordDay(m.recordDayId)}` : ''}`,
       };
       
       events.push({
@@ -233,6 +235,10 @@ export default function HistoryPage() {
             return <UserMinus className="h-4 w-4" />;
           case 'standby_seated':
             return <UserCheck className="h-4 w-4" />;
+          case 'returned_to_pool':
+            return <UserMinus className="h-4 w-4" />;
+          case 'standby_to_reschedule':
+            return <Calendar className="h-4 w-4" />;
           default:
             return <MoveHorizontal className="h-4 w-4" />;
         }
@@ -260,6 +266,8 @@ export default function HistoryPage() {
           'standby_added': { label: 'Standby Added', className: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800' },
           'standby_removed': { label: 'Standby Removed', className: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800' },
           'standby_seated': { label: 'Standby Seated', className: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800' },
+          'returned_to_pool': { label: 'Returned to Pool', className: 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-950 dark:text-slate-300 dark:border-slate-800' },
+          'standby_to_reschedule': { label: 'Standby to Reschedule', className: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800' },
         };
         const config = movementLabels[movementType as MovementType] || { label: 'Movement', className: '' };
         return <Badge variant="outline" className={config.className}>{config.label}</Badge>;

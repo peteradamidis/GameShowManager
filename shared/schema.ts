@@ -534,6 +534,8 @@ export const movementTypeEnum = pgEnum('movement_type', [
   'standby_added',         // Added to standby list
   'standby_removed',       // Removed from standby list
   'standby_seated',        // Standby moved to a seat
+  'returned_to_pool',      // Removed from assignment/standby and returned to available pool
+  'standby_to_reschedule', // Standby moved to reschedule list
 ]);
 
 export const movementHistory = pgTable("movement_history", {

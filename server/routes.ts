@@ -6298,6 +6298,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Log the return to pool movement before deletion
+      const movedBy = (req as any).session?.user?.username || 'system';
+      await storage.logMovement({
+        contestantId: assignment.contestantId,
+        movementType: 'returned_to_pool',
+        recordDayId: assignment.recordDayId,
+        fromBlockNumber: assignment.blockNumber,
+        fromSeatLabel: assignment.seatLabel,
+        notes: 'Returned to available pool',
+        movedBy,
+      });
+
       // Delete the assignment (storage handles updating contestant status)
       await storage.deleteSeatAssignment(req.params.id);
       res.json({ message: "Seat assignment removed" });
@@ -10086,6 +10098,16 @@ Thank you.`;
 
       // Update contestant status to 'rescheduled' so they are identifiable across all tabs
       await storage.updateContestantAvailability(standby.contestantId, 'rescheduled');
+
+      // Log movement to history
+      const movedBy = (req as any).session?.user?.username || 'system';
+      await storage.logMovement({
+        contestantId: standby.contestantId,
+        movementType: 'standby_to_reschedule',
+        recordDayId: standby.recordDayId,
+        notes: 'Standby moved to reschedule list',
+        movedBy,
+      });
 
       res.json({
         message: "Standby moved to reschedule tab",
