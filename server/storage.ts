@@ -355,6 +355,7 @@ export interface IStorage {
   
   // Attendance Issues (No-Shows and Early Leavers)
   createAttendanceIssue(issue: InsertAttendanceIssue): Promise<AttendanceIssue>;
+  createBulkNoShows(issues: Array<{ contestantId: string; recordDayId: string; blockNumber: number; seatLabel: string; notes?: string; markedBy?: string }>): Promise<{ success: boolean; count: number; issues: AttendanceIssue[] }>;
   getAttendanceIssues(): Promise<Array<AttendanceIssue & { contestant: Contestant; recordDay: RecordDay }>>;
   getAttendanceIssuesByRecordDay(recordDayId: string): Promise<Array<AttendanceIssue & { contestant: Contestant }>>;
   deleteAttendanceIssue(id: string): Promise<void>;
@@ -2231,6 +2232,43 @@ export class DbStorage implements IStorage {
       );
       
       return created;
+    });
+  }
+
+  async createBulkNoShows(issues: Array<{ contestantId: string; recordDayId: string; blockNumber: number; seatLabel: string; notes?: string; markedBy?: string }>): Promise<{ success: boolean; count: number; issues: AttendanceIssue[] }> {
+    return await db.transaction(async (tx) => {
+      const createdIssues: AttendanceIssue[] = [];
+      
+      for (const issue of issues) {
+        // Create the attendance issue
+        const [created] = await tx.insert(attendanceIssues).values({
+          contestantId: issue.contestantId,
+          recordDayId: issue.recordDayId,
+          blockNumber: issue.blockNumber,
+          seatLabel: issue.seatLabel,
+          issueType: 'no_show',
+          notes: issue.notes || 'Marked via Booking Master bulk action',
+          markedBy: issue.markedBy || 'System',
+        }).returning();
+        
+        createdIssues.push(created);
+        
+        // Increment no-show counter on contestant
+        await tx
+          .update(contestants)
+          .set({ noShowCount: sql`COALESCE(${contestants.noShowCount}, 0) + 1` })
+          .where(eq(contestants.id, issue.contestantId));
+        
+        // Delete the seat assignment to free up the seat
+        await tx.delete(seatAssignments).where(
+          and(
+            eq(seatAssignments.contestantId, issue.contestantId),
+            eq(seatAssignments.recordDayId, issue.recordDayId)
+          )
+        );
+      }
+      
+      return { success: true, count: createdIssues.length, issues: createdIssues };
     });
   }
 

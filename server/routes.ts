@@ -14080,6 +14080,66 @@ Thank you.`;
     }
   });
 
+  // Bulk mark no-shows from Booking Master (atomic transaction)
+  app.post("/api/attendance-issues/bulk-no-show", async (req, res) => {
+    try {
+      const { assignmentIds, recordDayId, markedBy } = req.body;
+      
+      if (!assignmentIds || !Array.isArray(assignmentIds) || assignmentIds.length === 0) {
+        return res.status(400).json({ error: "assignmentIds array is required" });
+      }
+      
+      if (!recordDayId) {
+        return res.status(400).json({ error: "recordDayId is required" });
+      }
+      
+      // Collect assignment details for all IDs
+      const issuesData: Array<{ contestantId: string; recordDayId: string; blockNumber: number; seatLabel: string; notes?: string; markedBy?: string }> = [];
+      const notFound: string[] = [];
+      
+      for (const assignmentId of assignmentIds) {
+        const assignment = await storage.getSeatAssignmentById(assignmentId);
+        if (!assignment) {
+          notFound.push(assignmentId);
+          continue;
+        }
+        
+        issuesData.push({
+          contestantId: assignment.contestantId,
+          recordDayId,
+          blockNumber: assignment.blockNumber,
+          seatLabel: assignment.seatLabel,
+          notes: 'Marked via Booking Master bulk action',
+          markedBy: markedBy || 'System',
+        });
+      }
+      
+      if (issuesData.length === 0) {
+        return res.status(400).json({ error: "No valid assignments found", notFound });
+      }
+      
+      // Execute all no-shows in a single atomic transaction
+      const result = await storage.createBulkNoShows(issuesData);
+      
+      // Broadcast the change for real-time updates
+      wsManager.broadcastBookingUpdate({
+        type: 'bulk-no-show',
+        recordDayId,
+        count: result.count,
+      });
+      
+      res.json({ 
+        success: true, 
+        count: result.count,
+        notFound: notFound.length,
+        issues: result.issues 
+      });
+    } catch (error: any) {
+      console.error("Error processing bulk no-shows:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // ============== PRIZE WINNERS ==============
   
   // Get prize winners for a record day

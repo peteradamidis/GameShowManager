@@ -36,6 +36,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -290,6 +300,7 @@ export default function BookingMaster() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isCheckInMode, setIsCheckInMode] = useState(false);
   const [filterNotSignedIn, setFilterNotSignedIn] = useState(false);
+  const [showNoShowConfirm, setShowNoShowConfirm] = useState(false);
   const [savedColumnsBeforeCheckIn, setSavedColumnsBeforeCheckIn] = useState<Record<ColumnId, boolean> | null>(null);
   // Use refs instead of state for pending text updates to avoid re-renders
   const pendingTextUpdatesRef = useRef<Record<string, string>>({});
@@ -635,6 +646,38 @@ export default function BookingMaster() {
     },
   });
 
+  // Bulk mark no-shows mutation
+  const bulkNoShowMutation = useMutation({
+    mutationFn: async ({ assignmentIds, recordDayId }: { assignmentIds: string[]; recordDayId: string }) => {
+      return await apiRequest("POST", "/api/attendance-issues/bulk-no-show", { 
+        assignmentIds,
+        recordDayId,
+        markedBy: "Booking Master"
+      });
+    },
+    onSuccess: (data: any) => {
+      const count = data?.count || 0;
+      toast({
+        title: "No-Shows Marked",
+        description: `${count} contestant(s) marked as no-show and removed from seats.`,
+      });
+      
+      setShowNoShowConfirm(false);
+      // Invalidate all related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/attendance-issues'], exact: false });
+      broadcastBookingChange(selectedRecordDay);
+      broadcastSeatingChange(selectedRecordDay);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to mark no-shows",
+        variant: "destructive",
+      });
+    },
+  });
 
   const generateAllSeats = (): BookingRow[] => {
     const rows: BookingRow[] = [];
@@ -1058,6 +1101,19 @@ export default function BookingMaster() {
               data-testid="button-filter-not-signed-in"
             >
               Not Signed In
+            </Button>
+          )}
+          
+          {isCheckInMode && filterNotSignedIn && bookingRows.filter(r => r.assignment?.id).length > 0 && (
+            <Button 
+              onClick={() => setShowNoShowConfirm(true)}
+              variant="destructive"
+              className="bg-red-700 hover:bg-red-800"
+              title="Mark all visible contestants as no-shows"
+              data-testid="button-mark-all-no-show"
+              disabled={bulkNoShowMutation.isPending}
+            >
+              {bulkNoShowMutation.isPending ? "Processing..." : `Mark All as No Show (${bookingRows.filter(r => r.assignment?.id).length})`}
             </Button>
           )}
           
@@ -2015,6 +2071,47 @@ export default function BookingMaster() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk No-Show Confirmation Dialog */}
+      <AlertDialog open={showNoShowConfirm} onOpenChange={setShowNoShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark All as No-Show?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>
+                <p className="mb-2">This will mark <strong>{bookingRows.filter(r => r.assignment?.id).length} contestant(s)</strong> as no-shows:</p>
+                <ul className="list-disc pl-5 mt-2 max-h-40 overflow-y-auto text-sm">
+                  {bookingRows.filter(r => r.assignment?.id).slice(0, 10).map(row => (
+                    <li key={row.seatId}>{row.contestant?.name} (Block {row.blockNumber}, Seat {row.seatLabel})</li>
+                  ))}
+                  {bookingRows.filter(r => r.assignment?.id).length > 10 && <li>...and {bookingRows.filter(r => r.assignment?.id).length - 10} more</li>}
+                </ul>
+                <p className="mt-3 text-red-600 dark:text-red-400 font-medium">
+                  This action will remove them from their seats, increment their no-show count, and create audit records.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkNoShowMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const assignmentIds = bookingRows
+                  .filter(row => row.assignment?.id)
+                  .map(row => row.assignment!.id);
+                if (selectedRecordDay && assignmentIds.length > 0) {
+                  bulkNoShowMutation.mutate({ assignmentIds, recordDayId: selectedRecordDay });
+                }
+              }}
+              disabled={bulkNoShowMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+              data-testid="button-confirm-bulk-no-show"
+            >
+              {bulkNoShowMutation.isPending ? "Processing..." : "Mark All as No-Show"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
