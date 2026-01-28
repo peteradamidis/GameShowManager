@@ -2915,6 +2915,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fix missing movement history entries for standbys moved to reschedule
+  app.post("/api/standbys/fix-movement-history", requireAuth, async (req, res) => {
+    try {
+      // Get all standbys that were moved to reschedule
+      const allStandbys = await storage.getStandbyAssignments();
+      const rescheduledStandbys = allStandbys.filter(s => 
+        s.movedToReschedule === true
+      );
+      
+      if (rescheduledStandbys.length === 0) {
+        return res.json({
+          message: "No rescheduled standbys found",
+          fixedCount: 0,
+        });
+      }
+      
+      // Get existing movement history to avoid duplicates
+      const existingMovements = await storage.getMovementHistory();
+      const existingSet = new Set(
+        existingMovements
+          .filter(m => m.movementType === 'standby_to_reschedule')
+          .map(m => `${m.contestantId}-${m.recordDayId}`)
+      );
+      
+      // Find standbys that don't have movement history entries
+      const standbysNeedingFix = rescheduledStandbys.filter(s => 
+        !existingSet.has(`${s.contestantId}-${s.recordDayId}`)
+      );
+      
+      let fixedCount = 0;
+      const fixedRecords: Array<{ contestantName: string; recordDayDate: string }> = [];
+      
+      for (const standby of standbysNeedingFix) {
+        await storage.logMovement({
+          contestantId: standby.contestantId,
+          movementType: 'standby_to_reschedule',
+          recordDayId: standby.recordDayId,
+          notes: 'Standby moved to reschedule list (backfilled)',
+          movedBy: 'System (backfill)',
+        });
+        
+        fixedCount++;
+        fixedRecords.push({
+          contestantName: standby.contestant?.name || 'Unknown',
+          recordDayDate: standby.recordDay?.date ? new Date(standby.recordDay.date).toISOString().split('T')[0] : 'Unknown',
+        });
+      }
+      
+      console.log(`[Fix Movement History] Created ${fixedCount} missing movement history entries for standbys`);
+      
+      res.json({
+        message: `Created ${fixedCount} missing movement history entries`,
+        fixedCount,
+        totalRescheduledStandbys: rescheduledStandbys.length,
+        alreadyHadEntries: rescheduledStandbys.length - standbysNeedingFix.length,
+        fixedRecords,
+      });
+    } catch (error: any) {
+      console.error("[Fix Movement History] Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get all record days
   app.get("/api/record-days", async (req, res) => {
     try {
