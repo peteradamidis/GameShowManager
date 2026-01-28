@@ -28,6 +28,7 @@ const ITEMS_PER_PAGE = 100;
 
 export default function HistoryPage() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [recordDayFilter, setRecordDayFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -182,14 +183,15 @@ export default function HistoryPage() {
     // Reset to page 1 when filters change (handled via effect below)
     return combinedEvents.filter(event => {
       const matchesType = typeFilter === "all" || event.type === typeFilter;
+      const matchesRecordDay = recordDayFilter === "all" || event.recordDayId === recordDayFilter;
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch = searchQuery === "" || 
         event.contestantName.toLowerCase().includes(searchLower) ||
         event.contestantEmail.toLowerCase().includes(searchLower) ||
         event.description.toLowerCase().includes(searchLower);
-      return matchesType && matchesSearch;
+      return matchesType && matchesRecordDay && matchesSearch;
     });
-  }, [combinedEvents, typeFilter, searchQuery]);
+  }, [combinedEvents, typeFilter, recordDayFilter, searchQuery]);
 
   // Reset to page 1 when filters change
   const handleSearchChange = (value: string) => {
@@ -201,6 +203,17 @@ export default function HistoryPage() {
     setTypeFilter(value);
     setCurrentPage(1);
   };
+
+  const handleRecordDayFilterChange = (value: string) => {
+    setRecordDayFilter(value);
+    setCurrentPage(1);
+  };
+
+  // Sort record days by date for the filter dropdown
+  const sortedRecordDays = useMemo(() => {
+    if (!recordDays) return [];
+    return [...recordDays].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [recordDays]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredEvents.length / ITEMS_PER_PAGE);
@@ -357,6 +370,19 @@ export default function HistoryPage() {
                   data-testid="input-search"
                 />
               </div>
+              <Select value={recordDayFilter} onValueChange={handleRecordDayFilterChange}>
+                <SelectTrigger className="w-full sm:w-48" data-testid="select-record-day-filter">
+                  <SelectValue placeholder="Filter by RX Day" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All RX Days</SelectItem>
+                  {sortedRecordDays.map((rd) => (
+                    <SelectItem key={rd.id} value={rd.id}>
+                      {format(new Date(rd.date), "dd/MM/yyyy")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Select value={typeFilter} onValueChange={handleTypeFilterChange}>
                 <SelectTrigger className="w-full sm:w-48" data-testid="select-type-filter">
                   <SelectValue placeholder="Filter by type" />
@@ -375,7 +401,7 @@ export default function HistoryPage() {
         <CardContent>
           {filteredEvents.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground" data-testid="empty-state">
-              {searchQuery || typeFilter !== "all" 
+              {searchQuery || typeFilter !== "all" || recordDayFilter !== "all"
                 ? "No matching events found."
                 : "No history events recorded yet."}
             </div>
