@@ -391,12 +391,29 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
               <button onClick={() => formatColor('#6b7280')} title="Gray" data-testid="btn-color-gray" className="w-6 h-6 rounded border border-gray-300 bg-gray-500 hover:ring-2 hover:ring-offset-1 hover:ring-gray-400" />
             </div>
           </div>
-          <div 
-            id="casting-card-preview"
-            className="bg-white p-8 rounded-lg border shadow-sm"
-          >
-            {/* Card Layout matching DOND PowerPoint design */}
-            <div className="flex gap-8">
+          {/* A4 Landscape page container - 297mm x 210mm */}
+          <div className="relative">
+            <div 
+              id="casting-card-preview"
+              className="bg-white p-6 border-2 border-gray-300 shadow-lg relative overflow-visible"
+              style={{ 
+                width: '297mm', 
+                minHeight: '210mm',
+                maxWidth: '100%'
+              }}
+            >
+              {/* Page boundary indicator line */}
+              <div 
+                className="absolute left-0 right-0 border-t-2 border-dashed border-red-400 pointer-events-none z-10"
+                style={{ top: '210mm' }}
+              >
+                <span className="absolute right-2 -top-5 bg-red-100 text-red-600 text-xs px-2 py-1 rounded font-medium">
+                  Page boundary - content below will be cut off
+                </span>
+              </div>
+              
+              {/* Card Layout matching DOND PowerPoint design */}
+              <div className="flex gap-6">
               {/* Left side - Photos */}
               <div className="w-52 flex-shrink-0">
                 {/* Main photo */}
@@ -573,6 +590,7 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                 </div>
               </div>
             </div>
+            </div>
           </div>
         </div>
       </div>
@@ -687,12 +705,31 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
               </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto">
-              <div 
-                id="casting-card-preview"
-                className="bg-white p-8 rounded-lg border shadow-sm"
-              >
-                {/* Card Layout matching DOND PowerPoint design */}
-                <div className="flex gap-8">
+              {/* A4 Landscape page container - 297mm x 210mm (scaled for preview) */}
+              <div className="relative mx-auto" style={{ maxWidth: '100%' }}>
+                <div 
+                  id="casting-card-preview"
+                  className="bg-white p-6 border-2 border-gray-300 shadow-lg relative overflow-visible origin-top-left"
+                  style={{ 
+                    width: '297mm', 
+                    minHeight: '210mm',
+                    transform: 'scale(0.6)',
+                    transformOrigin: 'top left',
+                    marginBottom: '-40%'
+                  }}
+                >
+                  {/* Page boundary indicator line */}
+                  <div 
+                    className="absolute left-0 right-0 border-t-2 border-dashed border-red-400 pointer-events-none z-10"
+                    style={{ top: '210mm' }}
+                  >
+                    <span className="absolute right-2 -top-5 bg-red-100 text-red-600 text-xs px-2 py-1 rounded font-medium">
+                      Page boundary - content below will be cut off
+                    </span>
+                  </div>
+                  
+                  {/* Card Layout matching DOND PowerPoint design */}
+                  <div className="flex gap-6">
                   {/* Left side - Photos */}
                   <div className="w-52 flex-shrink-0">
                     {/* Main photo */}
@@ -878,6 +915,7 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                       >{cardData.producerName || 'INSERT NAME'}</span>
                     </div>
                   </div>
+                </div>
                 </div>
               </div>
             </CardContent>
