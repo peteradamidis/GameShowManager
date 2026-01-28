@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -151,6 +151,7 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
   const [selectedContestant, setSelectedContestant] = useState<Contestant | null>(null);
   const [cardData, setCardData] = useState<CastingCardData | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Fetch existing casting card data when contestant is selected
   const { data: existingCard, isLoading: loadingCard } = useQuery<CastingCardData>({
@@ -287,10 +288,221 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
     }
   };
 
+  // Fullscreen mode renders just the card
+  if (isFullscreen && selectedContestant && cardData) {
+    return (
+      <div className="fixed inset-0 z-50 bg-white overflow-auto p-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-between mb-4 sticky top-0 bg-white py-2 border-b">
+            <h2 className="text-lg font-semibold">{selectedContestant.name} - Casting Card</h2>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending} data-testid="btn-save-card-fs">
+                {saveMutation.isPending ? 'Saving...' : 'Save'}
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={isGeneratingPdf} data-testid="btn-download-pdf-fs">
+                <Download className="h-4 w-4 mr-1" />
+                PDF
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setIsFullscreen(false)} data-testid="btn-exit-fullscreen">
+                <Minimize2 className="h-4 w-4 mr-1" />
+                Exit
+              </Button>
+            </div>
+          </div>
+          <div 
+            id="casting-card-preview"
+            className="bg-white p-8 rounded-lg border shadow-sm"
+          >
+            {/* Card Layout matching DOND PowerPoint design */}
+            <div className="flex gap-8">
+              {/* Left side - Photos */}
+              <div className="w-52 flex-shrink-0">
+                {/* Main photo */}
+                <div className="border-4 border-orange-500 rounded-lg overflow-hidden bg-gray-100">
+                  <Avatar className="w-full h-56 rounded-none">
+                    <AvatarImage src={selectedContestant.photoUrl || undefined} className="object-cover" />
+                    <AvatarFallback className="text-5xl rounded-none bg-gray-200">{selectedContestant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                </div>
+                
+                {/* Attending With section */}
+                <div className="mt-6 text-center">
+                  <p className="text-sm font-semibold text-gray-600 mb-1">ATTENDING WITH ...</p>
+                  <ArrowDown className="w-5 h-5 text-blue-500 mx-auto mb-2" />
+                  <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-32 h-32 mx-auto bg-gray-100">
+                    <Avatar className="w-full h-full rounded-none">
+                      <AvatarImage src={cardData.companionPhotoUrl || undefined} className="object-cover" />
+                      <AvatarFallback className="text-2xl rounded-none bg-gray-200">
+                        {(cardData.companionName || selectedContestant.attendingWith || '?').split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <div 
+                    contentEditable
+                    suppressContentEditableWarning
+                    className="text-sm font-semibold mt-2 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                    onBlur={(e) => {
+                      const text = e.currentTarget.textContent || '';
+                      const match = text.match(/^(.+?)(?:\s*\((.+)\))?$/);
+                      if (match) {
+                        updateField('companionName', match[1].trim());
+                        if (match[2]) updateField('companionRelationship', match[2].trim());
+                      }
+                    }}
+                  >
+                    {cardData.companionName || selectedContestant.attendingWith || 'NAME'} ({cardData.companionRelationship || 'RELATIONSHIP'})
+                  </div>
+                </div>
+              </div>
+
+              {/* Right side - Details */}
+              <div className="flex-1">
+                {/* Header banner with DOND logo */}
+                <div className="bg-green-700 text-white px-4 py-3 rounded flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold italic tracking-wide">{selectedContestant.name.toUpperCase()}</h2>
+                  <div className="text-right border-l border-white/30 pl-3">
+                    <div className="text-xs font-bold leading-tight">DEAL</div>
+                    <div className="text-xs font-bold leading-tight">NO</div>
+                    <div className="text-red-400 text-xs font-bold leading-tight">DEAL</div>
+                  </div>
+                </div>
+
+                {/* Age and details */}
+                <div className="mb-4">
+                  <p className="text-2xl font-bold">
+                    {selectedContestant.age || 'AGE'} ({selectedContestant.suburb || 'STATE'})
+                  </p>
+                  <div
+                    contentEditable
+                    suppressContentEditableWarning
+                    className="text-xl font-bold text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                    onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
+                  >
+                    {cardData.occupation || 'OCCUPATION'}
+                  </div>
+                  <p className="text-green-600 font-semibold">
+                    SPONSOR CATEGORY: <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                      onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
+                    >{cardData.sponsorCategory || 'X'}</span>
+                  </p>
+                </div>
+
+                {/* Tagline */}
+                <h3 
+                  contentEditable
+                  suppressContentEditableWarning
+                  className="text-2xl font-bold text-green-600 mb-4 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                  onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
+                >
+                  {cardData.tagline || 'SHORT TAGLINE'}
+                </h3>
+
+                {/* Bullet points - all editable */}
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start gap-2">
+                    <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
+                    <span>Energy Level – <strong
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                      onBlur={(e) => updateField('energyLevel', parseInt(e.currentTarget.textContent || '3') || 3)}
+                    >{cardData.energyLevel || 3}</strong> out of 5 – this helps us when booking players for later in the day</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
+                      onBlur={(e) => updateField('characterTraits', e.currentTarget.textContent || '')}
+                    >{cardData.characterTraits || 'Top line character points – we don\'t need to know if they are "bubbly/energetic/likable" as it doesn\'t really help. But if they have traits like – they just don\'t stop talking / they argue with their podium partner as they\'re bossy etc / infectious or funny laugh. That is stuff we can work with in an episode.'}</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
+                      onBlur={(e) => updateField('meetStory', e.currentTarget.textContent || '')}
+                    >{cardData.meetStory || 'Meet story (if applicable)'}</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
+                    <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
+                      onBlur={(e) => updateField('keyStories', e.currentTarget.textContent || '')}
+                    >{cardData.keyStories || '3 key stories/facts/interesting points'}</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
+                    <span>How much they want to win - <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                      onBlur={(e) => updateField('howMuchToWin', e.currentTarget.textContent || '')}
+                    >{cardData.howMuchToWin || '$XX,XXX'}</span></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
+                    <span>What they'd do with prize money (high and low) - <strong
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                      onBlur={(e) => updateField('prizeGoalHigh', e.currentTarget.textContent || '')}
+                    >{cardData.prizeGoalHigh || '100K'}</strong> and if they win only <strong
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                      onBlur={(e) => updateField('prizeGoalLow', e.currentTarget.textContent || '')}
+                    >{cardData.prizeGoalLow || '$1000'}</strong></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
+                    <span>How they <u>might</u> play game / Risk taker? <span
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                      onBlur={(e) => updateField('playStyle', e.currentTarget.textContent || '')}
+                    >{cardData.playStyle || ''}</span></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Circle className="w-3 h-3 mt-1.5 text-red-500 flex-shrink-0" />
+                    <span 
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="text-red-600 italic outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
+                      onBlur={(e) => updateField('previousShows', e.currentTarget.textContent || '')}
+                    >{cardData.previousShows || 'Other game shows / prize money won / previously on DOND'}</span>
+                  </li>
+                </ul>
+
+                {/* Producer - matching PowerPoint style */}
+                <div className="mt-6 flex items-center border border-gray-300">
+                  <span className="bg-gray-200 px-4 py-2 font-semibold text-sm border-r border-gray-300">PRODUCER:</span>
+                  <span 
+                    contentEditable
+                    suppressContentEditableWarning
+                    className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text flex-1"
+                    onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
+                  >{cardData.producerName || 'INSERT NAME'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex gap-6 h-[calc(100vh-200px)]">
       {/* Left Panel - Contestant Search */}
-      <div className="w-80 flex-shrink-0 flex flex-col">
+      <div className={`w-80 flex-shrink-0 flex flex-col ${isFullscreen ? 'hidden' : ''}`}>
         <Card className="flex-1 flex flex-col overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Select Contestant</CardTitle>
@@ -375,9 +587,9 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
       {selectedContestant && cardData ? (
         <div className="flex-1 overflow-hidden">
           {/* Direct Edit Card - Click any text to edit like PowerPoint */}
-          <Card className="flex-1 overflow-y-auto">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
+          <Card className="h-full flex flex-col">
+            <CardHeader className="pb-2 flex-shrink-0">
+              <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-base">Click any text to edit directly</CardTitle>
                 <div className="flex gap-2">
                   <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending} data-testid="btn-save-card">
@@ -385,16 +597,19 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                   </Button>
                   <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={isGeneratingPdf} data-testid="btn-download-pdf">
                     <Download className="h-4 w-4 mr-1" />
-                    {isGeneratingPdf ? '...' : 'PDF'}
+                    PDF
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setIsFullscreen(true)} data-testid="btn-fullscreen">
+                    <Maximize2 className="h-4 w-4 mr-1" />
+                    Fullscreen
                   </Button>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 overflow-y-auto">
               <div 
                 id="casting-card-preview"
                 className="bg-white p-8 rounded-lg border shadow-sm"
-                style={{ minHeight: '700px', maxWidth: '900px' }}
               >
                 {/* Card Layout matching DOND PowerPoint design */}
                 <div className="flex gap-8">
