@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2 } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -296,25 +296,83 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
     }
   };
 
+  // Text formatting functions for contentEditable
+  const applyFormat = (command: string, value?: string) => {
+    document.execCommand(command, false, value);
+  };
+
+  const formatBold = () => applyFormat('bold');
+  const formatItalic = () => applyFormat('italic');
+  const formatUnderline = () => applyFormat('underline');
+  const formatFontSize = (size: string) => applyFormat('fontSize', size);
+  const formatColor = (color: string) => applyFormat('foreColor', color);
+
   // Fullscreen mode renders just the card
   if (isFullscreen && selectedContestant && cardData) {
     return (
       <div className="fixed inset-0 z-50 bg-white overflow-auto p-6">
         <div className="max-w-5xl mx-auto">
-          <div className="flex items-center justify-between mb-4 sticky top-0 bg-white py-2 border-b">
-            <h2 className="text-lg font-semibold">{selectedContestant.name} - Casting Card</h2>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending} data-testid="btn-save-card-fs">
-                {saveMutation.isPending ? 'Saving...' : 'Save'}
+          <div className="sticky top-0 bg-white py-2 border-b z-10 space-y-2">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">{selectedContestant.name} - Casting Card</h2>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending} data-testid="btn-save-card-fs">
+                  {saveMutation.isPending ? 'Saving...' : 'Save'}
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={isGeneratingPdf} data-testid="btn-download-pdf-fs">
+                  <Download className="h-4 w-4 mr-1" />
+                  PDF
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setIsFullscreen(false)} data-testid="btn-exit-fullscreen">
+                  <Minimize2 className="h-4 w-4 mr-1" />
+                  Exit
+                </Button>
+              </div>
+            </div>
+            
+            {/* Formatting toolbar */}
+            <div className="flex items-center gap-1 flex-wrap bg-gray-50 p-2 rounded border">
+              <span className="text-xs text-gray-500 mr-2">Format:</span>
+              
+              {/* Bold, Italic, Underline */}
+              <Button size="icon" variant="ghost" onClick={formatBold} title="Bold" data-testid="btn-format-bold" className="h-8 w-8">
+                <Bold className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={isGeneratingPdf} data-testid="btn-download-pdf-fs">
-                <Download className="h-4 w-4 mr-1" />
-                PDF
+              <Button size="icon" variant="ghost" onClick={formatItalic} title="Italic" data-testid="btn-format-italic" className="h-8 w-8">
+                <Italic className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="outline" onClick={() => setIsFullscreen(false)} data-testid="btn-exit-fullscreen">
-                <Minimize2 className="h-4 w-4 mr-1" />
-                Exit
+              <Button size="icon" variant="ghost" onClick={formatUnderline} title="Underline" data-testid="btn-format-underline" className="h-8 w-8">
+                <Underline className="h-4 w-4" />
               </Button>
+              
+              <div className="w-px h-6 bg-gray-300 mx-1" />
+              
+              {/* Font Size */}
+              <span className="text-xs text-gray-500 ml-1">Size:</span>
+              <Button size="sm" variant="ghost" onClick={() => formatFontSize('1')} title="Small" data-testid="btn-size-small" className="h-8 px-2 text-xs">
+                S
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => formatFontSize('3')} title="Normal" data-testid="btn-size-normal" className="h-8 px-2 text-sm">
+                M
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => formatFontSize('5')} title="Large" data-testid="btn-size-large" className="h-8 px-2 text-base font-semibold">
+                L
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => formatFontSize('7')} title="Extra Large" data-testid="btn-size-xlarge" className="h-8 px-2 text-lg font-bold">
+                XL
+              </Button>
+              
+              <div className="w-px h-6 bg-gray-300 mx-1" />
+              
+              {/* Font Colors */}
+              <span className="text-xs text-gray-500 ml-1">Color:</span>
+              <button onClick={() => formatColor('#000000')} title="Black" data-testid="btn-color-black" className="w-6 h-6 rounded border border-gray-300 bg-black hover:ring-2 hover:ring-offset-1 hover:ring-gray-400" />
+              <button onClick={() => formatColor('#dc2626')} title="Red" data-testid="btn-color-red" className="w-6 h-6 rounded border border-gray-300 bg-red-600 hover:ring-2 hover:ring-offset-1 hover:ring-red-400" />
+              <button onClick={() => formatColor('#16a34a')} title="Green" data-testid="btn-color-green" className="w-6 h-6 rounded border border-gray-300 bg-green-600 hover:ring-2 hover:ring-offset-1 hover:ring-green-400" />
+              <button onClick={() => formatColor('#2563eb')} title="Blue" data-testid="btn-color-blue" className="w-6 h-6 rounded border border-gray-300 bg-blue-600 hover:ring-2 hover:ring-offset-1 hover:ring-blue-400" />
+              <button onClick={() => formatColor('#9333ea')} title="Purple" data-testid="btn-color-purple" className="w-6 h-6 rounded border border-gray-300 bg-purple-600 hover:ring-2 hover:ring-offset-1 hover:ring-purple-400" />
+              <button onClick={() => formatColor('#ea580c')} title="Orange" data-testid="btn-color-orange" className="w-6 h-6 rounded border border-gray-300 bg-orange-600 hover:ring-2 hover:ring-offset-1 hover:ring-orange-400" />
+              <button onClick={() => formatColor('#6b7280')} title="Gray" data-testid="btn-color-gray" className="w-6 h-6 rounded border border-gray-300 bg-gray-500 hover:ring-2 hover:ring-offset-1 hover:ring-gray-400" />
             </div>
           </div>
           <div 
