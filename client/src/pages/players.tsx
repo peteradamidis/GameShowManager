@@ -125,10 +125,12 @@ const PLANNING_STORAGE_KEY = 'rx-planning-data-v2';
 interface CastingCardData {
   id?: string;
   contestantId: string;
+  fullName?: string | null;
+  ageState?: string | null;
   occupation?: string | null;
   sponsorCategory?: string | null;
   tagline?: string | null;
-  energyLevel?: number | null;
+  energyLevel?: string | null;
   characterTraits?: string | null;
   meetStory?: string | null;
   keyStories?: string | null;
@@ -137,11 +139,24 @@ interface CastingCardData {
   howMuchToWin?: string | null;
   playStyle?: string | null;
   previousShows?: string | null;
+  bulletPoints?: string[] | null;
   companionName?: string | null;
   companionRelationship?: string | null;
   companionPhotoUrl?: string | null;
   producerName?: string | null;
 }
+
+// Default bullet points for new casting cards
+const defaultBulletPoints = [
+  'Energy Level – 3 out of 5 – this helps us when booking players for later in the day',
+  'Top line character points – we don\'t need to know if they are "bubbly/energetic/likable" as it doesn\'t really help. But if they have traits like – they just don\'t stop talking / they argue with their podium partner as they\'re bossy etc / infectious or funny laugh. That is stuff we can work with in an episode.',
+  'Meet story (if applicable)',
+  '3 key stories/facts/interesting points',
+  'How much they want to win - $XX,XXX',
+  'What they\'d do with prize money (high and low) - 100K and if they win only $1000',
+  'How they might play game / Risk taker?',
+  'Other game shows / prize money won / previously on DOND'
+];
 
 // Casting Cards Tab Component
 function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
@@ -450,15 +465,25 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
               <div className="flex-1">
                 {/* Header banner with DOND logo - matching PowerPoint style */}
                 <div className="bg-gradient-to-r from-green-800 to-green-700 text-white px-4 py-3 rounded flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold italic tracking-wide">{selectedContestant.name.toUpperCase()}</h2>
+                  <h2 
+                    contentEditable
+                    suppressContentEditableWarning
+                    className="text-2xl font-bold italic tracking-wide outline-none hover:bg-green-600 focus:bg-green-600 px-1 rounded cursor-text"
+                    onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
+                  >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
                   <img src={dondLogo} alt="Deal or No Deal" className="h-10 object-contain" />
                 </div>
 
-                {/* Age and details */}
+                {/* Age and details - all editable */}
                 <div className="mb-4">
-                  <p className="text-2xl font-bold">
-                    {selectedContestant.age || 'AGE'} ({selectedContestant.suburb || 'STATE'})
-                  </p>
+                  <div
+                    contentEditable
+                    suppressContentEditableWarning
+                    className="text-2xl font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                    onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
+                  >
+                    {cardData.ageState || `${selectedContestant.age || 'AGE'} (${selectedContestant.suburb || 'STATE'})`}
+                  </div>
                   <div
                     contentEditable
                     suppressContentEditableWarning
@@ -467,14 +492,14 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                   >
                     {cardData.occupation || 'OCCUPATION'}
                   </div>
-                  <p className="text-green-600 font-semibold">
-                    SPONSOR CATEGORY: <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
-                      onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
-                    >{cardData.sponsorCategory || 'X'}</span>
-                  </p>
+                  <div
+                    contentEditable
+                    suppressContentEditableWarning
+                    className="text-green-600 font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                    onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
+                  >
+                    {cardData.sponsorCategory || 'SPONSOR CATEGORY: X'}
+                  </div>
                 </div>
 
                 {/* Tagline */}
@@ -487,81 +512,47 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                   {cardData.tagline || 'SHORT TAGLINE'}
                 </h3>
 
-                {/* Bullet points - each entire line is editable */}
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start gap-2">
-                    <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                    <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                      onBlur={(e) => updateField('energyLevel', e.currentTarget.textContent || '')}
-                    >{cardData.energyLevel || 'Energy Level – 3 out of 5 – this helps us when booking players for later in the day'}</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                    <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                      onBlur={(e) => updateField('characterTraits', e.currentTarget.textContent || '')}
-                    >{cardData.characterTraits || 'Top line character points – we don\'t need to know if they are "bubbly/energetic/likable" as it doesn\'t really help. But if they have traits like – they just don\'t stop talking / they argue with their podium partner as they\'re bossy etc / infectious or funny laugh. That is stuff we can work with in an episode.'}</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                    <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                      onBlur={(e) => updateField('meetStory', e.currentTarget.textContent || '')}
-                    >{cardData.meetStory || 'Meet story (if applicable)'}</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                    <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                      onBlur={(e) => updateField('keyStories', e.currentTarget.textContent || '')}
-                    >{cardData.keyStories || '3 key stories/facts/interesting points'}</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                    <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                      onBlur={(e) => updateField('howMuchToWin', e.currentTarget.textContent || '')}
-                    >{cardData.howMuchToWin || 'How much they want to win - $XX,XXX'}</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                    <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                      onBlur={(e) => updateField('prizeGoalHigh', e.currentTarget.textContent || '')}
-                    >{cardData.prizeGoalHigh || 'What they\'d do with prize money (high and low) - 100K and if they win only $1000'}</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                    <span
-                      contentEditable
-                      suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                      onBlur={(e) => updateField('playStyle', e.currentTarget.textContent || '')}
-                    >{cardData.playStyle || 'How they might play game / Risk taker?'}</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Circle className="w-3 h-3 mt-1.5 text-red-500 flex-shrink-0" />
-                    <span 
-                      contentEditable
-                      suppressContentEditableWarning
-                      className="text-red-600 italic outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                      onBlur={(e) => updateField('previousShows', e.currentTarget.textContent || '')}
-                    >{cardData.previousShows || 'Other game shows / prize money won / previously on DOND'}</span>
-                  </li>
+                {/* Bullet points - dynamic with add/remove */}
+                <ul className="space-y-2 text-sm">
+                  {(cardData.bulletPoints || defaultBulletPoints).map((point, index) => (
+                    <li key={index} className="flex items-start gap-2 group">
+                      <Circle className={`w-3 h-3 mt-1.5 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
+                      <span
+                        contentEditable
+                        suppressContentEditableWarning
+                        className={`outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-600 italic' : ''}`}
+                        onBlur={(e) => {
+                          const newPoints = [...(cardData.bulletPoints || defaultBulletPoints)];
+                          newPoints[index] = e.currentTarget.textContent || '';
+                          updateField('bulletPoints', newPoints);
+                        }}
+                      >{point}</span>
+                      <button
+                        onClick={() => {
+                          const newPoints = [...(cardData.bulletPoints || defaultBulletPoints)];
+                          newPoints.splice(index, 1);
+                          updateField('bulletPoints', newPoints);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1"
+                        title="Remove point"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </li>
+                  ))}
                 </ul>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    const newPoints = [...(cardData.bulletPoints || defaultBulletPoints), 'New point...'];
+                    updateField('bulletPoints', newPoints);
+                  }}
+                  className="mt-2 text-green-600 hover:text-green-700"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Point
+                </Button>
 
                 {/* Producer - matching PowerPoint style */}
                 <div className="mt-6 flex items-center border border-gray-300">
@@ -764,15 +755,27 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                   <div className="flex-1">
                     {/* Header banner with DOND logo - matching PowerPoint style */}
                     <div className="bg-gradient-to-r from-green-800 to-green-700 text-white px-4 py-3 rounded flex items-center justify-between mb-4" data-testid="preview-header-banner">
-                      <h2 className="text-2xl font-bold italic tracking-wide" data-testid="preview-contestant-name">{selectedContestant.name.toUpperCase()}</h2>
+                      <h2 
+                        contentEditable
+                        suppressContentEditableWarning
+                        className="text-2xl font-bold italic tracking-wide outline-none hover:bg-green-600 focus:bg-green-600 px-1 rounded cursor-text"
+                        onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
+                        data-testid="preview-contestant-name"
+                      >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
                       <img src={dondLogo} alt="Deal or No Deal" className="h-10 object-contain" />
                     </div>
 
-                    {/* Age and details */}
+                    {/* Age and details - all editable */}
                     <div className="mb-4">
-                      <p className="text-2xl font-bold" data-testid="preview-age-location">
-                        {selectedContestant.age || 'AGE'} ({selectedContestant.suburb || 'STATE'})
-                      </p>
+                      <div
+                        contentEditable
+                        suppressContentEditableWarning
+                        className="text-2xl font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                        onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
+                        data-testid="preview-age-location"
+                      >
+                        {cardData.ageState || `${selectedContestant.age || 'AGE'} (${selectedContestant.suburb || 'STATE'})`}
+                      </div>
                       <div
                         contentEditable
                         suppressContentEditableWarning
@@ -782,15 +785,15 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                       >
                         {cardData.occupation || 'OCCUPATION'}
                       </div>
-                      <p className="text-green-600 font-semibold">
-                        SPONSOR CATEGORY: <span
-                          contentEditable
-                          suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
-                          onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
-                          data-testid="edit-sponsor"
-                        >{cardData.sponsorCategory || 'X'}</span>
-                      </p>
+                      <div
+                        contentEditable
+                        suppressContentEditableWarning
+                        className="text-green-600 font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                        onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
+                        data-testid="edit-sponsor"
+                      >
+                        {cardData.sponsorCategory || 'SPONSOR CATEGORY: X'}
+                      </div>
                     </div>
 
                     {/* Tagline */}
@@ -804,89 +807,50 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                       {cardData.tagline || 'SHORT TAGLINE'}
                     </h3>
 
-                    {/* Bullet points - each entire line is editable */}
-                    <ul className="space-y-3 text-sm" data-testid="preview-details-list">
-                      <li className="flex items-start gap-2">
-                        <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                        <span
-                          contentEditable
-                          suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                          onBlur={(e) => updateField('energyLevel', e.currentTarget.textContent || '')}
-                          data-testid="edit-energy"
-                        >{cardData.energyLevel || 'Energy Level – 3 out of 5 – this helps us when booking players for later in the day'}</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                        <span
-                          contentEditable
-                          suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                          onBlur={(e) => updateField('characterTraits', e.currentTarget.textContent || '')}
-                          data-testid="edit-traits"
-                        >{cardData.characterTraits || 'Top line character points – we don\'t need to know if they are "bubbly/energetic/likable" as it doesn\'t really help. But if they have traits like – they just don\'t stop talking / they argue with their podium partner as they\'re bossy etc / infectious or funny laugh. That is stuff we can work with in an episode.'}</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                        <span
-                          contentEditable
-                          suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                          onBlur={(e) => updateField('meetStory', e.currentTarget.textContent || '')}
-                          data-testid="edit-meet-story"
-                        >{cardData.meetStory || 'Meet story (if applicable)'}</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                        <span
-                          contentEditable
-                          suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                          onBlur={(e) => updateField('keyStories', e.currentTarget.textContent || '')}
-                          data-testid="edit-stories"
-                        >{cardData.keyStories || '3 key stories/facts/interesting points'}</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                        <span
-                          contentEditable
-                          suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                          onBlur={(e) => updateField('howMuchToWin', e.currentTarget.textContent || '')}
-                          data-testid="edit-win-amount"
-                        >{cardData.howMuchToWin || 'How much they want to win - $XX,XXX'}</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                        <span
-                          contentEditable
-                          suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                          onBlur={(e) => updateField('prizeGoalHigh', e.currentTarget.textContent || '')}
-                          data-testid="edit-goal-high"
-                        >{cardData.prizeGoalHigh || 'What they\'d do with prize money (high and low) - 100K and if they win only $1000'}</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                        <span
-                          contentEditable
-                          suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                          onBlur={(e) => updateField('playStyle', e.currentTarget.textContent || '')}
-                          data-testid="edit-play-style"
-                        >{cardData.playStyle || 'How they might play game / Risk taker?'}</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Circle className="w-3 h-3 mt-1.5 text-red-500 flex-shrink-0" />
-                        <span 
-                          contentEditable
-                          suppressContentEditableWarning
-                          className="text-red-600 italic outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                          onBlur={(e) => updateField('previousShows', e.currentTarget.textContent || '')}
-                          data-testid="edit-previous-shows"
-                        >{cardData.previousShows || 'Other game shows / prize money won / previously on DOND'}</span>
-                      </li>
+                    {/* Bullet points - dynamic with add/remove */}
+                    <ul className="space-y-2 text-sm" data-testid="preview-details-list">
+                      {(cardData.bulletPoints || defaultBulletPoints).map((point, index) => (
+                        <li key={index} className="flex items-start gap-2 group">
+                          <Circle className={`w-3 h-3 mt-1.5 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
+                          <span
+                            contentEditable
+                            suppressContentEditableWarning
+                            className={`outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-600 italic' : ''}`}
+                            onBlur={(e) => {
+                              const newPoints = [...(cardData.bulletPoints || defaultBulletPoints)];
+                              newPoints[index] = e.currentTarget.textContent || '';
+                              updateField('bulletPoints', newPoints);
+                            }}
+                            data-testid={`edit-bullet-${index}`}
+                          >{point}</span>
+                          <button
+                            onClick={() => {
+                              const newPoints = [...(cardData.bulletPoints || defaultBulletPoints)];
+                              newPoints.splice(index, 1);
+                              updateField('bulletPoints', newPoints);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1"
+                            title="Remove point"
+                            data-testid={`btn-remove-bullet-${index}`}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </li>
+                      ))}
                     </ul>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        const newPoints = [...(cardData.bulletPoints || defaultBulletPoints), 'New point...'];
+                        updateField('bulletPoints', newPoints);
+                      }}
+                      className="mt-2 text-green-600 hover:text-green-700"
+                      data-testid="btn-add-bullet"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add Point
+                    </Button>
 
                     {/* Producer - matching PowerPoint style */}
                     <div className="mt-6 flex items-center border border-gray-300">
