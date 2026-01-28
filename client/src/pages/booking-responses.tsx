@@ -209,7 +209,7 @@ export default function BookingResponses() {
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [declineAssignment, setDeclineAssignment] = useState<BookingAssignment | null>(null);
   const [declineReason, setDeclineReason] = useState("");
-  const [declineAction, setDeclineAction] = useState<"reschedule" | "rebook">("reschedule");
+  const [declineAction, setDeclineAction] = useState<"reschedule" | "return_pool">("reschedule");
   const [declineMovedBy, setDeclineMovedBy] = useState("");
   const [rebookRecordDayId, setRebookRecordDayId] = useState<string>("");
   const [rebookBlock, setRebookBlock] = useState<string>("");
@@ -507,6 +507,28 @@ export default function BookingResponses() {
     onError: (error: any) => {
       toast({ 
         title: "Failed to decline booking", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
+  // Mutation for returning to pool (deleting assignment)
+  const returnToPoolMutation = useMutation({
+    mutationFn: async (assignmentId: string) => {
+      return apiRequest("DELETE", `/api/seat-assignments/${assignmentId}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Returned to pool", description: "Assignment removed and contestant is available again" });
+      setDeclineDialogOpen(false);
+      setDeclineAssignment(null);
+      setDeclineReason("");
+      setDeclineMovedBy("");
+      invalidateBookingQueries();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to return to pool", 
         description: error.message,
         variant: "destructive" 
       });
@@ -939,10 +961,6 @@ export default function BookingResponses() {
     setDeclineReason("");
     setDeclineAction("reschedule");
     setDeclineMovedBy("");
-    setRebookRecordDayId("");
-    setRebookBlock("");
-    setRebookSeat("");
-    setRebookReason("");
     setDeclineDialogOpen(true);
   };
 
@@ -997,19 +1015,14 @@ export default function BookingResponses() {
   const handleDeclineSubmit = () => {
     if (!declineAssignment) return;
     
-    if (declineAction === "rebook") {
-      // Require record day, block, and seat for rebook
-      if (!rebookRecordDayId || !rebookBlock || !rebookSeat) return;
-      rebookMutation.mutate({
-        oldAssignmentId: declineAssignment.id,
-        contestantId: declineAssignment.contestantId,
-        newRecordDayId: rebookRecordDayId,
-        blockNumber: parseInt(rebookBlock),
-        seatLabel: rebookSeat,
-        reason: rebookReason || undefined,
-      });
+    if (declineAction === "return_pool") {
+      returnToPoolMutation.mutate(declineAssignment.id);
     } else {
       // Use the decline mutation for reschedule
+      if (!declineMovedBy.trim()) {
+        toast({ title: "Please enter your initials", variant: "destructive" });
+        return;
+      }
       declineMutation.mutate({
         assignmentId: declineAssignment.id,
         reason: declineReason,

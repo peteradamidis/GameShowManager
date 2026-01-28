@@ -58,6 +58,9 @@ interface Contestant {
   availabilityStatus: string;
   groupId: string | null;
   attendingWith: string | null;
+  isTemporary?: boolean | null;
+  isTestSubject?: boolean | null;
+  location?: string | null;
 }
 
 interface StandbyAssignment {
