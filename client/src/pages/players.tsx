@@ -463,12 +463,13 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
 
               {/* Right side - Details */}
               <div className="flex-1">
-                {/* Header banner with DOND logo - matching PowerPoint style */}
-                <div className="bg-gradient-to-r from-green-800 to-green-700 text-white px-4 py-3 rounded flex items-center justify-between mb-4">
+                {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
+                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 text-white px-4 py-3 rounded flex items-center justify-between mb-4">
                   <h2 
                     contentEditable
                     suppressContentEditableWarning
-                    className="text-2xl font-bold italic tracking-wide outline-none hover:bg-green-600 focus:bg-green-600 px-1 rounded cursor-text"
+                    className="text-2xl font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text drop-shadow-md"
+                    style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.3)' }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
                   <img src={dondLogo} alt="Deal or No Deal" className="h-10 object-contain" />
@@ -753,12 +754,13 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
 
                   {/* Right side - Details */}
                   <div className="flex-1">
-                    {/* Header banner with DOND logo - matching PowerPoint style */}
-                    <div className="bg-gradient-to-r from-green-800 to-green-700 text-white px-4 py-3 rounded flex items-center justify-between mb-4" data-testid="preview-header-banner">
+                    {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
+                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 text-white px-4 py-3 rounded flex items-center justify-between mb-4" data-testid="preview-header-banner">
                       <h2 
                         contentEditable
                         suppressContentEditableWarning
-                        className="text-2xl font-bold italic tracking-wide outline-none hover:bg-green-600 focus:bg-green-600 px-1 rounded cursor-text"
+                        className="text-2xl font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text drop-shadow-md"
+                        style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.3)' }}
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
                       >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
