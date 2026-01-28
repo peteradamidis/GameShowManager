@@ -2212,137 +2212,33 @@ export default function BookingResponses() {
           <div className="space-y-4 py-4">
             <RadioGroup 
               value={declineAction} 
-              onValueChange={(v) => setDeclineAction(v as "reschedule" | "rebook")}
+              onValueChange={(v) => setDeclineAction(v as "reschedule" | "return_pool")}
               className="space-y-3"
             >
-              <div className="flex items-start space-x-3">
-                <RadioGroupItem value="rebook" id="action-rebook" data-testid="radio-rebook" />
-                <div className="grid gap-1.5 leading-none">
-                  <Label htmlFor="action-rebook" className="font-medium cursor-pointer">
-                    Rebook to another day
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Move contestant to a different record day
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-3">
+              <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
                 <RadioGroupItem value="reschedule" id="action-reschedule" data-testid="radio-reschedule" />
-                <div className="grid gap-1.5 leading-none">
+                <div className="flex flex-col">
                   <Label htmlFor="action-reschedule" className="font-medium cursor-pointer">
                     Move to Reschedule list
                   </Label>
-                  <p className="text-sm text-muted-foreground">
+                  <span className="text-sm text-muted-foreground">
                     Remove from seating and add to reschedule tab for later
-                  </p>
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
+                <RadioGroupItem value="return_pool" id="action-return-pool" data-testid="radio-return-pool" />
+                <div className="flex flex-col">
+                  <Label htmlFor="action-return-pool" className="font-medium cursor-pointer">
+                    Return to Contestant Pool
+                  </Label>
+                  <span className="text-sm text-muted-foreground">
+                    Remove assignment and make contestant available again
+                  </span>
                 </div>
               </div>
             </RadioGroup>
-
-            {/* Rebook: Show record day, block, and seat selectors */}
-            {declineAction === "rebook" && (
-              <div className="space-y-4 pt-2 border-t">
-                <div className="space-y-2">
-                  <Label htmlFor="rebook-day">Select new record day</Label>
-                  <Select
-                    value={rebookRecordDayId}
-                    onValueChange={(val) => {
-                      setRebookRecordDayId(val);
-                      setRebookBlock("");
-                      setRebookSeat("");
-                    }}
-                  >
-                    <SelectTrigger data-testid="select-rebook-record-day">
-                      <SelectValue placeholder="Select record day..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sortedRecordDays
-                        .filter(rd => rd.id !== declineAssignment?.recordDayId)
-                        .map((rd) => (
-                          <SelectItem key={rd.id} value={rd.id}>
-                            {rd.rxNumber ? `${rd.rxNumber} - ` : ""}{format(new Date(rd.date), "EEE, d MMM yyyy")}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {/* Block and Seat Selection */}
-                {rebookRecordDayId && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Block</Label>
-                      <Select 
-                        value={rebookBlock} 
-                        onValueChange={(val) => { 
-                          setRebookBlock(val); 
-                          setRebookSeat(""); 
-                        }}
-                      >
-                        <SelectTrigger data-testid="select-rebook-block">
-                          <SelectValue placeholder="Select block" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[1, 2, 3, 4, 5, 6, 7].map((block) => (
-                            <SelectItem key={block} value={String(block)}>
-                              Block {block}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Seat</Label>
-                      <Select 
-                        value={rebookSeat} 
-                        onValueChange={setRebookSeat}
-                        disabled={!rebookBlock}
-                      >
-                        <SelectTrigger data-testid="select-rebook-seat">
-                          <SelectValue placeholder={rebookBlock ? "Select seat" : "Select block first"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {rebookAvailableSeats.length === 0 ? (
-                            <SelectItem value="none" disabled>No available seats</SelectItem>
-                          ) : (
-                            rebookAvailableSeats.map((seat) => (
-                              <SelectItem key={seat} value={seat}>
-                                {seat}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Optional reason for rebooking */}
-                <div className="space-y-2 mt-4">
-                  <Label htmlFor="rebook-reason">Reason for rebooking (optional)</Label>
-                  <Textarea
-                    id="rebook-reason"
-                    placeholder="e.g., Contestant requested date change, scheduling conflict, etc."
-                    value={rebookReason}
-                    onChange={(e) => setRebookReason(e.target.value)}
-                    data-testid="input-rebook-reason"
-                  />
-                </div>
-                <div className="space-y-2 mt-4">
-                  <Label htmlFor="rebook-initials">Your Initials <span className="text-red-500">*</span></Label>
-                  <Input
-                    id="rebook-initials"
-                    placeholder="e.g., JD"
-                    value={declineMovedBy}
-                    onChange={(e) => setDeclineMovedBy(e.target.value.toUpperCase())}
-                    maxLength={5}
-                    className="w-24"
-                    data-testid="input-rebook-initials"
-                  />
-                  <p className="text-xs text-muted-foreground">Required for tracking who processed this rebooking</p>
-                </div>
-              </div>
-            )}
 
             {/* Reschedule: Show reason textarea and producer initials */}
             {declineAction === "reschedule" && (
@@ -2377,24 +2273,18 @@ export default function BookingResponses() {
             <Button variant="outline" onClick={() => setDeclineDialogOpen(false)}>
               Cancel
             </Button>
-            {declineAction === "rebook" ? (
-              <Button
-                onClick={handleDeclineSubmit}
-                disabled={!rebookRecordDayId || !rebookBlock || !rebookSeat || !declineMovedBy.trim() || rebookMutation.isPending}
-                data-testid="button-submit-rebook"
-              >
-                {rebookMutation.isPending ? "Moving..." : "Rebook to New Day"}
-              </Button>
-            ) : (
-              <Button
-                variant="destructive"
-                onClick={handleDeclineSubmit}
-                disabled={!declineMovedBy.trim() || declineMutation.isPending}
-                data-testid="button-submit-decline"
-              >
-                {declineMutation.isPending ? "Processing..." : "Move to Reschedule"}
-              </Button>
-            )}
+            <Button
+              variant={declineAction === "reschedule" ? "destructive" : "default"}
+              onClick={handleDeclineSubmit}
+              disabled={
+                (declineAction === "reschedule" && !declineMovedBy.trim()) || 
+                declineMutation.isPending || 
+                returnToPoolMutation.isPending
+              }
+              data-testid="button-submit-decline"
+            >
+              {declineMutation.isPending || returnToPoolMutation.isPending ? "Processing..." : (declineAction === "reschedule" ? "Move to Reschedule" : "Return to Pool")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
