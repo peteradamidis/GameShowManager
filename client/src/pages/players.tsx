@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -187,14 +187,25 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
     }
   }, [selectedContestant, existingCard, loadingCard]);
 
-  // Save casting card mutation
+  // Save casting card mutation - uses PATCH for updates, POST for new cards
   const saveMutation = useMutation({
     mutationFn: async (data: CastingCardData) => {
-      const response = await apiRequest('POST', '/api/casting-cards', data);
-      return response.json();
+      if (existingCard?.id) {
+        // Update existing card
+        const response = await apiRequest('PATCH', `/api/casting-cards/${existingCard.id}`, data);
+        return response.json();
+      } else {
+        // Create new card
+        const response = await apiRequest('POST', '/api/casting-cards', data);
+        return response.json();
+      }
     },
     onSuccess: () => {
+      // Invalidate both the list and the specific contestant's card
       queryClient.invalidateQueries({ queryKey: ['/api/casting-cards'] });
+      if (selectedContestant) {
+        queryClient.invalidateQueries({ queryKey: ['/api/casting-cards', selectedContestant.id] });
+      }
       toast({ title: "Saved!", description: "Casting card has been saved" });
     },
     onError: (error: any) => {
@@ -577,16 +588,12 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                     
                     {/* Attending With section */}
                     {(cardData.companionName || selectedContestant.attendingWith) && (
-                      <div className="text-center">
+                      <div className="text-center" data-testid="preview-companion-section">
                         <p className="text-sm font-semibold text-gray-600 mb-2">ATTENDING WITH ...</p>
-                        <div className="relative">
-                          <div className="absolute -left-2 top-6 transform -rotate-45">
-                            <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                            </svg>
-                          </div>
+                        <div className="flex justify-center mb-2">
+                          <ArrowDown className="w-6 h-6 text-blue-500" />
                         </div>
-                        <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-28 h-28 mx-auto mt-4">
+                        <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-28 h-28 mx-auto">
                           <Avatar className="w-full h-full rounded-none">
                             <AvatarImage src={cardData.companionPhotoUrl || undefined} className="object-cover" />
                             <AvatarFallback className="text-xl rounded-none">
@@ -594,7 +601,7 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                             </AvatarFallback>
                           </Avatar>
                         </div>
-                        <p className="text-sm font-semibold mt-2">
+                        <p className="text-sm font-semibold mt-2" data-testid="preview-companion-name">
                           {cardData.companionName || selectedContestant.attendingWith}
                           {cardData.companionRelationship && ` (${cardData.companionRelationship})`}
                         </p>
@@ -605,8 +612,8 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                   {/* Right side - Details */}
                   <div className="flex-1">
                     {/* Header banner */}
-                    <div className="bg-green-700 text-white px-4 py-2 rounded-t-lg flex items-center justify-between mb-2">
-                      <h2 className="text-xl font-bold italic">{selectedContestant.name.toUpperCase()}</h2>
+                    <div className="bg-green-700 text-white px-4 py-2 rounded-t-lg flex items-center justify-between mb-2" data-testid="preview-header-banner">
+                      <h2 className="text-xl font-bold italic" data-testid="preview-contestant-name">{selectedContestant.name.toUpperCase()}</h2>
                       <div className="text-xs text-right">
                         <div className="font-bold">DEAL</div>
                         <div className="text-red-500 font-bold">NO DEAL</div>
@@ -615,52 +622,52 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
 
                     {/* Age and details */}
                     <div className="mb-3">
-                      <p className="text-xl font-bold">
+                      <p className="text-xl font-bold" data-testid="preview-age-location">
                         {selectedContestant.age || '?'} ({selectedContestant.suburb || selectedContestant.medicalMobilityNotes?.split(',')[0] || 'Location'})
                       </p>
-                      <p className="text-lg font-semibold text-gray-700">{cardData.occupation || 'OCCUPATION'}</p>
-                      <p className="text-green-600 font-semibold">SPONSOR CATEGORY: {cardData.sponsorCategory || 'X'}</p>
+                      <p className="text-lg font-semibold text-gray-700" data-testid="preview-occupation">{cardData.occupation || 'OCCUPATION'}</p>
+                      <p className="text-green-600 font-semibold" data-testid="preview-sponsor">SPONSOR CATEGORY: {cardData.sponsorCategory || 'X'}</p>
                     </div>
 
                     {/* Tagline */}
                     {cardData.tagline && (
-                      <h3 className="text-xl font-bold text-green-600 mb-3">{cardData.tagline}</h3>
+                      <h3 className="text-xl font-bold text-green-600 mb-3" data-testid="preview-tagline">{cardData.tagline}</h3>
                     )}
 
                     {/* Bullet points */}
-                    <ul className="space-y-2 text-sm">
+                    <ul className="space-y-2 text-sm" data-testid="preview-details-list">
                       <li className="flex items-start gap-2">
-                        <span className="text-gray-400">○</span>
-                        <span>Energy Level – <strong>{cardData.energyLevel || 3} out of 5</strong></span>
+                        <Circle className="w-3 h-3 mt-1 text-gray-400 flex-shrink-0" />
+                        <span data-testid="preview-energy">Energy Level – <strong>{cardData.energyLevel || 3} out of 5</strong></span>
                       </li>
                       {cardData.characterTraits && (
                         <li className="flex items-start gap-2">
-                          <span className="text-gray-400">○</span>
-                          <span>{cardData.characterTraits}</span>
+                          <Circle className="w-3 h-3 mt-1 text-gray-400 flex-shrink-0" />
+                          <span data-testid="preview-traits">{cardData.characterTraits}</span>
                         </li>
                       )}
                       {cardData.meetStory && (
                         <li className="flex items-start gap-2">
-                          <span className="text-gray-400">○</span>
-                          <span>Meet story: {cardData.meetStory}</span>
+                          <Circle className="w-3 h-3 mt-1 text-gray-400 flex-shrink-0" />
+                          <span data-testid="preview-meet-story">Meet story: {cardData.meetStory}</span>
                         </li>
                       )}
                       {cardData.keyStories && (
                         <li className="flex items-start gap-2">
-                          <span className="text-gray-400">○</span>
-                          <span>{cardData.keyStories}</span>
+                          <Circle className="w-3 h-3 mt-1 text-gray-400 flex-shrink-0" />
+                          <span data-testid="preview-stories">{cardData.keyStories}</span>
                         </li>
                       )}
                       {cardData.howMuchToWin && (
                         <li className="flex items-start gap-2">
-                          <span className="text-gray-400">○</span>
-                          <span>How much they want to win - <strong>{cardData.howMuchToWin}</strong></span>
+                          <Circle className="w-3 h-3 mt-1 text-gray-400 flex-shrink-0" />
+                          <span data-testid="preview-win-amount">How much they want to win - <strong>{cardData.howMuchToWin}</strong></span>
                         </li>
                       )}
                       {(cardData.prizeGoalHigh || cardData.prizeGoalLow) && (
                         <li className="flex items-start gap-2">
-                          <span className="text-gray-400">○</span>
-                          <span>
+                          <Circle className="w-3 h-3 mt-1 text-gray-400 flex-shrink-0" />
+                          <span data-testid="preview-prize-goals">
                             What they'd do with prize money - <strong>{cardData.prizeGoalHigh || '100K'}</strong> 
                             {cardData.prizeGoalLow && ` and if they win only ${cardData.prizeGoalLow}`}
                           </span>
@@ -668,14 +675,14 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                       )}
                       {cardData.playStyle && (
                         <li className="flex items-start gap-2">
-                          <span className="text-gray-400">○</span>
-                          <span>How they might play game / Risk taker? <strong>{cardData.playStyle}</strong></span>
+                          <Circle className="w-3 h-3 mt-1 text-gray-400 flex-shrink-0" />
+                          <span data-testid="preview-play-style">How they might play game / Risk taker? <strong>{cardData.playStyle}</strong></span>
                         </li>
                       )}
                       {cardData.previousShows && (
                         <li className="flex items-start gap-2">
-                          <span className="text-red-500">○</span>
-                          <span className="text-red-600 italic">{cardData.previousShows}</span>
+                          <Circle className="w-3 h-3 mt-1 text-red-500 flex-shrink-0" />
+                          <span className="text-red-600 italic" data-testid="preview-previous-shows">{cardData.previousShows}</span>
                         </li>
                       )}
                     </ul>
@@ -694,10 +701,10 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
           </Card>
         </div>
       ) : (
-        <Card className="flex-1 flex items-center justify-center">
+        <Card className="flex-1 flex items-center justify-center" data-testid="casting-empty-state">
           <div className="text-center text-muted-foreground">
             <CreditCard className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>Select a contestant to create or edit their casting card</p>
+            <p data-testid="text-empty-state">Select a contestant to create or edit their casting card</p>
           </div>
         </Card>
       )}
