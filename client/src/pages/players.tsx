@@ -432,16 +432,16 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                   {cardData.tagline || 'SHORT TAGLINE'}
                 </h3>
 
-                {/* Bullet points - all editable */}
+                {/* Bullet points - each entire line is editable */}
                 <ul className="space-y-3 text-sm">
                   <li className="flex items-start gap-2">
                     <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                    <span>Energy Level – <strong
+                    <span
                       contentEditable
                       suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
-                      onBlur={(e) => updateField('energyLevel', parseInt(e.currentTarget.textContent || '3') || 3)}
-                    >{cardData.energyLevel || 3}</strong> out of 5 – this helps us when booking players for later in the day</span>
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
+                      onBlur={(e) => updateField('energyLevel', e.currentTarget.textContent || '')}
+                    >{cardData.energyLevel || 'Energy Level – 3 out of 5 – this helps us when booking players for later in the day'}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
@@ -472,35 +472,30 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                   </li>
                   <li className="flex items-start gap-2">
                     <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                    <span>How much they want to win - <span
+                    <span
                       contentEditable
                       suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
                       onBlur={(e) => updateField('howMuchToWin', e.currentTarget.textContent || '')}
-                    >{cardData.howMuchToWin || '$XX,XXX'}</span></span>
+                    >{cardData.howMuchToWin || 'How much they want to win - $XX,XXX'}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                    <span>What they'd do with prize money (high and low) - <strong
+                    <span
                       contentEditable
                       suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
                       onBlur={(e) => updateField('prizeGoalHigh', e.currentTarget.textContent || '')}
-                    >{cardData.prizeGoalHigh || '100K'}</strong> and if they win only <strong
-                      contentEditable
-                      suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
-                      onBlur={(e) => updateField('prizeGoalLow', e.currentTarget.textContent || '')}
-                    >{cardData.prizeGoalLow || '$1000'}</strong></span>
+                    >{cardData.prizeGoalHigh || 'What they\'d do with prize money (high and low) - 100K and if they win only $1000'}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                    <span>How they <u>might</u> play game / Risk taker? <span
+                    <span
                       contentEditable
                       suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
                       onBlur={(e) => updateField('playStyle', e.currentTarget.textContent || '')}
-                    >{cardData.playStyle || ''}</span></span>
+                    >{cardData.playStyle || 'How they might play game / Risk taker?'}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Circle className="w-3 h-3 mt-1.5 text-red-500 flex-shrink-0" />
@@ -758,17 +753,17 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                       {cardData.tagline || 'SHORT TAGLINE'}
                     </h3>
 
-                    {/* Bullet points - all editable */}
+                    {/* Bullet points - each entire line is editable */}
                     <ul className="space-y-3 text-sm" data-testid="preview-details-list">
                       <li className="flex items-start gap-2">
                         <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                        <span>Energy Level – <strong
+                        <span
                           contentEditable
                           suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
-                          onBlur={(e) => updateField('energyLevel', parseInt(e.currentTarget.textContent || '3') || 3)}
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
+                          onBlur={(e) => updateField('energyLevel', e.currentTarget.textContent || '')}
                           data-testid="edit-energy"
-                        >{cardData.energyLevel || 3}</strong> out of 5 – this helps us when booking players for later in the day</span>
+                        >{cardData.energyLevel || 'Energy Level – 3 out of 5 – this helps us when booking players for later in the day'}</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
@@ -802,39 +797,33 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                       </li>
                       <li className="flex items-start gap-2">
                         <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                        <span>How much they want to win - <span
+                        <span
                           contentEditable
                           suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
                           onBlur={(e) => updateField('howMuchToWin', e.currentTarget.textContent || '')}
                           data-testid="edit-win-amount"
-                        >{cardData.howMuchToWin || '$XX,XXX'}</span></span>
+                        >{cardData.howMuchToWin || 'How much they want to win - $XX,XXX'}</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                        <span>What they'd do with prize money (high and low) - <strong
+                        <span
                           contentEditable
                           suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
                           onBlur={(e) => updateField('prizeGoalHigh', e.currentTarget.textContent || '')}
                           data-testid="edit-goal-high"
-                        >{cardData.prizeGoalHigh || '100K'}</strong> and if they win only <strong
-                          contentEditable
-                          suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
-                          onBlur={(e) => updateField('prizeGoalLow', e.currentTarget.textContent || '')}
-                          data-testid="edit-goal-low"
-                        >{cardData.prizeGoalLow || '$1000'}</strong></span>
+                        >{cardData.prizeGoalHigh || 'What they\'d do with prize money (high and low) - 100K and if they win only $1000'}</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <Circle className="w-3 h-3 mt-1.5 text-gray-400 flex-shrink-0" />
-                        <span>How they <u>might</u> play game / Risk taker? <span
+                        <span
                           contentEditable
                           suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
                           onBlur={(e) => updateField('playStyle', e.currentTarget.textContent || '')}
                           data-testid="edit-play-style"
-                        >{cardData.playStyle || ''}</span></span>
+                        >{cardData.playStyle || 'How they might play game / Risk taker?'}</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <Circle className="w-3 h-3 mt-1.5 text-red-500 flex-shrink-0" />
