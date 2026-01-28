@@ -148,6 +148,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
   const [ratingFilter, setRatingFilter] = useState<string>('all');
   const [genderFilter, setGenderFilter] = useState<string>('all');
   const [ageFilter, setAgeFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [planningData, setPlanningData] = useState<RXPlanningData>(loadPlanningData);
   const [draggedContestant, setDraggedContestant] = useState<PlannedContestant | null>(null);
   const [dragSource, setDragSource] = useState<{ type: 'pool' | 'block'; block?: string; dayId?: string } | null>(null);
@@ -381,6 +382,8 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
       }
       if (ratingFilter !== 'all' && c.auditionRating?.toUpperCase() !== ratingFilter) return false;
       if (genderFilter !== 'all' && c.gender?.toLowerCase() !== genderFilter.toLowerCase()) return false;
+      // Status filter
+      if (statusFilter !== 'all' && c.availabilityStatus !== statusFilter) return false;
       // Age filter
       if (ageFilter !== 'all' && c.age) {
         const age = c.age;
@@ -397,7 +400,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
       }
       return true;
     });
-  }, [eligibleContestants, plannedContestantIds, weekPlannedContestantIds, viewMode, searchTerm, ratingFilter, genderFilter, ageFilter]);
+  }, [eligibleContestants, plannedContestantIds, weekPlannedContestantIds, viewMode, searchTerm, ratingFilter, genderFilter, ageFilter, statusFilter]);
 
   // Get blocks for current day
   const currentDayBlocks = useMemo(() => {
@@ -740,20 +743,36 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                       </SelectContent>
                     </Select>
                   </div>
-                  <Select value={ageFilter} onValueChange={setAgeFilter}>
-                    <SelectTrigger data-testid="select-age-filter">
-                      <SelectValue placeholder="Age Range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Ages</SelectItem>
-                      <SelectItem value="18-29">18-29</SelectItem>
-                      <SelectItem value="30-39">30-39</SelectItem>
-                      <SelectItem value="40-49">40-49</SelectItem>
-                      <SelectItem value="50-59">50-59</SelectItem>
-                      <SelectItem value="60-69">60-69</SelectItem>
-                      <SelectItem value="70+">70+</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select value={ageFilter} onValueChange={setAgeFilter}>
+                      <SelectTrigger className="flex-1" data-testid="select-age-filter">
+                        <SelectValue placeholder="Age Range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Ages</SelectItem>
+                        <SelectItem value="18-29">18-29</SelectItem>
+                        <SelectItem value="30-39">30-39</SelectItem>
+                        <SelectItem value="40-49">40-49</SelectItem>
+                        <SelectItem value="50-59">50-59</SelectItem>
+                        <SelectItem value="60-69">60-69</SelectItem>
+                        <SelectItem value="70+">70+</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="flex-1" data-testid="select-status-filter">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="available">Available</SelectItem>
+                        <SelectItem value="assigned">Assigned</SelectItem>
+                        <SelectItem value="standby">Standby</SelectItem>
+                        <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                        <SelectItem value="confirmed">Confirmed</SelectItem>
+                        <SelectItem value="appeared">Appeared</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="max-h-[600px] overflow-y-auto">
