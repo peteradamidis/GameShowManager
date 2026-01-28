@@ -14931,6 +14931,207 @@ Thank you.`;
     }
   });
 
+  // Print casting card - returns HTML page optimized for A4 landscape printing
+  app.get("/api/casting-cards/:contestantId/print", requireAuth, async (req, res) => {
+    try {
+      const { contestantId } = req.params;
+      const card = await storage.getCastingCardByContestantId(contestantId);
+      if (!card) {
+        return res.status(404).send("<html><body><h1>Casting card not found</h1></body></html>");
+      }
+      
+      const contestant = await storage.getContestant(contestantId);
+      if (!contestant) {
+        return res.status(404).send("<html><body><h1>Contestant not found</h1></body></html>");
+      }
+
+      // Parse manual companions
+      let manualCompanions: { name: string; relationship: string; photo: string }[] = [];
+      try {
+        if (card.manualCompanions) {
+          manualCompanions = JSON.parse(card.manualCompanions);
+        }
+      } catch (e) {}
+
+      // Get contestant photo URL
+      const photoUrl = contestant.photoPath ? `/photos/${contestant.photoPath.split('/').pop()}` : '';
+
+      // Build companions HTML
+      const companionCount = manualCompanions.length;
+      let companionsHtml = '';
+      if (companionCount > 0) {
+        const size = companionCount <= 2 ? '80px' : '60px';
+        companionsHtml = manualCompanions.map(comp => `
+          <div style="text-align: center; margin: 4px;">
+            <div style="width: ${size}; height: ${size}; border-radius: 4px; overflow: hidden; background: #e5e5e5; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+              ${comp.photo ? `<img src="${comp.photo}" style="width: 100%; height: 100%; object-fit: cover;" />` : '<span style="color: #999; font-size: 24px;">?</span>'}
+            </div>
+            <div style="font-size: 10px; font-weight: bold; margin-top: 2px;">${comp.name || ''}</div>
+            <div style="font-size: 8px; color: #666;">${comp.relationship || ''}</div>
+          </div>
+        `).join('');
+      }
+
+      // Build questions HTML
+      const questions = [
+        'Occupation',
+        'Suburb Location',
+        'When was the audition?',
+        'What was Contestant like at the Audition / personality',
+        'Family/Partner/Single?',
+        'Kids?',
+        'Anecdotes/Interesting stories',
+        'What would they do with the money?',
+        'How they might play game / Risk taker?',
+        'Other game shows / prize money won / previously on DOND'
+      ];
+      const answers = (card.answers as Record<string, string>) || {};
+      const questionsHtml = questions.map(q => `
+        <div style="margin-bottom: 8px;">
+          <div style="font-weight: bold; font-size: 10px; color: #b45309;">${q}</div>
+          <div style="font-size: 11px; min-height: 16px; border-bottom: 1px solid #d4a574;">${answers[q] || ''}</div>
+        </div>
+      `).join('');
+
+      const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Casting Card - ${contestant.firstName} ${contestant.lastName}</title>
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 10mm;
+    }
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: white; }
+    .card {
+      width: 277mm;
+      height: 190mm;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #f59e0b 100%);
+      border: 3px solid #b45309;
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #b45309;
+    }
+    .logo { height: 40px; }
+    .name-section { text-align: center; }
+    .name { font-size: 28px; font-weight: bold; color: #92400e; }
+    .age-gender { font-size: 14px; color: #b45309; }
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .ready { background: #22c55e; color: white; }
+    .draft { background: #f59e0b; color: white; }
+    .content {
+      display: flex;
+      flex: 1;
+      gap: 16px;
+    }
+    .left-column {
+      width: 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .photo-section {
+      width: 180px;
+      height: 220px;
+      background: white;
+      border: 2px solid #b45309;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .photo-section img { width: 100%; height: 100%; object-fit: cover; }
+    .companions-section {
+      background: white;
+      border: 2px solid #b45309;
+      border-radius: 8px;
+      padding: 8px;
+    }
+    .companions-title {
+      font-size: 11px;
+      font-weight: bold;
+      color: #b45309;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .companions-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+    .right-column {
+      flex: 1;
+      background: white;
+      border: 2px solid #b45309;
+      border-radius: 8px;
+      padding: 12px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div style="width: 100px;"></div>
+      <div class="name-section">
+        <div class="name">${contestant.firstName} ${contestant.lastName}</div>
+        <div class="age-gender">${contestant.age ? contestant.age + ' years old' : ''} ${contestant.gender ? '• ' + contestant.gender : ''}</div>
+      </div>
+      <div class="status-badge ${card.isReady ? 'ready' : 'draft'}">${card.isReady ? 'READY' : 'DRAFT'}</div>
+    </div>
+    <div class="content">
+      <div class="left-column">
+        <div class="photo-section">
+          ${photoUrl ? `<img src="${photoUrl}" alt="Photo" />` : '<span style="color: #999; font-size: 48px;">?</span>'}
+        </div>
+        ${companionCount > 0 ? `
+          <div class="companions-section">
+            <div class="companions-title">SUPPORTERS (${companionCount})</div>
+            <div class="companions-grid">${companionsHtml}</div>
+          </div>
+        ` : ''}
+      </div>
+      <div class="right-column">
+        ${questionsHtml}
+      </div>
+    </div>
+  </div>
+  <script>
+    window.onload = function() { window.print(); };
+  </script>
+</body>
+</html>`;
+
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error: any) {
+      console.error("Error generating print view:", error);
+      res.status(500).send("<html><body><h1>Error generating print view</h1></body></html>");
+    }
+  });
+
   // Delete casting card
   app.delete("/api/casting-cards/:contestantId", requireAuth, async (req, res) => {
     try {

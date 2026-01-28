@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -2657,6 +2657,15 @@ export default function PlayersPage() {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
 
+  const handlePrintCard = (contestantId: string) => {
+    const printWindow = window.open(`/api/casting-cards/${contestantId}/print`, '_blank');
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
+  };
+
   const renderPersonCard = (assignment: SeatAssignment, isPlayer: boolean, showEpisodeSelector: boolean = false) => {
     const c = assignment.contestant;
     if (!c) return null;
@@ -2796,6 +2805,16 @@ export default function PlayersPage() {
                         >
                           <CreditCard className="h-3.5 w-3.5" />
                           Edit Card
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 gap-1 text-xs"
+                          onClick={() => handlePrintCard(c.id)}
+                          data-testid={`button-print-card-${assignment.id}`}
+                        >
+                          <Printer className="h-3.5 w-3.5" />
+                          Print
                         </Button>
                       </>
                     );
