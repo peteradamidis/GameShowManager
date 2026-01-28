@@ -1358,6 +1358,20 @@ export default function PlayersPage() {
 
   const handleEpisodeChange = (assignmentId: string, value: string) => {
     const episodeNumber = value === 'none' ? null : value;
+    
+    // Prevent Block 7 from being assigned to EP1
+    if (episodeNumber === '1') {
+      const assignment = allAssignments.find(a => a.id === assignmentId);
+      if (assignment && assignment.blockNumber === 7) {
+        toast({ 
+          title: "Block 7 Cannot Be EP1", 
+          description: "Block 7 contestants cannot be assigned to Episode 1. Please select a different episode.", 
+          variant: "destructive" 
+        });
+        return;
+      }
+    }
+    
     updateEpisodeMutation.mutate({ assignmentId, episodeNumber });
   };
 
