@@ -153,6 +153,14 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Find all supporters (group members) for the selected contestant
+  const supporters = useMemo(() => {
+    if (!selectedContestant) return [];
+    const contestantGroupId = (selectedContestant as any).groupId;
+    if (!contestantGroupId) return [];
+    return contestants.filter(c => (c as any).groupId === contestantGroupId && c.id !== selectedContestant.id);
+  }, [selectedContestant, contestants]);
+
   // Fetch existing casting card data when contestant is selected
   const { data: existingCard, isLoading: loadingCard } = useQuery<CastingCardData>({
     queryKey: ['/api/casting-cards', selectedContestant?.id],
@@ -325,34 +333,58 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                   </Avatar>
                 </div>
                 
-                {/* Attending With section */}
-                <div className="mt-6 text-center">
-                  <p className="text-sm font-semibold text-gray-600 mb-1">ATTENDING WITH ...</p>
-                  <ArrowDown className="w-5 h-5 text-blue-500 mx-auto mb-2" />
-                  <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-32 h-32 mx-auto bg-gray-100">
-                    <Avatar className="w-full h-full rounded-none">
-                      <AvatarImage src={cardData.companionPhotoUrl || undefined} className="object-cover" />
-                      <AvatarFallback className="text-2xl rounded-none bg-gray-200">
-                        {(cardData.companionName || selectedContestant.attendingWith || '?').split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
+                {/* Attending With section - shows all supporters from group */}
+                {(supporters.length > 0 || selectedContestant.attendingWith) && (
+                  <div className="mt-6 text-center">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">ATTENDING WITH ...</p>
+                    <ArrowDown className="w-5 h-5 text-blue-500 mx-auto mb-2" />
+                    <div className="space-y-3">
+                      {supporters.length > 0 ? (
+                        // Show all group members with their photos
+                        supporters.map((supporter, idx) => (
+                          <div key={supporter.id}>
+                            <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
+                              <Avatar className="w-full h-full rounded-none">
+                                <AvatarImage src={supporter.photoUrl || undefined} className="object-cover" />
+                                <AvatarFallback className="text-xl rounded-none bg-gray-200">
+                                  {supporter.name.split(' ').map(n => n[0]).join('')}
+                                </AvatarFallback>
+                              </Avatar>
+                            </div>
+                            <p className="text-sm font-semibold mt-1">{supporter.name}</p>
+                          </div>
+                        ))
+                      ) : (
+                        // Fallback to manual entry if no group members found
+                        <div>
+                          <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
+                            <Avatar className="w-full h-full rounded-none">
+                              <AvatarImage src={cardData.companionPhotoUrl || undefined} className="object-cover" />
+                              <AvatarFallback className="text-xl rounded-none bg-gray-200">
+                                {(cardData.companionName || selectedContestant.attendingWith || '?').split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                          <div 
+                            contentEditable
+                            suppressContentEditableWarning
+                            className="text-sm font-semibold mt-1 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                            onBlur={(e) => {
+                              const text = e.currentTarget.textContent || '';
+                              const match = text.match(/^(.+?)(?:\s*\((.+)\))?$/);
+                              if (match) {
+                                updateField('companionName', match[1].trim());
+                                if (match[2]) updateField('companionRelationship', match[2].trim());
+                              }
+                            }}
+                          >
+                            {cardData.companionName || selectedContestant.attendingWith || 'NAME'} ({cardData.companionRelationship || 'RELATIONSHIP'})
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div 
-                    contentEditable
-                    suppressContentEditableWarning
-                    className="text-sm font-semibold mt-2 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
-                    onBlur={(e) => {
-                      const text = e.currentTarget.textContent || '';
-                      const match = text.match(/^(.+?)(?:\s*\((.+)\))?$/);
-                      if (match) {
-                        updateField('companionName', match[1].trim());
-                        if (match[2]) updateField('companionRelationship', match[2].trim());
-                      }
-                    }}
-                  >
-                    {cardData.companionName || selectedContestant.attendingWith || 'NAME'} ({cardData.companionRelationship || 'RELATIONSHIP'})
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Right side - Details */}
@@ -623,35 +655,59 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                       </Avatar>
                     </div>
                     
-                    {/* Attending With section */}
-                    <div className="mt-6 text-center" data-testid="preview-companion-section">
-                      <p className="text-sm font-semibold text-gray-600 mb-1">ATTENDING WITH ...</p>
-                      <ArrowDown className="w-5 h-5 text-blue-500 mx-auto mb-2" />
-                      <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-32 h-32 mx-auto bg-gray-100">
-                        <Avatar className="w-full h-full rounded-none">
-                          <AvatarImage src={cardData.companionPhotoUrl || undefined} className="object-cover" />
-                          <AvatarFallback className="text-2xl rounded-none bg-gray-200">
-                            {(cardData.companionName || selectedContestant.attendingWith || '?').split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
+                    {/* Attending With section - shows all supporters from group */}
+                    {(supporters.length > 0 || selectedContestant.attendingWith) && (
+                      <div className="mt-6 text-center" data-testid="preview-companion-section">
+                        <p className="text-sm font-semibold text-gray-600 mb-1">ATTENDING WITH ...</p>
+                        <ArrowDown className="w-5 h-5 text-blue-500 mx-auto mb-2" />
+                        <div className="space-y-3">
+                          {supporters.length > 0 ? (
+                            // Show all group members with their photos
+                            supporters.map((supporter) => (
+                              <div key={supporter.id}>
+                                <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
+                                  <Avatar className="w-full h-full rounded-none">
+                                    <AvatarImage src={supporter.photoUrl || undefined} className="object-cover" />
+                                    <AvatarFallback className="text-xl rounded-none bg-gray-200">
+                                      {supporter.name.split(' ').map(n => n[0]).join('')}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                </div>
+                                <p className="text-sm font-semibold mt-1">{supporter.name}</p>
+                              </div>
+                            ))
+                          ) : (
+                            // Fallback to manual entry if no group members found
+                            <div>
+                              <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
+                                <Avatar className="w-full h-full rounded-none">
+                                  <AvatarImage src={cardData.companionPhotoUrl || undefined} className="object-cover" />
+                                  <AvatarFallback className="text-xl rounded-none bg-gray-200">
+                                    {(cardData.companionName || selectedContestant.attendingWith || '?').split(' ').map(n => n[0]).join('')}
+                                  </AvatarFallback>
+                                </Avatar>
+                              </div>
+                              <div 
+                                contentEditable
+                                suppressContentEditableWarning
+                                className="text-sm font-semibold mt-1 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
+                                onBlur={(e) => {
+                                  const text = e.currentTarget.textContent || '';
+                                  const match = text.match(/^(.+?)(?:\s*\((.+)\))?$/);
+                                  if (match) {
+                                    updateField('companionName', match[1].trim());
+                                    if (match[2]) updateField('companionRelationship', match[2].trim());
+                                  }
+                                }}
+                                data-testid="edit-companion-name"
+                              >
+                                {cardData.companionName || selectedContestant.attendingWith || 'NAME'} ({cardData.companionRelationship || 'RELATIONSHIP'})
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div 
-                        contentEditable
-                        suppressContentEditableWarning
-                        className="text-sm font-semibold mt-2 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text"
-                        onBlur={(e) => {
-                          const text = e.currentTarget.textContent || '';
-                          const match = text.match(/^(.+?)(?:\s*\((.+)\))?$/);
-                          if (match) {
-                            updateField('companionName', match[1].trim());
-                            if (match[2]) updateField('companionRelationship', match[2].trim());
-                          }
-                        }}
-                        data-testid="edit-companion-name"
-                      >
-                        {cardData.companionName || selectedContestant.attendingWith || 'NAME'} ({cardData.companionRelationship || 'RELATIONSHIP'})
-                      </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Right side - Details */}
