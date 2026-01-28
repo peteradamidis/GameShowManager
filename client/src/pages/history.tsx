@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
-import { History, ArrowRightLeft, AlertTriangle, UserCheck, Search, MoveHorizontal, Calendar, UserMinus, UserPlus } from "lucide-react";
+import { History, ArrowRightLeft, AlertTriangle, UserCheck, Search, MoveHorizontal, Calendar, UserMinus, UserPlus, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
 type MovementType = 'seat_change' | 'added_to_reschedule' | 'removed_from_reschedule' | 'standby_added' | 'standby_removed' | 'standby_seated';
 
@@ -23,9 +24,12 @@ interface HistoryEvent {
   recordDayId?: string;
 }
 
+const ITEMS_PER_PAGE = 100;
+
 export default function HistoryPage() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: historyData, isLoading } = useQuery<{
     rebookings: any[];
@@ -173,6 +177,7 @@ export default function HistoryPage() {
   }, [historyData, contestantMap, recordDayMap]);
 
   const filteredEvents = useMemo(() => {
+    // Reset to page 1 when filters change (handled via effect below)
     return combinedEvents.filter(event => {
       const matchesType = typeFilter === "all" || event.type === typeFilter;
       const searchLower = searchQuery.toLowerCase();
@@ -183,6 +188,23 @@ export default function HistoryPage() {
       return matchesType && matchesSearch;
     });
   }, [combinedEvents, typeFilter, searchQuery]);
+
+  // Reset to page 1 when filters change
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
+  const handleTypeFilterChange = (value: string) => {
+    setTypeFilter(value);
+    setCurrentPage(1);
+  };
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredEvents.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedEvents = filteredEvents.slice(startIndex, endIndex);
 
   const rebookingCount = historyData?.rebookings?.length || 0;
   const issueCount = historyData?.attendanceIssues?.length || 0;
@@ -322,12 +344,12 @@ export default function HistoryPage() {
                 <Input
                   placeholder="Search name, email, or details..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-8 w-full sm:w-64"
                   data-testid="input-search"
                 />
               </div>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <Select value={typeFilter} onValueChange={handleTypeFilterChange}>
                 <SelectTrigger className="w-full sm:w-48" data-testid="select-type-filter">
                   <SelectValue placeholder="Filter by type" />
                 </SelectTrigger>
@@ -364,7 +386,7 @@ export default function HistoryPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredEvents.map((event) => (
+                  {paginatedEvents.map((event) => (
                     <TableRow key={`${event.type}-${event.id}`} data-testid={`row-event-${event.id}`}>
                       <TableCell className="text-center">
                         {getEventIcon(event.type, event.movementType)}
@@ -401,8 +423,72 @@ export default function HistoryPage() {
             </div>
           )}
           {filteredEvents.length > 0 && (
-            <div className="mt-4 text-sm text-muted-foreground text-center">
-              Showing {filteredEvents.length} of {combinedEvents.length} events
+            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-muted-foreground">
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredEvents.length)} of {filteredEvents.length} events
+                {filteredEvents.length !== combinedEvents.length && (
+                  <span> (filtered from {combinedEvents.length} total)</span>
+                )}
+              </div>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    data-testid="button-first-page"
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    data-testid="button-prev-page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <div className="flex items-center gap-1 px-2">
+                    <span className="text-sm font-medium">Page</span>
+                    <Select
+                      value={currentPage.toString()}
+                      onValueChange={(v) => setCurrentPage(parseInt(v))}
+                    >
+                      <SelectTrigger className="w-16 h-9" data-testid="select-page">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: totalPages }, (_, i) => (
+                          <SelectItem key={i + 1} value={(i + 1).toString()}>
+                            {i + 1}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <span className="text-sm text-muted-foreground">of {totalPages}</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    data-testid="button-next-page"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    data-testid="button-last-page"
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
