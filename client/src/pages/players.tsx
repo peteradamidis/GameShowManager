@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import dondLogo from "@assets/dond-logo.png";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -384,7 +385,7 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
               {/* Left side - Photos */}
               <div className="w-52 flex-shrink-0">
                 {/* Main photo */}
-                <div className="border-4 border-orange-500 rounded-lg overflow-hidden bg-gray-100">
+                <div className="border-4 border-amber-500 rounded-lg overflow-hidden bg-gray-100">
                   <Avatar className="w-full h-56 rounded-none">
                     <AvatarImage src={selectedContestant.photoUrl || undefined} className="object-cover" />
                     <AvatarFallback className="text-5xl rounded-none bg-gray-200">{selectedContestant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
@@ -401,7 +402,7 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                         // Show all group members with their photos
                         supporters.map((supporter, idx) => (
                           <div key={supporter.id}>
-                            <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
+                            <div className="border-4 border-amber-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
                               <Avatar className="w-full h-full rounded-none">
                                 <AvatarImage src={supporter.photoUrl || undefined} className="object-cover" />
                                 <AvatarFallback className="text-xl rounded-none bg-gray-200">
@@ -415,7 +416,7 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                       ) : (
                         // Fallback to manual entry if no group members found
                         <div>
-                          <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
+                          <div className="border-4 border-amber-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
                             <Avatar className="w-full h-full rounded-none">
                               <AvatarImage src={cardData.companionPhotoUrl || undefined} className="object-cover" />
                               <AvatarFallback className="text-xl rounded-none bg-gray-200">
@@ -447,14 +448,10 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
 
               {/* Right side - Details */}
               <div className="flex-1">
-                {/* Header banner with DOND logo */}
-                <div className="bg-green-700 text-white px-4 py-3 rounded flex items-center justify-between mb-4">
+                {/* Header banner with DOND logo - matching PowerPoint style */}
+                <div className="bg-gradient-to-r from-green-800 to-green-700 text-white px-4 py-3 rounded flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-bold italic tracking-wide">{selectedContestant.name.toUpperCase()}</h2>
-                  <div className="text-right border-l border-white/30 pl-3">
-                    <div className="text-xs font-bold leading-tight">DEAL</div>
-                    <div className="text-xs font-bold leading-tight">NO</div>
-                    <div className="text-red-400 text-xs font-bold leading-tight">DEAL</div>
-                  </div>
+                  <img src={dondLogo} alt="Deal or No Deal" className="h-10 object-contain" />
                 </div>
 
                 {/* Age and details */}
@@ -701,7 +698,7 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                   {/* Left side - Photos */}
                   <div className="w-52 flex-shrink-0">
                     {/* Main photo */}
-                    <div className="border-4 border-orange-500 rounded-lg overflow-hidden bg-gray-100">
+                    <div className="border-4 border-amber-500 rounded-lg overflow-hidden bg-gray-100">
                       <Avatar className="w-full h-56 rounded-none">
                         <AvatarImage src={selectedContestant.photoUrl || undefined} className="object-cover" />
                         <AvatarFallback className="text-5xl rounded-none bg-gray-200">{selectedContestant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
@@ -718,7 +715,7 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                             // Show all group members with their photos
                             supporters.map((supporter) => (
                               <div key={supporter.id}>
-                                <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
+                                <div className="border-4 border-amber-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
                                   <Avatar className="w-full h-full rounded-none">
                                     <AvatarImage src={supporter.photoUrl || undefined} className="object-cover" />
                                     <AvatarFallback className="text-xl rounded-none bg-gray-200">
@@ -732,7 +729,7 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
                           ) : (
                             // Fallback to manual entry if no group members found
                             <div>
-                              <div className="border-4 border-orange-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
+                              <div className="border-4 border-amber-500 rounded-lg overflow-hidden w-28 h-28 mx-auto bg-gray-100">
                                 <Avatar className="w-full h-full rounded-none">
                                   <AvatarImage src={cardData.companionPhotoUrl || undefined} className="object-cover" />
                                   <AvatarFallback className="text-xl rounded-none bg-gray-200">
@@ -765,14 +762,10 @@ function CastingCardsTab({ contestants }: { contestants: Contestant[] }) {
 
                   {/* Right side - Details */}
                   <div className="flex-1">
-                    {/* Header banner with DOND logo */}
-                    <div className="bg-green-700 text-white px-4 py-3 rounded flex items-center justify-between mb-4" data-testid="preview-header-banner">
+                    {/* Header banner with DOND logo - matching PowerPoint style */}
+                    <div className="bg-gradient-to-r from-green-800 to-green-700 text-white px-4 py-3 rounded flex items-center justify-between mb-4" data-testid="preview-header-banner">
                       <h2 className="text-2xl font-bold italic tracking-wide" data-testid="preview-contestant-name">{selectedContestant.name.toUpperCase()}</h2>
-                      <div className="text-right border-l border-white/30 pl-3">
-                        <div className="text-xs font-bold leading-tight">DEAL</div>
-                        <div className="text-xs font-bold leading-tight">NO</div>
-                        <div className="text-red-400 text-xs font-bold leading-tight">DEAL</div>
-                      </div>
+                      <img src={dondLogo} alt="Deal or No Deal" className="h-10 object-contain" />
                     </div>
 
                     {/* Age and details */}
