@@ -65,6 +65,12 @@ export interface SeatData {
   attendingWithOverride?: string; // Override for attending with when it changes after invitation
   mobilityNotesOverride?: string; // Override for mobility/medical notes when they change after invitation
   podiumStory?: boolean; // True if contestant has a podium story
+  previouslyCanceled?: { // Info about who was previously in this seat (if canceled)
+    contestantName: string;
+    canceledAt?: string;
+    reason?: string;
+    wasDeclined?: boolean;
+  };
 }
 
 interface SeatCardProps {
@@ -359,6 +365,32 @@ export function SeatCard({
         <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-1">
           <User className="h-3 w-3" />
           <span className="text-[10px] font-mono">{seatLabel}</span>
+          {seat.previouslyCanceled && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-0.5 text-[8px] text-orange-600 dark:text-orange-400 cursor-help">
+                  <Ban className="h-2 w-2" />
+                  <span className="truncate max-w-[60px]">
+                    {seat.previouslyCanceled.wasDeclined ? 'Declined' : 'Cancelled'}
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs max-w-[200px]">
+                <p className="font-medium">{seat.previouslyCanceled.contestantName}</p>
+                <p className="text-muted-foreground">
+                  {seat.previouslyCanceled.wasDeclined ? 'Declined' : 'Cancelled'}
+                  {seat.previouslyCanceled.canceledAt && (
+                    <> on {new Date(seat.previouslyCanceled.canceledAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}</>
+                  )}
+                </p>
+                {seat.previouslyCanceled.reason && (
+                  <p className="text-[10px] text-muted-foreground italic mt-1 break-words">
+                    {seat.previouslyCanceled.reason.replace(/^\[DECLINED\]\s*/i, '')}
+                  </p>
+                )}
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
       ) : (
         <div className="space-y-1 overflow-hidden">

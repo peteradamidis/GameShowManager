@@ -401,6 +401,32 @@ export default function SeatingChartPage() {
     enabled: !!recordDayId,
   });
 
+  // Fetch canceled assignments for this record day (to show "previously" on empty seats)
+  const { data: canceledAssignments = [] } = useQuery({
+    queryKey: ['/api/canceled-assignments'],
+    enabled: !!recordDayId,
+  });
+
+  // Create a map of canceled assignments by block/seat for quick lookup
+  const canceledByPosition = useMemo(() => {
+    if (!canceledAssignments || !recordDayId) return new Map();
+    const map = new Map();
+    
+    // Filter to current record day and group by position
+    canceledAssignments
+      .filter((c: any) => c.recordDayId === recordDayId && c.blockNumber && c.seatLabel)
+      .forEach((c: any) => {
+        const key = `${c.blockNumber}-${c.seatLabel}`;
+        // Only keep the most recent cancellation per position
+        const existing = map.get(key);
+        if (!existing || new Date(c.createdAt) > new Date(existing.createdAt)) {
+          map.set(key, c);
+        }
+      });
+    
+    return map;
+  }, [canceledAssignments, recordDayId]);
+
   // Derive available contestants from assignments and all contestants
   // This eliminates staleness issues since it's computed from latest data
   const availableContestants = useMemo(() => {
@@ -766,6 +792,9 @@ export default function SeatingChartPage() {
     if (!recordDayId) return [];
     const emptyBlocks = generateEmptyBlocks(recordDayId);
     
+    // Track which seats are occupied
+    const occupiedPositions = new Set<string>();
+    
     if (assignments && Array.isArray(assignments)) {
       assignments.forEach((assignment: any) => {
         const blockIdx = assignment.blockNumber - 1;
@@ -774,6 +803,7 @@ export default function SeatingChartPage() {
           const seatIdx = emptyBlocks[blockIdx].findIndex(seat => seat.id === expectedId);
           
           if (seatIdx !== -1) {
+            occupiedPositions.add(`${assignment.blockNumber}-${assignment.seatLabel}`);
             emptyBlocks[blockIdx][seatIdx] = {
               ...emptyBlocks[blockIdx][seatIdx],
               contestantName: assignment.contestantName,
@@ -812,8 +842,35 @@ export default function SeatingChartPage() {
       });
     }
     
+    // Add previouslyCanceled info to empty seats
+    if (canceledByPosition.size > 0) {
+      emptyBlocks.forEach((block, blockIdx) => {
+        block.forEach((seat, seatIdx) => {
+          // Extract seat label from the ID
+          const seatLabel = seat.id.split('-').pop() || '';
+          const positionKey = `${blockIdx + 1}-${seatLabel}`;
+          
+          // Only add canceled info if the seat is empty (not occupied)
+          if (!occupiedPositions.has(positionKey)) {
+            const canceled = canceledByPosition.get(positionKey);
+            if (canceled) {
+              emptyBlocks[blockIdx][seatIdx] = {
+                ...seat,
+                previouslyCanceled: {
+                  contestantName: canceled.contestant?.name || 'Unknown',
+                  canceledAt: canceled.createdAt,
+                  reason: canceled.reason,
+                  wasDeclined: canceled.wasDeclined,
+                },
+              };
+            }
+          }
+        });
+      });
+    }
+    
     return emptyBlocks;
-  }, [recordDayId, assignments]);
+  }, [recordDayId, assignments, canceledByPosition]);
 
   // Show loading state if record days are still loading
   if (recordDaysLoading) {
