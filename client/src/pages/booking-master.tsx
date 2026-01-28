@@ -289,6 +289,7 @@ export default function BookingMaster() {
   const [isStandbyMode, setIsStandbyMode] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isCheckInMode, setIsCheckInMode] = useState(false);
+  const [filterNotSignedIn, setFilterNotSignedIn] = useState(false);
   const [savedColumnsBeforeCheckIn, setSavedColumnsBeforeCheckIn] = useState<Record<ColumnId, boolean> | null>(null);
   // Use refs instead of state for pending text updates to avoid re-renders
   const pendingTextUpdatesRef = useRef<Record<string, string>>({});
@@ -356,6 +357,7 @@ export default function BookingMaster() {
         setVisibleColumns(savedColumnsBeforeCheckIn);
       }
       setSavedColumnsBeforeCheckIn(null);
+      setFilterNotSignedIn(false); // Reset not signed in filter when exiting
     }
     setIsCheckInMode(!isCheckInMode);
   };
@@ -701,6 +703,10 @@ export default function BookingMaster() {
     if (filterConfirmedOnly && filterPaperworkNotSent && row.assignment?.paperworkSent) {
       return false;
     }
+    // Filter to only show those NOT signed in (when check-in mode is active)
+    if (isCheckInMode && filterNotSignedIn && row.assignment?.signedIn) {
+      return false;
+    }
     return true;
   });
 
@@ -1042,6 +1048,18 @@ export default function BookingMaster() {
             <CheckCircle className="h-4 w-4 mr-2" />
             Check In
           </Button>
+          
+          {isCheckInMode && (
+            <Button 
+              onClick={() => setFilterNotSignedIn(!filterNotSignedIn)}
+              variant={filterNotSignedIn ? "default" : "outline"}
+              className={filterNotSignedIn ? "bg-red-600 hover:bg-red-700 text-white" : "border-red-400 text-red-600 hover:bg-red-50 dark:border-red-500 dark:text-red-400 dark:hover:bg-red-950"}
+              title={filterNotSignedIn ? "Show all contestants" : "Show only those NOT signed in yet"}
+              data-testid="button-filter-not-signed-in"
+            >
+              Not Signed In
+            </Button>
+          )}
           
           <Button 
             onClick={() => {
