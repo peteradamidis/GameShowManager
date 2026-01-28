@@ -704,6 +704,17 @@ export class DbStorage implements IStorage {
             .set({ availabilityStatus: 'available' })
             .where(eq(contestants.id, assignment.contestantId));
         }
+
+        // Log movement history - removed from seat
+        await tx.insert(movementHistory).values({
+          contestantId: assignment.contestantId,
+          movementType: 'seat_change',
+          fromBlockNumber: assignment.blockNumber,
+          fromSeatLabel: assignment.seatLabel,
+          recordDayId: assignment.recordDayId,
+          notes: 'Removed from seat assignment',
+          movedBy: 'System',
+        });
       }
     });
   }
@@ -1164,6 +1175,17 @@ export class DbStorage implements IStorage {
         .update(contestants)
         .set({ availabilityStatus: 'rescheduled' })
         .where(eq(contestants.id, assignment.contestantId));
+
+      // Log movement history
+      await tx.insert(movementHistory).values({
+        contestantId: assignment.contestantId,
+        movementType: 'added_to_reschedule',
+        fromBlockNumber: assignment.blockNumber,
+        fromSeatLabel: assignment.seatLabel,
+        recordDayId: assignment.recordDayId,
+        notes: isDecline ? `Declined booking: ${reason || 'No reason'}` : `Canceled and moved to reschedule: ${reason || 'No reason'}`,
+        movedBy: movedBy || 'System',
+      });
 
       return canceled;
     });
@@ -1741,6 +1763,14 @@ export class DbStorage implements IStorage {
   }
 
   async deleteStandbyAssignment(id: string): Promise<void> {
+    const db = getDb();
+    
+    // Get details before deletion for history
+    const [standby] = await db
+      .select()
+      .from(standbyAssignments)
+      .where(eq(standbyAssignments.id, id));
+
     // First delete any confirmation tokens that reference this standby assignment
     await db
       .delete(standbyConfirmationTokens)
@@ -1750,6 +1780,17 @@ export class DbStorage implements IStorage {
     await db
       .delete(standbyAssignments)
       .where(eq(standbyAssignments.id, id));
+
+    if (standby) {
+      // Log movement history - removed from standby
+      await db.insert(movementHistory).values({
+        contestantId: standby.contestantId,
+        movementType: 'standby_removed',
+        recordDayId: standby.recordDayId,
+        notes: 'Removed from standby list',
+        movedBy: 'System',
+      });
+    }
   }
 
   // Standby Confirmation Tokens
@@ -2335,6 +2376,19 @@ export class DbStorage implements IStorage {
         .delete(attendanceIssues)
         .where(eq(attendanceIssues.id, id));
 
+      // 6. Log movement
+      await tx.insert(movementHistory).values({
+        contestantId: issue.contestantId,
+        movementType: 'removed_from_reschedule',
+        fromBlockNumber: issue.blockNumber,
+        fromSeatLabel: issue.seatLabel,
+        toBlockNumber: issue.blockNumber,
+        toSeatLabel: issue.seatLabel,
+        recordDayId: issue.recordDayId,
+        notes: `Restored to original seat from ${issue.issueType.replace('_', ' ')}`,
+        movedBy: 'System',
+      });
+
       return { attendanceIssue: issue, seatAssignment: assignment };
     });
   }
@@ -2452,10 +2506,21 @@ export class DbStorage implements IStorage {
         .update(contestants)
         .set({ availabilityStatus: 'rescheduled' })
         .where(eq(contestants.id, issue.contestantId));
+
+      // Log movement history
+      await tx.insert(movementHistory).values({
+        contestantId: issue.contestantId,
+        movementType: 'added_to_reschedule',
+        fromBlockNumber: issue.blockNumber,
+        fromSeatLabel: issue.seatLabel,
+        recordDayId: issue.recordDayId,
+        notes: `Moved to reschedule from attendance issue: ${reason}`,
+        movedBy: movedBy || 'System',
+      });
       
       return {
         attendanceIssue: updatedIssue,
-        canceledAssignment,
+        canceledAssignment: canceledAssignment,
       };
     });
   }
