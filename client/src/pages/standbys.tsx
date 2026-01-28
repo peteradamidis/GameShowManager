@@ -429,7 +429,7 @@ export default function StandbysPage() {
         reason,
         movedBy: 'SYSTEM',
         isFromStandby: true,
-        originalAttendanceDate: standby.recordDay?.date ? new Date(standby.recordDay.date) : new Date(),
+        originalAttendanceDate: standby.recordDay?.date ? new Date(standby.recordDay.date).toISOString() : new Date().toISOString(),
       });
       
       // Also update the standby status to 'rescheduled' so the button changes
@@ -474,7 +474,7 @@ export default function StandbysPage() {
         reason: `[${movedBy}] ${fullReason}`,
         movedBy: movedBy,
         isFromStandby: true,
-        originalAttendanceDate: standby.recordDay?.date ? new Date(standby.recordDay.date) : new Date(),
+        originalAttendanceDate: standby.recordDay?.date ? new Date(standby.recordDay.date).toISOString() : new Date().toISOString(),
       });
       
       // Update the standby status
