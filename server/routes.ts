@@ -8517,7 +8517,10 @@ Thank you.`;
 </html>`;
             }
             
-            const subject = emailSubject || `Studio Invitation - ${recordDate}`;
+            // Add "UPDATED" prefix for resends to avoid spam filters detecting duplicate emails
+            const isResend = !!assignment.bookingEmailSent;
+            const baseSubject = emailSubject || `Studio Invitation - ${recordDate}`;
+            const subject = isResend ? `UPDATED: ${baseSubject}` : baseSubject;
             
             const emailConfig: EmailConfig = {
               senderName: sharedConfig.senderName,
@@ -8563,7 +8566,7 @@ Thank you.`;
               confirmationId: tokenRecord.id,
               direction: 'outbound',
               messageType: 'booking_email',
-              subject: emailSubject || `Studio Invitation - ${recordDateForLog}`,
+              subject: subject, // Use the actual subject sent (includes UPDATED prefix for resends)
               body: storedBody,
               sentAt: new Date(),
             });
