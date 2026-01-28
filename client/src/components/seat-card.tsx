@@ -368,7 +368,7 @@ export function SeatCard({
           {seat.previouslyCanceled && (
             <HoverCard openDelay={100} closeDelay={100}>
               <HoverCardTrigger asChild>
-                <div className="flex items-center gap-0.5 text-[8px] text-orange-600 dark:text-orange-400 cursor-help">
+                <div className="flex items-center gap-0.5 text-[8px] text-orange-600 dark:text-orange-400 cursor-pointer">
                   <Ban className="h-2 w-2" />
                   <span className="truncate max-w-[60px]">
                     {seat.previouslyCanceled.wasDeclined ? 'Declined' : 'Cancelled'}
