@@ -11759,6 +11759,11 @@ Thank you.`;
       // Helper to check if assignment is declined
       const isDeclined = (a: SeatAssignment) => a.notes?.toUpperCase().includes('DECLINED');
       
+      // Only export confirmed contestants (not declined, must have confirmedRsvp)
+      const confirmedAssignments = filteredAssignments.filter(a => 
+        a.confirmedRsvp && !isDeclined(a)
+      );
+      
       // Helper to get status label
       const getStatus = (a: SeatAssignment) => {
         if (isDeclined(a)) return 'Declined';
@@ -11767,8 +11772,8 @@ Thank you.`;
         return 'Not Sent';
       };
       
-      // Build export data
-      const exportData = filteredAssignments.map(a => {
+      // Build export data (only confirmed contestants)
+      const exportData = confirmedAssignments.map(a => {
         const contestant = contestants.find(c => c.id === a.contestantId);
         const recordDay = recordDays.find(rd => rd.id === a.recordDayId);
         
