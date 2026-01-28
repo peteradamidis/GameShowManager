@@ -1428,35 +1428,35 @@ export default function StandbysPage() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <RadioGroup 
-              value={declineAction} 
-              onValueChange={(v) => setDeclineAction(v as "reschedule" | "return_pool")}
-              className="space-y-3"
-            >
-              <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
-                <RadioGroupItem value="reschedule" id="action-reschedule" data-testid="radio-reschedule" />
-                <div className="flex flex-col">
-                  <Label htmlFor="action-reschedule" className="font-medium cursor-pointer">
-                    Move to Reschedule list
-                  </Label>
-                  <span className="text-sm text-muted-foreground">
-                    Remove from standbys and add to reschedule tab for later
-                  </span>
-                </div>
+          <RadioGroup 
+            value={declineAction} 
+            onValueChange={(v) => setDeclineAction(v as "reschedule" | "return_pool")}
+            className="space-y-3"
+          >
+            <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
+              <RadioGroupItem value="reschedule" id="action-reschedule" data-testid="radio-reschedule" />
+              <div className="flex flex-col">
+                <Label htmlFor="action-reschedule" className="font-medium cursor-pointer">
+                  Move to Reschedule list
+                </Label>
+                <span className="text-sm text-muted-foreground">
+                  Remove from standbys and add to reschedule tab for later
+                </span>
               </div>
-              
-              <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
-                <RadioGroupItem value="return_pool" id="action-return-pool" data-testid="radio-return-pool" />
-                <div className="flex flex-col">
-                  <Label htmlFor="action-return-pool" className="font-medium cursor-pointer">
-                    Return to Contestant Pool
-                  </Label>
-                  <span className="text-sm text-muted-foreground">
-                    Remove from standbys and make available again
-                  </span>
-                </div>
+            </div>
+            
+            <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
+              <RadioGroupItem value="return_pool" id="action-return-pool" data-testid="radio-return-pool" />
+              <div className="flex flex-col">
+                <Label htmlFor="action-return-pool" className="font-medium cursor-pointer">
+                  Return to Contestant Pool
+                </Label>
+                <span className="text-sm text-muted-foreground">
+                  Remove from standbys and make available again
+                </span>
               </div>
-            </RadioGroup>
+            </div>
+          </RadioGroup>
 
             {declineAction === "reschedule" && (
               <div className="space-y-3 pt-2">
