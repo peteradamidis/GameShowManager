@@ -182,7 +182,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [cardData, setCardData] = useState<CastingCardData | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [cardZoom, setCardZoom] = useState(1.3);
+  const [cardZoom, setCardZoom] = useState(1.5);
   const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -630,7 +630,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <Printer className="h-4 w-4 mr-1" />
                   Print
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => { setCardZoom(1.3); setIsFullscreen(false); }} data-testid="btn-exit-fullscreen">
+                <Button size="sm" variant="outline" onClick={() => { setCardZoom(1.5); setIsFullscreen(false); }} data-testid="btn-exit-fullscreen">
                   <Minimize2 className="h-4 w-4 mr-1" />
                   Exit
                 </Button>
@@ -689,10 +689,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 <ZoomOut className="h-4 w-4" />
               </Button>
               <span className="text-xs text-gray-600 min-w-[40px] text-center">{Math.round(cardZoom * 100)}%</span>
-              <Button size="sm" variant="ghost" onClick={() => setCardZoom(Math.min(1.5, cardZoom + 0.1))} title="Zoom In" data-testid="btn-zoom-in" className="h-8 px-2">
+              <Button size="sm" variant="ghost" onClick={() => setCardZoom(Math.min(2.0, cardZoom + 0.1))} title="Zoom In" data-testid="btn-zoom-in" className="h-8 px-2">
                 <ZoomIn className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setCardZoom(1.3)} title="Reset Zoom" data-testid="btn-zoom-reset" className="h-8 px-2 text-xs">
+              <Button size="sm" variant="ghost" onClick={() => setCardZoom(1.5)} title="Reset Zoom" data-testid="btn-zoom-reset" className="h-8 px-2 text-xs">
                 Reset
               </Button>
             </div>
