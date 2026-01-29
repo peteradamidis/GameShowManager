@@ -310,10 +310,35 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     if (!cardData) return;
     const companions = cardData.manualCompanions || [];
     const updatedCompanions = companions.filter(c => c.id !== companionId);
-    updateField('manualCompanions', updatedCompanions);
-    if (updatedCompanions.length === 0) {
-      updateField('useManualCompanions', false);
+    
+    // Update both fields at once to avoid race conditions
+    const updatedData = {
+      ...cardData,
+      manualCompanions: updatedCompanions,
+      useManualCompanions: updatedCompanions.length > 0,
+    };
+    setCardData(updatedData);
+    hasUnsavedChanges.current = true;
+    
+    // Trigger auto-save with the complete updated data
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
     }
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      if (hasUnsavedChanges.current) {
+        setAutoSaveStatus('saving');
+        saveMutation.mutate(updatedData, {
+          onSuccess: () => {
+            hasUnsavedChanges.current = false;
+            setAutoSaveStatus('saved');
+            setTimeout(() => setAutoSaveStatus('idle'), 2000);
+          },
+          onError: () => {
+            setAutoSaveStatus('idle');
+          }
+        });
+      }
+    }, 1500);
   };
 
   // Update a manual companion field
