@@ -562,6 +562,30 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
   };
 
+  // Helper function to preload all images in an element
+  const preloadImages = async (element: HTMLElement): Promise<void> => {
+    const images = element.querySelectorAll('img');
+    const imagePromises: Promise<void>[] = [];
+    
+    images.forEach((img) => {
+      if (img.complete && img.naturalHeight !== 0) return;
+      
+      imagePromises.push(
+        new Promise((resolve) => {
+          const newImg = new Image();
+          newImg.crossOrigin = 'anonymous';
+          newImg.onload = () => resolve();
+          newImg.onerror = () => resolve(); // Don't fail on error, just continue
+          newImg.src = img.src;
+        })
+      );
+    });
+    
+    await Promise.all(imagePromises);
+    // Extra delay to ensure rendering is complete
+    await new Promise(resolve => setTimeout(resolve, 300));
+  };
+
   const handleDownloadPdf = async () => {
     if (!selectedContestant || !cardData) return;
     
@@ -573,6 +597,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         throw new Error('Card preview not found');
       }
 
+      // Preload all images first
+      await preloadImages(cardElement);
+
       // Dynamic import of html2canvas and jspdf
       const html2canvas = (await import('html2canvas')).default;
       const { jsPDF } = await import('jspdf');
@@ -582,6 +609,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 15000,
       });
 
       const imgData = canvas.toDataURL('image/png');
@@ -621,6 +650,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
 
     try {
+      // Preload all images first
+      await preloadImages(element);
+      
       // Temporarily reset transform for capture
       const originalTransform = (element as HTMLElement).style.transform;
       (element as HTMLElement).style.transform = 'none';
@@ -633,6 +665,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
+        imageTimeout: 15000,
       });
       
       // Restore transform
