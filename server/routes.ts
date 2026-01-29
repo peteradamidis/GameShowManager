@@ -14974,24 +14974,26 @@ Thank you.`;
         `).join('');
       }
 
-      // Build questions HTML
-      const questions = [
-        'Occupation',
-        'Suburb Location',
-        'When was the audition?',
-        'What was Contestant like at the Audition / personality',
-        'Family/Partner/Single?',
-        'Kids?',
-        'Anecdotes/Interesting stories',
-        'What would they do with the money?',
-        'How they might play game / Risk taker?',
-        'Other game shows / prize money won / previously on DOND'
+      // Build info sections HTML using actual card fields
+      const sections = [
+        { label: 'OCCUPATION', value: card.occupation || '' },
+        { label: 'SPONSOR CATEGORY', value: card.sponsorCategory || '' },
+        { label: 'TAGLINE', value: card.tagline || '' },
+        { label: 'ENERGY LEVEL', value: card.energyLevel ? `${card.energyLevel} out of 5` : '' },
+        { label: 'CHARACTER TRAITS', value: card.characterTraits || '' },
+        { label: 'MEET STORY', value: card.meetStory || '' },
+        { label: 'KEY STORIES / FACTS', value: card.keyStories || '' },
+        { label: 'HOW MUCH TO WIN', value: card.howMuchToWin || '' },
+        { label: 'PRIZE GOAL (HIGH)', value: card.prizeGoalHigh || '' },
+        { label: 'PRIZE GOAL (LOW)', value: card.prizeGoalLow || '' },
+        { label: 'PLAY STYLE', value: card.playStyle || '' },
+        { label: 'PREVIOUS SHOWS', value: card.previousShows || '' },
+        { label: 'PRODUCER', value: card.producerName || '' }
       ];
-      const answers = (card.answers as Record<string, string>) || {};
-      const questionsHtml = questions.map(q => `
+      const questionsHtml = sections.map(s => `
         <div style="margin-bottom: 8px;">
-          <div style="font-weight: bold; font-size: 10px; color: #b45309;">${q}</div>
-          <div style="font-size: 11px; min-height: 16px; border-bottom: 1px solid #d4a574;">${answers[q] || ''}</div>
+          <div style="font-weight: bold; font-size: 10px; color: #b45309;">${s.label}</div>
+          <div style="font-size: 11px; min-height: 16px; border-bottom: 1px solid #d4a574;">${s.value}</div>
         </div>
       `).join('');
 
