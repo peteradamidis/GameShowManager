@@ -7285,8 +7285,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         movedBy,
       });
 
-      // Delete the canceled assignment
-      await storage.deleteCanceledAssignment(req.params.id);
+      // Update contestant status to 'assigned'
+      await storage.updateContestant(canceled.contestantId, { availabilityStatus: 'assigned' });
+
+      // DO NOT delete the canceled assignment - keep it as a historical record
+      // The UI will detect the new seat assignment and show "REBOOKED" badge
+      // instead of the Rebook button
 
       res.json({
         message: "Contestant rebooked with paperwork status preserved",
