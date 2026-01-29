@@ -152,6 +152,7 @@ interface CastingCardData {
   companionRelationship?: string | null;
   companionPhotoUrl?: string | null;
   producerName?: string | null;
+  showProducer?: boolean;
   // Manual companions (up to 4)
   manualCompanions?: ManualCompanion[] | null;
   useManualCompanions?: boolean;
@@ -363,6 +364,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           companionRelationship: '',
           companionPhotoUrl: '',
           producerName: '',
+          showProducer: true,
           manualCompanions: autoCompanions.length > 0 ? autoCompanions : [],
           useManualCompanions: autoCompanions.length > 0,
         });
@@ -932,15 +934,34 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 </Button>
 
                 {/* Producer - matching PowerPoint style */}
-                <div className="mt-6 flex items-center border border-gray-300">
-                  <span className="bg-gray-200 px-4 py-2 font-semibold text-sm border-r border-gray-300">PRODUCER:</span>
-                  <span 
-                    contentEditable
-                    suppressContentEditableWarning
-                    className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text flex-1"
-                    onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
-                  >{cardData.producerName || 'INSERT NAME'}</span>
-                </div>
+                {cardData.showProducer !== false ? (
+                  <div className="mt-6 flex items-center border border-gray-300 relative group">
+                    <span className="bg-gray-200 px-4 py-2 font-semibold text-sm border-r border-gray-300">PRODUCER:</span>
+                    <span 
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text flex-1"
+                      onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
+                    >{cardData.producerName || 'INSERT NAME'}</span>
+                    <button
+                      onClick={() => updateField('showProducer', false)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Remove producer field"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => updateField('showProducer', true)}
+                    className="mt-6 text-xs"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Add Producer
+                  </Button>
+                )}
               </div>
             </div>
             </div>
@@ -1322,16 +1343,37 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     </Button>
 
                     {/* Producer - matching PowerPoint style */}
-                    <div className="mt-6 flex items-center border border-gray-300">
-                      <span className="bg-gray-200 px-4 py-2 font-semibold text-sm border-r border-gray-300">PRODUCER:</span>
-                      <span 
-                        contentEditable
-                        suppressContentEditableWarning
-                        className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text flex-1"
-                        onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
-                        data-testid="edit-producer"
-                      >{cardData.producerName || 'INSERT NAME'}</span>
-                    </div>
+                    {cardData.showProducer !== false ? (
+                      <div className="mt-6 flex items-center border border-gray-300 relative group">
+                        <span className="bg-gray-200 px-4 py-2 font-semibold text-sm border-r border-gray-300">PRODUCER:</span>
+                        <span 
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text flex-1"
+                          onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
+                          data-testid="edit-producer"
+                        >{cardData.producerName || 'INSERT NAME'}</span>
+                        <button
+                          onClick={() => updateField('showProducer', false)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remove producer field"
+                          data-testid="btn-remove-producer"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateField('showProducer', true)}
+                        className="mt-6 text-xs"
+                        data-testid="btn-add-producer"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add Producer
+                      </Button>
+                    )}
                   </div>
                 </div>
                 </div>
