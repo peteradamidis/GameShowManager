@@ -1184,18 +1184,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto">
+            <CardContent className="flex-1 overflow-hidden p-4">
               {/* A4 Landscape page container - 297mm x 210mm (scaled for preview) */}
-              <div className="relative mx-auto" style={{ maxWidth: '100%' }}>
+              <div className="relative overflow-hidden" style={{ width: `calc(297mm * ${cardZoom})`, height: `calc(210mm * ${cardZoom})` }}>
                 <div 
                   id="casting-card-preview"
-                  className="bg-white p-6 border-2 border-gray-300 shadow-lg relative overflow-visible origin-top-left"
+                  className="bg-white p-6 border-2 border-gray-300 shadow-lg relative overflow-hidden origin-top-left"
                   style={{ 
                     width: '297mm', 
-                    minHeight: '210mm',
-                    transform: 'scale(0.38)',
+                    height: '210mm',
+                    transform: `scale(${cardZoom})`,
                     transformOrigin: 'top left',
-                    marginBottom: '-62%',
                     fontFamily: 'Calibri, sans-serif'
                   }}
                 >
