@@ -1063,9 +1063,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   style={{ 
                     width: '297mm', 
                     minHeight: '210mm',
-                    transform: 'scale(0.6)',
+                    transform: 'scale(0.48)',
                     transformOrigin: 'top left',
-                    marginBottom: '-40%',
+                    marginBottom: '-52%',
                     fontFamily: 'Calibri, sans-serif'
                   }}
                 >
