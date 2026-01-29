@@ -272,8 +272,35 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       relationship: 'Relationship',
       photoUrl: null
     };
-    updateField('manualCompanions', [...companions, newCompanion]);
-    updateField('useManualCompanions', true);
+    const newCompanions = [...companions, newCompanion];
+    // Update both fields at once to avoid race condition
+    const updatedData = { 
+      ...cardData, 
+      manualCompanions: newCompanions, 
+      useManualCompanions: true 
+    };
+    setCardData(updatedData);
+    hasUnsavedChanges.current = true;
+    
+    // Trigger auto-save
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      if (hasUnsavedChanges.current) {
+        setAutoSaveStatus('saving');
+        saveMutation.mutate(updatedData, {
+          onSuccess: () => {
+            hasUnsavedChanges.current = false;
+            setAutoSaveStatus('saved');
+            setTimeout(() => setAutoSaveStatus('idle'), 2000);
+          },
+          onError: () => {
+            setAutoSaveStatus('idle');
+          }
+        });
+      }
+    }, 1500);
   };
 
   // Remove a manual companion
