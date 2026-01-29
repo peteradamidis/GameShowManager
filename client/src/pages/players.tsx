@@ -1021,11 +1021,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           className="hidden"
           accept="image/*"
           onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file && selectedContestant) {
-              handlePhotoUpload(selectedContestant.id, file);
+            try {
+              const file = e.target.files?.[0];
+              if (file && selectedContestant) {
+                handlePhotoUpload(selectedContestant.id, file);
+              }
+              e.target.value = '';
+            } catch (error) {
+              console.error('Photo upload error:', error);
+              toast({ title: "Upload error", description: "Failed to process photo", variant: "destructive" });
             }
-            e.target.value = '';
           }}
         />
         {/* Companion photo inputs for fullscreen mode */}
@@ -1037,9 +1042,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             accept="image/*"
             ref={(el) => { companionPhotoRefs.current[companion.id] = el; }}
             onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleCompanionPhotoUpload(companion.id, file);
-              e.target.value = '';
+              try {
+                const file = e.target.files?.[0];
+                if (file) handleCompanionPhotoUpload(companion.id, file);
+                e.target.value = '';
+              } catch (error) {
+                console.error('Companion photo error:', error);
+                toast({ title: "Upload error", description: "Failed to process photo", variant: "destructive" });
+              }
             }}
           />
         ))}
@@ -1171,11 +1181,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   className="hidden"
                   accept="image/*"
                   onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file && selectedContestant) {
-                      handlePhotoUpload(selectedContestant.id, file);
+                    try {
+                      const file = e.target.files?.[0];
+                      if (file && selectedContestant) {
+                        handlePhotoUpload(selectedContestant.id, file);
+                      }
+                      e.target.value = '';
+                    } catch (error) {
+                      console.error('Photo upload error:', error);
+                      toast({ title: "Upload error", description: "Failed to process photo", variant: "destructive" });
                     }
-                    e.target.value = '';
                   }}
                 />
                 
@@ -1226,9 +1241,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                               accept="image/*"
                               ref={(el) => { companionPhotoRefs.current[companion.id] = el; }}
                               onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handleCompanionPhotoUpload(companion.id, file);
-                                e.target.value = '';
+                                try {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleCompanionPhotoUpload(companion.id, file);
+                                  e.target.value = '';
+                                } catch (error) {
+                                  console.error('Companion photo error:', error);
+                                  toast({ title: "Upload error", description: "Failed to process photo", variant: "destructive" });
+                                }
                               }}
                             />
                             <div 
