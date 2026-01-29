@@ -58,7 +58,7 @@ export default function ReschedulePage() {
   const [filterOriginalRecordDayId, setFilterOriginalRecordDayId] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterType, setFilterType] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("pending"); // "all", "pending", "rebooked"
+  const [filterStatus, setFilterStatus] = useState<string>("rescheduled"); // filter by contestant status
 
   const handleRowClick = (contestant: any) => {
     setSelectedContestant(contestant);
@@ -369,13 +369,16 @@ export default function ReschedulePage() {
             <div className="flex items-center gap-2">
               <Label htmlFor="filter-status" className="text-sm font-medium whitespace-nowrap">Status:</Label>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger id="filter-status" className="w-32" data-testid="select-filter-status">
-                  <SelectValue placeholder="Pending" />
+                <SelectTrigger id="filter-status" className="w-36" data-testid="select-filter-status">
+                  <SelectValue placeholder="Rescheduled" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="rebooked">Rebooked</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                  <SelectItem value="assigned">Assigned</SelectItem>
+                  <SelectItem value="invited">Invited</SelectItem>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="available">Available</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -451,11 +454,9 @@ export default function ReschedulePage() {
                     const matchesType = filterType === "all" || 
                       (filterType === "standby" && cancellation.isFromStandby) || 
                       (filterType === "canceled" && !cancellation.isFromStandby);
-                    // Check if contestant is currently booked
-                    const isRebooked = !!currentBookings[cancellation.contestantId];
-                    const matchesStatus = filterStatus === "all" || 
-                      (filterStatus === "pending" && !isRebooked) ||
-                      (filterStatus === "rebooked" && isRebooked);
+                    // Filter by contestant's actual status
+                    const contestantStatus = cancellation.contestant?.status?.toLowerCase() || '';
+                    const matchesStatus = filterStatus === "all" || contestantStatus === filterStatus;
                     return matchesDate && matchesSearch && matchesType && matchesStatus;
                   })
                   .map((cancellation: any) => (
