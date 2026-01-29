@@ -870,7 +870,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 </h3>
 
                 {/* Bullet points - dynamic with add/remove */}
-                <ul className="space-y-3 text-base">
+                <ul className="space-y-3" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '14px' }}>
                   {(cardData.bulletPoints || defaultBulletPoints).map((point, index) => (
                     <li key={index} className="flex items-start gap-3 group">
                       <Circle className={`w-4 h-4 mt-1 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
@@ -1254,7 +1254,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     </h3>
 
                     {/* Bullet points - dynamic with add/remove */}
-                    <ul className="space-y-3 text-base" data-testid="preview-details-list">
+                    <ul className="space-y-3" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '14px' }} data-testid="preview-details-list">
                       {(cardData.bulletPoints || defaultBulletPoints).map((point, index) => (
                         <li key={index} className="flex items-start gap-3 group">
                           <Circle className={`w-4 h-4 mt-1 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
