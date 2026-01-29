@@ -478,6 +478,98 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
   };
 
+  // Print the card directly from the browser - guaranteed to match editor
+  const handlePrint = () => {
+    const element = document.getElementById('casting-card-preview');
+    if (!element) {
+      toast({ title: "Error", description: "Card preview not found", variant: "destructive" });
+      return;
+    }
+
+    // Create a new window with just the card content
+    const printWindow = window.open('', '_blank', 'width=1123,height=794');
+    if (!printWindow) {
+      toast({ title: "Error", description: "Could not open print window. Please allow popups.", variant: "destructive" });
+      return;
+    }
+
+    // Clone the element and get its styles
+    const clone = element.cloneNode(true) as HTMLElement;
+    
+    // Remove any interactive elements and edit hints
+    clone.querySelectorAll('[contenteditable]').forEach(el => {
+      el.removeAttribute('contenteditable');
+      (el as HTMLElement).style.outline = 'none';
+      (el as HTMLElement).style.cursor = 'default';
+    });
+    clone.querySelectorAll('button').forEach(el => el.remove());
+    clone.querySelectorAll('input[type="file"]').forEach(el => el.remove());
+    clone.querySelectorAll('.group-hover\\:opacity-100').forEach(el => el.remove());
+    
+    // Get all stylesheets
+    const styles = Array.from(document.styleSheets)
+      .map(sheet => {
+        try {
+          return Array.from(sheet.cssRules).map(rule => rule.cssText).join('\\n');
+        } catch (e) {
+          return '';
+        }
+      })
+      .join('\\n');
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Casting Card - ${selectedContestant?.name || 'Print'}</title>
+        <style>
+          ${styles}
+          @page {
+            size: A4 landscape;
+            margin: 10mm;
+          }
+          @media print {
+            html, body {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+          }
+          * { box-sizing: border-box; }
+          body {
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: white;
+          }
+          .card-container {
+            width: 100%;
+            max-width: 277mm;
+            margin: 0 auto;
+          }
+          /* Hide page boundary indicator */
+          .border-dashed { display: none !important; }
+          /* Remove hover/focus styles */
+          [class*="hover:"], [class*="focus:"] {
+            background: transparent !important;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="card-container">
+          ${clone.outerHTML}
+        </div>
+        <script>
+          window.onload = function() {
+            setTimeout(function() { window.print(); }, 500);
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   const updateField = (field: keyof CastingCardData, value: any) => {
     if (cardData) {
       setCardData({ ...cardData, [field]: value });
@@ -510,6 +602,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={isGeneratingPdf} data-testid="btn-download-pdf-fs">
                   <Download className="h-4 w-4 mr-1" />
                   PDF
+                </Button>
+                <Button size="sm" variant="outline" onClick={handlePrint} data-testid="btn-print-card-fs">
+                  <Printer className="h-4 w-4 mr-1" />
+                  Print
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setIsFullscreen(false)} data-testid="btn-exit-fullscreen">
                   <Minimize2 className="h-4 w-4 mr-1" />
