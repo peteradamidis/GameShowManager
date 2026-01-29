@@ -512,7 +512,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       const imgY = (pdfHeight - imgHeight * ratio) / 2;
 
       pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-      pdf.save(`${selectedContestant.name.replace(/\s+/g, '_')}_CastingCard.pdf`);
+      const contestantDisplayName = selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown';
+      pdf.save(`${contestantDisplayName.replace(/\s+/g, '_')}_CastingCard.pdf`);
       
       toast({ title: "PDF Downloaded!", description: "Casting card saved as PDF" });
     } catch (error: any) {
@@ -671,7 +672,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         <div className="max-w-5xl mx-auto">
           <div className="sticky top-0 bg-white py-2 border-b z-10 space-y-2">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{selectedContestant.name} - Casting Card</h2>
+              <h2 className="text-lg font-semibold">{selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown'} - Casting Card</h2>
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending || autoSaveStatus === 'saving'} data-testid="btn-save-card-fs">
                   {saveMutation.isPending || autoSaveStatus === 'saving' ? 'Saving...' : autoSaveStatus === 'saved' ? '✓ Saved' : 'Save'}
@@ -801,7 +802,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 >
                   <Avatar className="w-full h-72 rounded-none">
                     <AvatarImage src={selectedContestant.photoUrl || undefined} className="object-cover" />
-                    <AvatarFallback className="text-6xl rounded-none bg-gray-200">{selectedContestant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    <AvatarFallback className="text-6xl rounded-none bg-gray-200">{(selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'U').split(' ').map(n => n?.[0] || '').join('')}</AvatarFallback>
                   </Avatar>
                   {/* Upload overlay */}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -926,7 +927,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)'
                     }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
-                  >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
+                  >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
                   <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain" />
                 </div>
 
@@ -1230,7 +1231,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     >
                       <Avatar className="w-full h-72 rounded-none">
                         <AvatarImage src={selectedContestant.photoUrl || undefined} className="object-cover" />
-                        <AvatarFallback className="text-6xl rounded-none bg-gray-200">{selectedContestant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                        <AvatarFallback className="text-6xl rounded-none bg-gray-200">{(selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'U').split(' ').map(n => n?.[0] || '').join('')}</AvatarFallback>
                       </Avatar>
                       {/* Upload overlay */}
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -1345,7 +1346,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         }}
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
-                      >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
+                      >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
                       <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain" />
                     </div>
 
