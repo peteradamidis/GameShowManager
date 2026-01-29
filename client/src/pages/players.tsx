@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Link2 } from "lucide-react";
 import { format } from "date-fns";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -188,6 +190,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [renderError, setRenderError] = useState<string | null>(null);
+  const [showLinkedPartnersPicker, setShowLinkedPartnersPicker] = useState(false);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasUnsavedChanges = useRef(false);
 
@@ -303,6 +306,75 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         });
       }
     }, 1500);
+  };
+
+  // Get linked group members for current contestant
+  const getLinkedPartners = (): Contestant[] => {
+    if (!selectedContestant) return [];
+    const groupId = (selectedContestant as any).groupId;
+    if (!groupId) return [];
+    return contestants.filter(c => (c as any).groupId === groupId && c.id !== selectedContestant.id);
+  };
+
+  // Add a linked partner as companion
+  const addLinkedPartnerAsCompanion = (partner: Contestant) => {
+    if (!cardData) return;
+    const companions = cardData.manualCompanions || [];
+    if (companions.length >= 4) {
+      toast({ title: "Maximum reached", description: "You can add up to 4 companions", variant: "destructive" });
+      return;
+    }
+    // Check if already added
+    if (companions.some(c => c.id === partner.id)) {
+      toast({ title: "Already added", description: `${partner.name} is already a companion`, variant: "destructive" });
+      return;
+    }
+    const newCompanion: ManualCompanion = {
+      id: partner.id,
+      name: partner.name || 'Partner',
+      relationship: selectedContestant?.attendingWith?.toLowerCase().includes('partner') ? 'Partner' : 
+                   selectedContestant?.attendingWith?.toLowerCase().includes('wife') ? 'Wife' :
+                   selectedContestant?.attendingWith?.toLowerCase().includes('husband') ? 'Husband' :
+                   selectedContestant?.attendingWith?.toLowerCase().includes('friend') ? 'Friend' :
+                   selectedContestant?.attendingWith?.toLowerCase().includes('sister') ? 'Sister' :
+                   selectedContestant?.attendingWith?.toLowerCase().includes('brother') ? 'Brother' :
+                   selectedContestant?.attendingWith?.toLowerCase().includes('mother') ? 'Mother' :
+                   selectedContestant?.attendingWith?.toLowerCase().includes('father') ? 'Father' :
+                   selectedContestant?.attendingWith?.toLowerCase().includes('daughter') ? 'Daughter' :
+                   selectedContestant?.attendingWith?.toLowerCase().includes('son') ? 'Son' : 'Companion',
+      photoUrl: partner.photoUrl || null
+    };
+    const newCompanions = [...companions, newCompanion];
+    const updatedData = { 
+      ...cardData, 
+      manualCompanions: newCompanions, 
+      useManualCompanions: true 
+    };
+    setCardData(updatedData);
+    setShowLinkedPartnersPicker(false);
+    hasUnsavedChanges.current = true;
+    
+    // Trigger auto-save
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      if (hasUnsavedChanges.current) {
+        setAutoSaveStatus('saving');
+        saveMutation.mutate(updatedData, {
+          onSuccess: () => {
+            hasUnsavedChanges.current = false;
+            setAutoSaveStatus('saved');
+            setTimeout(() => setAutoSaveStatus('idle'), 2000);
+          },
+          onError: () => {
+            setAutoSaveStatus('idle');
+          }
+        });
+      }
+    }, 1500);
+    
+    toast({ title: "Partner added", description: `${partner.name} added as companion` });
   };
 
   // Remove a manual companion
@@ -1086,18 +1158,74 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     );
                   })()}
                   
-                  {/* Add companion button */}
+                  {/* Add companion buttons */}
                   {(cardData.manualCompanions?.length || 0) < 4 && (
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={addManualCompanion}
-                      className="mt-3 text-xs bg-blue-600 hover:bg-blue-700"
-                      data-testid="btn-add-companion"
-                    >
-                      <Plus className="w-3 h-3 mr-1" />
-                      Add Custom Partner ({(cardData.manualCompanions?.length || 0)}/4)
-                    </Button>
+                    <div className="flex items-center gap-2 mt-3 justify-center flex-wrap">
+                      {/* Add from linked group members */}
+                      {getLinkedPartners().length > 0 && (
+                        <Popover open={showLinkedPartnersPicker} onOpenChange={setShowLinkedPartnersPicker}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="text-xs bg-purple-600 hover:bg-purple-700"
+                              data-testid="btn-add-linked-partner"
+                            >
+                              <Link2 className="w-3 h-3 mr-1" />
+                              Add Linked Partner ({getLinkedPartners().length})
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-72 p-2" align="center">
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-muted-foreground mb-2">
+                                Select a linked group member:
+                              </p>
+                              {getLinkedPartners().map(partner => {
+                                const alreadyAdded = (cardData.manualCompanions || []).some(c => c.id === partner.id);
+                                return (
+                                  <button
+                                    key={partner.id}
+                                    onClick={() => !alreadyAdded && addLinkedPartnerAsCompanion(partner)}
+                                    disabled={alreadyAdded}
+                                    className={`w-full flex items-center gap-2 p-2 rounded text-left text-sm ${
+                                      alreadyAdded 
+                                        ? 'opacity-50 cursor-not-allowed bg-muted' 
+                                        : 'hover:bg-accent cursor-pointer'
+                                    }`}
+                                    data-testid={`btn-select-linked-partner-${partner.id}`}
+                                  >
+                                    <Avatar className="h-8 w-8 rounded border">
+                                      <AvatarImage src={partner.photoUrl || undefined} className="object-cover object-top" />
+                                      <AvatarFallback className="text-xs">
+                                        {partner.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || '?'}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium truncate">{partner.name}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {partner.gender === 'Female' ? 'F' : 'M'} • {partner.age}y
+                                        {alreadyAdded && ' • Already added'}
+                                      </p>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                      {/* Add custom partner */}
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={addManualCompanion}
+                        className="text-xs bg-blue-600 hover:bg-blue-700"
+                        data-testid="btn-add-companion"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add Custom Partner ({(cardData.manualCompanions?.length || 0)}/4)
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1533,18 +1661,74 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         );
                       })()}
                       
-                      {/* Add companion button */}
+                      {/* Add companion buttons */}
                       {(cardData.manualCompanions?.length || 0) < 4 && (
-                        <Button
-                          size="sm"
-                          variant="default"
-                          onClick={addManualCompanion}
-                          className="mt-3 text-xs bg-blue-600 hover:bg-blue-700"
-                          data-testid="btn-add-companion-preview"
-                        >
-                          <Plus className="w-3 h-3 mr-1" />
-                          Add Custom Partner ({(cardData.manualCompanions?.length || 0)}/4)
-                        </Button>
+                        <div className="flex items-center gap-2 mt-3 justify-center flex-wrap">
+                          {/* Add from linked group members */}
+                          {getLinkedPartners().length > 0 && (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  className="text-xs bg-purple-600 hover:bg-purple-700"
+                                  data-testid="btn-add-linked-partner-preview"
+                                >
+                                  <Link2 className="w-3 h-3 mr-1" />
+                                  Add Linked Partner ({getLinkedPartners().length})
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-72 p-2" align="center">
+                                <div className="space-y-1">
+                                  <p className="text-xs font-medium text-muted-foreground mb-2">
+                                    Select a linked group member:
+                                  </p>
+                                  {getLinkedPartners().map(partner => {
+                                    const alreadyAdded = (cardData.manualCompanions || []).some(c => c.id === partner.id);
+                                    return (
+                                      <button
+                                        key={partner.id}
+                                        onClick={() => !alreadyAdded && addLinkedPartnerAsCompanion(partner)}
+                                        disabled={alreadyAdded}
+                                        className={`w-full flex items-center gap-2 p-2 rounded text-left text-sm ${
+                                          alreadyAdded 
+                                            ? 'opacity-50 cursor-not-allowed bg-muted' 
+                                            : 'hover:bg-accent cursor-pointer'
+                                        }`}
+                                        data-testid={`btn-select-linked-partner-preview-${partner.id}`}
+                                      >
+                                        <Avatar className="h-8 w-8 rounded border">
+                                          <AvatarImage src={partner.photoUrl || undefined} className="object-cover object-top" />
+                                          <AvatarFallback className="text-xs">
+                                            {partner.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || '?'}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="font-medium truncate">{partner.name}</p>
+                                          <p className="text-xs text-muted-foreground">
+                                            {partner.gender === 'Female' ? 'F' : 'M'} • {partner.age}y
+                                            {alreadyAdded && ' • Already added'}
+                                          </p>
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                          {/* Add custom partner */}
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={addManualCompanion}
+                            className="text-xs bg-blue-600 hover:bg-blue-700"
+                            data-testid="btn-add-companion-preview"
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Add Custom Partner ({(cardData.manualCompanions?.length || 0)}/4)
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>
