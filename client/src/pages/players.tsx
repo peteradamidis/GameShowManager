@@ -176,7 +176,7 @@ const defaultBulletPoints = [
 function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: { contestants: Contestant[]; initialContestantId?: string | null; onClearInitial?: () => void }) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
-  const [ratingFilter, setRatingFilter] = useState<string>('all');
+  const [ratingFilter, setRatingFilter] = useState<string>('A+');
   const [genderFilter, setGenderFilter] = useState<string>('all');
   const [selectedContestant, setSelectedContestant] = useState<Contestant | null>(null);
   const [cardData, setCardData] = useState<CastingCardData | null>(null);
@@ -1023,8 +1023,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <SelectItem value="A+">A+</SelectItem>
                     <SelectItem value="A">A</SelectItem>
                     <SelectItem value="B+">B+</SelectItem>
-                    <SelectItem value="B">B</SelectItem>
-                    <SelectItem value="C">C</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={genderFilter} onValueChange={setGenderFilter}>
