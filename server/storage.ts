@@ -1276,6 +1276,13 @@ export class DbStorage implements IStorage {
         originalAttendanceDate: data.originalAttendanceDate ?? null,
       })
       .returning();
+    
+    // Update contestant state to 'rescheduled'
+    await db
+      .update(contestants)
+      .set({ state: 'rescheduled' })
+      .where(eq(contestants.id, data.contestantId));
+    
     return created;
   }
 

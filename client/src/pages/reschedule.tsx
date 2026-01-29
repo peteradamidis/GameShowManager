@@ -58,7 +58,7 @@ export default function ReschedulePage() {
   const [filterOriginalRecordDayId, setFilterOriginalRecordDayId] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterType, setFilterType] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("all"); // filter by contestant state
+  const [filterStatus, setFilterStatus] = useState<string>("rescheduled"); // filter by contestant state
 
   const handleRowClick = (contestant: any) => {
     setSelectedContestant(contestant);

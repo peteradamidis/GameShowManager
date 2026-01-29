@@ -2542,7 +2542,14 @@ export default function SeatingChartPage() {
                     <div className="flex-1 grid grid-cols-4 gap-x-4 gap-y-2">
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Name</label>
-                        <p className="text-sm font-medium">{contestant.name}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-medium">{contestant.name}</p>
+                          {contestant.state === 'rescheduled' && (
+                            <Badge className="text-[10px] px-1.5 py-0 bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-300 dark:border-orange-700">
+                              RESCHEDULE
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Age</label>
