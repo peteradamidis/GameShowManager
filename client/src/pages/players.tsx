@@ -178,6 +178,43 @@ const defaultBulletPoints = [
   'Other game shows / prize money won / previously on DOND'
 ];
 
+// LocalStorage backup key prefix
+const CARD_BACKUP_KEY = 'casting_card_backup_';
+
+// Helper to get backup from localStorage
+const getCardBackup = (contestantId: string): CastingCardData | null => {
+  try {
+    const stored = localStorage.getItem(CARD_BACKUP_KEY + contestantId);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('Error reading card backup:', e);
+  }
+  return null;
+};
+
+// Helper to save backup to localStorage
+const saveCardBackup = (contestantId: string, data: CastingCardData) => {
+  try {
+    localStorage.setItem(CARD_BACKUP_KEY + contestantId, JSON.stringify({
+      ...data,
+      _backupTimestamp: Date.now()
+    }));
+  } catch (e) {
+    console.error('Error saving card backup:', e);
+  }
+};
+
+// Helper to clear backup from localStorage
+const clearCardBackup = (contestantId: string) => {
+  try {
+    localStorage.removeItem(CARD_BACKUP_KEY + contestantId);
+  } catch (e) {
+    console.error('Error clearing card backup:', e);
+  }
+};
+
 // Casting Cards Tab Component
 function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: { contestants: Contestant[]; initialContestantId?: string | null; onClearInitial?: () => void }) {
   const { toast } = useToast();
@@ -193,6 +230,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [renderError, setRenderError] = useState<string | null>(null);
   const [showLinkedPartnersPicker, setShowLinkedPartnersPicker] = useState(false);
+  const [hasBackup, setHasBackup] = useState<boolean>(false);
+  const [backupTimestamp, setBackupTimestamp] = useState<number | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasUnsavedChanges = useRef(false);
 
@@ -541,6 +580,55 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       }
     }
   }, [selectedContestant, existingCard, loadingCard, contestants]);
+
+  // Check for backup when contestant changes
+  useEffect(() => {
+    if (selectedContestant) {
+      const backup = getCardBackup(selectedContestant.id);
+      if (backup && (backup as any)._backupTimestamp) {
+        setHasBackup(true);
+        setBackupTimestamp((backup as any)._backupTimestamp);
+      } else {
+        setHasBackup(false);
+        setBackupTimestamp(null);
+      }
+    } else {
+      setHasBackup(false);
+      setBackupTimestamp(null);
+    }
+  }, [selectedContestant]);
+
+  // Save card data to localStorage backup whenever it changes (debounced)
+  useEffect(() => {
+    if (cardData && selectedContestant) {
+      const timeoutId = setTimeout(() => {
+        saveCardBackup(selectedContestant.id, cardData);
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [cardData, selectedContestant]);
+
+  // Function to restore from backup
+  const restoreFromBackup = () => {
+    if (selectedContestant) {
+      const backup = getCardBackup(selectedContestant.id);
+      if (backup) {
+        const { _backupTimestamp, ...cardDataWithoutTimestamp } = backup as any;
+        setCardData(cardDataWithoutTimestamp);
+        toast({ title: "Restored!", description: "Card data restored from backup" });
+      }
+    }
+  };
+
+  // Function to clear backup manually
+  const discardBackup = () => {
+    if (selectedContestant) {
+      clearCardBackup(selectedContestant.id);
+      setHasBackup(false);
+      setBackupTimestamp(null);
+      toast({ title: "Backup cleared", description: "Local backup has been discarded" });
+    }
+  };
 
   // Save casting card mutation - uses PATCH for updates, POST for new cards
   const saveMutation = useMutation({
@@ -959,11 +1047,22 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           <div className="sticky top-0 bg-white py-2 border-b z-10 space-y-2">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">{selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown'} - Casting Card</h2>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending || autoSaveStatus === 'saving'} data-testid="btn-save-card-fs">
                   {saveMutation.isPending || autoSaveStatus === 'saving' ? 'Saving...' : autoSaveStatus === 'saved' ? '✓ Saved' : 'Save'}
                 </Button>
                 <span className="text-xs text-gray-500">Auto-saves</span>
+                {hasBackup && (
+                  <div className="flex items-center gap-1 ml-2 px-2 py-1 bg-amber-100 border border-amber-300 rounded text-xs">
+                    <span className="text-amber-700">Backup</span>
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-amber-700 hover:bg-amber-200" onClick={restoreFromBackup} data-testid="btn-restore-backup-fs">
+                      Restore
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-6 px-1 text-amber-600 hover:bg-amber-200" onClick={discardBackup} data-testid="btn-discard-backup-fs">
+                      ✕
+                    </Button>
+                  </div>
+                )}
                 <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={isGeneratingPdf} data-testid="btn-download-pdf-fs">
                   <Download className="h-4 w-4 mr-1" />
                   PDF
@@ -1547,11 +1646,22 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     {cardData.isReady ? 'Ready' : 'Mark Ready'}
                   </Button>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                   <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending || autoSaveStatus === 'saving'} data-testid="btn-save-card">
                     {saveMutation.isPending || autoSaveStatus === 'saving' ? 'Saving...' : autoSaveStatus === 'saved' ? '✓ Saved' : 'Save'}
                   </Button>
-                  <span className="text-xs text-gray-500 ml-2">Auto-saves</span>
+                  <span className="text-xs text-gray-500">Auto-saves</span>
+                  {hasBackup && (
+                    <div className="flex items-center gap-1 ml-2 px-2 py-1 bg-amber-100 border border-amber-300 rounded text-xs">
+                      <span className="text-amber-700">Backup available</span>
+                      <Button size="sm" variant="ghost" className="h-6 px-2 text-amber-700 hover:bg-amber-200" onClick={restoreFromBackup} data-testid="btn-restore-backup">
+                        Restore
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-6 px-1 text-amber-600 hover:bg-amber-200" onClick={discardBackup} data-testid="btn-discard-backup">
+                        ✕
+                      </Button>
+                    </div>
+                  )}
                   <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={isGeneratingPdf} data-testid="btn-download-pdf">
                     <Download className="h-4 w-4 mr-1" />
                     PDF
