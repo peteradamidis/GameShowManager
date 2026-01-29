@@ -2660,6 +2660,8 @@ function DataMaintenanceSection() {
   const [rescheduleFixResult, setRescheduleFixResult] = useState<{ fixedCount: number; totalInReschedule: number } | null>(null);
   const [isFixingStandbyReschedule, setIsFixingStandbyReschedule] = useState(false);
   const [standbyRescheduleFixResult, setStandbyRescheduleFixResult] = useState<{ fixedCount: number; totalRescheduledStandbys: number } | null>(null);
+  const [isCleaningDuplicates, setIsCleaningDuplicates] = useState(false);
+  const [duplicateCleanupResult, setDuplicateCleanupResult] = useState<{ deletedCount: number; details: string[] } | null>(null);
   const { toast } = useToast();
 
   const handleFixStatus = async () => {
@@ -2775,6 +2777,32 @@ function DataMaintenanceSection() {
       });
     } finally {
       setIsFixingStandbyReschedule(false);
+    }
+  };
+
+  const handleCleanupDuplicates = async () => {
+    setIsCleaningDuplicates(true);
+    setDuplicateCleanupResult(null);
+    try {
+      const response = await apiRequest("POST", "/api/canceled-assignments/cleanup-duplicates");
+      if (response.ok) {
+        const data = await response.json();
+        setDuplicateCleanupResult({ deletedCount: data.deletedCount, details: data.details || [] });
+        toast({
+          title: "Duplicate cleanup completed",
+          description: data.deletedCount > 0
+            ? `Removed ${data.deletedCount} duplicate reschedule entries.`
+            : "No duplicates found.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Cleanup failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsCleaningDuplicates(false);
     }
   };
 
@@ -2957,6 +2985,57 @@ function DataMaintenanceSection() {
             )}
           </div>
         )}
+
+        <div className="border-t pt-4 mt-4">
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Cleanup Duplicate Reschedule Entries</p>
+            <p className="text-sm text-muted-foreground">
+              Removes duplicate entries from the Reschedule list. If a contestant appears multiple times 
+              (e.g., moved to reschedule from multiple dates), this keeps only the most recent entry and removes the rest.
+            </p>
+          </div>
+          
+          <Button 
+            onClick={handleCleanupDuplicates} 
+            disabled={isCleaningDuplicates}
+            className="mt-2"
+            variant="outline"
+            data-testid="button-cleanup-duplicates"
+          >
+            {isCleaningDuplicates ? (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Cleaning up...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Cleanup Duplicate Entries
+              </>
+            )}
+          </Button>
+          
+          {duplicateCleanupResult && (
+            <div className="p-3 rounded-lg bg-muted text-sm mt-2">
+              {duplicateCleanupResult.deletedCount === 0 ? (
+                <p className="text-green-600 dark:text-green-400">No duplicate entries found in the Reschedule list.</p>
+              ) : (
+                <div>
+                  <p className="text-amber-600 dark:text-amber-400 font-medium mb-2">
+                    Removed {duplicateCleanupResult.deletedCount} duplicate entries.
+                  </p>
+                  {duplicateCleanupResult.details.length > 0 && (
+                    <ul className="text-xs text-muted-foreground space-y-1">
+                      {duplicateCleanupResult.details.map((detail, i) => (
+                        <li key={i}>{detail}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
