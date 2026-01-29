@@ -7085,6 +7085,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Remove reschedule entries for contestants who are already assigned to seats
+  app.post("/api/canceled-assignments/cleanup-seated", requireAuth, async (req, res) => {
+    try {
+      const canceledAssignments = await storage.getCanceledAssignments();
+      const seatAssignments = await storage.getSeatAssignments();
+      
+      // Get set of contestant IDs who currently have seat assignments
+      const seatedContestantIds = new Set(seatAssignments.map((s: any) => s.contestantId));
+      
+      // Find canceled assignments where the contestant is already seated
+      let deletedCount = 0;
+      const removedEntries: string[] = [];
+      
+      for (const canceled of canceledAssignments) {
+        if (seatedContestantIds.has(canceled.contestantId)) {
+          await storage.deleteCanceledAssignment(canceled.id);
+          deletedCount++;
+          removedEntries.push(canceled.contestant?.name || canceled.contestantId);
+        }
+      }
+      
+      console.log(`[Cleanup Seated] Removed ${deletedCount} reschedule entries for contestants already seated`);
+      
+      res.json({
+        message: `Removed ${deletedCount} reschedule entries for contestants who are now seated`,
+        deletedCount,
+        removedNames: removedEntries,
+      });
+    } catch (error: any) {
+      console.error("Error cleaning up seated reschedule entries:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Cleanup duplicate reschedule entries
   app.post("/api/canceled-assignments/cleanup-duplicates", requireAuth, async (req, res) => {
     try {

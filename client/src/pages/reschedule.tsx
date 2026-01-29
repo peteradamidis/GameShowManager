@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Calendar as CalendarIcon, User, Mail, Phone, MapPin, Users, Heart, AlertTriangle, Pencil, X, Save, Trash2, Search, FileCheck } from "lucide-react";
+import { Calendar as CalendarIcon, User, Mail, Phone, MapPin, Users, Heart, AlertTriangle, Pencil, X, Save, Trash2, Search, FileCheck, Wrench } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format, isSameDay, parseISO } from "date-fns";
@@ -103,6 +103,30 @@ export default function ReschedulePage() {
     onError: (error: Error) => {
       toast({
         title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const cleanupSeatedMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/canceled-assignments/cleanup-seated');
+      return response.json();
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      toast({
+        title: "Cleanup complete",
+        description: data.deletedCount > 0 
+          ? `Removed ${data.deletedCount} entries: ${data.removedNames?.join(', ')}`
+          : "No duplicates found - reschedule list is clean",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Cleanup failed",
         description: error.message,
         variant: "destructive",
       });
@@ -354,7 +378,19 @@ export default function ReschedulePage() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
-          <CardTitle>Contestants for Rebooking</CardTitle>
+          <div className="flex items-center gap-3">
+            <CardTitle>Contestants for Rebooking</CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => cleanupSeatedMutation.mutate()}
+              disabled={cleanupSeatedMutation.isPending}
+              data-testid="btn-cleanup-seated"
+            >
+              <Wrench className="h-4 w-4 mr-1" />
+              {cleanupSeatedMutation.isPending ? 'Cleaning...' : 'Remove Seated Duplicates'}
+            </Button>
+          </div>
           <div className="flex items-center gap-4">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
