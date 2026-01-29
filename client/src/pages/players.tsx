@@ -882,8 +882,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 <h3 
                   contentEditable
                   suppressContentEditableWarning
-                  className="font-light text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                  style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '29px', marginTop: '-4px' }}
+                  className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                  style={{ fontFamily: 'Calibri, sans-serif', fontSize: '29px', marginTop: '-10px' }}
                   onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                 >
                   {cardData.tagline || 'SHORT TAGLINE'}
@@ -1268,8 +1268,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <h3 
                       contentEditable
                       suppressContentEditableWarning
-                      className="font-light text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                      style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '29px', marginTop: '-4px' }}
+                      className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                      style={{ fontFamily: 'Calibri, sans-serif', fontSize: '29px', marginTop: '-10px' }}
                       onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                       data-testid="edit-tagline"
                     >
