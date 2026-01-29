@@ -815,7 +815,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               {/* Right side - Details */}
               <div className="flex-1">
                 {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 px-2 rounded flex items-center justify-between mb-4">
+                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-4 rounded-l flex items-center justify-between mb-4 overflow-hidden">
                   <h2 
                     contentEditable
                     suppressContentEditableWarning
@@ -827,7 +827,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
-                  <img src={dondLogo} alt="Deal or No Deal" className="h-full max-h-14 object-contain py-1" />
+                  <img src={dondLogo} alt="Deal or No Deal" className="h-16 object-cover self-stretch" />
                 </div>
 
                 {/* Age and details - all editable */}
@@ -1193,18 +1193,20 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   {/* Right side - Details */}
                   <div className="flex-1">
                     {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 px-2 rounded flex items-center justify-between mb-4" data-testid="preview-header-banner">
+                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-4 rounded-l flex items-center justify-between mb-4 overflow-hidden" data-testid="preview-header-banner">
                       <h2 
                         contentEditable
                         suppressContentEditableWarning
-                        className="text-3xl font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text text-yellow-300 py-2"
+                        className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text text-yellow-300 py-2"
                         style={{ 
+                          fontFamily: '"Century Gothic", sans-serif',
+                          fontSize: '40px',
                           textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)'
                         }}
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
                       >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
-                      <img src={dondLogo} alt="Deal or No Deal" className="h-full max-h-14 object-contain py-1" />
+                      <img src={dondLogo} alt="Deal or No Deal" className="h-16 object-cover self-stretch" />
                     </div>
 
                     {/* Age and details - all editable */}
