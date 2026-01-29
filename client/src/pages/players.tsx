@@ -321,6 +321,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             parsedCard.manualCompanions = [];
           }
         }
+        // Ensure manualCompanions is always an array
+        if (!Array.isArray(parsedCard.manualCompanions)) {
+          parsedCard.manualCompanions = [];
+        }
         setCardData(parsedCard);
       } else if (!loadingCard) {
         // Find group members to auto-populate as companions (up to 4)
@@ -345,7 +349,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           occupation: '',
           sponsorCategory: '',
           tagline: '',
-          energyLevel: 3,
+          energyLevel: '3',
           characterTraits: '',
           meetStory: '',
           keyStories: '',
@@ -358,7 +362,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           companionRelationship: '',
           companionPhotoUrl: '',
           producerName: '',
-          manualCompanions: autoCompanions.length > 0 ? autoCompanions : undefined,
+          manualCompanions: autoCompanions.length > 0 ? autoCompanions : [],
           useManualCompanions: autoCompanions.length > 0,
         });
       }
