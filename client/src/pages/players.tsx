@@ -751,27 +751,18 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             </div>
           </div>
           {/* A4 Landscape page container - 297mm x 210mm (scaled to fit) */}
-          <div className="relative overflow-auto" style={{ height: `calc(210mm * ${cardZoom} + 40px)` }}>
+          <div className="relative overflow-hidden" style={{ width: `calc(297mm * ${cardZoom})`, height: `calc(210mm * ${cardZoom})` }}>
             <div 
               id="casting-card-preview"
-              className="bg-white p-6 border-2 border-gray-300 shadow-lg relative overflow-visible origin-top-left"
+              className="bg-white p-6 border-2 border-gray-300 shadow-lg relative overflow-hidden origin-top-left"
               style={{ 
                 width: '297mm', 
-                minHeight: '210mm',
+                height: '210mm',
                 transform: `scale(${cardZoom})`,
                 transformOrigin: 'top left',
                 fontFamily: 'Calibri, sans-serif'
               }}
             >
-              {/* Page boundary indicator line */}
-              <div 
-                className="absolute left-0 right-0 border-t-2 border-dashed border-red-400 pointer-events-none z-10"
-                style={{ top: '210mm' }}
-              >
-                <span className="absolute right-2 -top-5 bg-red-100 text-red-600 text-xs px-2 py-1 rounded font-medium">
-                  Page boundary - content below will be cut off
-                </span>
-              </div>
               
               {/* Card Layout matching DOND PowerPoint design */}
               <div className="flex gap-8">
