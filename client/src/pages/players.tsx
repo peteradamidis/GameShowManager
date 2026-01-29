@@ -829,6 +829,35 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   if (isFullscreen && selectedContestant && cardData) {
     return (
       <div className="fixed inset-0 z-50 bg-white overflow-auto p-6">
+        {/* Hidden file inputs for fullscreen mode */}
+        <input
+          type="file"
+          ref={mainPhotoInputRef}
+          className="hidden"
+          accept="image/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && selectedContestant) {
+              handlePhotoUpload(selectedContestant.id, file);
+            }
+            e.target.value = '';
+          }}
+        />
+        {/* Companion photo inputs for fullscreen mode */}
+        {(cardData.manualCompanions || []).map((companion) => (
+          <input
+            key={companion.id}
+            type="file"
+            className="hidden"
+            accept="image/*"
+            ref={(el) => { companionPhotoRefs.current[companion.id] = el; }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleCompanionPhotoUpload(companion.id, file);
+              e.target.value = '';
+            }}
+          />
+        ))}
         <div className="max-w-5xl mx-auto">
           <div className="sticky top-0 bg-white py-2 border-b z-10 space-y-2">
             <div className="flex items-center justify-between">
