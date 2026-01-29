@@ -3289,6 +3289,46 @@ export default function PlayersPage() {
         </Card>
       </div>
 
+      {/* Quick View Table - Blocks, Players, Episode Numbers */}
+      <Card className="mb-6">
+        <CardHeader className="py-2 pb-1">
+          <CardTitle className="text-sm font-medium text-muted-foreground">Quick View - All Blocks</CardTitle>
+        </CardHeader>
+        <CardContent className="py-2">
+          <div className="grid grid-cols-7 gap-2 text-center text-sm">
+            {[1, 2, 3, 4, 5, 6, 7].map(blockNum => {
+              const blockPlayer = players.find(p => p.blockNumber === blockNum);
+              const blockBackup = backups.find(b => b.blockNumber === blockNum);
+              return (
+                <div key={blockNum} className="border rounded-lg p-2 bg-muted/30">
+                  <div className="font-bold text-xs text-muted-foreground mb-1">Block {blockNum}</div>
+                  {blockPlayer ? (
+                    <>
+                      <div className="font-medium text-xs truncate" title={blockPlayer.contestant?.name}>
+                        {blockPlayer.contestant?.name?.split(' ')[0] || '-'}
+                      </div>
+                      <Badge 
+                        variant={blockPlayer.rxEpNumber ? "default" : "secondary"} 
+                        className={`text-xs mt-1 ${blockPlayer.rxEpNumber ? 'bg-green-600' : ''}`}
+                      >
+                        {blockPlayer.rxEpNumber ? `EP ${blockPlayer.rxEpNumber}` : 'Unassigned'}
+                      </Badge>
+                    </>
+                  ) : (
+                    <div className="text-xs text-muted-foreground italic">No player</div>
+                  )}
+                  {blockBackup && (
+                    <div className="text-xs text-amber-600 mt-1 truncate" title={`Backup: ${blockBackup.contestant?.name}`}>
+                      B: {blockBackup.contestant?.name?.split(' ')[0]}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
       {episodeGroups.groups.map(group => {
         const hasConflict = group.players.length > 1;
         return (
