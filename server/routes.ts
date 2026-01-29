@@ -14903,7 +14903,8 @@ Thank you.`;
   // Create or update casting card (upsert)
   app.post("/api/casting-cards", requireAuth, async (req, res) => {
     try {
-      const data = req.body;
+      // Remove fields that shouldn't be set directly (id, timestamps)
+      const { id, createdAt, updatedAt, ...data } = req.body;
       if (!data.contestantId) {
         return res.status(400).json({ error: "contestantId is required" });
       }
@@ -14919,7 +14920,8 @@ Thank you.`;
   app.patch("/api/casting-cards/:contestantId", requireAuth, async (req, res) => {
     try {
       const { contestantId } = req.params;
-      const data = req.body;
+      // Remove fields that shouldn't be updated directly (id, timestamps, contestantId)
+      const { id, createdAt, updatedAt, contestantId: _, ...data } = req.body;
       const card = await storage.updateCastingCard(contestantId, data);
       if (!card) {
         return res.status(404).json({ error: "Casting card not found" });
