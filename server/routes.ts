@@ -7095,7 +7095,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/canceled-assignments/cleanup-seated", requireAuth, async (req, res) => {
     try {
       const canceledAssignments = await storage.getCanceledAssignments();
-      const seatAssignments = await storage.getSeatAssignments();
+      const seatAssignments = await storage.getAllSeatAssignments();
       
       // Get set of contestant IDs who currently have seat assignments
       const seatedContestantIds = new Set(seatAssignments.map((s: any) => s.contestantId));
