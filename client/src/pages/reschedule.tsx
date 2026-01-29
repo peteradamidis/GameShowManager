@@ -58,7 +58,7 @@ export default function ReschedulePage() {
   const [filterOriginalRecordDayId, setFilterOriginalRecordDayId] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterType, setFilterType] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("rescheduled"); // filter by contestant status
+  const [filterStatus, setFilterStatus] = useState<string>("all"); // filter by contestant state
 
   const handleRowClick = (contestant: any) => {
     setSelectedContestant(contestant);
@@ -454,9 +454,9 @@ export default function ReschedulePage() {
                     const matchesType = filterType === "all" || 
                       (filterType === "standby" && cancellation.isFromStandby) || 
                       (filterType === "canceled" && !cancellation.isFromStandby);
-                    // Filter by contestant's actual status
-                    const contestantStatus = cancellation.contestant?.status?.toLowerCase() || '';
-                    const matchesStatus = filterStatus === "all" || contestantStatus === filterStatus;
+                    // Filter by contestant's actual state
+                    const contestantState = cancellation.contestant?.state?.toLowerCase() || '';
+                    const matchesStatus = filterStatus === "all" || contestantState === filterStatus;
                     return matchesDate && matchesSearch && matchesType && matchesStatus;
                   })
                   .map((cancellation: any) => (
