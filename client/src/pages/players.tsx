@@ -815,11 +815,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               {/* Right side - Details */}
               <div className="flex-1">
                 {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-4 rounded-l flex items-center justify-between mb-4 overflow-hidden">
+                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-4 rounded-l flex items-stretch justify-between mb-4">
                   <h2 
                     contentEditable
                     suppressContentEditableWarning
-                    className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text text-yellow-300 py-2"
+                    className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text text-yellow-300 flex items-center"
                     style={{ 
                       fontFamily: '"Century Gothic", sans-serif',
                       fontSize: '40px',
@@ -827,7 +827,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
-                  <img src={dondLogo} alt="Deal or No Deal" className="h-16 object-cover self-stretch" />
+                  <img src={dondLogo} alt="Deal or No Deal" className="h-auto object-contain" style={{ maxHeight: '100%' }} />
                 </div>
 
                 {/* Age and details - all editable */}
@@ -1063,9 +1063,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   style={{ 
                     width: '297mm', 
                     minHeight: '210mm',
-                    transform: 'scale(0.48)',
+                    transform: 'scale(0.38)',
                     transformOrigin: 'top left',
-                    marginBottom: '-52%',
+                    marginBottom: '-62%',
                     fontFamily: 'Calibri, sans-serif'
                   }}
                 >
@@ -1193,11 +1193,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   {/* Right side - Details */}
                   <div className="flex-1">
                     {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-4 rounded-l flex items-center justify-between mb-4 overflow-hidden" data-testid="preview-header-banner">
+                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-4 rounded-l flex items-stretch justify-between mb-4" data-testid="preview-header-banner">
                       <h2 
                         contentEditable
                         suppressContentEditableWarning
-                        className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text text-yellow-300 py-2"
+                        className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text text-yellow-300 flex items-center"
                         style={{ 
                           fontFamily: '"Century Gothic", sans-serif',
                           fontSize: '40px',
@@ -1206,7 +1206,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
                       >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
-                      <img src={dondLogo} alt="Deal or No Deal" className="h-16 object-cover self-stretch" />
+                      <img src={dondLogo} alt="Deal or No Deal" className="h-auto object-contain" style={{ maxHeight: '100%' }} />
                     </div>
 
                     {/* Age and details - all editable */}
