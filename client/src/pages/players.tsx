@@ -819,13 +819,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   {(cardData.manualCompanions?.length || 0) < 4 && (
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="default"
                       onClick={addManualCompanion}
-                      className="mt-3 text-xs"
+                      className="mt-3 text-xs bg-blue-600 hover:bg-blue-700"
                       data-testid="btn-add-companion"
                     >
                       <Plus className="w-3 h-3 mr-1" />
-                      Add Partner ({(cardData.manualCompanions?.length || 0)}/4)
+                      Add Custom Partner ({(cardData.manualCompanions?.length || 0)}/4)
                     </Button>
                   )}
                 </div>
@@ -1218,13 +1218,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       {(cardData.manualCompanions?.length || 0) < 4 && (
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="default"
                           onClick={addManualCompanion}
-                          className="mt-3 text-xs"
+                          className="mt-3 text-xs bg-blue-600 hover:bg-blue-700"
                           data-testid="btn-add-companion-preview"
                         >
                           <Plus className="w-3 h-3 mr-1" />
-                          Add Partner ({(cardData.manualCompanions?.length || 0)}/4)
+                          Add Custom Partner ({(cardData.manualCompanions?.length || 0)}/4)
                         </Button>
                       )}
                     </div>
