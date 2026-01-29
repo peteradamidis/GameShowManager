@@ -933,14 +933,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   contentEditable
                   suppressContentEditableWarning
                   className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                  style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '29px', fontWeight: 'bold', marginTop: '-10px' }}
+                  style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '30px', fontWeight: 'bold', marginTop: '-10px' }}
                   onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                 >
                   {cardData.tagline || 'SHORT TAGLINE'}
                 </h3>
 
                 {/* Bullet points - dynamic with add/remove */}
-                <ul className="space-y-2" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '14px' }}>
+                <ul className="space-y-2" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '15px' }}>
                   {(cardData.bulletPoints || defaultBulletPoints).map((point, index) => (
                     <li key={index} className="flex items-start gap-3 group">
                       <Circle className={`w-4 h-4 mt-1 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
@@ -1335,7 +1335,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       contentEditable
                       suppressContentEditableWarning
                       className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                      style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '29px', fontWeight: 'bold', marginTop: '-10px' }}
+                      style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '30px', fontWeight: 'bold', marginTop: '-10px' }}
                       onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                       data-testid="edit-tagline"
                     >
@@ -1343,7 +1343,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     </h3>
 
                     {/* Bullet points - dynamic with add/remove */}
-                    <ul className="space-y-2" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '14px' }} data-testid="preview-details-list">
+                    <ul className="space-y-2" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '15px' }} data-testid="preview-details-list">
                       {(cardData.bulletPoints || defaultBulletPoints).map((point, index) => (
                         <li key={index} className="flex items-start gap-3 group">
                           <Circle className={`w-4 h-4 mt-1 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
