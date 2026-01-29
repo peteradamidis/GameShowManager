@@ -401,6 +401,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
   };
 
+  // Toggle ready status and save immediately with the new value
+  const toggleReadyAndSave = () => {
+    if (cardData) {
+      const updatedData = { ...cardData, isReady: !cardData.isReady };
+      setCardData(updatedData);
+      saveMutation.mutate(updatedData);
+    }
+  };
+
   const handleDownloadPdf = async () => {
     if (!selectedContestant || !cardData) return;
     
@@ -909,11 +918,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <Button
                     size="sm"
                     variant={cardData.isReady ? "default" : "outline"}
-                    onClick={() => {
-                      updateField('isReady', !cardData.isReady);
-                      // Auto-save when toggling ready status
-                      setTimeout(() => handleSave(), 100);
-                    }}
+                    onClick={toggleReadyAndSave}
+                    disabled={saveMutation.isPending}
                     className={cardData.isReady ? "bg-green-600 hover:bg-green-700" : ""}
                     data-testid="btn-toggle-ready"
                   >
