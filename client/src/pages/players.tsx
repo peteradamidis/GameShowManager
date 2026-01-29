@@ -3319,6 +3319,9 @@ export default function PlayersPage() {
                       <div className="font-medium text-xs truncate" title={epPlayer.contestant?.name}>
                         {epPlayer.contestant?.name || '-'}
                       </div>
+                      <div className="text-xs text-muted-foreground">
+                        Seat {epPlayer.seatLabel || '-'}
+                      </div>
                     </>
                   ) : (
                     <div className="text-xs text-muted-foreground italic py-2">Not assigned</div>
