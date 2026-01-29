@@ -818,13 +818,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <h2 
                     contentEditable
                     suppressContentEditableWarning
-                    className="text-2xl font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text"
+                    className="text-2xl font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text text-yellow-300"
                     style={{ 
-                      background: 'linear-gradient(180deg, #fef08a 0%, #fbbf24 50%, #d97706 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      textShadow: 'none',
-                      filter: 'drop-shadow(1px 1px 1px rgba(0,0,0,0.4))'
+                      textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)'
                     }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
@@ -1197,13 +1193,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <h2 
                         contentEditable
                         suppressContentEditableWarning
-                        className="text-2xl font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text"
+                        className="text-2xl font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text text-yellow-300"
                         style={{ 
-                          background: 'linear-gradient(180deg, #fef08a 0%, #fbbf24 50%, #d97706 100%)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                          textShadow: 'none',
-                          filter: 'drop-shadow(1px 1px 1px rgba(0,0,0,0.4))'
+                          textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)'
                         }}
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
