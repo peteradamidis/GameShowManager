@@ -14948,12 +14948,14 @@ Thank you.`;
       }
 
       // Parse manual companions
-      let manualCompanions: { name: string; relationship: string; photo: string }[] = [];
+      let manualCompanions: { id?: string; name: string; relationship: string; photo?: string; photoUrl?: string }[] = [];
       try {
         if (card.manualCompanions) {
           manualCompanions = JSON.parse(card.manualCompanions);
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error("Error parsing manualCompanions:", e);
+      }
 
       // Get contestant photo URL
       const photoUrl = contestant.photoPath ? `/photos/${contestant.photoPath.split('/').pop()}` : '';
@@ -14963,15 +14965,17 @@ Thank you.`;
       let companionsHtml = '';
       if (companionCount > 0) {
         const size = companionCount <= 2 ? '80px' : '60px';
-        companionsHtml = manualCompanions.map(comp => `
+        companionsHtml = manualCompanions.map(comp => {
+          const compPhoto = comp.photoUrl || comp.photo || '';
+          return `
           <div style="text-align: center; margin: 4px;">
             <div style="width: ${size}; height: ${size}; border-radius: 4px; overflow: hidden; background: #e5e5e5; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-              ${comp.photo ? `<img src="${comp.photo}" style="width: 100%; height: 100%; object-fit: cover;" />` : '<span style="color: #999; font-size: 24px;">?</span>'}
+              ${compPhoto ? `<img src="${compPhoto}" style="width: 100%; height: 100%; object-fit: cover;" />` : '<span style="color: #999; font-size: 24px;">?</span>'}
             </div>
             <div style="font-size: 10px; font-weight: bold; margin-top: 2px;">${comp.name || ''}</div>
             <div style="font-size: 8px; color: #666;">${comp.relationship || ''}</div>
           </div>
-        `).join('');
+        `;}).join('');
       }
 
       // Build info sections HTML using actual card fields
@@ -15138,7 +15142,8 @@ Thank you.`;
       res.send(html);
     } catch (error: any) {
       console.error("Error generating print view:", error);
-      res.status(500).send("<html><body><h1>Error generating print view</h1></body></html>");
+      console.error("Error stack:", error.stack);
+      res.status(500).send(`<html><body><h1>Error generating print view</h1><p>${error.message || 'Unknown error'}</p></body></html>`);
     }
   });
 
