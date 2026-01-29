@@ -15005,11 +15005,17 @@ Thank you.`;
   <title>Casting Card - ${contestant.firstName} ${contestant.lastName}</title>
   <style>
     @page {
-      size: A4 landscape;
+      size: 297mm 210mm landscape;
       margin: 10mm;
     }
     @media print {
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      html, body {
+        width: 297mm;
+        height: 210mm;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      @page { size: landscape; }
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; background: white; }
