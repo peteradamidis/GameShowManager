@@ -3316,8 +3316,8 @@ export default function PlayersPage() {
                       <Badge variant="outline" className="text-xs mb-1">
                         Block {epPlayer.blockNumber}
                       </Badge>
-                      <div className="font-medium text-xs truncate" title={epPlayer.contestant?.name}>
-                        {epPlayer.contestant?.name || '-'}
+                      <div className="font-medium text-xs truncate" title={`${epPlayer.contestant?.firstName || ''} ${epPlayer.contestant?.lastName || ''}`.trim()}>
+                        {epPlayer.contestant ? `${epPlayer.contestant.firstName || ''} ${epPlayer.contestant.lastName || ''}`.trim() || '-' : '-'}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         Seat {epPlayer.seatLabel || '-'}
