@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -459,6 +459,51 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     },
     onError: (error: any) => {
       toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Reset/delete casting card mutation
+  const resetCardMutation = useMutation({
+    mutationFn: async (contestantId: string) => {
+      const response = await apiRequest('DELETE', `/api/casting-cards/${contestantId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/casting-cards'] });
+      if (selectedContestant) {
+        queryClient.invalidateQueries({ queryKey: ['/api/casting-cards', selectedContestant.id] });
+      }
+      // Reset local card data to fresh state
+      if (selectedContestant) {
+        const autoCompanions = getAutoCompanions(selectedContestant);
+        setCardData({
+          contestantId: selectedContestant.id,
+          occupation: '',
+          sponsorCategory: '',
+          tagline: '',
+          energyLevel: '3',
+          characterTraits: '',
+          meetStory: '',
+          keyStories: '',
+          prizeGoalHigh: '',
+          prizeGoalLow: '',
+          howMuchToWin: '',
+          playStyle: '',
+          previousShows: '',
+          companionName: selectedContestant.attendingWith || '',
+          companionRelationship: '',
+          companionPhotoUrl: '',
+          producerName: '',
+          showProducer: true,
+          showTagline: true,
+          manualCompanions: autoCompanions.length > 0 ? autoCompanions : [],
+          useManualCompanions: autoCompanions.length > 0,
+        });
+      }
+      toast({ title: "Card Reset", description: "Casting card has been reset to default" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Reset failed", description: error.message, variant: "destructive" });
     },
   });
 
@@ -1220,6 +1265,21 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <Button size="sm" variant="outline" onClick={() => { setCardZoom(0.8); setIsFullscreen(true); }} data-testid="btn-fullscreen">
                     <Maximize2 className="h-4 w-4 mr-1" />
                     Fullscreen
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-red-600 border-red-300 hover:bg-red-50"
+                    onClick={() => {
+                      if (selectedContestant && confirm('Are you sure you want to reset this card? All saved data will be lost.')) {
+                        resetCardMutation.mutate(selectedContestant.id);
+                      }
+                    }}
+                    disabled={resetCardMutation.isPending}
+                    data-testid="btn-reset-card"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-1" />
+                    {resetCardMutation.isPending ? 'Resetting...' : 'Reset Card'}
                   </Button>
                 </div>
               </div>
