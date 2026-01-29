@@ -814,17 +814,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               {/* Right side - Details */}
               <div className="flex-1">
                 {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 px-4 py-2 rounded flex items-center justify-between mb-4">
+                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 px-2 rounded flex items-center justify-between mb-4">
                   <h2 
                     contentEditable
                     suppressContentEditableWarning
-                    className="text-2xl font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text text-yellow-300"
+                    className="text-2xl font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text text-yellow-300 py-2"
                     style={{ 
                       textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)'
                     }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
-                  <img src={dondLogo} alt="Deal or No Deal" className="h-12 object-contain" />
+                  <img src={dondLogo} alt="Deal or No Deal" className="h-full max-h-14 object-contain py-1" />
                 </div>
 
                 {/* Age and details - all editable */}
@@ -1189,18 +1189,18 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   {/* Right side - Details */}
                   <div className="flex-1">
                     {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 px-4 py-2 rounded flex items-center justify-between mb-4" data-testid="preview-header-banner">
+                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 px-2 rounded flex items-center justify-between mb-4" data-testid="preview-header-banner">
                       <h2 
                         contentEditable
                         suppressContentEditableWarning
-                        className="text-2xl font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text text-yellow-300"
+                        className="text-2xl font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text text-yellow-300 py-2"
                         style={{ 
                           textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)'
                         }}
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
                       >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
-                      <img src={dondLogo} alt="Deal or No Deal" className="h-12 object-contain" />
+                      <img src={dondLogo} alt="Deal or No Deal" className="h-full max-h-14 object-contain py-1" />
                     </div>
 
                     {/* Age and details - all editable */}
