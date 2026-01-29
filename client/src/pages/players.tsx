@@ -312,7 +312,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   useEffect(() => {
     if (selectedContestant) {
       if (existingCard && existingCard.contestantId === selectedContestant.id) {
-        setCardData(existingCard);
+        // Parse manualCompanions if it's a string (from database)
+        let parsedCard = { ...existingCard };
+        if (typeof parsedCard.manualCompanions === 'string') {
+          try {
+            parsedCard.manualCompanions = JSON.parse(parsedCard.manualCompanions as any);
+          } catch (e) {
+            parsedCard.manualCompanions = [];
+          }
+        }
+        setCardData(parsedCard);
       } else if (!loadingCard) {
         // Find group members to auto-populate as companions (up to 4)
         const contestantGroupId = (selectedContestant as any).groupId;
@@ -359,13 +368,19 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   // Save casting card mutation - uses PATCH for updates, POST for new cards
   const saveMutation = useMutation({
     mutationFn: async (data: CastingCardData) => {
+      // Serialize manualCompanions to JSON string for database storage
+      const dataToSend = {
+        ...data,
+        manualCompanions: data.manualCompanions ? JSON.stringify(data.manualCompanions) : null,
+      };
+      
       if (existingCard?.id) {
-        // Update existing card
-        const response = await apiRequest('PATCH', `/api/casting-cards/${existingCard.id}`, data);
+        // Update existing card - use contestantId, not card id
+        const response = await apiRequest('PATCH', `/api/casting-cards/${data.contestantId}`, dataToSend);
         return response.json();
       } else {
         // Create new card
-        const response = await apiRequest('POST', '/api/casting-cards', data);
+        const response = await apiRequest('POST', '/api/casting-cards', dataToSend);
         return response.json();
       }
     },
