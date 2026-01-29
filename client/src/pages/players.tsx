@@ -153,6 +153,7 @@ interface CastingCardData {
   companionPhotoUrl?: string | null;
   producerName?: string | null;
   showProducer?: boolean;
+  showTagline?: boolean;
   // Manual companions (up to 4)
   manualCompanions?: ManualCompanion[] | null;
   useManualCompanions?: boolean;
@@ -368,6 +369,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           companionPhotoUrl: '',
           producerName: '',
           showProducer: true,
+          showTagline: true,
           manualCompanions: autoCompanions.length > 0 ? autoCompanions : [],
           useManualCompanions: autoCompanions.length > 0,
         });
@@ -929,18 +931,39 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 </div>
 
                 {/* Tagline */}
-                <h3 
-                  contentEditable
-                  suppressContentEditableWarning
-                  className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                  style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '30px', fontWeight: 'bold', marginTop: '-10px' }}
-                  onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
-                >
-                  {cardData.tagline || 'SHORT TAGLINE'}
-                </h3>
+                {cardData.showTagline !== false ? (
+                  <div className="relative group">
+                    <h3 
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                      style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '30px', fontWeight: 'bold', marginTop: '-10px' }}
+                      onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
+                    >
+                      {cardData.tagline || 'SHORT TAGLINE'}
+                    </h3>
+                    <button
+                      onClick={() => updateField('showTagline', false)}
+                      className="absolute -top-1 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity print-hidden"
+                      title="Remove tagline"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => updateField('showTagline', true)}
+                    className="mb-3 text-xs print-hidden"
+                    style={{ marginTop: '-10px' }}
+                  >
+                    + Add Tagline
+                  </Button>
+                )}
 
                 {/* Bullet points - dynamic with add/remove */}
-                <ul className="space-y-2" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '15px' }}>
+                <ul className="space-y-2" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '15px', marginTop: cardData.showTagline === false ? '-10px' : undefined }}>
                   {(cardData.bulletPoints || defaultBulletPoints).map((point, index) => (
                     <li key={index} className="flex items-start gap-3 group">
                       <Circle className={`w-4 h-4 mt-1 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
@@ -1331,19 +1354,42 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     </div>
 
                     {/* Tagline */}
-                    <h3 
-                      contentEditable
-                      suppressContentEditableWarning
-                      className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                      style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '30px', fontWeight: 'bold', marginTop: '-10px' }}
-                      onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
-                      data-testid="edit-tagline"
-                    >
-                      {cardData.tagline || 'SHORT TAGLINE'}
-                    </h3>
+                    {cardData.showTagline !== false ? (
+                      <div className="relative group">
+                        <h3 
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                          style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '30px', fontWeight: 'bold', marginTop: '-10px' }}
+                          onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
+                          data-testid="edit-tagline"
+                        >
+                          {cardData.tagline || 'SHORT TAGLINE'}
+                        </h3>
+                        <button
+                          onClick={() => updateField('showTagline', false)}
+                          className="absolute -top-1 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity print-hidden"
+                          title="Remove tagline"
+                          data-testid="btn-remove-tagline"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateField('showTagline', true)}
+                        className="mb-3 text-xs print-hidden"
+                        style={{ marginTop: '-10px' }}
+                        data-testid="btn-add-tagline"
+                      >
+                        + Add Tagline
+                      </Button>
+                    )}
 
                     {/* Bullet points - dynamic with add/remove */}
-                    <ul className="space-y-2" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '15px' }} data-testid="preview-details-list">
+                    <ul className="space-y-2" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '15px', marginTop: cardData.showTagline === false ? '-10px' : undefined }} data-testid="preview-details-list">
                       {(cardData.bulletPoints || defaultBulletPoints).map((point, index) => (
                         <li key={index} className="flex items-start gap-3 group">
                           <Circle className={`w-4 h-4 mt-1 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
