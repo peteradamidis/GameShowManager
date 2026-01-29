@@ -936,8 +936,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             {/* Remove button */}
                             <button
                               onClick={(e) => { e.stopPropagation(); removeManualCompanion(companion.id); }}
-                              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 z-10"
                               title="Remove companion"
+                              data-testid={`btn-remove-companion-${companion.id}`}
                             >
                               <X className="w-3 h-3" />
                             </button>
