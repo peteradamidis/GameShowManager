@@ -176,6 +176,46 @@ const defaultBulletPoints = [
   'Other game shows / prize money won / previously on DOND'
 ];
 
+// Error boundary for catching and displaying errors gracefully
+class CastingCardErrorBoundary extends React.Component<
+  { children: React.ReactNode; onReset: () => void },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode; onReset: () => void }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Casting Card Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center h-64 bg-destructive/10 rounded-lg p-6">
+          <p className="text-lg font-semibold text-destructive mb-2">Something went wrong</p>
+          <p className="text-sm text-muted-foreground mb-4">{this.state.error?.message || 'An error occurred while rendering the casting card'}</p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              this.setState({ hasError: false, error: null });
+              this.props.onReset();
+            }}
+          >
+            Try Again
+          </Button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // Casting Cards Tab Component
 function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: { contestants: Contestant[]; initialContestantId?: string | null; onClearInitial?: () => void }) {
   const { toast } = useToast();
@@ -839,30 +879,34 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   };
 
   const updateField = (field: keyof CastingCardData, value: any) => {
-    if (cardData) {
-      setCardData({ ...cardData, [field]: value });
-      hasUnsavedChanges.current = true;
-      
-      // Debounced auto-save
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-      autoSaveTimeoutRef.current = setTimeout(() => {
-        if (hasUnsavedChanges.current) {
-          setAutoSaveStatus('saving');
-          const dataToSave = { ...cardData, [field]: value };
-          saveMutation.mutate(dataToSave, {
-            onSuccess: () => {
-              hasUnsavedChanges.current = false;
-              setAutoSaveStatus('saved');
-              setTimeout(() => setAutoSaveStatus('idle'), 2000);
-            },
-            onError: () => {
-              setAutoSaveStatus('idle');
+    try {
+      if (cardData) {
+        setCardData({ ...cardData, [field]: value });
+        hasUnsavedChanges.current = true;
+        
+        // Debounced auto-save
+        if (autoSaveTimeoutRef.current) {
+          clearTimeout(autoSaveTimeoutRef.current);
+        }
+        autoSaveTimeoutRef.current = setTimeout(() => {
+          if (hasUnsavedChanges.current) {
+            setAutoSaveStatus('saving');
+            const dataToSave = { ...cardData, [field]: value };
+            saveMutation.mutate(dataToSave, {
+              onSuccess: () => {
+                hasUnsavedChanges.current = false;
+                setAutoSaveStatus('saved');
+                setTimeout(() => setAutoSaveStatus('idle'), 2000);
+              },
+              onError: () => {
+                setAutoSaveStatus('idle');
             }
           });
-        }
-      }, 1500); // Auto-save after 1.5 seconds of inactivity
+          }
+        }, 1500); // Auto-save after 1.5 seconds of inactivity
+      }
+    } catch (error) {
+      console.error('Error updating field:', error);
     }
   };
 
@@ -1502,6 +1546,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           </Card>
         </div>
       ) : selectedContestant && cardData ? (
+        <CastingCardErrorBoundary onReset={() => { setSelectedContestant(null); setCardData(null); }}>
         <div className="flex-1 overflow-hidden">
           {/* Direct Edit Card - Click any text to edit like PowerPoint */}
           <Card className="h-full flex flex-col">
@@ -1903,6 +1948,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             </CardContent>
           </Card>
         </div>
+        </CastingCardErrorBoundary>
       ) : (
         <Card className="flex-1 flex items-center justify-center" data-testid="casting-empty-state">
           <div className="text-center text-muted-foreground">
