@@ -182,7 +182,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [cardData, setCardData] = useState<CastingCardData | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [cardZoom, setCardZoom] = useState(0.8);
+  const [cardZoom, setCardZoom] = useState(1.0);
   const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
 
   // Select initial contestant when navigating from Players tab
@@ -666,7 +666,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               <Button size="sm" variant="ghost" onClick={() => setCardZoom(Math.min(1.5, cardZoom + 0.1))} title="Zoom In" data-testid="btn-zoom-in" className="h-8 px-2">
                 <ZoomIn className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setCardZoom(0.8)} title="Reset Zoom" data-testid="btn-zoom-reset" className="h-8 px-2 text-xs">
+              <Button size="sm" variant="ghost" onClick={() => setCardZoom(1.0)} title="Reset Zoom" data-testid="btn-zoom-reset" className="h-8 px-2 text-xs">
                 Reset
               </Button>
             </div>
