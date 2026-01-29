@@ -1963,6 +1963,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/contestants", async (req, res) => {
     try {
       const allContestants = await storage.getContestants();
+      // Debug: log sample of contestants with groupIds
+      const withGroups = allContestants.filter(c => c.groupId);
+      console.log(`[GET /api/contestants] Total: ${allContestants.length}, with groupId: ${withGroups.length}`);
+      if (withGroups.length > 0) {
+        console.log('[GET /api/contestants] Sample:', withGroups.slice(0, 2).map(c => ({ name: c.name, groupId: c.groupId })));
+      }
       res.json(allContestants);
     } catch (error: any) {
       res.status(500).json({ error: error.message });

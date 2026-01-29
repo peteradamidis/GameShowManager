@@ -194,6 +194,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasUnsavedChanges = useRef(false);
 
+  // Debug: Log contestants with groupIds
+  useEffect(() => {
+    const withGroups = contestants.filter(c => c.groupId);
+    console.log(`[CastingCardsTab] Total contestants: ${contestants.length}, with groupId: ${withGroups.length}`);
+    if (withGroups.length > 0) {
+      console.log('[CastingCardsTab] Sample contestants with groups:', withGroups.slice(0, 3).map(c => ({ name: c.name, groupId: c.groupId })));
+    }
+  }, [contestants]);
+
   // Select initial contestant when navigating from Players tab
   useEffect(() => {
     if (initialContestantId && contestants.length > 0) {
@@ -311,9 +320,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   // Get linked group members for current contestant
   const getLinkedPartners = (): Contestant[] => {
     if (!selectedContestant) return [];
-    const groupId = (selectedContestant as any).groupId;
+    const groupId = selectedContestant.groupId;
+    console.log(`[getLinkedPartners] Contestant: ${selectedContestant.name}, groupId: ${groupId}, contestants count: ${contestants.length}`);
     if (!groupId) return [];
-    return contestants.filter(c => (c as any).groupId === groupId && c.id !== selectedContestant.id);
+    const partners = contestants.filter(c => c.groupId === groupId && c.id !== selectedContestant.id);
+    console.log(`[getLinkedPartners] Found ${partners.length} partners: ${partners.map(p => p.name).join(', ')}`);
+    return partners;
   };
 
   // Add a linked partner as companion
