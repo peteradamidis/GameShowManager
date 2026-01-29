@@ -697,11 +697,14 @@ export const castingCards = pgTable("casting_cards", {
   contestantId: varchar("contestant_id").references(() => contestants.id).notNull().unique(),
   
   // Basic info overrides (can differ from contestant record)
+  fullName: text("full_name"), // Override name display
+  ageState: text("age_state"), // Age and state display (e.g. "45 (VIC)")
   occupation: text("occupation"),
   sponsorCategory: text("sponsor_category"),
   
   // Card-specific fields
   tagline: text("tagline"), // Short tagline in green
+  bulletPoints: text("bullet_points"), // JSON array of bullet point strings
   energyLevel: integer("energy_level"), // 1-5
   characterTraits: text("character_traits"), // Top line character points
   meetStory: text("meet_story"), // Meet story (if applicable)

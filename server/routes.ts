@@ -14934,6 +14934,7 @@ Thank you.`;
   });
 
   // Print casting card - returns HTML page optimized for A4 landscape printing
+  // Matches the visual design of the card editor exactly
   app.get("/api/casting-cards/:contestantId/print", requireAuth, async (req, res) => {
     try {
       const { contestantId } = req.params;
@@ -14964,53 +14965,70 @@ Thank you.`;
       const companionCount = manualCompanions.length;
       let companionsHtml = '';
       if (companionCount > 0) {
-        const size = companionCount <= 2 ? '80px' : '60px';
         companionsHtml = manualCompanions.map(comp => {
           const compPhoto = comp.photoUrl || comp.photo || '';
           return `
-          <div style="text-align: center; margin: 4px;">
-            <div style="width: ${size}; height: ${size}; border-radius: 4px; overflow: hidden; background: #e5e5e5; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+          <div style="text-align: center; width: 80px;">
+            <div style="width: 70px; height: 70px; border-radius: 4px; overflow: hidden; background: #e5e5e5; display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 1px solid #ccc;">
               ${compPhoto ? `<img src="${compPhoto}" style="width: 100%; height: 100%; object-fit: cover;" />` : '<span style="color: #999; font-size: 24px;">?</span>'}
             </div>
-            <div style="font-size: 10px; font-weight: bold; margin-top: 2px;">${comp.name || ''}</div>
-            <div style="font-size: 8px; color: #666;">${comp.relationship || ''}</div>
+            <div style="font-size: 10px; font-weight: bold; margin-top: 4px;">${comp.name || ''}</div>
+            <div style="font-size: 9px; color: #666;">(${comp.relationship || ''})</div>
           </div>
         `;}).join('');
       }
 
-      // Build info sections HTML using actual card fields
-      const sections = [
-        { label: 'OCCUPATION', value: card.occupation || '' },
-        { label: 'SPONSOR CATEGORY', value: card.sponsorCategory || '' },
-        { label: 'TAGLINE', value: card.tagline || '' },
-        { label: 'ENERGY LEVEL', value: card.energyLevel ? `${card.energyLevel} out of 5` : '' },
-        { label: 'CHARACTER TRAITS', value: card.characterTraits || '' },
-        { label: 'MEET STORY', value: card.meetStory || '' },
-        { label: 'KEY STORIES / FACTS', value: card.keyStories || '' },
-        { label: 'HOW MUCH TO WIN', value: card.howMuchToWin || '' },
-        { label: 'PRIZE GOAL (HIGH)', value: card.prizeGoalHigh || '' },
-        { label: 'PRIZE GOAL (LOW)', value: card.prizeGoalLow || '' },
-        { label: 'PLAY STYLE', value: card.playStyle || '' },
-        { label: 'PREVIOUS SHOWS', value: card.previousShows || '' },
-        { label: 'PRODUCER', value: card.producerName || '' }
-      ];
-      const questionsHtml = sections.map(s => `
-        <div style="margin-bottom: 8px;">
-          <div style="font-weight: bold; font-size: 10px; color: #b45309;">${s.label}</div>
-          <div style="font-size: 11px; min-height: 16px; border-bottom: 1px solid #d4a574;">${s.value}</div>
-        </div>
-      `).join('');
+      // Parse bullet points from JSON or use defaults
+      let bulletPoints: string[] = [];
+      try {
+        if (card.bulletPoints) {
+          bulletPoints = JSON.parse(card.bulletPoints);
+        }
+      } catch (e) {
+        console.error("Error parsing bulletPoints:", e);
+      }
+      
+      // Default bullet points if none saved
+      if (bulletPoints.length === 0) {
+        bulletPoints = [
+          'Energy Level – 3 out of 5 – this helps us when booking players for later in the day',
+          'Top line character points – we don\'t need to know if they are "bubbly/energetic/likable" as it doesn\'t really help. But if they have traits like – they just don\'t stop talking / they argue with their podium partner as they\'re bossy etc / infectious or funny laugh. That is stuff we can work with in an episode.',
+          'Meet story (if applicable)',
+          '3 key stories/facts/interesting points',
+          'How much they want to win - $XX,XXX',
+          'What they\'d do with prize money (high and low) - 100K and if they win only $1000',
+          'How they might play game / Risk taker?',
+          'Other game shows / prize money won / previously on DOND'
+        ];
+      }
+
+      // Build bullet points HTML (last one in red/italic to match editor)
+      const bulletPointsHtml = bulletPoints.map((point, index) => {
+        const isLast = index === bulletPoints.length - 1;
+        const circleColor = isLast ? '#ef4444' : '#9ca3af';
+        const textStyle = isLast ? 'color: #dc2626; font-style: italic;' : '';
+        return `
+          <li style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: ${circleColor}; flex-shrink: 0; margin-top: 5px;"></span>
+            <span style="${textStyle}">${point}</span>
+          </li>
+        `;
+      }).join('');
+
+      // Get display values (use card overrides or fall back to contestant data)
+      const displayName = card.fullName || contestant.name || '';
+      const displayAgeState = card.ageState || `${contestant.age || ''} (${contestant.state || contestant.suburb || ''})`;
 
       const html = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Casting Card - ${contestant.firstName} ${contestant.lastName}</title>
+  <title>Casting Card - ${displayName}</title>
   <style>
     @page {
       size: 297mm 210mm landscape;
-      margin: 10mm;
+      margin: 8mm;
     }
     @media print {
       html, body {
@@ -15022,44 +15040,20 @@ Thank you.`;
       @page { size: landscape; }
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; background: white; }
+    body { font-family: Arial, sans-serif; background: #f3f4f6; padding: 10px; }
     .card {
-      width: 277mm;
-      height: 190mm;
-      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #f59e0b 100%);
-      border: 3px solid #b45309;
+      width: 100%;
+      max-width: 280mm;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 40%, #fcd34d 100%);
+      border: 2px solid #92400e;
       border-radius: 8px;
       padding: 16px;
       display: flex;
-      flex-direction: column;
-    }
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #b45309;
-    }
-    .logo { height: 40px; }
-    .name-section { text-align: center; }
-    .name { font-size: 28px; font-weight: bold; color: #92400e; }
-    .age-gender { font-size: 14px; color: #b45309; }
-    .status-badge {
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: bold;
-    }
-    .ready { background: #22c55e; color: white; }
-    .draft { background: #f59e0b; color: white; }
-    .content {
-      display: flex;
-      flex: 1;
       gap: 16px;
     }
     .left-column {
       width: 200px;
+      flex-shrink: 0;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -15068,7 +15062,7 @@ Thank you.`;
       width: 180px;
       height: 220px;
       background: white;
-      border: 2px solid #b45309;
+      border: 2px solid #92400e;
       border-radius: 8px;
       overflow: hidden;
       display: flex;
@@ -15077,58 +15071,138 @@ Thank you.`;
     }
     .photo-section img { width: 100%; height: 100%; object-fit: cover; }
     .companions-section {
-      background: white;
-      border: 2px solid #b45309;
-      border-radius: 8px;
-      padding: 8px;
-    }
-    .companions-title {
-      font-size: 11px;
-      font-weight: bold;
-      color: #b45309;
-      margin-bottom: 8px;
-      text-align: center;
-    }
-    .companions-grid {
       display: flex;
       flex-wrap: wrap;
-      justify-content: center;
       gap: 8px;
+      justify-content: center;
     }
     .right-column {
       flex: 1;
-      background: white;
-      border: 2px solid #b45309;
-      border-radius: 8px;
-      padding: 12px;
-      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
+    .header-banner {
+      background: linear-gradient(90deg, #b45309 0%, #d97706 50%, #f59e0b 100%);
+      padding: 8px 16px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .header-name {
+      font-size: 26px;
+      font-weight: bold;
+      font-style: italic;
+      background: linear-gradient(180deg, #fef08a 0%, #fbbf24 50%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.4));
+    }
+    .header-logo {
+      height: 48px;
+    }
+    .info-section {
+      margin-bottom: 12px;
+    }
+    .age-state {
+      font-size: 22px;
+      font-weight: bold;
+      color: #1f2937;
+    }
+    .occupation {
+      font-size: 18px;
+      font-weight: bold;
+      color: #374151;
+    }
+    .sponsor-category {
+      font-size: 14px;
+      font-weight: 600;
+      color: #16a34a;
+    }
+    .tagline {
+      font-size: 20px;
+      font-weight: bold;
+      color: #16a34a;
+      margin-bottom: 12px;
+    }
+    .bullet-points {
+      list-style: none;
+      padding: 0;
+      font-size: 11px;
+      line-height: 1.4;
+      flex: 1;
+    }
+    .producer-section {
+      display: flex;
+      border: 1px solid #9ca3af;
+      margin-top: 12px;
+    }
+    .producer-label {
+      background: #e5e7eb;
+      padding: 6px 12px;
+      font-weight: 600;
+      font-size: 12px;
+      border-right: 1px solid #9ca3af;
+    }
+    .producer-name {
+      background: #fbbf24;
+      padding: 6px 12px;
+      font-weight: bold;
+      font-size: 12px;
+      flex: 1;
+    }
+    .status-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+    .ready { background: #22c55e; color: white; }
+    .draft { background: #f59e0b; color: white; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="header">
-      <div style="width: 100px;"></div>
-      <div class="name-section">
-        <div class="name">${contestant.name || ''}</div>
-        <div class="age-gender">${contestant.age ? contestant.age + ' years old' : ''} ${contestant.gender ? '• ' + contestant.gender : ''}</div>
-      </div>
-      <div class="status-badge ${card.isReady ? 'ready' : 'draft'}">${card.isReady ? 'READY' : 'DRAFT'}</div>
-    </div>
-    <div class="content">
+  <div style="position: relative;">
+    <div class="status-badge ${card.isReady ? 'ready' : 'draft'}">${card.isReady ? 'READY' : 'DRAFT'}</div>
+    <div class="card">
       <div class="left-column">
         <div class="photo-section">
           ${photoUrl ? `<img src="${photoUrl}" alt="Photo" />` : '<span style="color: #999; font-size: 48px;">?</span>'}
         </div>
         ${companionCount > 0 ? `
           <div class="companions-section">
-            <div class="companions-title">SUPPORTERS (${companionCount})</div>
-            <div class="companions-grid">${companionsHtml}</div>
+            ${companionsHtml}
           </div>
         ` : ''}
       </div>
       <div class="right-column">
-        ${questionsHtml}
+        <div class="header-banner">
+          <h2 class="header-name">${displayName.toUpperCase()}</h2>
+          <img src="/attached_assets/dond-logo.png" alt="Deal or No Deal" class="header-logo" onerror="this.style.display='none'" />
+        </div>
+        
+        <div class="info-section">
+          <div class="age-state">${displayAgeState}</div>
+          <div class="occupation">${card.occupation || 'OCCUPATION'}</div>
+          <div class="sponsor-category">${card.sponsorCategory || 'SPONSOR CATEGORY: X'}</div>
+        </div>
+        
+        <div class="tagline">${card.tagline || 'SHORT TAGLINE'}</div>
+        
+        <ul class="bullet-points">
+          ${bulletPointsHtml}
+        </ul>
+        
+        <div class="producer-section">
+          <span class="producer-label">PRODUCER:</span>
+          <span class="producer-name">${card.producerName || 'INSERT NAME'}</span>
+        </div>
       </div>
     </div>
   </div>
