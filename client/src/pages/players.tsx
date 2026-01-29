@@ -341,9 +341,29 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     enabled: !!selectedContestant,
   });
 
+  // Helper function to get auto-populated companions from group members
+  const getAutoCompanions = (contestant: any): ManualCompanion[] => {
+    const contestantGroupId = contestant?.groupId;
+    if (!contestantGroupId) return [];
+    
+    const groupMembers = contestants.filter(
+      c => (c as any).groupId === contestantGroupId && c.id !== contestant.id
+    ).slice(0, 4);
+    
+    return groupMembers.map(member => ({
+      id: `companion-${member.id}`,
+      name: [member.firstName, member.lastName].filter(Boolean).join(' ') || member.name || 'Partner',
+      relationship: member.attendingWith || 'Partner',
+      photoUrl: member.photoPath ? `/photos/${member.photoPath.split('/').pop()}` : null
+    }));
+  };
+
   // Initialize card data when contestant is selected or existing card loads
   useEffect(() => {
     if (selectedContestant) {
+      // Get auto companions from group members
+      const autoCompanions = getAutoCompanions(selectedContestant);
+      
       if (existingCard && existingCard.contestantId === selectedContestant.id) {
         // Parse manualCompanions if it's a string (from database)
         let parsedCard = { ...existingCard };
@@ -358,25 +378,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         if (!Array.isArray(parsedCard.manualCompanions)) {
           parsedCard.manualCompanions = [];
         }
-        setCardData(parsedCard);
-      } else if (!loadingCard) {
-        // Find group members to auto-populate as companions (up to 4)
-        const contestantGroupId = (selectedContestant as any).groupId;
-        let autoCompanions: ManualCompanion[] = [];
         
-        if (contestantGroupId) {
-          const groupMembers = contestants.filter(
-            c => (c as any).groupId === contestantGroupId && c.id !== selectedContestant.id
-          ).slice(0, 4);
-          
-          autoCompanions = groupMembers.map(member => ({
-            id: `companion-${member.id}`,
-            name: [member.firstName, member.lastName].filter(Boolean).join(' ') || member.name || 'Partner',
-            relationship: member.attendingWith || 'Partner',
-            photoUrl: member.photoPath ? `/photos/${member.photoPath.split('/').pop()}` : null
-          }));
+        // If no companions saved but group members exist, auto-populate
+        if (parsedCard.manualCompanions.length === 0 && autoCompanions.length > 0) {
+          parsedCard.manualCompanions = autoCompanions;
+          parsedCard.useManualCompanions = true;
         }
         
+        setCardData(parsedCard);
+      } else if (!loadingCard) {
         setCardData({
           contestantId: selectedContestant.id,
           occupation: '',
