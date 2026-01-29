@@ -15028,7 +15028,7 @@ Thank you.`;
   <style>
     @page {
       size: 297mm 210mm landscape;
-      margin: 8mm;
+      margin: 10mm;
     }
     @media print {
       html, body {
@@ -15040,29 +15040,27 @@ Thank you.`;
       @page { size: landscape; }
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; background: #f3f4f6; padding: 10px; }
-    .card {
+    body { 
+      font-family: Arial, sans-serif; 
+      background: white; 
+      padding: 24px;
+    }
+    .page {
       width: 100%;
-      max-width: 280mm;
-      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 40%, #fcd34d 100%);
-      border: 2px solid #92400e;
-      border-radius: 8px;
-      padding: 16px;
+      max-width: 277mm;
+      background: white;
       display: flex;
-      gap: 16px;
+      gap: 24px;
     }
     .left-column {
-      width: 200px;
+      width: 208px;
       flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
     }
     .photo-section {
-      width: 180px;
-      height: 220px;
-      background: white;
-      border: 2px solid #92400e;
+      width: 100%;
+      height: 224px;
+      background: #f3f4f6;
+      border: 4px solid #f59e0b;
       border-radius: 8px;
       overflow: hidden;
       display: flex;
@@ -15070,16 +15068,47 @@ Thank you.`;
       justify-content: center;
     }
     .photo-section img { width: 100%; height: 100%; object-fit: cover; }
-    .companions-section {
+    .attending-with {
+      margin-top: 24px;
+      text-align: center;
+    }
+    .attending-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #4b5563;
+      margin-bottom: 4px;
+    }
+    .attending-arrow {
+      color: #3b82f6;
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    .companions-grid {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
       justify-content: center;
     }
+    .companion {
+      text-align: center;
+    }
+    .companion-photo {
+      width: 112px;
+      height: 112px;
+      border: 4px solid #f59e0b;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+    }
+    .companion-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .companion-name { font-size: 14px; font-weight: 600; margin-top: 4px; }
+    .companion-relationship { font-size: 12px; color: #6b7280; }
     .right-column {
       flex: 1;
-      display: flex;
-      flex-direction: column;
     }
     .header-banner {
       background: linear-gradient(90deg, #b45309 0%, #d97706 50%, #f59e0b 100%);
@@ -15088,34 +15117,34 @@ Thank you.`;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
     .header-name {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: bold;
       font-style: italic;
+      letter-spacing: 0.05em;
       background: linear-gradient(180deg, #fef08a 0%, #fbbf24 50%, #d97706 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      text-shadow: none;
       filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.4));
     }
     .header-logo {
       height: 48px;
     }
     .info-section {
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
     .age-state {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: bold;
-      color: #1f2937;
+      color: #111827;
     }
     .occupation {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: bold;
-      color: #374151;
+      color: #1f2937;
     }
     .sponsor-category {
       font-size: 14px;
@@ -15123,86 +15152,111 @@ Thank you.`;
       color: #16a34a;
     }
     .tagline {
-      font-size: 20px;
+      font-size: 24px;
       font-weight: bold;
       color: #16a34a;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
     .bullet-points {
       list-style: none;
       padding: 0;
-      font-size: 11px;
-      line-height: 1.4;
-      flex: 1;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .bullet-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .bullet-circle {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 4px;
     }
     .producer-section {
       display: flex;
-      border: 1px solid #9ca3af;
-      margin-top: 12px;
+      border: 1px solid #d1d5db;
+      margin-top: 24px;
     }
     .producer-label {
       background: #e5e7eb;
-      padding: 6px 12px;
+      padding: 8px 16px;
       font-weight: 600;
-      font-size: 12px;
-      border-right: 1px solid #9ca3af;
+      font-size: 14px;
+      border-right: 1px solid #d1d5db;
     }
     .producer-name {
       background: #fbbf24;
-      padding: 6px 12px;
+      padding: 8px 16px;
       font-weight: bold;
-      font-size: 12px;
+      font-size: 14px;
       flex: 1;
     }
-    .status-badge {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: bold;
-    }
-    .ready { background: #22c55e; color: white; }
-    .draft { background: #f59e0b; color: white; }
   </style>
 </head>
 <body>
-  <div style="position: relative;">
-    <div class="status-badge ${card.isReady ? 'ready' : 'draft'}">${card.isReady ? 'READY' : 'DRAFT'}</div>
-    <div class="card">
-      <div class="left-column">
-        <div class="photo-section">
-          ${photoUrl ? `<img src="${photoUrl}" alt="Photo" />` : '<span style="color: #999; font-size: 48px;">?</span>'}
-        </div>
-        ${companionCount > 0 ? `
-          <div class="companions-section">
-            ${companionsHtml}
-          </div>
-        ` : ''}
+  <div class="page">
+    <div class="left-column">
+      <div class="photo-section">
+        ${photoUrl ? `<img src="${photoUrl}" alt="Photo" />` : '<span style="color: #9ca3af; font-size: 48px;">?</span>'}
       </div>
-      <div class="right-column">
-        <div class="header-banner">
-          <h2 class="header-name">${displayName.toUpperCase()}</h2>
-          <img src="/attached_assets/dond-logo.png" alt="Deal or No Deal" class="header-logo" onerror="this.style.display='none'" />
+      
+      ${companionCount > 0 ? `
+      <div class="attending-with">
+        <div class="attending-label">ATTENDING WITH ...</div>
+        <div class="attending-arrow">&#8595;</div>
+        <div class="companions-grid">
+          ${manualCompanions.map(comp => {
+            const compPhoto = comp.photoUrl || comp.photo || '';
+            return `
+            <div class="companion">
+              <div class="companion-photo">
+                ${compPhoto ? `<img src="${compPhoto}" />` : '<span style="color: #9ca3af; font-size: 24px;">?</span>'}
+              </div>
+              <div class="companion-name">${comp.name || ''}</div>
+              <div class="companion-relationship">(${comp.relationship || ''})</div>
+            </div>
+            `;
+          }).join('')}
         </div>
-        
-        <div class="info-section">
-          <div class="age-state">${displayAgeState}</div>
-          <div class="occupation">${card.occupation || 'OCCUPATION'}</div>
-          <div class="sponsor-category">${card.sponsorCategory || 'SPONSOR CATEGORY: X'}</div>
-        </div>
-        
-        <div class="tagline">${card.tagline || 'SHORT TAGLINE'}</div>
-        
-        <ul class="bullet-points">
-          ${bulletPointsHtml}
-        </ul>
-        
-        <div class="producer-section">
-          <span class="producer-label">PRODUCER:</span>
-          <span class="producer-name">${card.producerName || 'INSERT NAME'}</span>
-        </div>
+      </div>
+      ` : ''}
+    </div>
+    
+    <div class="right-column">
+      <div class="header-banner">
+        <h2 class="header-name">${displayName.toUpperCase()}</h2>
+        <img src="/attached_assets/dond-logo.png" alt="Deal or No Deal" class="header-logo" onerror="this.style.display='none'" />
+      </div>
+      
+      <div class="info-section">
+        <div class="age-state">${displayAgeState}</div>
+        <div class="occupation">${card.occupation || 'OCCUPATION'}</div>
+        <div class="sponsor-category">${card.sponsorCategory || 'SPONSOR CATEGORY: X'}</div>
+      </div>
+      
+      <div class="tagline">${card.tagline || 'SHORT TAGLINE'}</div>
+      
+      <ul class="bullet-points">
+        ${bulletPoints.map((point, index) => {
+          const isLast = index === bulletPoints.length - 1;
+          const circleColor = isLast ? '#ef4444' : '#9ca3af';
+          const textStyle = isLast ? 'color: #dc2626; font-style: italic;' : '';
+          return `
+            <li class="bullet-item">
+              <span class="bullet-circle" style="background: ${circleColor};"></span>
+              <span style="${textStyle}">${point}</span>
+            </li>
+          `;
+        }).join('')}
+      </ul>
+      
+      <div class="producer-section">
+        <span class="producer-label">PRODUCER:</span>
+        <span class="producer-name">${card.producerName || 'INSERT NAME'}</span>
       </div>
     </div>
   </div>
