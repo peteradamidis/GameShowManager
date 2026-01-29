@@ -943,7 +943,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                               onClick={() => companionPhotoRefs.current[companion.id]?.click()}
                             >
                               <Avatar className="w-full h-full rounded-none">
-                                <AvatarImage src={companion.photoUrl || undefined} className="object-cover" />
+                                <AvatarImage src={companion.photoUrl || undefined} className="object-cover object-top" />
                                 <AvatarFallback className={`${fallbackSize} rounded-none bg-gray-200`}>
                                   {(companion.name || 'Partner').split(' ').map(n => n?.[0] || '').join('') || '?'}
                                 </AvatarFallback>
@@ -1391,7 +1391,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                   onClick={() => companionPhotoRefs.current[companion.id]?.click()}
                                 >
                                   <Avatar className="w-full h-full rounded-none">
-                                    <AvatarImage src={companion.photoUrl || undefined} className="object-cover" />
+                                    <AvatarImage src={companion.photoUrl || undefined} className="object-cover object-top" />
                                     <AvatarFallback className={`${fallbackSize} rounded-none bg-gray-200`}>
                                       {(companion.name || 'Partner').split(' ').map(n => n?.[0] || '').join('') || '?'}
                                     </AvatarFallback>
