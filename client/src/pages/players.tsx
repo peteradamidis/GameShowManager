@@ -314,6 +314,23 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       if (existingCard && existingCard.contestantId === selectedContestant.id) {
         setCardData(existingCard);
       } else if (!loadingCard) {
+        // Find group members to auto-populate as companions (up to 4)
+        const contestantGroupId = (selectedContestant as any).groupId;
+        let autoCompanions: ManualCompanion[] = [];
+        
+        if (contestantGroupId) {
+          const groupMembers = contestants.filter(
+            c => (c as any).groupId === contestantGroupId && c.id !== selectedContestant.id
+          ).slice(0, 4);
+          
+          autoCompanions = groupMembers.map(member => ({
+            id: `companion-${member.id}`,
+            name: `${member.firstName} ${member.lastName}`,
+            relationship: member.attendingWith || 'Partner',
+            photoUrl: member.photoPath ? `/photos/${member.photoPath.split('/').pop()}` : null
+          }));
+        }
+        
         setCardData({
           contestantId: selectedContestant.id,
           occupation: '',
@@ -332,10 +349,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           companionRelationship: '',
           companionPhotoUrl: '',
           producerName: '',
+          manualCompanions: autoCompanions.length > 0 ? autoCompanions : undefined,
+          useManualCompanions: autoCompanions.length > 0,
         });
       }
     }
-  }, [selectedContestant, existingCard, loadingCard]);
+  }, [selectedContestant, existingCard, loadingCard, contestants]);
 
   // Save casting card mutation - uses PATCH for updates, POST for new cards
   const saveMutation = useMutation({
