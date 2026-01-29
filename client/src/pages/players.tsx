@@ -339,7 +339,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           
           autoCompanions = groupMembers.map(member => ({
             id: `companion-${member.id}`,
-            name: `${member.firstName} ${member.lastName}`,
+            name: [member.firstName, member.lastName].filter(Boolean).join(' ') || member.name || 'Partner',
             relationship: member.attendingWith || 'Partner',
             photoUrl: member.photoPath ? `/photos/${member.photoPath.split('/').pop()}` : null
           }));
@@ -770,7 +770,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                               <Avatar className="w-full h-full rounded-none">
                                 <AvatarImage src={companion.photoUrl || undefined} className="object-cover" />
                                 <AvatarFallback className={`${fallbackSize} rounded-none bg-gray-200`}>
-                                  {companion.name.split(' ').map(n => n[0]).join('') || '?'}
+                                  {(companion.name || 'Partner').split(' ').map(n => n?.[0] || '').join('') || '?'}
                                 </AvatarFallback>
                               </Avatar>
                               {/* Upload overlay */}
@@ -799,7 +799,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                               suppressContentEditableWarning
                               className={`${textSize} font-semibold mt-1 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text`}
                               onBlur={(e) => updateCompanionField(companion.id, 'name', e.currentTarget.textContent || 'Name')}
-                            >{companion.name}</div>
+                            >{companion.name || 'Name'}</div>
                             {/* Editable relationship */}
                             <div 
                               contentEditable
@@ -1149,7 +1149,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                   <Avatar className="w-full h-full rounded-none">
                                     <AvatarImage src={companion.photoUrl || undefined} className="object-cover" />
                                     <AvatarFallback className={`${fallbackSize} rounded-none bg-gray-200`}>
-                                      {companion.name.split(' ').map(n => n[0]).join('') || '?'}
+                                      {(companion.name || 'Partner').split(' ').map(n => n?.[0] || '').join('') || '?'}
                                     </AvatarFallback>
                                   </Avatar>
                                   {/* Upload overlay */}
@@ -1178,7 +1178,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                   suppressContentEditableWarning
                                   className={`${textSize} font-semibold mt-1 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text`}
                                   onBlur={(e) => updateCompanionField(companion.id, 'name', e.currentTarget.textContent || 'Name')}
-                                >{companion.name}</div>
+                                >{companion.name || 'Name'}</div>
                                 {/* Editable relationship */}
                                 <div 
                                   contentEditable
