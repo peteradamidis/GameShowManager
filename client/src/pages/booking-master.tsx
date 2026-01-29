@@ -1543,11 +1543,6 @@ export default function BookingMaster() {
                                     STBY
                                   </Badge>
                                 )}
-                                {row.contestant?.state === 'rescheduled' && (
-                                  <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-orange-400 bg-orange-100 text-orange-700 dark:border-orange-700 dark:bg-orange-900/30 dark:text-orange-300" title="Contestant was rescheduled">
-                                    RESCHED
-                                  </Badge>
-                                )}
                                 {row.contestant?.id && (row.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(row.contestant.name)) && (
                                   <Button
                                     variant="ghost"
