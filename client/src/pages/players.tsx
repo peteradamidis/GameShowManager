@@ -883,7 +883,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   contentEditable
                   suppressContentEditableWarning
                   className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                  style={{ fontFamily: 'Calibri, sans-serif', fontSize: '29px', marginTop: '-10px' }}
+                  style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '29px', fontWeight: 'bold', marginTop: '-10px' }}
                   onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                 >
                   {cardData.tagline || 'SHORT TAGLINE'}
@@ -1286,7 +1286,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       contentEditable
                       suppressContentEditableWarning
                       className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                      style={{ fontFamily: 'Calibri, sans-serif', fontSize: '29px', marginTop: '-10px' }}
+                      style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '29px', fontWeight: 'bold', marginTop: '-10px' }}
                       onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                       data-testid="edit-tagline"
                     >
