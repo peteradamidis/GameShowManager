@@ -186,6 +186,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [cardZoom, setCardZoom] = useState(0.65);
   const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [renderError, setRenderError] = useState<string | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasUnsavedChanges = useRef(false);
 
@@ -361,55 +362,70 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   // Initialize card data when contestant is selected or existing card loads
   useEffect(() => {
     if (selectedContestant) {
-      // Get auto companions from group members
-      const autoCompanions = getAutoCompanions(selectedContestant);
-      
-      if (existingCard && existingCard.contestantId === selectedContestant.id) {
-        // Parse manualCompanions if it's a string (from database)
-        let parsedCard = { ...existingCard };
-        if (typeof parsedCard.manualCompanions === 'string') {
-          try {
-            parsedCard.manualCompanions = JSON.parse(parsedCard.manualCompanions as any);
-          } catch (e) {
+      try {
+        setRenderError(null); // Clear any previous errors
+        
+        // Get auto companions from group members
+        const autoCompanions = getAutoCompanions(selectedContestant);
+        
+        if (existingCard && existingCard.contestantId === selectedContestant.id) {
+          // Parse manualCompanions if it's a string (from database)
+          let parsedCard = { ...existingCard };
+          if (typeof parsedCard.manualCompanions === 'string') {
+            try {
+              parsedCard.manualCompanions = JSON.parse(parsedCard.manualCompanions as any);
+            } catch (e) {
+              parsedCard.manualCompanions = [];
+            }
+          }
+          // Ensure manualCompanions is always an array
+          if (!Array.isArray(parsedCard.manualCompanions)) {
             parsedCard.manualCompanions = [];
           }
+          
+          // Ensure each companion has required fields
+          parsedCard.manualCompanions = parsedCard.manualCompanions.map((c: any, idx: number) => ({
+            id: c?.id || `companion-${idx}`,
+            name: c?.name || 'Partner',
+            relationship: c?.relationship || 'Partner',
+            photoUrl: c?.photoUrl || null
+          }));
+          
+          // If no companions saved but group members exist, auto-populate
+          if (parsedCard.manualCompanions.length === 0 && autoCompanions.length > 0) {
+            parsedCard.manualCompanions = autoCompanions;
+            parsedCard.useManualCompanions = true;
+          }
+          
+          setCardData(parsedCard);
+        } else if (!loadingCard) {
+          setCardData({
+            contestantId: selectedContestant.id,
+            occupation: '',
+            sponsorCategory: '',
+            tagline: '',
+            energyLevel: '3',
+            characterTraits: '',
+            meetStory: '',
+            keyStories: '',
+            prizeGoalHigh: '',
+            prizeGoalLow: '',
+            howMuchToWin: '',
+            playStyle: '',
+            previousShows: '',
+            companionName: selectedContestant.attendingWith || '',
+            companionRelationship: '',
+            companionPhotoUrl: '',
+            producerName: '',
+            showProducer: true,
+            showTagline: true,
+            manualCompanions: autoCompanions.length > 0 ? autoCompanions : [],
+            useManualCompanions: autoCompanions.length > 0,
+          });
         }
-        // Ensure manualCompanions is always an array
-        if (!Array.isArray(parsedCard.manualCompanions)) {
-          parsedCard.manualCompanions = [];
-        }
-        
-        // If no companions saved but group members exist, auto-populate
-        if (parsedCard.manualCompanions.length === 0 && autoCompanions.length > 0) {
-          parsedCard.manualCompanions = autoCompanions;
-          parsedCard.useManualCompanions = true;
-        }
-        
-        setCardData(parsedCard);
-      } else if (!loadingCard) {
-        setCardData({
-          contestantId: selectedContestant.id,
-          occupation: '',
-          sponsorCategory: '',
-          tagline: '',
-          energyLevel: '3',
-          characterTraits: '',
-          meetStory: '',
-          keyStories: '',
-          prizeGoalHigh: '',
-          prizeGoalLow: '',
-          howMuchToWin: '',
-          playStyle: '',
-          previousShows: '',
-          companionName: selectedContestant.attendingWith || '',
-          companionRelationship: '',
-          companionPhotoUrl: '',
-          producerName: '',
-          showProducer: true,
-          showTagline: true,
-          manualCompanions: autoCompanions.length > 0 ? autoCompanions : [],
-          useManualCompanions: autoCompanions.length > 0,
-        });
+      } catch (error: any) {
+        console.error('Error initializing card data:', error);
+        setRenderError(`Error loading card: ${error?.message || 'Unknown error'}`);
       }
     }
   }, [selectedContestant, existingCard, loadingCard, contestants]);
@@ -1154,7 +1170,20 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       </div>
 
       {/* Right Panel - Card Editor & Preview */}
-      {selectedContestant && cardData ? (
+      {renderError ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Card className="p-6 max-w-md">
+            <div className="text-center">
+              <div className="text-red-500 text-4xl mb-4">⚠️</div>
+              <h3 className="font-semibold text-lg mb-2">Error Loading Casting Card</h3>
+              <p className="text-muted-foreground mb-4">{renderError}</p>
+              <Button onClick={() => { setRenderError(null); setSelectedContestant(null); }}>
+                Go Back
+              </Button>
+            </div>
+          </Card>
+        </div>
+      ) : selectedContestant && cardData ? (
         <div className="flex-1 overflow-hidden">
           {/* Direct Edit Card - Click any text to edit like PowerPoint */}
           <Card className="h-full flex flex-col">
