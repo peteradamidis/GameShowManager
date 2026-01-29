@@ -58,6 +58,7 @@ export default function ReschedulePage() {
   const [filterOriginalRecordDayId, setFilterOriginalRecordDayId] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterType, setFilterType] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("pending"); // "all", "pending", "rebooked"
 
   const handleRowClick = (contestant: any) => {
     setSelectedContestant(contestant);
@@ -142,6 +143,27 @@ export default function ReschedulePage() {
   const { data: recordDays = [] } = useQuery<any[]>({
     queryKey: ['/api/record-days'],
   });
+
+  // Fetch all seat assignments to check if rescheduled contestants are now booked
+  const { data: allSeatAssignments = [] } = useQuery<any[]>({
+    queryKey: ['/api/seat-assignments/all'],
+  });
+
+  // Create a map of contestantId -> current booking info
+  const currentBookings = useMemo(() => {
+    const bookingMap: { [contestantId: string]: { recordDay: any; blockNumber: number; seatLabel: string } } = {};
+    allSeatAssignments.forEach((assignment: any) => {
+      if (assignment.contestantId) {
+        const recordDay = recordDays.find((rd: any) => rd.id === assignment.recordDayId);
+        bookingMap[assignment.contestantId] = {
+          recordDay,
+          blockNumber: assignment.blockNumber,
+          seatLabel: assignment.seatLabel,
+        };
+      }
+    });
+    return bookingMap;
+  }, [allSeatAssignments, recordDays]);
 
   // Fetch occupied seats for the selected record day
   const { data: occupiedSeats = [] } = useQuery({
@@ -345,6 +367,19 @@ export default function ReschedulePage() {
               />
             </div>
             <div className="flex items-center gap-2">
+              <Label htmlFor="filter-status" className="text-sm font-medium whitespace-nowrap">Status:</Label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger id="filter-status" className="w-32" data-testid="select-filter-status">
+                  <SelectValue placeholder="Pending" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="rebooked">Rebooked</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
               <Label htmlFor="filter-type" className="text-sm font-medium whitespace-nowrap">Type:</Label>
               <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger id="filter-type" className="w-32" data-testid="select-filter-type">
@@ -416,7 +451,12 @@ export default function ReschedulePage() {
                     const matchesType = filterType === "all" || 
                       (filterType === "standby" && cancellation.isFromStandby) || 
                       (filterType === "canceled" && !cancellation.isFromStandby);
-                    return matchesDate && matchesSearch && matchesType;
+                    // Check if contestant is currently booked
+                    const isRebooked = !!currentBookings[cancellation.contestantId];
+                    const matchesStatus = filterStatus === "all" || 
+                      (filterStatus === "pending" && !isRebooked) ||
+                      (filterStatus === "rebooked" && isRebooked);
+                    return matchesDate && matchesSearch && matchesType && matchesStatus;
                   })
                   .map((cancellation: any) => (
                   <TableRow 
@@ -571,31 +611,53 @@ export default function ReschedulePage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="default"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRebook(cancellation);
-                          }}
-                          data-testid={`button-rebook-${cancellation.id}`}
-                        >
-                          Rebook
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReturnToContestants(cancellation.id, cancellation.contestant?.name);
-                          }}
-                          title="Return to contestants"
-                          data-testid={`button-return-${cancellation.id}`}
-                        >
-                          <Trash2 className="h-4 w-4 text-muted-foreground" />
-                        </Button>
-                      </div>
+                      {(() => {
+                        const booking = currentBookings[cancellation.contestantId];
+                        if (booking) {
+                          // Contestant is now booked - show their booking info
+                          const dateStr = booking.recordDay?.date 
+                            ? format(new Date(booking.recordDay.date), 'EEE d MMM')
+                            : 'Unknown date';
+                          return (
+                            <div className="flex items-center gap-2">
+                              <Badge className="bg-green-100 text-green-700 border-green-300">
+                                REBOOKED
+                              </Badge>
+                              <span className="text-sm font-medium text-green-700">
+                                {dateStr} - B{booking.blockNumber} {booking.seatLabel}
+                              </span>
+                            </div>
+                          );
+                        }
+                        // Not booked - show rebook button
+                        return (
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRebook(cancellation);
+                              }}
+                              data-testid={`button-rebook-${cancellation.id}`}
+                            >
+                              Rebook
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleReturnToContestants(cancellation.id, cancellation.contestant?.name);
+                              }}
+                              title="Return to contestants"
+                              data-testid={`button-return-${cancellation.id}`}
+                            >
+                              <Trash2 className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                   </TableRow>
                 ))}

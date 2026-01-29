@@ -3813,8 +3813,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check for previous canceled assignments to carry over paperwork status
       const canceledAssignments = await storage.getCanceledAssignments();
-      const previousCanceled = canceledAssignments.find(
+      // Find any reschedule entry for this contestant (for paperwork carryover)
+      const previousCanceledWithPaperwork = canceledAssignments.find(
         (c: any) => c.contestantId === contestantId && (c.paperworkSent || c.paperworkReceived)
+      );
+      // Find any reschedule entry for this contestant (to remove them from reschedule)
+      const anyPreviousCanceled = canceledAssignments.find(
+        (c: any) => c.contestantId === contestantId
       );
 
       const assignment = await storage.createSeatAssignment({
@@ -3824,8 +3829,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         seatLabel,
         playerType,
         // Carry over paperwork status from previous bookings
-        paperworkSent: previousCanceled?.paperworkSent || undefined,
-        paperworkReceived: previousCanceled?.paperworkReceived || undefined,
+        paperworkSent: previousCanceledWithPaperwork?.paperworkSent || undefined,
+        paperworkReceived: previousCanceledWithPaperwork?.paperworkReceived || undefined,
         // Standby block type tracking - when standby is seated
         seatedAsBlockType: seatedAsBlockType || undefined,
         seatedFromStandby: seatedFromStandby === true,
@@ -3834,6 +3839,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update contestant status to assigned
       await storage.updateContestantAvailability(contestantId, 'assigned');
+
+      // Note: We intentionally keep reschedule entries when rebooked
+      // The reschedule page will check if contestant is now seated and show their booking info
 
       res.json(assignment);
     } catch (error: any) {
