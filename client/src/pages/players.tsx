@@ -1055,7 +1055,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       contentEditable
                       suppressContentEditableWarning
                       className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                      style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '30px', fontWeight: 'bold', marginTop: '-10px' }}
+                      style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '31px', fontWeight: 'bold', marginTop: '-10px' }}
                       onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                     >
                       {cardData.tagline || 'SHORT TAGLINE'}
@@ -1081,7 +1081,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 )}
 
                 {/* Bullet points - dynamic with add/remove */}
-                <ul className="space-y-2" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '15px', marginTop: cardData.showTagline === false ? '-10px' : undefined }}>
+                <ul className="space-y-2" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '16px', marginTop: cardData.showTagline === false ? '-10px' : undefined }}>
                   {(cardData.bulletPoints || defaultBulletPoints).map((point, index) => (
                     <li key={index} className="flex items-start gap-3 group">
                       <Circle className={`w-4 h-4 mt-1 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
@@ -1129,7 +1129,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <span 
                       contentEditable
                       suppressContentEditableWarning
-                      className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text flex-1"
+                      className="bg-yellow-400 px-2 py-1 font-bold outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text flex-1"
+                      style={{ fontSize: '9px' }}
                       onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
                     >{cardData.producerName || 'INSERT NAME'}</span>
                     <button
@@ -1506,7 +1507,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           contentEditable
                           suppressContentEditableWarning
                           className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                          style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '30px', fontWeight: 'bold', marginTop: '-10px' }}
+                          style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '31px', fontWeight: 'bold', marginTop: '-10px' }}
                           onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                           data-testid="edit-tagline"
                         >
@@ -1535,7 +1536,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     )}
 
                     {/* Bullet points - dynamic with add/remove */}
-                    <ul className="space-y-2" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '15px', marginTop: cardData.showTagline === false ? '-10px' : undefined }} data-testid="preview-details-list">
+                    <ul className="space-y-2" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '16px', marginTop: cardData.showTagline === false ? '-10px' : undefined }} data-testid="preview-details-list">
                       {(cardData.bulletPoints || defaultBulletPoints).map((point, index) => (
                         <li key={index} className="flex items-start gap-3 group">
                           <Circle className={`w-4 h-4 mt-1 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
@@ -1586,7 +1587,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         <span 
                           contentEditable
                           suppressContentEditableWarning
-                          className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text flex-1"
+                          className="bg-yellow-400 px-2 py-1 font-bold outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text flex-1"
+                          style={{ fontSize: '9px' }}
                           onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
                           data-testid="edit-producer"
                         >{cardData.producerName || 'INSERT NAME'}</span>
