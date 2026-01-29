@@ -3224,13 +3224,13 @@ export default function PlayersPage() {
                 <User className="h-4 w-4 mr-2" />
                 Players & Backups
               </TabsTrigger>
-              <TabsTrigger value="planning" data-testid="tab-planning">
-                <Calendar className="h-4 w-4 mr-2" />
-                RX Planning
-              </TabsTrigger>
               <TabsTrigger value="casting" data-testid="tab-casting">
                 <CreditCard className="h-4 w-4 mr-2" />
                 Casting Cards
+              </TabsTrigger>
+              <TabsTrigger value="planning" data-testid="tab-planning">
+                <Calendar className="h-4 w-4 mr-2" />
+                RX Planning
               </TabsTrigger>
             </TabsList>
           </div>
