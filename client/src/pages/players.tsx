@@ -888,7 +888,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                               suppressContentEditableWarning
                               className={`${textSize} text-gray-500 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text`}
                               onBlur={(e) => updateCompanionField(companion.id, 'relationship', e.currentTarget.textContent || 'Relationship')}
-                            >({companion.relationship})</div>
+                            >({companion.relationship || 'Relationship'})</div>
                           </div>
                         ))}
                       </div>
@@ -1306,7 +1306,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                   suppressContentEditableWarning
                                   className={`${textSize} text-gray-500 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text`}
                                   onBlur={(e) => updateCompanionField(companion.id, 'relationship', e.currentTarget.textContent || 'Relationship')}
-                                >({companion.relationship})</div>
+                                >({companion.relationship || 'Relationship'})</div>
                               </div>
                             ))}
                           </div>
