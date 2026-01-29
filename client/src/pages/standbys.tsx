@@ -588,11 +588,36 @@ export default function StandbysPage() {
     );
   }, [standbysForRecordDay, selectedStandbys]);
 
+  // Calculate selected standbys who haven't been sent emails yet (for bulk email button)
+  const selectedNotSentYet = useMemo(() => {
+    return standbysForRecordDay.filter(s => 
+      selectedStandbys.includes(s.id) && 
+      !s.standbyEmailSent &&
+      s.contestant.email
+    );
+  }, [standbysForRecordDay, selectedStandbys]);
+
+  // Selected standbys without email address (can't send)
+  const selectedNoEmailAddress = useMemo(() => {
+    return standbysForRecordDay.filter(s => 
+      selectedStandbys.includes(s.id) && 
+      !s.standbyEmailSent &&
+      !s.contestant.email
+    );
+  }, [standbysForRecordDay, selectedStandbys]);
+
   const handleSelectAll = () => {
-    if (selectedStandbys.length === standbysForRecordDay.length) {
-      setSelectedStandbys([]);
+    // Use filtered list (groupedStandbysForRecordDay) for select all
+    const filteredIds = groupedStandbysForRecordDay.map(s => s.id);
+    const allFilteredSelected = filteredIds.length > 0 && filteredIds.every(id => selectedStandbys.includes(id));
+    
+    if (allFilteredSelected) {
+      // Deselect all filtered items
+      setSelectedStandbys(selectedStandbys.filter(id => !filteredIds.includes(id)));
     } else {
-      setSelectedStandbys(standbysForRecordDay.map(s => s.id));
+      // Select all filtered items (add to existing selection)
+      const newSelection = new Set([...selectedStandbys, ...filteredIds]);
+      setSelectedStandbys(Array.from(newSelection));
     }
   };
 
@@ -605,11 +630,13 @@ export default function StandbysPage() {
   };
 
   const handlePreviewEmails = () => {
-    if (selectedStandbys.length === 0) {
-      toast({ title: "No standbys selected", variant: "destructive" });
+    // Only send to standbys who haven't been sent emails yet
+    const idsToSend = selectedNotSentYet.map(s => s.id);
+    if (idsToSend.length === 0) {
+      toast({ title: "No eligible standbys", description: "Selected standbys have already been sent emails or have no email address", variant: "destructive" });
       return;
     }
-    previewEmailsMutation.mutate(selectedStandbys);
+    previewEmailsMutation.mutate(idsToSend);
   };
 
   const handleSendEmails = () => {
@@ -805,8 +832,8 @@ export default function StandbysPage() {
                       data-testid="input-search-standbys"
                     />
                   </div>
-                  {/* Hide bulk actions in search mode */}
-                  {!isSearchMode && selectedStandbys.length > 0 && (
+                  {/* Hide bulk actions in search mode - only show for standbys not yet sent */}
+                  {!isSearchMode && selectedNotSentYet.length > 0 && (
                     <Button 
                       onClick={handlePreviewEmails}
                       disabled={previewEmailsMutation.isPending}
@@ -814,8 +841,14 @@ export default function StandbysPage() {
                       data-testid="button-preview-emails"
                     >
                       <Mail className="h-4 w-4 mr-2" />
-                      Send Standby Email ({selectedStandbys.length})
+                      Send Standby Email ({selectedNotSentYet.length})
                     </Button>
+                  )}
+                  {/* Warning if selected standbys have no email */}
+                  {!isSearchMode && selectedNoEmailAddress.length > 0 && selectedNotSentYet.length === 0 && (
+                    <span className="text-xs text-amber-600">
+                      {selectedNoEmailAddress.length} selected without email address
+                    </span>
                   )}
                   {/* Send Ticket button - for confirmed standbys without ticket */}
                   {selectedConfirmedWithoutTicket.length > 0 && (
@@ -908,7 +941,7 @@ export default function StandbysPage() {
                       {!isSearchMode && (
                         <TableHead className="w-12">
                           <Checkbox
-                            checked={selectedStandbys.length === standbysForRecordDay.length && standbysForRecordDay.length > 0}
+                            checked={groupedStandbysForRecordDay.length > 0 && groupedStandbysForRecordDay.every(s => selectedStandbys.includes(s.id))}
                             onCheckedChange={handleSelectAll}
                             data-testid="checkbox-select-all-standbys"
                           />
