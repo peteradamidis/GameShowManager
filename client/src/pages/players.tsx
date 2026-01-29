@@ -611,6 +611,24 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         backgroundColor: '#ffffff',
         logging: false,
         imageTimeout: 15000,
+        ignoreElements: (element) => {
+          // Skip any elements with problematic CSS
+          return element.classList?.contains('ignore-print');
+        },
+        onclone: (clonedDoc) => {
+          // Remove CSS color() function references that html2canvas can't parse
+          const style = clonedDoc.createElement('style');
+          style.textContent = `
+            * { 
+              --ring: 215 20.2% 65.1% !important;
+              --primary: 215 16.3% 46.9% !important;
+              --secondary: 210 40% 96.1% !important;
+              --accent: 35 91% 55% !important;
+              --muted: 210 40% 96.1% !important;
+            }
+          `;
+          clonedDoc.head.appendChild(style);
+        },
       });
 
       const imgData = canvas.toDataURL('image/png');
@@ -666,6 +684,23 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         backgroundColor: '#ffffff',
         logging: false,
         imageTimeout: 15000,
+        ignoreElements: (elem) => {
+          return elem.classList?.contains('ignore-print');
+        },
+        onclone: (clonedDoc) => {
+          // Remove CSS color() function references that html2canvas can't parse
+          const style = clonedDoc.createElement('style');
+          style.textContent = `
+            * { 
+              --ring: 215 20.2% 65.1% !important;
+              --primary: 215 16.3% 46.9% !important;
+              --secondary: 210 40% 96.1% !important;
+              --accent: 35 91% 55% !important;
+              --muted: 210 40% 96.1% !important;
+            }
+          `;
+          clonedDoc.head.appendChild(style);
+        },
       });
       
       // Restore transform
