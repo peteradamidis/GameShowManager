@@ -455,7 +455,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       if (selectedContestant) {
         queryClient.invalidateQueries({ queryKey: ['/api/casting-cards', selectedContestant.id] });
       }
-      toast({ title: "Saved!", description: "Casting card has been saved" });
+      // Toast is only shown for manual saves, not auto-saves
     },
     onError: (error: any) => {
       toast({ title: "Save failed", description: error.message, variant: "destructive" });
@@ -522,7 +522,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
   const handleSave = () => {
     if (cardData) {
-      saveMutation.mutate(cardData);
+      saveMutation.mutate(cardData, {
+        onSuccess: () => {
+          toast({ title: "Saved!", description: "Casting card has been saved" });
+        }
+      });
     }
   };
 
