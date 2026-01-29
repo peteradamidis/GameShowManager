@@ -558,6 +558,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             showTagline: true,
             manualCompanions: autoCompanions.length > 0 ? autoCompanions : [],
             useManualCompanions: autoCompanions.length > 0,
+            ageState: `${selectedContestant.age || ''} ${selectedContestant.suburb || ''}`.trim(),
           });
         }
       } catch (error: any) {
@@ -633,6 +634,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           showTagline: true,
           manualCompanions: autoCompanions.length > 0 ? autoCompanions : [],
           useManualCompanions: autoCompanions.length > 0,
+          ageState: `${selectedContestant.age || ''} ${selectedContestant.suburb || ''}`.trim(),
         });
       }
       toast({ title: "Card Reset", description: "Casting card has been reset to default" });
@@ -642,11 +644,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     },
   });
 
-  // Filter contestants
+  // Filter contestants - search by full name (first + last)
   const filteredContestants = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
     return contestants.filter(c => {
-      const matchesSearch = searchTerm === '' || 
-        c.name.toLowerCase().includes(searchTerm.toLowerCase());
+      // Search matches full name - split search term to match first/last name separately too
+      const fullName = c.name.toLowerCase();
+      const searchTerms = term.split(/\s+/).filter(Boolean);
+      const matchesSearch = term === '' || 
+        fullName.includes(term) || // Match full search term anywhere in name
+        searchTerms.every(t => fullName.includes(t)); // Or match all words individually
       const matchesRating = ratingFilter === 'all' || 
         c.auditionRating?.toUpperCase() === ratingFilter.toUpperCase();
       const matchesGender = genderFilter === 'all' || 
