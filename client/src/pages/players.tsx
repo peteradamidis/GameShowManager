@@ -354,7 +354,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       id: `companion-${member.id}`,
       name: [member.firstName, member.lastName].filter(Boolean).join(' ') || member.name || 'Partner',
       relationship: member.attendingWith || 'Partner',
-      photoUrl: member.photoPath ? `/photos/${member.photoPath.split('/').pop()}` : null
+      photoUrl: member.photoUrl || null
     }));
   };
 
