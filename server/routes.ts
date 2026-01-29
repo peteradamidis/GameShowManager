@@ -14942,7 +14942,7 @@ Thank you.`;
         return res.status(404).send("<html><body><h1>Casting card not found</h1></body></html>");
       }
       
-      const contestant = await storage.getContestant(contestantId);
+      const contestant = await storage.getContestantById(contestantId);
       if (!contestant) {
         return res.status(404).send("<html><body><h1>Contestant not found</h1></body></html>");
       }
