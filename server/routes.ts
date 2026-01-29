@@ -15110,7 +15110,7 @@ Thank you.`;
     <div class="header">
       <div style="width: 100px;"></div>
       <div class="name-section">
-        <div class="name">${contestant.firstName} ${contestant.lastName}</div>
+        <div class="name">${contestant.name || ''}</div>
         <div class="age-gender">${contestant.age ? contestant.age + ' years old' : ''} ${contestant.gender ? '• ' + contestant.gender : ''}</div>
       </div>
       <div class="status-badge ${card.isReady ? 'ready' : 'draft'}">${card.isReady ? 'READY' : 'DRAFT'}</div>
