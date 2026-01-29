@@ -602,10 +602,10 @@ export class DbStorage implements IStorage {
         // Create the seat assignment
         const [created] = await tx.insert(seatAssignments).values(assignment).returning();
         
-        // Update contestant status to 'assigned'
+        // Update contestant status to 'assigned' and reset state from 'rescheduled' if applicable
         await tx
           .update(contestants)
-          .set({ availabilityStatus: 'assigned' })
+          .set({ availabilityStatus: 'assigned', state: 'assigned' })
           .where(eq(contestants.id, assignment.contestantId));
         
         return created;
