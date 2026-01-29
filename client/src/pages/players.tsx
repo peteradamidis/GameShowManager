@@ -1129,8 +1129,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <span 
                       contentEditable
                       suppressContentEditableWarning
-                      className="bg-yellow-400 px-2 py-1 font-bold outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text flex-1"
-                      style={{ fontSize: '9px' }}
+                      className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text flex-1"
                       onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
                     >{cardData.producerName || 'INSERT NAME'}</span>
                     <button
@@ -1587,8 +1586,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         <span 
                           contentEditable
                           suppressContentEditableWarning
-                          className="bg-yellow-400 px-2 py-1 font-bold outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text flex-1"
-                          style={{ fontSize: '9px' }}
+                          className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text flex-1"
                           onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
                           data-testid="edit-producer"
                         >{cardData.producerName || 'INSERT NAME'}</span>
