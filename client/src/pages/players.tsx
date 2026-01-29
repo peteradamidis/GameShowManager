@@ -834,7 +834,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               {/* Right side - Details */}
               <div className="flex-1">
                 {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-4 rounded-l flex items-center justify-between mb-4" style={{ height: '44px' }}>
+                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-4 rounded-l flex items-center justify-between mb-4" style={{ height: '50px' }}>
                   <h2 
                     contentEditable
                     suppressContentEditableWarning
@@ -1233,7 +1233,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   {/* Right side - Details */}
                   <div className="flex-1">
                     {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-4 rounded-l flex items-center justify-between mb-4" style={{ height: '44px' }} data-testid="preview-header-banner">
+                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-4 rounded-l flex items-center justify-between mb-4" style={{ height: '50px' }} data-testid="preview-header-banner">
                       <h2 
                         contentEditable
                         suppressContentEditableWarning
