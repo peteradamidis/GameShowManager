@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -181,6 +181,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [cardData, setCardData] = useState<CastingCardData | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [cardZoom, setCardZoom] = useState(0.7);
   const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
 
   // Select initial contestant when navigating from Players tab
@@ -651,17 +652,32 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               <button onClick={() => formatColor('#9333ea')} title="Purple" data-testid="btn-color-purple" className="w-6 h-6 rounded border border-gray-300 bg-purple-600 hover:ring-2 hover:ring-offset-1 hover:ring-purple-400" />
               <button onClick={() => formatColor('#ea580c')} title="Orange" data-testid="btn-color-orange" className="w-6 h-6 rounded border border-gray-300 bg-orange-600 hover:ring-2 hover:ring-offset-1 hover:ring-orange-400" />
               <button onClick={() => formatColor('#6b7280')} title="Gray" data-testid="btn-color-gray" className="w-6 h-6 rounded border border-gray-300 bg-gray-500 hover:ring-2 hover:ring-offset-1 hover:ring-gray-400" />
+              
+              <div className="w-px h-6 bg-gray-300 mx-1" />
+              
+              {/* Zoom Controls */}
+              <span className="text-xs text-gray-500 ml-1">Zoom:</span>
+              <Button size="sm" variant="ghost" onClick={() => setCardZoom(Math.max(0.3, cardZoom - 0.1))} title="Zoom Out" data-testid="btn-zoom-out" className="h-8 px-2">
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <span className="text-xs text-gray-600 min-w-[40px] text-center">{Math.round(cardZoom * 100)}%</span>
+              <Button size="sm" variant="ghost" onClick={() => setCardZoom(Math.min(1.5, cardZoom + 0.1))} title="Zoom In" data-testid="btn-zoom-in" className="h-8 px-2">
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setCardZoom(0.7)} title="Reset Zoom" data-testid="btn-zoom-reset" className="h-8 px-2 text-xs">
+                Reset
+              </Button>
             </div>
           </div>
           {/* A4 Landscape page container - 297mm x 210mm (scaled to fit) */}
-          <div className="relative" style={{ height: 'calc(210mm * 0.38 + 20px)' }}>
+          <div className="relative overflow-auto" style={{ height: `calc(210mm * ${cardZoom} + 40px)` }}>
             <div 
               id="casting-card-preview"
               className="bg-white p-6 border-2 border-gray-300 shadow-lg relative overflow-visible origin-top-left"
               style={{ 
                 width: '297mm', 
                 minHeight: '210mm',
-                transform: 'scale(0.38)',
+                transform: `scale(${cardZoom})`,
                 transformOrigin: 'top left',
                 fontFamily: 'Calibri, sans-serif'
               }}
