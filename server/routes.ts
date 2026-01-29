@@ -15176,6 +15176,17 @@ Thank you.`;
     }
   });
 
+  // Delete ALL casting cards
+  app.delete("/api/casting-cards", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteAllCastingCards();
+      res.json({ success: true, message: "All casting cards deleted" });
+    } catch (error: any) {
+      console.error("Error deleting all casting cards:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize WebSocket server for real-time updates

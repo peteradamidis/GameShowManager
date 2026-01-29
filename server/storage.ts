@@ -2957,6 +2957,11 @@ export class DbStorage implements IStorage {
     const db = getDb();
     await db.delete(castingCards).where(eq(castingCards.contestantId, contestantId));
   }
+
+  async deleteAllCastingCards(): Promise<void> {
+    const db = getDb();
+    await db.delete(castingCards);
+  }
 }
 
 export const storage = new DbStorage();

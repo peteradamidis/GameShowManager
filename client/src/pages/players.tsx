@@ -462,17 +462,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     },
   });
 
-  // Reset/delete casting card mutation
-  const resetCardMutation = useMutation({
-    mutationFn: async (contestantId: string) => {
-      const response = await apiRequest('DELETE', `/api/casting-cards/${contestantId}`);
+  // Reset/delete ALL casting cards mutation
+  const resetAllCardsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('DELETE', '/api/casting-cards');
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/casting-cards'] });
-      if (selectedContestant) {
-        queryClient.invalidateQueries({ queryKey: ['/api/casting-cards', selectedContestant.id] });
-      }
+      toast({ title: "All cards reset", description: "All casting cards have been deleted" });
       // Reset local card data to fresh state
       if (selectedContestant) {
         const autoCompanions = getAutoCompanions(selectedContestant);
@@ -1178,6 +1176,22 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   </SelectContent>
                 </Select>
               </div>
+              {/* Reset All Cards Button */}
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full text-red-600 border-red-300 hover:bg-red-50"
+                onClick={() => {
+                  if (confirm('Are you sure you want to reset ALL casting cards? This will delete all saved card data for every contestant.')) {
+                    resetAllCardsMutation.mutate();
+                  }
+                }}
+                disabled={resetAllCardsMutation.isPending}
+                data-testid="btn-reset-all-cards"
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                {resetAllCardsMutation.isPending ? 'Resetting All...' : 'Reset All Cards'}
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto p-2">
@@ -1271,22 +1285,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <Maximize2 className="h-4 w-4 mr-1" />
                     Fullscreen
                   </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="text-red-600 border-red-300 hover:bg-red-50"
-                    onClick={() => {
-                      if (selectedContestant && confirm('Are you sure you want to reset this card? All saved data will be lost.')) {
-                        resetCardMutation.mutate(selectedContestant.id);
-                      }
-                    }}
-                    disabled={resetCardMutation.isPending}
-                    data-testid="btn-reset-card"
-                  >
-                    <RotateCcw className="h-4 w-4 mr-1" />
-                    {resetCardMutation.isPending ? 'Resetting...' : 'Reset Card'}
-                  </Button>
-                </div>
+                                  </div>
               </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden p-4">
