@@ -653,15 +653,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               <button onClick={() => formatColor('#6b7280')} title="Gray" data-testid="btn-color-gray" className="w-6 h-6 rounded border border-gray-300 bg-gray-500 hover:ring-2 hover:ring-offset-1 hover:ring-gray-400" />
             </div>
           </div>
-          {/* A4 Landscape page container - 297mm x 210mm */}
-          <div className="relative">
+          {/* A4 Landscape page container - 297mm x 210mm (scaled to fit) */}
+          <div className="relative" style={{ height: 'calc(210mm * 0.38 + 20px)' }}>
             <div 
               id="casting-card-preview"
-              className="bg-white p-6 border-2 border-gray-300 shadow-lg relative overflow-visible"
+              className="bg-white p-6 border-2 border-gray-300 shadow-lg relative overflow-visible origin-top-left"
               style={{ 
                 width: '297mm', 
                 minHeight: '210mm',
-                maxWidth: '100%',
+                transform: 'scale(0.38)',
+                transformOrigin: 'top left',
                 fontFamily: 'Calibri, sans-serif'
               }}
             >
