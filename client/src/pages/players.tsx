@@ -675,7 +675,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <Printer className="h-4 w-4 mr-1" />
                   Print
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => { setCardZoom(1.5); setIsFullscreen(false); }} data-testid="btn-exit-fullscreen">
+                <Button size="sm" variant="outline" onClick={() => { setCardZoom(0.65); setIsFullscreen(false); }} data-testid="btn-exit-fullscreen">
                   <Minimize2 className="h-4 w-4 mr-1" />
                   Exit
                 </Button>
