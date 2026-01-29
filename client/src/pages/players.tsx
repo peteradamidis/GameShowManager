@@ -735,20 +735,24 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const formatItalic = () => applyFormat('italic');
   const formatUnderline = () => applyFormat('underline');
   const formatFontSize = (size: string) => {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
-    
-    const range = selection.getRangeAt(0);
-    if (range.collapsed) return;
-    
-    const span = document.createElement('span');
-    span.style.fontSize = `${size}px`;
-    
     try {
-      range.surroundContents(span);
-    } catch (e) {
-      // If selection spans multiple elements, use execCommand fallback
-      applyFormat('fontSize', '3');
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+      
+      const range = selection.getRangeAt(0);
+      if (range.collapsed) return;
+      
+      const span = document.createElement('span');
+      span.style.fontSize = `${size}px`;
+      
+      try {
+        range.surroundContents(span);
+      } catch (e) {
+        // If selection spans multiple elements, use execCommand fallback
+        document.execCommand('fontSize', false, '3');
+      }
+    } catch (error) {
+      console.error('Error applying font size:', error);
     }
   };
   const formatColor = (color: string) => applyFormat('foreColor', color);
