@@ -81,6 +81,7 @@ interface Contestant {
   medicalMobilityNotes: string | null;
   attendingWith: string | null;
   photoUrl: string | null;
+  groupId: string | null;
 }
 
 interface EpisodeGroup {
@@ -330,10 +331,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
   // Find all supporters (group members) for the selected contestant
   const supporters = useMemo(() => {
-    if (!selectedContestant) return [];
-    const contestantGroupId = (selectedContestant as any).groupId;
-    if (!contestantGroupId) return [];
-    return contestants.filter(c => (c as any).groupId === contestantGroupId && c.id !== selectedContestant.id);
+    if (!selectedContestant?.groupId) return [];
+    return contestants.filter(c => c.groupId === selectedContestant.groupId && c.id !== selectedContestant.id);
   }, [selectedContestant, contestants]);
 
   // Fetch existing casting card data when contestant is selected
@@ -343,13 +342,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   });
 
   // Helper function to get auto-populated companions from group members
-  const getAutoCompanions = (contestant: any): ManualCompanion[] => {
-    const contestantGroupId = contestant?.groupId;
-    if (!contestantGroupId) return [];
+  const getAutoCompanions = (contestant: Contestant | null): ManualCompanion[] => {
+    if (!contestant?.groupId) return [];
     
     const groupMembers = contestants.filter(
-      c => (c as any).groupId === contestantGroupId && c.id !== contestant.id
+      c => c.groupId === contestant.groupId && c.id !== contestant.id
     ).slice(0, 4);
+    
+    console.log(`[getAutoCompanions] Contestant ${contestant.name || contestant.id} has groupId: ${contestant.groupId}, found ${groupMembers.length} group members`);
     
     return groupMembers.map(member => ({
       id: `companion-${member.id}`,
