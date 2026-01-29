@@ -606,7 +606,23 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const formatBold = () => applyFormat('bold');
   const formatItalic = () => applyFormat('italic');
   const formatUnderline = () => applyFormat('underline');
-  const formatFontSize = (size: string) => applyFormat('fontSize', size);
+  const formatFontSize = (size: string) => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    
+    const range = selection.getRangeAt(0);
+    if (range.collapsed) return;
+    
+    const span = document.createElement('span');
+    span.style.fontSize = `${size}px`;
+    
+    try {
+      range.surroundContents(span);
+    } catch (e) {
+      // If selection spans multiple elements, use execCommand fallback
+      applyFormat('fontSize', '3');
+    }
+  };
   const formatColor = (color: string) => applyFormat('foreColor', color);
 
   // Fullscreen mode renders just the card
@@ -656,18 +672,26 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               
               {/* Font Size */}
               <span className="text-xs text-gray-500 ml-1">Size:</span>
-              <Button size="sm" variant="ghost" onClick={() => formatFontSize('1')} title="Small" data-testid="btn-size-small" className="h-8 px-2 text-xs">
-                S
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => formatFontSize('3')} title="Normal" data-testid="btn-size-normal" className="h-8 px-2 text-sm">
-                M
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => formatFontSize('5')} title="Large" data-testid="btn-size-large" className="h-8 px-2 text-base font-semibold">
-                L
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => formatFontSize('7')} title="Extra Large" data-testid="btn-size-xlarge" className="h-8 px-2 text-lg font-bold">
-                XL
-              </Button>
+              <select 
+                onChange={(e) => formatFontSize(e.target.value)}
+                className="h-8 px-2 text-sm border rounded bg-white"
+                defaultValue=""
+                data-testid="select-font-size"
+              >
+                <option value="" disabled>Size</option>
+                <option value="8">8</option>
+                <option value="10">10</option>
+                <option value="12">12</option>
+                <option value="14">14</option>
+                <option value="16">16</option>
+                <option value="18">18</option>
+                <option value="20">20</option>
+                <option value="24">24</option>
+                <option value="28">28</option>
+                <option value="32">32</option>
+                <option value="36">36</option>
+                <option value="40">40</option>
+              </select>
               
               <div className="w-px h-6 bg-gray-300 mx-1" />
               
