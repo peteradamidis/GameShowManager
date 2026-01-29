@@ -182,7 +182,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [cardData, setCardData] = useState<CastingCardData | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [cardZoom, setCardZoom] = useState(0.7);
+  const [cardZoom, setCardZoom] = useState(0.8);
   const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
 
   // Select initial contestant when navigating from Players tab
@@ -666,7 +666,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               <Button size="sm" variant="ghost" onClick={() => setCardZoom(Math.min(1.5, cardZoom + 0.1))} title="Zoom In" data-testid="btn-zoom-in" className="h-8 px-2">
                 <ZoomIn className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setCardZoom(0.7)} title="Reset Zoom" data-testid="btn-zoom-reset" className="h-8 px-2 text-xs">
+              <Button size="sm" variant="ghost" onClick={() => setCardZoom(0.8)} title="Reset Zoom" data-testid="btn-zoom-reset" className="h-8 px-2 text-xs">
                 Reset
               </Button>
             </div>
@@ -842,14 +842,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     style={{ 
                       fontFamily: '"Century Gothic", sans-serif',
                       fontSize: '40px',
-                      lineHeight: '1.1',
-                      paddingTop: '2px',
-                      paddingBottom: '2px',
+                      lineHeight: '1',
+                      paddingTop: '0px',
+                      paddingBottom: '0px',
                       textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)'
                     }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
-                  <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain" />
+                  <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain py-0" />
                 </div>
 
                 {/* Age and details - all editable */}
@@ -1243,15 +1243,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         style={{ 
                           fontFamily: '"Century Gothic", sans-serif',
                           fontSize: '40px',
-                          lineHeight: '1.1',
-                          paddingTop: '2px',
-                          paddingBottom: '2px',
+                          lineHeight: '1',
+                          paddingTop: '0px',
+                          paddingBottom: '0px',
                           textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)'
                         }}
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
                       >{cardData.fullName || selectedContestant.name.toUpperCase()}</h2>
-                      <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain" />
+                      <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain py-0" />
                     </div>
 
                     {/* Age and details - all editable */}
