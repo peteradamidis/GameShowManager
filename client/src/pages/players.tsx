@@ -184,6 +184,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [cardZoom, setCardZoom] = useState(1.3);
   const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasUnsavedChanges = useRef(false);
 
   // Select initial contestant when navigating from Players tab
   useEffect(() => {
@@ -570,6 +573,28 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const updateField = (field: keyof CastingCardData, value: any) => {
     if (cardData) {
       setCardData({ ...cardData, [field]: value });
+      hasUnsavedChanges.current = true;
+      
+      // Debounced auto-save
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        if (hasUnsavedChanges.current) {
+          setAutoSaveStatus('saving');
+          const dataToSave = { ...cardData, [field]: value };
+          saveMutation.mutate(dataToSave, {
+            onSuccess: () => {
+              hasUnsavedChanges.current = false;
+              setAutoSaveStatus('saved');
+              setTimeout(() => setAutoSaveStatus('idle'), 2000);
+            },
+            onError: () => {
+              setAutoSaveStatus('idle');
+            }
+          });
+        }
+      }, 1500); // Auto-save after 1.5 seconds of inactivity
     }
   };
 
@@ -593,9 +618,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">{selectedContestant.name} - Casting Card</h2>
               <div className="flex gap-2">
-                <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending} data-testid="btn-save-card-fs">
-                  {saveMutation.isPending ? 'Saving...' : 'Save'}
+                <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending || autoSaveStatus === 'saving'} data-testid="btn-save-card-fs">
+                  {saveMutation.isPending || autoSaveStatus === 'saving' ? 'Saving...' : autoSaveStatus === 'saved' ? '✓ Saved' : 'Save'}
                 </Button>
+                <span className="text-xs text-gray-500">Auto-saves</span>
                 <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={isGeneratingPdf} data-testid="btn-download-pdf-fs">
                   <Download className="h-4 w-4 mr-1" />
                   PDF
@@ -1076,9 +1102,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   </Button>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending} data-testid="btn-save-card">
-                    {saveMutation.isPending ? 'Saving...' : 'Save'}
+                  <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending || autoSaveStatus === 'saving'} data-testid="btn-save-card">
+                    {saveMutation.isPending || autoSaveStatus === 'saving' ? 'Saving...' : autoSaveStatus === 'saved' ? '✓ Saved' : 'Save'}
                   </Button>
+                  <span className="text-xs text-gray-500 ml-2">Auto-saves</span>
                   <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={isGeneratingPdf} data-testid="btn-download-pdf">
                     <Download className="h-4 w-4 mr-1" />
                     PDF
