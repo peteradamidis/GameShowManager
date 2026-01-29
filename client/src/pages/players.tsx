@@ -80,6 +80,8 @@ interface Contestant {
   email: string | null;
   auditionRating: string | null;
   suburb: string | null;
+  location: string | null;
+  postcode: string | null;
   medicalMobilityNotes: string | null;
   attendingWith: string | null;
   photoUrl: string | null;
@@ -530,7 +532,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             showTagline: true,
             manualCompanions: autoCompanions.length > 0 ? autoCompanions : [],
             useManualCompanions: autoCompanions.length > 0,
-            ageState: `${selectedContestant.age || ''} ${selectedContestant.suburb || ''}`.trim(),
+            ageState: `${selectedContestant.age || ''} ${selectedContestant.postcode || ''} ${selectedContestant.location || selectedContestant.suburb || ''}`.trim().replace(/\s+/g, ' '),
           });
         }
       } catch (error: any) {
@@ -606,7 +608,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           showTagline: true,
           manualCompanions: autoCompanions.length > 0 ? autoCompanions : [],
           useManualCompanions: autoCompanions.length > 0,
-          ageState: `${selectedContestant.age || ''} ${selectedContestant.suburb || ''}`.trim(),
+          ageState: `${selectedContestant.age || ''} ${selectedContestant.postcode || ''} ${selectedContestant.location || selectedContestant.suburb || ''}`.trim().replace(/\s+/g, ' '),
         });
       }
       toast({ title: "Card Reset", description: "Casting card has been reset to default" });
@@ -1280,7 +1282,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     className="text-3xl font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
                     onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
                   >
-                    {cardData.ageState || `${selectedContestant.age || 'AGE'} (${selectedContestant.suburb || 'STATE'})`}
+                    {cardData.ageState || `${selectedContestant.age || 'AGE'} ${selectedContestant.postcode || ''} ${selectedContestant.location || selectedContestant.suburb || 'CITY'}`.trim().replace(/\s+/g, ' ')}
                   </div>
                   <div
                     contentEditable
@@ -1785,7 +1787,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
                         data-testid="preview-age-location"
                       >
-                        {cardData.ageState || `${selectedContestant.age || 'AGE'} (${selectedContestant.suburb || 'STATE'})`}
+                        {cardData.ageState || `${selectedContestant.age || 'AGE'} ${selectedContestant.postcode || ''} ${selectedContestant.location || selectedContestant.suburb || 'CITY'}`.trim().replace(/\s+/g, ' ')}
                       </div>
                       <div
                         contentEditable
