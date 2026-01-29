@@ -859,7 +859,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 <h3 
                   contentEditable
                   suppressContentEditableWarning
-                  className="text-3xl font-bold text-green-600 mb-6 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                  className="text-3xl font-bold text-red-600 mb-6 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
                   onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                 >
                   {cardData.tagline || 'SHORT TAGLINE'}
@@ -1238,7 +1238,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <h3 
                       contentEditable
                       suppressContentEditableWarning
-                      className="text-3xl font-bold text-green-600 mb-6 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                      className="text-3xl font-bold text-red-600 mb-6 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
                       onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                       data-testid="edit-tagline"
                     >
