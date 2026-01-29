@@ -478,96 +478,90 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
   };
 
-  // Print the card directly from the browser - guaranteed to match editor
-  const handlePrint = () => {
+  // Print the card as an image - guaranteed pixel-perfect match
+  const handlePrint = async () => {
     const element = document.getElementById('casting-card-preview');
     if (!element) {
       toast({ title: "Error", description: "Card preview not found", variant: "destructive" });
       return;
     }
 
-    // Create a new window with just the card content
-    const printWindow = window.open('', '_blank', 'width=1123,height=794');
-    if (!printWindow) {
-      toast({ title: "Error", description: "Could not open print window. Please allow popups.", variant: "destructive" });
-      return;
-    }
+    try {
+      // Temporarily reset transform for capture
+      const originalTransform = (element as HTMLElement).style.transform;
+      (element as HTMLElement).style.transform = 'none';
+      
+      // Capture as canvas using html2canvas
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      });
+      
+      // Restore transform
+      (element as HTMLElement).style.transform = originalTransform;
+      
+      const imgData = canvas.toDataURL('image/png');
+      
+      // Open print window with the image
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast({ title: "Error", description: "Could not open print window. Please allow popups.", variant: "destructive" });
+        return;
+      }
 
-    // Clone the element and get its styles
-    const clone = element.cloneNode(true) as HTMLElement;
-    
-    // Remove any interactive elements and edit hints
-    clone.querySelectorAll('[contenteditable]').forEach(el => {
-      el.removeAttribute('contenteditable');
-      (el as HTMLElement).style.outline = 'none';
-      (el as HTMLElement).style.cursor = 'default';
-    });
-    clone.querySelectorAll('button').forEach(el => el.remove());
-    clone.querySelectorAll('input[type="file"]').forEach(el => el.remove());
-    clone.querySelectorAll('.group-hover\\:opacity-100').forEach(el => el.remove());
-    
-    // Get all stylesheets
-    const styles = Array.from(document.styleSheets)
-      .map(sheet => {
-        try {
-          return Array.from(sheet.cssRules).map(rule => rule.cssText).join('\\n');
-        } catch (e) {
-          return '';
-        }
-      })
-      .join('\\n');
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Casting Card - ${selectedContestant?.name || 'Print'}</title>
-        <style>
-          ${styles}
-          @page {
-            size: A4 landscape;
-            margin: 10mm;
-          }
-          @media print {
-            html, body {
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-              color-adjust: exact !important;
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Casting Card - ${selectedContestant?.name || 'Print'}</title>
+          <style>
+            @page {
+              size: A4 landscape;
+              margin: 0;
             }
-          }
-          * { box-sizing: border-box; }
-          body {
-            margin: 0;
-            padding: 20px;
-            font-family: system-ui, -apple-system, sans-serif;
-            background: white;
-          }
-          .card-container {
-            width: 100%;
-            max-width: 277mm;
-            margin: 0 auto;
-          }
-          /* Hide page boundary indicator */
-          .border-dashed { display: none !important; }
-          /* Remove hover/focus styles */
-          [class*="hover:"], [class*="focus:"] {
-            background: transparent !important;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="card-container">
-          ${clone.outerHTML}
-        </div>
-        <script>
-          window.onload = function() {
-            setTimeout(function() { window.print(); }, 500);
-          };
-        </script>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
+            @media print {
+              html, body {
+                margin: 0;
+                padding: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+            }
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              background: white;
+            }
+            img {
+              max-width: 100%;
+              max-height: 100vh;
+              width: auto;
+              height: auto;
+            }
+          </style>
+        </head>
+        <body>
+          <img src="${imgData}" />
+          <script>
+            window.onload = function() {
+              setTimeout(function() { window.print(); }, 300);
+            };
+          </script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+    } catch (error: any) {
+      console.error('Print error:', error);
+      toast({ title: "Print Error", description: error.message || "Failed to generate print view", variant: "destructive" });
+    }
   };
 
   const updateField = (field: keyof CastingCardData, value: any) => {
