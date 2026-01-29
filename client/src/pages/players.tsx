@@ -675,9 +675,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               </div>
               
               {/* Card Layout matching DOND PowerPoint design */}
-              <div className="flex gap-6">
+              <div className="flex gap-8">
               {/* Left side - Photos */}
-              <div className="w-52 flex-shrink-0">
+              <div className="w-64 flex-shrink-0">
                 {/* Hidden file inputs */}
                 <input
                   type="file"
@@ -699,9 +699,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   onClick={() => mainPhotoInputRef.current?.click()}
                   data-testid="upload-main-photo"
                 >
-                  <Avatar className="w-full h-56 rounded-none">
+                  <Avatar className="w-full h-72 rounded-none">
                     <AvatarImage src={selectedContestant.photoUrl || undefined} className="object-cover" />
-                    <AvatarFallback className="text-5xl rounded-none bg-gray-200">{selectedContestant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    <AvatarFallback className="text-6xl rounded-none bg-gray-200">{selectedContestant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                   </Avatar>
                   {/* Upload overlay */}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -725,10 +725,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   {(() => {
                     const companions = cardData.manualCompanions || [];
                     const count = companions.length;
-                    // Size based on count: 1=w-28, 2=w-24, 3=w-20, 4=w-16
-                    const sizeClass = count <= 1 ? 'w-28 h-28' : count === 2 ? 'w-24 h-24' : count === 3 ? 'w-20 h-20' : 'w-16 h-16';
-                    const textSize = count <= 2 ? 'text-sm' : 'text-xs';
-                    const fallbackSize = count <= 1 ? 'text-xl' : count === 2 ? 'text-lg' : 'text-base';
+                    // Size based on count: 1=w-36, 2=w-28, 3=w-24, 4=w-20
+                    const sizeClass = count <= 1 ? 'w-36 h-36' : count === 2 ? 'w-28 h-28' : count === 3 ? 'w-24 h-24' : 'w-20 h-20';
+                    const textSize = count <= 2 ? 'text-base' : 'text-sm';
+                    const fallbackSize = count <= 1 ? 'text-2xl' : count === 2 ? 'text-xl' : 'text-lg';
                     
                     return (
                       <div className={count > 2 ? 'grid grid-cols-2 gap-2' : 'space-y-3'}>
@@ -828,11 +828,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 </div>
 
                 {/* Age and details - all editable */}
-                <div className="mb-4">
+                <div className="mb-6">
                   <div
                     contentEditable
                     suppressContentEditableWarning
-                    className="text-2xl font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                    className="text-3xl font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
                     onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
                   >
                     {cardData.ageState || `${selectedContestant.age || 'AGE'} (${selectedContestant.suburb || 'STATE'})`}
@@ -848,7 +848,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <div
                     contentEditable
                     suppressContentEditableWarning
-                    className="text-green-600 font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                    className="text-lg text-green-600 font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
                     onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
                   >
                     {cardData.sponsorCategory || 'SPONSOR CATEGORY: X'}
@@ -859,17 +859,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 <h3 
                   contentEditable
                   suppressContentEditableWarning
-                  className="text-2xl font-bold text-green-600 mb-4 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                  className="text-3xl font-bold text-green-600 mb-6 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
                   onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                 >
                   {cardData.tagline || 'SHORT TAGLINE'}
                 </h3>
 
                 {/* Bullet points - dynamic with add/remove */}
-                <ul className="space-y-2 text-sm">
+                <ul className="space-y-3 text-base">
                   {(cardData.bulletPoints || defaultBulletPoints).map((point, index) => (
-                    <li key={index} className="flex items-start gap-2 group">
-                      <Circle className={`w-3 h-3 mt-1.5 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
+                    <li key={index} className="flex items-start gap-3 group">
+                      <Circle className={`w-4 h-4 mt-1 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
                       <span
                         contentEditable
                         suppressContentEditableWarning
@@ -1076,18 +1076,18 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   </div>
                   
                   {/* Card Layout matching DOND PowerPoint design */}
-                  <div className="flex gap-6">
+                  <div className="flex gap-8">
                   {/* Left side - Photos */}
-                  <div className="w-52 flex-shrink-0">
+                  <div className="w-64 flex-shrink-0">
                     {/* Main photo - clickable to upload */}
                     <div 
                       className="border-4 border-amber-500 rounded-lg overflow-hidden bg-gray-100 relative group cursor-pointer"
                       onClick={() => mainPhotoInputRef.current?.click()}
                       data-testid="upload-main-photo-preview"
                     >
-                      <Avatar className="w-full h-56 rounded-none">
+                      <Avatar className="w-full h-72 rounded-none">
                         <AvatarImage src={selectedContestant.photoUrl || undefined} className="object-cover" />
-                        <AvatarFallback className="text-5xl rounded-none bg-gray-200">{selectedContestant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                        <AvatarFallback className="text-6xl rounded-none bg-gray-200">{selectedContestant.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                       </Avatar>
                       {/* Upload overlay */}
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -1111,10 +1111,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       {(() => {
                         const companions = cardData.manualCompanions || [];
                         const count = companions.length;
-                        // Size based on count: 1=w-28, 2=w-24, 3=w-20, 4=w-16
-                        const sizeClass = count <= 1 ? 'w-28 h-28' : count === 2 ? 'w-24 h-24' : count === 3 ? 'w-20 h-20' : 'w-16 h-16';
-                        const textSize = count <= 2 ? 'text-sm' : 'text-xs';
-                        const fallbackSize = count <= 1 ? 'text-xl' : count === 2 ? 'text-lg' : 'text-base';
+                        // Size based on count: 1=w-36, 2=w-28, 3=w-24, 4=w-20
+                        const sizeClass = count <= 1 ? 'w-36 h-36' : count === 2 ? 'w-28 h-28' : count === 3 ? 'w-24 h-24' : 'w-20 h-20';
+                        const textSize = count <= 2 ? 'text-base' : 'text-sm';
+                        const fallbackSize = count <= 1 ? 'text-2xl' : count === 2 ? 'text-xl' : 'text-lg';
                         
                         return (
                           <div className={count > 2 ? 'grid grid-cols-2 gap-2' : 'space-y-3'}>
@@ -1204,11 +1204,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     </div>
 
                     {/* Age and details - all editable */}
-                    <div className="mb-4">
+                    <div className="mb-6">
                       <div
                         contentEditable
                         suppressContentEditableWarning
-                        className="text-2xl font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                        className="text-3xl font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
                         onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
                         data-testid="preview-age-location"
                       >
@@ -1226,7 +1226,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div
                         contentEditable
                         suppressContentEditableWarning
-                        className="text-green-600 font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                        className="text-lg text-green-600 font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
                         onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
                         data-testid="edit-sponsor"
                       >
@@ -1238,7 +1238,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <h3 
                       contentEditable
                       suppressContentEditableWarning
-                      className="text-2xl font-bold text-green-600 mb-4 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                      className="text-3xl font-bold text-green-600 mb-6 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
                       onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                       data-testid="edit-tagline"
                     >
@@ -1246,10 +1246,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     </h3>
 
                     {/* Bullet points - dynamic with add/remove */}
-                    <ul className="space-y-2 text-sm" data-testid="preview-details-list">
+                    <ul className="space-y-3 text-base" data-testid="preview-details-list">
                       {(cardData.bulletPoints || defaultBulletPoints).map((point, index) => (
-                        <li key={index} className="flex items-start gap-2 group">
-                          <Circle className={`w-3 h-3 mt-1.5 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
+                        <li key={index} className="flex items-start gap-3 group">
+                          <Circle className={`w-4 h-4 mt-1 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
                           <span
                             contentEditable
                             suppressContentEditableWarning
