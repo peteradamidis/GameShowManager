@@ -967,7 +967,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         },
         onclone: (clonedDoc) => {
           // Remove CSS color() function references that html2canvas can't parse
-          // Also remove any oklch, oklab, lab, lch color functions
           const style = clonedDoc.createElement('style');
           style.textContent = `
             * { 
@@ -988,10 +987,24 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             .ignore-print {
               display: none !important;
             }
+            /* Remove border from body text for print */
+            .print-no-border {
+              border: none !important;
+            }
+            /* Force text colors for PDF rendering */
+            .text-yellow-300 {
+              color: #fcd34d !important;
+            }
+            .text-green-600 {
+              color: #16a34a !important;
+            }
+            .text-amber-600 {
+              color: #d97706 !important;
+            }
           `;
           clonedDoc.head.appendChild(style);
           
-          // Fix header gradient manually - find header by its classes
+          // Fix header gradient manually
           const headers = clonedDoc.querySelectorAll('.bg-gradient-to-r');
           headers.forEach((header: Element) => {
             const htmlHeader = header as HTMLElement;
@@ -1000,10 +1013,26 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             }
           });
           
+          // Fix text colors explicitly
+          clonedDoc.querySelectorAll('.text-yellow-300').forEach((el: Element) => {
+            (el as HTMLElement).style.color = '#fcd34d';
+          });
+          clonedDoc.querySelectorAll('.text-green-600').forEach((el: Element) => {
+            (el as HTMLElement).style.color = '#16a34a';
+          });
+          clonedDoc.querySelectorAll('.text-amber-600').forEach((el: Element) => {
+            (el as HTMLElement).style.color = '#d97706';
+          });
+          
           // Hide all elements with ignore-print class
           const ignorePrintElements = clonedDoc.querySelectorAll('.ignore-print');
           ignorePrintElements.forEach((el: Element) => {
             (el as HTMLElement).style.display = 'none';
+          });
+          
+          // Remove border from body text
+          clonedDoc.querySelectorAll('.print-no-border').forEach((el: Element) => {
+            (el as HTMLElement).style.border = 'none';
           });
           
           // Walk through all elements and remove any inline styles with color() function
@@ -1013,7 +1042,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             if (htmlEl.style) {
               const cssText = htmlEl.style.cssText;
               if (cssText && (cssText.includes('color(') || cssText.includes('oklch') || cssText.includes('oklab'))) {
-                // Replace with safe fallback colors
                 htmlEl.style.cssText = cssText
                   .replace(/color\([^)]+\)/g, '#000000')
                   .replace(/oklch\([^)]+\)/g, '#000000')
@@ -1106,7 +1134,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         },
         onclone: (clonedDoc) => {
           // Remove CSS color() function references that html2canvas can't parse
-          // Also remove any oklch, oklab, lab, lch color functions
           const style = clonedDoc.createElement('style');
           style.textContent = `
             * { 
@@ -1127,10 +1154,24 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             .ignore-print {
               display: none !important;
             }
+            /* Remove border from body text for print */
+            .print-no-border {
+              border: none !important;
+            }
+            /* Force text colors for print rendering */
+            .text-yellow-300 {
+              color: #fcd34d !important;
+            }
+            .text-green-600 {
+              color: #16a34a !important;
+            }
+            .text-amber-600 {
+              color: #d97706 !important;
+            }
           `;
           clonedDoc.head.appendChild(style);
           
-          // Fix header gradient manually - find header by its classes
+          // Fix header gradient manually
           const headers = clonedDoc.querySelectorAll('.bg-gradient-to-r');
           headers.forEach((header: Element) => {
             const htmlHeader = header as HTMLElement;
@@ -1139,10 +1180,26 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             }
           });
           
+          // Fix text colors explicitly
+          clonedDoc.querySelectorAll('.text-yellow-300').forEach((el: Element) => {
+            (el as HTMLElement).style.color = '#fcd34d';
+          });
+          clonedDoc.querySelectorAll('.text-green-600').forEach((el: Element) => {
+            (el as HTMLElement).style.color = '#16a34a';
+          });
+          clonedDoc.querySelectorAll('.text-amber-600').forEach((el: Element) => {
+            (el as HTMLElement).style.color = '#d97706';
+          });
+          
           // Hide all elements with ignore-print class
           const ignorePrintElements = clonedDoc.querySelectorAll('.ignore-print');
           ignorePrintElements.forEach((el: Element) => {
             (el as HTMLElement).style.display = 'none';
+          });
+          
+          // Remove border from body text
+          clonedDoc.querySelectorAll('.print-no-border').forEach((el: Element) => {
+            (el as HTMLElement).style.border = 'none';
           });
           
           // Walk through all elements and remove any inline styles with color() function
@@ -1152,7 +1209,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             if (htmlEl.style) {
               const cssText = htmlEl.style.cssText;
               if (cssText && (cssText.includes('color(') || cssText.includes('oklch') || cssText.includes('oklab'))) {
-                // Replace with safe fallback colors
                 htmlEl.style.cssText = cssText
                   .replace(/color\([^)]+\)/g, '#000000')
                   .replace(/oklch\([^)]+\)/g, '#000000')
@@ -1756,10 +1812,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                 )}
                               </div>
                             </div>
-                            {/* Remove button */}
+                            {/* Remove button - hidden in print */}
                             <button
                               onClick={(e) => { e.stopPropagation(); removeManualCompanion(companion.id); }}
-                              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 z-10"
+                              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 z-10 ignore-print"
                               title="Remove companion"
                               data-testid={`btn-remove-companion-${companion.id}`}
                             >
@@ -1860,8 +1916,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               {/* Right side - Details */}
               <div className="flex-1">
                 {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                {/* Uses negative right margin to extend to card edge despite padding */}
-                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-6 pr-6 rounded-l flex items-center justify-between mb-4 -mr-6" style={{ height: '50px' }}>
+                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-6 pr-4 rounded-l flex items-center justify-between mb-4" style={{ height: '50px' }}>
                   <h2 
                     contentEditable
                     suppressContentEditableWarning
@@ -1991,7 +2046,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <div
                       contentEditable
                       suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[200px]"
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[200px] print-no-border"
                       style={{ fontFamily: 'Calibri, sans-serif', fontSize: '16px', lineHeight: '1.5' }}
                       onBlur={(e) => updateField('bodyText', e.currentTarget.innerText || '')}
                       dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
@@ -2431,10 +2486,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                     )}
                                   </div>
                                 </div>
-                                {/* Remove button */}
+                                {/* Remove button - hidden in print */}
                                 <button
                                   onClick={(e) => { e.stopPropagation(); removeManualCompanion(companion.id); }}
-                                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 z-10"
+                                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 z-10 ignore-print"
                                   title="Remove companion"
                                 >
                                   <X className="w-3 h-3" />
@@ -2534,8 +2589,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   {/* Right side - Details */}
                   <div className="flex-1">
                     {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                    {/* Uses negative right margin to extend to card edge despite padding */}
-                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-4 pr-6 rounded-l flex items-center justify-between mb-4 -mr-6" style={{ height: '50px' }} data-testid="preview-header-banner">
+                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-4 pr-4 rounded-l flex items-center justify-between mb-4" style={{ height: '50px' }} data-testid="preview-header-banner">
                       <h2 
                         contentEditable
                         suppressContentEditableWarning
@@ -2672,7 +2726,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         <div
                           contentEditable
                           suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[200px]"
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[200px] print-no-border"
                           style={{ fontFamily: 'Calibri, sans-serif', fontSize: '16px', lineHeight: '1.5' }}
                           onBlur={(e) => updateField('bodyText', e.currentTarget.innerText || '')}
                           dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
