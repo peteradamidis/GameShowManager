@@ -725,6 +725,10 @@ export const castingCards = pgTable("casting_cards", {
   
   // Producer assignment
   producerName: text("producer_name"),
+  showProducer: boolean("show_producer").default(true), // Whether to show producer section
+  
+  // Tagline visibility
+  showTagline: boolean("show_tagline").default(true), // Whether to show tagline section
   
   // Card status
   isReady: boolean("is_ready").default(false), // Card marked as ready/complete

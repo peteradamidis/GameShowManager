@@ -683,28 +683,31 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
   // Save casting card mutation - uses PATCH for updates, POST for new cards
   const saveMutation = useMutation({
-    mutationFn: async (data: CastingCardData) => {
+    mutationFn: async (data: CastingCardData & { skipInvalidate?: boolean }) => {
       // Serialize manualCompanions to JSON string for database storage
+      const { skipInvalidate, ...cardDataToSend } = data;
       const dataToSend = {
-        ...data,
-        manualCompanions: data.manualCompanions ? JSON.stringify(data.manualCompanions) : null,
+        ...cardDataToSend,
+        manualCompanions: cardDataToSend.manualCompanions ? JSON.stringify(cardDataToSend.manualCompanions) : null,
       };
       
       if (existingCard?.id) {
         // Update existing card - use contestantId, not card id
         const response = await apiRequest('PATCH', `/api/casting-cards/${data.contestantId}`, dataToSend);
-        return response.json();
+        return { ...(await response.json()), skipInvalidate };
       } else {
         // Create new card
         const response = await apiRequest('POST', '/api/casting-cards', dataToSend);
-        return response.json();
+        return { ...(await response.json()), skipInvalidate };
       }
     },
-    onSuccess: () => {
-      // Invalidate both the list and the specific contestant's card
-      queryClient.invalidateQueries({ queryKey: ['/api/casting-cards'] });
-      if (selectedContestant) {
-        queryClient.invalidateQueries({ queryKey: ['/api/casting-cards', selectedContestant.id] });
+    onSuccess: (result) => {
+      // Only invalidate on manual saves, not auto-saves (to prevent state overwrite)
+      if (!result?.skipInvalidate) {
+        queryClient.invalidateQueries({ queryKey: ['/api/casting-cards'] });
+        if (selectedContestant) {
+          queryClient.invalidateQueries({ queryKey: ['/api/casting-cards', selectedContestant.id] });
+        }
       }
       // Toast is only shown for manual saves, not auto-saves
     },
@@ -1011,8 +1014,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         autoSaveTimeoutRef.current = setTimeout(() => {
           if (hasUnsavedChanges.current) {
             setAutoSaveStatus('saving');
-            const dataToSave = { ...cardData, [field]: value };
-            saveMutation.mutate(dataToSave, {
+            const dataToSave = { ...cardData, [field]: value, skipInvalidate: true };
+            saveMutation.mutate(dataToSave as any, {
               onSuccess: () => {
                 hasUnsavedChanges.current = false;
                 setAutoSaveStatus('saved');
