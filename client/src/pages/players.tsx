@@ -1947,14 +1947,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name"
                     style={{ 
                       fontFamily: '"Century Gothic", sans-serif',
-                      fontSize: '40px',
+                      fontSize: '32px',
                       lineHeight: '50px',
                       textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                       color: '#fcd34d',
                       margin: 0,
-                      padding: 0,
-                      display: 'flex',
-                      alignItems: 'center'
+                      padding: 0
                     }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
@@ -2633,14 +2631,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name"
                         style={{ 
                           fontFamily: '"Century Gothic", sans-serif',
-                          fontSize: '40px',
+                          fontSize: '32px',
                           lineHeight: '50px',
                           textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                           color: '#fcd34d',
                           margin: 0,
-                          padding: 0,
-                          display: 'flex',
-                          alignItems: 'center'
+                          padding: 0
                         }}
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
