@@ -356,8 +356,35 @@ export default function Contestants() {
     return selectedContestants.map(id => contestants.find(c => c.id === id)).filter(Boolean) as Contestant[];
   }, [selectedContestants, contestants]);
 
+  // Check if all selected contestants are already in the same group
+  const allInSameGroup = useMemo(() => {
+    if (selectedContestantsForLinking.length < 2) return false;
+    const firstGroupId = selectedContestantsForLinking[0]?.groupId;
+    if (!firstGroupId) return false;
+    return selectedContestantsForLinking.every(c => c.groupId === firstGroupId);
+  }, [selectedContestantsForLinking]);
+
+  // Check if selected contestants appear related via attendingWith but aren't formally linked
+  const appearRelatedViaAttendingWith = useMemo(() => {
+    if (selectedContestantsForLinking.length < 2) return false;
+    // Check if any selected contestant mentions any other selected contestant in attendingWith
+    for (const c1 of selectedContestantsForLinking) {
+      for (const c2 of selectedContestantsForLinking) {
+        if (c1.id !== c2.id && c1.attendingWith && attendingWithMentionsName(c1.attendingWith, c2.name)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }, [selectedContestantsForLinking]);
+
+  // Show "Link Together" only if:
+  // - 2+ contestants selected
+  // - None already have a groupId (or they're not all in the same group)
+  // - NOT if they're all already in the same formal group
   const canLinkSelected = selectedContestants.length >= 2 && 
-    selectedContestantsForLinking.every(c => !c.groupId);
+    selectedContestantsForLinking.every(c => !c.groupId) &&
+    !allInSameGroup;
 
   // Check if a single selected contestant can be unlinked (has a groupId)
   const canUnlinkSelected = selectedContestants.length === 1 && 
@@ -2071,10 +2098,17 @@ export default function Contestants() {
                       className="border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-300 dark:hover:bg-purple-950"
                       onClick={() => setLinkDialogOpen(true)}
                       data-testid="floating-button-link-contestants"
+                      title={appearRelatedViaAttendingWith ? "These contestants appear related but aren't formally linked in the database" : "Create a formal database link between these contestants"}
                     >
                       <Link className="h-4 w-4 mr-2" />
-                      Link Together
+                      {appearRelatedViaAttendingWith ? "Formally Link" : "Link Together"}
                     </Button>
+                  )}
+                  {allInSameGroup && selectedContestants.length >= 2 && (
+                    <Badge variant="outline" className="border-green-300 text-green-700 dark:border-green-700 dark:text-green-300 px-3 py-1">
+                      <Users className="h-4 w-4 mr-2" />
+                      Already Linked
+                    </Badge>
                   )}
                   {canUnlinkSelected && (
                     <Button 
