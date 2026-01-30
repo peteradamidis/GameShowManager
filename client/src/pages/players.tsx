@@ -626,7 +626,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             showTagline: true,
             manualCompanions: autoCompanions.length > 0 ? autoCompanions : [],
             useManualCompanions: autoCompanions.length > 0,
-            ageState: `${selectedContestant.age || ''} (${(selectedContestant.state || 'STATE').toUpperCase()})`.trim(),
+            ageState: `${selectedContestant.age || ''} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`.trim(),
           });
         }
       } catch (error: any) {
@@ -754,7 +754,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           showTagline: true,
           manualCompanions: autoCompanions.length > 0 ? autoCompanions : [],
           useManualCompanions: autoCompanions.length > 0,
-          ageState: `${selectedContestant.age || ''} (${(selectedContestant.state || 'STATE').toUpperCase()})`.trim(),
+          ageState: `${selectedContestant.age || ''} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`.trim(),
         });
       }
       toast({ title: "Card Reset", description: "Casting card has been reset to default" });
@@ -1541,7 +1541,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     className="text-3xl font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
                     onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
                   >
-                    {cardData.ageState || `${selectedContestant.age || 'AGE'} (${(selectedContestant.state || 'STATE').toUpperCase()})`}
+                    {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
                   </div>
                   <div
                     contentEditable
@@ -2064,7 +2064,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
                         data-testid="preview-age-location"
                       >
-                        {cardData.ageState || `${selectedContestant.age || 'AGE'} (${(selectedContestant.state || 'STATE').toUpperCase()})`}
+                        {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
                       </div>
                       <div
                         contentEditable
