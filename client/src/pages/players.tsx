@@ -2303,7 +2303,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     variant="outline"
                     size="sm"
                     onClick={() => updateField('showProducer', true)}
-                    className="mt-6 text-xs"
+                    className="mt-6 text-xs print:hidden ignore-print"
                   >
                     <Plus className="w-3 h-3 mr-1" />
                     Add Producer
@@ -3027,7 +3027,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         variant="outline"
                         size="sm"
                         onClick={() => updateField('showProducer', true)}
-                        className="mt-6 text-xs"
+                        className="mt-6 text-xs print:hidden ignore-print"
                         data-testid="btn-add-producer"
                       >
                         <Plus className="w-3 h-3 mr-1" />
