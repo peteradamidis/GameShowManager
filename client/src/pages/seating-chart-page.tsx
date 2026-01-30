@@ -1683,6 +1683,29 @@ export default function SeatingChartPage() {
             >
               <ArrowLeftRight className="h-4 w-4" />
             </Button>
+            {/* Search by full name */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search by name..."
+                value={seatSearchQuery}
+                onChange={(e) => setSeatSearchQuery(e.target.value)}
+                className="pl-8 w-48"
+                data-testid="input-seat-search"
+              />
+              {seatSearchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6"
+                  onClick={() => setSeatSearchQuery("")}
+                  data-testid="button-clear-seat-search"
+                >
+                  <XCircle className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
             <Button 
               variant={isPodiumVisualizerMode ? "default" : "ghost"}
               size="icon"
