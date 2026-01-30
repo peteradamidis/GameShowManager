@@ -947,10 +947,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       printOverrideStyle.id = 'print-override-style';
       printOverrideStyle.textContent = `
         #casting-card-preview, #casting-card-preview * {
-          color: inherit !important;
           background-color: inherit !important;
           border-color: inherit !important;
         }
+        /* Casting card specific colors - must override inherit */
+        .casting-card-name { color: #fcd34d !important; }
+        .casting-card-sponsor { color: #16a34a !important; }
+        .casting-card-tagline { color: #dc2626 !important; }
       `;
       document.head.appendChild(printOverrideStyle);
 
@@ -1115,10 +1118,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       printOverrideStyle.id = 'print-override-style-print';
       printOverrideStyle.textContent = `
         #casting-card-preview, #casting-card-preview * {
-          color: inherit !important;
           background-color: inherit !important;
           border-color: inherit !important;
         }
+        /* Casting card specific colors - must override inherit */
+        .casting-card-name { color: #fcd34d !important; }
+        .casting-card-sponsor { color: #16a34a !important; }
+        .casting-card-tagline { color: #dc2626 !important; }
       `;
       document.head.appendChild(printOverrideStyle);
       
