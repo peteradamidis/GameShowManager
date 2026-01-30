@@ -15047,12 +15047,31 @@ Thank you.`;
     }
   });
 
-  // Update casting card
+  // Update casting card with conflict detection
   app.patch("/api/casting-cards/:contestantId", requireAuth, async (req, res) => {
     try {
       const { contestantId } = req.params;
-      // Remove fields that shouldn't be updated directly (id, timestamps, contestantId)
-      const { id, createdAt, updatedAt, contestantId: _, ...data } = req.body;
+      // Extract lastKnownUpdatedAt for conflict detection, and remove fields that shouldn't be updated
+      const { id, createdAt, updatedAt, contestantId: _, lastKnownUpdatedAt, forceOverwrite, ...data } = req.body;
+      
+      // Check for conflicts if lastKnownUpdatedAt is provided
+      if (lastKnownUpdatedAt && !forceOverwrite) {
+        const existingCard = await storage.getCastingCardByContestantId(contestantId);
+        if (existingCard && existingCard.updatedAt) {
+          const serverTime = new Date(existingCard.updatedAt).getTime();
+          const clientTime = new Date(lastKnownUpdatedAt).getTime();
+          // Allow 2 second buffer for timing differences
+          if (serverTime > clientTime + 2000) {
+            return res.status(409).json({ 
+              error: "Conflict detected",
+              message: "This card was modified by another user since you opened it",
+              serverUpdatedAt: existingCard.updatedAt,
+              currentData: existingCard
+            });
+          }
+        }
+      }
+      
       const card = await storage.updateCastingCard(contestantId, data);
       if (!card) {
         return res.status(404).json({ error: "Casting card not found" });

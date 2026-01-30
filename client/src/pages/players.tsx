@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown, AlertTriangle, RefreshCw } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -20,6 +20,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -301,6 +303,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [showLinkedPartnersPicker, setShowLinkedPartnersPicker] = useState(false);
   const [hasBackup, setHasBackup] = useState<boolean>(false);
   const [backupTimestamp, setBackupTimestamp] = useState<number | null>(null);
+  const [lastKnownUpdatedAt, setLastKnownUpdatedAt] = useState<string | null>(null);
+  const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
+  const [conflictData, setConflictData] = useState<{ serverUpdatedAt: string; currentData: any } | null>(null);
+  const [pendingSaveData, setPendingSaveData] = useState<CastingCardData | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasUnsavedChanges = useRef(false);
 
@@ -629,6 +635,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           }
           
           setCardData(parsedCard);
+          // Track when this card was loaded for conflict detection
+          setLastKnownUpdatedAt((existingCard as any).updatedAt || new Date().toISOString());
         } else if (!loadingCard) {
           setCardData({
             contestantId: selectedContestant.id,
@@ -713,17 +721,36 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
   // Save casting card mutation - uses PATCH for updates, POST for new cards
   const saveMutation = useMutation({
-    mutationFn: async (data: CastingCardData & { skipInvalidate?: boolean }) => {
+    mutationFn: async (data: CastingCardData & { skipInvalidate?: boolean; forceOverwrite?: boolean }) => {
       // Serialize manualCompanions to JSON string for database storage
-      const { skipInvalidate, ...cardDataToSend } = data;
+      const { skipInvalidate, forceOverwrite, ...cardDataToSend } = data;
       const dataToSend = {
         ...cardDataToSend,
         manualCompanions: cardDataToSend.manualCompanions ? JSON.stringify(cardDataToSend.manualCompanions) : null,
+        lastKnownUpdatedAt: lastKnownUpdatedAt,
+        forceOverwrite: forceOverwrite || false,
       };
       
       if (existingCard?.id) {
         // Update existing card - use contestantId, not card id
-        const response = await apiRequest('PATCH', `/api/casting-cards/${data.contestantId}`, dataToSend);
+        const response = await fetch(`/api/casting-cards/${data.contestantId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(dataToSend),
+        });
+        
+        // Handle conflict (409)
+        if (response.status === 409) {
+          const conflictInfo = await response.json();
+          return { conflict: true, ...conflictInfo, skipInvalidate, originalData: data };
+        }
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Save failed');
+        }
+        
         return { ...(await response.json()), skipInvalidate };
       } else {
         // Create new card
@@ -731,7 +758,21 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         return { ...(await response.json()), skipInvalidate };
       }
     },
-    onSuccess: (result) => {
+    onSuccess: (result: any) => {
+      // Handle conflict case
+      if (result?.conflict) {
+        setConflictData({ serverUpdatedAt: result.serverUpdatedAt, currentData: result.currentData });
+        setPendingSaveData(result.originalData);
+        setConflictDialogOpen(true);
+        setAutoSaveStatus('idle');
+        return;
+      }
+      
+      // Update lastKnownUpdatedAt with the server's new timestamp
+      if (result?.updatedAt) {
+        setLastKnownUpdatedAt(result.updatedAt);
+      }
+      
       // Only invalidate on manual saves, not auto-saves (to prevent state overwrite)
       if (!result?.skipInvalidate) {
         queryClient.invalidateQueries({ queryKey: ['/api/casting-cards'] });
@@ -827,6 +868,28 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       setCardData(updatedData);
       saveMutation.mutate(updatedData);
     }
+  };
+
+  // Conflict resolution handlers
+  const handleOverwriteConflict = () => {
+    if (pendingSaveData) {
+      // Force overwrite - ignore conflict
+      saveMutation.mutate({ ...pendingSaveData, forceOverwrite: true } as any);
+      setConflictDialogOpen(false);
+      setConflictData(null);
+      setPendingSaveData(null);
+      toast({ title: "Changes saved", description: "Your changes have been saved, overwriting the other user's changes" });
+    }
+  };
+
+  const handleRefreshFromServer = () => {
+    // Discard local changes and refresh from server
+    setConflictDialogOpen(false);
+    setConflictData(null);
+    setPendingSaveData(null);
+    // Refetch the card data from server
+    queryClient.invalidateQueries({ queryKey: ['/api/casting-cards', selectedContestant?.id] });
+    toast({ title: "Card refreshed", description: "Loaded the latest version from the server" });
   };
 
   // Helper function to preload all images in an element
@@ -1224,6 +1287,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   {saveMutation.isPending || autoSaveStatus === 'saving' ? 'Saving...' : autoSaveStatus === 'saved' ? '✓ Saved' : 'Save'}
                 </Button>
                 <span className="text-xs text-gray-500">Auto-saves</span>
+                {lastKnownUpdatedAt && (
+                  <span className="text-xs text-muted-foreground ml-2" title={`Last saved: ${new Date(lastKnownUpdatedAt).toLocaleString()}`}>
+                    Last saved: {new Date(lastKnownUpdatedAt).toLocaleTimeString()}
+                  </span>
+                )}
                 {hasBackup && (
                   <div className="flex items-center gap-1 ml-2 px-2 py-1 bg-amber-100 border border-amber-300 rounded text-xs">
                     <span className="text-amber-700">Backup</span>
@@ -1987,6 +2055,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     {saveMutation.isPending || autoSaveStatus === 'saving' ? 'Saving...' : autoSaveStatus === 'saved' ? '✓ Saved' : 'Save'}
                   </Button>
                   <span className="text-xs text-gray-500">Auto-saves</span>
+                  {lastKnownUpdatedAt && (
+                    <span className="text-xs text-muted-foreground ml-2" title={`Last saved: ${new Date(lastKnownUpdatedAt).toLocaleString()}`}>
+                      Last saved: {new Date(lastKnownUpdatedAt).toLocaleTimeString()}
+                    </span>
+                  )}
                   {hasBackup && (
                     <div className="flex items-center gap-1 ml-2 px-2 py-1 bg-amber-100 border border-amber-300 rounded text-xs">
                       <span className="text-amber-700">Backup available</span>
@@ -2534,6 +2607,48 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           </div>
         </Card>
       )}
+
+      {/* Conflict Detection Dialog */}
+      <Dialog open={conflictDialogOpen} onOpenChange={setConflictDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <AlertTriangle className="h-5 w-5" />
+              Save Conflict Detected
+            </DialogTitle>
+            <DialogDescription>
+              This casting card was modified by another user since you opened it.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-3">
+            {conflictData && (
+              <p className="text-sm text-muted-foreground">
+                Server version was updated: {new Date(conflictData.serverUpdatedAt).toLocaleString()}
+              </p>
+            )}
+            <p className="text-sm">
+              What would you like to do?
+            </p>
+          </div>
+          <DialogFooter className="flex gap-2 sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={handleRefreshFromServer}
+              className="flex-1"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Discard my changes
+            </Button>
+            <Button
+              variant="default"
+              onClick={handleOverwriteConflict}
+              className="flex-1 bg-amber-600 hover:bg-amber-700"
+            >
+              Overwrite with mine
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
