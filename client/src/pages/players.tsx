@@ -980,8 +980,31 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               --foreground: 0 0% 0% !important;
               --border: 0 0% 80% !important;
             }
+            /* Force header gradient colors for PDF */
+            .bg-gradient-to-r.from-amber-700 {
+              background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important;
+            }
+            /* Hide ignore-print elements */
+            .ignore-print {
+              display: none !important;
+            }
           `;
           clonedDoc.head.appendChild(style);
+          
+          // Fix header gradient manually - find header by its classes
+          const headers = clonedDoc.querySelectorAll('.bg-gradient-to-r');
+          headers.forEach((header: Element) => {
+            const htmlHeader = header as HTMLElement;
+            if (htmlHeader.classList.contains('from-amber-700')) {
+              htmlHeader.style.background = 'linear-gradient(to right, #b45309, #d97706, #f59e0b)';
+            }
+          });
+          
+          // Hide all elements with ignore-print class
+          const ignorePrintElements = clonedDoc.querySelectorAll('.ignore-print');
+          ignorePrintElements.forEach((el: Element) => {
+            (el as HTMLElement).style.display = 'none';
+          });
           
           // Walk through all elements and remove any inline styles with color() function
           const allElements = clonedDoc.querySelectorAll('*');
@@ -1096,8 +1119,31 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               --foreground: 0 0% 0% !important;
               --border: 0 0% 80% !important;
             }
+            /* Force header gradient colors for print */
+            .bg-gradient-to-r.from-amber-700 {
+              background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important;
+            }
+            /* Hide ignore-print elements */
+            .ignore-print {
+              display: none !important;
+            }
           `;
           clonedDoc.head.appendChild(style);
+          
+          // Fix header gradient manually - find header by its classes
+          const headers = clonedDoc.querySelectorAll('.bg-gradient-to-r');
+          headers.forEach((header: Element) => {
+            const htmlHeader = header as HTMLElement;
+            if (htmlHeader.classList.contains('from-amber-700')) {
+              htmlHeader.style.background = 'linear-gradient(to right, #b45309, #d97706, #f59e0b)';
+            }
+          });
+          
+          // Hide all elements with ignore-print class
+          const ignorePrintElements = clonedDoc.querySelectorAll('.ignore-print');
+          ignorePrintElements.forEach((el: Element) => {
+            (el as HTMLElement).style.display = 'none';
+          });
           
           // Walk through all elements and remove any inline styles with color() function
           const allElements = clonedDoc.querySelectorAll('*');
@@ -1800,7 +1846,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         size="sm"
                         variant="default"
                         onClick={addManualCompanion}
-                        className="text-xs bg-blue-600 hover:bg-blue-700"
+                        className="text-xs bg-blue-600 hover:bg-blue-700 ignore-print"
                         data-testid="btn-add-companion"
                       >
                         <Plus className="w-3 h-3 mr-1" />
@@ -1814,7 +1860,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               {/* Right side - Details */}
               <div className="flex-1">
                 {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-6 rounded-l flex items-center justify-between mb-4" style={{ height: '50px' }}>
+                {/* Uses negative right margin to extend to card edge despite padding */}
+                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-6 pr-6 rounded-l flex items-center justify-between mb-4 -mr-6" style={{ height: '50px' }}>
                   <h2 
                     contentEditable
                     suppressContentEditableWarning
@@ -1959,7 +2006,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       const newText = currentText.trim() + '\n• ';
                       updateField('bodyText', newText);
                     }}
-                    className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden"
+                    className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden ignore-print"
                   >
                     <Plus className="w-4 h-4 mr-1" />
                     Add Dot Point
@@ -2473,7 +2520,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             size="sm"
                             variant="default"
                             onClick={addManualCompanion}
-                            className="text-xs bg-blue-600 hover:bg-blue-700"
+                            className="text-xs bg-blue-600 hover:bg-blue-700 ignore-print"
                             data-testid="btn-add-companion-preview"
                           >
                             <Plus className="w-3 h-3 mr-1" />
@@ -2487,7 +2534,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   {/* Right side - Details */}
                   <div className="flex-1">
                     {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-4 rounded-l flex items-center justify-between mb-4" style={{ height: '50px' }} data-testid="preview-header-banner">
+                    {/* Uses negative right margin to extend to card edge despite padding */}
+                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-4 pr-6 rounded-l flex items-center justify-between mb-4 -mr-6" style={{ height: '50px' }} data-testid="preview-header-banner">
                       <h2 
                         contentEditable
                         suppressContentEditableWarning
@@ -2640,7 +2688,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           const newText = currentText.trim() + '\n• ';
                           updateField('bodyText', newText);
                         }}
-                        className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden"
+                        className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden ignore-print"
                         data-testid="btn-add-dot-point"
                       >
                         <Plus className="w-4 h-4 mr-1" />
