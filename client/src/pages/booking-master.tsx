@@ -5,11 +5,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useBookingMasterWebSocket } from "@/hooks/use-websocket";
 import { broadcastBookingChange, broadcastSeatingChange } from "@/lib/crossTabSync";
 
-// Helper function to check if a medical field has meaningful content (not NA/N/A/empty)
-const hasMeaningfulMedicalNote = (value: string | undefined | null): boolean => {
+// Helper function to check if a field has meaningful content (not NA/N/A/No/empty)
+const hasMeaningfulValue = (value: string | undefined | null): boolean => {
   if (!value) return false;
   const trimmed = value.trim().toUpperCase();
-  return trimmed !== '' && trimmed !== 'NA' && trimmed !== 'N/A' && trimmed !== 'N / A';
+  return trimmed !== '' && trimmed !== 'NA' && trimmed !== 'N/A' && trimmed !== 'N / A' && trimmed !== 'NO';
+};
+
+// Helper to display value only if meaningful
+const displayIfMeaningful = (value: string | undefined | null): string => {
+  return hasMeaningfulValue(value) ? (value || "") : "";
 };
 import { Label } from "@/components/ui/label";
 import {
@@ -736,10 +741,10 @@ export default function BookingMaster() {
         return false;
       }
     }
-    // Filter by medical information (includes both Medical App and Medical AUD, excludes NA/N/A, OR age 70+)
+    // Filter by medical information (includes both Medical App and Medical AUD, excludes NA/N/A/No, OR age 70+)
     if (filterMedicalNotes) {
-      const hasMedicalApp = hasMeaningfulMedicalNote(row.contestant?.medicalInfo);
-      const hasMedicalAud = hasMeaningfulMedicalNote(row.contestant?.mobilityNotes);
+      const hasMedicalApp = hasMeaningfulValue(row.contestant?.medicalInfo);
+      const hasMedicalAud = hasMeaningfulValue(row.contestant?.mobilityNotes);
       const isOver70 = row.contestant?.age !== undefined && row.contestant?.age !== null && row.contestant.age >= 70;
       if (!hasMedicalApp && !hasMedicalAud && !isOver70) {
         return false;
@@ -1324,8 +1329,8 @@ export default function BookingMaster() {
                     
                     // Medical notes filter (same logic as main table - includes medical notes OR age 70+)
                     if (filterMedicalNotes) {
-                      const hasMedicalApp = hasMeaningfulMedicalNote(fullContestant?.medicalInfo);
-                      const hasMedicalAud = hasMeaningfulMedicalNote(fullContestant?.mobilityNotes);
+                      const hasMedicalApp = hasMeaningfulValue(fullContestant?.medicalInfo);
+                      const hasMedicalAud = hasMeaningfulValue(fullContestant?.mobilityNotes);
                       const isOver70 = fullContestant?.age !== undefined && fullContestant?.age !== null && fullContestant.age >= 70;
                       if (!hasMedicalApp && !hasMedicalAud && !isOver70) return false;
                     }
@@ -1431,7 +1436,7 @@ export default function BookingMaster() {
                           </TableCell>
                         )}
                         {isColumnVisible("location") && <TableCell className="text-xs py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{contestant?.location || ""}</TableCell>}
-                        {isColumnVisible("medicalQ") && <TableCell className="text-xs py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{contestant?.medicalInfo || ""}</TableCell>}
+                        {isColumnVisible("medicalQ") && <TableCell className="text-xs py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{displayIfMeaningful(contestant?.medicalInfo)}</TableCell>}
                         {isColumnVisible("mobilityNotes") && (
                           <TableCell className="text-xs py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">
                             {isEditMode ? (
@@ -1451,8 +1456,8 @@ export default function BookingMaster() {
                               </div>
                             ) : (
                               <div className="flex items-center gap-1">
-                                {standby.mobilityNotesOverride || contestant?.mobilityNotes || ""}
-                                {standby.mobilityNotesOverride && (
+                                {displayIfMeaningful(standby.mobilityNotesOverride) || displayIfMeaningful(contestant?.mobilityNotes)}
+                                {hasMeaningfulValue(standby.mobilityNotesOverride) && (
                                   <Badge variant="outline" className="text-[8px] px-1 py-0 h-4 bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-700">
                                     UPDATED
                                   </Badge>
@@ -1461,7 +1466,7 @@ export default function BookingMaster() {
                             )}
                           </TableCell>
                         )}
-                        {isColumnVisible("criminal") && <TableCell className="text-xs py-0.5 h-7 w-20 text-center border-r border-purple-200 dark:border-purple-800">{contestant?.criminalRecord || ""}</TableCell>}
+                        {isColumnVisible("criminal") && <TableCell className="text-xs py-0.5 h-7 w-20 text-center border-r border-purple-200 dark:border-purple-800">{displayIfMeaningful(contestant?.criminalRecord)}</TableCell>}
                         {isColumnVisible("notes") && (
                           <TableCell className="border-r-4 border-r-purple-400 py-0.5 text-xs">
                             {(standby as any).standbyMovementNotes || standby.notes || ""}
@@ -1728,7 +1733,7 @@ export default function BookingMaster() {
                         {isColumnVisible("location") && <TableCell className="text-xs py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">{row.contestant?.location || ""}</TableCell>}
                         {isColumnVisible("medicalQ") && (
                           <TableCell className="text-xs py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
-                            {row.contestant?.medicalInfo || ""}
+                            {displayIfMeaningful(row.contestant?.medicalInfo)}
                           </TableCell>
                         )}
                         {isColumnVisible("mobilityNotes") && (
@@ -1750,22 +1755,22 @@ export default function BookingMaster() {
                                 </div>
                               ) : (
                                 <div className="flex items-center gap-1">
-                                  <span className="truncate" title={row.assignment.mobilityNotesOverride || row.contestant?.mobilityNotes || ""}>
-                                    {row.assignment.mobilityNotesOverride || row.contestant?.mobilityNotes || ""}
+                                  <span className="truncate" title={displayIfMeaningful(row.assignment.mobilityNotesOverride) || displayIfMeaningful(row.contestant?.mobilityNotes)}>
+                                    {displayIfMeaningful(row.assignment.mobilityNotesOverride) || displayIfMeaningful(row.contestant?.mobilityNotes)}
                                   </span>
-                                  {row.assignment.mobilityNotesOverride && row.assignment.mobilityNotesOverride !== row.contestant?.mobilityNotes && (
+                                  {hasMeaningfulValue(row.assignment.mobilityNotesOverride) && row.assignment.mobilityNotesOverride !== row.contestant?.mobilityNotes && (
                                     <span className="text-[9px] bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1 rounded font-medium whitespace-nowrap flex-shrink-0">UPDATED</span>
                                   )}
                                 </div>
                               )
                             ) : (
-                              row.contestant?.mobilityNotes || ""
+                              displayIfMeaningful(row.contestant?.mobilityNotes)
                             )}
                           </TableCell>
                         )}
                         {isColumnVisible("criminal") && (
                           <TableCell className="text-xs py-0.5 h-7 w-20 text-center border-r border-gray-200 dark:border-gray-700">
-                            {row.contestant?.criminalRecord || ""}
+                            {displayIfMeaningful(row.contestant?.criminalRecord)}
                           </TableCell>
                         )}
                         {isColumnVisible("castingCategory") && (

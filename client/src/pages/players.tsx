@@ -128,6 +128,13 @@ interface BlockTypeData {
 
 const PLANNING_STORAGE_KEY = 'rx-planning-data-v2';
 
+// Helper function to check if a field has meaningful content (not NA/N/A/No/empty)
+const hasMeaningfulValue = (value: string | undefined | null): boolean => {
+  if (!value) return false;
+  const trimmed = value.trim().toUpperCase();
+  return trimmed !== '' && trimmed !== 'NA' && trimmed !== 'N/A' && trimmed !== 'N / A' && trimmed !== 'NO';
+};
+
 // Manual companion interface
 interface ManualCompanion {
   id: string;
@@ -3746,7 +3753,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                     </div>
                   )}
                 </div>
-                {viewingContestant.medicalMobilityNotes && (
+                {hasMeaningfulValue(viewingContestant.medicalMobilityNotes) && (
                   <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
                     <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">Medical/Mobility Notes:</span>
                     <p className="text-sm">{viewingContestant.medicalMobilityNotes}</p>
@@ -4272,7 +4279,7 @@ export default function PlayersPage() {
               )}
             </div>
             
-            {notes && (
+            {hasMeaningfulValue(notes) && (
               <div className="mt-2 text-xs bg-amber-500/10 text-amber-700 dark:text-amber-400 px-2 py-1 rounded">
                 {notes}
               </div>
