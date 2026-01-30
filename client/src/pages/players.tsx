@@ -1095,6 +1095,53 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           clonedDoc.querySelectorAll('.casting-card-photo-border').forEach((el: Element) => {
             (el as HTMLElement).style.border = '4px solid #f59e0b';
             (el as HTMLElement).style.backgroundColor = '#f3f4f6';
+            // Fix photo container width - ensure it doesn't shrink
+            (el as HTMLElement).style.minWidth = '256px';
+          });
+          
+          // Fix main photo container explicit dimensions
+          clonedDoc.querySelectorAll('.w-64.flex-shrink-0').forEach((el: Element) => {
+            (el as HTMLElement).style.width = '256px';
+            (el as HTMLElement).style.minWidth = '256px';
+            (el as HTMLElement).style.flexShrink = '0';
+          });
+          
+          // Ensure all images have explicit dimensions and proper object-fit
+          clonedDoc.querySelectorAll('img').forEach((img: Element) => {
+            const htmlImg = img as HTMLImageElement;
+            if (!htmlImg.style.objectFit) {
+              htmlImg.style.objectFit = 'cover';
+            }
+          });
+          
+          // Fix Avatar images - Radix Avatar uses conditional rendering that doesn't transfer during cloning
+          // Find all avatar containers and ensure images render properly
+          clonedDoc.querySelectorAll('[data-slot="avatar-image"]').forEach((el: Element) => {
+            const img = el as HTMLImageElement;
+            if (img.src) {
+              img.style.objectFit = 'cover';
+              img.style.width = '100%';
+              img.style.height = '100%';
+              img.style.display = 'block';
+              img.style.visibility = 'visible';
+              img.style.opacity = '1';
+            }
+          });
+          
+          // Also handle avatar fallbacks - hide them if there's an image with a valid src
+          clonedDoc.querySelectorAll('[data-slot="avatar"]').forEach((avatar: Element) => {
+            const avatarImg = avatar.querySelector('[data-slot="avatar-image"]') as HTMLImageElement;
+            const avatarFallback = avatar.querySelector('[data-slot="avatar-fallback"]');
+            if (avatarImg && avatarImg.src && avatarImg.src !== 'undefined' && !avatarImg.src.endsWith('undefined')) {
+              // Image has a valid src, ensure it shows and hide fallback
+              avatarImg.style.display = 'block';
+              avatarImg.style.visibility = 'visible';
+              avatarImg.style.position = 'absolute';
+              avatarImg.style.inset = '0';
+              if (avatarFallback) {
+                (avatarFallback as HTMLElement).style.display = 'none';
+              }
+            }
           });
           
           // Hide all elements with ignore-print class
@@ -1288,6 +1335,53 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           clonedDoc.querySelectorAll('.casting-card-photo-border').forEach((el: Element) => {
             (el as HTMLElement).style.border = '4px solid #f59e0b';
             (el as HTMLElement).style.backgroundColor = '#f3f4f6';
+            // Fix photo container width - ensure it doesn't shrink
+            (el as HTMLElement).style.minWidth = '256px';
+          });
+          
+          // Fix main photo container explicit dimensions
+          clonedDoc.querySelectorAll('.w-64.flex-shrink-0').forEach((el: Element) => {
+            (el as HTMLElement).style.width = '256px';
+            (el as HTMLElement).style.minWidth = '256px';
+            (el as HTMLElement).style.flexShrink = '0';
+          });
+          
+          // Ensure all images have explicit dimensions and proper object-fit
+          clonedDoc.querySelectorAll('img').forEach((img: Element) => {
+            const htmlImg = img as HTMLImageElement;
+            if (!htmlImg.style.objectFit) {
+              htmlImg.style.objectFit = 'cover';
+            }
+          });
+          
+          // Fix Avatar images - Radix Avatar uses conditional rendering that doesn't transfer during cloning
+          // Find all avatar containers and ensure images render properly
+          clonedDoc.querySelectorAll('[data-slot="avatar-image"]').forEach((el: Element) => {
+            const img = el as HTMLImageElement;
+            if (img.src) {
+              img.style.objectFit = 'cover';
+              img.style.width = '100%';
+              img.style.height = '100%';
+              img.style.display = 'block';
+              img.style.visibility = 'visible';
+              img.style.opacity = '1';
+            }
+          });
+          
+          // Also handle avatar fallbacks - hide them if there's an image with a valid src
+          clonedDoc.querySelectorAll('[data-slot="avatar"]').forEach((avatar: Element) => {
+            const avatarImg = avatar.querySelector('[data-slot="avatar-image"]') as HTMLImageElement;
+            const avatarFallback = avatar.querySelector('[data-slot="avatar-fallback"]');
+            if (avatarImg && avatarImg.src && avatarImg.src !== 'undefined' && !avatarImg.src.endsWith('undefined')) {
+              // Image has a valid src, ensure it shows and hide fallback
+              avatarImg.style.display = 'block';
+              avatarImg.style.visibility = 'visible';
+              avatarImg.style.position = 'absolute';
+              avatarImg.style.inset = '0';
+              if (avatarFallback) {
+                (avatarFallback as HTMLElement).style.display = 'none';
+              }
+            }
           });
           
           // Hide all elements with ignore-print class
