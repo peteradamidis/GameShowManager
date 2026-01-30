@@ -1794,6 +1794,20 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
                     />
                   </div>
+                  {/* Add dot point button */}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const currentText = cardData.bodyText || defaultBodyText;
+                      const newText = currentText.trim() + '\n• ';
+                      updateField('bodyText', newText);
+                    }}
+                    className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Dot Point
+                  </Button>
                 </div>
 
                 {/* Producer - matching PowerPoint style */}
@@ -2456,6 +2470,21 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           data-testid="edit-body-text"
                         />
                       </div>
+                      {/* Add dot point button */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const currentText = cardData.bodyText || defaultBodyText;
+                          const newText = currentText.trim() + '\n• ';
+                          updateField('bodyText', newText);
+                        }}
+                        className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden"
+                        data-testid="btn-add-dot-point"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add Dot Point
+                      </Button>
                     </div>
 
                     {/* Producer - matching PowerPoint style */}
