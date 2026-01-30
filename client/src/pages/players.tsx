@@ -1028,7 +1028,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.color = '#fcd34d';
             (el as HTMLElement).style.lineHeight = '50px';
             (el as HTMLElement).style.margin = '0';
-            (el as HTMLElement).style.marginTop = '-12px';
+            (el as HTMLElement).style.marginTop = '-16px';
           });
           clonedDoc.querySelectorAll('.casting-card-sponsor').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#16a34a';
@@ -1221,7 +1221,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.color = '#fcd34d';
             (el as HTMLElement).style.lineHeight = '50px';
             (el as HTMLElement).style.margin = '0';
-            (el as HTMLElement).style.marginTop = '-12px';
+            (el as HTMLElement).style.marginTop = '-16px';
           });
           clonedDoc.querySelectorAll('.casting-card-sponsor').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#16a34a';
@@ -1989,7 +1989,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       color: '#fcd34d',
                       margin: 0,
                       padding: 0,
-                      marginTop: '-12px'
+                      marginTop: '-16px'
                     }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
@@ -2679,7 +2679,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           color: '#fcd34d',
                           margin: 0,
                           padding: 0,
-                          marginTop: '-12px'
+                          marginTop: '-16px'
                         }}
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
