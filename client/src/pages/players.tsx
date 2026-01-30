@@ -184,40 +184,44 @@ const defaultBulletPoints = [
 const CARD_BACKUP_KEY = 'casting_card_backup_';
 
 // Safe render wrapper to catch errors and prevent white screen
+// Proper React Error Boundary class component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback: React.ReactNode; onError?: (error: Error) => void },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode; fallback: React.ReactNode; onError?: (error: Error) => void }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('ErrorBoundary caught error:', error, errorInfo);
+    this.props.onError?.(error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <>{this.props.fallback}</>;
+    }
+    return <>{this.props.children}</>;
+  }
+}
+
+// Wrapper function for ErrorBoundary
 function SafeRender({ children, fallback, onError }: { 
   children: React.ReactNode; 
   fallback: React.ReactNode;
   onError?: (error: Error) => void;
 }) {
-  const [hasError, setHasError] = React.useState(false);
-  const [error, setError] = React.useState<Error | null>(null);
-  
-  React.useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      console.error('Caught render error:', event.error);
-      setError(event.error);
-      setHasError(true);
-      onError?.(event.error);
-      event.preventDefault();
-    };
-    
-    window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
-  }, [onError]);
-  
-  if (hasError) {
-    return <>{fallback}</>;
-  }
-  
-  try {
-    return <>{children}</>;
-  } catch (e) {
-    console.error('Render error caught:', e);
-    setHasError(true);
-    setError(e instanceof Error ? e : new Error(String(e)));
-    onError?.(e instanceof Error ? e : new Error(String(e)));
-    return <>{fallback}</>;
-  }
+  return (
+    <ErrorBoundary fallback={fallback} onError={onError}>
+      {children}
+    </ErrorBoundary>
+  );
 }
 
 // Helper to get backup from localStorage
