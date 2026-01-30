@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { getPartnerNames, attendingWithMentionsName } from "@shared/attendingWithParser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import dondLogo from "@assets/dond-logo.png";
 import { Badge } from "@/components/ui/badge";
@@ -425,11 +426,46 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const getLinkedPartners = (): Contestant[] => {
     if (!selectedContestant) return [];
     const groupId = selectedContestant.groupId;
-    console.log(`[getLinkedPartners] Contestant: ${selectedContestant.name}, groupId: ${groupId}, contestants count: ${contestants.length}`);
-    if (!groupId) return [];
-    const partners = contestants.filter(c => c.groupId === groupId && c.id !== selectedContestant.id);
-    console.log(`[getLinkedPartners] Found ${partners.length} partners: ${partners.map(p => p.name).join(', ')}`);
-    return partners;
+    console.log(`[getLinkedPartners] Contestant: ${selectedContestant.name}, groupId: ${groupId}, attendingWith: ${selectedContestant.attendingWith}, contestants count: ${contestants.length}`);
+    
+    // First, try to find partners via groupId (manually linked)
+    if (groupId) {
+      const partners = contestants.filter(c => c.groupId === groupId && c.id !== selectedContestant.id);
+      console.log(`[getLinkedPartners] Found ${partners.length} partners via groupId: ${partners.map(p => p.name).join(', ')}`);
+      if (partners.length > 0) return partners;
+    }
+    
+    // If no groupId or no partners found, try to find via attendingWith field
+    if (selectedContestant.attendingWith) {
+      const partnerNames = getPartnerNames(selectedContestant.attendingWith);
+      console.log(`[getLinkedPartners] Trying attendingWith, partnerNames: ${partnerNames.join(', ')}`);
+      
+      if (partnerNames.length > 0) {
+        // Find contestants whose names match the partner names
+        const attendingWithPartners = contestants.filter(c => {
+          if (c.id === selectedContestant.id) return false;
+          // Check if this contestant's name is mentioned in attendingWith
+          return partnerNames.some(partnerName => {
+            const name = c.name?.toLowerCase() || '';
+            const pName = partnerName.toLowerCase();
+            return name.includes(pName) || pName.includes(name.split(' ')[0]);
+          });
+        });
+        
+        // Also check for reciprocal mentions (they mention us in their attendingWith)
+        const reciprocalPartners = contestants.filter(c => {
+          if (c.id === selectedContestant.id) return false;
+          if (attendingWithPartners.some(p => p.id === c.id)) return false; // Already found
+          return c.attendingWith && attendingWithMentionsName(c.attendingWith, selectedContestant.name || '');
+        });
+        
+        const allPartners = [...attendingWithPartners, ...reciprocalPartners];
+        console.log(`[getLinkedPartners] Found ${allPartners.length} partners via attendingWith: ${allPartners.map(p => p.name).join(', ')}`);
+        return allPartners;
+      }
+    }
+    
+    return [];
   };
 
   // Add a linked partner as companion
@@ -561,15 +597,47 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
   // Helper function to get auto-populated companions from group members
   const getAutoCompanions = (contestant: Contestant | null): ManualCompanion[] => {
-    if (!contestant?.groupId) return [];
+    if (!contestant) return [];
     
-    const groupMembers = contestants.filter(
-      c => c.groupId === contestant.groupId && c.id !== contestant.id
-    ).slice(0, 4);
+    let groupMembers: Contestant[] = [];
     
-    console.log(`[getAutoCompanions] Contestant ${contestant.name || contestant.id} has groupId: ${contestant.groupId}, found ${groupMembers.length} group members`);
+    // First, try to find via groupId (manually linked)
+    if (contestant.groupId) {
+      groupMembers = contestants.filter(
+        c => c.groupId === contestant.groupId && c.id !== contestant.id
+      );
+      console.log(`[getAutoCompanions] Contestant ${contestant.name || contestant.id} has groupId: ${contestant.groupId}, found ${groupMembers.length} group members via groupId`);
+    }
     
-    return groupMembers.map(member => ({
+    // If no groupId or no members found, try via attendingWith
+    if (groupMembers.length === 0 && contestant.attendingWith) {
+      const partnerNames = getPartnerNames(contestant.attendingWith);
+      console.log(`[getAutoCompanions] Trying attendingWith for ${contestant.name}, partnerNames: ${partnerNames.join(', ')}`);
+      
+      if (partnerNames.length > 0) {
+        // Find contestants whose names match the partner names
+        const attendingWithPartners = contestants.filter(c => {
+          if (c.id === contestant.id) return false;
+          return partnerNames.some(partnerName => {
+            const name = c.name?.toLowerCase() || '';
+            const pName = partnerName.toLowerCase();
+            return name.includes(pName) || pName.includes(name.split(' ')[0]);
+          });
+        });
+        
+        // Also check for reciprocal mentions
+        const reciprocalPartners = contestants.filter(c => {
+          if (c.id === contestant.id) return false;
+          if (attendingWithPartners.some(p => p.id === c.id)) return false;
+          return c.attendingWith && attendingWithMentionsName(c.attendingWith, contestant.name || '');
+        });
+        
+        groupMembers = [...attendingWithPartners, ...reciprocalPartners];
+        console.log(`[getAutoCompanions] Found ${groupMembers.length} group members via attendingWith: ${groupMembers.map(m => m.name).join(', ')}`);
+      }
+    }
+    
+    return groupMembers.slice(0, 4).map(member => ({
       id: `companion-${member.id}`,
       name: [member.firstName, member.lastName].filter(Boolean).join(' ') || member.name || 'Partner',
       relationship: member.attendingWith || 'Partner',
@@ -3443,8 +3511,37 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
   // Get group members for a contestant
   const getGroupMembers = (contestant: Contestant): Contestant[] => {
     const contestantGroupId = (contestant as any).groupId;
-    if (!contestantGroupId) return [];
-    return contestants.filter(c => (c as any).groupId === contestantGroupId && c.id !== contestant.id);
+    
+    // First, try to find via groupId
+    if (contestantGroupId) {
+      const groupMembers = contestants.filter(c => (c as any).groupId === contestantGroupId && c.id !== contestant.id);
+      if (groupMembers.length > 0) return groupMembers;
+    }
+    
+    // If no groupId or no members found, try via attendingWith
+    if (contestant.attendingWith) {
+      const partnerNames = getPartnerNames(contestant.attendingWith);
+      if (partnerNames.length > 0) {
+        const attendingWithPartners = contestants.filter(c => {
+          if (c.id === contestant.id) return false;
+          return partnerNames.some(partnerName => {
+            const name = c.name?.toLowerCase() || '';
+            const pName = partnerName.toLowerCase();
+            return name.includes(pName) || pName.includes(name.split(' ')[0]);
+          });
+        });
+        
+        const reciprocalPartners = contestants.filter(c => {
+          if (c.id === contestant.id) return false;
+          if (attendingWithPartners.some(p => p.id === c.id)) return false;
+          return c.attendingWith && attendingWithMentionsName(c.attendingWith, contestant.name || '');
+        });
+        
+        return [...attendingWithPartners, ...reciprocalPartners];
+      }
+    }
+    
+    return [];
   };
 
   // Open booking dialog for a contestant
