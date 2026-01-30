@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown, AlertTriangle, RefreshCw } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown, AlertTriangle, RefreshCw, Undo2, Redo2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -307,6 +307,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [cardZoom, setCardZoom] = useState(0.65);
   const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  
+  // Undo/Redo history
+  const [undoHistory, setUndoHistory] = useState<CastingCardData[]>([]);
+  const [redoHistory, setRedoHistory] = useState<CastingCardData[]>([]);
+  const maxHistorySize = 50;
   const [renderError, setRenderError] = useState<string | null>(null);
   const [showLinkedPartnersPicker, setShowLinkedPartnersPicker] = useState(false);
   const [hasBackup, setHasBackup] = useState<boolean>(false);
@@ -678,8 +683,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
   }, [selectedContestant, existingCard, loadingCard, contestants]);
 
-  // Check for backup when contestant changes
+  // Check for backup when contestant changes and clear undo/redo history
   useEffect(() => {
+    // Clear undo/redo history when switching contestants
+    setUndoHistory([]);
+    setRedoHistory([]);
+    
     if (selectedContestant) {
       const backup = getCardBackup(selectedContestant.id);
       if (backup && (backup as any)._backupTimestamp) {
@@ -1379,9 +1388,54 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
   };
 
+  // Undo function
+  const handleUndo = () => {
+    if (undoHistory.length > 0 && cardData) {
+      const previousState = undoHistory[undoHistory.length - 1];
+      setRedoHistory(prev => [...prev.slice(-(maxHistorySize - 1)), cardData]);
+      setUndoHistory(prev => prev.slice(0, -1));
+      setCardData(previousState);
+      hasUnsavedChanges.current = true;
+      
+      // Trigger save after undo
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        setAutoSaveStatus('saving');
+        saveMutation.mutate({ ...previousState, skipInvalidate: true } as any);
+      }, 1000);
+    }
+  };
+  
+  // Redo function
+  const handleRedo = () => {
+    if (redoHistory.length > 0 && cardData) {
+      const nextState = redoHistory[redoHistory.length - 1];
+      setUndoHistory(prev => [...prev.slice(-(maxHistorySize - 1)), cardData]);
+      setRedoHistory(prev => prev.slice(0, -1));
+      setCardData(nextState);
+      hasUnsavedChanges.current = true;
+      
+      // Trigger save after redo
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        setAutoSaveStatus('saving');
+        saveMutation.mutate({ ...nextState, skipInvalidate: true } as any);
+      }, 1000);
+    }
+  };
+
   const updateField = (field: keyof CastingCardData, value: any) => {
     try {
       if (cardData) {
+        // Push current state to undo history before making changes
+        setUndoHistory(prev => [...prev.slice(-(maxHistorySize - 1)), cardData]);
+        // Clear redo history on new change
+        setRedoHistory([]);
+        
         setCardData({ ...cardData, [field]: value });
         hasUnsavedChanges.current = true;
         
@@ -1626,6 +1680,32 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setCardZoom(0.65)} title="Reset Zoom" data-testid="btn-zoom-reset" className="h-8 px-2 text-xs">
                 Reset
+              </Button>
+              
+              <div className="w-px h-6 bg-gray-300 mx-1" />
+              
+              {/* Undo/Redo Controls */}
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={handleUndo} 
+                disabled={undoHistory.length === 0}
+                title={`Undo (${undoHistory.length} available)`}
+                data-testid="btn-undo" 
+                className="h-8 px-2"
+              >
+                <Undo2 className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={handleRedo} 
+                disabled={redoHistory.length === 0}
+                title={`Redo (${redoHistory.length} available)`}
+                data-testid="btn-redo" 
+                className="h-8 px-2"
+              >
+                <Redo2 className="h-4 w-4" />
               </Button>
             </div>
           </div>
