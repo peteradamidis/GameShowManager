@@ -448,8 +448,8 @@ export default function BookingMaster() {
     queryKey: ['/api/standbys'],
   });
 
-  // Filter standbys to get ones for the current record day
-  const standbysForRecordDay = standbys.filter(s => s.recordDayId === selectedRecordDay);
+  // Filter standbys to get ones for the current record day - only show confirmed standbys
+  const standbysForRecordDay = standbys.filter(s => s.recordDayId === selectedRecordDay && s.status === 'confirmed');
 
   // Fetch email assets (images and PDFs) for attachments
   interface EmailAsset {
@@ -1383,10 +1383,66 @@ export default function BookingMaster() {
                         )}
                         {isColumnVisible("mobile") && <TableCell className="text-xs min-w-[120px] py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{standby.contestant.phone || ""}</TableCell>}
                         {isColumnVisible("email") && <TableCell className="text-xs py-0.5 h-7 w-48 min-w-[180px] truncate border-r border-purple-200 dark:border-purple-800" title={standby.contestant.email || ""}>{standby.contestant.email || ""}</TableCell>}
-                        {isColumnVisible("attendingWith") && <TableCell className="text-xs py-0.5 h-7 min-w-[140px] border-r border-purple-200 dark:border-purple-800">{contestant?.attendingWith || ""}</TableCell>}
+                        {isColumnVisible("attendingWith") && (
+                          <TableCell className="text-xs py-0.5 h-7 min-w-[140px] border-r border-purple-200 dark:border-purple-800">
+                            {isEditMode ? (
+                              <div className="flex items-center gap-1">
+                                <Input
+                                  key={`standby-attending-${standby.id}`}
+                                  defaultValue={standby.attendingWithOverride || contestant?.attendingWith || ""}
+                                  onChange={(e) => handleStandbyDebouncedTextUpdate(standby.id, "attendingWithOverride", e.target.value)}
+                                  className="h-6 text-xs px-1"
+                                  data-testid={`input-standby-attending-${standby.id}`}
+                                />
+                                {standby.attendingWithOverride && (
+                                  <Badge variant="outline" className="text-[8px] px-1 py-0 h-4 bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-700">
+                                    UPDATED
+                                  </Badge>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                {standby.attendingWithOverride || contestant?.attendingWith || ""}
+                                {standby.attendingWithOverride && (
+                                  <Badge variant="outline" className="text-[8px] px-1 py-0 h-4 bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-700">
+                                    UPDATED
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+                          </TableCell>
+                        )}
                         {isColumnVisible("location") && <TableCell className="text-xs py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{contestant?.location || ""}</TableCell>}
                         {isColumnVisible("medicalQ") && <TableCell className="text-xs py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{contestant?.medicalInfo || ""}</TableCell>}
-                        {isColumnVisible("mobilityNotes") && <TableCell className="text-xs py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{contestant?.mobilityNotes || ""}</TableCell>}
+                        {isColumnVisible("mobilityNotes") && (
+                          <TableCell className="text-xs py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">
+                            {isEditMode ? (
+                              <div className="flex items-center gap-1">
+                                <Input
+                                  key={`standby-mobility-${standby.id}`}
+                                  defaultValue={standby.mobilityNotesOverride || contestant?.mobilityNotes || ""}
+                                  onChange={(e) => handleStandbyDebouncedTextUpdate(standby.id, "mobilityNotesOverride", e.target.value)}
+                                  className="h-6 text-xs px-1"
+                                  data-testid={`input-standby-mobility-${standby.id}`}
+                                />
+                                {standby.mobilityNotesOverride && (
+                                  <Badge variant="outline" className="text-[8px] px-1 py-0 h-4 bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-700">
+                                    UPDATED
+                                  </Badge>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                {standby.mobilityNotesOverride || contestant?.mobilityNotes || ""}
+                                {standby.mobilityNotesOverride && (
+                                  <Badge variant="outline" className="text-[8px] px-1 py-0 h-4 bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-700">
+                                    UPDATED
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+                          </TableCell>
+                        )}
                         {isColumnVisible("criminal") && <TableCell className="text-xs py-0.5 h-7 w-20 text-center border-r border-purple-200 dark:border-purple-800">{contestant?.criminalRecord || ""}</TableCell>}
                         {isColumnVisible("notes") && (
                           <TableCell className="border-r-4 border-r-purple-400 py-0.5 text-xs">

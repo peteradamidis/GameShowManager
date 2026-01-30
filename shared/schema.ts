@@ -266,6 +266,8 @@ export const standbyAssignments = pgTable("standby_assignments", {
   signedIn: timestamp("signed_in"),
   otdNotes: text("otd_notes"),
   standbyMovementNotes: text("standby_movement_notes"), // Notes about standby movement (e.g., "Replaced players")
+  attendingWithOverride: text("attending_with_override"), // Override for attending with (when original changes after invitation)
+  mobilityNotesOverride: text("mobility_notes_override"), // Override for mobility/medical notes (when original changes after invitation)
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   // Ensure one standby entry per contestant per record day
