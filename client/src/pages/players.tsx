@@ -934,6 +934,19 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       const html2canvas = (await import('html2canvas')).default;
       const { jsPDF } = await import('jspdf');
 
+      // Inject CSS override BEFORE html2canvas parses stylesheets
+      // This prevents "unsupported color function" errors from modern CSS
+      const printOverrideStyle = document.createElement('style');
+      printOverrideStyle.id = 'print-override-style';
+      printOverrideStyle.textContent = `
+        #casting-card-preview, #casting-card-preview * {
+          color: inherit !important;
+          background-color: inherit !important;
+          border-color: inherit !important;
+        }
+      `;
+      document.head.appendChild(printOverrideStyle);
+
       const canvas = await html2canvas(cardElement, {
         scale: 2,
         useCORS: true,
@@ -981,6 +994,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         },
       });
 
+      // Remove the override style after html2canvas is done
+      document.getElementById('print-override-style')?.remove();
+
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'landscape',
@@ -1003,6 +1019,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       toast({ title: "PDF Downloaded!", description: "Casting card saved as PDF" });
     } catch (error: any) {
       console.error('PDF generation error:', error);
+      // Clean up on error too
+      document.getElementById('print-override-style')?.remove();
       toast({ title: "PDF Error", description: error.message || "Failed to generate PDF", variant: "destructive" });
     } finally {
       setIsGeneratingPdf(false);
@@ -1027,6 +1045,19 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       
       // Capture as canvas using html2canvas
       const html2canvas = (await import('html2canvas')).default;
+      
+      // Inject CSS override BEFORE html2canvas parses stylesheets
+      const printOverrideStyle = document.createElement('style');
+      printOverrideStyle.id = 'print-override-style-print';
+      printOverrideStyle.textContent = `
+        #casting-card-preview, #casting-card-preview * {
+          color: inherit !important;
+          background-color: inherit !important;
+          border-color: inherit !important;
+        }
+      `;
+      document.head.appendChild(printOverrideStyle);
+      
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
@@ -1072,6 +1103,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           });
         },
       });
+      
+      // Clean up the override style
+      document.getElementById('print-override-style-print')?.remove();
       
       // Restore transform
       (element as HTMLElement).style.transform = originalTransform;
@@ -1132,6 +1166,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       printWindow.document.close();
     } catch (error: any) {
       console.error('Print error:', error);
+      // Clean up on error too
+      document.getElementById('print-override-style-print')?.remove();
       toast({ title: "Print Error", description: error.message || "Failed to generate print view", variant: "destructive" });
     }
   };
