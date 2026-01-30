@@ -1197,15 +1197,18 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 {/* Main photo - clickable to upload */}
                 <div 
                   className="border-4 border-amber-500 rounded-lg overflow-hidden bg-gray-100 relative group cursor-pointer"
-                  onClick={() => mainPhotoInputRef.current?.click()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    mainPhotoInputRef.current?.click();
+                  }}
                   data-testid="upload-main-photo"
                 >
-                  <Avatar className="w-full h-72 rounded-none">
+                  <Avatar className="w-full h-72 rounded-none pointer-events-none">
                     <AvatarImage src={selectedContestant.photoUrl || undefined} className="object-cover" />
                     <AvatarFallback className="text-6xl rounded-none bg-gray-200">{(selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'U').split(' ').map(n => n?.[0] || '').join('')}</AvatarFallback>
                   </Avatar>
                   {/* Upload overlay */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                     {uploadingPhotoFor === selectedContestant.id ? (
                       <div className="text-white text-sm">Uploading...</div>
                     ) : (
@@ -1253,16 +1256,19 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             />
                             <div 
                               className={`border-4 border-amber-500 rounded-lg overflow-hidden ${sizeClass} mx-auto bg-gray-100 relative group cursor-pointer`}
-                              onClick={() => companionPhotoRefs.current[companion.id]?.click()}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                companionPhotoRefs.current[companion.id]?.click();
+                              }}
                             >
-                              <Avatar className="w-full h-full rounded-none">
+                              <Avatar className="w-full h-full rounded-none pointer-events-none">
                                 <AvatarImage src={companion.photoUrl || undefined} className="object-cover object-top" />
                                 <AvatarFallback className={`${fallbackSize} rounded-none bg-gray-200`}>
                                   {(companion.name || 'Partner').split(' ').map(n => n?.[0] || '').join('') || '?'}
                                 </AvatarFallback>
                               </Avatar>
                               {/* Upload overlay */}
-                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                                 {uploadingPhotoFor === companion.id ? (
                                   <div className="text-white text-xs">Uploading...</div>
                                 ) : (
@@ -1728,15 +1734,18 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     {/* Main photo - clickable to upload */}
                     <div 
                       className="border-4 border-amber-500 rounded-lg overflow-hidden bg-gray-100 relative group cursor-pointer"
-                      onClick={() => mainPhotoInputRef.current?.click()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        mainPhotoInputRef.current?.click();
+                      }}
                       data-testid="upload-main-photo-preview"
                     >
-                      <Avatar className="w-full h-72 rounded-none">
+                      <Avatar className="w-full h-72 rounded-none pointer-events-none">
                         <AvatarImage src={selectedContestant.photoUrl || undefined} className="object-cover" />
                         <AvatarFallback className="text-6xl rounded-none bg-gray-200">{(selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'U').split(' ').map(n => n?.[0] || '').join('')}</AvatarFallback>
                       </Avatar>
                       {/* Upload overlay */}
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                         {uploadingPhotoFor === selectedContestant.id ? (
                           <div className="text-white text-sm">Uploading...</div>
                         ) : (
@@ -1768,16 +1777,19 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                               <div key={companion.id} className="relative">
                                 <div 
                                   className={`border-4 border-amber-500 rounded-lg overflow-hidden ${sizeClass} mx-auto bg-gray-100 relative group cursor-pointer`}
-                                  onClick={() => companionPhotoRefs.current[companion.id]?.click()}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    companionPhotoRefs.current[companion.id]?.click();
+                                  }}
                                 >
-                                  <Avatar className="w-full h-full rounded-none">
+                                  <Avatar className="w-full h-full rounded-none pointer-events-none">
                                     <AvatarImage src={companion.photoUrl || undefined} className="object-cover object-top" />
                                     <AvatarFallback className={`${fallbackSize} rounded-none bg-gray-200`}>
                                       {(companion.name || 'Partner').split(' ').map(n => n?.[0] || '').join('') || '?'}
                                     </AvatarFallback>
                                   </Avatar>
                                   {/* Upload overlay */}
-                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                                     {uploadingPhotoFor === companion.id ? (
                                       <div className="text-white text-xs">Uploading...</div>
                                     ) : (
