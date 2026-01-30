@@ -861,22 +861,45 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     const imagePromises: Promise<void>[] = [];
     
     images.forEach((img) => {
-      if (img.complete && img.naturalHeight !== 0) return;
+      // Skip data URIs (base64) - they don't need preloading
+      if (img.src.startsWith('data:')) return;
       
+      // Skip already loaded images with valid dimensions
+      if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) return;
+      
+      // Force reload the image to ensure it's loaded
       imagePromises.push(
         new Promise((resolve) => {
+          const timeout = setTimeout(() => {
+            console.warn('Image preload timeout:', img.src?.substring(0, 100));
+            resolve();
+          }, 10000); // 10 second timeout per image
+          
           const newImg = new Image();
           newImg.crossOrigin = 'anonymous';
-          newImg.onload = () => resolve();
-          newImg.onerror = () => resolve(); // Don't fail on error, just continue
-          newImg.src = img.src;
+          newImg.onload = () => {
+            clearTimeout(timeout);
+            // Also ensure the original img is updated
+            if (!img.complete || img.naturalWidth === 0) {
+              img.src = newImg.src;
+            }
+            resolve();
+          };
+          newImg.onerror = () => {
+            clearTimeout(timeout);
+            console.warn('Image preload failed:', img.src?.substring(0, 100));
+            resolve(); // Don't fail on error, just continue
+          };
+          // Add cache buster to force fresh load if needed
+          const srcUrl = img.src;
+          newImg.src = srcUrl;
         })
       );
     });
     
     await Promise.all(imagePromises);
     // Extra delay to ensure rendering is complete
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 500));
   };
 
   const handleDownloadPdf = async () => {
@@ -1727,6 +1750,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <img 
                         src={cardData.mainPhotoOverride || selectedContestant.photoUrl || ''} 
                         alt={selectedContestant.name || 'Contestant'}
+                        crossOrigin="anonymous"
                         className="object-cover pointer-events-none"
                         style={{
                           width: '100%',
@@ -2456,6 +2480,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           <img 
                             src={cardData.mainPhotoOverride || selectedContestant.photoUrl || ''} 
                             alt={selectedContestant.name || 'Contestant'}
+                            crossOrigin="anonymous"
                             className="object-cover pointer-events-none"
                             style={{
                               width: '100%',
