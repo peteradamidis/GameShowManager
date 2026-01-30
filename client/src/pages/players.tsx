@@ -183,6 +183,43 @@ const defaultBulletPoints = [
 // LocalStorage backup key prefix
 const CARD_BACKUP_KEY = 'casting_card_backup_';
 
+// Safe render wrapper to catch errors and prevent white screen
+function SafeRender({ children, fallback, onError }: { 
+  children: React.ReactNode; 
+  fallback: React.ReactNode;
+  onError?: (error: Error) => void;
+}) {
+  const [hasError, setHasError] = React.useState(false);
+  const [error, setError] = React.useState<Error | null>(null);
+  
+  React.useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error('Caught render error:', event.error);
+      setError(event.error);
+      setHasError(true);
+      onError?.(event.error);
+      event.preventDefault();
+    };
+    
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, [onError]);
+  
+  if (hasError) {
+    return <>{fallback}</>;
+  }
+  
+  try {
+    return <>{children}</>;
+  } catch (e) {
+    console.error('Render error caught:', e);
+    setHasError(true);
+    setError(e instanceof Error ? e : new Error(String(e)));
+    onError?.(e instanceof Error ? e : new Error(String(e)));
+    return <>{fallback}</>;
+  }
+}
+
 // Helper to get backup from localStorage
 const getCardBackup = (contestantId: string): CastingCardData | null => {
   try {
@@ -1024,9 +1061,39 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   };
   const formatColor = (color: string) => applyFormat('foreColor', color);
 
+  // Error fallback for fullscreen mode
+  const fullscreenErrorFallback = (
+    <div className="fixed inset-0 z-50 bg-white overflow-auto p-6 flex items-center justify-center">
+      <Card className="p-6 max-w-md">
+        <div className="text-center">
+          <div className="text-red-500 text-4xl mb-4">⚠️</div>
+          <h3 className="font-semibold text-lg mb-2">Something went wrong</h3>
+          <p className="text-muted-foreground mb-4">An error occurred while displaying the casting card.</p>
+          <Button onClick={() => { setIsFullscreen(false); setRenderError(null); }}>
+            Exit Fullscreen
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+
   // Fullscreen mode renders just the card
   if (isFullscreen && selectedContestant && cardData) {
+    // Safely access cardData properties with defaults
+    const safeCardData = {
+      ...cardData,
+      manualCompanions: cardData.manualCompanions || [],
+      bulletPoints: cardData.bulletPoints || defaultBulletPoints,
+      fullName: cardData.fullName || selectedContestant?.name || '',
+      ageState: cardData.ageState || '',
+      occupation: cardData.occupation || '',
+      sponsorCategory: cardData.sponsorCategory || '',
+      tagline: cardData.tagline || '',
+      producerName: cardData.producerName || '',
+    };
+    
     return (
+      <SafeRender fallback={fullscreenErrorFallback} onError={(e) => { console.error('Fullscreen render error:', e); setRenderError(e.message); }}>
       <div className="fixed inset-0 z-50 bg-white overflow-auto p-6">
         {/* Hidden file inputs for fullscreen mode */}
         <input
@@ -1550,6 +1617,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           </div>
         </div>
       </div>
+      </SafeRender>
     );
   }
 
@@ -2363,7 +2431,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
       if (ratingFilter !== 'all' && c.auditionRating?.toUpperCase() !== ratingFilter) return false;
       if (genderFilter !== 'all' && c.gender?.toLowerCase() !== genderFilter.toLowerCase()) return false;
       // Status filter
-      if (statusFilter !== 'all' && c.availabilityStatus !== statusFilter) return false;
+      if (statusFilter !== 'all' && (c as any).availabilityStatus !== statusFilter) return false;
       // Age filter
       if (ageFilter !== 'all' && c.age) {
         const age = c.age;
