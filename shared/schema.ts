@@ -733,7 +733,8 @@ export const castingCards = pgTable("casting_cards", {
   showTagline: boolean("show_tagline").default(true), // Whether to show tagline section
   
   // Card status
-  isReady: boolean("is_ready").default(false), // Card marked as ready/complete
+  isReady: boolean("is_ready").default(false), // Card marked as RX Ready
+  isDraftComplete: boolean("is_draft_complete").default(false), // Draft marked as complete
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

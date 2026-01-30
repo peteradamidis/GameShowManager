@@ -176,8 +176,9 @@ interface CastingCardData {
   // Manual companions (up to 4)
   manualCompanions?: ManualCompanion[] | null;
   useManualCompanions?: boolean;
-  // Card ready status
-  isReady?: boolean;
+  // Card status
+  isReady?: boolean; // RX Ready
+  isDraftComplete?: boolean; // Draft Complete
   // Main photo override (base64) - only affects casting card, not contestant record
   mainPhotoOverride?: string | null;
   // Main photo positioning and zoom
@@ -263,6 +264,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [searchTerm, setSearchTerm] = useState('');
   const [ratingFilter, setRatingFilter] = useState<string>('A+');
   const [genderFilter, setGenderFilter] = useState<string>('all');
+  const [cardStatusFilter, setCardStatusFilter] = useState<string>('all'); // all, draft_complete, rx_ready, in_progress
   const [selectedContestant, setSelectedContestant] = useState<Contestant | null>(null);
   const [cardData, setCardData] = useState<CastingCardData | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -546,6 +548,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     return contestants.filter(c => c.groupId === selectedContestant.groupId && c.id !== selectedContestant.id);
   }, [selectedContestant, contestants]);
 
+  // Fetch all casting cards for filtering
+  const { data: allCastingCards = [] } = useQuery<CastingCardData[]>({
+    queryKey: ['/api/casting-cards'],
+  });
+
   // Fetch existing casting card data when contestant is selected
   const { data: existingCard, isLoading: loadingCard } = useQuery<CastingCardData>({
     queryKey: ['/api/casting-cards', selectedContestant?.id],
@@ -778,9 +785,25 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         c.auditionRating?.toUpperCase() === ratingFilter.toUpperCase();
       const matchesGender = genderFilter === 'all' || 
         c.gender.toLowerCase() === genderFilter.toLowerCase();
+      
+      // Card status filter - check against existing cards
+      if (cardStatusFilter !== 'all') {
+        const cardForContestant = allCastingCards?.find((card: any) => card.contestantId === c.id);
+        if (cardStatusFilter === 'draft_complete') {
+          if (!cardForContestant?.isDraftComplete) return false;
+        } else if (cardStatusFilter === 'rx_ready') {
+          if (!cardForContestant?.isReady) return false;
+        } else if (cardStatusFilter === 'in_progress') {
+          // In progress = has card but neither draft complete nor rx ready
+          if (!cardForContestant || cardForContestant.isDraftComplete || cardForContestant.isReady) return false;
+        } else if (cardStatusFilter === 'no_card') {
+          if (cardForContestant) return false;
+        }
+      }
+      
       return matchesSearch && matchesRating && matchesGender;
     });
-  }, [contestants, searchTerm, ratingFilter, genderFilter]);
+  }, [contestants, searchTerm, ratingFilter, genderFilter, cardStatusFilter, allCastingCards]);
 
   const handleSave = () => {
     if (cardData) {
@@ -792,10 +815,19 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
   };
 
-  // Toggle ready status and save immediately with the new value
+  // Toggle RX Ready status and save immediately with the new value
   const toggleReadyAndSave = () => {
     if (cardData) {
       const updatedData = { ...cardData, isReady: !cardData.isReady };
+      setCardData(updatedData);
+      saveMutation.mutate(updatedData);
+    }
+  };
+
+  // Toggle Draft Complete status and save immediately with the new value
+  const toggleDraftCompleteAndSave = () => {
+    if (cardData) {
+      const updatedData = { ...cardData, isDraftComplete: !cardData.isDraftComplete };
       setCardData(updatedData);
       saveMutation.mutate(updatedData);
     }
@@ -1492,7 +1524,33 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         <div className="max-w-5xl mx-auto">
           <div className="sticky top-0 bg-white py-2 border-b z-10 space-y-2">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown'} - Casting Card</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold">{selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown'} - Casting Card</h2>
+                {/* Draft Complete toggle */}
+                <Button
+                  size="sm"
+                  variant={cardData?.isDraftComplete ? "default" : "outline"}
+                  onClick={toggleDraftCompleteAndSave}
+                  disabled={saveMutation.isPending}
+                  className={cardData?.isDraftComplete ? "bg-blue-600 hover:bg-blue-700" : ""}
+                  data-testid="btn-toggle-draft-complete-fs"
+                >
+                  <FileText className="h-4 w-4 mr-1" />
+                  {cardData?.isDraftComplete ? 'Draft Complete' : 'Draft Complete'}
+                </Button>
+                {/* RX Ready toggle */}
+                <Button
+                  size="sm"
+                  variant={cardData?.isReady ? "default" : "outline"}
+                  onClick={toggleReadyAndSave}
+                  disabled={saveMutation.isPending}
+                  className={cardData?.isReady ? "bg-green-600 hover:bg-green-700" : ""}
+                  data-testid="btn-toggle-ready-fs"
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-1" />
+                  {cardData?.isReady ? 'RX Ready' : 'RX Ready'}
+                </Button>
+              </div>
               <div className="flex gap-2 items-center">
                 <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending || autoSaveStatus === 'saving'} data-testid="btn-save-card-fs">
                   {saveMutation.isPending || autoSaveStatus === 'saving' ? 'Saving...' : autoSaveStatus === 'saved' ? '✓ Saved' : 'Save'}
@@ -2209,6 +2267,18 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <SelectItem value="male">Male</SelectItem>
                   </SelectContent>
                 </Select>
+                <Select value={cardStatusFilter} onValueChange={setCardStatusFilter}>
+                  <SelectTrigger className="flex-1" data-testid="select-card-status">
+                    <SelectValue placeholder="Card Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Cards</SelectItem>
+                    <SelectItem value="draft_complete">Draft Complete</SelectItem>
+                    <SelectItem value="rx_ready">RX Ready</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="no_card">No Card</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               {/* Reset All Cards Button */}
               <Button 
@@ -2289,7 +2359,19 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-3">
                   <CardTitle className="text-base">Click any text to edit directly</CardTitle>
-                  {/* Ready status toggle */}
+                  {/* Draft Complete toggle */}
+                  <Button
+                    size="sm"
+                    variant={cardData.isDraftComplete ? "default" : "outline"}
+                    onClick={toggleDraftCompleteAndSave}
+                    disabled={saveMutation.isPending}
+                    className={cardData.isDraftComplete ? "bg-blue-600 hover:bg-blue-700" : ""}
+                    data-testid="btn-toggle-draft-complete"
+                  >
+                    <FileText className="h-4 w-4 mr-1" />
+                    {cardData.isDraftComplete ? 'Draft Complete' : 'Draft Complete'}
+                  </Button>
+                  {/* RX Ready toggle */}
                   <Button
                     size="sm"
                     variant={cardData.isReady ? "default" : "outline"}
@@ -2299,7 +2381,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     data-testid="btn-toggle-ready"
                   >
                     <CheckCircle2 className="h-4 w-4 mr-1" />
-                    {cardData.isReady ? 'Ready' : 'Mark Ready'}
+                    {cardData.isReady ? 'RX Ready' : 'RX Ready'}
                   </Button>
                 </div>
                 <div className="flex gap-2 items-center">
@@ -4515,13 +4597,18 @@ export default function PlayersPage() {
                 {(() => {
                   const systemCard = c ? castingCardsMap.get(c.id) : null;
                   if (systemCard) {
+                    // Determine badge color and text based on status
+                    const getBadgeStyle = () => {
+                      if (systemCard.isReady) return { className: "bg-green-600 text-white", text: "RX Ready" };
+                      if ((systemCard as any).isDraftComplete) return { className: "bg-blue-600 text-white", text: "Draft Complete" };
+                      return { className: "bg-amber-500 text-white", text: "In Progress" };
+                    };
+                    const badgeStyle = getBadgeStyle();
                     return (
                       <>
-                        <Badge 
-                          className={systemCard.isReady ? "bg-green-600 text-white" : "bg-amber-500 text-white"}
-                        >
+                        <Badge className={badgeStyle.className}>
                           <CreditCard className="h-3 w-3 mr-1" />
-                          Card {systemCard.isReady ? 'Ready' : 'Draft'}
+                          {badgeStyle.text}
                         </Badge>
                         <Button
                           size="sm"
