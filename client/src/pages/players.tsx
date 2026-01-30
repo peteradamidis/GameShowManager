@@ -1140,23 +1140,35 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               html, body {
                 margin: 0;
                 padding: 0;
+                width: 297mm;
+                height: 210mm;
+                overflow: hidden;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
               }
+              img {
+                width: 297mm !important;
+                height: 210mm !important;
+                object-fit: contain;
+              }
             }
             * { box-sizing: border-box; margin: 0; padding: 0; }
+            html, body {
+              width: 297mm;
+              height: 210mm;
+              overflow: hidden;
+              background: white;
+            }
             body {
               display: flex;
               justify-content: center;
               align-items: center;
-              min-height: 100vh;
-              background: white;
             }
             img {
-              max-width: 100%;
-              max-height: 100vh;
-              width: auto;
-              height: auto;
+              width: 297mm;
+              height: 210mm;
+              object-fit: contain;
+              display: block;
             }
           </style>
         </head>
