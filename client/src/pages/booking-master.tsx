@@ -427,12 +427,21 @@ export default function BookingMaster() {
   }, [blockTypes]);
 
   // Helper function to get auto-populated casting category
-  const getAutoCastingCategory = (contestant: Contestant | undefined, blockNumber: number): string => {
-    // If contestant has a player type set, show that
+  // Priority: assignment playerType (from seating chart buttons) > contestant playerType > block type
+  const getAutoCastingCategory = (contestant: Contestant | undefined, blockNumber: number, assignmentPlayerType?: string | null): string => {
+    // First check the assignment's player type (set via seating chart buttons)
+    if (assignmentPlayerType) {
+      switch (assignmentPlayerType) {
+        case 'player': return 'PLAYER';
+        case 'player_partner': return 'PARTNER';
+        case 'backup': return 'BACKUP';
+      }
+    }
+    // Then check if contestant has a player type set
     if (contestant?.playerType) {
       switch (contestant.playerType) {
         case 'player': return 'PLAYER';
-        case 'player_partner': return 'PLAYER PARTNER';
+        case 'player_partner': return 'PARTNER';
         case 'backup': return 'BACKUP';
       }
     }
@@ -979,7 +988,7 @@ export default function BookingMaster() {
         row.contestant?.medicalInfo || "",
         row.contestant?.mobilityNotes || "",
         row.contestant?.criminalRecord || "",
-        row.assignment?.castingCategory || "",
+        row.assignment?.castingCategory || getAutoCastingCategory(row.contestant, row.blockNumber, row.assignment?.playerType),
         row.assignment?.notes || "",
         row.assignment?.bookingEmailSent ? "✓" : "",
         row.assignment?.confirmedRsvp ? "✓" : "",
@@ -1777,7 +1786,7 @@ export default function BookingMaster() {
                           <TableCell className="py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">
                             {row.assignment && (
                               <span className="text-xs px-1">
-                                {row.assignment.castingCategory || getAutoCastingCategory(row.contestant, row.blockNumber)}
+                                {row.assignment.castingCategory || getAutoCastingCategory(row.contestant, row.blockNumber, row.assignment.playerType)}
                               </span>
                             )}
                           </TableCell>
