@@ -1238,20 +1238,34 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     },
   });
 
-  // Helper to get neighbors for a seat (adjacent occupied seats in the same block)
+  // Helper to get neighbors for a seat (adjacent occupied seats in the SAME ROW only)
   const getNeighborsForSeat = useCallback((blockIndex: number, seatIndex: number): NeighborSeat[] => {
     const block = blocks[blockIndex];
     if (!block) return [];
     
+    // Calculate row boundaries based on SEAT_ROWS structure
+    // A: 5 seats (0-4), B: 5 seats (5-9), C: 4 seats (10-13), D: 4 seats (14-17), E: 4 seats (18-21)
+    const rowBoundaries = [
+      { start: 0, end: 4 },   // Row A (5 seats)
+      { start: 5, end: 9 },   // Row B (5 seats)
+      { start: 10, end: 13 }, // Row C (4 seats)
+      { start: 14, end: 17 }, // Row D (4 seats)
+      { start: 18, end: 21 }, // Row E (4 seats)
+    ];
+    
+    // Find which row this seat is in
+    const currentRow = rowBoundaries.find(row => seatIndex >= row.start && seatIndex <= row.end);
+    if (!currentRow) return [];
+    
     const neighbors: NeighborSeat[] = [];
     
-    // Check adjacent seats (previous and next in the array)
-    // Since seats are arranged in rows, we check immediate neighbors
+    // Only check neighbors within the same row
     for (let offset = -1; offset <= 1; offset += 2) {
       const neighborIdx = seatIndex + offset;
-      if (neighborIdx >= 0 && neighborIdx < block.length) {
+      // Check if neighbor is within the same row boundaries
+      if (neighborIdx >= currentRow.start && neighborIdx <= currentRow.end) {
         const neighbor = block[neighborIdx];
-        if (neighbor.contestantId && neighbor.contestantName) {
+        if (neighbor?.contestantId && neighbor.contestantName) {
           neighbors.push({
             contestantId: neighbor.contestantId,
             contestantName: neighbor.contestantName,
