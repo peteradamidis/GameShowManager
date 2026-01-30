@@ -164,6 +164,8 @@ interface CastingCardData {
   useManualCompanions?: boolean;
   // Card ready status
   isReady?: boolean;
+  // Main photo override (base64) - only affects casting card, not contestant record
+  mainPhotoOverride?: string | null;
 }
 
 // Default bullet points for new casting cards
@@ -283,11 +285,23 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     },
   });
 
-  // Handle photo file selection
+  // Handle photo file selection - stores as base64 in card data only (doesn't update contestant record)
   const handlePhotoUpload = (contestantId: string, file: File | null) => {
-    if (!file) return;
+    if (!file || !cardData) return;
     setUploadingPhotoFor(contestantId);
-    photoUploadMutation.mutate({ contestantId, file });
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      updateField('mainPhotoOverride', base64);
+      setUploadingPhotoFor(null);
+      toast({ title: "Photo added", description: "Casting card photo has been updated" });
+    };
+    reader.onerror = () => {
+      setUploadingPhotoFor(null);
+      toast({ title: "Upload failed", description: "Could not read the image file", variant: "destructive" });
+    };
+    reader.readAsDataURL(file);
   };
 
   // Handle manual companion photo upload (converts to base64 for storage in card data)
@@ -1204,7 +1218,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   data-testid="upload-main-photo"
                 >
                   <Avatar className="w-full h-72 rounded-none pointer-events-none">
-                    <AvatarImage src={selectedContestant.photoUrl || undefined} className="object-cover" />
+                    <AvatarImage src={cardData.mainPhotoOverride || selectedContestant.photoUrl || undefined} className="object-cover" />
                     <AvatarFallback className="text-6xl rounded-none bg-gray-200">{(selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'U').split(' ').map(n => n?.[0] || '').join('')}</AvatarFallback>
                   </Avatar>
                   {/* Upload overlay */}
@@ -1741,7 +1755,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       data-testid="upload-main-photo-preview"
                     >
                       <Avatar className="w-full h-72 rounded-none pointer-events-none">
-                        <AvatarImage src={selectedContestant.photoUrl || undefined} className="object-cover" />
+                        <AvatarImage src={cardData.mainPhotoOverride || selectedContestant.photoUrl || undefined} className="object-cover" />
                         <AvatarFallback className="text-6xl rounded-none bg-gray-200">{(selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'U').split(' ').map(n => n?.[0] || '').join('')}</AvatarFallback>
                       </Avatar>
                       {/* Upload overlay */}
