@@ -184,6 +184,7 @@ interface CastingCardData {
   mainPhotoZoom?: number | null;
   mainPhotoOffsetX?: number | null;
   mainPhotoOffsetY?: number | null;
+  mainPhotoRotation?: number | null;
 }
 
 // Default bullet points for new casting cards
@@ -1690,7 +1691,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           width: '100%',
                           height: '100%',
                           objectFit: 'cover',
-                          transform: `scale(${cardData.mainPhotoZoom || 1}) translate(${cardData.mainPhotoOffsetX || 0}px, ${cardData.mainPhotoOffsetY || 0}px)`,
+                          transform: `scale(${cardData.mainPhotoZoom || 1}) translate(${cardData.mainPhotoOffsetX || 0}px, ${cardData.mainPhotoOffsetY || 0}px) rotate(${cardData.mainPhotoRotation || 0}deg)`,
                           transition: 'transform 0.15s ease-out',
                         }}
                       />
@@ -1773,9 +1774,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             updateField('mainPhotoZoom', 1);
                             updateField('mainPhotoOffsetX', 0);
                             updateField('mainPhotoOffsetY', 0);
+                            updateField('mainPhotoRotation', 0);
                           }}
                           className="text-white p-0.5 hover:bg-white/20 rounded text-[8px]"
-                          title="Reset position"
+                          title="Reset all"
                         >
                           <RotateCcw className="w-3 h-3" />
                         </button>
@@ -1789,7 +1791,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         >
                           <ChevronUp className="w-3 h-3 rotate-90" />
                         </button>
-                        <div />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateField('mainPhotoRotation', ((cardData.mainPhotoRotation || 0) + 90) % 360);
+                          }}
+                          className="text-white p-1 hover:bg-white/20 rounded"
+                          title="Rotate 90°"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                        </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -2396,7 +2407,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                               width: '100%',
                               height: '100%',
                               objectFit: 'cover',
-                              transform: `scale(${cardData.mainPhotoZoom || 1}) translate(${cardData.mainPhotoOffsetX || 0}px, ${cardData.mainPhotoOffsetY || 0}px)`,
+                              transform: `scale(${cardData.mainPhotoZoom || 1}) translate(${cardData.mainPhotoOffsetX || 0}px, ${cardData.mainPhotoOffsetY || 0}px) rotate(${cardData.mainPhotoRotation || 0}deg)`,
                               transition: 'transform 0.15s ease-out',
                             }}
                           />
@@ -2479,9 +2490,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                 updateField('mainPhotoZoom', 1);
                                 updateField('mainPhotoOffsetX', 0);
                                 updateField('mainPhotoOffsetY', 0);
+                                updateField('mainPhotoRotation', 0);
                               }}
                               className="text-white p-0.5 hover:bg-white/20 rounded text-[8px]"
-                              title="Reset position"
+                              title="Reset all"
                             >
                               <RotateCcw className="w-3 h-3" />
                             </button>
@@ -2495,7 +2507,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             >
                               <ChevronUp className="w-3 h-3 rotate-90" />
                             </button>
-                            <div />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateField('mainPhotoRotation', ((cardData.mainPhotoRotation || 0) + 90) % 360);
+                              }}
+                              className="text-white p-1 hover:bg-white/20 rounded"
+                              title="Rotate 90°"
+                            >
+                              <RefreshCw className="w-3 h-3" />
+                            </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
