@@ -856,6 +856,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         },
         onclone: (clonedDoc) => {
           // Remove CSS color() function references that html2canvas can't parse
+          // Also remove any oklch, oklab, lab, lch color functions
           const style = clonedDoc.createElement('style');
           style.textContent = `
             * { 
@@ -864,9 +865,28 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               --secondary: 210 40% 96.1% !important;
               --accent: 35 91% 55% !important;
               --muted: 210 40% 96.1% !important;
+              --background: 0 0% 100% !important;
+              --foreground: 0 0% 0% !important;
+              --border: 0 0% 80% !important;
             }
           `;
           clonedDoc.head.appendChild(style);
+          
+          // Walk through all elements and remove any inline styles with color() function
+          const allElements = clonedDoc.querySelectorAll('*');
+          allElements.forEach((el: Element) => {
+            const htmlEl = el as HTMLElement;
+            if (htmlEl.style) {
+              const cssText = htmlEl.style.cssText;
+              if (cssText && (cssText.includes('color(') || cssText.includes('oklch') || cssText.includes('oklab'))) {
+                // Replace with safe fallback colors
+                htmlEl.style.cssText = cssText
+                  .replace(/color\([^)]+\)/g, '#000000')
+                  .replace(/oklch\([^)]+\)/g, '#000000')
+                  .replace(/oklab\([^)]+\)/g, '#000000');
+              }
+            }
+          });
         },
       });
 
@@ -928,6 +948,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         },
         onclone: (clonedDoc) => {
           // Remove CSS color() function references that html2canvas can't parse
+          // Also remove any oklch, oklab, lab, lch color functions
           const style = clonedDoc.createElement('style');
           style.textContent = `
             * { 
@@ -936,9 +957,28 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               --secondary: 210 40% 96.1% !important;
               --accent: 35 91% 55% !important;
               --muted: 210 40% 96.1% !important;
+              --background: 0 0% 100% !important;
+              --foreground: 0 0% 0% !important;
+              --border: 0 0% 80% !important;
             }
           `;
           clonedDoc.head.appendChild(style);
+          
+          // Walk through all elements and remove any inline styles with color() function
+          const allElements = clonedDoc.querySelectorAll('*');
+          allElements.forEach((el: Element) => {
+            const htmlEl = el as HTMLElement;
+            if (htmlEl.style) {
+              const cssText = htmlEl.style.cssText;
+              if (cssText && (cssText.includes('color(') || cssText.includes('oklch') || cssText.includes('oklab'))) {
+                // Replace with safe fallback colors
+                htmlEl.style.cssText = cssText
+                  .replace(/color\([^)]+\)/g, '#000000')
+                  .replace(/oklch\([^)]+\)/g, '#000000')
+                  .replace(/oklab\([^)]+\)/g, '#000000');
+              }
+            }
+          });
         },
       });
       
