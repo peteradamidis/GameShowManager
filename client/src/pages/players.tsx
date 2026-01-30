@@ -955,6 +955,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         .casting-card-name { color: #fcd34d !important; }
         .casting-card-sponsor { color: #16a34a !important; }
         .casting-card-tagline { color: #dc2626 !important; }
+        .casting-card-producer-label { background-color: #e5e7eb !important; border: 1px solid #d1d5db !important; color: #000000 !important; }
+        .casting-card-producer-name { background-color: #facc15 !important; color: #000000 !important; }
+        .casting-card-photo-border { border: 4px solid #f59e0b !important; background-color: #f3f4f6 !important; }
       `;
       document.head.appendChild(printOverrideStyle);
 
@@ -1031,6 +1034,19 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           });
           clonedDoc.querySelectorAll('.casting-card-tagline').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#dc2626';
+          });
+          clonedDoc.querySelectorAll('.casting-card-producer-label').forEach((el: Element) => {
+            (el as HTMLElement).style.backgroundColor = '#e5e7eb';
+            (el as HTMLElement).style.border = '1px solid #d1d5db';
+            (el as HTMLElement).style.color = '#000000';
+          });
+          clonedDoc.querySelectorAll('.casting-card-producer-name').forEach((el: Element) => {
+            (el as HTMLElement).style.backgroundColor = '#facc15';
+            (el as HTMLElement).style.color = '#000000';
+          });
+          clonedDoc.querySelectorAll('.casting-card-photo-border').forEach((el: Element) => {
+            (el as HTMLElement).style.border = '4px solid #f59e0b';
+            (el as HTMLElement).style.backgroundColor = '#f3f4f6';
           });
           
           // Hide all elements with ignore-print class
@@ -1132,6 +1148,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         .casting-card-name { color: #fcd34d !important; }
         .casting-card-sponsor { color: #16a34a !important; }
         .casting-card-tagline { color: #dc2626 !important; }
+        .casting-card-producer-label { background-color: #e5e7eb !important; border: 1px solid #d1d5db !important; color: #000000 !important; }
+        .casting-card-producer-name { background-color: #facc15 !important; color: #000000 !important; }
+        .casting-card-photo-border { border: 4px solid #f59e0b !important; background-color: #f3f4f6 !important; }
       `;
       document.head.appendChild(printOverrideStyle);
       
@@ -1207,6 +1226,19 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           });
           clonedDoc.querySelectorAll('.casting-card-tagline').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#dc2626';
+          });
+          clonedDoc.querySelectorAll('.casting-card-producer-label').forEach((el: Element) => {
+            (el as HTMLElement).style.backgroundColor = '#e5e7eb';
+            (el as HTMLElement).style.border = '1px solid #d1d5db';
+            (el as HTMLElement).style.color = '#000000';
+          });
+          clonedDoc.querySelectorAll('.casting-card-producer-name').forEach((el: Element) => {
+            (el as HTMLElement).style.backgroundColor = '#facc15';
+            (el as HTMLElement).style.color = '#000000';
+          });
+          clonedDoc.querySelectorAll('.casting-card-photo-border').forEach((el: Element) => {
+            (el as HTMLElement).style.border = '4px solid #f59e0b';
+            (el as HTMLElement).style.backgroundColor = '#f3f4f6';
           });
           
           // Hide all elements with ignore-print class
@@ -1634,7 +1666,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 
                 {/* Main photo - with zoom and position controls */}
                 <div 
-                  className="border-4 border-amber-500 rounded-lg overflow-hidden bg-gray-100 relative group"
+                  className="casting-card-photo-border rounded-lg overflow-hidden relative group"
+                  style={{ border: '4px solid #f59e0b', backgroundColor: '#f3f4f6' }}
                   data-testid="main-photo-container"
                 >
                   {/* Photo with zoom/pan applied */}
@@ -1806,7 +1839,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                               }}
                             />
                             <div 
-                              className={`border-4 border-amber-500 rounded-lg overflow-hidden ${sizeClass} mx-auto bg-gray-100 relative group cursor-pointer`}
+                              className={`casting-card-photo-border rounded-lg overflow-hidden ${sizeClass} mx-auto relative group cursor-pointer`}
+                              style={{ border: '4px solid #f59e0b', backgroundColor: '#f3f4f6' }}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 companionPhotoRefs.current[companion.id]?.click();
@@ -2099,11 +2133,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 {/* Producer - matching PowerPoint style */}
                 {cardData.showProducer !== false ? (
                   <div className="mt-6 flex items-center relative group w-fit">
-                    <span className="bg-gray-200 px-4 py-2 font-semibold text-sm border border-gray-300">PRODUCER:</span>
+                    <span 
+                      className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
+                      style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
+                    >PRODUCER:</span>
                     <span 
                       contentEditable
                       suppressContentEditableWarning
-                      className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text min-w-[120px]"
+                      className="casting-card-producer-name px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text min-w-[120px]"
+                      style={{ backgroundColor: '#facc15', color: '#000000' }}
                       onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
                     >{cardData.producerName || 'INSERT NAME'}</span>
                     <button
@@ -2334,7 +2372,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <div className="w-64 flex-shrink-0">
                     {/* Main photo - with zoom and position controls */}
                     <div 
-                      className="border-4 border-amber-500 rounded-lg overflow-hidden bg-gray-100 relative group"
+                      className="casting-card-photo-border rounded-lg overflow-hidden relative group"
+                      style={{ border: '4px solid #f59e0b', backgroundColor: '#f3f4f6' }}
                       data-testid="upload-main-photo-preview"
                     >
                       {/* Photo with zoom/pan applied */}
@@ -2792,11 +2831,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     {/* Producer - matching PowerPoint style */}
                     {cardData.showProducer !== false ? (
                       <div className="mt-6 flex items-center relative group w-fit">
-                        <span className="bg-gray-200 px-4 py-2 font-semibold text-sm border border-gray-300">PRODUCER:</span>
+                        <span 
+                          className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
+                          style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
+                        >PRODUCER:</span>
                         <span 
                           contentEditable
                           suppressContentEditableWarning
-                          className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text min-w-[120px]"
+                          className="casting-card-producer-name px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text min-w-[120px]"
+                          style={{ backgroundColor: '#facc15', color: '#000000' }}
                           onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
                           data-testid="edit-producer"
                         >{cardData.producerName || 'INSERT NAME'}</span>
