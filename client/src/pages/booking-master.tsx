@@ -11,6 +11,20 @@ const hasMeaningfulMedicalNote = (value: string | undefined | null): boolean => 
   const trimmed = value.trim().toUpperCase();
   return trimmed !== '' && trimmed !== 'NA' && trimmed !== 'N/A' && trimmed !== 'N / A';
 };
+
+// Helper function to calculate age from birthdate
+const calculateAge = (birthdate: string | undefined | null): number | null => {
+  if (!birthdate) return null;
+  const birth = new Date(birthdate);
+  if (isNaN(birth.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+};
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -70,6 +84,7 @@ import * as XLSX from "xlsx";
 const COLUMN_CONFIG = [
   { id: "seat", label: "SEAT", alwaysVisible: true },
   { id: "name", label: "NAME", alwaysVisible: true },
+  { id: "age", label: "AGE", alwaysVisible: false },
   { id: "mobile", label: "MOBILE", alwaysVisible: false },
   { id: "email", label: "EMAIL", alwaysVisible: false },
   { id: "attendingWith", label: "ATTENDING WITH", alwaysVisible: false },
@@ -95,6 +110,7 @@ type ColumnId = typeof COLUMN_CONFIG[number]["id"];
 const DEFAULT_VISIBLE_COLUMNS: Record<ColumnId, boolean> = {
   seat: true,
   name: true,
+  age: true,
   mobile: true,
   email: true,
   attendingWith: true,
@@ -734,9 +750,15 @@ export default function BookingMaster() {
         return false;
       }
     }
-    // Filter by medical information (includes both Medical App and Medical AUD, excludes NA/N/A)
-    if (filterMedicalNotes && !hasMeaningfulMedicalNote(row.contestant?.medicalInfo) && !hasMeaningfulMedicalNote(row.contestant?.mobilityNotes)) {
-      return false;
+    // Filter by medical information (includes both Medical App and Medical AUD, excludes NA/N/A, OR age 70+)
+    if (filterMedicalNotes) {
+      const hasMedicalApp = hasMeaningfulMedicalNote(row.contestant?.medicalInfo);
+      const hasMedicalAud = hasMeaningfulMedicalNote(row.contestant?.mobilityNotes);
+      const age = calculateAge(row.contestant?.birthdate);
+      const isOver70 = age !== null && age >= 70;
+      if (!hasMedicalApp && !hasMedicalAud && !isOver70) {
+        return false;
+      }
     }
     // Filter to only show confirmed RSVP
     if (filterConfirmedOnly && !row.assignment?.confirmedRsvp) {
@@ -1192,7 +1214,7 @@ export default function BookingMaster() {
           <Button 
             onClick={() => setFilterMedicalNotes(!filterMedicalNotes)}
             variant={filterMedicalNotes ? "default" : "outline"}
-            title={filterMedicalNotes ? "Show all contestants" : "Show only contestants with medical notes (App or AUD)"}
+            title={filterMedicalNotes ? "Show all contestants" : "Show only contestants with medical notes (App or AUD) or age 70+"}
             data-testid="button-filter-medical-notes"
           >
             Show Medical Notes
@@ -1282,6 +1304,7 @@ export default function BookingMaster() {
                   <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 w-10 text-white font-semibold border-r border-purple-500 dark:border-purple-700">#</TableHead>
                   <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 w-16 text-white font-semibold border-r border-purple-500 dark:border-purple-700">STATUS</TableHead>
                   {isColumnVisible("name") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 min-w-[120px] text-white font-semibold border-r border-purple-500 dark:border-purple-700">NAME</TableHead>}
+                  {isColumnVisible("age") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 w-10 text-center text-white font-semibold border-r border-purple-500 dark:border-purple-700">AGE</TableHead>}
                   {isColumnVisible("mobile") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 min-w-[100px] text-white font-semibold border-r border-purple-500 dark:border-purple-700">MOBILE</TableHead>}
                   {isColumnVisible("email") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 w-48 min-w-[180px] text-white font-semibold border-r border-purple-500 dark:border-purple-700">EMAIL</TableHead>}
                   {isColumnVisible("attendingWith") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 text-white font-semibold border-r border-purple-500 dark:border-purple-700">ATTENDING<br/>WITH</TableHead>}
@@ -1314,11 +1337,13 @@ export default function BookingMaster() {
                       if (!nameMatch && !attendingWithMatch) return false;
                     }
                     
-                    // Medical notes filter (same logic as main table)
+                    // Medical notes filter (same logic as main table - includes medical notes OR age 70+)
                     if (filterMedicalNotes) {
                       const hasMedicalApp = hasMeaningfulMedicalNote(fullContestant?.medicalInfo);
                       const hasMedicalAud = hasMeaningfulMedicalNote(fullContestant?.mobilityNotes);
-                      if (!hasMedicalApp && !hasMedicalAud) return false;
+                      const age = calculateAge(fullContestant?.birthdate);
+                      const isOver70 = age !== null && age >= 70;
+                      if (!hasMedicalApp && !hasMedicalAud && !isOver70) return false;
                     }
                     
                     return true;
@@ -1379,6 +1404,18 @@ export default function BookingMaster() {
                                 </Button>
                               )}
                             </div>
+                          </TableCell>
+                        )}
+                        {isColumnVisible("age") && (
+                          <TableCell className="text-xs text-center py-0.5 h-7 w-10 border-r border-purple-200 dark:border-purple-800">
+                            {(() => {
+                              const age = calculateAge(contestant?.birthdate);
+                              return age !== null ? (
+                                <span className={age >= 70 ? "font-semibold text-orange-600 dark:text-orange-400" : ""}>
+                                  {age}
+                                </span>
+                              ) : "";
+                            })()}
                           </TableCell>
                         )}
                         {isColumnVisible("mobile") && <TableCell className="text-xs min-w-[120px] py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{standby.contestant.phone || ""}</TableCell>}
@@ -1556,6 +1593,7 @@ export default function BookingMaster() {
                   </TableHead>
                   {isColumnVisible("seat") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-14 text-white font-semibold whitespace-nowrap border-r border-gray-300 dark:border-gray-600">SEAT</TableHead>}
                   {isColumnVisible("name") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 min-w-[120px] text-white font-semibold border-r border-gray-300 dark:border-gray-600">NAME</TableHead>}
+                  {isColumnVisible("age") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-10 text-center text-white font-semibold border-r border-gray-300 dark:border-gray-600">AGE</TableHead>}
                   {isColumnVisible("mobile") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 min-w-[100px] text-white font-semibold border-r border-gray-300 dark:border-gray-600">MOBILE</TableHead>}
                   {isColumnVisible("email") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 w-48 min-w-[180px] text-white font-semibold border-r border-gray-300 dark:border-gray-600">EMAIL</TableHead>}
                   {isColumnVisible("attendingWith") && <TableHead className="sticky top-0 bg-[#00363a] dark:bg-[#002628] z-50 text-[10px] py-1 text-white font-semibold border-r border-gray-300 dark:border-gray-600">ATTENDING<br/>WITH</TableHead>}
@@ -1661,6 +1699,18 @@ export default function BookingMaster() {
                             ) : (
                               <span className="text-muted-foreground italic">Empty</span>
                             )}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("age") && (
+                          <TableCell className="text-xs text-center py-0.5 h-7 w-10 border-r border-gray-200 dark:border-gray-700">
+                            {(() => {
+                              const age = calculateAge(row.contestant?.birthdate);
+                              return age !== null ? (
+                                <span className={age >= 70 ? "font-semibold text-orange-600 dark:text-orange-400" : ""}>
+                                  {age}
+                                </span>
+                              ) : "";
+                            })()}
                           </TableCell>
                         )}
                         {isColumnVisible("mobile") && <TableCell className="text-xs min-w-[120px] py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">{row.contestant?.phone || ""}</TableCell>}
