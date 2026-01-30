@@ -1584,12 +1584,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
                 {/* Producer - matching PowerPoint style */}
                 {cardData.showProducer !== false ? (
-                  <div className="mt-6 flex items-center border border-gray-300 relative group">
-                    <span className="bg-gray-200 px-4 py-2 font-semibold text-sm border-r border-gray-300">PRODUCER:</span>
+                  <div className="mt-6 flex items-center relative group w-fit">
+                    <span className="bg-gray-200 px-4 py-2 font-semibold text-sm border border-gray-300">PRODUCER:</span>
                     <span 
                       contentEditable
                       suppressContentEditableWarning
-                      className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text w-40"
+                      className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text min-w-[120px]"
                       onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
                     >{cardData.producerName || 'INSERT NAME'}</span>
                     <button
@@ -2115,12 +2115,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
                     {/* Producer - matching PowerPoint style */}
                     {cardData.showProducer !== false ? (
-                      <div className="mt-6 flex items-center border border-gray-300 relative group">
-                        <span className="bg-gray-200 px-4 py-2 font-semibold text-sm border-r border-gray-300">PRODUCER:</span>
+                      <div className="mt-6 flex items-center relative group w-fit">
+                        <span className="bg-gray-200 px-4 py-2 font-semibold text-sm border border-gray-300">PRODUCER:</span>
                         <span 
                           contentEditable
                           suppressContentEditableWarning
-                          className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text w-40"
+                          className="bg-yellow-400 px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text min-w-[120px]"
                           onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
                           data-testid="edit-producer"
                         >{cardData.producerName || 'INSERT NAME'}</span>
