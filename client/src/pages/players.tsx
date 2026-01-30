@@ -1028,6 +1028,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.color = '#fcd34d';
             (el as HTMLElement).style.lineHeight = '50px';
             (el as HTMLElement).style.margin = '0';
+            (el as HTMLElement).style.marginTop = '-8px';
           });
           clonedDoc.querySelectorAll('.casting-card-sponsor').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#16a34a';
@@ -1220,6 +1221,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.color = '#fcd34d';
             (el as HTMLElement).style.lineHeight = '50px';
             (el as HTMLElement).style.margin = '0';
+            (el as HTMLElement).style.marginTop = '-8px';
           });
           clonedDoc.querySelectorAll('.casting-card-sponsor').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#16a34a';
@@ -1982,11 +1984,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     style={{ 
                       fontFamily: '"Century Gothic", sans-serif',
                       fontSize: '32px',
-                      lineHeight: '32px',
+                      lineHeight: '50px',
                       textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                       color: '#fcd34d',
                       margin: 0,
-                      padding: 0
+                      padding: 0,
+                      marginTop: '-8px'
                     }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
@@ -2671,11 +2674,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         style={{ 
                           fontFamily: '"Century Gothic", sans-serif',
                           fontSize: '32px',
-                          lineHeight: '32px',
+                          lineHeight: '50px',
                           textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                           color: '#fcd34d',
                           margin: 0,
-                          padding: 0
+                          padding: 0,
+                          marginTop: '-8px'
                         }}
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
