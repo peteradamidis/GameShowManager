@@ -1,4 +1,5 @@
 import { SeatingChart } from "@/components/seating-chart";
+import { getDistanceFromDocklands } from "@/components/contestant-table";
 import { WinningMoneyModal } from "@/components/winning-money-modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -238,6 +239,8 @@ export default function SeatingChartPage() {
   const [filterAge, setFilterAge] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterStandby, setFilterStandby] = useState<string>("all");
+  const [filterWithin20km, setFilterWithin20km] = useState(false);
+  const [filterWithin60km, setFilterWithin60km] = useState(false);
   
   // Cancel dialog state
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -564,9 +567,19 @@ export default function SeatingChartPage() {
         if (filterStandby === "not_available" && c.availableForStandby) return false;
       }
       
+      // Distance filters (from Docklands studio)
+      if (filterWithin20km) {
+        const distanceInfo = getDistanceFromDocklands(c.location);
+        if (!distanceInfo || distanceInfo.distance > 20) return false;
+      }
+      if (filterWithin60km) {
+        const distanceInfo = getDistanceFromDocklands(c.location);
+        if (!distanceInfo || distanceInfo.isOver60km) return false;
+      }
+      
       return true;
     });
-  }, [availableContestants, debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby]);
+  }, [availableContestants, debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km]);
 
   // Check if record day is locked (RX Day Mode)
   const isLocked = currentRecordDay?.lockedAt != null;
@@ -2020,6 +2033,32 @@ export default function SeatingChartPage() {
                         <SelectItem value="not_available">No</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                  
+                  {/* Distance filters */}
+                  <div className="flex items-center gap-3 ml-2 self-end pb-1">
+                    <div className="flex items-center gap-1.5">
+                      <Checkbox
+                        id="filter-within-20km"
+                        checked={filterWithin20km}
+                        onCheckedChange={(checked) => setFilterWithin20km(checked as boolean)}
+                        data-testid="checkbox-filter-within-20km"
+                      />
+                      <label htmlFor="filter-within-20km" className="text-xs cursor-pointer whitespace-nowrap">
+                        Within 20km
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Checkbox
+                        id="filter-within-60km"
+                        checked={filterWithin60km}
+                        onCheckedChange={(checked) => setFilterWithin60km(checked as boolean)}
+                        data-testid="checkbox-filter-within-60km"
+                      />
+                      <label htmlFor="filter-within-60km" className="text-xs cursor-pointer whitespace-nowrap">
+                        Within 60km
+                      </label>
+                    </div>
                   </div>
                   
                   <span className="ml-auto text-muted-foreground self-end pb-1">
