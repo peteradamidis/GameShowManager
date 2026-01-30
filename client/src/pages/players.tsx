@@ -153,12 +153,17 @@ interface CastingCardData {
   playStyle?: string | null;
   previousShows?: string | null;
   bulletPoints?: string[] | null;
+  // Single body text block (replaces individual bullet points for easier editing)
+  bodyText?: string | null;
   companionName?: string | null;
   companionRelationship?: string | null;
   companionPhotoUrl?: string | null;
   producerName?: string | null;
   showProducer?: boolean;
   showTagline?: boolean;
+  // Position offsets for draggable elements
+  taglineOffsetY?: number | null;
+  bodyOffsetY?: number | null;
   // Manual companions (up to 4)
   manualCompanions?: ManualCompanion[] | null;
   useManualCompanions?: boolean;
@@ -179,6 +184,23 @@ const defaultBulletPoints = [
   'How they might play game / Risk taker?',
   'Other game shows / prize money won / previously on DOND'
 ];
+
+// Default body text for new casting cards (single block format)
+const defaultBodyText = `• Energy Level – 3 out of 5 – this helps us when booking players for later in the day
+
+• Top line character points – we don't need to know if they are "bubbly/energetic/likable" as it doesn't really help. But if they have traits like – they just don't stop talking / they argue with their podium partner as they're bossy etc / infectious or funny laugh. That is stuff we can work with in an episode.
+
+• Meet story (if applicable)
+
+• 3 key stories/facts/interesting points
+
+• How much they want to win - $XX,XXX
+
+• What they'd do with prize money (high and low) - 100K and if they win only $1000
+
+• How they might play game / Risk taker?
+
+• Other game shows / prize money won / previously on DOND`;
 
 // LocalStorage backup key prefix
 const CARD_BACKUP_KEY = 'casting_card_backup_';
@@ -1546,7 +1568,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <div
                     contentEditable
                     suppressContentEditableWarning
-                    className="text-xl font-bold text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                    className="text-3xl font-bold text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
                     onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
                   >
                     {cardData.occupation || 'OCCUPATION'}
@@ -1561,21 +1583,47 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   </div>
                 </div>
 
-                {/* Tagline */}
+                {/* Tagline - draggable */}
                 {cardData.showTagline !== false ? (
-                  <div className="relative group">
-                    <h3 
-                      contentEditable
-                      suppressContentEditableWarning
-                      className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                      style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '31px', fontWeight: 'bold', marginTop: '-10px' }}
-                      onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
-                    >
-                      {cardData.tagline || 'SHORT TAGLINE'}
-                    </h3>
+                  <div 
+                    className="relative group cursor-move"
+                    style={{ 
+                      marginTop: `${(cardData.taglineOffsetY || 0) - 10}px`,
+                      transition: 'margin-top 0.1s ease-out'
+                    }}
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('text/plain', 'tagline');
+                      (e.target as HTMLElement).style.opacity = '0.5';
+                    }}
+                    onDragEnd={(e) => {
+                      (e.target as HTMLElement).style.opacity = '1';
+                    }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const rect = (e.target as HTMLElement).getBoundingClientRect();
+                      const offsetY = e.clientY - rect.top - rect.height / 2;
+                      updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) + offsetY);
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <GripVertical className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity print-hidden flex-shrink-0" />
+                      <h3 
+                        contentEditable
+                        suppressContentEditableWarning
+                        className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
+                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '31px', fontWeight: 'bold' }}
+                        onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
+                        {cardData.tagline || 'SHORT TAGLINE'}
+                      </h3>
+                    </div>
                     <button
                       onClick={() => updateField('showTagline', false)}
-                      className="absolute -top-1 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity print-hidden"
+                      className="absolute -top-1 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity print-hidden"
                       title="Remove tagline"
                     >
                       ×
@@ -1593,46 +1641,54 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   </Button>
                 )}
 
-                {/* Bullet points - dynamic with add/remove */}
-                <ul className="space-y-2" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '16px', marginTop: cardData.showTagline === false ? '-10px' : undefined }}>
-                  {(cardData.bulletPoints || defaultBulletPoints).map((point, index) => (
-                    <li key={index} className="flex items-start gap-3 group">
-                      <Circle className={`w-4 h-4 mt-1 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
-                      <span
-                        contentEditable
-                        suppressContentEditableWarning
-                        className={`outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-600 italic' : ''}`}
-                        onBlur={(e) => {
-                          const newPoints = [...(cardData.bulletPoints || defaultBulletPoints)];
-                          newPoints[index] = e.currentTarget.textContent || '';
-                          updateField('bulletPoints', newPoints);
-                        }}
-                      >{point}</span>
-                      <button
-                        onClick={() => {
-                          const newPoints = [...(cardData.bulletPoints || defaultBulletPoints)];
-                          newPoints.splice(index, 1);
-                          updateField('bulletPoints', newPoints);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1"
-                        title="Remove point"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                {/* Body text - single draggable text box */}
+                <div 
+                  className="relative group cursor-move"
+                  style={{ 
+                    marginTop: `${cardData.bodyOffsetY || 0}px`,
+                    transition: 'margin-top 0.1s ease-out'
+                  }}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('text/plain', 'body');
+                    (e.target as HTMLElement).style.opacity = '0.5';
+                  }}
+                  onDragEnd={(e) => {
+                    (e.target as HTMLElement).style.opacity = '1';
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const rect = (e.target as HTMLElement).getBoundingClientRect();
+                    const offsetY = e.clientY - rect.top - rect.height / 2;
+                    updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) + offsetY);
+                  }}
+                >
+                  <div className="flex items-start gap-2">
+                    <GripVertical className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity print-hidden flex-shrink-0 mt-1" />
+                    <div
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[200px]"
+                      style={{ fontFamily: 'Calibri, sans-serif', fontSize: '16px', lineHeight: '1.5' }}
+                      onBlur={(e) => updateField('bodyText', e.currentTarget.innerText || '')}
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
+                    />
+                  </div>
+                  <div className="absolute -top-2 right-0 opacity-0 group-hover:opacity-100 transition-opacity print-hidden text-xs text-gray-400">
+                    Drag to move
+                  </div>
+                </div>
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => {
-                    const newPoints = [...(cardData.bulletPoints || defaultBulletPoints), 'New point...'];
-                    updateField('bulletPoints', newPoints);
-                  }}
-                  className="mt-2 text-green-600 hover:text-green-700"
+                  onClick={() => updateField('bodyText', defaultBodyText)}
+                  className="mt-2 text-amber-600 hover:text-amber-700 print-hidden"
                 >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add Point
+                  <RotateCcw className="w-4 h-4 mr-1" />
+                  Reset to Default
                 </Button>
 
                 {/* Producer - matching PowerPoint style */}
@@ -2069,7 +2125,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div
                         contentEditable
                         suppressContentEditableWarning
-                        className="text-xl font-bold text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                        className="text-3xl font-bold text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
                         onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
                         data-testid="edit-occupation"
                       >
@@ -2086,22 +2142,48 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       </div>
                     </div>
 
-                    {/* Tagline */}
+                    {/* Tagline - draggable */}
                     {cardData.showTagline !== false ? (
-                      <div className="relative group">
-                        <h3 
-                          contentEditable
-                          suppressContentEditableWarning
-                          className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                          style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '31px', fontWeight: 'bold', marginTop: '-10px' }}
-                          onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
-                          data-testid="edit-tagline"
-                        >
-                          {cardData.tagline || 'SHORT TAGLINE'}
-                        </h3>
+                      <div 
+                        className="relative group cursor-move"
+                        style={{ 
+                          marginTop: `${(cardData.taglineOffsetY || 0) - 10}px`,
+                          transition: 'margin-top 0.1s ease-out'
+                        }}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('text/plain', 'tagline');
+                          (e.target as HTMLElement).style.opacity = '0.5';
+                        }}
+                        onDragEnd={(e) => {
+                          (e.target as HTMLElement).style.opacity = '1';
+                        }}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const rect = (e.target as HTMLElement).getBoundingClientRect();
+                          const offsetY = e.clientY - rect.top - rect.height / 2;
+                          updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) + offsetY);
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <GripVertical className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity print-hidden flex-shrink-0" />
+                          <h3 
+                            contentEditable
+                            suppressContentEditableWarning
+                            className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
+                            style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '31px', fontWeight: 'bold' }}
+                            onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            data-testid="edit-tagline"
+                          >
+                            {cardData.tagline || 'SHORT TAGLINE'}
+                          </h3>
+                        </div>
                         <button
                           onClick={() => updateField('showTagline', false)}
-                          className="absolute -top-1 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity print-hidden"
+                          className="absolute -top-1 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity print-hidden"
                           title="Remove tagline"
                           data-testid="btn-remove-tagline"
                         >
@@ -2121,49 +2203,56 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       </Button>
                     )}
 
-                    {/* Bullet points - dynamic with add/remove */}
-                    <ul className="space-y-2" style={{ fontFamily: 'Calibri, sans-serif', fontSize: '16px', marginTop: cardData.showTagline === false ? '-10px' : undefined }} data-testid="preview-details-list">
-                      {(cardData.bulletPoints || defaultBulletPoints).map((point, index) => (
-                        <li key={index} className="flex items-start gap-3 group">
-                          <Circle className={`w-4 h-4 mt-1 flex-shrink-0 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-500' : 'text-gray-400'}`} />
-                          <span
-                            contentEditable
-                            suppressContentEditableWarning
-                            className={`outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 ${index === (cardData.bulletPoints || defaultBulletPoints).length - 1 ? 'text-red-600 italic' : ''}`}
-                            onBlur={(e) => {
-                              const newPoints = [...(cardData.bulletPoints || defaultBulletPoints)];
-                              newPoints[index] = e.currentTarget.textContent || '';
-                              updateField('bulletPoints', newPoints);
-                            }}
-                            data-testid={`edit-bullet-${index}`}
-                          >{point}</span>
-                          <button
-                            onClick={() => {
-                              const newPoints = [...(cardData.bulletPoints || defaultBulletPoints)];
-                              newPoints.splice(index, 1);
-                              updateField('bulletPoints', newPoints);
-                            }}
-                            className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1"
-                            title="Remove point"
-                            data-testid={`btn-remove-bullet-${index}`}
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
+                    {/* Body text - single draggable text box */}
+                    <div 
+                      className="relative group cursor-move"
+                      style={{ 
+                        marginTop: `${cardData.bodyOffsetY || 0}px`,
+                        transition: 'margin-top 0.1s ease-out'
+                      }}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('text/plain', 'body');
+                        (e.target as HTMLElement).style.opacity = '0.5';
+                      }}
+                      onDragEnd={(e) => {
+                        (e.target as HTMLElement).style.opacity = '1';
+                      }}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const rect = (e.target as HTMLElement).getBoundingClientRect();
+                        const offsetY = e.clientY - rect.top - rect.height / 2;
+                        updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) + offsetY);
+                      }}
+                    >
+                      <div className="flex items-start gap-2">
+                        <GripVertical className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity print-hidden flex-shrink-0 mt-1" />
+                        <div
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[200px]"
+                          style={{ fontFamily: 'Calibri, sans-serif', fontSize: '16px', lineHeight: '1.5' }}
+                          onBlur={(e) => updateField('bodyText', e.currentTarget.innerText || '')}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
+                          data-testid="edit-body-text"
+                        />
+                      </div>
+                      <div className="absolute -top-2 right-0 opacity-0 group-hover:opacity-100 transition-opacity print-hidden text-xs text-gray-400">
+                        Drag to move
+                      </div>
+                    </div>
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => {
-                        const newPoints = [...(cardData.bulletPoints || defaultBulletPoints), 'New point...'];
-                        updateField('bulletPoints', newPoints);
-                      }}
-                      className="mt-2 text-green-600 hover:text-green-700"
-                      data-testid="btn-add-bullet"
+                      onClick={() => updateField('bodyText', defaultBodyText)}
+                      className="mt-2 text-amber-600 hover:text-amber-700 print-hidden"
+                      data-testid="btn-reset-body"
                     >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Add Point
+                      <RotateCcw className="w-4 h-4 mr-1" />
+                      Reset to Default
                     </Button>
 
                     {/* Producer - matching PowerPoint style */}
