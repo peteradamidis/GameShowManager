@@ -378,13 +378,20 @@ export default function Contestants() {
     return false;
   }, [selectedContestantsForLinking]);
 
+  // Check if any selected contestant is already assigned to a record day
+  const anySelectedHasSeatAssignment = useMemo(() => {
+    return selectedContestants.some(id => seatAssignmentMap.has(id));
+  }, [selectedContestants, seatAssignmentMap]);
+
   // Show "Link Together" only if:
   // - 2+ contestants selected
   // - None already have a groupId (or they're not all in the same group)
   // - NOT if they're all already in the same formal group
+  // - None are already assigned to a record day (use right-click linking instead)
   const canLinkSelected = selectedContestants.length >= 2 && 
     selectedContestantsForLinking.every(c => !c.groupId) &&
-    !allInSameGroup;
+    !allInSameGroup &&
+    !anySelectedHasSeatAssignment;
 
   // Check if a single selected contestant can be unlinked (has a groupId)
   const canUnlinkSelected = selectedContestants.length === 1 && 
@@ -442,7 +449,10 @@ export default function Contestants() {
   const australianStates = ['VIC', 'NSW', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'];
 
   // Determine which contestants to display
-  let displayedContestants = filterRecordDayId
+  // Important: When filtering by record day, only use filteredAvailability when it's fully loaded
+  // While loading, fall back to contestants to prevent empty search results during loading
+  const isAvailabilityFilterReady = shouldFetchAvailability && !loadingFiltered;
+  let displayedContestants = isAvailabilityFilterReady
     ? filteredAvailability
         .filter(item => !filterResponseValue || filterResponseValue === "all" || item.responseValue === filterResponseValue)
         .filter(item => !standbyForRecordDayIds.has(item.contestant.id))
@@ -2103,6 +2113,13 @@ export default function Contestants() {
                       <Link className="h-4 w-4 mr-2" />
                       {appearRelatedViaAttendingWith ? "Formally Link" : "Link Together"}
                     </Button>
+                  )}
+                  {anySelectedHasSeatAssignment && selectedContestants.length >= 2 && 
+                    selectedContestantsForLinking.every(c => !c.groupId) && !allInSameGroup && (
+                    <Badge variant="outline" className="border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-300 px-3 py-1" title="Use right-click on the seating chart to link seated contestants">
+                      <Link className="h-4 w-4 mr-2" />
+                      Use Seating Chart to Link
+                    </Badge>
                   )}
                   {allInSameGroup && selectedContestants.length >= 2 && (
                     <Badge variant="outline" className="border-green-300 text-green-700 dark:border-green-700 dark:text-green-300 px-3 py-1">

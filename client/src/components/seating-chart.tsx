@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   DndContext,
   closestCenter,
@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SeatCard, SeatData } from "./seat-card";
+import { SeatCard, SeatData, NeighborSeat } from "./seat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -197,6 +197,8 @@ function DraggableDroppableSeat({
   onPrizeWinner,
   onEditTempContestant,
   onDeleteTestSubject,
+  neighbors,
+  onLinkWithNeighbor,
 }: {
   seat: SeatData;
   blockIndex: number;
@@ -216,6 +218,8 @@ function DraggableDroppableSeat({
   onPrizeWinner?: (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => void;
   onEditTempContestant?: (contestantId: string) => void;
   onDeleteTestSubject?: (contestantId: string) => void;
+  neighbors?: NeighborSeat[];
+  onLinkWithNeighbor?: (contestantId: string, neighborContestantId: string) => void;
 }) {
   // Make occupied seats draggable
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
@@ -265,6 +269,8 @@ function DraggableDroppableSeat({
         onPrizeWinner={onPrizeWinner}
         onEditTempContestant={onEditTempContestant}
         onDeleteTestSubject={onDeleteTestSubject}
+        neighbors={neighbors}
+        onLinkWithNeighbor={onLinkWithNeighbor}
       />
     </div>
   );
@@ -659,6 +665,8 @@ function SeatingBlock({
   blockType,
   onBlockTypeChange,
   isPodiumVisualizerMode = false,
+  getNeighborsForSeat,
+  onLinkWithNeighbor,
 }: { 
   block: SeatData[]; 
   blockIndex: number;
@@ -682,6 +690,8 @@ function SeatingBlock({
   blockType?: 'PB' | 'NPB';
   onBlockTypeChange?: (blockNumber: number, newType: 'PB' | 'NPB') => void;
   isPodiumVisualizerMode?: boolean;
+  getNeighborsForSeat?: (blockIndex: number, seatIndex: number) => NeighborSeat[];
+  onLinkWithNeighbor?: (contestantId: string, neighborContestantId: string) => void;
 }) {
   const stats = calculateBlockStats(block);
 
@@ -924,6 +934,8 @@ function SeatingBlock({
                           onPrizeWinner={onPrizeWinner}
                           onEditTempContestant={onEditTempContestant}
                           onDeleteTestSubject={onDeleteTestSubject}
+                          neighbors={getNeighborsForSeat?.(blockIndex, absoluteSeatIdx) || []}
+                          onLinkWithNeighbor={onLinkWithNeighbor}
                         />
                         {/* Horizontal link to next seat in same row */}
                         {hasLinkToNext && (
@@ -1171,6 +1183,94 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
       });
     },
   });
+
+  // Mutation to link two contestants together
+  const linkContestantsMutation = useMutation({
+    mutationFn: async ({ contestantId, neighborContestantId }: { contestantId: string; neighborContestantId: string }) => {
+      // Find the contestants to check if either is already in a group
+      const allSeats = blocks.flat();
+      const contestantSeat = allSeats.find(s => s.contestantId === contestantId);
+      const neighborSeat = allSeats.find(s => s.contestantId === neighborContestantId);
+      
+      // If neighbor already has a group, link contestant to that group
+      if (neighborSeat?.groupId) {
+        const response = await apiRequest('POST', `/api/contestants/${contestantId}/link-to-group`, {
+          groupId: neighborSeat.groupId,
+        });
+        return response.json();
+      }
+      // If contestant already has a group, link neighbor to that group
+      else if (contestantSeat?.groupId) {
+        const response = await apiRequest('POST', `/api/contestants/${neighborContestantId}/link-to-group`, {
+          groupId: contestantSeat.groupId,
+        });
+        return response.json();
+      }
+      // Neither in a group - create a new group with both
+      else {
+        const response = await apiRequest('POST', '/api/groups/manual', {
+          contestantIds: [contestantId, neighborContestantId],
+        });
+        return response.json();
+      }
+    },
+    onSuccess: (data) => {
+      // Refresh all relevant queries
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.includes('/api/seat-assignments');
+        }
+      });
+      onRefreshNeeded?.();
+      toast({
+        title: "Contestants Linked",
+        description: data.message || "The contestants have been linked into a group.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error linking contestants",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Helper to get neighbors for a seat (adjacent occupied seats in the same block)
+  const getNeighborsForSeat = useCallback((blockIndex: number, seatIndex: number): NeighborSeat[] => {
+    const block = blocks[blockIndex];
+    if (!block) return [];
+    
+    const neighbors: NeighborSeat[] = [];
+    
+    // Check adjacent seats (previous and next in the array)
+    // Since seats are arranged in rows, we check immediate neighbors
+    for (let offset = -1; offset <= 1; offset += 2) {
+      const neighborIdx = seatIndex + offset;
+      if (neighborIdx >= 0 && neighborIdx < block.length) {
+        const neighbor = block[neighborIdx];
+        if (neighbor.contestantId && neighbor.contestantName) {
+          neighbors.push({
+            contestantId: neighbor.contestantId,
+            contestantName: neighbor.contestantName,
+            groupId: neighbor.groupId,
+            blockNumber: blockIndex + 1,
+            seatLabel: neighbor.id.split('-').pop() || '',
+            photoUrl: neighbor.photoUrl,
+          });
+        }
+      }
+    }
+    
+    return neighbors;
+  }, [blocks]);
+
+  // Handler for linking with neighbor
+  const handleLinkWithNeighbor = useCallback((contestantId: string, neighborContestantId: string) => {
+    linkContestantsMutation.mutate({ contestantId, neighborContestantId });
+  }, [linkContestantsMutation]);
 
   const handleBlockTypeChange = (blockNumber: number, newType: 'PB' | 'NPB') => {
     updateBlockTypeMutation.mutate({ blockNumber, blockType: newType });
@@ -1714,6 +1814,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   blockType={blockTypeMap[idx + 1]}
                   onBlockTypeChange={handleBlockTypeChange}
                   isPodiumVisualizerMode={isPodiumVisualizerMode}
+                  getNeighborsForSeat={getNeighborsForSeat}
+                  onLinkWithNeighbor={handleLinkWithNeighbor}
                 />
               ))}
             </div>
@@ -1780,6 +1882,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     blockType={blockTypeMap[originalIdx + 1]}
                     onBlockTypeChange={handleBlockTypeChange}
                     isPodiumVisualizerMode={isPodiumVisualizerMode}
+                    getNeighborsForSeat={getNeighborsForSeat}
+                    onLinkWithNeighbor={handleLinkWithNeighbor}
                   />
                 );
               })}
@@ -1818,6 +1922,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   blockType={blockTypeMap[7]}
                   onBlockTypeChange={handleBlockTypeChange}
                   isPodiumVisualizerMode={isPodiumVisualizerMode}
+                  getNeighborsForSeat={getNeighborsForSeat}
+                  onLinkWithNeighbor={handleLinkWithNeighbor}
                 />
               </div>
               

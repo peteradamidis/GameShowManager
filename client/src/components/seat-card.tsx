@@ -18,7 +18,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert, Pencil, MessageSquare, UserCheck, Gift, Trash2, Check } from "lucide-react";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert, Pencil, MessageSquare, UserCheck, Gift, Trash2, Check, Link2 } from "lucide-react";
 import { getDistanceFromDocklands } from "@/components/contestant-table";
 
 // Helper function to check if a medical field has meaningful content (not NA/N/A/No/None/empty)
@@ -74,6 +84,16 @@ export interface SeatData {
   };
 }
 
+// Neighbor seat data for linking
+export interface NeighborSeat {
+  contestantId: string;
+  contestantName: string;
+  groupId?: string | null;
+  blockNumber: number;
+  seatLabel: string;
+  photoUrl?: string | null;
+}
+
 interface SeatCardProps {
   seat: SeatData;
   blockIndex: number;
@@ -92,6 +112,9 @@ interface SeatCardProps {
   onPrizeWinner?: (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => void;
   onEditTempContestant?: (contestantId: string) => void;
   onDeleteTestSubject?: (contestantId: string) => void;
+  // Neighbor linking props
+  neighbors?: NeighborSeat[];
+  onLinkWithNeighbor?: (contestantId: string, neighborContestantId: string) => void;
 }
 
 const groupColors = [
@@ -162,6 +185,8 @@ export function SeatCard({
   onPrizeWinner,
   onEditTempContestant,
   onDeleteTestSubject,
+  neighbors = [],
+  onLinkWithNeighbor,
 }: SeatCardProps) {
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [localNotes, setLocalNotes] = useState(seat.notes || '');
@@ -556,14 +581,26 @@ export function SeatCard({
     </Card>
   );
 
+  // Filter neighbors that can be linked (not already in the same group)
+  const linkableNeighbors = neighbors.filter(n => {
+    // Can't link with self
+    if (n.contestantId === seat.contestantId) return false;
+    // If both already in the same group, can't link
+    if (seat.groupId && n.groupId && seat.groupId === n.groupId) return false;
+    return true;
+  });
+  
   // Wrap occupied seats with HoverCard for details (disabled during drag)
   if (!isEmpty && !isGlobalDragging) {
     return (
       <>
-      <HoverCard openDelay={200} closeDelay={100}>
-        <HoverCardTrigger asChild>
-          {seatContent}
-        </HoverCardTrigger>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div>
+            <HoverCard openDelay={200} closeDelay={100}>
+              <HoverCardTrigger asChild>
+                {seatContent}
+              </HoverCardTrigger>
         <HoverCardContent 
           className="w-80 z-[100] max-h-[80vh] overflow-y-auto" 
           side="bottom" 
@@ -1077,7 +1114,55 @@ export function SeatCard({
             )}
           </div>
         </HoverCardContent>
-      </HoverCard>
+            </HoverCard>
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-56">
+          {linkableNeighbors.length > 0 && onLinkWithNeighbor && seat.contestantId && (
+            <>
+              <ContextMenuSub>
+                <ContextMenuSubTrigger>
+                  <Link2 className="mr-2 h-4 w-4" />
+                  <span>Link with Neighbor</span>
+                </ContextMenuSubTrigger>
+                <ContextMenuSubContent className="w-56">
+                  {linkableNeighbors.map((neighbor) => (
+                    <ContextMenuItem
+                      key={neighbor.contestantId}
+                      onClick={() => onLinkWithNeighbor(seat.contestantId!, neighbor.contestantId)}
+                      data-testid={`context-link-neighbor-${neighbor.contestantId}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          {neighbor.photoUrl ? (
+                            <AvatarImage src={neighbor.photoUrl} className="object-cover" />
+                          ) : null}
+                          <AvatarFallback className="text-[10px]">
+                            {neighbor.contestantName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm truncate">{neighbor.contestantName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Block {neighbor.blockNumber} Seat {neighbor.seatLabel}
+                            {neighbor.groupId && ' (in group)'}
+                          </p>
+                        </div>
+                      </div>
+                    </ContextMenuItem>
+                  ))}
+                </ContextMenuSubContent>
+              </ContextMenuSub>
+              <ContextMenuSeparator />
+            </>
+          )}
+          {linkableNeighbors.length === 0 && (
+            <ContextMenuItem disabled>
+              <span className="text-muted-foreground text-xs">No neighbors to link with</span>
+            </ContextMenuItem>
+          )}
+        </ContextMenuContent>
+      </ContextMenu>
       <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
