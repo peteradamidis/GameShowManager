@@ -991,15 +991,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             .print-no-border {
               border: none !important;
             }
-            /* Force text colors for PDF rendering */
-            .text-yellow-300 {
+            /* Force casting card colors for PDF rendering */
+            .casting-card-name {
               color: #fcd34d !important;
             }
-            .text-green-600 {
+            .casting-card-sponsor {
               color: #16a34a !important;
             }
-            .text-amber-600 {
-              color: #d97706 !important;
+            .casting-card-tagline {
+              color: #dc2626 !important;
             }
           `;
           clonedDoc.head.appendChild(style);
@@ -1013,15 +1013,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             }
           });
           
-          // Fix text colors explicitly
-          clonedDoc.querySelectorAll('.text-yellow-300').forEach((el: Element) => {
+          // Fix casting card colors explicitly
+          clonedDoc.querySelectorAll('.casting-card-name').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#fcd34d';
           });
-          clonedDoc.querySelectorAll('.text-green-600').forEach((el: Element) => {
+          clonedDoc.querySelectorAll('.casting-card-sponsor').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#16a34a';
           });
-          clonedDoc.querySelectorAll('.text-amber-600').forEach((el: Element) => {
-            (el as HTMLElement).style.color = '#d97706';
+          clonedDoc.querySelectorAll('.casting-card-tagline').forEach((el: Element) => {
+            (el as HTMLElement).style.color = '#dc2626';
           });
           
           // Hide all elements with ignore-print class
@@ -1158,15 +1158,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             .print-no-border {
               border: none !important;
             }
-            /* Force text colors for print rendering */
-            .text-yellow-300 {
+            /* Force casting card colors for print rendering */
+            .casting-card-name {
               color: #fcd34d !important;
             }
-            .text-green-600 {
+            .casting-card-sponsor {
               color: #16a34a !important;
             }
-            .text-amber-600 {
-              color: #d97706 !important;
+            .casting-card-tagline {
+              color: #dc2626 !important;
             }
           `;
           clonedDoc.head.appendChild(style);
@@ -1180,15 +1180,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             }
           });
           
-          // Fix text colors explicitly
-          clonedDoc.querySelectorAll('.text-yellow-300').forEach((el: Element) => {
+          // Fix casting card colors explicitly
+          clonedDoc.querySelectorAll('.casting-card-name').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#fcd34d';
           });
-          clonedDoc.querySelectorAll('.text-green-600').forEach((el: Element) => {
+          clonedDoc.querySelectorAll('.casting-card-sponsor').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#16a34a';
           });
-          clonedDoc.querySelectorAll('.text-amber-600').forEach((el: Element) => {
-            (el as HTMLElement).style.color = '#d97706';
+          clonedDoc.querySelectorAll('.casting-card-tagline').forEach((el: Element) => {
+            (el as HTMLElement).style.color = '#dc2626';
           });
           
           // Hide all elements with ignore-print class
@@ -1920,12 +1920,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <h2 
                     contentEditable
                     suppressContentEditableWarning
-                    className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text text-yellow-300"
+                    className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name"
                     style={{ 
                       fontFamily: '"Century Gothic", sans-serif',
                       fontSize: '40px',
                       lineHeight: '1',
-                      textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)'
+                      textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
+                      color: '#fcd34d'
                     }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
@@ -1953,7 +1954,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <div
                     contentEditable
                     suppressContentEditableWarning
-                    className="text-lg text-green-600 font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                    className="text-lg font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text casting-card-sponsor"
+                    style={{ color: '#16a34a' }}
                     onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
                   >
                     {cardData.sponsorCategory || 'SPONSOR CATEGORY: X'}
@@ -1990,8 +1992,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <h3 
                         contentEditable
                         suppressContentEditableWarning
-                        className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '31px', fontWeight: 'bold' }}
+                        className="font-bold mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline"
+                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '31px', fontWeight: 'bold', color: '#dc2626' }}
                         onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                       >
                         {cardData.tagline || 'SHORT TAGLINE'}
@@ -2593,12 +2595,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <h2 
                         contentEditable
                         suppressContentEditableWarning
-                        className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text text-yellow-300"
+                        className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name"
                         style={{ 
                           fontFamily: '"Century Gothic", sans-serif',
                           fontSize: '40px',
                           lineHeight: '1',
-                          textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)'
+                          textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
+                          color: '#fcd34d'
                         }}
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
@@ -2629,7 +2632,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div
                         contentEditable
                         suppressContentEditableWarning
-                        className="text-lg text-green-600 font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                        className="text-lg font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text casting-card-sponsor"
+                        style={{ color: '#16a34a' }}
                         onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
                         data-testid="edit-sponsor"
                       >
@@ -2667,8 +2671,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           <h3 
                             contentEditable
                             suppressContentEditableWarning
-                            className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
-                            style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '31px', fontWeight: 'bold' }}
+                            className="font-bold mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline"
+                            style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '31px', fontWeight: 'bold', color: '#dc2626' }}
                             onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                             data-testid="edit-tagline"
                           >
