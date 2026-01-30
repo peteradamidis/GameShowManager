@@ -1678,15 +1678,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     />
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => updateField('bodyText', defaultBodyText)}
-                  className="mt-2 text-amber-600 hover:text-amber-700 print-hidden"
-                >
-                  <RotateCcw className="w-4 h-4 mr-1" />
-                  Reset to Default
-                </Button>
 
                 {/* Producer - matching PowerPoint style */}
                 {cardData.showProducer !== false ? (
@@ -2236,16 +2227,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         />
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => updateField('bodyText', defaultBodyText)}
-                      className="mt-2 text-amber-600 hover:text-amber-700 print-hidden"
-                      data-testid="btn-reset-body"
-                    >
-                      <RotateCcw className="w-4 h-4 mr-1" />
-                      Reset to Default
-                    </Button>
 
                     {/* Producer - matching PowerPoint style */}
                     {cardData.showProducer !== false ? (
