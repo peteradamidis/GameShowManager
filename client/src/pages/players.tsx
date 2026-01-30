@@ -171,6 +171,10 @@ interface CastingCardData {
   isReady?: boolean;
   // Main photo override (base64) - only affects casting card, not contestant record
   mainPhotoOverride?: string | null;
+  // Main photo positioning and zoom
+  mainPhotoZoom?: number | null;
+  mainPhotoOffsetX?: number | null;
+  mainPhotoOffsetY?: number | null;
 }
 
 // Default bullet points for new casting cards
@@ -1352,29 +1356,142 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   }}
                 />
                 
-                {/* Main photo - clickable to upload */}
+                {/* Main photo - with zoom and position controls */}
                 <div 
-                  className="border-4 border-amber-500 rounded-lg overflow-hidden bg-gray-100 relative group cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    mainPhotoInputRef.current?.click();
-                  }}
-                  data-testid="upload-main-photo"
+                  className="border-4 border-amber-500 rounded-lg overflow-hidden bg-gray-100 relative group"
+                  data-testid="main-photo-container"
                 >
-                  <Avatar className="w-full h-72 rounded-none pointer-events-none">
-                    <AvatarImage src={cardData.mainPhotoOverride || selectedContestant.photoUrl || undefined} className="object-cover" />
-                    <AvatarFallback className="text-6xl rounded-none bg-gray-200">{(selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'U').split(' ').map(n => n?.[0] || '').join('')}</AvatarFallback>
-                  </Avatar>
-                  {/* Upload overlay */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                    {uploadingPhotoFor === selectedContestant.id ? (
-                      <div className="text-white text-sm">Uploading...</div>
+                  {/* Photo with zoom/pan applied */}
+                  <div 
+                    className="w-full h-72 relative overflow-hidden"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {(cardData.mainPhotoOverride || selectedContestant.photoUrl) ? (
+                      <img 
+                        src={cardData.mainPhotoOverride || selectedContestant.photoUrl || ''} 
+                        alt={selectedContestant.name || 'Contestant'}
+                        className="object-cover pointer-events-none"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          transform: `scale(${cardData.mainPhotoZoom || 1}) translate(${cardData.mainPhotoOffsetX || 0}px, ${cardData.mainPhotoOffsetY || 0}px)`,
+                          transition: 'transform 0.15s ease-out',
+                        }}
+                      />
                     ) : (
-                      <div className="text-center text-white">
-                        <Upload className="w-8 h-8 mx-auto mb-1" />
-                        <span className="text-xs">Click to upload</span>
+                      <div className="w-full h-full flex items-center justify-center bg-gray-200 text-6xl text-gray-400">
+                        {(selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'U').split(' ').map(n => n?.[0] || '').join('')}
                       </div>
                     )}
+                  </div>
+                  
+                  {/* Photo controls overlay - visible on hover */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none print-hidden">
+                    {/* Upload button - top right */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        mainPhotoInputRef.current?.click();
+                      }}
+                      className="absolute top-2 right-2 bg-black/70 text-white p-2 rounded-lg hover:bg-black/90 pointer-events-auto"
+                      title="Upload new photo"
+                    >
+                      <Upload className="w-4 h-4" />
+                    </button>
+                    
+                    {/* Zoom controls - bottom left */}
+                    <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/70 rounded-lg p-1 pointer-events-auto">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateField('mainPhotoZoom', Math.max(0.5, (cardData.mainPhotoZoom || 1) - 0.1));
+                        }}
+                        className="text-white p-1 hover:bg-white/20 rounded"
+                        title="Zoom out"
+                      >
+                        <ZoomOut className="w-4 h-4" />
+                      </button>
+                      <span className="text-white text-xs px-1 min-w-[40px] text-center">
+                        {Math.round((cardData.mainPhotoZoom || 1) * 100)}%
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateField('mainPhotoZoom', Math.min(3, (cardData.mainPhotoZoom || 1) + 0.1));
+                        }}
+                        className="text-white p-1 hover:bg-white/20 rounded"
+                        title="Zoom in"
+                      >
+                        <ZoomIn className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    {/* Position controls - bottom right */}
+                    <div className="absolute bottom-2 right-2 bg-black/70 rounded-lg p-1 pointer-events-auto">
+                      <div className="grid grid-cols-3 gap-0.5">
+                        <div />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateField('mainPhotoOffsetY', (cardData.mainPhotoOffsetY || 0) + 5);
+                          }}
+                          className="text-white p-1 hover:bg-white/20 rounded"
+                          title="Move up"
+                        >
+                          <ChevronUp className="w-3 h-3" />
+                        </button>
+                        <div />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateField('mainPhotoOffsetX', (cardData.mainPhotoOffsetX || 0) + 5);
+                          }}
+                          className="text-white p-1 hover:bg-white/20 rounded"
+                          title="Move left"
+                        >
+                          <ChevronUp className="w-3 h-3 -rotate-90" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateField('mainPhotoZoom', 1);
+                            updateField('mainPhotoOffsetX', 0);
+                            updateField('mainPhotoOffsetY', 0);
+                          }}
+                          className="text-white p-0.5 hover:bg-white/20 rounded text-[8px]"
+                          title="Reset position"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateField('mainPhotoOffsetX', (cardData.mainPhotoOffsetX || 0) - 5);
+                          }}
+                          className="text-white p-1 hover:bg-white/20 rounded"
+                          title="Move right"
+                        >
+                          <ChevronUp className="w-3 h-3 rotate-90" />
+                        </button>
+                        <div />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateField('mainPhotoOffsetY', (cardData.mainPhotoOffsetY || 0) - 5);
+                          }}
+                          className="text-white p-1 hover:bg-white/20 rounded"
+                          title="Move down"
+                        >
+                          <ChevronUp className="w-3 h-3 rotate-180" />
+                        </button>
+                        <div />
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
@@ -1910,29 +2027,142 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <div className="flex gap-8">
                   {/* Left side - Photos */}
                   <div className="w-64 flex-shrink-0">
-                    {/* Main photo - clickable to upload */}
+                    {/* Main photo - with zoom and position controls */}
                     <div 
-                      className="border-4 border-amber-500 rounded-lg overflow-hidden bg-gray-100 relative group cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        mainPhotoInputRef.current?.click();
-                      }}
+                      className="border-4 border-amber-500 rounded-lg overflow-hidden bg-gray-100 relative group"
                       data-testid="upload-main-photo-preview"
                     >
-                      <Avatar className="w-full h-72 rounded-none pointer-events-none">
-                        <AvatarImage src={cardData.mainPhotoOverride || selectedContestant.photoUrl || undefined} className="object-cover" />
-                        <AvatarFallback className="text-6xl rounded-none bg-gray-200">{(selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'U').split(' ').map(n => n?.[0] || '').join('')}</AvatarFallback>
-                      </Avatar>
-                      {/* Upload overlay */}
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                        {uploadingPhotoFor === selectedContestant.id ? (
-                          <div className="text-white text-sm">Uploading...</div>
+                      {/* Photo with zoom/pan applied */}
+                      <div 
+                        className="w-full h-72 relative overflow-hidden"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {(cardData.mainPhotoOverride || selectedContestant.photoUrl) ? (
+                          <img 
+                            src={cardData.mainPhotoOverride || selectedContestant.photoUrl || ''} 
+                            alt={selectedContestant.name || 'Contestant'}
+                            className="object-cover pointer-events-none"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              transform: `scale(${cardData.mainPhotoZoom || 1}) translate(${cardData.mainPhotoOffsetX || 0}px, ${cardData.mainPhotoOffsetY || 0}px)`,
+                              transition: 'transform 0.15s ease-out',
+                            }}
+                          />
                         ) : (
-                          <div className="text-center text-white">
-                            <Upload className="w-8 h-8 mx-auto mb-1" />
-                            <span className="text-xs">Click to upload</span>
+                          <div className="w-full h-full flex items-center justify-center bg-gray-200 text-6xl text-gray-400">
+                            {(selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'U').split(' ').map(n => n?.[0] || '').join('')}
                           </div>
                         )}
+                      </div>
+                      
+                      {/* Photo controls overlay - visible on hover */}
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none print-hidden">
+                        {/* Upload button - top right */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            mainPhotoInputRef.current?.click();
+                          }}
+                          className="absolute top-2 right-2 bg-black/70 text-white p-2 rounded-lg hover:bg-black/90 pointer-events-auto"
+                          title="Upload new photo"
+                        >
+                          <Upload className="w-4 h-4" />
+                        </button>
+                        
+                        {/* Zoom controls - bottom left */}
+                        <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/70 rounded-lg p-1 pointer-events-auto">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateField('mainPhotoZoom', Math.max(0.5, (cardData.mainPhotoZoom || 1) - 0.1));
+                            }}
+                            className="text-white p-1 hover:bg-white/20 rounded"
+                            title="Zoom out"
+                          >
+                            <ZoomOut className="w-4 h-4" />
+                          </button>
+                          <span className="text-white text-xs px-1 min-w-[40px] text-center">
+                            {Math.round((cardData.mainPhotoZoom || 1) * 100)}%
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateField('mainPhotoZoom', Math.min(3, (cardData.mainPhotoZoom || 1) + 0.1));
+                            }}
+                            className="text-white p-1 hover:bg-white/20 rounded"
+                            title="Zoom in"
+                          >
+                            <ZoomIn className="w-4 h-4" />
+                          </button>
+                        </div>
+                        
+                        {/* Position controls - bottom right */}
+                        <div className="absolute bottom-2 right-2 bg-black/70 rounded-lg p-1 pointer-events-auto">
+                          <div className="grid grid-cols-3 gap-0.5">
+                            <div />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateField('mainPhotoOffsetY', (cardData.mainPhotoOffsetY || 0) + 5);
+                              }}
+                              className="text-white p-1 hover:bg-white/20 rounded"
+                              title="Move up"
+                            >
+                              <ChevronUp className="w-3 h-3" />
+                            </button>
+                            <div />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateField('mainPhotoOffsetX', (cardData.mainPhotoOffsetX || 0) + 5);
+                              }}
+                              className="text-white p-1 hover:bg-white/20 rounded"
+                              title="Move left"
+                            >
+                              <ChevronUp className="w-3 h-3 -rotate-90" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateField('mainPhotoZoom', 1);
+                                updateField('mainPhotoOffsetX', 0);
+                                updateField('mainPhotoOffsetY', 0);
+                              }}
+                              className="text-white p-0.5 hover:bg-white/20 rounded text-[8px]"
+                              title="Reset position"
+                            >
+                              <RotateCcw className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateField('mainPhotoOffsetX', (cardData.mainPhotoOffsetX || 0) - 5);
+                              }}
+                              className="text-white p-1 hover:bg-white/20 rounded"
+                              title="Move right"
+                            >
+                              <ChevronUp className="w-3 h-3 rotate-90" />
+                            </button>
+                            <div />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateField('mainPhotoOffsetY', (cardData.mainPhotoOffsetY || 0) - 5);
+                              }}
+                              className="text-white p-1 hover:bg-white/20 rounded"
+                              title="Move down"
+                            >
+                              <ChevronUp className="w-3 h-3 rotate-180" />
+                            </button>
+                            <div />
+                          </div>
+                        </div>
                       </div>
                     </div>
                     
