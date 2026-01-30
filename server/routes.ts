@@ -285,11 +285,13 @@ function identifyGroups(contestants: any[]): Map<string, string[]> {
       
       if (candidates.length === 0) {
         // No exact match - try matching first name + last name separately
-        const targetParts = normalizedTarget.split(' ').filter(p => p.length > 2);
+        // Only match name parts with 4+ chars to reduce false positives
+        const targetParts = normalizedTarget.split(' ').filter(p => p.length >= 4);
         if (targetParts.length > 0) {
           normalizedNameToContestants.forEach((contestantList, normalizedName) => {
-            const nameParts = normalizedName.split(' ');
+            const nameParts = normalizedName.split(' ').filter(p => p.length >= 4);
             // Require matching first name OR last name (full word, not substring)
+            // Both parts must be 4+ chars to count
             const hasWordMatch = targetParts.some(tp => nameParts.includes(tp));
             if (hasWordMatch) {
               contestantList.forEach(c => {
@@ -305,15 +307,38 @@ function identifyGroups(contestants: any[]): Map<string, string[]> {
       if (candidates.length === 0) return;
       
       if (candidates.length === 1) {
-        // Single candidate - check for reciprocal mention
+        // Single candidate - check for reciprocal mention first (most reliable)
         const candidate = candidates[0];
         if (hasReciprocalMention(contestant, candidate)) {
           // Confirmed match - both parties list each other
           confirmedGroupMembers.add(candidate.id);
-        } else if (mentionsName(contestant.attendingWith, candidate.name)) {
-          // One-way mention - still add but lower confidence
-          // This is common when one person fills out the form more completely
-          confirmedGroupMembers.add(candidate.id);
+        } else {
+          // One-way mention - need additional evidence to confirm
+          // Check disambiguation score for supporting signals (phone, location, age)
+          const score = getDisambiguationScore(candidate, contestant);
+          
+          // Require at least SOME supporting evidence for single-candidate one-way matches
+          // Phone prefix (30 pts) or suburb match (25 pts) are strong indicators
+          if (score >= 25) {
+            // Strong supporting evidence (same household phone prefix, or same suburb)
+            confirmedGroupMembers.add(candidate.id);
+          } else if (score >= 10) {
+            // Moderate evidence (same state + age proximity) - log for manual review
+            ambiguousMatches.push({
+              source: contestant.name,
+              targetName,
+              candidates: [`${candidate.name} (id:${candidate.id}, score:${score})`],
+              reason: 'One-way mention with moderate disambiguation score - needs manual confirmation'
+            });
+          } else {
+            // No supporting evidence - flag for manual review, don't auto-link
+            ambiguousMatches.push({
+              source: contestant.name,
+              targetName,
+              candidates: [`${candidate.name} (id:${candidate.id}, score:${score})`],
+              reason: 'One-way mention only - no reciprocal mention or supporting signals'
+            });
+          }
         }
       } else {
         // Multiple candidates with same/similar name - need disambiguation
