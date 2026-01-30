@@ -1112,6 +1112,21 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             if (!htmlImg.style.objectFit) {
               htmlImg.style.objectFit = 'cover';
             }
+            // Force visibility for all images
+            htmlImg.style.display = 'block';
+            htmlImg.style.visibility = 'visible';
+            htmlImg.style.opacity = '1';
+          });
+          
+          // Fix main photo specifically - ensure it renders with proper dimensions
+          clonedDoc.querySelectorAll('.casting-card-photo-border img').forEach((img: Element) => {
+            const htmlImg = img as HTMLImageElement;
+            htmlImg.style.width = '100%';
+            htmlImg.style.height = '100%';
+            htmlImg.style.objectFit = 'cover';
+            htmlImg.style.display = 'block';
+            htmlImg.style.visibility = 'visible';
+            htmlImg.style.opacity = '1';
           });
           
           // Fix Avatar images - Radix Avatar uses conditional rendering that doesn't transfer during cloning
@@ -1352,6 +1367,21 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             if (!htmlImg.style.objectFit) {
               htmlImg.style.objectFit = 'cover';
             }
+            // Force visibility for all images
+            htmlImg.style.display = 'block';
+            htmlImg.style.visibility = 'visible';
+            htmlImg.style.opacity = '1';
+          });
+          
+          // Fix main photo specifically - ensure it renders with proper dimensions
+          clonedDoc.querySelectorAll('.casting-card-photo-border img').forEach((img: Element) => {
+            const htmlImg = img as HTMLImageElement;
+            htmlImg.style.width = '100%';
+            htmlImg.style.height = '100%';
+            htmlImg.style.objectFit = 'cover';
+            htmlImg.style.display = 'block';
+            htmlImg.style.visibility = 'visible';
+            htmlImg.style.opacity = '1';
           });
           
           // Fix Avatar images - Radix Avatar uses conditional rendering that doesn't transfer during cloning
