@@ -410,6 +410,7 @@ export default function ReschedulePage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="reschedule">Reschedule</SelectItem>
                   <SelectItem value="assigned">Assigned</SelectItem>
                   <SelectItem value="invited">Invited</SelectItem>
                   <SelectItem value="confirmed">Confirmed</SelectItem>
