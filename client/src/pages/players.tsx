@@ -1982,7 +1982,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     style={{ 
                       fontFamily: '"Century Gothic", sans-serif',
                       fontSize: '32px',
-                      lineHeight: '44px',
+                      lineHeight: '32px',
                       textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                       color: '#fcd34d',
                       margin: 0,
@@ -2671,7 +2671,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         style={{ 
                           fontFamily: '"Century Gothic", sans-serif',
                           fontSize: '32px',
-                          lineHeight: '44px',
+                          lineHeight: '32px',
                           textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                           color: '#fcd34d',
                           margin: 0,
