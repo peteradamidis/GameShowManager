@@ -1992,7 +1992,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
-                  <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain" />
+                  <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain ml-auto" />
                 </div>
 
                 {/* Age and details - all editable */}
@@ -2682,7 +2682,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
                       >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
-                      <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain" />
+                      <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain ml-auto" />
                     </div>
 
                     {/* Age and details - all editable */}
