@@ -950,14 +950,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           background-color: inherit !important;
           border-color: inherit !important;
         }
-        /* Casting card specific colors - must override inherit */
-        .casting-card-header { background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important; }
-        .casting-card-name { color: #fcd34d !important; }
-        .casting-card-sponsor { color: #16a34a !important; }
-        .casting-card-tagline { color: #dc2626 !important; }
-        .casting-card-producer-label { background-color: #e5e7eb !important; border: 1px solid #d1d5db !important; color: #000000 !important; }
-        .casting-card-producer-name { background-color: #facc15 !important; color: #000000 !important; }
-        .casting-card-photo-border { border: 4px solid #f59e0b !important; background-color: #f3f4f6 !important; }
+        /* Casting card specific colors - must override inherit with higher specificity */
+        #casting-card-preview .casting-card-header { background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important; }
+        #casting-card-preview .casting-card-name { color: #fcd34d !important; }
+        #casting-card-preview .casting-card-sponsor { color: #16a34a !important; }
+        #casting-card-preview .casting-card-tagline { color: #dc2626 !important; }
+        #casting-card-preview .casting-card-producer-label { background-color: #e5e7eb !important; border: 1px solid #d1d5db !important; color: #000000 !important; }
+        #casting-card-preview .casting-card-producer-name { background-color: #facc15 !important; color: #000000 !important; }
+        #casting-card-preview .casting-card-photo-border { border: 4px solid #f59e0b !important; background-color: #f3f4f6 !important; }
       `;
       document.head.appendChild(printOverrideStyle);
 
@@ -1144,14 +1144,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           background-color: inherit !important;
           border-color: inherit !important;
         }
-        /* Casting card specific colors - must override inherit */
-        .casting-card-header { background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important; }
-        .casting-card-name { color: #fcd34d !important; }
-        .casting-card-sponsor { color: #16a34a !important; }
-        .casting-card-tagline { color: #dc2626 !important; }
-        .casting-card-producer-label { background-color: #e5e7eb !important; border: 1px solid #d1d5db !important; color: #000000 !important; }
-        .casting-card-producer-name { background-color: #facc15 !important; color: #000000 !important; }
-        .casting-card-photo-border { border: 4px solid #f59e0b !important; background-color: #f3f4f6 !important; }
+        /* Casting card specific colors - must override inherit with higher specificity */
+        #casting-card-preview .casting-card-header { background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important; }
+        #casting-card-preview .casting-card-name { color: #fcd34d !important; }
+        #casting-card-preview .casting-card-sponsor { color: #16a34a !important; }
+        #casting-card-preview .casting-card-tagline { color: #dc2626 !important; }
+        #casting-card-preview .casting-card-producer-label { background-color: #e5e7eb !important; border: 1px solid #d1d5db !important; color: #000000 !important; }
+        #casting-card-preview .casting-card-producer-name { background-color: #facc15 !important; color: #000000 !important; }
+        #casting-card-preview .casting-card-photo-border { border: 4px solid #f59e0b !important; background-color: #f3f4f6 !important; }
       `;
       document.head.appendChild(printOverrideStyle);
       
