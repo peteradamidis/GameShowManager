@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -1583,40 +1583,39 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   </div>
                 </div>
 
-                {/* Tagline - draggable */}
+                {/* Tagline - with position controls */}
                 {cardData.showTagline !== false ? (
                   <div 
-                    className="relative group cursor-move"
+                    className="relative group"
                     style={{ 
                       marginTop: `${(cardData.taglineOffsetY || 0) - 10}px`,
-                      transition: 'margin-top 0.1s ease-out'
-                    }}
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData('text/plain', 'tagline');
-                      (e.target as HTMLElement).style.opacity = '0.5';
-                    }}
-                    onDragEnd={(e) => {
-                      (e.target as HTMLElement).style.opacity = '1';
-                    }}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      const rect = (e.target as HTMLElement).getBoundingClientRect();
-                      const offsetY = e.clientY - rect.top - rect.height / 2;
-                      updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) + offsetY);
+                      transition: 'margin-top 0.15s ease-out'
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      <GripVertical className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity print-hidden flex-shrink-0" />
+                      {/* Position controls */}
+                      <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden">
+                        <button 
+                          onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) - 10)}
+                          className="text-gray-400 hover:text-gray-600 p-0.5"
+                          title="Move up"
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) + 10)}
+                          className="text-gray-400 hover:text-gray-600 p-0.5"
+                          title="Move down"
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </button>
+                      </div>
                       <h3 
                         contentEditable
                         suppressContentEditableWarning
                         className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
                         style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '31px', fontWeight: 'bold' }}
                         onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
-                        onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => e.stopPropagation()}
                       >
                         {cardData.tagline || 'SHORT TAGLINE'}
                       </h3>
@@ -1641,44 +1640,40 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   </Button>
                 )}
 
-                {/* Body text - single draggable text box */}
+                {/* Body text - single text box with position controls */}
                 <div 
-                  className="relative group cursor-move"
+                  className="relative group"
                   style={{ 
                     marginTop: `${cardData.bodyOffsetY || 0}px`,
-                    transition: 'margin-top 0.1s ease-out'
-                  }}
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData('text/plain', 'body');
-                    (e.target as HTMLElement).style.opacity = '0.5';
-                  }}
-                  onDragEnd={(e) => {
-                    (e.target as HTMLElement).style.opacity = '1';
-                  }}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    const rect = (e.target as HTMLElement).getBoundingClientRect();
-                    const offsetY = e.clientY - rect.top - rect.height / 2;
-                    updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) + offsetY);
+                    transition: 'margin-top 0.15s ease-out'
                   }}
                 >
                   <div className="flex items-start gap-2">
-                    <GripVertical className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity print-hidden flex-shrink-0 mt-1" />
+                    {/* Position controls */}
+                    <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden mt-1">
+                      <button 
+                        onClick={() => updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) - 10)}
+                        className="text-gray-400 hover:text-gray-600 p-0.5"
+                        title="Move up"
+                      >
+                        <ChevronUp className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) + 10)}
+                        className="text-gray-400 hover:text-gray-600 p-0.5"
+                        title="Move down"
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+                    </div>
                     <div
                       contentEditable
                       suppressContentEditableWarning
                       className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[200px]"
                       style={{ fontFamily: 'Calibri, sans-serif', fontSize: '16px', lineHeight: '1.5' }}
                       onBlur={(e) => updateField('bodyText', e.currentTarget.innerText || '')}
-                      onClick={(e) => e.stopPropagation()}
-                      onMouseDown={(e) => e.stopPropagation()}
                       dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
                     />
-                  </div>
-                  <div className="absolute -top-2 right-0 opacity-0 group-hover:opacity-100 transition-opacity print-hidden text-xs text-gray-400">
-                    Drag to move
                   </div>
                 </div>
                 <Button
@@ -2142,40 +2137,39 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       </div>
                     </div>
 
-                    {/* Tagline - draggable */}
+                    {/* Tagline - with position controls */}
                     {cardData.showTagline !== false ? (
                       <div 
-                        className="relative group cursor-move"
+                        className="relative group"
                         style={{ 
                           marginTop: `${(cardData.taglineOffsetY || 0) - 10}px`,
-                          transition: 'margin-top 0.1s ease-out'
-                        }}
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('text/plain', 'tagline');
-                          (e.target as HTMLElement).style.opacity = '0.5';
-                        }}
-                        onDragEnd={(e) => {
-                          (e.target as HTMLElement).style.opacity = '1';
-                        }}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          const rect = (e.target as HTMLElement).getBoundingClientRect();
-                          const offsetY = e.clientY - rect.top - rect.height / 2;
-                          updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) + offsetY);
+                          transition: 'margin-top 0.15s ease-out'
                         }}
                       >
                         <div className="flex items-center gap-2">
-                          <GripVertical className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity print-hidden flex-shrink-0" />
+                          {/* Position controls */}
+                          <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden">
+                            <button 
+                              onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) - 10)}
+                              className="text-gray-400 hover:text-gray-600 p-0.5"
+                              title="Move up"
+                            >
+                              <ChevronUp className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) + 10)}
+                              className="text-gray-400 hover:text-gray-600 p-0.5"
+                              title="Move down"
+                            >
+                              <ChevronDown className="w-4 h-4" />
+                            </button>
+                          </div>
                           <h3 
                             contentEditable
                             suppressContentEditableWarning
                             className="font-bold text-red-600 mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1"
                             style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '31px', fontWeight: 'bold' }}
                             onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
-                            onClick={(e) => e.stopPropagation()}
-                            onMouseDown={(e) => e.stopPropagation()}
                             data-testid="edit-tagline"
                           >
                             {cardData.tagline || 'SHORT TAGLINE'}
@@ -2203,45 +2197,41 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       </Button>
                     )}
 
-                    {/* Body text - single draggable text box */}
+                    {/* Body text - single text box with position controls */}
                     <div 
-                      className="relative group cursor-move"
+                      className="relative group"
                       style={{ 
                         marginTop: `${cardData.bodyOffsetY || 0}px`,
-                        transition: 'margin-top 0.1s ease-out'
-                      }}
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData('text/plain', 'body');
-                        (e.target as HTMLElement).style.opacity = '0.5';
-                      }}
-                      onDragEnd={(e) => {
-                        (e.target as HTMLElement).style.opacity = '1';
-                      }}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        const rect = (e.target as HTMLElement).getBoundingClientRect();
-                        const offsetY = e.clientY - rect.top - rect.height / 2;
-                        updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) + offsetY);
+                        transition: 'margin-top 0.15s ease-out'
                       }}
                     >
                       <div className="flex items-start gap-2">
-                        <GripVertical className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity print-hidden flex-shrink-0 mt-1" />
+                        {/* Position controls */}
+                        <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden mt-1">
+                          <button 
+                            onClick={() => updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) - 10)}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Move up"
+                          >
+                            <ChevronUp className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) + 10)}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Move down"
+                          >
+                            <ChevronDown className="w-4 h-4" />
+                          </button>
+                        </div>
                         <div
                           contentEditable
                           suppressContentEditableWarning
                           className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[200px]"
                           style={{ fontFamily: 'Calibri, sans-serif', fontSize: '16px', lineHeight: '1.5' }}
                           onBlur={(e) => updateField('bodyText', e.currentTarget.innerText || '')}
-                          onClick={(e) => e.stopPropagation()}
-                          onMouseDown={(e) => e.stopPropagation()}
                           dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
                           data-testid="edit-body-text"
                         />
-                      </div>
-                      <div className="absolute -top-2 right-0 opacity-0 group-hover:opacity-100 transition-opacity print-hidden text-xs text-gray-400">
-                        Drag to move
                       </div>
                     </div>
                     <Button
