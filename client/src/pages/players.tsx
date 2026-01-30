@@ -4618,70 +4618,14 @@ export default function PlayersPage() {
             
             {isPlayer && (
               <div className="mt-3 flex items-center gap-2 flex-wrap">
-                {/* System-created casting card status */}
-                {(() => {
-                  const systemCard = c ? castingCardsMap.get(c.id) : null;
-                  if (systemCard) {
-                    // Determine badge color and text based on status
-                    const getBadgeStyle = () => {
-                      if (systemCard.isReady) return { className: "bg-green-600 text-white", text: "RX Ready" };
-                      if ((systemCard as any).isDraftComplete) return { className: "bg-blue-600 text-white", text: "Draft Complete" };
-                      return { className: "bg-amber-500 text-white", text: "In Progress" };
-                    };
-                    const badgeStyle = getBadgeStyle();
-                    return (
-                      <>
-                        <Badge className={badgeStyle.className}>
-                          <CreditCard className="h-3 w-3 mr-1" />
-                          {badgeStyle.text}
-                        </Badge>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 gap-1 text-xs"
-                          onClick={() => {
-                            setEditContestantId(c.id);
-                            setActiveTab('casting');
-                          }}
-                          data-testid={`button-edit-card-${assignment.id}`}
-                        >
-                          <CreditCard className="h-3.5 w-3.5" />
-                          Edit Card
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 gap-1 text-xs"
-                          onClick={() => handlePrintCard(c.id)}
-                          data-testid={`button-print-card-${assignment.id}`}
-                        >
-                          <Printer className="h-3.5 w-3.5" />
-                          Print
-                        </Button>
-                      </>
-                    );
-                  } else {
-                    return (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 gap-1 text-xs border-dashed"
-                        onClick={() => {
-                          setEditContestantId(c.id);
-                          setActiveTab('casting');
-                        }}
-                        data-testid={`button-create-card-${assignment.id}`}
-                      >
-                        <CreditCard className="h-3.5 w-3.5" />
-                        Create Card
-                      </Button>
-                    );
-                  }
-                })()}
-                
-                {/* Uploaded PowerPoint/PDF casting card */}
+                {/* Show PDF badge if PDF is uploaded, otherwise show system card status */}
                 {assignment.castingCardUrl ? (
+                  // PDF is uploaded - show PDF badge and controls
                   <>
+                    <Badge className="bg-purple-600 text-white">
+                      <FileText className="h-3 w-3 mr-1" />
+                      PDF Uploaded
+                    </Badge>
                     <Button
                       size="sm"
                       variant="outline"
@@ -4704,17 +4648,79 @@ export default function PlayersPage() {
                     </Button>
                   </>
                 ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 gap-1 text-xs"
-                    onClick={() => handleCastingCardUpload(assignment.id)}
-                    disabled={uploadCastingCardMutation.isPending}
-                    data-testid={`button-upload-casting-card-${assignment.id}`}
-                  >
-                    <Upload className="h-3.5 w-3.5" />
-                    Upload PDF
-                  </Button>
+                  // No PDF - show system card status or create card option
+                  <>
+                    {(() => {
+                      const systemCard = c ? castingCardsMap.get(c.id) : null;
+                      if (systemCard) {
+                        // Determine badge color and text based on status
+                        const getBadgeStyle = () => {
+                          if (systemCard.isReady) return { className: "bg-green-600 text-white", text: "RX Ready" };
+                          if ((systemCard as any).isDraftComplete) return { className: "bg-blue-600 text-white", text: "Draft Complete" };
+                          return { className: "bg-amber-500 text-white", text: "In Progress" };
+                        };
+                        const badgeStyle = getBadgeStyle();
+                        return (
+                          <>
+                            <Badge className={badgeStyle.className}>
+                              <CreditCard className="h-3 w-3 mr-1" />
+                              {badgeStyle.text}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 gap-1 text-xs"
+                              onClick={() => {
+                                setEditContestantId(c.id);
+                                setActiveTab('casting');
+                              }}
+                              data-testid={`button-edit-card-${assignment.id}`}
+                            >
+                              <CreditCard className="h-3.5 w-3.5" />
+                              Edit Card
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 gap-1 text-xs"
+                              onClick={() => handlePrintCard(c.id)}
+                              data-testid={`button-print-card-${assignment.id}`}
+                            >
+                              <Printer className="h-3.5 w-3.5" />
+                              Print
+                            </Button>
+                          </>
+                        );
+                      } else {
+                        return (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 gap-1 text-xs border-dashed"
+                            onClick={() => {
+                              setEditContestantId(c.id);
+                              setActiveTab('casting');
+                            }}
+                            data-testid={`button-create-card-${assignment.id}`}
+                          >
+                            <CreditCard className="h-3.5 w-3.5" />
+                            Create Card
+                          </Button>
+                        );
+                      }
+                    })()}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1 text-xs"
+                      onClick={() => handleCastingCardUpload(assignment.id)}
+                      disabled={uploadCastingCardMutation.isPending}
+                      data-testid={`button-upload-casting-card-${assignment.id}`}
+                    >
+                      <Upload className="h-3.5 w-3.5" />
+                      Upload PDF
+                    </Button>
+                  </>
                 )}
               </div>
             )}
