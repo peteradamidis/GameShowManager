@@ -1486,7 +1486,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           type="file"
           ref={mainPhotoInputRef}
           className="hidden"
-          accept="image/*"
+          accept="image/*,.heic,.heif,.webp,.avif"
           onChange={(e) => {
             try {
               const file = e.target.files?.[0];
@@ -1506,7 +1506,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             key={companion.id}
             type="file"
             className="hidden"
-            accept="image/*"
+            accept="image/*,.heic,.heif,.webp,.avif"
             ref={(el) => { companionPhotoRefs.current[companion.id] = el; }}
             onChange={(e) => {
               try {
@@ -1651,7 +1651,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   type="file"
                   ref={mainPhotoInputRef}
                   className="hidden"
-                  accept="image/*"
+                  accept="image/*,.heic,.heif,.webp,.avif"
                   onChange={(e) => {
                     try {
                       const file = e.target.files?.[0];
@@ -1827,7 +1827,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             <input
                               type="file"
                               className="hidden"
-                              accept="image/*"
+                              accept="image/*,.heic,.heif,.webp,.avif"
                               ref={(el) => { companionPhotoRefs.current[companion.id] = el; }}
                               onChange={(e) => {
                                 try {
