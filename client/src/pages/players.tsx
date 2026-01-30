@@ -1042,6 +1042,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       return;
     }
 
+    // Show reminder about landscape orientation
+    toast({ 
+      title: "Print Tip", 
+      description: "Select 'Landscape' orientation in the print dialog for correct formatting." 
+    });
+
     try {
       // Preload all images first
       await preloadImages(element);
@@ -1126,6 +1132,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         return;
       }
 
+      // Calculate image dimensions - A4 landscape is 297mm x 210mm (1.414:1 ratio)
+      const a4Width = 297; // mm
+      const a4Height = 210; // mm
+      
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -1133,50 +1143,73 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           <title>Casting Card - ${selectedContestant?.name || 'Print'}</title>
           <style>
             @page {
-              size: A4 landscape;
+              size: ${a4Width}mm ${a4Height}mm landscape;
               margin: 0;
             }
             @media print {
-              html, body {
+              @page {
+                size: landscape;
                 margin: 0;
-                padding: 0;
-                width: 297mm;
-                height: 210mm;
-                overflow: hidden;
+              }
+              html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                overflow: hidden !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
               }
+              .print-container {
+                width: 100vw !important;
+                height: 100vh !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+              }
               img {
-                width: 297mm !important;
-                height: 210mm !important;
-                object-fit: contain;
+                max-width: 100% !important;
+                max-height: 100% !important;
+                width: auto !important;
+                height: auto !important;
+                object-fit: contain !important;
               }
             }
             * { box-sizing: border-box; margin: 0; padding: 0; }
             html, body {
-              width: 297mm;
-              height: 210mm;
+              margin: 0;
+              padding: 0;
+              width: 100%;
+              height: 100vh;
               overflow: hidden;
               background: white;
             }
-            body {
+            .print-container {
+              width: 100%;
+              height: 100vh;
               display: flex;
               justify-content: center;
               align-items: center;
+              background: white;
             }
             img {
-              width: 297mm;
-              height: 210mm;
+              max-width: 100%;
+              max-height: 100vh;
               object-fit: contain;
               display: block;
             }
           </style>
         </head>
         <body>
-          <img src="${imgData}" />
+          <div class="print-container">
+            <img src="${imgData}" />
+          </div>
           <script>
             window.onload = function() {
-              setTimeout(function() { window.print(); }, 300);
+              // Alert user to select landscape orientation
+              setTimeout(function() { 
+                window.print(); 
+              }, 300);
             };
           </script>
         </body>
