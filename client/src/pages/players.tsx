@@ -1481,7 +1481,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                     <Avatar className="h-8 w-8 rounded border">
                                       <AvatarImage src={partner.photoUrl || undefined} className="object-cover object-top" />
                                       <AvatarFallback className="text-xs">
-                                        {partner.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || '?'}
+                                        {(partner.name || '?').split(' ').map(n => n?.[0] || '').join('').slice(0, 2) || '?'}
                                       </AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 min-w-0">
@@ -1746,7 +1746,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={c.photoUrl || undefined} />
-                    <AvatarFallback className="text-xs">{c.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    <AvatarFallback className="text-xs">{(c.name || '?').split(' ').map(n => n?.[0] || '').join('') || '?'}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{c.name}</p>
@@ -2002,7 +2002,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                         <Avatar className="h-8 w-8 rounded border">
                                           <AvatarImage src={partner.photoUrl || undefined} className="object-cover object-top" />
                                           <AvatarFallback className="text-xs">
-                                            {partner.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || '?'}
+                                            {(partner.name || '?').split(' ').map(n => n?.[0] || '').join('').slice(0, 2) || '?'}
                                           </AvatarFallback>
                                         </Avatar>
                                         <div className="flex-1 min-w-0">
@@ -4144,7 +4144,18 @@ export default function PlayersPage() {
         </TabsContent>
 
         <TabsContent value="casting" className="mt-0">
-          <CastingCardsTab contestants={contestants} initialContestantId={editContestantId} onClearInitial={() => setEditContestantId(null)} />
+          <SafeRender 
+            fallback={
+              <div className="flex flex-col items-center justify-center h-96 gap-4">
+                <div className="text-red-500 text-xl font-semibold">Casting Cards Error</div>
+                <p className="text-muted-foreground">An error occurred while loading the casting cards. Please refresh the page.</p>
+                <Button onClick={() => window.location.reload()}>Refresh Page</Button>
+              </div>
+            }
+            onError={(e) => console.error('CastingCardsTab crashed:', e)}
+          >
+            <CastingCardsTab contestants={contestants} initialContestantId={editContestantId} onClearInitial={() => setEditContestantId(null)} />
+          </SafeRender>
         </TabsContent>
       </Tabs>
     </div>
