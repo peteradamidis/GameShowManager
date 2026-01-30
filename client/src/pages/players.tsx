@@ -1988,8 +1988,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                       color: '#fcd34d',
                       margin: 0,
-                      padding: 0,
-                      marginTop: '-24px'
+                      padding: 0
                     }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
@@ -2678,8 +2677,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                           color: '#fcd34d',
                           margin: 0,
-                          padding: 0,
-                          marginTop: '-24px'
+                          padding: 0
                         }}
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
