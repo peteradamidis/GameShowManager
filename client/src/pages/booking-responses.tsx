@@ -1305,7 +1305,7 @@ export default function BookingResponses() {
                     <TableHead className="font-semibold">Priority</TableHead>
                     <TableHead className="font-semibold">Name</TableHead>
                     <TableHead className="font-semibold">Record Day</TableHead>
-                    <TableHead className="font-semibold">Email</TableHead>
+                    <TableHead className="font-semibold min-w-[200px]">Email</TableHead>
                     <TableHead className="font-semibold">Phone</TableHead>
                     <TableHead className="font-semibold text-center">Standby Status</TableHead>
                     <TableHead className="font-semibold text-center">Email Sent</TableHead>
@@ -1631,7 +1631,7 @@ export default function BookingResponses() {
                   <TableHead className="font-semibold text-xs">Attending<br/>With</TableHead>
                   <TableHead className="font-semibold text-xs whitespace-nowrap">Date /<br/>RX</TableHead>
                   <TableHead className="font-semibold text-xs">Seat</TableHead>
-                  <TableHead className="font-semibold text-xs">Email</TableHead>
+                  <TableHead className="font-semibold text-xs min-w-[200px]">Email</TableHead>
                   <TableHead className="font-semibold text-xs text-center">Sent</TableHead>
                   <TableHead className="font-semibold text-xs text-center">Status</TableHead>
                   <TableHead className="font-semibold text-xs text-center">Ticket</TableHead>
@@ -1720,7 +1720,7 @@ export default function BookingResponses() {
                         </span>
                       </TableCell>
                       <TableCell className="py-1">
-                        <span className="text-xs text-muted-foreground truncate max-w-[120px] block">
+                        <span className="text-xs text-muted-foreground">
                           {item.contestant?.email || "-"}
                         </span>
                       </TableCell>
