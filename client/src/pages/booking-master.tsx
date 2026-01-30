@@ -1286,6 +1286,7 @@ export default function BookingMaster() {
                   {isColumnVisible("email") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 w-48 min-w-[180px] text-white font-semibold border-r border-purple-500 dark:border-purple-700">EMAIL</TableHead>}
                   {isColumnVisible("attendingWith") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 text-white font-semibold border-r border-purple-500 dark:border-purple-700">ATTENDING<br/>WITH</TableHead>}
                   {isColumnVisible("location") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 text-white font-semibold border-r border-purple-500 dark:border-purple-700">LOCATION</TableHead>}
+                  {isColumnVisible("medicalQ") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 text-white font-semibold border-r border-purple-500 dark:border-purple-700">MEDICAL -<br/>APP</TableHead>}
                   {isColumnVisible("mobilityNotes") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 text-white font-semibold border-r border-purple-500 dark:border-purple-700">MEDICAL -<br/>AUD</TableHead>}
                   {isColumnVisible("criminal") && <TableHead className="sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 w-20 text-center text-white font-semibold border-r border-purple-500 dark:border-purple-700">CRIMINAL /<br/>BANKRUPTCY</TableHead>}
                   {isColumnVisible("notes") && <TableHead className={`sticky top-0 bg-purple-700 dark:bg-purple-900 z-50 text-[10px] py-1 border-r-4 border-r-purple-400 text-white font-semibold ${isFullscreen ? 'min-w-[200px]' : 'min-w-[300px]'}`}>NOTES</TableHead>}
@@ -1302,11 +1303,25 @@ export default function BookingMaster() {
               <TableBody>
                 {standbysForRecordDay
                   .filter(standby => {
-                    if (!searchName) return true;
-                    const search = searchName.toLowerCase();
-                    const nameMatch = standby.contestant.name.toLowerCase().includes(search);
-                    const attendingWithMatch = standby.contestant.attendingWith?.toLowerCase().includes(search) || false;
-                    return nameMatch || attendingWithMatch;
+                    // Get full contestant data for filtering
+                    const fullContestant = contestants.find(c => c.id === standby.contestantId);
+                    
+                    // Name/attending with search filter
+                    if (searchName) {
+                      const search = searchName.toLowerCase();
+                      const nameMatch = standby.contestant.name.toLowerCase().includes(search);
+                      const attendingWithMatch = standby.contestant.attendingWith?.toLowerCase().includes(search) || false;
+                      if (!nameMatch && !attendingWithMatch) return false;
+                    }
+                    
+                    // Medical notes filter (same logic as main table)
+                    if (filterMedicalNotes) {
+                      const hasMedicalApp = hasMeaningfulMedicalNote(fullContestant?.medicalInfo);
+                      const hasMedicalAud = hasMeaningfulMedicalNote(fullContestant?.mobilityNotes);
+                      if (!hasMedicalApp && !hasMedicalAud) return false;
+                    }
+                    
+                    return true;
                   })
                   .map((standby, index) => {
                     const contestant = contestants.find(c => c.id === standby.contestantId);
@@ -1370,6 +1385,7 @@ export default function BookingMaster() {
                         {isColumnVisible("email") && <TableCell className="text-xs py-0.5 h-7 w-48 min-w-[180px] truncate border-r border-purple-200 dark:border-purple-800" title={standby.contestant.email || ""}>{standby.contestant.email || ""}</TableCell>}
                         {isColumnVisible("attendingWith") && <TableCell className="text-xs py-0.5 h-7 min-w-[140px] border-r border-purple-200 dark:border-purple-800">{contestant?.attendingWith || ""}</TableCell>}
                         {isColumnVisible("location") && <TableCell className="text-xs py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{contestant?.location || ""}</TableCell>}
+                        {isColumnVisible("medicalQ") && <TableCell className="text-xs py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{contestant?.medicalInfo || ""}</TableCell>}
                         {isColumnVisible("mobilityNotes") && <TableCell className="text-xs py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{contestant?.mobilityNotes || ""}</TableCell>}
                         {isColumnVisible("criminal") && <TableCell className="text-xs py-0.5 h-7 w-20 text-center border-r border-purple-200 dark:border-purple-800">{contestant?.criminalRecord || ""}</TableCell>}
                         {isColumnVisible("notes") && (
