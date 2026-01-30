@@ -951,6 +951,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           border-color: inherit !important;
         }
         /* Casting card specific colors - must override inherit */
+        .casting-card-header { background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important; }
         .casting-card-name { color: #fcd34d !important; }
         .casting-card-sponsor { color: #16a34a !important; }
         .casting-card-tagline { color: #dc2626 !important; }
@@ -1016,9 +1017,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             }
           });
           
-          // Fix casting card colors explicitly
+          // Fix casting card header and colors explicitly
+          clonedDoc.querySelectorAll('.casting-card-header').forEach((el: Element) => {
+            (el as HTMLElement).style.background = 'linear-gradient(to right, #b45309, #d97706, #f59e0b)';
+          });
           clonedDoc.querySelectorAll('.casting-card-name').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#fcd34d';
+            (el as HTMLElement).style.lineHeight = '50px';
+            (el as HTMLElement).style.margin = '0';
           });
           clonedDoc.querySelectorAll('.casting-card-sponsor').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#16a34a';
@@ -1122,6 +1128,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           border-color: inherit !important;
         }
         /* Casting card specific colors - must override inherit */
+        .casting-card-header { background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important; }
         .casting-card-name { color: #fcd34d !important; }
         .casting-card-sponsor { color: #16a34a !important; }
         .casting-card-tagline { color: #dc2626 !important; }
@@ -1186,9 +1193,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             }
           });
           
-          // Fix casting card colors explicitly
+          // Fix casting card header and colors explicitly
+          clonedDoc.querySelectorAll('.casting-card-header').forEach((el: Element) => {
+            (el as HTMLElement).style.background = 'linear-gradient(to right, #b45309, #d97706, #f59e0b)';
+          });
           clonedDoc.querySelectorAll('.casting-card-name').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#fcd34d';
+            (el as HTMLElement).style.lineHeight = '50px';
+            (el as HTMLElement).style.margin = '0';
           });
           clonedDoc.querySelectorAll('.casting-card-sponsor').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#16a34a';
@@ -1922,7 +1934,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               {/* Right side - Details */}
               <div className="flex-1">
                 {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-6 pr-4 rounded-l flex items-center justify-between mb-4" style={{ height: '50px' }}>
+                <div 
+                  className="pl-6 pr-4 rounded-l flex items-center justify-between mb-4 casting-card-header" 
+                  style={{ 
+                    height: '50px',
+                    background: 'linear-gradient(to right, #b45309, #d97706, #f59e0b)'
+                  }}
+                >
                   <h2 
                     contentEditable
                     suppressContentEditableWarning
@@ -1930,9 +1948,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     style={{ 
                       fontFamily: '"Century Gothic", sans-serif',
                       fontSize: '40px',
-                      lineHeight: '1',
+                      lineHeight: '50px',
                       textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
-                      color: '#fcd34d'
+                      color: '#fcd34d',
+                      margin: 0,
+                      padding: 0,
+                      display: 'flex',
+                      alignItems: 'center'
                     }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
@@ -2597,7 +2619,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   {/* Right side - Details */}
                   <div className="flex-1">
                     {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
-                    <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500 pl-4 pr-4 rounded-l flex items-center justify-between mb-4" style={{ height: '50px' }} data-testid="preview-header-banner">
+                    <div 
+                      className="pl-4 pr-4 rounded-l flex items-center justify-between mb-4 casting-card-header" 
+                      style={{ 
+                        height: '50px',
+                        background: 'linear-gradient(to right, #b45309, #d97706, #f59e0b)'
+                      }} 
+                      data-testid="preview-header-banner"
+                    >
                       <h2 
                         contentEditable
                         suppressContentEditableWarning
@@ -2605,9 +2634,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         style={{ 
                           fontFamily: '"Century Gothic", sans-serif',
                           fontSize: '40px',
-                          lineHeight: '1',
+                          lineHeight: '50px',
                           textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
-                          color: '#fcd34d'
+                          color: '#fcd34d',
+                          margin: 0,
+                          padding: 0,
+                          display: 'flex',
+                          alignItems: 'center'
                         }}
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
