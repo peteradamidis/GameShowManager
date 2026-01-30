@@ -58,7 +58,7 @@ export default function ReschedulePage() {
   const [filterOriginalRecordDayId, setFilterOriginalRecordDayId] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterType, setFilterType] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("rescheduled"); // filter by contestant state
+  const [filterStatus, setFilterStatus] = useState<string>("all"); // filter by contestant state
 
   const handleRowClick = (contestant: any) => {
     setSelectedContestant(contestant);
@@ -406,11 +406,10 @@ export default function ReschedulePage() {
               <Label htmlFor="filter-status" className="text-sm font-medium whitespace-nowrap">Status:</Label>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger id="filter-status" className="w-36" data-testid="select-filter-status">
-                  <SelectValue placeholder="Rescheduled" />
+                  <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="rescheduled">Rescheduled</SelectItem>
                   <SelectItem value="assigned">Assigned</SelectItem>
                   <SelectItem value="invited">Invited</SelectItem>
                   <SelectItem value="confirmed">Confirmed</SelectItem>
