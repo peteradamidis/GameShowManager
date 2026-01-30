@@ -790,12 +790,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const filteredContestants = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
     return contestants.filter(c => {
-      // Search matches full name - split search term to match first/last name separately too
+      // Search matches full name or email - split search term to match first/last name separately too
       const fullName = c.name.toLowerCase();
+      const email = (c.email || '').toLowerCase();
       const searchTerms = term.split(/\s+/).filter(Boolean);
       const matchesSearch = term === '' || 
         fullName.includes(term) || // Match full search term anywhere in name
-        searchTerms.every(t => fullName.includes(t)); // Or match all words individually
+        email.includes(term) || // Match email
+        searchTerms.every(t => fullName.includes(t) || email.includes(t)); // Or match all words individually
       const matchesRating = ratingFilter === 'all' || 
         c.auditionRating?.toUpperCase() === ratingFilter.toUpperCase();
       const matchesGender = genderFilter === 'all' || 
@@ -1736,7 +1738,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by name..."
+                  placeholder="Search by name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8"
