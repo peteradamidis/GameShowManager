@@ -1046,14 +1046,20 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       const range = selection.getRangeAt(0);
       if (range.collapsed) return;
       
-      const span = document.createElement('span');
-      span.style.fontSize = `${size}px`;
+      // Use execCommand with a font size, then find and replace the font tags
+      // execCommand fontSize uses values 1-7, we'll use 7 as a marker
+      document.execCommand('fontSize', false, '7');
       
-      try {
-        range.surroundContents(span);
-      } catch (e) {
-        // If selection spans multiple elements, use execCommand fallback
-        document.execCommand('fontSize', false, '3');
+      // Find all font elements with size="7" and replace with span with actual size
+      const activeElement = document.activeElement;
+      if (activeElement) {
+        const fontElements = activeElement.querySelectorAll('font[size="7"]');
+        fontElements.forEach((font) => {
+          const span = document.createElement('span');
+          span.style.fontSize = `${size}px`;
+          span.innerHTML = font.innerHTML;
+          font.parentNode?.replaceChild(span, font);
+        });
       }
     } catch (error) {
       console.error('Error applying font size:', error);
