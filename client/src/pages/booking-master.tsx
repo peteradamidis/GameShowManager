@@ -11,20 +11,6 @@ const hasMeaningfulMedicalNote = (value: string | undefined | null): boolean => 
   const trimmed = value.trim().toUpperCase();
   return trimmed !== '' && trimmed !== 'NA' && trimmed !== 'N/A' && trimmed !== 'N / A';
 };
-
-// Helper function to calculate age from birthdate
-const calculateAge = (birthdate: string | undefined | null): number | null => {
-  if (!birthdate) return null;
-  const birth = new Date(birthdate);
-  if (isNaN(birth.getTime())) return null;
-  const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  return age;
-};
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -754,8 +740,7 @@ export default function BookingMaster() {
     if (filterMedicalNotes) {
       const hasMedicalApp = hasMeaningfulMedicalNote(row.contestant?.medicalInfo);
       const hasMedicalAud = hasMeaningfulMedicalNote(row.contestant?.mobilityNotes);
-      const age = calculateAge(row.contestant?.birthdate);
-      const isOver70 = age !== null && age >= 70;
+      const isOver70 = row.contestant?.age !== undefined && row.contestant?.age !== null && row.contestant.age >= 70;
       if (!hasMedicalApp && !hasMedicalAud && !isOver70) {
         return false;
       }
@@ -1341,8 +1326,7 @@ export default function BookingMaster() {
                     if (filterMedicalNotes) {
                       const hasMedicalApp = hasMeaningfulMedicalNote(fullContestant?.medicalInfo);
                       const hasMedicalAud = hasMeaningfulMedicalNote(fullContestant?.mobilityNotes);
-                      const age = calculateAge(fullContestant?.birthdate);
-                      const isOver70 = age !== null && age >= 70;
+                      const isOver70 = fullContestant?.age !== undefined && fullContestant?.age !== null && fullContestant.age >= 70;
                       if (!hasMedicalApp && !hasMedicalAud && !isOver70) return false;
                     }
                     
@@ -1408,14 +1392,11 @@ export default function BookingMaster() {
                         )}
                         {isColumnVisible("age") && (
                           <TableCell className="text-xs text-center py-0.5 h-7 w-10 border-r border-purple-200 dark:border-purple-800">
-                            {(() => {
-                              const age = calculateAge(contestant?.birthdate);
-                              return age !== null ? (
-                                <span className={age >= 70 ? "font-semibold text-orange-600 dark:text-orange-400" : ""}>
-                                  {age}
-                                </span>
-                              ) : "";
-                            })()}
+                            {contestant?.age !== undefined && contestant?.age !== null ? (
+                              <span className={contestant.age >= 70 ? "font-semibold text-orange-600 dark:text-orange-400" : ""}>
+                                {contestant.age}
+                              </span>
+                            ) : ""}
                           </TableCell>
                         )}
                         {isColumnVisible("mobile") && <TableCell className="text-xs min-w-[120px] py-0.5 h-7 border-r border-purple-200 dark:border-purple-800">{standby.contestant.phone || ""}</TableCell>}
@@ -1703,14 +1684,11 @@ export default function BookingMaster() {
                         )}
                         {isColumnVisible("age") && (
                           <TableCell className="text-xs text-center py-0.5 h-7 w-10 border-r border-gray-200 dark:border-gray-700">
-                            {(() => {
-                              const age = calculateAge(row.contestant?.birthdate);
-                              return age !== null ? (
-                                <span className={age >= 70 ? "font-semibold text-orange-600 dark:text-orange-400" : ""}>
-                                  {age}
-                                </span>
-                              ) : "";
-                            })()}
+                            {row.contestant?.age !== undefined && row.contestant?.age !== null ? (
+                              <span className={row.contestant.age >= 70 ? "font-semibold text-orange-600 dark:text-orange-400" : ""}>
+                                {row.contestant.age}
+                              </span>
+                            ) : ""}
                           </TableCell>
                         )}
                         {isColumnVisible("mobile") && <TableCell className="text-xs min-w-[120px] py-0.5 h-7 border-r border-gray-200 dark:border-gray-700">{row.contestant?.phone || ""}</TableCell>}
