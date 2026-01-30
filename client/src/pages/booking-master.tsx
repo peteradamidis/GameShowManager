@@ -892,7 +892,25 @@ export default function BookingMaster() {
   };
 
   const exportToExcel = () => {
-    if (!selectedRecordDay || bookingRows.length === 0) {
+    if (!selectedRecordDay) {
+      toast({
+        title: "No record day selected",
+        description: "Please select a record day to export",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check if there's any data to export (either booking rows or standbys)
+    const hasBookingData = bookingRows.some(row => row.assignment);
+    const hasStandbyData = standbysForRecordDay.length > 0;
+    
+    if (!hasBookingData && !hasStandbyData) {
+      toast({
+        title: "No data to export",
+        description: "No contestants match the current filters",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -1029,6 +1047,13 @@ export default function BookingMaster() {
     ];
 
     XLSX.writeFile(wb, `Booking-Master-${dayName}.xlsx`);
+    
+    const assignedCount = bookingRows.filter(r => r.assignment).length;
+    const standbyCount = standbysForRecordDay.length;
+    toast({
+      title: "Export complete",
+      description: `Exported ${assignedCount} contestants${standbyCount > 0 ? ` and ${standbyCount} standbys` : ""}`,
+    });
   };
 
   return (
