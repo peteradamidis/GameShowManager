@@ -42,11 +42,12 @@ declare module 'http' {
   }
 }
 app.use(express.json({
+  limit: '50mb', // Allow large payloads for casting card photos
   verify: (req, _res, buf) => {
     req.rawBody = buf;
   }
 }));
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 // Session middleware for authentication
 app.use(getSessionConfig());
