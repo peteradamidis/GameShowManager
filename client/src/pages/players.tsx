@@ -422,28 +422,31 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }, 1500);
   };
 
-  // Get linked group members for current contestant
+  // Get linked group members for current contestant - combines BOTH groupId and attendingWith sources
   const getLinkedPartners = (): Contestant[] => {
     if (!selectedContestant) return [];
     const groupId = selectedContestant.groupId;
     console.log(`[getLinkedPartners] Contestant: ${selectedContestant.name}, groupId: ${groupId}, attendingWith: ${selectedContestant.attendingWith}, contestants count: ${contestants.length}`);
     
-    // First, try to find partners via groupId (manually linked)
+    const partnersMap = new Map<string, Contestant>(); // Use map to dedupe by ID
+    
+    // Find partners via groupId (manually linked)
     if (groupId) {
-      const partners = contestants.filter(c => c.groupId === groupId && c.id !== selectedContestant.id);
-      console.log(`[getLinkedPartners] Found ${partners.length} partners via groupId: ${partners.map(p => p.name).join(', ')}`);
-      if (partners.length > 0) return partners;
+      const groupPartners = contestants.filter(c => c.groupId === groupId && c.id !== selectedContestant.id);
+      console.log(`[getLinkedPartners] Found ${groupPartners.length} partners via groupId: ${groupPartners.map(p => p.name).join(', ')}`);
+      groupPartners.forEach(p => partnersMap.set(p.id.toString(), p));
     }
     
-    // If no groupId or no partners found, try to find via attendingWith field
+    // Also find partners via attendingWith field (imported data)
     if (selectedContestant.attendingWith) {
       const partnerNames = getPartnerNames(selectedContestant.attendingWith);
-      console.log(`[getLinkedPartners] Trying attendingWith, partnerNames: ${partnerNames.join(', ')}`);
+      console.log(`[getLinkedPartners] Checking attendingWith, partnerNames: ${partnerNames.join(', ')}`);
       
       if (partnerNames.length > 0) {
         // Find contestants whose names match the partner names
         const attendingWithPartners = contestants.filter(c => {
           if (c.id === selectedContestant.id) return false;
+          if (partnersMap.has(c.id.toString())) return false; // Already found via groupId
           // Check if this contestant's name is mentioned in attendingWith
           return partnerNames.some(partnerName => {
             const name = c.name?.toLowerCase() || '';
@@ -451,21 +454,31 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             return name.includes(pName) || pName.includes(name.split(' ')[0]);
           });
         });
+        attendingWithPartners.forEach(p => partnersMap.set(p.id.toString(), p));
         
         // Also check for reciprocal mentions (they mention us in their attendingWith)
         const reciprocalPartners = contestants.filter(c => {
           if (c.id === selectedContestant.id) return false;
-          if (attendingWithPartners.some(p => p.id === c.id)) return false; // Already found
+          if (partnersMap.has(c.id.toString())) return false; // Already found
           return c.attendingWith && attendingWithMentionsName(c.attendingWith, selectedContestant.name || '');
         });
-        
-        const allPartners = [...attendingWithPartners, ...reciprocalPartners];
-        console.log(`[getLinkedPartners] Found ${allPartners.length} partners via attendingWith: ${allPartners.map(p => p.name).join(', ')}`);
-        return allPartners;
+        reciprocalPartners.forEach(p => partnersMap.set(p.id.toString(), p));
       }
     }
     
-    return [];
+    // Also check if anyone else has the same groupId as us (even if we don't have one set)
+    // This handles cases where we were linked TO someone but don't have our own groupId set
+    const othersWithOurName = contestants.filter(c => {
+      if (c.id === selectedContestant.id) return false;
+      if (partnersMap.has(c.id.toString())) return false;
+      // Check if they mention us in their attendingWith
+      return c.attendingWith && attendingWithMentionsName(c.attendingWith, selectedContestant.name || '');
+    });
+    othersWithOurName.forEach(p => partnersMap.set(p.id.toString(), p));
+    
+    const allPartners = Array.from(partnersMap.values());
+    console.log(`[getLinkedPartners] Total combined partners: ${allPartners.length} - ${allPartners.map(p => p.name).join(', ')}`);
+    return allPartners;
   };
 
   // Add a linked partner as companion
