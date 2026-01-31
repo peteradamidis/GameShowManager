@@ -259,6 +259,9 @@ function SafeRender({ children, fallback, onError }: {
   );
 }
 
+// Producer names for casting cards
+const PRODUCER_NAMES = ['Peter', 'Maggie', 'Kathleen', 'Lochie', 'Sean', 'Felicity', 'Margie', 'Neil', 'Casual'] as const;
+
 // Casting Cards Tab Component
 function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: { contestants: Contestant[]; initialContestantId?: string | null; onClearInitial?: () => void }) {
   const { toast } = useToast();
@@ -266,6 +269,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [ratingFilter, setRatingFilter] = useState<string>('A+');
   const [genderFilter, setGenderFilter] = useState<string>('all');
   const [cardStatusFilter, setCardStatusFilter] = useState<string>('all'); // all, draft_complete, rx_ready, in_progress
+  const [producerFilter, setProducerFilter] = useState<string>('all'); // Filter by producer name
   const [selectedContestant, setSelectedContestant] = useState<Contestant | null>(null);
   const [cardData, setCardData] = useState<CastingCardData | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -868,8 +872,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         c.gender.toLowerCase() === genderFilter.toLowerCase();
       
       // Card status filter - check against existing cards
+      const cardForContestant = allCastingCards?.find((card: any) => card.contestantId === c.id);
       if (cardStatusFilter !== 'all') {
-        const cardForContestant = allCastingCards?.find((card: any) => card.contestantId === c.id);
         if (cardStatusFilter === 'draft_complete') {
           if (!cardForContestant?.isDraftComplete) return false;
         } else if (cardStatusFilter === 'rx_ready') {
@@ -882,9 +886,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         }
       }
       
+      // Producer filter - check the producer name on the card
+      if (producerFilter !== 'all') {
+        if (!cardForContestant?.producerName) return false;
+        if (cardForContestant.producerName !== producerFilter) return false;
+      }
+      
       return matchesSearch && matchesRating && matchesGender;
     });
-  }, [contestants, searchTerm, ratingFilter, genderFilter, cardStatusFilter, allCastingCards]);
+  }, [contestants, searchTerm, ratingFilter, genderFilter, cardStatusFilter, producerFilter, allCastingCards]);
 
   const handleSave = () => {
     if (cardData) {
@@ -2466,13 +2476,23 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
                       style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
                     >PRODUCER:</span>
-                    <span 
-                      contentEditable
-                      suppressContentEditableWarning
-                      className="casting-card-producer-name px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text min-w-[120px]"
-                      style={{ backgroundColor: '#facc15', color: '#000000' }}
-                      onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
-                    >{cardData.producerName || 'INSERT NAME'}</span>
+                    <Select 
+                      value={cardData.producerName || ''} 
+                      onValueChange={(value) => updateField('producerName', value)}
+                    >
+                      <SelectTrigger 
+                        className="casting-card-producer-name h-auto px-4 py-2 font-bold text-sm border-0 rounded-none min-w-[120px]"
+                        style={{ backgroundColor: '#facc15', color: '#000000' }}
+                        data-testid="select-producer-name"
+                      >
+                        <SelectValue placeholder="SELECT" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PRODUCER_NAMES.map(name => (
+                          <SelectItem key={name} value={name}>{name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <button
                       onClick={() => updateField('showProducer', false)}
                       className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -2552,6 +2572,19 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <SelectItem value="rx_ready">RX Ready</SelectItem>
                     <SelectItem value="in_progress">In Progress</SelectItem>
                     <SelectItem value="no_card">No Card</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                <Select value={producerFilter} onValueChange={setProducerFilter}>
+                  <SelectTrigger className="flex-1" data-testid="select-producer-filter">
+                    <SelectValue placeholder="Producer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Producers</SelectItem>
+                    {PRODUCER_NAMES.map(name => (
+                      <SelectItem key={name} value={name}>{name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -3188,17 +3221,26 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
                           style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
                         >PRODUCER:</span>
-                        <span 
-                          contentEditable
-                          suppressContentEditableWarning
-                          className="casting-card-producer-name px-4 py-2 font-bold text-sm outline-none hover:bg-yellow-300 focus:bg-yellow-300 cursor-text min-w-[120px]"
-                          style={{ backgroundColor: '#facc15', color: '#000000' }}
-                          onBlur={(e) => updateField('producerName', e.currentTarget.textContent || '')}
-                          data-testid="edit-producer"
-                        >{cardData.producerName || 'INSERT NAME'}</span>
+                        <Select 
+                          value={cardData.producerName || ''} 
+                          onValueChange={(value) => updateField('producerName', value)}
+                        >
+                          <SelectTrigger 
+                            className="casting-card-producer-name h-auto px-4 py-2 font-bold text-sm border-0 rounded-none min-w-[120px]"
+                            style={{ backgroundColor: '#facc15', color: '#000000' }}
+                            data-testid="select-producer-name-preview"
+                          >
+                            <SelectValue placeholder="SELECT" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PRODUCER_NAMES.map(name => (
+                              <SelectItem key={name} value={name}>{name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <button
                           onClick={() => updateField('showProducer', false)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity ignore-print print:hidden"
                           title="Remove producer field"
                           data-testid="btn-remove-producer"
                         >
