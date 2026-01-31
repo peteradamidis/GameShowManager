@@ -1099,11 +1099,20 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.minWidth = '256px';
           });
           
-          // Fix main photo container explicit dimensions
+          // Fix main photo container explicit dimensions - w-64 = 16rem = 256px
           clonedDoc.querySelectorAll('.w-64.flex-shrink-0').forEach((el: Element) => {
             (el as HTMLElement).style.width = '256px';
             (el as HTMLElement).style.minWidth = '256px';
+            (el as HTMLElement).style.maxWidth = '256px';
             (el as HTMLElement).style.flexShrink = '0';
+            (el as HTMLElement).style.flexBasis = '256px';
+          });
+          
+          // Fix the inner photo wrapper - h-72 = 18rem = 288px  
+          clonedDoc.querySelectorAll('.w-full.h-72').forEach((el: Element) => {
+            (el as HTMLElement).style.width = '100%';
+            (el as HTMLElement).style.height = '288px';
+            (el as HTMLElement).style.minHeight = '288px';
           });
           
           // Ensure all images have explicit dimensions and proper object-fit
@@ -1354,11 +1363,20 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.minWidth = '256px';
           });
           
-          // Fix main photo container explicit dimensions
+          // Fix main photo container explicit dimensions - w-64 = 16rem = 256px
           clonedDoc.querySelectorAll('.w-64.flex-shrink-0').forEach((el: Element) => {
             (el as HTMLElement).style.width = '256px';
             (el as HTMLElement).style.minWidth = '256px';
+            (el as HTMLElement).style.maxWidth = '256px';
             (el as HTMLElement).style.flexShrink = '0';
+            (el as HTMLElement).style.flexBasis = '256px';
+          });
+          
+          // Fix the inner photo wrapper - h-72 = 18rem = 288px  
+          clonedDoc.querySelectorAll('.w-full.h-72').forEach((el: Element) => {
+            (el as HTMLElement).style.width = '100%';
+            (el as HTMLElement).style.height = '288px';
+            (el as HTMLElement).style.minHeight = '288px';
           });
           
           // Ensure all images have explicit dimensions and proper object-fit
