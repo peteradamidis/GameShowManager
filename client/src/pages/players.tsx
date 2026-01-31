@@ -2209,9 +2209,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     );
                   })()}
                   
-                  {/* Add companion buttons */}
+                  {/* Add companion buttons - hidden in print */}
                   {(cardData.manualCompanions?.length || 0) < 4 && (
-                    <div className="flex items-center gap-2 mt-3 justify-center flex-wrap">
+                    <div className="flex items-center gap-2 mt-3 justify-center flex-wrap ignore-print print:hidden">
                       {/* Add from linked group members */}
                       {getLinkedPartners().length > 0 && (
                         <Popover open={showLinkedPartnersPicker} onOpenChange={setShowLinkedPartnersPicker}>
@@ -2921,9 +2921,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         );
                       })()}
                       
-                      {/* Add companion buttons */}
+                      {/* Add companion buttons - hidden in print */}
                       {(cardData.manualCompanions?.length || 0) < 4 && (
-                        <div className="flex items-center gap-2 mt-3 justify-center flex-wrap">
+                        <div className="flex items-center gap-2 mt-3 justify-center flex-wrap ignore-print print:hidden">
                           {/* Add from linked group members */}
                           {getLinkedPartners().length > 0 && (
                             <Popover>
