@@ -1127,15 +1127,29 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             htmlImg.style.opacity = '1';
           });
           
-          // Fix main photo specifically - ensure it renders with proper dimensions
-          clonedDoc.querySelectorAll('.casting-card-photo-border img').forEach((img: Element) => {
-            const htmlImg = img as HTMLImageElement;
-            htmlImg.style.width = '100%';
-            htmlImg.style.height = '100%';
-            htmlImg.style.objectFit = 'cover';
-            htmlImg.style.display = 'block';
-            htmlImg.style.visibility = 'visible';
-            htmlImg.style.opacity = '1';
+          // Fix main photo - html2canvas doesn't handle object-fit:cover properly
+          // Convert img to background-image on parent container which works better
+          clonedDoc.querySelectorAll('.casting-card-photo-border').forEach((container: Element) => {
+            const img = container.querySelector('img') as HTMLImageElement;
+            if (img && img.src) {
+              // Find the inner wrapper div that contains the image
+              const wrapper = img.parentElement;
+              if (wrapper) {
+                // Apply the image as background on the wrapper
+                wrapper.style.backgroundImage = `url("${img.src}")`;
+                wrapper.style.backgroundSize = 'cover';
+                wrapper.style.backgroundPosition = 'center top';
+                wrapper.style.backgroundRepeat = 'no-repeat';
+                // Preserve the transform (zoom/pan) if any
+                const imgTransform = img.style.transform;
+                if (imgTransform && imgTransform !== 'none') {
+                  wrapper.style.transform = imgTransform;
+                }
+                // Hide the original img element
+                img.style.opacity = '0';
+                img.style.visibility = 'hidden';
+              }
+            }
           });
           
           // Fix Avatar images - Radix Avatar uses conditional rendering that doesn't transfer during cloning
@@ -1391,15 +1405,29 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             htmlImg.style.opacity = '1';
           });
           
-          // Fix main photo specifically - ensure it renders with proper dimensions
-          clonedDoc.querySelectorAll('.casting-card-photo-border img').forEach((img: Element) => {
-            const htmlImg = img as HTMLImageElement;
-            htmlImg.style.width = '100%';
-            htmlImg.style.height = '100%';
-            htmlImg.style.objectFit = 'cover';
-            htmlImg.style.display = 'block';
-            htmlImg.style.visibility = 'visible';
-            htmlImg.style.opacity = '1';
+          // Fix main photo - html2canvas doesn't handle object-fit:cover properly
+          // Convert img to background-image on parent container which works better
+          clonedDoc.querySelectorAll('.casting-card-photo-border').forEach((container: Element) => {
+            const img = container.querySelector('img') as HTMLImageElement;
+            if (img && img.src) {
+              // Find the inner wrapper div that contains the image
+              const wrapper = img.parentElement;
+              if (wrapper) {
+                // Apply the image as background on the wrapper
+                wrapper.style.backgroundImage = `url("${img.src}")`;
+                wrapper.style.backgroundSize = 'cover';
+                wrapper.style.backgroundPosition = 'center top';
+                wrapper.style.backgroundRepeat = 'no-repeat';
+                // Preserve the transform (zoom/pan) if any
+                const imgTransform = img.style.transform;
+                if (imgTransform && imgTransform !== 'none') {
+                  wrapper.style.transform = imgTransform;
+                }
+                // Hide the original img element
+                img.style.opacity = '0';
+                img.style.visibility = 'hidden';
+              }
+            }
           });
           
           // Fix Avatar images - Radix Avatar uses conditional rendering that doesn't transfer during cloning
