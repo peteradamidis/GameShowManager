@@ -4829,12 +4829,10 @@ export default function PlayersPage() {
   };
 
   const handlePrintCard = (contestantId: string) => {
-    const printWindow = window.open(`/api/casting-cards/${contestantId}/print`, '_blank');
-    if (printWindow) {
-      printWindow.onload = () => {
-        printWindow.print();
-      };
-    }
+    // Navigate to casting cards tab with this contestant selected
+    // The user can then use the print button there which has the proper html2canvas implementation
+    setEditContestantId(contestantId);
+    setActiveTab('casting');
   };
 
   const renderPersonCard = (assignment: SeatAssignment, isPlayer: boolean, showEpisodeSelector: boolean = false) => {
