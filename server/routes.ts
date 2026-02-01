@@ -3918,8 +3918,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update contestant status to assigned
       await storage.updateContestantAvailability(contestantId, 'assigned');
 
-      // Note: We intentionally keep reschedule entries when rebooked
-      // The reschedule page will check if contestant is now seated and show their booking info
+      // Update reschedule entry if contestant was on reschedule list
+      if (anyPreviousCanceled) {
+        const rebookedBy = (req as any).session?.username || 'system';
+        await storage.updateCanceledAssignment(anyPreviousCanceled.id, {
+          rebookedToRecordDayId: recordDayId,
+          rebookedAt: new Date(),
+          rebookedBy: rebookedBy,
+        });
+      }
 
       res.json(assignment);
     } catch (error: any) {
@@ -4059,6 +4066,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const previousCanceled = allCanceledAssignments.find(
           (c: any) => c.contestantId === contestantId && (c.paperworkSent || c.paperworkReceived)
         );
+        // Also find any canceled assignment for this contestant (to update rebook status)
+        const anyCanceled = allCanceledAssignments.find(
+          (c: any) => c.contestantId === contestantId
+        );
         
         const assignment = await storage.createSeatAssignment({
           recordDayId,
@@ -4073,6 +4084,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Update contestant status to assigned
         await storage.updateContestantAvailability(contestantId, 'assigned');
+        
+        // Update reschedule entry if contestant was on reschedule list
+        if (anyCanceled) {
+          const rebookedBy = (req as any).session?.username || 'system';
+          await storage.updateCanceledAssignment(anyCanceled.id, {
+            rebookedToRecordDayId: recordDayId,
+            rebookedAt: new Date(),
+            rebookedBy: rebookedBy,
+          });
+        }
       }
 
       res.json({
@@ -5870,6 +5891,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const previousCanceled = allCanceledAssignments.find(
             (c: any) => c.contestantId === item.contestant.id && (c.paperworkSent || c.paperworkReceived)
           );
+          // Also find any canceled assignment for this contestant (to update rebook status)
+          const anyCanceled = allCanceledAssignments.find(
+            (c: any) => c.contestantId === item.contestant.id
+          );
           
           const assignment = await storage.createSeatAssignment({
             recordDayId,
@@ -5882,6 +5907,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           createdAssignments.push(assignment);
           contestantUpdates.push(item.contestant.id);
+          
+          // Update reschedule entry if contestant was on reschedule list
+          if (anyCanceled) {
+            await storage.updateCanceledAssignment(anyCanceled.id, {
+              rebookedToRecordDayId: recordDayId,
+              rebookedAt: new Date(),
+              rebookedBy: 'auto-assign',
+            });
+          }
         }
 
         for (const contestantId of contestantUpdates) {
