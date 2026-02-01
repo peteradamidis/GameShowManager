@@ -2540,7 +2540,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     >PRODUCER:</span>
                     <Select 
                       value={cardData.producerName || ''} 
-                      onValueChange={(value) => updateField('producerName', value)}
+                      onValueChange={(value) => updateField('producerName', value === '__clear__' ? '' : value)}
                     >
                       <SelectTrigger 
                         className="casting-card-producer-name h-auto px-4 py-2 font-bold text-sm border-0 rounded-none min-w-[120px]"
@@ -2550,6 +2550,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         <SelectValue placeholder="SELECT" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="__clear__" className="text-muted-foreground italic">Clear</SelectItem>
                         {PRODUCER_NAMES.map(name => (
                           <SelectItem key={name} value={name}>{name}</SelectItem>
                         ))}
@@ -3293,7 +3294,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         >PRODUCER:</span>
                         <Select 
                           value={cardData.producerName || ''} 
-                          onValueChange={(value) => updateField('producerName', value)}
+                          onValueChange={(value) => updateField('producerName', value === '__clear__' ? '' : value)}
                         >
                           <SelectTrigger 
                             className="casting-card-producer-name h-auto px-4 py-2 font-bold text-sm border-0 rounded-none min-w-[120px]"
@@ -3303,6 +3304,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             <SelectValue placeholder="SELECT" />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="__clear__" className="text-muted-foreground italic">Clear</SelectItem>
                             {PRODUCER_NAMES.map(name => (
                               <SelectItem key={name} value={name}>{name}</SelectItem>
                             ))}
