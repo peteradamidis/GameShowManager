@@ -13,6 +13,7 @@ import { initCrossTabSync, closeCrossTabSync } from "./lib/crossTabSync";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { MoneyRain } from "@/components/money-rain";
 import { AnnouncementPopupModal } from "@/components/farewell-video-modal";
+import { BirthdayBanner } from "@/components/birthday-banner";
 import Dashboard from "@/pages/dashboard";
 import Contestants from "@/pages/contestants";
 import RecordDays from "@/pages/record-days";
@@ -149,6 +150,7 @@ function AuthenticatedApp() {
       <div className="flex h-screen w-full">
         <AppSidebar />
         <div className="flex flex-col flex-1 overflow-hidden">
+          <BirthdayBanner />
           <header className="flex items-center justify-between p-4 border-b">
             <SidebarTrigger data-testid="button-sidebar-toggle" />
             <div className="flex items-center gap-3">
