@@ -1186,7 +1186,7 @@ export default function SeatingChartPage() {
     : [];
   const canSeatGroupTogether = adjacentSeats.length >= groupMembersToSeat.length;
 
-  const handleAssignContestant = async () => {
+  const handleAssignContestant = async (skipPostcodeWarning = false) => {
     if (!selectedContestant || !selectedBlock || !selectedSeat) return;
 
     try {
@@ -1201,6 +1201,7 @@ export default function SeatingChartPage() {
             contestantId: groupMembersToSeat[i].id,
             blockNumber: selectedBlock,
             seatLabel: seatsToUse[i],
+            skipPostcodeWarning,
           });
         }
         
@@ -1222,6 +1223,7 @@ export default function SeatingChartPage() {
           contestantId: selectedContestant,
           blockNumber: selectedBlock,
           seatLabel: selectedSeat,
+          skipPostcodeWarning,
         });
         
         // Invalidate essential queries
@@ -1240,6 +1242,18 @@ export default function SeatingChartPage() {
       setSelectedContestant("");
       setSeatGroupTogether(false);
     } catch (error: any) {
+      // Check if this is an OUTSIDE_VICTORIA warning that requires confirmation
+      if (error?.code === 'OUTSIDE_VICTORIA' && error?.requiresConfirmation) {
+        const confirmed = window.confirm(
+          `⚠️ OUTSIDE VICTORIA WARNING\n\n${error.contestantName} has postcode ${error.postcode || 'unknown'} which is outside Victoria.\n\nAre you sure you want to book this contestant?`
+        );
+        if (confirmed) {
+          // Retry with skip flag
+          handleAssignContestant(true);
+        }
+        return;
+      }
+      
       // Refresh to get latest seat assignments
       await refetch();
       
@@ -2266,7 +2280,7 @@ export default function SeatingChartPage() {
                 Cancel
               </Button>
               <Button 
-                onClick={handleAssignContestant} 
+                onClick={() => handleAssignContestant()} 
                 disabled={!selectedContestant || availableContestants.length === 0}
                 data-testid="button-confirm-seat-assign"
               >

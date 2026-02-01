@@ -3457,8 +3457,8 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
 
   // Book contestant mutation
   const bookContestantMutation = useMutation({
-    mutationFn: async ({ recordDayId, contestantId, blockNumber, seatLabel }: { 
-      recordDayId: string; contestantId: string; blockNumber: number; seatLabel: string 
+    mutationFn: async ({ recordDayId, contestantId, blockNumber, seatLabel, skipPostcodeWarning }: { 
+      recordDayId: string; contestantId: string; blockNumber: number; seatLabel: string; skipPostcodeWarning?: boolean 
     }) => {
       const response = await apiRequest('POST', '/api/seat-assignments', {
         recordDayId,
@@ -3466,6 +3466,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
         blockNumber,
         seatLabel,
         playerType: 'regular',
+        skipPostcodeWarning,
       });
       return response.json();
     },
@@ -3478,21 +3479,33 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
       setSelectedBlock('');
       setSelectedSeat('');
     },
-    onError: (error: any) => {
+    onError: (error: any, variables) => {
+      // Check if this is an OUTSIDE_VICTORIA warning that requires confirmation
+      if (error?.code === 'OUTSIDE_VICTORIA' && error?.requiresConfirmation) {
+        const confirmed = window.confirm(
+          `⚠️ OUTSIDE VICTORIA WARNING\n\n${error.contestantName} has postcode ${error.postcode || 'unknown'} which is outside Victoria.\n\nAre you sure you want to book this contestant?`
+        );
+        if (confirmed) {
+          // Retry with skip flag
+          bookContestantMutation.mutate({ ...variables, skipPostcodeWarning: true });
+        }
+        return;
+      }
       toast({ title: "Booking failed", description: error.message || "Failed to book contestant", variant: "destructive" });
     },
   });
 
   // Book group mutation
   const bookGroupMutation = useMutation({
-    mutationFn: async ({ recordDayId, contestantIds, blockNumber, startingSeat }: { 
-      recordDayId: string; contestantIds: string[]; blockNumber: number; startingSeat: string 
+    mutationFn: async ({ recordDayId, contestantIds, blockNumber, startingSeat, skipPostcodeWarning }: { 
+      recordDayId: string; contestantIds: string[]; blockNumber: number; startingSeat: string; skipPostcodeWarning?: boolean 
     }) => {
       const response = await apiRequest('POST', '/api/seat-assignments/group', {
         recordDayId,
         contestantIds,
         blockNumber,
         startingSeat,
+        skipPostcodeWarning,
       });
       return response.json();
     },
@@ -3505,7 +3518,18 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
       setSelectedBlock('');
       setSelectedSeat('');
     },
-    onError: (error: any) => {
+    onError: (error: any, variables) => {
+      // Check if this is an OUTSIDE_VICTORIA warning that requires confirmation
+      if (error?.code === 'OUTSIDE_VICTORIA' && error?.requiresConfirmation) {
+        const confirmed = window.confirm(
+          `⚠️ OUTSIDE VICTORIA WARNING\n\n${error.contestantName} has postcode ${error.postcode || 'unknown'} which is outside Victoria.\n\nAre you sure you want to book this contestant?`
+        );
+        if (confirmed) {
+          // Retry with skip flag
+          bookGroupMutation.mutate({ ...variables, skipPostcodeWarning: true });
+        }
+        return;
+      }
       toast({ title: "Group booking failed", description: error.message || "Failed to book group", variant: "destructive" });
     },
   });

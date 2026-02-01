@@ -1680,7 +1680,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     await executeSwap(sourceSeat, targetSeat, sourceLocation, targetLocation, false);
   };
   
-  const handleConfirmStandbyAssignInternal = async (standby: StandbyData, targetBlockNumber: number, targetSeatLabel: string, notes?: string) => {
+  const handleConfirmStandbyAssignInternal = async (standby: StandbyData, targetBlockNumber: number, targetSeatLabel: string, notes?: string, skipPostcodeWarning = false) => {
     try {
       // Get block type from the block configuration (default to NPB if not configured)
       const blockType = blockTypeMap[targetBlockNumber] || 'NPB';
@@ -1701,6 +1701,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         seatedAsBlockType: blockType,
         seatedFromStandby: true,
         standbyMovementNotes: notes || undefined,
+        skipPostcodeWarning,
       });
       
       const blockTypeLabel = blockType === 'PB' ? 'Case Holder' : 'Non Playing Block';
@@ -1714,6 +1715,24 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
       onStandbySeated?.();
       queryClient.invalidateQueries({ queryKey: ['/api/standbys/record-day', recordDayId] });
     } catch (error: any) {
+      // Check if this is an OUTSIDE_VICTORIA warning that requires confirmation
+      if (error?.code === 'OUTSIDE_VICTORIA' && error?.requiresConfirmation) {
+        const confirmed = window.confirm(
+          `⚠️ OUTSIDE VICTORIA WARNING\n\n${error.contestantName} has postcode ${error.postcode || 'unknown'} which is outside Victoria.\n\nAre you sure you want to seat this standby?`
+        );
+        if (confirmed) {
+          // Retry with skip flag
+          handleConfirmStandbyAssignInternal(standby, targetBlockNumber, targetSeatLabel, notes, true);
+        } else {
+          // Revert the standby status change
+          await apiRequest('PATCH', `/api/standbys/${standby.id}`, {
+            status: 'confirmed',
+            assignedToSeat: null,
+          });
+        }
+        return;
+      }
+      
       toast({
         title: "Failed to seat standby",
         description: error?.message || "Could not assign standby to seat.",

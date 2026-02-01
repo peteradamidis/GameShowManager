@@ -3855,10 +3855,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper: Check if a postcode is within Victoria, Australia
+  // Victoria postcodes: 3000-3999 (main), 8000-8999 (PO boxes/delivery areas)
+  const isVictorianPostcode = (postcode: string | null | undefined): boolean => {
+    if (!postcode) return true; // No postcode = allow (unknown location)
+    const pc = parseInt(postcode.trim(), 10);
+    if (isNaN(pc)) return true; // Invalid postcode = allow
+    return (pc >= 3000 && pc <= 3999) || (pc >= 8000 && pc <= 8999);
+  };
+
   // Create a seat assignment
   app.post("/api/seat-assignments", async (req, res) => {
     try {
-      const { recordDayId, contestantId, blockNumber, seatLabel, playerType, seatedAsBlockType, seatedFromStandby, standbyMovementNotes } = req.body;
+      const { recordDayId, contestantId, blockNumber, seatLabel, playerType, seatedAsBlockType, seatedFromStandby, standbyMovementNotes, skipPostcodeWarning } = req.body;
 
       if (!recordDayId || !contestantId || !blockNumber || !seatLabel) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -3883,6 +3892,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contestant = await storage.getContestantById(contestantId);
       if (contestant?.auditionRating?.toUpperCase().trim() === 'DNU') {
         return res.status(400).json({ error: "Cannot seat a DNU-rated contestant (Do Not Use)" });
+      }
+
+      // Check if contestant is outside Victoria (postcode check)
+      // This requires confirmation from the user (skipPostcodeWarning must be true)
+      if (contestant && !isVictorianPostcode(contestant.postcode) && !skipPostcodeWarning) {
+        return res.status(422).json({ 
+          error: `${contestant.name} has postcode ${contestant.postcode || 'unknown'} which is outside Victoria. Are you sure you want to book them?`,
+          code: "OUTSIDE_VICTORIA",
+          requiresConfirmation: true,
+          contestantName: contestant.name,
+          postcode: contestant.postcode
+        });
       }
 
       // Check for duplicate assignments - contestant should not be seated in ANY record day
@@ -4001,11 +4022,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Must provide 2-4 contestants for group seating" });
       }
 
-      // Check if any contestant is DNU-rated (Do Not Use)
+      // Check if any contestant is DNU-rated (Do Not Use) or outside Victoria
+      const { skipPostcodeWarning } = req.body;
       for (const contestantId of contestantIds) {
         const contestant = await storage.getContestantById(contestantId);
         if (contestant?.auditionRating?.toUpperCase().trim() === 'DNU') {
           return res.status(400).json({ error: `Cannot seat ${contestant.name} - they are DNU-rated (Do Not Use)` });
+        }
+        // Check Victoria postcode - require confirmation if outside Victoria
+        if (contestant && !isVictorianPostcode(contestant.postcode) && !skipPostcodeWarning) {
+          return res.status(422).json({ 
+            error: `${contestant.name} has postcode ${contestant.postcode || 'unknown'} which is outside Victoria. Are you sure you want to book them?`,
+            code: "OUTSIDE_VICTORIA",
+            requiresConfirmation: true,
+            contestantName: contestant.name,
+            postcode: contestant.postcode
+          });
         }
       }
 
@@ -4621,6 +4653,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return attendingWithMentionsName(personB.attendingWith, personA.name);
       };
 
+      // Helper: Check if a postcode is within Victoria, Australia
+      // Victoria postcodes: 3000-3999 (main), 8000-8999 (PO boxes/delivery areas)
+      const isVictorianPostcode = (postcode: string | null | undefined): boolean => {
+        if (!postcode) return false;
+        const pc = parseInt(postcode.trim(), 10);
+        if (isNaN(pc)) return false;
+        return (pc >= 3000 && pc <= 3999) || (pc >= 8000 && pc <= 8999);
+      };
+
       // Helper: Check if a contestant has blocking conditions that prevent auto-assignment
       const hasBlockingCondition = (c: typeof allContestants[0]): { blocked: boolean; reason: string } => {
         if (c.auditionRating === 'A' || c.auditionRating === 'A+') {
@@ -4634,6 +4675,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         if (c.podiumStory === true) {
           return { blocked: true, reason: 'has podium story' };
+        }
+        // Block contestants outside Victoria (postcode not 3000-3999 or 8000-8999)
+        if (c.postcode && !isVictorianPostcode(c.postcode)) {
+          return { blocked: true, reason: 'outside Victoria (postcode)' };
         }
         return { blocked: false, reason: '' };
       };

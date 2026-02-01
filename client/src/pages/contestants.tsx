@@ -921,7 +921,7 @@ export default function Contestants() {
     setAssignDialogOpen(true);
   };
 
-  const handleAssignToSeat = async () => {
+  const handleAssignToSeat = async (skipPostcodeWarning = false) => {
     if (!selectedRecordDay || selectedContestants.length === 0) return;
     
     // For seat assignment (1-4 contestants), need block and seat
@@ -937,6 +937,7 @@ export default function Contestants() {
           contestantId: selectedContestants[0],
           blockNumber: parseInt(selectedBlock),
           seatLabel: selectedSeat,
+          skipPostcodeWarning,
         });
         
         toast({
@@ -950,6 +951,7 @@ export default function Contestants() {
           contestantIds: selectedContestants,
           blockNumber: parseInt(selectedBlock),
           startingSeat: selectedSeat,
+          skipPostcodeWarning,
         });
         
         const seatRange = result.seats?.map((s: any) => s.seat).join(', ') || selectedSeat;
@@ -978,6 +980,18 @@ export default function Contestants() {
       setSelectedBlock("");
       setSelectedSeat("");
     } catch (error: any) {
+      // Check if this is an OUTSIDE_VICTORIA warning that requires confirmation
+      if (error?.code === 'OUTSIDE_VICTORIA' && error?.requiresConfirmation) {
+        const confirmed = window.confirm(
+          `⚠️ OUTSIDE VICTORIA WARNING\n\n${error.contestantName} has postcode ${error.postcode || 'unknown'} which is outside Victoria.\n\nAre you sure you want to book this contestant?`
+        );
+        if (confirmed) {
+          // Retry with skip flag
+          handleAssignToSeat(true);
+        }
+        return;
+      }
+      
       toast({
         title: "Assignment failed",
         description: error?.message || "Could not assign contestant(s).",
@@ -1946,7 +1960,7 @@ export default function Contestants() {
               Cancel
             </Button>
             <Button 
-              onClick={handleAssignToSeat} 
+              onClick={() => handleAssignToSeat()} 
               disabled={
                 !selectedRecordDay || 
                 (selectedContestants.length <= MAX_GROUP_SIZE && (!selectedBlock || !selectedSeat))
