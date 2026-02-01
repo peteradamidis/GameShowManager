@@ -1175,6 +1175,33 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             }
           });
           
+          // Fix partner photo sizes - convert Tailwind w-36 h-36 (and variants) to explicit pixels
+          // w-36 = 144px, w-28 = 112px, w-24 = 96px, w-20 = 80px
+          clonedDoc.querySelectorAll('.w-36.h-36').forEach((el: Element) => {
+            (el as HTMLElement).style.width = '144px';
+            (el as HTMLElement).style.height = '144px';
+            (el as HTMLElement).style.minWidth = '144px';
+            (el as HTMLElement).style.minHeight = '144px';
+          });
+          clonedDoc.querySelectorAll('.w-28.h-28').forEach((el: Element) => {
+            (el as HTMLElement).style.width = '112px';
+            (el as HTMLElement).style.height = '112px';
+            (el as HTMLElement).style.minWidth = '112px';
+            (el as HTMLElement).style.minHeight = '112px';
+          });
+          clonedDoc.querySelectorAll('.w-24.h-24').forEach((el: Element) => {
+            (el as HTMLElement).style.width = '96px';
+            (el as HTMLElement).style.height = '96px';
+            (el as HTMLElement).style.minWidth = '96px';
+            (el as HTMLElement).style.minHeight = '96px';
+          });
+          clonedDoc.querySelectorAll('.w-20.h-20').forEach((el: Element) => {
+            (el as HTMLElement).style.width = '80px';
+            (el as HTMLElement).style.height = '80px';
+            (el as HTMLElement).style.minWidth = '80px';
+            (el as HTMLElement).style.minHeight = '80px';
+          });
+          
           // Fix Avatar images - Radix Avatar uses conditional rendering that doesn't transfer during cloning
           // Find all avatar containers and ensure images render properly
           clonedDoc.querySelectorAll('[data-slot="avatar-image"]').forEach((el: Element) => {
@@ -1451,6 +1478,33 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 img.style.visibility = 'hidden';
               }
             }
+          });
+          
+          // Fix partner photo sizes - convert Tailwind w-36 h-36 (and variants) to explicit pixels
+          // w-36 = 144px, w-28 = 112px, w-24 = 96px, w-20 = 80px
+          clonedDoc.querySelectorAll('.w-36.h-36').forEach((el: Element) => {
+            (el as HTMLElement).style.width = '144px';
+            (el as HTMLElement).style.height = '144px';
+            (el as HTMLElement).style.minWidth = '144px';
+            (el as HTMLElement).style.minHeight = '144px';
+          });
+          clonedDoc.querySelectorAll('.w-28.h-28').forEach((el: Element) => {
+            (el as HTMLElement).style.width = '112px';
+            (el as HTMLElement).style.height = '112px';
+            (el as HTMLElement).style.minWidth = '112px';
+            (el as HTMLElement).style.minHeight = '112px';
+          });
+          clonedDoc.querySelectorAll('.w-24.h-24').forEach((el: Element) => {
+            (el as HTMLElement).style.width = '96px';
+            (el as HTMLElement).style.height = '96px';
+            (el as HTMLElement).style.minWidth = '96px';
+            (el as HTMLElement).style.minHeight = '96px';
+          });
+          clonedDoc.querySelectorAll('.w-20.h-20').forEach((el: Element) => {
+            (el as HTMLElement).style.width = '80px';
+            (el as HTMLElement).style.height = '80px';
+            (el as HTMLElement).style.minWidth = '80px';
+            (el as HTMLElement).style.minHeight = '80px';
           });
           
           // Fix Avatar images - Radix Avatar uses conditional rendering that doesn't transfer during cloning
@@ -2477,9 +2531,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   </Button>
                 </div>
 
-                {/* Producer - matching PowerPoint style */}
+                {/* Producer - matching PowerPoint style - reduced margin to fit on page */}
                 {cardData.showProducer !== false ? (
-                  <div className="mt-6 flex items-center relative group w-fit">
+                  <div className="mt-4 mb-2 flex items-center relative group w-fit">
                     <span 
                       className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
                       style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
@@ -3230,9 +3284,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       </Button>
                     </div>
 
-                    {/* Producer - matching PowerPoint style */}
+                    {/* Producer - matching PowerPoint style - reduced margin to fit on page */}
                     {cardData.showProducer !== false ? (
-                      <div className="mt-6 flex items-center relative group w-fit">
+                      <div className="mt-4 mb-2 flex items-center relative group w-fit">
                         <span 
                           className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
                           style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
