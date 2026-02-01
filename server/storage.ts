@@ -1148,64 +1148,63 @@ export class DbStorage implements IStorage {
   }
 
   async cancelSeatAssignment(id: string, reason?: string, movedBy?: string, isDecline: boolean = false): Promise<CanceledAssignment> {
-    return await db.transaction(async (tx) => {
-      const [assignment] = await tx
-        .select()
-        .from(seatAssignments)
-        .where(eq(seatAssignments.id, id));
+    // Get the seat assignment first
+    const [assignment] = await db
+      .select()
+      .from(seatAssignments)
+      .where(eq(seatAssignments.id, id));
 
-      if (!assignment) {
-        throw new Error('Seat assignment not found');
-      }
+    if (!assignment) {
+      throw new Error('Seat assignment not found');
+    }
 
-      const [canceled] = await tx
-        .insert(canceledAssignments)
-        .values({
-          contestantId: assignment.contestantId,
-          recordDayId: assignment.recordDayId,
-          blockNumber: assignment.blockNumber,
-          seatLabel: assignment.seatLabel,
-          reason,
-          movedBy,
-          // Track if this was a decline vs a producer move
-          wasDeclined: isDecline,
-          declinedAt: isDecline ? new Date() : null,
-          declinedBy: isDecline ? movedBy : null,
-          // Carry over booking status for rescheduling
-          bookingEmailSent: assignment.bookingEmailSent,
-          confirmedRsvp: assignment.confirmedRsvp,
-          // Carry over paperwork status for rescheduling
-          paperworkSent: assignment.paperworkSent,
-          paperworkSentBy: assignment.paperworkSentBy,
-          paperworkReceived: assignment.paperworkReceived,
-          paperworkReceivedBy: assignment.paperworkReceivedBy,
-          paperworkOnDay: assignment.paperworkOnDay,
-          // Carry over standby block type (if from standby)
-          seatedAsBlockType: assignment.seatedAsBlockType,
-          standbyMovementNotes: assignment.standbyMovementNotes,
-        })
-        .returning();
-
-      await tx.delete(seatAssignments).where(eq(seatAssignments.id, id));
-
-      await tx
-        .update(contestants)
-        .set({ availabilityStatus: 'rescheduled' })
-        .where(eq(contestants.id, assignment.contestantId));
-
-      // Log movement history
-      await tx.insert(movementHistory).values({
-        contestantId: assignment.contestantId,
-        movementType: 'added_to_reschedule',
-        fromBlockNumber: assignment.blockNumber,
-        fromSeatLabel: assignment.seatLabel,
-        recordDayId: assignment.recordDayId,
-        notes: isDecline ? `Declined booking: ${reason || 'No reason'}` : `Canceled and moved to reschedule: ${reason || 'No reason'}`,
-        movedBy: movedBy || 'System',
-      });
-
-      return canceled;
+    // Use createOrUpdateCanceledAssignment to prevent duplicates and preserve history
+    const canceled = await this.createOrUpdateCanceledAssignment({
+      contestantId: assignment.contestantId,
+      recordDayId: assignment.recordDayId,
+      blockNumber: assignment.blockNumber,
+      seatLabel: assignment.seatLabel,
+      reason,
+      movedBy,
+      // Track if this was a decline vs a producer move
+      wasDeclined: isDecline,
+      declinedAt: isDecline ? new Date() : null,
+      declinedBy: isDecline ? movedBy : null,
+      // Carry over booking status for rescheduling
+      bookingEmailSent: assignment.bookingEmailSent,
+      confirmedRsvp: assignment.confirmedRsvp,
+      // Carry over paperwork status for rescheduling
+      paperworkSent: assignment.paperworkSent,
+      paperworkSentBy: assignment.paperworkSentBy,
+      paperworkReceived: assignment.paperworkReceived,
+      paperworkReceivedBy: assignment.paperworkReceivedBy,
+      paperworkOnDay: assignment.paperworkOnDay,
+      // Carry over standby block type (if from standby)
+      seatedAsBlockType: assignment.seatedAsBlockType,
+      standbyMovementNotes: assignment.standbyMovementNotes,
     });
+
+    // Delete the seat assignment
+    await db.delete(seatAssignments).where(eq(seatAssignments.id, id));
+
+    // Update contestant status to 'rescheduled'
+    await db
+      .update(contestants)
+      .set({ availabilityStatus: 'rescheduled' })
+      .where(eq(contestants.id, assignment.contestantId));
+
+    // Log movement history
+    await db.insert(movementHistory).values({
+      contestantId: assignment.contestantId,
+      movementType: 'added_to_reschedule',
+      fromBlockNumber: assignment.blockNumber,
+      fromSeatLabel: assignment.seatLabel,
+      recordDayId: assignment.recordDayId,
+      notes: isDecline ? `Declined booking: ${reason || 'No reason'}` : `Canceled and moved to reschedule: ${reason || 'No reason'}`,
+      movedBy: movedBy || 'System',
+    });
+
+    return canceled;
   }
 
   // Canceled Assignments
@@ -1234,6 +1233,13 @@ export class DbStorage implements IStorage {
         paperworkOnDay: canceledAssignments.paperworkOnDay,
         seatedAsBlockType: canceledAssignments.seatedAsBlockType,
         standbyMovementNotes: canceledAssignments.standbyMovementNotes,
+        // Rebooked tracking fields
+        rebookedToRecordDayId: canceledAssignments.rebookedToRecordDayId,
+        rebookedAt: canceledAssignments.rebookedAt,
+        rebookedBy: canceledAssignments.rebookedBy,
+        // Reschedule count and history
+        rescheduleCount: canceledAssignments.rescheduleCount,
+        declineHistory: canceledAssignments.declineHistory,
         contestant: contestants,
         recordDay: recordDays,
       })
@@ -1352,6 +1358,16 @@ export class DbStorage implements IStorage {
           wasDeclined: data.wasDeclined ?? false,
           declinedAt: data.declinedAt ?? null,
           declinedBy: data.declinedBy ?? null,
+          // Carry over booking and paperwork status from the new assignment
+          bookingEmailSent: (data as any).bookingEmailSent ?? null,
+          confirmedRsvp: (data as any).confirmedRsvp ?? null,
+          paperworkSent: (data as any).paperworkSent ?? null,
+          paperworkSentBy: (data as any).paperworkSentBy ?? null,
+          paperworkReceived: (data as any).paperworkReceived ?? null,
+          paperworkReceivedBy: (data as any).paperworkReceivedBy ?? null,
+          paperworkOnDay: (data as any).paperworkOnDay ?? null,
+          seatedAsBlockType: (data as any).seatedAsBlockType ?? null,
+          standbyMovementNotes: (data as any).standbyMovementNotes ?? null,
         })
         .where(eq(canceledAssignments.id, existing.id))
         .returning();
