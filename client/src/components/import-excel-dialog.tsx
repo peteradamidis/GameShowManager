@@ -262,12 +262,12 @@ export function ImportExcelDialog({ onImport }: ImportExcelDialogProps) {
             )}
 
             {previewData.duplicateCount > 0 ? (
-              <div className="flex-1 overflow-hidden flex flex-col">
-                <div className="flex items-center gap-2 mb-2">
+              <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+                <div className="flex items-center gap-2 mb-2 shrink-0">
                   <AlertTriangle className="h-4 w-4 text-amber-500" />
                   <span className="text-sm font-medium">Potential Duplicates (will be skipped)</span>
                 </div>
-                <ScrollArea className="flex-1 border rounded-lg">
+                <ScrollArea className="flex-1 border rounded-lg min-h-0 max-h-[35vh]">
                   <div className="p-2 space-y-2">
                     {previewData.duplicates.map((dup, index) => (
                       <div key={index} className="p-3 rounded border bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
