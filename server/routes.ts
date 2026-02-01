@@ -1365,7 +1365,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const emailMatch = contestant.email ? existingByEmail.get(contestant.email) : null;
         const phoneMatch = normalizedPhone ? existingByPhone.get(normalizedPhone) : null;
 
-        const match = nameMatch || emailMatch || phoneMatch;
+        // Phone matches alone are NOT duplicates if name and email are different
+        // (people can share phone numbers, e.g., family members)
+        let match = nameMatch || emailMatch;
+        
+        // Only consider phone match a duplicate if name OR email also matches the phone match record
+        if (!match && phoneMatch) {
+          const phoneMatchName = phoneMatch.name.toLowerCase().trim();
+          const phoneMatchEmail = phoneMatch.email?.toLowerCase().trim();
+          const importEmail = contestant.email?.toLowerCase().trim();
+          
+          // Check if this is truly the same person (name or email matches too)
+          if (phoneMatchName === normalizedName || (importEmail && phoneMatchEmail === importEmail)) {
+            match = phoneMatch;
+          } else {
+            // Different name AND different email - this is a shared phone, not a duplicate
+            console.log(`[Import Preview] Phone match for ${contestant.name} but different name/email - allowing as separate person (shared phone)`);
+          }
+        }
         
         if (match) {
           // If the existing contestant is temporary, allow import to update them
@@ -1797,7 +1814,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Build lookup maps for existing contestants - include isTemporary flag
       const existingByNameMap = new Map<string, { id: string; isTemporary: boolean }>();
       const existingByEmailMap = new Map<string, { id: string; isTemporary: boolean }>();
-      const existingByPhoneMap = new Map<string, { id: string; isTemporary: boolean }>();
+      const existingByPhoneMap = new Map<string, { id: string; isTemporary: boolean; name: string; email: string | null }>();
       
       existingContestants.forEach((c: any) => {
         if (c.name) {
@@ -1815,7 +1832,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const normalizedPhone = normalizePhone(c.phone);
         if (normalizedPhone) {
           if (!existingByPhoneMap.has(normalizedPhone) || !c.isTemporary) {
-            existingByPhoneMap.set(normalizedPhone, { id: c.id, isTemporary: !!c.isTemporary });
+            existingByPhoneMap.set(normalizedPhone, { 
+              id: c.id, 
+              isTemporary: !!c.isTemporary,
+              name: c.name?.toLowerCase().trim() || '',
+              email: c.email?.toLowerCase().trim() || null
+            });
           }
         }
       });
@@ -1902,7 +1924,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             processedEmails.add(normalizedEmail);
           }
           if (normalizedPhone) {
-            existingByPhoneMap.set(normalizedPhone, { id: tempMatch.id, isTemporary: false });
+            existingByPhoneMap.set(normalizedPhone, { 
+              id: tempMatch.id, 
+              isTemporary: false,
+              name: normalizedName || '',
+              email: normalizedEmail || null
+            });
             processedPhones.add(normalizedPhone);
           }
           continue;
@@ -1916,7 +1943,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const isDuplicateName = normalizedName && ((nameMapEntry && !nameMapEntry.isTemporary) || processedNames.has(normalizedName));
         const isDuplicateEmail = normalizedEmail && ((emailMapEntry && !emailMapEntry.isTemporary) || processedEmails.has(normalizedEmail));
-        const isDuplicatePhone = normalizedPhone && ((phoneMapEntry && !phoneMapEntry.isTemporary) || processedPhones.has(normalizedPhone));
+        
+        // Phone duplicates only count if the name OR email also matches
+        // (people can share phone numbers, e.g., family members)
+        let isDuplicatePhone = false;
+        if (normalizedPhone && !isDuplicateName && !isDuplicateEmail) {
+          if (processedPhones.has(normalizedPhone)) {
+            // Check if this is truly a duplicate within the same import file
+            // For now, allow shared phones within same import since we can't easily check name/email
+            isDuplicatePhone = false;
+          } else if (phoneMapEntry && !phoneMapEntry.isTemporary) {
+            // Check if the phone match also has matching name or email
+            const phoneMatchName = phoneMapEntry.name;
+            const phoneMatchEmail = phoneMapEntry.email;
+            if (phoneMatchName === normalizedName || (normalizedEmail && phoneMatchEmail === normalizedEmail)) {
+              isDuplicatePhone = true;
+            } else {
+              // Different name AND different email - this is a shared phone, not a duplicate
+              console.log(`[Import] Phone match for ${row.name} but different name/email - allowing as separate person (shared phone)`);
+            }
+          }
+        }
         
         if (isDuplicateName || isDuplicateEmail || isDuplicatePhone) {
           skippedDuplicates.push({
