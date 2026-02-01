@@ -11,7 +11,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail, Download, Database, Clock, RefreshCw, Lock, Server, Send, Eye, ClipboardCheck, Ticket, AlertCircle, Heart, Video } from "lucide-react";
+import { Trash2, Image, FileText, Loader2, Copy, Check, Save, Mail, Download, Database, Clock, RefreshCw, Lock, Server, Send, Eye, ClipboardCheck, Ticket, AlertCircle, Heart, Video, Cake, Plus, X, Edit2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -1074,7 +1074,7 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 max-w-3xl">
+        <TabsList className="grid w-full grid-cols-7 max-w-4xl">
           <TabsTrigger value="general" data-testid="tab-general">
             <Lock className="w-4 h-4 mr-2" />
             General
@@ -1098,6 +1098,10 @@ export default function Settings() {
           <TabsTrigger value="users" data-testid="tab-users">
             <Lock className="w-4 h-4 mr-2" />
             Users
+          </TabsTrigger>
+          <TabsTrigger value="birthdays" data-testid="tab-birthdays">
+            <Cake className="w-4 h-4 mr-2" />
+            Birthdays
           </TabsTrigger>
         </TabsList>
 
@@ -2396,6 +2400,12 @@ export default function Settings() {
             <UsersSection />
           </div>
         </TabsContent>
+
+        <TabsContent value="birthdays">
+          <div className="grid gap-6 max-w-2xl">
+            <BirthdaysSection />
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
@@ -3210,6 +3220,294 @@ function UsersSection() {
             ) : (
               <Button onClick={() => setIsCreating(true)} data-testid="button-add-user">
                 Add New User
+              </Button>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+interface BirthdayEntry {
+  id: string;
+  name: string;
+  birthdate: string;
+  createdAt: string;
+}
+
+function BirthdaysSection() {
+  const { toast } = useToast();
+  const [newName, setNewName] = useState("");
+  const [newBirthdate, setNewBirthdate] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editBirthdate, setEditBirthdate] = useState("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  const { data: birthdays, isLoading, refetch } = useQuery<BirthdayEntry[]>({
+    queryKey: ['/api/birthdays'],
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async ({ name, birthdate }: { name: string; birthdate: string }) => {
+      return apiRequest('POST', '/api/birthdays', { name, birthdate });
+    },
+    onSuccess: () => {
+      toast({ title: "Birthday added", description: "Team member birthday has been saved" });
+      setNewName("");
+      setNewBirthdate("");
+      setIsAdding(false);
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to add birthday", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, name, birthdate }: { id: string; name: string; birthdate: string }) => {
+      return apiRequest('PATCH', `/api/birthdays/${id}`, { name, birthdate });
+    },
+    onSuccess: () => {
+      toast({ title: "Birthday updated", description: "Changes have been saved" });
+      setEditingId(null);
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest('DELETE', `/api/birthdays/${id}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Birthday removed", description: "Entry has been deleted" });
+      setDeleteConfirmId(null);
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to delete", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleCreate = () => {
+    if (!newName.trim() || !newBirthdate) {
+      toast({ title: "Error", description: "Name and birthdate are required", variant: "destructive" });
+      return;
+    }
+    createMutation.mutate({ name: newName.trim(), birthdate: newBirthdate });
+  };
+
+  const handleUpdate = () => {
+    if (!editingId || !editName.trim() || !editBirthdate) return;
+    updateMutation.mutate({ id: editingId, name: editName.trim(), birthdate: editBirthdate });
+  };
+
+  const startEdit = (entry: BirthdayEntry) => {
+    setEditingId(entry.id);
+    setEditName(entry.name);
+    setEditBirthdate(entry.birthdate.split('T')[0]); // Format for date input
+  };
+
+  const formatBirthdate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long' });
+  };
+
+  const sortedBirthdays = birthdays?.slice().sort((a, b) => {
+    const aDate = new Date(a.birthdate);
+    const bDate = new Date(b.birthdate);
+    // Sort by month, then day
+    if (aDate.getMonth() !== bDate.getMonth()) {
+      return aDate.getMonth() - bDate.getMonth();
+    }
+    return aDate.getDate() - bDate.getDate();
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Cake className="w-5 h-5" />
+          Team Birthdays
+        </CardTitle>
+        <CardDescription>
+          Add team members' birthdays to display celebratory banners on their special day.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin" />
+          </div>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Registered Birthdays ({sortedBirthdays?.length || 0})</Label>
+              {sortedBirthdays && sortedBirthdays.length > 0 ? (
+                <div className="border rounded-lg divide-y">
+                  {sortedBirthdays.map((entry) => (
+                    <div key={entry.id} className="flex items-center justify-between p-3">
+                      {editingId === entry.id ? (
+                        <div className="flex-1 flex items-center gap-3">
+                          <Input
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            placeholder="Name"
+                            className="w-40"
+                            data-testid={`edit-name-${entry.id}`}
+                          />
+                          <Input
+                            type="date"
+                            value={editBirthdate}
+                            onChange={(e) => setEditBirthdate(e.target.value)}
+                            className="w-40"
+                            data-testid={`edit-date-${entry.id}`}
+                          />
+                          <Button
+                            size="sm"
+                            onClick={handleUpdate}
+                            disabled={updateMutation.isPending}
+                            data-testid={`save-edit-${entry.id}`}
+                          >
+                            {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditingId(null)}
+                            data-testid={`cancel-edit-${entry.id}`}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-3">
+                            <Cake className="w-4 h-4 text-pink-500" />
+                            <span className="font-medium">{entry.name}</span>
+                            <span className="text-muted-foreground text-sm">
+                              {formatBirthdate(entry.birthdate)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {deleteConfirmId === entry.id ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-muted-foreground">Delete?</span>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => deleteMutation.mutate(entry.id)}
+                                  disabled={deleteMutation.isPending}
+                                  data-testid={`confirm-delete-${entry.id}`}
+                                >
+                                  {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Yes"}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setDeleteConfirmId(null)}
+                                  data-testid={`cancel-delete-${entry.id}`}
+                                >
+                                  No
+                                </Button>
+                              </div>
+                            ) : (
+                              <>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => startEdit(entry)}
+                                  data-testid={`edit-birthday-${entry.id}`}
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => setDeleteConfirmId(entry.id)}
+                                  data-testid={`delete-birthday-${entry.id}`}
+                                >
+                                  <Trash2 className="w-4 h-4 text-destructive" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground border rounded-lg">
+                  <Cake className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>No birthdays registered yet</p>
+                  <p className="text-sm">Add team members to celebrate their special days!</p>
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
+            {isAdding ? (
+              <div className="space-y-4">
+                <Label className="text-sm font-medium">Add Birthday</Label>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="birthday-name" className="text-xs text-muted-foreground">Name</Label>
+                    <Input
+                      id="birthday-name"
+                      placeholder="Team member's name"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      data-testid="input-birthday-name"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="birthday-date" className="text-xs text-muted-foreground">Birthdate</Label>
+                    <Input
+                      id="birthday-date"
+                      type="date"
+                      value={newBirthdate}
+                      onChange={(e) => setNewBirthdate(e.target.value)}
+                      data-testid="input-birthday-date"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleCreate}
+                      disabled={createMutation.isPending || !newName.trim() || !newBirthdate}
+                      data-testid="button-save-birthday"
+                    >
+                      {createMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <Plus className="w-4 h-4 mr-2" />
+                      )}
+                      Add Birthday
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsAdding(false);
+                        setNewName("");
+                        setNewBirthdate("");
+                      }}
+                      data-testid="button-cancel-add-birthday"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <Button onClick={() => setIsAdding(true)} data-testid="button-add-birthday">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Birthday
               </Button>
             )}
           </>
