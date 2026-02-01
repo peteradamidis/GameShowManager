@@ -1053,6 +1053,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             .ignore-print {
               display: none !important;
             }
+            /* Show print-only producer name (hidden in UI) */
+            .casting-card-producer-name-print {
+              display: inline !important;
+            }
             /* Remove border from body text for print */
             .print-no-border {
               border: none !important;
@@ -1357,6 +1361,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             /* Hide ignore-print elements */
             .ignore-print {
               display: none !important;
+            }
+            /* Show print-only producer name (hidden in UI) */
+            .casting-card-producer-name-print {
+              display: inline !important;
             }
             /* Remove border from body text for print */
             .print-no-border {
@@ -2527,12 +2535,18 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
                       style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
                     >PRODUCER:</span>
+                    {/* Plain text for print - shown during PDF/print, hidden in UI */}
+                    <span 
+                      className="casting-card-producer-name-print px-4 py-2 font-bold text-sm min-w-[120px]"
+                      style={{ backgroundColor: '#facc15', color: '#000000', display: 'none' }}
+                    >{cardData.producerName || 'SELECT'}</span>
+                    {/* Dropdown for UI - hidden during PDF/print */}
                     <Select 
                       value={cardData.producerName || ''} 
                       onValueChange={(value) => updateField('producerName', value === '__clear__' ? '' : value)}
                     >
                       <SelectTrigger 
-                        className="casting-card-producer-name h-auto px-4 py-2 font-bold text-sm border-0 rounded-none min-w-[120px]"
+                        className="casting-card-producer-name h-auto px-4 py-2 font-bold text-sm border-0 rounded-none min-w-[120px] ignore-print"
                         style={{ backgroundColor: '#facc15', color: '#000000' }}
                         data-testid="select-producer-name"
                       >
@@ -2547,7 +2561,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     </Select>
                     <button
                       onClick={() => updateField('showProducer', false)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity ignore-print"
                       title="Remove producer field"
                     >
                       <X className="w-3 h-3" />
@@ -3265,12 +3279,18 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
                           style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
                         >PRODUCER:</span>
+                        {/* Plain text for print - shown during PDF/print, hidden in UI */}
+                        <span 
+                          className="casting-card-producer-name-print px-4 py-2 font-bold text-sm min-w-[120px]"
+                          style={{ backgroundColor: '#facc15', color: '#000000' }}
+                        >{cardData.producerName || 'SELECT'}</span>
+                        {/* Dropdown for UI - hidden during PDF/print */}
                         <Select 
                           value={cardData.producerName || ''} 
                           onValueChange={(value) => updateField('producerName', value === '__clear__' ? '' : value)}
                         >
                           <SelectTrigger 
-                            className="casting-card-producer-name h-auto px-4 py-2 font-bold text-sm border-0 rounded-none min-w-[120px]"
+                            className="casting-card-producer-name h-auto px-4 py-2 font-bold text-sm border-0 rounded-none min-w-[120px] ignore-print"
                             style={{ backgroundColor: '#facc15', color: '#000000' }}
                             data-testid="select-producer-name-preview"
                           >
