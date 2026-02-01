@@ -2012,7 +2012,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           <div className="relative overflow-hidden" style={{ width: `calc(297mm * ${cardZoom})`, height: `calc(210mm * ${cardZoom})` }}>
             <div 
               id="casting-card-preview"
-              className="bg-white p-6 border-2 border-gray-300 shadow-lg relative overflow-hidden origin-top-left"
+              className="bg-white p-5 border-2 border-gray-300 shadow-lg relative overflow-hidden origin-top-left"
               style={{ 
                 width: '297mm', 
                 height: '210mm',
@@ -2531,9 +2531,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   </Button>
                 </div>
 
-                {/* Producer - matching PowerPoint style - reduced margin to fit on page */}
+                {/* Producer - matching PowerPoint style - minimal margin to fit on page */}
                 {cardData.showProducer !== false ? (
-                  <div className="mt-4 mb-2 flex items-center relative group w-fit">
+                  <div className="mt-2 flex items-center relative group w-fit">
                     <span 
                       className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
                       style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
