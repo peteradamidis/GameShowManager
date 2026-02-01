@@ -2185,12 +2185,20 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                 companionPhotoRefs.current[companion.id]?.click();
                               }}
                             >
-                              <Avatar className="w-full h-full rounded-none pointer-events-none">
-                                <AvatarImage src={companion.photoUrl || undefined} className="object-cover object-top" />
-                                <AvatarFallback className={`${fallbackSize} rounded-none bg-gray-200`}>
-                                  {(companion.name || 'Partner').split(' ').map(n => n?.[0] || '').join('') || '?'}
-                                </AvatarFallback>
-                              </Avatar>
+                              <div className="w-full h-full relative">
+                                {companion.photoUrl ? (
+                                  <div 
+                                    className="w-full h-full bg-cover bg-no-repeat bg-top"
+                                    style={{ backgroundImage: `url(${companion.photoUrl})` }}
+                                  />
+                                ) : (
+                                  <Avatar className="w-full h-full rounded-none pointer-events-none">
+                                    <AvatarFallback className={`${fallbackSize} rounded-none bg-gray-200`}>
+                                      {(companion.name || 'Partner').split(' ').map(n => n?.[0] || '').join('') || '?'}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                )}
+                              </div>
                               {/* Upload overlay */}
                               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                                 {uploadingPhotoFor === companion.id ? (
@@ -2921,12 +2929,20 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                     companionPhotoRefs.current[companion.id]?.click();
                                   }}
                                 >
-                                  <Avatar className="w-full h-full rounded-none pointer-events-none">
-                                    <AvatarImage src={companion.photoUrl || undefined} className="object-cover object-top" />
-                                    <AvatarFallback className={`${fallbackSize} rounded-none bg-gray-200`}>
-                                      {(companion.name || 'Partner').split(' ').map(n => n?.[0] || '').join('') || '?'}
-                                    </AvatarFallback>
-                                  </Avatar>
+                                  <div className="w-full h-full relative">
+                                    {companion.photoUrl ? (
+                                      <div 
+                                        className="w-full h-full bg-cover bg-no-repeat bg-top"
+                                        style={{ backgroundImage: `url(${companion.photoUrl})` }}
+                                      />
+                                    ) : (
+                                      <Avatar className="w-full h-full rounded-none pointer-events-none">
+                                        <AvatarFallback className={`${fallbackSize} rounded-none bg-gray-200`}>
+                                          {(companion.name || 'Partner').split(' ').map(n => n?.[0] || '').join('') || '?'}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                    )}
+                                  </div>
                                   {/* Upload overlay */}
                                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                                     {uploadingPhotoFor === companion.id ? (
