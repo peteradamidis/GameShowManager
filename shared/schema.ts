@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, pgEnum, date, unique, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, pgEnum, date, unique, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -164,6 +164,15 @@ export const canceledAssignments = pgTable("canceled_assignments", {
   wasDeclined: boolean("was_declined").default(false), // True if this was a decline (not just a producer move)
   declinedAt: timestamp("declined_at"), // When the contestant declined
   declinedBy: text("declined_by"), // Who processed the decline
+  
+  // Reschedule count and history tracking
+  rescheduleCount: integer("reschedule_count").default(1), // How many times they've been in reschedule tab
+  declineHistory: jsonb("decline_history"), // Array of previous decline records [{reason, declinedAt, recordDayId, notes}]
+  
+  // Rebooked tracking - when they're booked into a new day
+  rebookedToRecordDayId: varchar("rebooked_to_record_day_id").references(() => recordDays.id),
+  rebookedAt: timestamp("rebooked_at"),
+  rebookedBy: text("rebooked_by"),
   
   // Carry over booking/paperwork status when rescheduling
   bookingEmailSent: timestamp("booking_email_sent"), // When booking invitation was sent

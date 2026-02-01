@@ -2960,7 +2960,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fixedRecords: Array<{ standbyId: string; contestantId: string; contestantName: string }> = [];
       
       for (const standby of standbysNeedingFix) {
-        await storage.createCanceledAssignment({
+        await storage.createOrUpdateCanceledAssignment({
           contestantId: standby.contestantId,
           recordDayId: standby.recordDayId,
           blockNumber: null,
@@ -7105,6 +7105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create a new canceled assignment (for attended standbys being moved to reschedule)
+  // Uses createOrUpdateCanceledAssignment to update existing entries instead of creating duplicates
   app.post("/api/canceled-assignments", requireAuth, async (req, res) => {
     try {
       const { contestantId, recordDayId, blockNumber, seatLabel, reason, movedBy, isFromStandby, originalAttendanceDate } = req.body;
@@ -7113,17 +7114,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "contestantId and recordDayId are required" });
       }
       
-      // Check if contestant is already in the reschedule list (prevent duplicates)
-      const existingCanceled = await storage.getCanceledAssignments();
-      const alreadyInReschedule = existingCanceled.find((c: any) => c.contestantId === contestantId);
-      if (alreadyInReschedule) {
-        // Update existing record instead of creating duplicate
-        console.log(`[Reschedule] Contestant ${contestantId} already in reschedule list, skipping duplicate`);
-        return res.json(alreadyInReschedule);
-      }
-      
-      // Create the canceled assignment record
-      const canceledAssignment = await storage.createCanceledAssignment({
+      // Use createOrUpdateCanceledAssignment which handles duplicates internally
+      // If contestant already in reschedule, updates their record and increments count
+      const canceledAssignment = await storage.createOrUpdateCanceledAssignment({
         contestantId,
         recordDayId,
         blockNumber: blockNumber || null,
@@ -7360,9 +7353,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update contestant status to 'assigned'
       await storage.updateContestant(canceled.contestantId, { availabilityStatus: 'assigned' });
 
-      // DO NOT delete the canceled assignment - keep it as a historical record
-      // The UI will detect the new seat assignment and show "REBOOKED" badge
-      // instead of the Rebook button
+      // Update the canceled assignment with rebooked info (instead of deleting)
+      const rebookedBy = (req as any).session?.username || 'system';
+      await storage.updateCanceledAssignment(canceled.id, {
+        rebookedToRecordDayId: recordDayId,
+        rebookedAt: new Date(),
+        rebookedBy: rebookedBy,
+      });
 
       res.json({
         message: "Contestant rebooked with paperwork status preserved",
@@ -10268,28 +10265,20 @@ Thank you.`;
       if (filteredUpdateData.status === 'rescheduled' && filteredUpdateData.movedToReschedule) {
         const movedBy = filteredUpdateData.notes?.match(/\[([^\]]+)\]/)?.[1] || 'SYSTEM';
         
-        // Check if contestant is already in reschedule list (prevent duplicates)
-        const existingCanceled = await storage.getCanceledAssignments();
-        const alreadyInReschedule = existingCanceled.find((c: any) => c.contestantId === standby.contestantId);
-        
-        if (!alreadyInReschedule) {
-          // Create a canceled assignment record for the reschedule page
-          // Use isFromStandby: false so it shows "Canceled" tag, not "Standby"
-          await storage.createCanceledAssignment({
-            contestantId: standby.contestantId,
-            recordDayId: standby.recordDayId,
-            blockNumber: null, // Standbys don't have a block number
-            seatLabel: standby.assignedToSeat || null,
-            reason: filteredUpdateData.notes || 'DECLINED STANDBY INVITATION',
-            movedBy,
-            isFromStandby: false, // Show "Canceled" tag, not "Standby"
-            wasDeclined: true,
-            declinedAt: new Date(),
-            originalAttendanceDate: standby.recordDayId ? (await storage.getRecordDayById(standby.recordDayId))?.date : null,
-          });
-        } else {
-          console.log(`[Reschedule] Contestant ${standby.contestantId} already in reschedule list, skipping duplicate`);
-        }
+        // Use createOrUpdateCanceledAssignment to handle duplicates automatically
+        // If contestant already in reschedule, updates their record and increments count
+        await storage.createOrUpdateCanceledAssignment({
+          contestantId: standby.contestantId,
+          recordDayId: standby.recordDayId,
+          blockNumber: null, // Standbys don't have a block number
+          seatLabel: standby.assignedToSeat || null,
+          reason: filteredUpdateData.notes || 'DECLINED STANDBY INVITATION',
+          movedBy,
+          isFromStandby: false, // Show "Canceled" tag, not "Standby"
+          wasDeclined: true,
+          declinedAt: new Date(),
+          originalAttendanceDate: standby.recordDayId ? (await storage.getRecordDayById(standby.recordDayId))?.date : null,
+        });
 
         // Log the standby decline/reschedule to movement history
         await storage.logMovement({
@@ -10411,26 +10400,17 @@ Thank you.`;
         return res.status(400).json({ error: "This standby has already been moved to reschedule" });
       }
 
-      // Check if contestant is already in reschedule list (prevent duplicates)
-      const existingCanceled = await storage.getCanceledAssignments();
-      const alreadyInReschedule = existingCanceled.find((c: any) => c.contestantId === standby.contestantId);
-      
-      let canceledAssignment;
-      if (!alreadyInReschedule) {
-        // Create a canceled assignment entry for the reschedule tab
-        canceledAssignment = await storage.createCanceledAssignment({
-          contestantId: standby.contestantId,
-          recordDayId: standby.recordDayId,
-          blockNumber: null,
-          seatLabel: standby.assignedToSeat || null,
-          reason: 'Standby - eligible for reschedule',
-          isFromStandby: true,
-          originalAttendanceDate: new Date(standby.recordDay.date),
-        });
-      } else {
-        console.log(`[Reschedule] Contestant ${standby.contestantId} already in reschedule list, skipping duplicate`);
-        canceledAssignment = alreadyInReschedule;
-      }
+      // Use createOrUpdateCanceledAssignment to handle duplicates automatically
+      // If contestant already in reschedule, updates their record and increments count
+      const canceledAssignment = await storage.createOrUpdateCanceledAssignment({
+        contestantId: standby.contestantId,
+        recordDayId: standby.recordDayId,
+        blockNumber: null,
+        seatLabel: standby.assignedToSeat || null,
+        reason: 'Standby - eligible for reschedule',
+        isFromStandby: true,
+        originalAttendanceDate: new Date(standby.recordDay.date),
+      });
 
       // Update the standby to mark it as moved to reschedule
       const updatedStandby = await storage.updateStandbyAssignment(id, {

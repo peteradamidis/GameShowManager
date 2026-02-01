@@ -253,7 +253,10 @@ export interface IStorage {
   // Canceled Assignments
   getCanceledAssignments(): Promise<Array<CanceledAssignment & { contestant: Contestant; recordDay: RecordDay }>>;
   getCanceledAssignmentByPosition(recordDayId: string, blockNumber: number, seatLabel: string): Promise<CanceledAssignment | undefined>;
+  getCanceledAssignmentByContestant(contestantId: string): Promise<CanceledAssignment | undefined>;
   createCanceledAssignment(data: Partial<InsertCanceledAssignment> & { contestantId: string; recordDayId: string }): Promise<CanceledAssignment>;
+  createOrUpdateCanceledAssignment(data: Partial<InsertCanceledAssignment> & { contestantId: string; recordDayId: string }): Promise<CanceledAssignment>;
+  updateCanceledAssignment(id: string, data: Partial<CanceledAssignment>): Promise<CanceledAssignment>;
   updateCanceledAssignmentPosition(id: string, blockNumber: number, seatLabel: string): Promise<void>;
   deleteCanceledAssignment(id: string): Promise<void>;
   
@@ -1294,6 +1297,85 @@ export class DbStorage implements IStorage {
       .where(eq(contestants.id, data.contestantId));
     
     return created;
+  }
+
+  async getCanceledAssignmentByContestant(contestantId: string): Promise<CanceledAssignment | undefined> {
+    const [result] = await db
+      .select()
+      .from(canceledAssignments)
+      .where(eq(canceledAssignments.contestantId, contestantId));
+    return result;
+  }
+
+  async createOrUpdateCanceledAssignment(data: Partial<InsertCanceledAssignment> & { contestantId: string; recordDayId: string }): Promise<CanceledAssignment> {
+    // Check if contestant already has a reschedule entry
+    const existing = await this.getCanceledAssignmentByContestant(data.contestantId);
+    
+    if (existing) {
+      // Build decline history entry from existing record
+      const historyEntry: any = {
+        reason: existing.reason,
+        recordDayId: existing.recordDayId,
+        blockNumber: existing.blockNumber,
+        seatLabel: existing.seatLabel,
+        canceledAt: existing.canceledAt,
+        movedBy: existing.movedBy,
+        wasDeclined: existing.wasDeclined,
+        declinedAt: existing.declinedAt,
+        rebookedToRecordDayId: existing.rebookedToRecordDayId,
+        rebookedAt: existing.rebookedAt,
+      };
+      
+      // Append to existing decline history
+      const existingHistory = (existing.declineHistory as any[]) || [];
+      const newHistory = [...existingHistory, historyEntry];
+      
+      // Update existing record with new info
+      const [updated] = await db
+        .update(canceledAssignments)
+        .set({
+          recordDayId: data.recordDayId,
+          blockNumber: data.blockNumber ?? null,
+          seatLabel: data.seatLabel ?? null,
+          reason: data.reason ?? null,
+          movedBy: data.movedBy ?? null,
+          isFromStandby: data.isFromStandby ?? false,
+          originalAttendanceDate: data.originalAttendanceDate ?? null,
+          canceledAt: new Date(),
+          rescheduleCount: (existing.rescheduleCount || 1) + 1,
+          declineHistory: newHistory,
+          // Clear rebooked status since they're back in reschedule
+          rebookedToRecordDayId: null,
+          rebookedAt: null,
+          rebookedBy: null,
+          // Reset declined tracking for new entry
+          wasDeclined: data.wasDeclined ?? false,
+          declinedAt: data.declinedAt ?? null,
+          declinedBy: data.declinedBy ?? null,
+        })
+        .where(eq(canceledAssignments.id, existing.id))
+        .returning();
+      
+      // Update contestant state to 'rescheduled'
+      await db
+        .update(contestants)
+        .set({ state: 'rescheduled' })
+        .where(eq(contestants.id, data.contestantId));
+      
+      return updated;
+    } else {
+      // No existing entry, create new one
+      return this.createCanceledAssignment(data);
+    }
+  }
+
+  async updateCanceledAssignment(id: string, data: Partial<CanceledAssignment>): Promise<CanceledAssignment> {
+    const [updated] = await db
+      .update(canceledAssignments)
+      .set(data as any)
+      .where(eq(canceledAssignments.id, id))
+      .returning();
+    return updated;
   }
 
   async deleteCanceledAssignment(id: string): Promise<void> {

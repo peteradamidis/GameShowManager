@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Calendar as CalendarIcon, User, Mail, Phone, MapPin, Users, Heart, AlertTriangle, Pencil, X, Save, Trash2, Search, FileCheck, Wrench } from "lucide-react";
+import { Calendar as CalendarIcon, User, Mail, Phone, MapPin, Users, Heart, AlertTriangle, Pencil, X, Save, Trash2, Search, FileCheck, Wrench, History } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format, isSameDay, parseISO } from "date-fns";
@@ -53,6 +53,7 @@ export default function ReschedulePage() {
   const [selectedSeat, setSelectedSeat] = useState<string>("");
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedContestant, setSelectedContestant] = useState<any>(null);
+  const [selectedCancellationRecord, setSelectedCancellationRecord] = useState<any>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editFormData, setEditFormData] = useState<any>({});
   const [filterOriginalRecordDayId, setFilterOriginalRecordDayId] = useState<string>("all");
@@ -60,8 +61,10 @@ export default function ReschedulePage() {
   const [filterType, setFilterType] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all"); // filter by contestant state
 
-  const handleRowClick = (contestant: any) => {
+  const handleRowClick = (cancellation: any) => {
+    const contestant = cancellation.contestant;
     setSelectedContestant(contestant);
+    setSelectedCancellationRecord(cancellation);
     setEditFormData({
       name: contestant.name || '',
       age: contestant.age || '',
@@ -499,7 +502,7 @@ export default function ReschedulePage() {
                   <TableRow 
                     key={cancellation.id} 
                     data-testid={`row-canceled-${cancellation.id}`}
-                    onClick={() => handleRowClick(cancellation.contestant)}
+                    onClick={() => handleRowClick(cancellation)}
                     className="cursor-pointer hover-elevate"
                   >
                     <TableCell>
@@ -545,31 +548,39 @@ export default function ReschedulePage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {cancellation.isFromStandby ? (
-                        <div className="flex items-center gap-1">
-                          <Badge className="bg-yellow-500 text-yellow-950 hover:bg-yellow-500">
-                            Standby
+                      <div className="flex items-center gap-1">
+                        {cancellation.isFromStandby ? (
+                          <>
+                            <Badge className="bg-yellow-500 text-yellow-950 hover:bg-yellow-500">
+                              Standby
+                            </Badge>
+                            {/* Display block type from seatedAsBlockType field or fall back to parsing reason */}
+                            {cancellation.seatedAsBlockType === 'PB' || cancellation.reason?.includes('Podium Block') || cancellation.reason?.includes('Case Holder') ? (
+                              <Badge variant="outline" className="border-purple-300 bg-purple-100 text-purple-700 dark:border-purple-700 dark:bg-purple-900 dark:text-purple-300 text-[10px]" title="Case Holder">
+                                PB
+                              </Badge>
+                            ) : cancellation.seatedAsBlockType === 'NPB' || cancellation.reason?.includes('Non-Playing Block') ? (
+                              <Badge variant="outline" className="border-blue-300 bg-blue-100 text-blue-700 dark:border-blue-700 dark:bg-blue-900 dark:text-blue-300 text-[10px]" title="Non Playing Block">
+                                NPB
+                              </Badge>
+                            ) : cancellation.reason?.includes('Not Seated') ? (
+                              <Badge variant="outline" className="border-gray-300 bg-gray-100 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 text-[10px]">
+                                NS
+                              </Badge>
+                            ) : null}
+                          </>
+                        ) : (
+                          <Badge variant="secondary">
+                            Canceled
                           </Badge>
-                          {/* Display block type from seatedAsBlockType field or fall back to parsing reason */}
-                          {cancellation.seatedAsBlockType === 'PB' || cancellation.reason?.includes('Podium Block') || cancellation.reason?.includes('Case Holder') ? (
-                            <Badge variant="outline" className="border-purple-300 bg-purple-100 text-purple-700 dark:border-purple-700 dark:bg-purple-900 dark:text-purple-300 text-[10px]" title="Case Holder">
-                              PB
-                            </Badge>
-                          ) : cancellation.seatedAsBlockType === 'NPB' || cancellation.reason?.includes('Non-Playing Block') ? (
-                            <Badge variant="outline" className="border-blue-300 bg-blue-100 text-blue-700 dark:border-blue-700 dark:bg-blue-900 dark:text-blue-300 text-[10px]" title="Non Playing Block">
-                              NPB
-                            </Badge>
-                          ) : cancellation.reason?.includes('Not Seated') ? (
-                            <Badge variant="outline" className="border-gray-300 bg-gray-100 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 text-[10px]">
-                              NS
-                            </Badge>
-                          ) : null}
-                        </div>
-                      ) : (
-                        <Badge variant="secondary">
-                          Canceled
-                        </Badge>
-                      )}
+                        )}
+                        {/* Show reschedule count if > 1 */}
+                        {(cancellation.rescheduleCount || 1) > 1 && (
+                          <Badge variant="outline" className="border-red-300 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900 dark:text-red-300 text-[10px]" title={`Rescheduled ${cancellation.rescheduleCount} times`}>
+                            x{cancellation.rescheduleCount}
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {cancellation.contestant.auditionRating ? (
@@ -649,9 +660,28 @@ export default function ReschedulePage() {
                     </TableCell>
                     <TableCell className="text-right">
                       {(() => {
+                        // First check if rebooked via the rebookedToRecordDayId field on the record
+                        if (cancellation.rebookedToRecordDayId) {
+                          const rebookedRecordDay = recordDays.find((rd: any) => rd.id === cancellation.rebookedToRecordDayId);
+                          const dateStr = rebookedRecordDay?.date 
+                            ? format(new Date(rebookedRecordDay.date), 'EEE d MMM')
+                            : 'Unknown date';
+                          // Also check if they have a current seat assignment
+                          const booking = currentBookings[cancellation.contestantId];
+                          return (
+                            <div className="flex items-center gap-2">
+                              <Badge className="bg-green-100 text-green-700 border-green-300">
+                                REBOOKED
+                              </Badge>
+                              <span className="text-sm font-medium text-green-700">
+                                {dateStr}{booking ? ` - B${booking.blockNumber} ${booking.seatLabel}` : ''}
+                              </span>
+                            </div>
+                          );
+                        }
+                        // Fallback: check currentBookings map (for legacy data without rebookedToRecordDayId)
                         const booking = currentBookings[cancellation.contestantId];
                         if (booking) {
-                          // Contestant is now booked - show their booking info
                           const dateStr = booking.recordDay?.date 
                             ? format(new Date(booking.recordDay.date), 'EEE d MMM')
                             : 'Unknown date';
@@ -1121,6 +1151,74 @@ export default function ReschedulePage() {
                       Criminal Record
                     </div>
                     <p className="text-sm text-muted-foreground">{selectedContestant.criminalRecord}</p>
+                  </div>
+                )}
+
+                {/* Reschedule History */}
+                {selectedCancellationRecord && (
+                  <div className="border-t pt-3" data-testid="section-reschedule-history">
+                    <div className="flex items-center gap-2 text-sm font-medium mb-2">
+                      <History className="h-4 w-4 text-muted-foreground" />
+                      Reschedule History
+                      {(selectedCancellationRecord.rescheduleCount || 1) > 1 && (
+                        <Badge variant="outline" className="border-red-300 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900 dark:text-red-300 text-xs" data-testid="badge-reschedule-count">
+                          {selectedCancellationRecord.rescheduleCount} times
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {/* Current reschedule info */}
+                    <div className="bg-muted/50 rounded-md p-2 mb-2" data-testid="card-current-reschedule">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium">Current</span>
+                        <span className="text-muted-foreground" data-testid="text-reschedule-date">
+                          {selectedCancellationRecord.canceledAt 
+                            ? format(new Date(selectedCancellationRecord.canceledAt), 'dd MMM yyyy')
+                            : 'Unknown date'}
+                        </span>
+                      </div>
+                      {selectedCancellationRecord.reason && (
+                        <p className="text-xs text-muted-foreground mt-1" data-testid="text-reschedule-reason">{selectedCancellationRecord.reason}</p>
+                      )}
+                      {selectedCancellationRecord.rebookedToRecordDayId && (
+                        <Badge className="bg-green-100 text-green-700 border-green-300 mt-1 text-xs" data-testid="badge-rebooked-current">
+                          Rebooked
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {/* Previous decline history */}
+                    {selectedCancellationRecord.declineHistory && 
+                     Array.isArray(selectedCancellationRecord.declineHistory) && 
+                     selectedCancellationRecord.declineHistory.length > 0 && (
+                      <div className="space-y-2 max-h-40 overflow-y-auto" data-testid="list-decline-history">
+                        <p className="text-xs font-medium text-muted-foreground">Previous Entries:</p>
+                        {selectedCancellationRecord.declineHistory.map((entry: any, index: number) => (
+                          <div key={index} className="bg-muted/30 rounded-md p-2 text-xs" data-testid={`card-history-entry-${index}`}>
+                            <div className="flex items-center justify-between">
+                              <span className="text-muted-foreground">
+                                {entry.canceledAt 
+                                  ? format(new Date(entry.canceledAt), 'dd MMM yyyy')
+                                  : 'Unknown date'}
+                              </span>
+                              {entry.wasDeclined && (
+                                <Badge variant="destructive" className="text-[10px] px-1" data-testid={`badge-declined-${index}`}>
+                                  Declined
+                                </Badge>
+                              )}
+                              {entry.rebookedToRecordDayId && (
+                                <Badge className="bg-green-100 text-green-700 border-green-300 text-[10px] px-1" data-testid={`badge-rebooked-${index}`}>
+                                  Rebooked
+                                </Badge>
+                              )}
+                            </div>
+                            {entry.reason && (
+                              <p className="text-muted-foreground mt-1" data-testid={`text-history-reason-${index}`}>{entry.reason}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
