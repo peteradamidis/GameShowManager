@@ -17,6 +17,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import type { BirthdayEntry } from "@shared/schema";
 
 // Form Settings Constants and Component
 const AVAILABILITY_DEFAULTS: Record<string, string> = {
@@ -3227,13 +3228,6 @@ function UsersSection() {
       </CardContent>
     </Card>
   );
-}
-
-interface BirthdayEntry {
-  id: string;
-  name: string;
-  birthdate: string;
-  createdAt: string;
 }
 
 function BirthdaysSection() {

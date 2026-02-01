@@ -2,13 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { X, Cake, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-interface BirthdayEntry {
-  id: string;
-  name: string;
-  birthdate: string;
-  createdAt: string;
-}
+import type { BirthdayEntry } from "@shared/schema";
 
 export function BirthdayBanner() {
   const [isDismissed, setIsDismissed] = useState(false);
@@ -32,13 +26,25 @@ export function BirthdayBanner() {
     setConfettiPieces(pieces);
   }, []);
 
-  // Check if dismissed for today (using localStorage)
+  // Check if dismissed for today (using localStorage) and reset at midnight
   useEffect(() => {
-    const dismissedDate = localStorage.getItem('birthdayBannerDismissed');
-    const today = new Date().toDateString();
-    if (dismissedDate === today) {
-      setIsDismissed(true);
-    }
+    const checkDismissStatus = () => {
+      const dismissedDate = localStorage.getItem('birthdayBannerDismissed');
+      const today = new Date().toDateString();
+      if (dismissedDate === today) {
+        setIsDismissed(true);
+      } else if (dismissedDate && dismissedDate !== today) {
+        // It's a new day, clear the old dismiss and show banner again
+        localStorage.removeItem('birthdayBannerDismissed');
+        setIsDismissed(false);
+      }
+    };
+    
+    checkDismissStatus();
+    
+    // Check every minute for day change (handles midnight crossing while app is open)
+    const interval = setInterval(checkDismissStatus, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleDismiss = () => {
@@ -94,7 +100,7 @@ export function BirthdayBanner() {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20"
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-white"
           onClick={handleDismiss}
           data-testid="dismiss-birthday-banner"
         >
