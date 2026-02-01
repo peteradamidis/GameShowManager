@@ -2012,7 +2012,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           <div className="relative overflow-hidden" style={{ width: `calc(297mm * ${cardZoom})`, height: `calc(210mm * ${cardZoom})` }}>
             <div 
               id="casting-card-preview"
-              className="bg-white p-5 border-2 border-gray-300 shadow-lg relative overflow-hidden origin-top-left"
+              className="bg-white p-4 border-2 border-gray-300 shadow-lg relative overflow-hidden origin-top-left"
               style={{ 
                 width: '297mm', 
                 height: '210mm',
@@ -2023,7 +2023,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             >
               
               {/* Card Layout matching DOND PowerPoint design */}
-              <div className="flex gap-8">
+              <div className="flex gap-6">
               {/* Left side - Photos */}
               <div className="w-64 flex-shrink-0">
                 {/* Hidden file inputs */}
@@ -2453,7 +2453,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <h3 
                         contentEditable
                         suppressContentEditableWarning
-                        className="font-bold mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline"
+                        className="font-bold mb-2 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline"
                         style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '31px', fontWeight: 'bold', color: '#dc2626' }}
                         onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                       >
@@ -2784,7 +2784,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               <div className="relative overflow-hidden" style={{ width: `calc(297mm * ${cardZoom})`, height: `calc(210mm * ${cardZoom})` }}>
                 <div 
                   id="casting-card-preview"
-                  className="bg-white p-5 border-2 border-gray-300 shadow-lg relative overflow-hidden origin-top-left"
+                  className="bg-white p-4 border-2 border-gray-300 shadow-lg relative overflow-hidden origin-top-left"
                   style={{ 
                     width: '297mm', 
                     height: '210mm',
@@ -2804,7 +2804,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   </div>
                   
                   {/* Card Layout matching DOND PowerPoint design */}
-                  <div className="flex gap-8">
+                  <div className="flex gap-6">
                   {/* Left side - Photos */}
                   <div className="w-64 flex-shrink-0">
                     {/* Main photo - with zoom and position controls */}
