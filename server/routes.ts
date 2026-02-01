@@ -285,15 +285,19 @@ function identifyGroups(contestants: any[]): Map<string, string[]> {
       
       if (candidates.length === 0) {
         // No exact match - try matching first name + last name separately
-        // Only match name parts with 4+ chars to reduce false positives
-        const targetParts = normalizedTarget.split(' ').filter(p => p.length >= 4);
-        if (targetParts.length > 0) {
+        // STRICTER MATCHING: Require BOTH first AND last name to match when target has both
+        // This prevents "Gianni" matching both "Gianni De Pasquale" AND "Gianni Pitruzzello"
+        const targetParts = normalizedTarget.split(' ').filter(p => p.length >= 3);
+        
+        if (targetParts.length >= 2) {
+          // Target has first AND last name - require BOTH to match
+          // e.g., "Carmela De Pasquale" should only match contestants with BOTH "Carmela" and some form of surname
           normalizedNameToContestants.forEach((contestantList, normalizedName) => {
-            const nameParts = normalizedName.split(' ').filter(p => p.length >= 4);
-            // Require matching first name OR last name (full word, not substring)
-            // Both parts must be 4+ chars to count
-            const hasWordMatch = targetParts.some(tp => nameParts.includes(tp));
-            if (hasWordMatch) {
+            const nameParts = normalizedName.split(' ').filter(p => p.length >= 3);
+            // Count how many target parts match the candidate's name parts
+            const matchCount = targetParts.filter(tp => nameParts.includes(tp)).length;
+            // Require at least 2 matches (first + last name) to reduce false positives
+            if (matchCount >= 2) {
               contestantList.forEach(c => {
                 if (c.id !== contestant.id && !candidates.some(existing => existing.id === c.id)) {
                   candidates.push(c);
@@ -301,7 +305,37 @@ function identifyGroups(contestants: any[]): Map<string, string[]> {
               });
             }
           });
+        } else if (targetParts.length === 1 && targetParts[0].length >= 6) {
+          // Only first name provided (e.g., "Gianni") - this is RISKY for common names
+          // Only add candidates if there's exactly ONE person with that first name
+          // This prevents ambiguous first-name-only matches
+          const potentialMatches: any[] = [];
+          normalizedNameToContestants.forEach((contestantList, normalizedName) => {
+            const nameParts = normalizedName.split(' ').filter(p => p.length >= 3);
+            if (nameParts.includes(targetParts[0])) {
+              contestantList.forEach(c => {
+                if (c.id !== contestant.id) {
+                  potentialMatches.push(c);
+                }
+              });
+            }
+          });
+          
+          // Only use first-name-only matching if there's exactly 1 candidate
+          // If there are multiple "Gianni"s, require manual disambiguation
+          if (potentialMatches.length === 1) {
+            candidates.push(potentialMatches[0]);
+          } else if (potentialMatches.length > 1) {
+            // Log ambiguity - don't auto-link with first-name-only when ambiguous
+            ambiguousMatches.push({
+              source: contestant.name,
+              targetName,
+              candidates: potentialMatches.map(c => `${c.name} (id:${c.id})`),
+              reason: `First-name-only match "${targetParts[0]}" is ambiguous - ${potentialMatches.length} people share this first name`
+            });
+          }
         }
+        // If targetParts is empty or single short word, don't attempt partial matching
       }
       
       if (candidates.length === 0) return;

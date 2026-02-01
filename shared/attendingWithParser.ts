@@ -139,6 +139,7 @@ export function getNormalizedPartnerNames(attendingWith: string | null | undefin
 /**
  * Check if two contestants might be partners based on their attendingWith fields
  * and their names. For a match, contestant A should list B's name AND B should list A's name.
+ * Uses STRICT matching to prevent false positives from common first names.
  */
 export function areContestantsMutualPartners(
   contestantAName: string,
@@ -156,18 +157,37 @@ export function areContestantsMutualPartners(
 
   const normalizedAName = normalizeName(contestantAName);
   const normalizedBName = normalizeName(contestantBName);
+  const aNameParts = normalizedAName.split(' ').filter(p => p.length >= 3);
+  const bNameParts = normalizedBName.split(' ').filter(p => p.length >= 3);
   const normalizedAPartners = parsedA.partnerNames.map(normalizeName);
   const normalizedBPartners = parsedB.partnerNames.map(normalizeName);
 
+  // Helper function for strict name matching
+  const strictNameMatch = (partnerName: string, targetParts: string[]): boolean => {
+    const partnerParts = partnerName.split(' ').filter(p => p.length >= 3);
+    
+    // Exact match
+    if (partnerParts.join(' ') === targetParts.join(' ')) return true;
+    
+    // If both have 2+ parts, require at least 2 matches
+    if (partnerParts.length >= 2 && targetParts.length >= 2) {
+      const matchCount = partnerParts.filter(pp => targetParts.includes(pp)).length;
+      return matchCount >= 2;
+    }
+    
+    // Single name - require exact first name match
+    if (partnerParts.length === 1 && targetParts.length >= 1) {
+      return partnerParts[0] === targetParts[0];
+    }
+    
+    return false;
+  };
+
   // Check if A lists B
-  const aListsB = normalizedAPartners.some(partner => 
-    normalizedBName.includes(partner) || partner.includes(normalizedBName)
-  );
+  const aListsB = normalizedAPartners.some(partner => strictNameMatch(partner, bNameParts));
 
   // Check if B lists A
-  const bListsA = normalizedBPartners.some(partner => 
-    normalizedAName.includes(partner) || partner.includes(normalizedAName)
-  );
+  const bListsA = normalizedBPartners.some(partner => strictNameMatch(partner, aNameParts));
 
   // Require mutual reference for strong matching
   return aListsB && bListsA;
@@ -175,7 +195,8 @@ export function areContestantsMutualPartners(
 
 /**
  * Check if a contestant's attendingWith mentions a specific name.
- * Uses fuzzy matching - checks if either contains the other.
+ * Uses STRICT matching - requires full name match or at least 2 name parts to match.
+ * This prevents false positives like "Gianni" matching both "Gianni De Pasquale" and "Gianni Pitruzzello".
  */
 export function attendingWithMentionsName(
   attendingWith: string | null | undefined,
@@ -187,9 +208,26 @@ export function attendingWithMentionsName(
   }
 
   const normalizedTarget = normalizeName(targetName);
+  const targetParts = normalizedTarget.split(' ').filter(p => p.length >= 3);
+  
   return parsed.partnerNames.some(partner => {
     const normalizedPartner = normalizeName(partner);
-    return normalizedPartner.includes(normalizedTarget) || 
-           normalizedTarget.includes(normalizedPartner);
+    const partnerParts = normalizedPartner.split(' ').filter(p => p.length >= 3);
+    
+    // Exact full name match
+    if (normalizedPartner === normalizedTarget) return true;
+    
+    // If partner name has 2+ parts, require at least 2 parts to match
+    if (partnerParts.length >= 2 && targetParts.length >= 2) {
+      const matchCount = partnerParts.filter(pp => targetParts.includes(pp)).length;
+      return matchCount >= 2;
+    }
+    
+    // Single name only - require exact first name match
+    if (partnerParts.length === 1 && targetParts.length >= 1) {
+      return partnerParts[0] === targetParts[0];
+    }
+    
+    return false;
   });
 }

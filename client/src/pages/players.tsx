@@ -632,21 +632,54 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       console.log(`[getAutoCompanions] Trying attendingWith for ${contestant.name}, partnerNames: ${partnerNames.join(', ')}`);
       
       if (partnerNames.length > 0) {
-        // Find contestants whose names match the partner names
+        // Find contestants whose names match the partner names - STRICT MATCHING
         const attendingWithPartners = contestants.filter(c => {
           if (c.id === contestant.id) return false;
           return partnerNames.some(partnerName => {
-            const name = c.name?.toLowerCase() || '';
-            const pName = partnerName.toLowerCase();
-            return name.includes(pName) || pName.includes(name.split(' ')[0]);
+            const name = c.name?.toLowerCase().trim() || '';
+            const pName = partnerName.toLowerCase().trim();
+            const nameParts = name.split(' ').filter(p => p.length >= 3);
+            const pNameParts = pName.split(' ').filter(p => p.length >= 3);
+            
+            // Exact full name match
+            if (name === pName) return true;
+            
+            // If partner name has 2+ parts, require at least 2 parts to match
+            if (pNameParts.length >= 2) {
+              const matchCount = pNameParts.filter(pp => nameParts.includes(pp)).length;
+              return matchCount >= 2;
+            }
+            
+            // Single name only - require exact first name match
+            if (pNameParts.length === 1 && nameParts.length >= 1) {
+              return nameParts[0] === pNameParts[0];
+            }
+            
+            return false;
           });
         });
         
-        // Also check for reciprocal mentions
+        // Also check for reciprocal mentions - strict matching
         const reciprocalPartners = contestants.filter(c => {
           if (c.id === contestant.id) return false;
           if (attendingWithPartners.some(p => p.id === c.id)) return false;
-          return c.attendingWith && attendingWithMentionsName(c.attendingWith, contestant.name || '');
+          if (!c.attendingWith) return false;
+          
+          const cPartnerNames = getPartnerNames(c.attendingWith);
+          const contestantName = (contestant.name || '').toLowerCase().trim();
+          const contestantParts = contestantName.split(' ').filter(p => p.length >= 3);
+          
+          return cPartnerNames.some(pn => {
+            const pnParts = pn.toLowerCase().trim().split(' ').filter(p => p.length >= 3);
+            if (contestantParts.length >= 2 && pnParts.length >= 2) {
+              const matchCount = pnParts.filter(pp => contestantParts.includes(pp)).length;
+              return matchCount >= 2;
+            }
+            if (pnParts.length === 1 && contestantParts.length >= 1) {
+              return pnParts[0] === contestantParts[0];
+            }
+            return false;
+          });
         });
         
         groupMembers = [...attendingWithPartners, ...reciprocalPartners];
@@ -3762,16 +3795,54 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
         const attendingWithPartners = contestants.filter(c => {
           if (c.id === contestant.id) return false;
           return partnerNames.some(partnerName => {
-            const name = c.name?.toLowerCase() || '';
-            const pName = partnerName.toLowerCase();
-            return name.includes(pName) || pName.includes(name.split(' ')[0]);
+            const name = c.name?.toLowerCase().trim() || '';
+            const pName = partnerName.toLowerCase().trim();
+            const nameParts = name.split(' ').filter(p => p.length >= 3);
+            const pNameParts = pName.split(' ').filter(p => p.length >= 3);
+            
+            // Exact full name match
+            if (name === pName) return true;
+            
+            // If partner name has 2+ parts, require at least 2 parts to match (first + last name)
+            if (pNameParts.length >= 2) {
+              const matchCount = pNameParts.filter(pp => nameParts.includes(pp)).length;
+              return matchCount >= 2;
+            }
+            
+            // Single name only (e.g., "Gianni") - require exact first name match AND only 1 contestant matches
+            if (pNameParts.length === 1) {
+              // Only match if it's an exact first name match, not partial
+              return nameParts[0] === pNameParts[0];
+            }
+            
+            return false;
           });
         });
         
+        // For reciprocal check, also be stricter
         const reciprocalPartners = contestants.filter(c => {
           if (c.id === contestant.id) return false;
           if (attendingWithPartners.some(p => p.id === c.id)) return false;
-          return c.attendingWith && attendingWithMentionsName(c.attendingWith, contestant.name || '');
+          if (!c.attendingWith) return false;
+          
+          // Check if c's attendingWith mentions contestant - require stronger matching
+          const cPartnerNames = getPartnerNames(c.attendingWith);
+          const contestantName = (contestant.name || '').toLowerCase().trim();
+          const contestantParts = contestantName.split(' ').filter(p => p.length >= 3);
+          
+          return cPartnerNames.some(pn => {
+            const pnParts = pn.toLowerCase().trim().split(' ').filter(p => p.length >= 3);
+            // Require at least 2 parts match if target has 2+ parts
+            if (contestantParts.length >= 2 && pnParts.length >= 2) {
+              const matchCount = pnParts.filter(pp => contestantParts.includes(pp)).length;
+              return matchCount >= 2;
+            }
+            // Single name match only if exact first name
+            if (pnParts.length === 1 && contestantParts.length >= 1) {
+              return pnParts[0] === contestantParts[0];
+            }
+            return false;
+          });
         });
         
         return [...attendingWithPartners, ...reciprocalPartners];
