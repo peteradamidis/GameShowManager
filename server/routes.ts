@@ -15362,6 +15362,73 @@ Thank you.`;
     }
   });
 
+  // === Birthday Entries API ===
+  
+  // Get all birthday entries
+  app.get("/api/birthdays", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getBirthdayEntries();
+      res.json(entries);
+    } catch (error: any) {
+      console.error("Error fetching birthday entries:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get today's birthdays (for banner display)
+  app.get("/api/birthdays/today", async (req, res) => {
+    try {
+      const entries = await storage.getTodayBirthdays();
+      res.json(entries);
+    } catch (error: any) {
+      console.error("Error fetching today's birthdays:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create a birthday entry
+  app.post("/api/birthdays", requireAuth, async (req, res) => {
+    try {
+      const { name, birthdate } = req.body;
+      if (!name || !birthdate) {
+        return res.status(400).json({ error: "Name and birthdate are required" });
+      }
+      const entry = await storage.createBirthdayEntry({ name, birthdate });
+      res.json(entry);
+    } catch (error: any) {
+      console.error("Error creating birthday entry:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update a birthday entry
+  app.patch("/api/birthdays/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, birthdate } = req.body;
+      const entry = await storage.updateBirthdayEntry(id, { name, birthdate });
+      if (!entry) {
+        return res.status(404).json({ error: "Birthday entry not found" });
+      }
+      res.json(entry);
+    } catch (error: any) {
+      console.error("Error updating birthday entry:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete a birthday entry
+  app.delete("/api/birthdays/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteBirthdayEntry(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting birthday entry:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize WebSocket server for real-time updates

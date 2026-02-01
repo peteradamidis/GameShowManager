@@ -748,3 +748,19 @@ export const insertCastingCardSchema = createInsertSchema(castingCards).omit({
 
 export type InsertCastingCard = z.infer<typeof insertCastingCardSchema>;
 export type CastingCard = typeof castingCards.$inferSelect;
+
+// Birthday Entries table for team birthday celebrations
+export const birthdayEntries = pgTable("birthday_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  birthdate: date("birthdate").notNull(), // Month and day for annual celebration
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertBirthdayEntrySchema = createInsertSchema(birthdayEntries).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertBirthdayEntry = z.infer<typeof insertBirthdayEntrySchema>;
+export type BirthdayEntry = typeof birthdayEntries.$inferSelect;

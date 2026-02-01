@@ -26,6 +26,7 @@ import {
   noticeboardLikes,
   postRecordTracking,
   castingCards,
+  birthdayEntries,
   type Contestant,
   type InsertContestant,
   type Group,
@@ -73,6 +74,8 @@ import {
   type InsertPostRecordTracking,
   type CastingCard,
   type InsertCastingCard,
+  type BirthdayEntry,
+  type InsertBirthdayEntry,
 } from "@shared/schema";
 import { eq, and, sql, inArray, desc } from "drizzle-orm";
 
@@ -389,6 +392,13 @@ export interface IStorage {
   toggleLike(postId: string, browserId: string): Promise<{ liked: boolean; likeCount: number }>;
   getLikesByPost(postId: string): Promise<NoticeboardLike[]>;
   hasBrowserLikedPost(postId: string, browserId: string): Promise<boolean>;
+  
+  // Birthday Entries
+  getBirthdayEntries(): Promise<BirthdayEntry[]>;
+  createBirthdayEntry(entry: InsertBirthdayEntry): Promise<BirthdayEntry>;
+  updateBirthdayEntry(id: string, data: Partial<BirthdayEntry>): Promise<BirthdayEntry | undefined>;
+  deleteBirthdayEntry(id: string): Promise<void>;
+  getTodayBirthdays(): Promise<BirthdayEntry[]>;
 }
 
 export class DbStorage implements IStorage {
@@ -2968,6 +2978,48 @@ export class DbStorage implements IStorage {
   async deleteAllCastingCards(): Promise<void> {
     const db = getDb();
     await db.delete(castingCards);
+  }
+
+  // Birthday Entries methods
+  async getBirthdayEntries(): Promise<BirthdayEntry[]> {
+    const db = getDb();
+    return db.select().from(birthdayEntries);
+  }
+
+  async createBirthdayEntry(entry: InsertBirthdayEntry): Promise<BirthdayEntry> {
+    const db = getDb();
+    const [created] = await db.insert(birthdayEntries).values(entry).returning();
+    return created;
+  }
+
+  async updateBirthdayEntry(id: string, data: Partial<BirthdayEntry>): Promise<BirthdayEntry | undefined> {
+    const db = getDb();
+    const [updated] = await db
+      .update(birthdayEntries)
+      .set(data)
+      .where(eq(birthdayEntries.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteBirthdayEntry(id: string): Promise<void> {
+    const db = getDb();
+    await db.delete(birthdayEntries).where(eq(birthdayEntries.id, id));
+  }
+
+  async getTodayBirthdays(): Promise<BirthdayEntry[]> {
+    const db = getDb();
+    // Get today's month and day, compare with birthdate's month and day
+    const today = new Date();
+    const month = today.getMonth() + 1; // JavaScript months are 0-indexed
+    const day = today.getDate();
+    
+    // Query all entries and filter in JS for date matching (simpler than complex SQL date extraction)
+    const allEntries = await db.select().from(birthdayEntries);
+    return allEntries.filter(entry => {
+      const birthDate = new Date(entry.birthdate);
+      return birthDate.getMonth() + 1 === month && birthDate.getDate() === day;
+    });
   }
 }
 
