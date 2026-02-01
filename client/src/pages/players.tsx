@@ -2370,7 +2370,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               <div className="flex-1">
                 {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
                 <div 
-                  className="pl-6 pr-4 rounded-l flex items-center justify-between mb-4 casting-card-header" 
+                  className="pl-6 pr-0 rounded-l flex items-center justify-between mb-4 casting-card-header" 
                   style={{ 
                     height: '50px',
                     background: 'linear-gradient(to right, #b45309, #d97706, #f59e0b)'
@@ -2391,7 +2391,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
-                  <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain ml-auto" />
+                  <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain" />
                 </div>
 
                 {/* Age and details - all editable */}
@@ -3114,7 +3114,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <div className="flex-1">
                     {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
                     <div 
-                      className="pl-4 pr-4 rounded-l flex items-center justify-between mb-4 casting-card-header" 
+                      className="pl-4 pr-0 rounded-l flex items-center justify-between mb-4 casting-card-header" 
                       style={{ 
                         height: '50px',
                         background: 'linear-gradient(to right, #b45309, #d97706, #f59e0b)'
@@ -3137,7 +3137,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
                       >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
-                      <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain ml-auto" />
+                      <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain" />
                     </div>
 
                     {/* Age and details - all editable */}
