@@ -810,50 +810,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     },
   });
 
-  // Reset/delete ALL casting cards mutation
-  const resetAllCardsMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('DELETE', '/api/casting-cards');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/casting-cards'] });
-      toast({ title: "All cards reset", description: "All casting cards have been deleted" });
-      // Reset local card data to fresh state
-      if (selectedContestant) {
-        const autoCompanions = getAutoCompanions(selectedContestant);
-        setCardData({
-          contestantId: selectedContestant.id,
-          occupation: '',
-          sponsorCategory: '',
-          tagline: '',
-          energyLevel: '3',
-          characterTraits: '',
-          meetStory: '',
-          keyStories: '',
-          prizeGoalHigh: '',
-          prizeGoalLow: '',
-          howMuchToWin: '',
-          playStyle: '',
-          previousShows: '',
-          companionName: selectedContestant.attendingWith || '',
-          companionRelationship: '',
-          companionPhotoUrl: '',
-          producerName: '',
-          showProducer: true,
-          showTagline: true,
-          manualCompanions: autoCompanions.length > 0 ? autoCompanions : [],
-          useManualCompanions: autoCompanions.length > 0,
-          ageState: `${selectedContestant.age || ''} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`.trim(),
-        });
-      }
-      toast({ title: "Card Reset", description: "Casting card has been reset to default" });
-    },
-    onError: (error: any) => {
-      toast({ title: "Reset failed", description: error.message, variant: "destructive" });
-    },
-  });
-
   // Filter contestants - search by full name (first + last)
   const filteredContestants = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
@@ -2651,22 +2607,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   </SelectContent>
                 </Select>
               </div>
-              {/* Reset All Cards Button */}
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="w-full text-red-600 border-red-300 hover:bg-red-50"
-                onClick={() => {
-                  if (confirm('Are you sure you want to reset ALL casting cards? This will delete all saved card data for every contestant.')) {
-                    resetAllCardsMutation.mutate();
-                  }
-                }}
-                disabled={resetAllCardsMutation.isPending}
-                data-testid="btn-reset-all-cards"
-              >
-                <RotateCcw className="h-4 w-4 mr-1" />
-                {resetAllCardsMutation.isPending ? 'Resetting All...' : 'Reset All Cards'}
-              </Button>
             </div>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto p-2">
