@@ -1287,7 +1287,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
           });
-          // Producer corner in bottom right - ensure yellow background shows in print
+          // Producer corner in bottom left - ensure yellow background shows in print
           clonedDoc.querySelectorAll('.casting-card-producer-corner span').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
@@ -1613,7 +1613,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
           });
-          // Producer corner in bottom right - ensure yellow background shows in print
+          // Producer corner in bottom left - ensure yellow background shows in print
           clonedDoc.querySelectorAll('.casting-card-producer-corner span').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
@@ -2262,10 +2262,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               }}
             >
               
-              {/* Producer Name - Bottom Right Corner */}
+              {/* Producer Name - Bottom Left Corner */}
               {cardData.producerName && (
                 <div 
-                  className="absolute bottom-3 right-4 casting-card-producer-corner"
+                  className="absolute bottom-3 left-4 casting-card-producer-corner"
                   style={{ zIndex: 10 }}
                 >
                   <span 
@@ -3161,10 +3161,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     </span>
                   </div>
                   
-                  {/* Producer Name - Bottom Right Corner */}
+                  {/* Producer Name - Bottom Left Corner */}
                   {cardData.producerName && (
                     <div 
-                      className="absolute bottom-3 right-4 casting-card-producer-corner"
+                      className="absolute bottom-3 left-4 casting-card-producer-corner"
                       style={{ zIndex: 10 }}
                     >
                       <span 
