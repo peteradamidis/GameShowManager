@@ -2678,8 +2678,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <div
                     contentEditable
                     suppressContentEditableWarning
-                    className="font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                    style={{ fontFamily: 'Calibri, sans-serif', fontSize: `${cardData.fontSizeAgeState || 30}px` }}
+                    className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                    style={{ fontFamily: 'Calibri, sans-serif', fontSize: '30px' }}
                     onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
                   >
                     {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
@@ -2687,8 +2687,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <div
                     contentEditable
                     suppressContentEditableWarning
-                    className="font-bold text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                    style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 30}px` }}
+                    className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                    style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '30px' }}
                     onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
                   >
                     {cardData.occupation || 'OCCUPATION'}
@@ -3505,8 +3505,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div
                         contentEditable
                         suppressContentEditableWarning
-                        className="font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                        style={{ fontFamily: 'Calibri, sans-serif', fontSize: `${cardData.fontSizeAgeState || 30}px` }}
+                        className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                        style={{ fontFamily: 'Calibri, sans-serif', fontSize: '30px' }}
                         onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
                         data-testid="preview-age-location"
                       >
@@ -3515,8 +3515,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div
                         contentEditable
                         suppressContentEditableWarning
-                        className="font-bold text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 30}px` }}
+                        className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '30px' }}
                         onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
                         data-testid="edit-occupation"
                       >
