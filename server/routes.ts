@@ -15271,9 +15271,11 @@ Thank you.`;
       // Extract lastKnownUpdatedAt for conflict detection, and remove fields that shouldn't be updated
       const { id, createdAt, updatedAt, contestantId: _, lastKnownUpdatedAt, forceOverwrite, ...data } = req.body;
       
+      // Get existing card for conflict detection and version saving
+      const existingCard = await storage.getCastingCardByContestantId(contestantId);
+      
       // Check for conflicts if lastKnownUpdatedAt is provided
       if (lastKnownUpdatedAt && !forceOverwrite) {
-        const existingCard = await storage.getCastingCardByContestantId(contestantId);
         if (existingCard && existingCard.updatedAt) {
           const serverTime = new Date(existingCard.updatedAt).getTime();
           const clientTime = new Date(lastKnownUpdatedAt).getTime();
@@ -15286,6 +15288,23 @@ Thank you.`;
               currentData: existingCard
             });
           }
+        }
+      }
+      
+      // Time-throttled version saving: only save if 10+ minutes since last version
+      if (existingCard) {
+        const TEN_MINUTES_MS = 10 * 60 * 1000;
+        const latestVersion = await storage.getLatestCastingCardVersion(existingCard.id);
+        const now = Date.now();
+        const lastVersionTime = latestVersion ? new Date(latestVersion.createdAt).getTime() : 0;
+        
+        if (now - lastVersionTime >= TEN_MINUTES_MS) {
+          // Save current state as a version before updating
+          await storage.createCastingCardVersion({
+            castingCardId: existingCard.id,
+            cardData: JSON.stringify(existingCard),
+            createdBy: (req.user as any)?.username || 'system',
+          });
         }
       }
       
@@ -15550,6 +15569,63 @@ Thank you.`;
       res.json({ success: true, message: "All casting cards deleted" });
     } catch (error: any) {
       console.error("Error deleting all casting cards:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // === Casting Card Version History API ===
+  
+  // Get version history for a casting card
+  app.get("/api/casting-cards/:cardId/versions", requireAuth, async (req, res) => {
+    try {
+      const { cardId } = req.params;
+      const versions = await storage.getCastingCardVersions(cardId);
+      res.json(versions);
+    } catch (error: any) {
+      console.error("Error fetching casting card versions:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Restore a casting card to a previous version
+  app.post("/api/casting-cards/:cardId/versions/:versionId/restore", requireAuth, async (req, res) => {
+    try {
+      const { cardId, versionId } = req.params;
+      
+      // Get the version to restore
+      const versions = await storage.getCastingCardVersions(cardId);
+      const versionToRestore = versions.find(v => v.id === versionId);
+      
+      if (!versionToRestore) {
+        return res.status(404).json({ error: "Version not found" });
+      }
+      
+      // Parse the stored card data
+      const cardData = JSON.parse(versionToRestore.cardData);
+      
+      // Get the current card to find contestantId
+      // The cardId is the casting_cards.id, need to find the card first
+      const allCards = await storage.getCastingCards();
+      const currentCard = allCards.find(c => c.id === cardId);
+      
+      if (!currentCard) {
+        return res.status(404).json({ error: "Casting card not found" });
+      }
+      
+      // Save the current state as a new version before restoring (so restore can be undone)
+      await storage.createCastingCardVersion({
+        castingCardId: cardId,
+        cardData: JSON.stringify(currentCard),
+        createdBy: (req.user as any)?.username || 'system',
+      });
+      
+      // Update the card with the restored data (excluding id, contestantId, createdAt, updatedAt)
+      const { id: _id, contestantId: _cId, createdAt: _cAt, updatedAt: _uAt, ...restoreData } = cardData;
+      
+      const updated = await storage.updateCastingCard(currentCard.contestantId, restoreData);
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error restoring casting card version:", error);
       res.status(500).json({ error: error.message });
     }
   });
