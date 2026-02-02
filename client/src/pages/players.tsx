@@ -2639,6 +2639,78 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           </div>
         </div>
       </div>
+      
+      {/* Version History Dialog - also needed in fullscreen mode */}
+      <Dialog open={versionHistoryOpen} onOpenChange={setVersionHistoryOpen}>
+        <DialogContent className="max-w-lg max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Version History
+            </DialogTitle>
+            <DialogDescription>
+              Previous versions of this casting card. Versions are saved automatically every 10 minutes during editing.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2 max-h-[400px] overflow-y-auto">
+            {loadingVersions ? (
+              <div className="text-center py-8 text-muted-foreground">Loading versions...</div>
+            ) : cardVersions.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <History className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                <p>No version history yet</p>
+                <p className="text-xs mt-1">Versions are saved automatically every 10 minutes during editing.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {cardVersions.map((version) => {
+                  let parsedData: any = {};
+                  try {
+                    parsedData = typeof version.cardData === 'string' 
+                      ? JSON.parse(version.cardData) 
+                      : version.cardData;
+                  } catch (e) {
+                    console.error('Failed to parse version cardData:', e);
+                  }
+                  return (
+                    <div key={version.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-md border">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium">
+                          {new Date(version.createdAt).toLocaleDateString()} at {new Date(version.createdAt).toLocaleTimeString()}
+                        </div>
+                        <div className="text-xs text-muted-foreground flex items-center gap-2">
+                          {version.createdBy && <span>By: {version.createdBy}</span>}
+                          {parsedData.isReady && <Badge variant="outline" className="text-[10px] py-0">RX Ready</Badge>}
+                          {parsedData.isDraftComplete && <Badge variant="outline" className="text-[10px] py-0">Draft</Badge>}
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          if (existingCard?.id) {
+                            restoreVersionMutation.mutate({ cardId: existingCard.id, versionId: version.id });
+                          }
+                        }}
+                        disabled={restoreVersionMutation.isPending}
+                        data-testid={`btn-restore-version-fs-${version.id}`}
+                      >
+                        <RotateCcw className="h-3 w-3 mr-1" />
+                        Restore
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setVersionHistoryOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </SafeRender>
     );
   }
