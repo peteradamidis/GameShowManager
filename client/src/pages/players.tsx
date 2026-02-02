@@ -1418,6 +1418,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.border = 'none';
           });
           
+          // Remove outer border and shadow from card container for print
+          const cardPreview = clonedDoc.querySelector('#casting-card-preview');
+          if (cardPreview) {
+            (cardPreview as HTMLElement).style.border = 'none';
+            (cardPreview as HTMLElement).style.boxShadow = 'none';
+          }
+          
           // Walk through all elements and remove any inline styles with color() function
           const allElements = clonedDoc.querySelectorAll('*');
           allElements.forEach((el: Element) => {
@@ -1726,6 +1733,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           clonedDoc.querySelectorAll('.print-no-border').forEach((el: Element) => {
             (el as HTMLElement).style.border = 'none';
           });
+          
+          // Remove outer border and shadow from card container for print
+          const cardPreview = clonedDoc.querySelector('#casting-card-preview');
+          if (cardPreview) {
+            (cardPreview as HTMLElement).style.border = 'none';
+            (cardPreview as HTMLElement).style.boxShadow = 'none';
+          }
           
           // Walk through all elements and remove any inline styles with color() function
           const allElements = clonedDoc.querySelectorAll('*');
@@ -2222,7 +2236,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           <div className="relative overflow-hidden" style={{ width: `calc(297mm * ${cardZoom})`, height: `calc(210mm * ${cardZoom})` }}>
             <div 
               id="casting-card-preview"
-              className="bg-white p-4 border-2 border-gray-300 shadow-lg relative overflow-hidden origin-top-left"
+              className="bg-white p-4 border-2 border-gray-300 shadow-lg relative overflow-hidden origin-top-left print:border-0 print:shadow-none"
               style={{ 
                 width: '297mm', 
                 height: '210mm',
@@ -3058,7 +3072,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               <div className="relative overflow-hidden" style={{ width: `calc(297mm * ${cardZoom})`, height: `calc(210mm * ${cardZoom})` }}>
                 <div 
                   id="casting-card-preview"
-                  className="bg-white p-4 border-2 border-gray-300 shadow-lg relative overflow-hidden origin-top-left"
+                  className="bg-white p-4 border-2 border-gray-300 shadow-lg relative overflow-hidden origin-top-left print:border-0 print:shadow-none"
                   style={{ 
                     width: '297mm', 
                     height: '210mm',
