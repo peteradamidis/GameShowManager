@@ -38,6 +38,7 @@ import { syncRecordDayToSheet, createSheetHeader, updateCellInRecordDaySheet, up
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { requireAuth, hashPassword, verifyPassword } from "./auth";
 import { wsManager } from "./websocket";
+import sharp from "sharp";
 
 // Google Sheets config keys for database storage
 const SHEETS_SPREADSHEET_ID_KEY = 'google_sheets_spreadsheet_id';
@@ -771,12 +772,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Process and sharpen the uploaded image
+      const originalPath = req.file.path;
+      const processedFilename = `processed-${req.file.filename}`;
+      const processedPath = path.join(path.dirname(originalPath), processedFilename);
+      
+      try {
+        // Apply strong sharpening to improve clarity for casting cards
+        // sigma: 1.0-2.0 controls radius, higher = more aggressive
+        // flat: reduces noise sharpening, thresholds: minimum difference for edge detection
+        await sharp(originalPath)
+          .sharpen({
+            sigma: 1.5,  // Strong sharpening radius
+            m1: 1.5,     // Flat area sharpening (more aggressive)
+            m2: 1.0,     // Jagged area sharpening
+            x1: 2,       // Threshold flat/jagged
+            y2: 10,      // Maximum darkening
+            y3: 20,      // Maximum brightening
+          })
+          .modulate({
+            brightness: 1.02, // Slight brightness boost
+            saturation: 1.05, // Slight saturation boost for vibrancy
+          })
+          .jpeg({ quality: 95 }) // High quality output
+          .toFile(processedPath);
+        
+        // Remove original and rename processed file
+        fs.unlinkSync(originalPath);
+        const finalPath = originalPath; // Use original filename
+        fs.renameSync(processedPath, finalPath);
+        
+        console.log(`Photo sharpened and processed for contestant ${id}`);
+      } catch (sharpError) {
+        console.error("Sharp processing error, using original:", sharpError);
+        // If sharp fails, just use the original unprocessed image
+      }
+
       const photoUrl = `/uploads/photos/${req.file.filename}`;
       
       // Update contestant with photo URL
       const updated = await storage.updateContestantPhoto(id, photoUrl);
 
-      res.json({ photoUrl, message: "Photo uploaded successfully" });
+      res.json({ photoUrl, message: "Photo uploaded and sharpened successfully" });
     } catch (error) {
       console.error("Photo upload error:", error);
       res.status(500).json({ error: "Failed to upload photo" });
@@ -1206,10 +1243,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
 
-            // Save new photo
-            const filename = `contestant-gallery-${entry.matchedContestant.id}-${Date.now()}.png`;
+            // Save new photo with sharpening
+            const filename = `contestant-gallery-${entry.matchedContestant.id}-${Date.now()}.jpg`;
             const filePath = path.join(uploadPath, filename);
-            fs.writeFileSync(filePath, entry.imageData);
+            
+            try {
+              // Apply strong sharpening to improve clarity for casting cards
+              await sharp(entry.imageData)
+                .sharpen({
+                  sigma: 1.5,  // Strong sharpening radius
+                  m1: 1.5,     // Flat area sharpening (more aggressive)
+                  m2: 1.0,     // Jagged area sharpening
+                  x1: 2,       // Threshold flat/jagged
+                  y2: 10,      // Maximum darkening
+                  y3: 20,      // Maximum brightening
+                })
+                .modulate({
+                  brightness: 1.02, // Slight brightness boost
+                  saturation: 1.05, // Slight saturation boost for vibrancy
+                })
+                .jpeg({ quality: 95 }) // High quality output
+                .toFile(filePath);
+              
+              console.log(`[Gallery Import] Photo sharpened for ${entry.matchedContestant.name}`);
+            } catch (sharpError) {
+              console.error(`[Gallery Import] Sharp processing error, saving original:`, sharpError);
+              // If sharp fails, save the original unprocessed image
+              fs.writeFileSync(filePath, entry.imageData);
+            }
 
             const photoUrl = `/uploads/photos/${filename}`;
             await storage.updateContestantPhoto(entry.matchedContestant.id, photoUrl);
