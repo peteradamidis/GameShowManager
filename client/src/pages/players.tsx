@@ -1974,6 +1974,21 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       const range = selection.getRangeAt(0);
       if (range.collapsed) return;
       
+      // Handle 'bigger' and 'smaller' for A↑ and A↓ buttons
+      let targetSize = size;
+      if (size === 'bigger' || size === 'smaller') {
+        // Try to detect current font size from selection
+        const parentEl = range.commonAncestorContainer.parentElement;
+        const computedStyle = parentEl ? window.getComputedStyle(parentEl) : null;
+        const currentSize = computedStyle ? parseInt(computedStyle.fontSize) : 16;
+        const step = 2;
+        if (size === 'bigger') {
+          targetSize = String(Math.min(currentSize + step, 72));
+        } else {
+          targetSize = String(Math.max(currentSize - step, 8));
+        }
+      }
+      
       // Use execCommand with a font size, then find and replace the font tags
       // execCommand fontSize uses values 1-7, we'll use 7 as a marker
       document.execCommand('fontSize', false, '7');
@@ -1984,7 +1999,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         const fontElements = activeElement.querySelectorAll('font[size="7"]');
         fontElements.forEach((font) => {
           const span = document.createElement('span');
-          span.style.fontSize = `${size}px`;
+          span.style.fontSize = `${targetSize}px`;
           span.innerHTML = font.innerHTML;
           font.parentNode?.replaceChild(span, font);
         });
@@ -2193,26 +2208,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 <option value="40">40</option>
               </select>
               
-              <div className="w-px h-6 bg-gray-300 mx-1" />
-              
-              {/* Age/Location Font Size */}
-              <span className="text-xs text-gray-500 ml-1">Age:</span>
-              <Button size="icon" variant="ghost" onClick={() => updateField('fontSizeAgeState', Math.max((cardData.fontSizeAgeState || 30) - 2, 16))} title="Decrease Age Font" data-testid="btn-age-font-down" className="h-8 w-8">
-                <ChevronDown className="h-4 w-4" />
+              {/* Increase/Decrease Font Size buttons (like Word) */}
+              <Button size="icon" variant="ghost" onClick={() => formatFontSize('bigger')} title="Increase Font Size" data-testid="btn-font-size-up" className="h-8 w-8">
+                <span className="text-sm font-bold">A</span><ChevronUp className="h-3 w-3 -ml-0.5" />
               </Button>
-              <span className="text-xs text-gray-600 min-w-[30px] text-center">{cardData.fontSizeAgeState || 30}</span>
-              <Button size="icon" variant="ghost" onClick={() => updateField('fontSizeAgeState', Math.min((cardData.fontSizeAgeState || 30) + 2, 48))} title="Increase Age Font" data-testid="btn-age-font-up" className="h-8 w-8">
-                <ChevronUp className="h-4 w-4" />
-              </Button>
-              
-              {/* Occupation Font Size */}
-              <span className="text-xs text-gray-500 ml-1">Occ:</span>
-              <Button size="icon" variant="ghost" onClick={() => updateField('fontSizeOccupation', Math.max((cardData.fontSizeOccupation || 30) - 2, 16))} title="Decrease Occupation Font" data-testid="btn-occ-font-down" className="h-8 w-8">
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-              <span className="text-xs text-gray-600 min-w-[30px] text-center">{cardData.fontSizeOccupation || 30}</span>
-              <Button size="icon" variant="ghost" onClick={() => updateField('fontSizeOccupation', Math.min((cardData.fontSizeOccupation || 30) + 2, 48))} title="Increase Occupation Font" data-testid="btn-occ-font-up" className="h-8 w-8">
-                <ChevronUp className="h-4 w-4" />
+              <Button size="icon" variant="ghost" onClick={() => formatFontSize('smaller')} title="Decrease Font Size" data-testid="btn-font-size-down" className="h-8 w-8">
+                <span className="text-sm font-bold">A</span><ChevronDown className="h-3 w-3 -ml-0.5" />
               </Button>
               
               <div className="w-px h-6 bg-gray-300 mx-1" />
@@ -3121,26 +3122,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     Fullscreen
                   </Button>
                                   </div>
-              </div>
-              {/* Font size controls for Age/Location and Occupation */}
-              <div className="flex items-center gap-2 mt-2 px-2 py-1 bg-gray-50 rounded border">
-                <span className="text-xs text-gray-500">Age/Location:</span>
-                <Button size="icon" variant="ghost" onClick={() => updateField('fontSizeAgeState', Math.max((cardData.fontSizeAgeState || 30) - 2, 16))} title="Decrease Age Font" data-testid="btn-age-font-down-main" className="h-7 w-7">
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-                <span className="text-xs text-gray-600 min-w-[24px] text-center">{cardData.fontSizeAgeState || 30}</span>
-                <Button size="icon" variant="ghost" onClick={() => updateField('fontSizeAgeState', Math.min((cardData.fontSizeAgeState || 30) + 2, 48))} title="Increase Age Font" data-testid="btn-age-font-up-main" className="h-7 w-7">
-                  <ChevronUp className="h-3 w-3" />
-                </Button>
-                <div className="w-px h-5 bg-gray-300 mx-1" />
-                <span className="text-xs text-gray-500">Occupation:</span>
-                <Button size="icon" variant="ghost" onClick={() => updateField('fontSizeOccupation', Math.max((cardData.fontSizeOccupation || 30) - 2, 16))} title="Decrease Occupation Font" data-testid="btn-occ-font-down-main" className="h-7 w-7">
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-                <span className="text-xs text-gray-600 min-w-[24px] text-center">{cardData.fontSizeOccupation || 30}</span>
-                <Button size="icon" variant="ghost" onClick={() => updateField('fontSizeOccupation', Math.min((cardData.fontSizeOccupation || 30) + 2, 48))} title="Increase Occupation Font" data-testid="btn-occ-font-up-main" className="h-7 w-7">
-                  <ChevronUp className="h-3 w-3" />
-                </Button>
               </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden p-4">
