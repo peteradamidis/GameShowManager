@@ -2721,7 +2721,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       contentEditable
                       suppressContentEditableWarning
                       className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] print-no-border"
-                      style={{ fontFamily: 'Calibri, sans-serif', fontSize: '18px', lineHeight: '1.5' }}
+                      style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5' }}
                       onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
                       dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
                     />
@@ -3536,7 +3536,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           contentEditable
                           suppressContentEditableWarning
                           className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] print-no-border"
-                          style={{ fontFamily: 'Calibri, sans-serif', fontSize: '18px', lineHeight: '1.5' }}
+                          style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5' }}
                           onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
                           dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
                           data-testid="edit-body-text"
