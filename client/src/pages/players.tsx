@@ -649,9 +649,30 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     },
     onSuccess: (restoredCard) => {
       toast({ title: "Version restored", description: "The casting card has been restored to the selected version." });
-      // Sync local form state with restored data
+      // Sync local form state with restored data - need to parse JSON fields
       if (restoredCard) {
-        setCardData(restoredCard);
+        let parsedCard = { ...restoredCard };
+        // Parse manualCompanions if it's a string (from database)
+        if (typeof parsedCard.manualCompanions === 'string') {
+          try {
+            parsedCard.manualCompanions = JSON.parse(parsedCard.manualCompanions as any);
+          } catch (e) {
+            parsedCard.manualCompanions = [];
+          }
+        }
+        // Ensure manualCompanions is always an array
+        if (!Array.isArray(parsedCard.manualCompanions)) {
+          parsedCard.manualCompanions = [];
+        }
+        // Parse bulletPoints if it's a string
+        if (typeof parsedCard.bulletPoints === 'string') {
+          try {
+            parsedCard.bulletPoints = JSON.parse(parsedCard.bulletPoints as any);
+          } catch (e) {
+            parsedCard.bulletPoints = [];
+          }
+        }
+        setCardData(parsedCard);
         setLastKnownUpdatedAt(restoredCard.updatedAt);
       }
       queryClient.invalidateQueries({ queryKey: ['/api/casting-cards', selectedContestant?.id] });
