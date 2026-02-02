@@ -626,6 +626,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     // Try to get cursor position from selection
     const selection = window.getSelection();
     let insertPosition = currentText.length; // Default to end
+    let foundPosition = false;
     
     // Check if selection is within our element
     if (selection && selection.rangeCount > 0) {
@@ -636,6 +637,24 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         preCaretRange.selectNodeContents(element);
         preCaretRange.setEnd(range.startContainer, range.startOffset);
         insertPosition = preCaretRange.toString().length;
+        foundPosition = true;
+      }
+    }
+    
+    // If selection wasn't in the element, try using the saved cursor position
+    if (!foundPosition && lastCursorPositionRef.current && lastCursorPositionRef.current.node) {
+      const savedNode = lastCursorPositionRef.current.node;
+      const savedOffset = lastCursorPositionRef.current.offset;
+      if (element.contains(savedNode)) {
+        try {
+          const preCaretRange = document.createRange();
+          preCaretRange.selectNodeContents(element);
+          preCaretRange.setEnd(savedNode, savedOffset);
+          insertPosition = preCaretRange.toString().length;
+          foundPosition = true;
+        } catch (e) {
+          // Node may no longer be valid, fall back to end
+        }
       }
     }
     
@@ -2802,6 +2821,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] print-no-border"
                       style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5' }}
                       onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
+                      onMouseUp={saveCursorPosition}
+                      onKeyUp={saveCursorPosition}
                       dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
                     />
                   </div>
@@ -3621,6 +3642,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] print-no-border"
                           style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5' }}
                           onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
+                          onMouseUp={saveCursorPosition}
+                          onKeyUp={saveCursorPosition}
                           dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
                           data-testid="edit-body-text"
                         />
