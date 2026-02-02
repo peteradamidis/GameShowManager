@@ -187,6 +187,9 @@ interface CastingCardData {
   mainPhotoOffsetX?: number | null;
   mainPhotoOffsetY?: number | null;
   mainPhotoRotation?: number | null;
+  // Font sizes for age/state and occupation
+  fontSizeAgeState?: number | null;
+  fontSizeOccupation?: number | null;
 }
 
 // Default bullet points for new casting cards
@@ -1191,6 +1194,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         #casting-card-preview .casting-card-tagline { color: #dc2626 !important; }
         #casting-card-preview .casting-card-producer-label { background-color: #e5e7eb !important; border: 1px solid #d1d5db !important; color: #000000 !important; }
         #casting-card-preview .casting-card-producer-name { background-color: #facc15 !important; color: #000000 !important; }
+        #casting-card-preview .casting-card-producer-corner span { background-color: #facc15 !important; color: #000000 !important; }
         #casting-card-preview .casting-card-photo-border { border: 4px solid #f59e0b !important; background-color: #f3f4f6 !important; }
       `;
       document.head.appendChild(printOverrideStyle);
@@ -1280,6 +1284,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.color = '#000000';
           });
           clonedDoc.querySelectorAll('.casting-card-producer-name').forEach((el: Element) => {
+            (el as HTMLElement).style.backgroundColor = '#facc15';
+            (el as HTMLElement).style.color = '#000000';
+          });
+          // Producer corner in bottom right - ensure yellow background shows in print
+          clonedDoc.querySelectorAll('.casting-card-producer-corner span').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
           });
@@ -1512,6 +1521,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         #casting-card-preview .casting-card-tagline { color: #dc2626 !important; }
         #casting-card-preview .casting-card-producer-label { background-color: #e5e7eb !important; border: 1px solid #d1d5db !important; color: #000000 !important; }
         #casting-card-preview .casting-card-producer-name { background-color: #facc15 !important; color: #000000 !important; }
+        #casting-card-preview .casting-card-producer-corner span { background-color: #facc15 !important; color: #000000 !important; }
         #casting-card-preview .casting-card-photo-border { border: 4px solid #f59e0b !important; background-color: #f3f4f6 !important; }
       `;
       document.head.appendChild(printOverrideStyle);
@@ -1600,6 +1610,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.color = '#000000';
           });
           clonedDoc.querySelectorAll('.casting-card-producer-name').forEach((el: Element) => {
+            (el as HTMLElement).style.backgroundColor = '#facc15';
+            (el as HTMLElement).style.color = '#000000';
+          });
+          // Producer corner in bottom right - ensure yellow background shows in print
+          clonedDoc.querySelectorAll('.casting-card-producer-corner span').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
           });
@@ -2247,6 +2262,21 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               }}
             >
               
+              {/* Producer Name - Bottom Right Corner */}
+              {cardData.producerName && (
+                <div 
+                  className="absolute bottom-3 right-4 casting-card-producer-corner"
+                  style={{ zIndex: 10 }}
+                >
+                  <span 
+                    className="px-3 py-1.5 font-bold text-sm"
+                    style={{ backgroundColor: '#facc15', color: '#000000' }}
+                  >
+                    {cardData.producerName}
+                  </span>
+                </div>
+              )}
+
               {/* Card Layout matching DOND PowerPoint design */}
               <div className="flex gap-6">
               {/* Left side - Photos */}
@@ -2621,23 +2651,59 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
                 {/* Age and details - all editable */}
                 <div className="mb-6">
-                  <div
-                    contentEditable
-                    suppressContentEditableWarning
-                    className="text-3xl font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                    style={{ fontFamily: 'Calibri, sans-serif' }}
-                    onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
-                  >
-                    {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
+                  <div className="flex items-center gap-1 group">
+                    <div
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
+                      style={{ fontFamily: 'Calibri, sans-serif', fontSize: `${cardData.fontSizeAgeState || 30}px` }}
+                      onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
+                    >
+                      {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
+                    </div>
+                    <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity ignore-print">
+                      <button
+                        onClick={() => updateField('fontSizeAgeState', Math.min((cardData.fontSizeAgeState || 30) + 2, 48))}
+                        className="text-gray-400 hover:text-gray-600 p-0.5"
+                        title="Increase font size"
+                      >
+                        <ChevronUp className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => updateField('fontSizeAgeState', Math.max((cardData.fontSizeAgeState || 30) - 2, 16))}
+                        className="text-gray-400 hover:text-gray-600 p-0.5"
+                        title="Decrease font size"
+                      >
+                        <ChevronDown className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
-                  <div
-                    contentEditable
-                    suppressContentEditableWarning
-                    className="text-3xl font-bold text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                    style={{ fontFamily: '"Calibri Light", Calibri, sans-serif' }}
-                    onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
-                  >
-                    {cardData.occupation || 'OCCUPATION'}
+                  <div className="flex items-center gap-1 group">
+                    <div
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="font-bold text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
+                      style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 30}px` }}
+                      onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
+                    >
+                      {cardData.occupation || 'OCCUPATION'}
+                    </div>
+                    <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity ignore-print">
+                      <button
+                        onClick={() => updateField('fontSizeOccupation', Math.min((cardData.fontSizeOccupation || 30) + 2, 48))}
+                        className="text-gray-400 hover:text-gray-600 p-0.5"
+                        title="Increase font size"
+                      >
+                        <ChevronUp className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => updateField('fontSizeOccupation', Math.max((cardData.fontSizeOccupation || 30) - 2, 16))}
+                        className="text-gray-400 hover:text-gray-600 p-0.5"
+                        title="Decrease font size"
+                      >
+                        <ChevronDown className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                   <div
                     contentEditable
@@ -3094,6 +3160,21 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     </span>
                   </div>
                   
+                  {/* Producer Name - Bottom Right Corner */}
+                  {cardData.producerName && (
+                    <div 
+                      className="absolute bottom-3 right-4 casting-card-producer-corner"
+                      style={{ zIndex: 10 }}
+                    >
+                      <span 
+                        className="px-3 py-1.5 font-bold text-sm"
+                        style={{ backgroundColor: '#facc15', color: '#000000' }}
+                      >
+                        {cardData.producerName}
+                      </span>
+                    </div>
+                  )}
+                  
                   {/* Card Layout matching DOND PowerPoint design */}
                   <div className="flex gap-6">
                   {/* Left side - Photos */}
@@ -3432,25 +3513,61 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
                     {/* Age and details - all editable */}
                     <div className="mb-6">
-                      <div
-                        contentEditable
-                        suppressContentEditableWarning
-                        className="text-3xl font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                        style={{ fontFamily: 'Calibri, sans-serif' }}
-                        onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
-                        data-testid="preview-age-location"
-                      >
-                        {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
+                      <div className="flex items-center gap-1 group">
+                        <div
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
+                          style={{ fontFamily: 'Calibri, sans-serif', fontSize: `${cardData.fontSizeAgeState || 30}px` }}
+                          onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
+                          data-testid="preview-age-location"
+                        >
+                          {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
+                        </div>
+                        <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity ignore-print">
+                          <button
+                            onClick={() => updateField('fontSizeAgeState', Math.min((cardData.fontSizeAgeState || 30) + 2, 48))}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Increase font size"
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => updateField('fontSizeAgeState', Math.max((cardData.fontSizeAgeState || 30) - 2, 16))}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Decrease font size"
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
-                      <div
-                        contentEditable
-                        suppressContentEditableWarning
-                        className="text-3xl font-bold text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif' }}
-                        onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
-                        data-testid="edit-occupation"
-                      >
-                        {cardData.occupation || 'OCCUPATION'}
+                      <div className="flex items-center gap-1 group">
+                        <div
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="font-bold text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
+                          style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 30}px` }}
+                          onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
+                          data-testid="edit-occupation"
+                        >
+                          {cardData.occupation || 'OCCUPATION'}
+                        </div>
+                        <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity ignore-print">
+                          <button
+                            onClick={() => updateField('fontSizeOccupation', Math.min((cardData.fontSizeOccupation || 30) + 2, 48))}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Increase font size"
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => updateField('fontSizeOccupation', Math.max((cardData.fontSizeOccupation || 30) - 2, 16))}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Decrease font size"
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
                       <div
                         contentEditable
