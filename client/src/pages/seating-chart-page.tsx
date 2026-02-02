@@ -3,7 +3,7 @@ import { getDistanceFromDocklands } from "@/components/contestant-table";
 import { WinningMoneyModal } from "@/components/winning-money-modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check, Eye, User, Mail, Phone, MapPin, ArrowLeftRight, Camera, UserPlus, Pencil, ClipboardCheck, CheckCircle2, XCircle, AlertCircle, PartyPopper } from "lucide-react";
+import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check, Eye, User, Mail, Phone, MapPin, ArrowLeftRight, Camera, UserPlus, Pencil, ClipboardCheck, CheckCircle2, XCircle, AlertCircle, PartyPopper, ChevronLeft, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -225,6 +225,8 @@ export default function SeatingChartPage() {
   const [selectedContestant, setSelectedContestant] = useState<string>("");
   const [contestantSearch, setContestantSearch] = useState<string>("");
   const [debouncedContestantSearch, setDebouncedContestantSearch] = useState<string>("");
+  const [contestantPage, setContestantPage] = useState<number>(1);
+  const CONTESTANTS_PER_PAGE = 50;
   
   // Debounce contestant search for better performance
   useEffect(() => {
@@ -241,6 +243,11 @@ export default function SeatingChartPage() {
   const [filterStandby, setFilterStandby] = useState<string>("all");
   const [filterWithin20km, setFilterWithin20km] = useState(false);
   const [filterWithin60km, setFilterWithin60km] = useState(false);
+  
+  // Reset page when filters or search changes
+  useEffect(() => {
+    setContestantPage(1);
+  }, [debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km]);
   
   // Cancel dialog state
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -2182,7 +2189,9 @@ export default function SeatingChartPage() {
                   </div>
                   
                   <span className="ml-auto text-muted-foreground self-end pb-1">
-                    {filteredContestants.length} found
+                    {filteredContestants.length > CONTESTANTS_PER_PAGE 
+                      ? `${(contestantPage - 1) * CONTESTANTS_PER_PAGE + 1}-${Math.min(contestantPage * CONTESTANTS_PER_PAGE, filteredContestants.length)} of ${filteredContestants.length}`
+                      : `${filteredContestants.length} found`}
                   </span>
                 </div>
               </div>
@@ -2219,8 +2228,12 @@ export default function SeatingChartPage() {
                       'rescheduled': 'Resch',
                       'returning_standby': 'RetSB',
                     };
-                    // Show all filtered contestants
-                    return filteredContestants.map((contestant: any) => {
+                    // Paginate contestants for performance
+                    const totalPages = Math.ceil(filteredContestants.length / CONTESTANTS_PER_PAGE);
+                    const startIdx = (contestantPage - 1) * CONTESTANTS_PER_PAGE;
+                    const paginatedContestants = filteredContestants.slice(startIdx, startIdx + CONTESTANTS_PER_PAGE);
+                    
+                    return paginatedContestants.map((contestant: any) => {
                       const isSelected = selectedContestant === contestant.id;
                       const hasGroup = !!contestant.attendingWith;
                       const isAvailableForStandby = !!contestant.availableForStandby;
@@ -2322,6 +2335,35 @@ export default function SeatingChartPage() {
                   })()}
                 </div>
               </ScrollArea>
+              
+              {/* Pagination Controls */}
+              {filteredContestants.length > CONTESTANTS_PER_PAGE && (
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <span className="text-xs text-muted-foreground">
+                    Page {contestantPage} of {Math.ceil(filteredContestants.length / CONTESTANTS_PER_PAGE)}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setContestantPage(p => Math.max(1, p - 1))}
+                      disabled={contestantPage <= 1}
+                      data-testid="button-prev-page"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setContestantPage(p => Math.min(Math.ceil(filteredContestants.length / CONTESTANTS_PER_PAGE), p + 1))}
+                      disabled={contestantPage >= Math.ceil(filteredContestants.length / CONTESTANTS_PER_PAGE)}
+                      data-testid="button-next-page"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
               
               {/* Selection Preview & Group Option */}
               {selectedContestant && selectedContestantData && (
