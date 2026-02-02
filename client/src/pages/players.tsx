@@ -697,9 +697,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   });
 
   // Fetch existing casting card data when contestant is selected
+  // Disable refetchOnWindowFocus to prevent overwriting unsaved local edits when switching tabs
   const { data: existingCard, isLoading: loadingCard } = useQuery<CastingCardData>({
     queryKey: ['/api/casting-cards', selectedContestant?.id],
     enabled: !!selectedContestant,
+    refetchOnWindowFocus: false,
+    staleTime: 30000, // Consider data fresh for 30 seconds
   });
 
   // Fetch version history for the current card
@@ -933,6 +936,26 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     setUndoHistory([]);
     setRedoHistory([]);
   }, [selectedContestant]);
+
+  // Save body text content when user leaves the tab (prevents data loss)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // Capture current body text content from the refs before tab becomes hidden
+        const bodyTextElement = bodyTextRef.current || bodyTextRefFs.current;
+        if (bodyTextElement && cardData) {
+          const currentHtml = bodyTextElement.innerHTML;
+          if (currentHtml && currentHtml !== cardData.bodyText) {
+            // Update card data with current content to prevent loss
+            setCardData(prev => prev ? { ...prev, bodyText: currentHtml } : prev);
+          }
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [cardData]);
 
   // Save casting card mutation - uses PATCH for updates, POST for new cards
   const saveMutation = useMutation({
