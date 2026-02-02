@@ -212,7 +212,7 @@ function PostCard({ post, onRefresh, displayName, sessionId }: { post: Post; onR
             <img
               src={post.imageUrl}
               alt="Post attachment"
-              className="w-full max-h-96 object-cover rounded-lg"
+              className="w-full max-h-[500px] object-contain rounded-lg"
               data-testid={`img-post-${post.id}`}
             />
           </div>
