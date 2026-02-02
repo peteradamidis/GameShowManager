@@ -2351,9 +2351,9 @@ export default function SeatingChartPage() {
                           </label>
                           {canSeatGroupTogether ? (
                             <div className="text-xs text-muted-foreground mt-1">
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1 flex-wrap">
                                 <Users className="h-3 w-3" />
-                                <span>{groupMembersToSeat.map((m: any) => m.name).join(' + ')}</span>
+                                <span>{groupMembersToSeat.map((m: any) => `${m.name} (${m.rating || '—'})`).join(' + ')}</span>
                               </div>
                               <div className="mt-0.5">
                                 Seats: {adjacentSeats.slice(0, groupMembersToSeat.length).join(', ')}
