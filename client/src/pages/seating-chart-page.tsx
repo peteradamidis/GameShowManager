@@ -2219,8 +2219,8 @@ export default function SeatingChartPage() {
                       'rescheduled': 'Resch',
                       'returning_standby': 'RetSB',
                     };
-                    // Limit to first 100 items for performance - use filters to narrow down
-                    return filteredContestants.slice(0, 100).map((contestant: any) => {
+                    // Show all filtered contestants
+                    return filteredContestants.map((contestant: any) => {
                       const isSelected = selectedContestant === contestant.id;
                       const hasGroup = !!contestant.attendingWith;
                       const isAvailableForStandby = !!contestant.availableForStandby;
