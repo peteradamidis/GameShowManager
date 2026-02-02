@@ -597,6 +597,92 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
   // Refs for manual companion photo inputs
   const companionPhotoRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
+  
+  // Refs for body text contentEditable divs (regular and fullscreen)
+  const bodyTextRef = useRef<HTMLDivElement>(null);
+  const bodyTextRefFs = useRef<HTMLDivElement>(null);
+  
+  // Track last cursor position for dot point insertion
+  const lastCursorPositionRef = useRef<{ node: Node | null; offset: number } | null>(null);
+  
+  // Helper to save cursor position when user is in the body text
+  const saveCursorPosition = () => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      lastCursorPositionRef.current = {
+        node: range.startContainer,
+        offset: range.startOffset
+      };
+    }
+  };
+  
+  // Helper to insert dot point at cursor position or at the start of current line
+  const insertDotPointAtCursor = (isFullscreen: boolean) => {
+    const ref = isFullscreen ? bodyTextRefFs : bodyTextRef;
+    const element = ref.current;
+    if (!element) return;
+    
+    // Get the current text content
+    const currentText = element.innerText || '';
+    
+    // Try to get cursor position from selection
+    const selection = window.getSelection();
+    let insertPosition = currentText.length; // Default to end
+    
+    // Check if selection is within our element
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      if (element.contains(range.startContainer)) {
+        // Calculate the text offset from the start of the element
+        const preCaretRange = document.createRange();
+        preCaretRange.selectNodeContents(element);
+        preCaretRange.setEnd(range.startContainer, range.startOffset);
+        insertPosition = preCaretRange.toString().length;
+      }
+    }
+    
+    // Find the start of the current line
+    let lineStart = insertPosition;
+    while (lineStart > 0 && currentText[lineStart - 1] !== '\n') {
+      lineStart--;
+    }
+    
+    // Insert "• " at the start of the current line
+    const newText = currentText.slice(0, lineStart) + '• ' + currentText.slice(lineStart);
+    updateField('bodyText', newText);
+    
+    // Focus back on element and set cursor after the bullet
+    setTimeout(() => {
+      element.focus();
+      const newSelection = window.getSelection();
+      if (newSelection && element.firstChild) {
+        // Set cursor position after the inserted bullet
+        const newCursorPos = lineStart + 2;
+        let charCount = 0;
+        const setPosition = (node: Node): boolean => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const len = (node.textContent || '').length;
+            if (charCount + len >= newCursorPos) {
+              const range = document.createRange();
+              range.setStart(node, newCursorPos - charCount);
+              range.collapse(true);
+              newSelection.removeAllRanges();
+              newSelection.addRange(range);
+              return true;
+            }
+            charCount += len;
+          } else {
+            for (const child of Array.from(node.childNodes)) {
+              if (setPosition(child)) return true;
+            }
+          }
+          return false;
+        };
+        setPosition(element);
+      }
+    }, 10);
+  };
 
   // Find all supporters (group members) for the selected contestant
   const supporters = useMemo(() => {
@@ -2580,6 +2666,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       </button>
                     </div>
                     <div
+                      ref={bodyTextRefFs}
                       contentEditable
                       suppressContentEditableWarning
                       className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] print-no-border"
@@ -2592,11 +2679,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => {
-                      const currentText = cardData.bodyText || defaultBodyText;
-                      const newText = currentText.trim() + '\n• ';
-                      updateField('bodyText', newText);
-                    }}
+                    onClick={() => insertDotPointAtCursor(true)}
                     className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden ignore-print"
                   >
                     <Plus className="w-4 h-4 mr-1" />
@@ -3398,6 +3481,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           </button>
                         </div>
                         <div
+                          ref={bodyTextRef}
                           contentEditable
                           suppressContentEditableWarning
                           className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] print-no-border"
@@ -3411,11 +3495,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => {
-                          const currentText = cardData.bodyText || defaultBodyText;
-                          const newText = currentText.trim() + '\n• ';
-                          updateField('bodyText', newText);
-                        }}
+                        onClick={() => insertDotPointAtCursor(false)}
                         className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden ignore-print"
                         data-testid="btn-add-dot-point"
                       >
