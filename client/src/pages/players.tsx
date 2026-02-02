@@ -203,19 +203,12 @@ const defaultBulletPoints = [
 
 // Default body text for new casting cards (single block format)
 const defaultBodyText = `• Energy Level – 3 out of 5 – this helps us when booking players for later in the day
-
 • Top line character points – we don't need to know if they are "bubbly/energetic/likable" as it doesn't really help. But if they have traits like – they just don't stop talking / they argue with their podium partner as they're bossy etc / infectious or funny laugh. That is stuff we can work with in an episode.
-
 • Meet story (if applicable)
-
 • 3 key stories/facts/interesting points
-
 • How much they want to win - $XX,XXX
-
 • What they'd do with prize money (high and low) - 100K and if they win only $1000
-
 • How they might play game / Risk taker?
-
 • Other game shows / prize money won / previously on DOND`;
 
 // Safe render wrapper to catch errors and prevent white screen
