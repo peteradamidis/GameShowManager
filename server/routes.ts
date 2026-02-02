@@ -4902,11 +4902,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const hasCRating = members.some((m: typeof available[0]) => m.auditionRating === 'C');
         
         if (hasAOrBPlus && hasCRating) {
-          // Incompatible group - split into solos
-          console.log(`[Auto-assign] Splitting incompatible group: ${members.map((m: typeof available[0]) => `${m.name}(${m.auditionRating})`).join(' + ')} - A/B+ cannot be in same block as C`);
-          members.forEach((member: typeof available[0], idx: number) => {
-            finalGroupMap.set(`split-${groupId}-${idx}`, [member]);
-          });
+          // Incompatible group - EXCLUDE ENTIRELY (don't split, don't place)
+          // A/A+/B+ can only go to PB blocks, C can only go to NPB blocks
+          // These ratings are fundamentally incompatible, so the whole group must be skipped
+          console.log(`[Auto-assign] EXCLUDING incompatible group: ${members.map((m: typeof available[0]) => `${m.name}(${m.auditionRating})`).join(' + ')} - A/B+ and C members cannot be placed together in any block type`);
+          // Don't add to finalGroupMap - effectively excludes the entire group
         } else {
           // Compatible group - keep together
           finalGroupMap.set(groupId, members);
