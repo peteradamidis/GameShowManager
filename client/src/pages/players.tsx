@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown, AlertTriangle, RefreshCw, Undo2, Redo2, History } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown, AlertTriangle, RefreshCw, Undo2, Redo2, History, Eye, EyeOff, PanelTop } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -274,6 +274,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [cardData, setCardData] = useState<CastingCardData | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [hideToolbar, setHideToolbar] = useState(false);
   const [cardZoom, setCardZoom] = useState(0.65);
   const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
@@ -2016,6 +2017,30 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         ))}
         <div className="max-w-5xl mx-auto">
           <div className="sticky top-0 bg-white py-2 border-b z-10 space-y-2">
+            {/* Toggle toolbar visibility button - always visible */}
+            <div className="flex items-center justify-between">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setHideToolbar(!hideToolbar)}
+                className="h-7 px-2 text-gray-500 hover:text-gray-700"
+                data-testid="btn-toggle-toolbar"
+                title={hideToolbar ? "Show toolbar" : "Hide toolbar"}
+              >
+                {hideToolbar ? <Eye className="h-4 w-4 mr-1" /> : <EyeOff className="h-4 w-4 mr-1" />}
+                {hideToolbar ? "Show Toolbar" : "Hide Toolbar"}
+              </Button>
+              {/* Always show Exit button even when toolbar is hidden */}
+              {hideToolbar && (
+                <Button size="sm" variant="outline" onClick={() => { setCardZoom(0.65); setIsFullscreen(false); setHideToolbar(false); }} data-testid="btn-exit-fullscreen-mini">
+                  <Minimize2 className="h-4 w-4 mr-1" />
+                  Exit
+                </Button>
+              )}
+            </div>
+            
+            {/* Main toolbar - can be hidden */}
+            {!hideToolbar && (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg font-semibold">{selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown'} - Casting Card</h2>
@@ -2072,8 +2097,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 </Button>
               </div>
             </div>
+            )}
             
-            {/* Formatting toolbar */}
+            {/* Formatting toolbar - also hidden when toolbar is hidden */}
+            {!hideToolbar && (
             <div className="flex items-center gap-1 flex-wrap bg-gray-50 p-2 rounded border">
               <span className="text-xs text-gray-500 mr-2">Format:</span>
               
@@ -2166,6 +2193,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 <Redo2 className="h-4 w-4" />
               </Button>
             </div>
+            )}
           </div>
           {/* A4 Landscape page container - 297mm x 210mm (scaled to fit) */}
           <div className="relative overflow-hidden" style={{ width: `calc(297mm * ${cardZoom})`, height: `calc(210mm * ${cardZoom})` }}>
