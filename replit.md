@@ -8,6 +8,10 @@ I prefer detailed explanations.
 Do not make changes to the folder `Z`.
 Do not make changes to the file `Y`.
 
+## Login Credentials
+- **Username:** dond.user
+- **Password:** admin
+
 ## System Architecture
 
 ### UI/UX Decisions
