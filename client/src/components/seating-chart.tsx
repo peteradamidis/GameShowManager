@@ -176,6 +176,8 @@ interface SeatingChartProps {
   onStandbySeated?: () => void; // Callback when standby is seated
   isPodiumVisualizerMode?: boolean; // Show only contestant photos
   searchQuery?: string; // Search for contestant by name
+  blockNotes?: Record<number, string>; // Block notes by block number (1-7)
+  onBlockNoteChange?: (blockNumber: number, notes: string) => void;
 }
 
 function DraggableDroppableSeat({
@@ -667,6 +669,8 @@ function SeatingBlock({
   isPodiumVisualizerMode = false,
   getNeighborsForSeat,
   onLinkWithNeighbor,
+  blockNote,
+  onBlockNoteChange,
 }: { 
   block: SeatData[]; 
   blockIndex: number;
@@ -692,6 +696,8 @@ function SeatingBlock({
   isPodiumVisualizerMode?: boolean;
   getNeighborsForSeat?: (blockIndex: number, seatIndex: number) => NeighborSeat[];
   onLinkWithNeighbor?: (contestantId: string, neighborContestantId: string) => void;
+  blockNote?: string;
+  onBlockNoteChange?: (blockNumber: number, notes: string) => void;
 }) {
   const stats = calculateBlockStats(block);
 
@@ -864,6 +870,23 @@ function SeatingBlock({
             )}
           </div>
         )}
+        {/* Block Notes - editable text area for producer notes */}
+        {!isPodiumVisualizerMode && onBlockNoteChange && (
+          <div className="mt-2">
+            <input
+              type="text"
+              placeholder="Add block notes..."
+              value={blockNote || ''}
+              onChange={(e) => onBlockNoteChange(blockIndex + 1, e.target.value)}
+              className={`w-full text-xs px-2 py-1 rounded border transition-colors ${
+                blockNote 
+                  ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-100' 
+                  : 'bg-muted/50 border-transparent hover:border-muted-foreground/20'
+              } focus:outline-none focus:ring-1 focus:ring-primary/50`}
+              data-testid={`block-note-input-${blockIndex}`}
+            />
+          </div>
+        )}
       </CardHeader>
       <CardContent className={isPodiumVisualizerMode ? "space-y-1 pt-0" : "space-y-2"}>
         {displayRows.map((row, displayIdx) => {
@@ -1030,7 +1053,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "" }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "", blockNotes = {}, onBlockNoteChange }: SeatingChartProps) {
   // Use initialSeats as source of truth - derive blocks from props, not state
   // Only use local state for temporary overrides during active drag operations
   const defaultBlocks = useMemo(() => 
@@ -1849,6 +1872,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   isPodiumVisualizerMode={isPodiumVisualizerMode}
                   getNeighborsForSeat={getNeighborsForSeat}
                   onLinkWithNeighbor={handleLinkWithNeighbor}
+                  blockNote={blockNotes[idx + 1]}
+                  onBlockNoteChange={onBlockNoteChange}
                 />
               ))}
             </div>
@@ -1917,6 +1942,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     isPodiumVisualizerMode={isPodiumVisualizerMode}
                     getNeighborsForSeat={getNeighborsForSeat}
                     onLinkWithNeighbor={handleLinkWithNeighbor}
+                    blockNote={blockNotes[originalIdx + 1]}
+                    onBlockNoteChange={onBlockNoteChange}
                   />
                 );
               })}
@@ -1957,6 +1984,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   isPodiumVisualizerMode={isPodiumVisualizerMode}
                   getNeighborsForSeat={getNeighborsForSeat}
                   onLinkWithNeighbor={handleLinkWithNeighbor}
+                  blockNote={blockNotes[7]}
+                  onBlockNoteChange={onBlockNoteChange}
                 />
               </div>
               

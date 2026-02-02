@@ -404,8 +404,70 @@ export default function SeatingChartPage() {
     enabled: !!recordDayId,
   });
 
+  // Fetch block notes for this record day
+  const { data: blockNotesData = [] } = useQuery({
+    queryKey: ['/api/block-notes', recordDayId],
+    queryFn: async () => {
+      if (!recordDayId) return [];
+      const response = await fetch(`/api/block-notes/${recordDayId}`, { credentials: 'include' });
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!recordDayId,
+  });
+
+  // Convert block notes array to a map by block number
+  const blockNotes: Record<number, string> = useMemo(() => {
+    const map: Record<number, string> = {};
+    blockNotesData.forEach((note: { blockNumber: number; notes: string }) => {
+      map[note.blockNumber] = note.notes;
+    });
+    return map;
+  }, [blockNotesData]);
+
+  // Local state for optimistic block notes updates
+  const [localBlockNotes, setLocalBlockNotes] = useState<Record<number, string>>({});
+  const blockNoteTimeoutRef = useRef<Record<number, NodeJS.Timeout>>({});
+
+  // Merge local and server block notes (local takes precedence for optimistic updates)
+  const mergedBlockNotes = useMemo(() => {
+    return { ...blockNotes, ...localBlockNotes };
+  }, [blockNotes, localBlockNotes]);
+
+  // Handle block note change with debouncing
+  const handleBlockNoteChange = useCallback((blockNumber: number, notes: string) => {
+    // Update local state immediately for optimistic UI
+    setLocalBlockNotes(prev => ({ ...prev, [blockNumber]: notes }));
+    
+    // Clear existing timeout for this block
+    if (blockNoteTimeoutRef.current[blockNumber]) {
+      clearTimeout(blockNoteTimeoutRef.current[blockNumber]);
+    }
+    
+    // Debounce the API call
+    blockNoteTimeoutRef.current[blockNumber] = setTimeout(async () => {
+      try {
+        await fetch(`/api/block-notes/${recordDayId}/${blockNumber}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ notes }),
+        });
+        // Clear local state after successful save
+        setLocalBlockNotes(prev => {
+          const newState = { ...prev };
+          delete newState[blockNumber];
+          return newState;
+        });
+        queryClient.invalidateQueries({ queryKey: ['/api/block-notes', recordDayId] });
+      } catch (error) {
+        console.error('Failed to save block note:', error);
+      }
+    }, 500);
+  }, [recordDayId]);
+
   // Fetch canceled assignments for this record day (to show "previously" on empty seats)
-  const { data: canceledAssignments = [] } = useQuery({
+  const { data: canceledAssignments = [] } = useQuery<any[]>({
     queryKey: ['/api/canceled-assignments'],
     enabled: !!recordDayId,
   });
@@ -1916,6 +1978,8 @@ export default function SeatingChartPage() {
             }}
             isPodiumVisualizerMode={isPodiumVisualizerMode}
             searchQuery={seatSearchQuery}
+            blockNotes={mergedBlockNotes}
+            onBlockNoteChange={handleBlockNoteChange}
           />
         )
       )}
