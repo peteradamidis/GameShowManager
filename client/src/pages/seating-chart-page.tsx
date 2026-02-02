@@ -230,7 +230,7 @@ export default function SeatingChartPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedContestantSearch(contestantSearch);
-    }, 150);
+    }, 250); // 250ms debounce for smoother typing
     return () => clearTimeout(timer);
   }, [contestantSearch]);
   const [filterRating, setFilterRating] = useState<string>("all");
@@ -2088,32 +2088,34 @@ export default function SeatingChartPage() {
                     <p className="text-sm text-muted-foreground text-center py-6">
                       No contestants match your filters.
                     </p>
-                  ) : (
-                    filteredContestants.map((contestant: any) => {
+                  ) : (() => {
+                    // Constants moved outside map loop for performance
+                    const ratingColors: Record<string, string> = {
+                      'A+': 'bg-emerald-500 text-white',
+                      'A': 'bg-green-500 text-white',
+                      'B+': 'bg-amber-500 text-white',
+                      'B': 'bg-orange-500 text-white',
+                      'C': 'bg-red-500 text-white',
+                    };
+                    const statusColors: Record<string, string> = {
+                      'available': 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+                      'assigned': 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
+                      'invited': 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+                      'confirmed': 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
+                      'rescheduled': 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300',
+                      'returning_standby': 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
+                    };
+                    const statusLabels: Record<string, string> = {
+                      'available': 'Avail',
+                      'assigned': 'Asgnd',
+                      'invited': 'Invited',
+                      'confirmed': 'Conf',
+                      'rescheduled': 'Resch',
+                      'returning_standby': 'RetSB',
+                    };
+                    // Limit to first 100 items for performance - use filters to narrow down
+                    return filteredContestants.slice(0, 100).map((contestant: any) => {
                       const isSelected = selectedContestant === contestant.id;
-                      const ratingColors: Record<string, string> = {
-                        'A+': 'bg-emerald-500 text-white',
-                        'A': 'bg-green-500 text-white',
-                        'B+': 'bg-amber-500 text-white',
-                        'B': 'bg-orange-500 text-white',
-                        'C': 'bg-red-500 text-white',
-                      };
-                      const statusColors: Record<string, string> = {
-                        'available': 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
-                        'assigned': 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
-                        'invited': 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
-                        'confirmed': 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
-                        'rescheduled': 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300',
-                        'returning_standby': 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
-                      };
-                      const statusLabels: Record<string, string> = {
-                        'available': 'Avail',
-                        'assigned': 'Asgnd',
-                        'invited': 'Invited',
-                        'confirmed': 'Conf',
-                        'rescheduled': 'Resch',
-                        'returning_standby': 'RetSB',
-                      };
                       const hasGroup = !!contestant.attendingWith;
                       const isAvailableForStandby = !!contestant.availableForStandby;
                       const hasPodiumStory = !!contestant.podiumStory;
@@ -2210,8 +2212,8 @@ export default function SeatingChartPage() {
                           </Button>
                         </div>
                       );
-                    })
-                  )}
+                    });
+                  })()}
                 </div>
               </ScrollArea>
               
