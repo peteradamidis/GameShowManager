@@ -15621,6 +15621,39 @@ Thank you.`;
     }
   });
 
+  // === Block Notes API ===
+  
+  // Get block notes for a record day
+  app.get("/api/block-notes/:recordDayId", requireAuth, async (req, res) => {
+    try {
+      const { recordDayId } = req.params;
+      const notes = await storage.getBlockNotes(recordDayId);
+      res.json(notes);
+    } catch (error: any) {
+      console.error("Error getting block notes:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update block note
+  app.put("/api/block-notes/:recordDayId/:blockNumber", requireAuth, async (req, res) => {
+    try {
+      const { recordDayId, blockNumber } = req.params;
+      const { notes } = req.body;
+      
+      const blockNum = parseInt(blockNumber);
+      if (isNaN(blockNum) || blockNum < 1 || blockNum > 7) {
+        return res.status(400).json({ error: "Invalid block number (must be 1-7)" });
+      }
+      
+      const result = await storage.upsertBlockNote(recordDayId, blockNum, notes || "");
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error updating block note:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize WebSocket server for real-time updates
