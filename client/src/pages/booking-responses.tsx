@@ -42,7 +42,8 @@ import {
   History,
   ChevronDown,
   ChevronRight,
-  Download
+  Download,
+  FileSpreadsheet
 } from "lucide-react";
 import type { RecordDay, Contestant, SeatAssignment, RebookingHistory, StandbyAssignment, CanceledAssignment } from "@shared/schema";
 
@@ -153,6 +154,8 @@ export default function BookingResponses() {
   
   const [searchName, setSearchName] = useState("");
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
+  const [selectedStandbys, setSelectedStandbys] = useState<Set<string>>(new Set());
+  const [isExportingStandbys, setIsExportingStandbys] = useState(false);
   
   // Save state to localStorage when filters change
   useEffect(() => {
@@ -634,6 +637,57 @@ export default function BookingResponses() {
       });
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  // Export selected standbys to Excel
+  const handleExportStandbys = async () => {
+    if (selectedStandbys.size === 0) {
+      toast({
+        title: "No standbys selected",
+        description: "Select standbys to export",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsExportingStandbys(true);
+    try {
+      const response = await fetch('/api/standbys/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ standbyIds: Array.from(selectedStandbys) }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Export failed');
+      }
+      
+      // Download the file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `standbys-${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Export successful",
+        description: `Exported ${selectedStandbys.size} standbys to Excel`
+      });
+    } catch (error: any) {
+      toast({
+        title: "Export failed",
+        description: error.message || "Could not export data",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExportingStandbys(false);
     }
   };
 
@@ -1286,6 +1340,27 @@ export default function BookingResponses() {
                   Backup contestants for the selected record day
                 </CardDescription>
               </div>
+              <div className="flex items-center gap-2">
+                {selectedStandbys.size > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    {selectedStandbys.size} selected
+                  </span>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportStandbys}
+                  disabled={isExportingStandbys || selectedStandbys.size === 0}
+                  data-testid="button-export-standbys"
+                >
+                  {isExportingStandbys ? (
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  )}
+                  Export to Excel
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -1303,6 +1378,23 @@ export default function BookingResponses() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-amber-100 dark:bg-amber-900/20">
+                    <TableHead className="w-[50px]">
+                      <Checkbox
+                        checked={
+                          standbyData.filter(s => !searchName || s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase())).length > 0 &&
+                          standbyData.filter(s => !searchName || s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase())).every(s => selectedStandbys.has(s.id))
+                        }
+                        onCheckedChange={(checked) => {
+                          const filteredStandbys = standbyData.filter(s => !searchName || s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase()));
+                          if (checked) {
+                            setSelectedStandbys(new Set(filteredStandbys.map(s => s.id)));
+                          } else {
+                            setSelectedStandbys(new Set());
+                          }
+                        }}
+                        data-testid="checkbox-select-all-standbys"
+                      />
+                    </TableHead>
                     <TableHead className="font-semibold">Priority</TableHead>
                     <TableHead className="font-semibold">Name</TableHead>
                     <TableHead className="font-semibold">Record Day</TableHead>
@@ -1319,9 +1411,24 @@ export default function BookingResponses() {
                     .map((standby) => (
                       <TableRow 
                         key={standby.id}
-                        className={standby.confirmedAt ? 'bg-green-50 dark:bg-green-900/20' : ''}
+                        className={`${standby.confirmedAt ? 'bg-green-50 dark:bg-green-900/20' : ''} ${selectedStandbys.has(standby.id) ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
                         data-testid={`row-standby-${standby.id}`}
                       >
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedStandbys.has(standby.id)}
+                            onCheckedChange={(checked) => {
+                              const newSelected = new Set(selectedStandbys);
+                              if (checked) {
+                                newSelected.add(standby.id);
+                              } else {
+                                newSelected.delete(standby.id);
+                              }
+                              setSelectedStandbys(newSelected);
+                            }}
+                            data-testid={`checkbox-standby-${standby.id}`}
+                          />
+                        </TableCell>
                         <TableCell>
                           <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
                             #{standby.priority || '-'}

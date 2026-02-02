@@ -11058,6 +11058,76 @@ Thank you.`;
     }
   });
 
+  // Export selected standbys to Excel
+  app.post("/api/standbys/export", requireAuth, async (req, res) => {
+    try {
+      const { standbyIds } = req.body;
+      
+      if (!standbyIds || !Array.isArray(standbyIds) || standbyIds.length === 0) {
+        return res.status(400).json({ error: "Standby IDs array is required" });
+      }
+      
+      // Get all necessary data
+      const allStandbys = await storage.getAllStandbys();
+      const contestants = await storage.getContestants();
+      const recordDays = await storage.getRecordDays();
+      
+      // Filter to only the requested standbys
+      const filteredStandbys = allStandbys.filter(s => standbyIds.includes(s.id));
+      
+      // Helper to get status label
+      const getStatus = (s: any) => {
+        if (s.confirmedAt) return 'Confirmed';
+        if (s.status === 'pending') return 'Pending';
+        return s.status || 'Unknown';
+      };
+      
+      // Build export data
+      const exportData = filteredStandbys.map(s => {
+        const contestant = contestants.find(c => c.id === s.contestantId);
+        const recordDay = recordDays.find(rd => rd.id === s.recordDayId);
+        
+        // Format mobile number with comma suffix for mail merge
+        const mobileWithComma = contestant?.phone ? `${contestant.phone},` : '';
+        
+        return {
+          'Priority': s.priority || '-',
+          'Name': contestant?.name || '',
+          'Gender': contestant?.gender || '',
+          'Age': contestant?.age || '',
+          'RX Date': recordDay?.date ? new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '',
+          'RX Number': recordDay?.rxNumber || '',
+          'Email': contestant?.email || '',
+          'Mobile,': mobileWithComma,
+          'Email Sent': s.reminderEmailSent ? 'Yes' : 'No',
+          'Status': getStatus(s),
+          'Notes': s.notes || '',
+        };
+      });
+      
+      // Sort by priority
+      exportData.sort((a: any, b: any) => {
+        const priorityA = typeof a['Priority'] === 'number' ? a['Priority'] : 999;
+        const priorityB = typeof b['Priority'] === 'number' ? b['Priority'] : 999;
+        return priorityA - priorityB;
+      });
+      
+      // Create Excel workbook
+      const ws = xlsx.utils.json_to_sheet(exportData);
+      const wb = xlsx.utils.book_new();
+      xlsx.utils.book_append_sheet(wb, ws, 'Standbys');
+      
+      // Send as downloadable file
+      const timestamp = new Date().toISOString().split('T')[0];
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="standbys-${timestamp}.xlsx"`);
+      res.send(xlsx.write(wb, { bookType: 'xlsx', type: 'buffer' }));
+    } catch (error: any) {
+      console.error("Error exporting standbys data:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Standby Attendance History - Get all returning standbys
   app.get("/api/returning-standbys", async (req, res) => {
     try {
