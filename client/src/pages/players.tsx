@@ -2625,6 +2625,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     contentEditable
                     suppressContentEditableWarning
                     className="text-3xl font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                    style={{ fontFamily: 'Calibri, sans-serif' }}
                     onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
                   >
                     {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
@@ -2633,6 +2634,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     contentEditable
                     suppressContentEditableWarning
                     className="text-3xl font-bold text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                    style={{ fontFamily: '"Calibri Light", Calibri, sans-serif' }}
                     onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
                   >
                     {cardData.occupation || 'OCCUPATION'}
@@ -3434,6 +3436,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         contentEditable
                         suppressContentEditableWarning
                         className="text-3xl font-bold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                        style={{ fontFamily: 'Calibri, sans-serif' }}
                         onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
                         data-testid="preview-age-location"
                       >
@@ -3443,6 +3446,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         contentEditable
                         suppressContentEditableWarning
                         className="text-3xl font-bold text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
+                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif' }}
                         onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
                         data-testid="edit-occupation"
                       >
