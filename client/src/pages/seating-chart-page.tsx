@@ -253,7 +253,6 @@ export default function SeatingChartPage() {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelAssignmentId, setCancelAssignmentId] = useState<string>("");
   const [cancelReason, setCancelReason] = useState<string>("");
-  const [cancelInitials, setCancelInitials] = useState<string>("");
   
   // Reset confirmation dialog state
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
@@ -426,6 +425,12 @@ export default function SeatingChartPage() {
       return response.json();
     },
     enabled: !!recordDayId,
+  });
+
+  // Fetch current logged-in user
+  const { data: authData } = useQuery<{ authenticated: boolean; user?: { id: string; username: string } }>({
+    queryKey: ['/api/auth/check'],
+    staleTime: 5 * 60 * 1000,
   });
 
   // Convert block notes array to a map by block number
@@ -1681,6 +1686,7 @@ export default function SeatingChartPage() {
     try {
       await apiRequest('POST', `/api/seat-assignments/${cancelAssignmentId}/cancel`, {
         reason: cancelReason || "No reason provided",
+        movedBy: authData?.user?.username || 'system',
       });
       // Invalidate essential queries - cancel affects seat assignments, contestants, standbys, and canceled list
       queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
@@ -2924,19 +2930,6 @@ export default function SeatingChartPage() {
                 data-testid="textarea-cancel-reason"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="cancel-initials">Your Initials <span className="text-red-500">*</span></Label>
-              <Input
-                id="cancel-initials"
-                placeholder="e.g., JD"
-                value={cancelInitials}
-                onChange={(e) => setCancelInitials(e.target.value.toUpperCase())}
-                maxLength={5}
-                className="w-24"
-                data-testid="input-cancel-initials"
-              />
-              <p className="text-xs text-muted-foreground">Required for tracking who processed this cancellation</p>
-            </div>
           </div>
 
           <DialogFooter>
@@ -2946,7 +2939,6 @@ export default function SeatingChartPage() {
                 setCancelDialogOpen(false);
                 setCancelAssignmentId("");
                 setCancelReason("");
-                setCancelInitials("");
               }}
               data-testid="button-cancel-dialog-close"
             >
@@ -2955,7 +2947,6 @@ export default function SeatingChartPage() {
             <Button 
               variant="destructive"
               onClick={handleConfirmCancel}
-              disabled={!cancelInitials.trim()}
               data-testid="button-confirm-cancel"
             >
               Confirm Cancel
