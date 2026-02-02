@@ -252,25 +252,26 @@ export default function BookingResponses() {
 
   // Note: No auto-selection - "All Record Days" is the default when no selection is stored
 
-  // Build query URL with filters
-  const buildTrackerUrl = () => {
+  // Build query URL with filters - computed inside queryFn to avoid stale closure issues
+  const buildTrackerUrl = (recordDay: string, status: StatusFilter) => {
     const params = new URLSearchParams();
-    if (selectedRecordDay) {
-      params.append("recordDayId", selectedRecordDay);
+    if (recordDay) {
+      params.append("recordDayId", recordDay);
     }
-    if (statusFilter !== "all") {
-      params.append("status", statusFilter);
+    if (status !== "all") {
+      params.append("status", status);
     }
     const queryString = params.toString();
     return queryString ? `/api/booking-tracker?${queryString}` : "/api/booking-tracker";
   };
-
-  const trackerUrl = buildTrackerUrl();
     
   const { data: trackerResponse, isLoading: loadingTracker, refetch: refetchTracker } = useQuery<BookingTrackerResponse>({
     queryKey: ["/api/booking-tracker", selectedRecordDay, statusFilter],
-    queryFn: async () => {
-      const response = await fetch(trackerUrl, { credentials: 'include' });
+    queryFn: async ({ queryKey }) => {
+      // Use query key values to build URL, ensuring fresh values
+      const [, recordDay, status] = queryKey as [string, string, StatusFilter];
+      const url = buildTrackerUrl(recordDay || "", status || "all");
+      const response = await fetch(url, { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch booking tracker data');
       return response.json();
     },
