@@ -2305,25 +2305,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               }}
             >
               
-              {/* Producer Name - Bottom Left Corner */}
-              {cardData.producerName && (
-                <div 
-                  className="casting-card-producer-corner"
-                  style={{ 
-                    position: 'absolute', 
-                    bottom: '8px', 
-                    left: '16px', 
-                    zIndex: 10 
-                  }}
-                >
-                  <span 
-                    className="px-3 py-1.5 font-bold text-sm"
-                    style={{ backgroundColor: '#facc15', color: '#000000', display: 'inline-block' }}
-                  >
-                    {cardData.producerName}
-                  </span>
-                </div>
-              )}
 
               {/* Card Layout matching DOND PowerPoint design */}
               <div className="flex gap-6">
@@ -2835,9 +2816,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 </div>
 
                 {/* Producer - matching PowerPoint style - minimal margin to fit on page */}
-                {/* This inline producer section is hidden in print - producer name shows in bottom corner instead */}
                 {cardData.showProducer !== false ? (
-                  <div className="mt-1 flex items-center relative group w-fit ignore-print">
+                  <div className="mt-1 flex items-center relative group w-fit">
                     <span 
                       className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
                       style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
@@ -3174,25 +3154,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     </span>
                   </div>
                   
-                  {/* Producer Name - Bottom Left Corner */}
-                  {cardData.producerName && (
-                    <div 
-                      className="casting-card-producer-corner"
-                      style={{ 
-                        position: 'absolute', 
-                        bottom: '8px', 
-                        left: '16px', 
-                        zIndex: 10 
-                      }}
-                    >
-                      <span 
-                        className="px-3 py-1.5 font-bold text-sm"
-                        style={{ backgroundColor: '#facc15', color: '#000000', display: 'inline-block' }}
-                      >
-                        {cardData.producerName}
-                      </span>
-                    </div>
-                  )}
                   
                   {/* Card Layout matching DOND PowerPoint design */}
                   <div className="flex gap-6">
@@ -3676,9 +3637,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     </div>
 
                     {/* Producer - matching PowerPoint style - reduced margin to fit on page */}
-                    {/* This inline producer section is hidden in print - producer name shows in bottom corner instead */}
                     {cardData.showProducer !== false ? (
-                      <div className="mt-1 mb-1 flex items-center relative group w-fit ignore-print">
+                      <div className="mt-1 mb-1 flex items-center relative group w-fit">
                         <span 
                           className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
                           style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
