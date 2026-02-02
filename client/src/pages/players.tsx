@@ -1291,6 +1291,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.lineHeight = '80px';
             (el as HTMLElement).style.margin = '0';
             (el as HTMLElement).style.marginTop = '-24px';
+            (el as HTMLElement).style.paddingLeft = '16px';
           });
           clonedDoc.querySelectorAll('.casting-card-sponsor').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#16a34a';
@@ -1306,6 +1307,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           clonedDoc.querySelectorAll('.casting-card-producer-name').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
+          });
+          // Also style the print-only producer name span
+          clonedDoc.querySelectorAll('.casting-card-producer-name-print').forEach((el: Element) => {
+            (el as HTMLElement).style.backgroundColor = '#facc15';
+            (el as HTMLElement).style.color = '#000000';
+            (el as HTMLElement).style.display = 'inline';
+            (el as HTMLElement).style.padding = '8px 16px';
+            (el as HTMLElement).style.fontWeight = 'bold';
           });
           // Producer corner in bottom left - ensure yellow background and positioning shows in print
           clonedDoc.querySelectorAll('.casting-card-producer-corner').forEach((el: Element) => {
@@ -1628,6 +1637,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.lineHeight = '80px';
             (el as HTMLElement).style.margin = '0';
             (el as HTMLElement).style.marginTop = '-24px';
+            (el as HTMLElement).style.paddingLeft = '16px';
           });
           clonedDoc.querySelectorAll('.casting-card-sponsor').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#16a34a';
@@ -1643,6 +1653,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           clonedDoc.querySelectorAll('.casting-card-producer-name').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
+          });
+          // Also style the print-only producer name span
+          clonedDoc.querySelectorAll('.casting-card-producer-name-print').forEach((el: Element) => {
+            (el as HTMLElement).style.backgroundColor = '#facc15';
+            (el as HTMLElement).style.color = '#000000';
+            (el as HTMLElement).style.display = 'inline';
+            (el as HTMLElement).style.padding = '8px 16px';
+            (el as HTMLElement).style.fontWeight = 'bold';
           });
           // Producer corner in bottom left - ensure yellow background and positioning shows in print
           clonedDoc.querySelectorAll('.casting-card-producer-corner').forEach((el: Element) => {
@@ -2693,7 +2711,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                       color: '#fcd34d',
                       margin: 0,
-                      padding: 0
+                      padding: 0,
+                      paddingLeft: '16px'
                     }}
                     onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                   >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
@@ -3167,15 +3186,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     fontFamily: 'Calibri, sans-serif'
                   }}
                 >
-                  {/* Page boundary indicator line */}
-                  <div 
-                    className="absolute left-0 right-0 border-t-2 border-dashed border-red-400 pointer-events-none z-10"
-                    style={{ top: '210mm' }}
-                  >
-                    <span className="absolute right-2 -top-5 bg-red-100 text-red-600 text-xs px-2 py-1 rounded font-medium">
-                      Page boundary - content below will be cut off
-                    </span>
-                  </div>
                   
                   
                   {/* Card Layout matching DOND PowerPoint design */}
@@ -3507,7 +3517,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                           color: '#fcd34d',
                           margin: 0,
-                          padding: 0
+                          padding: 0,
+                          paddingLeft: '16px'
                         }}
                         onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
                         data-testid="preview-contestant-name"
