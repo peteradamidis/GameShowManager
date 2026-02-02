@@ -1188,7 +1188,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           border-color: inherit !important;
         }
         /* Casting card specific colors - must override inherit with higher specificity */
-        #casting-card-preview .casting-card-header { background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important; }
+        #casting-card-preview .casting-card-header { background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important; border: 2px solid #000000 !important; }
         #casting-card-preview .casting-card-name { color: #fcd34d !important; }
         #casting-card-preview .casting-card-sponsor { color: #16a34a !important; }
         #casting-card-preview .casting-card-tagline { color: #dc2626 !important; }
@@ -1265,6 +1265,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           // Fix casting card header and colors explicitly
           clonedDoc.querySelectorAll('.casting-card-header').forEach((el: Element) => {
             (el as HTMLElement).style.background = 'linear-gradient(to right, #b45309, #d97706, #f59e0b)';
+            (el as HTMLElement).style.border = '2px solid #000000';
           });
           clonedDoc.querySelectorAll('.casting-card-name').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#fcd34d';
@@ -1525,7 +1526,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           border-color: inherit !important;
         }
         /* Casting card specific colors - must override inherit with higher specificity */
-        #casting-card-preview .casting-card-header { background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important; }
+        #casting-card-preview .casting-card-header { background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important; border: 2px solid #000000 !important; }
         #casting-card-preview .casting-card-name { color: #fcd34d !important; }
         #casting-card-preview .casting-card-sponsor { color: #16a34a !important; }
         #casting-card-preview .casting-card-tagline { color: #dc2626 !important; }
@@ -1601,6 +1602,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           // Fix casting card header and colors explicitly
           clonedDoc.querySelectorAll('.casting-card-header').forEach((el: Element) => {
             (el as HTMLElement).style.background = 'linear-gradient(to right, #b45309, #d97706, #f59e0b)';
+            (el as HTMLElement).style.border = '2px solid #000000';
           });
           clonedDoc.querySelectorAll('.casting-card-name').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#fcd34d';
@@ -2667,7 +2669,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name"
                     style={{ 
                       fontFamily: '"Century Gothic", sans-serif',
-                      fontSize: '36px',
+                      fontSize: '40px',
                       lineHeight: '80px',
                       textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                       color: '#fcd34d',
@@ -3479,7 +3481,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name"
                         style={{ 
                           fontFamily: '"Century Gothic", sans-serif',
-                          fontSize: '36px',
+                          fontSize: '40px',
                           lineHeight: '80px',
                           textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                           color: '#fcd34d',
