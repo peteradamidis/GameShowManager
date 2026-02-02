@@ -2188,7 +2188,7 @@ export default function SeatingChartPage() {
                     </div>
                   </div>
                   
-                  <span className="ml-auto text-muted-foreground self-end pb-1">
+                  <span className="ml-auto text-muted-foreground self-end pb-1" data-testid="text-contestant-count">
                     {filteredContestants.length > CONTESTANTS_PER_PAGE 
                       ? `${(contestantPage - 1) * CONTESTANTS_PER_PAGE + 1}-${Math.min(contestantPage * CONTESTANTS_PER_PAGE, filteredContestants.length)} of ${filteredContestants.length}`
                       : `${filteredContestants.length} found`}
@@ -2338,8 +2338,8 @@ export default function SeatingChartPage() {
               
               {/* Pagination Controls */}
               {filteredContestants.length > CONTESTANTS_PER_PAGE && (
-                <div className="flex items-center justify-between pt-2 border-t">
-                  <span className="text-xs text-muted-foreground">
+                <div className="flex items-center justify-between gap-2 pt-2 border-t">
+                  <span className="text-xs text-muted-foreground" data-testid="text-contestant-pagination">
                     Page {contestantPage} of {Math.ceil(filteredContestants.length / CONTESTANTS_PER_PAGE)}
                   </span>
                   <div className="flex items-center gap-1">
