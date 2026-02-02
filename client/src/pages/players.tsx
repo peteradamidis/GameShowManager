@@ -2815,6 +2815,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <Printer className="h-4 w-4 mr-1" />
                     Print
                   </Button>
+                  <Button size="sm" variant="outline" onClick={() => setVersionHistoryOpen(true)} disabled={!existingCard?.id} data-testid="button-version-history">
+                    <History className="h-4 w-4 mr-1" />
+                    History
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => { setCardZoom(0.8); setIsFullscreen(true); }} data-testid="btn-fullscreen">
                     <Maximize2 className="h-4 w-4 mr-1" />
                     Fullscreen
