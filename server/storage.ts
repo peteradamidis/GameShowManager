@@ -27,6 +27,7 @@ import {
   postRecordTracking,
   castingCards,
   birthdayEntries,
+  blockNotes,
   type Contestant,
   type InsertContestant,
   type Group,
@@ -76,6 +77,8 @@ import {
   type InsertCastingCard,
   type BirthdayEntry,
   type InsertBirthdayEntry,
+  type BlockNote,
+  type InsertBlockNote,
 } from "@shared/schema";
 import { eq, and, sql, inArray, desc } from "drizzle-orm";
 
@@ -402,6 +405,10 @@ export interface IStorage {
   updateBirthdayEntry(id: string, data: Partial<BirthdayEntry>): Promise<BirthdayEntry | undefined>;
   deleteBirthdayEntry(id: string): Promise<void>;
   getTodayBirthdays(): Promise<BirthdayEntry[]>;
+  
+  // Block Notes
+  getBlockNotes(recordDayId: string): Promise<BlockNote[]>;
+  upsertBlockNote(recordDayId: string, blockNumber: number, notes: string): Promise<BlockNote>;
 }
 
 export class DbStorage implements IStorage {
@@ -3118,6 +3125,37 @@ export class DbStorage implements IStorage {
       const birthDate = new Date(entry.birthdate);
       return birthDate.getMonth() + 1 === month && birthDate.getDate() === day;
     });
+  }
+
+  // Block Notes methods
+  async getBlockNotes(recordDayId: string): Promise<BlockNote[]> {
+    const db = getDb();
+    return await db.select().from(blockNotes).where(eq(blockNotes.recordDayId, recordDayId));
+  }
+
+  async upsertBlockNote(recordDayId: string, blockNumber: number, notes: string): Promise<BlockNote> {
+    const db = getDb();
+    // Check if note already exists
+    const existing = await db.select().from(blockNotes)
+      .where(and(
+        eq(blockNotes.recordDayId, recordDayId),
+        eq(blockNotes.blockNumber, blockNumber)
+      ));
+    
+    if (existing.length > 0) {
+      // Update existing
+      const [updated] = await db.update(blockNotes)
+        .set({ notes, updatedAt: new Date() })
+        .where(eq(blockNotes.id, existing[0].id))
+        .returning();
+      return updated;
+    } else {
+      // Create new
+      const [created] = await db.insert(blockNotes)
+        .values({ recordDayId, blockNumber, notes })
+        .returning();
+      return created;
+    }
   }
 }
 

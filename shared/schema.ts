@@ -790,3 +790,20 @@ export const insertBirthdayEntrySchema = createInsertSchema(birthdayEntries).omi
 
 export type InsertBirthdayEntry = z.infer<typeof insertBirthdayEntrySchema>;
 export type BirthdayEntry = typeof birthdayEntries.$inferSelect;
+
+// Block notes for seating chart - producer notes per block per record day
+export const blockNotes = pgTable("block_notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  recordDayId: varchar("record_day_id").references(() => recordDays.id).notNull(),
+  blockNumber: integer("block_number").notNull(), // 1-7
+  notes: text("notes").default(""),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBlockNoteSchema = createInsertSchema(blockNotes).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertBlockNote = z.infer<typeof insertBlockNoteSchema>;
+export type BlockNote = typeof blockNotes.$inferSelect;
