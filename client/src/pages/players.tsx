@@ -2628,7 +2628,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   className="pl-6 pr-0 rounded-l flex items-center justify-between mb-4 casting-card-header" 
                   style={{ 
                     height: '80px',
-                    background: 'linear-gradient(to right, #b45309, #d97706, #f59e0b)'
+                    background: 'linear-gradient(to right, #b45309, #d97706, #f59e0b)',
+                    border: '2px solid #000000'
                   }}
                 >
                   <h2 
@@ -3488,7 +3489,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       className="pl-4 pr-0 rounded-l flex items-center justify-between mb-4 casting-card-header" 
                       style={{ 
                         height: '80px',
-                        background: 'linear-gradient(to right, #b45309, #d97706, #f59e0b)'
+                        background: 'linear-gradient(to right, #b45309, #d97706, #f59e0b)',
+                        border: '2px solid #000000'
                       }} 
                       data-testid="preview-header-banner"
                     >
