@@ -1332,9 +1332,12 @@ export default function BookingResponses() {
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-amber-600" />
-                  Standbys ({standbyData.filter(s => 
-                    (!searchName || s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase()))
-                  ).length})
+                  Standbys ({standbyData.filter(s => {
+                    if (searchName && !s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase())) return false;
+                    if (statusFilter === "confirmed" && !s.confirmedAt) return false;
+                    if (statusFilter === "awaiting" && s.confirmedAt) return false;
+                    return true;
+                  }).length})
                 </CardTitle>
                 <CardDescription>
                   Backup contestants for the selected record day
@@ -1381,11 +1384,26 @@ export default function BookingResponses() {
                     <TableHead className="w-[50px]">
                       <Checkbox
                         checked={
-                          standbyData.filter(s => !searchName || s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase())).length > 0 &&
-                          standbyData.filter(s => !searchName || s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase())).every(s => selectedStandbys.has(s.id))
+                          standbyData.filter(s => {
+                            if (searchName && !s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase())) return false;
+                            if (statusFilter === "confirmed" && !s.confirmedAt) return false;
+                            if (statusFilter === "awaiting" && s.confirmedAt) return false;
+                            return true;
+                          }).length > 0 &&
+                          standbyData.filter(s => {
+                            if (searchName && !s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase())) return false;
+                            if (statusFilter === "confirmed" && !s.confirmedAt) return false;
+                            if (statusFilter === "awaiting" && s.confirmedAt) return false;
+                            return true;
+                          }).every(s => selectedStandbys.has(s.id))
                         }
                         onCheckedChange={(checked) => {
-                          const filteredStandbys = standbyData.filter(s => !searchName || s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase()));
+                          const filteredStandbys = standbyData.filter(s => {
+                            if (searchName && !s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase())) return false;
+                            if (statusFilter === "confirmed" && !s.confirmedAt) return false;
+                            if (statusFilter === "awaiting" && s.confirmedAt) return false;
+                            return true;
+                          });
                           if (checked) {
                             setSelectedStandbys(new Set(filteredStandbys.map(s => s.id)));
                           } else {
@@ -1406,7 +1424,21 @@ export default function BookingResponses() {
                 </TableHeader>
                 <TableBody>
                   {standbyData
-                    .filter(s => !searchName || s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase()))
+                    .filter(s => {
+                      // Filter by name
+                      if (searchName && !s.contestant?.name?.toLowerCase().includes(searchName.toLowerCase())) {
+                        return false;
+                      }
+                      // Filter by status
+                      if (statusFilter === "confirmed" && !s.confirmedAt) {
+                        return false;
+                      }
+                      if (statusFilter === "awaiting" && s.confirmedAt) {
+                        return false;
+                      }
+                      // For "all", "declined", "failed_send" etc, show all standbys
+                      return true;
+                    })
                     .sort((a, b) => (a.priority || 999) - (b.priority || 999))
                     .map((standby) => (
                       <TableRow 
