@@ -1268,7 +1268,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           });
           clonedDoc.querySelectorAll('.casting-card-name').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#fcd34d';
-            (el as HTMLElement).style.lineHeight = '50px';
+            (el as HTMLElement).style.lineHeight = '100px';
             (el as HTMLElement).style.margin = '0';
             (el as HTMLElement).style.marginTop = '-24px';
           });
@@ -1594,7 +1594,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           });
           clonedDoc.querySelectorAll('.casting-card-name').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#fcd34d';
-            (el as HTMLElement).style.lineHeight = '50px';
+            (el as HTMLElement).style.lineHeight = '100px';
             (el as HTMLElement).style.margin = '0';
             (el as HTMLElement).style.marginTop = '-24px';
           });
@@ -2627,7 +2627,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 <div 
                   className="pl-6 pr-0 rounded-l flex items-center justify-between mb-4 casting-card-header" 
                   style={{ 
-                    height: '50px',
+                    height: '100px',
                     background: 'linear-gradient(to right, #b45309, #d97706, #f59e0b)'
                   }}
                 >
@@ -2637,8 +2637,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name"
                     style={{ 
                       fontFamily: '"Century Gothic", sans-serif',
-                      fontSize: '32px',
-                      lineHeight: '50px',
+                      fontSize: '64px',
+                      lineHeight: '100px',
                       textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                       color: '#fcd34d',
                       margin: 0,
@@ -3487,7 +3487,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <div 
                       className="pl-4 pr-0 rounded-l flex items-center justify-between mb-4 casting-card-header" 
                       style={{ 
-                        height: '50px',
+                        height: '100px',
                         background: 'linear-gradient(to right, #b45309, #d97706, #f59e0b)'
                       }} 
                       data-testid="preview-header-banner"
@@ -3498,8 +3498,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name"
                         style={{ 
                           fontFamily: '"Century Gothic", sans-serif',
-                          fontSize: '32px',
-                          lineHeight: '50px',
+                          fontSize: '64px',
+                          lineHeight: '100px',
                           textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                           color: '#fcd34d',
                           margin: 0,
