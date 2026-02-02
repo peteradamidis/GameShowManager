@@ -279,6 +279,10 @@ export default function SeatingChartPage() {
   const [selectedProducer, setSelectedProducer] = useState<string>("");
   const [producerUpdating, setProducerUpdating] = useState(false);
   
+  // AP (Assistant Producer) state
+  const [selectedAP, setSelectedAP] = useState<string>("");
+  const [apUpdating, setApUpdating] = useState(false);
+  
   // Swap blocks dialog state
   const [swapBlocksDialogOpen, setSwapBlocksDialogOpen] = useState(false);
   const [swapSourceBlock, setSwapSourceBlock] = useState<string>("");
@@ -367,6 +371,7 @@ export default function SeatingChartPage() {
   useEffect(() => {
     if (currentRecordDay) {
       setSelectedProducer(currentRecordDay.producer || "");
+      setSelectedAP(currentRecordDay.ap || "");
     }
   }, [currentRecordDay?.id]);
 
@@ -860,6 +865,28 @@ export default function SeatingChartPage() {
       setSelectedProducer(currentRecordDay?.producer || "none");
     } finally {
       setProducerUpdating(false);
+    }
+  };
+
+  // AP (Assistant Producer) update handler
+  const handleAPChange = async (newAP: string) => {
+    setSelectedAP(newAP);
+    setApUpdating(true);
+    try {
+      await apiRequest('PATCH', `/api/record-days/${recordDayId}`, {
+        ap: newAP === "none" ? null : newAP,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/record-days'] });
+    } catch (error: any) {
+      toast({
+        title: "AP update failed",
+        description: error?.message || "Could not update AP.",
+        variant: "destructive",
+      });
+      // Revert on error
+      setSelectedAP(currentRecordDay?.ap || "none");
+    } finally {
+      setApUpdating(false);
     }
   };
 
@@ -1711,19 +1738,34 @@ export default function SeatingChartPage() {
         </div>
         <div className="flex flex-col gap-2 items-end">
           {currentRecordDay && (
-            <div className="flex items-center gap-2">
-              <Label htmlFor="producer-select" className="font-medium">Producer:</Label>
-              <Select value={selectedProducer || "none"} onValueChange={handleProducerChange} disabled={producerUpdating || isLocked}>
-                <SelectTrigger id="producer-select" className="w-56" data-testid="select-producer">
-                  <SelectValue placeholder="Select producer" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="Peter Adamidis">Peter Adamidis</SelectItem>
-                  <SelectItem value="Kathleen Reynolds">Kathleen Reynolds</SelectItem>
-                  <SelectItem value="Maggie Carty">Maggie Carty</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="producer-select" className="font-medium">Producer:</Label>
+                <Select value={selectedProducer || "none"} onValueChange={handleProducerChange} disabled={producerUpdating || isLocked}>
+                  <SelectTrigger id="producer-select" className="w-44" data-testid="select-producer">
+                    <SelectValue placeholder="Select producer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="Peter Adamidis">Peter Adamidis</SelectItem>
+                    <SelectItem value="Kathleen Reynolds">Kathleen Reynolds</SelectItem>
+                    <SelectItem value="Maggie Carty">Maggie Carty</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="ap-select" className="font-medium">AP:</Label>
+                <Select value={selectedAP || "none"} onValueChange={handleAPChange} disabled={apUpdating || isLocked}>
+                  <SelectTrigger id="ap-select" className="w-44" data-testid="select-ap">
+                    <SelectValue placeholder="Select AP" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="Lochie Hookway">Lochie Hookway</SelectItem>
+                    <SelectItem value="Felicity Parker-Hill">Felicity Parker-Hill</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
           <div className="flex gap-2 items-center">

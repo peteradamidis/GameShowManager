@@ -53,6 +53,7 @@ Do not make changes to the file `Y`.
 - **Noticeboard Video Support:** The crew noticeboard supports video uploads (up to 100MB) alongside image uploads (up to 10MB). Videos display with playback controls in the feed.
 - **Multi-User Management:** Settings page includes a Users tab for managing multiple user accounts. Allows creating new users with usernames and passwords (bcrypt hashed), viewing all users, and deleting users. Prevents deletion of the last remaining user and self-deletion. All users have full system access.
 - **Block Notes:** Each seating block (1-7) has an editable text field for producer annotations. Notes are saved per record day, auto-save with 500ms debounce, and display with amber highlighting when populated. Stored in the `block_notes` database table with unique constraint on (record_day_id, block_number).
+- **Producer & AP Assignment:** Each record day can have a Producer and Assistant Producer (AP) assigned via dropdowns in the seating chart header. Producer options: Peter Adamidis, Kathleen Reynolds, Maggie Carty. AP options: Lochie Hookway, Felicity Parker-Hill. Selections are saved immediately and persist per record day.
 
 ### Feature Specifications
 - **Contestant Management:** Profiles, search, filtering by status, gender, rating, etc.
