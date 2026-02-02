@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown, AlertTriangle, RefreshCw, Undo2, Redo2 } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown, AlertTriangle, RefreshCw, Undo2, Redo2, History } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -290,6 +290,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [pendingSaveData, setPendingSaveData] = useState<CastingCardData | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasUnsavedChanges = useRef(false);
+  
+  // Version history state
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
 
   // Debug: Log contestants with groupIds
   useEffect(() => {
@@ -610,6 +613,54 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const { data: existingCard, isLoading: loadingCard } = useQuery<CastingCardData>({
     queryKey: ['/api/casting-cards', selectedContestant?.id],
     enabled: !!selectedContestant,
+  });
+
+  // Fetch version history for the current card
+  const { data: cardVersions = [], isLoading: loadingVersions, refetch: refetchVersions } = useQuery<Array<{
+    id: string;
+    castingCardId: string;
+    cardData: string;
+    createdAt: string;
+    createdBy: string | null;
+  }>>({
+    queryKey: ['/api/casting-cards', existingCard?.id, 'versions'],
+    queryFn: async () => {
+      if (!existingCard?.id) return [];
+      const response = await fetch(`/api/casting-cards/${existingCard.id}/versions`, { credentials: 'include' });
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!existingCard?.id && versionHistoryOpen,
+  });
+
+  // Restore version mutation
+  const restoreVersionMutation = useMutation({
+    mutationFn: async ({ cardId, versionId }: { cardId: string; versionId: string }) => {
+      const response = await fetch(`/api/casting-cards/${cardId}/versions/${versionId}/restore`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to restore version');
+      }
+      return response.json();
+    },
+    onSuccess: (restoredCard) => {
+      toast({ title: "Version restored", description: "The casting card has been restored to the selected version." });
+      // Sync local form state with restored data
+      if (restoredCard) {
+        setCardData(restoredCard);
+        setLastKnownUpdatedAt(restoredCard.updatedAt);
+      }
+      queryClient.invalidateQueries({ queryKey: ['/api/casting-cards', selectedContestant?.id] });
+      refetchVersions();
+      setVersionHistoryOpen(false);
+    },
+    onError: (error: any) => {
+      toast({ title: "Restore failed", description: error.message, variant: "destructive" });
+    },
   });
 
   // Helper function to get auto-populated companions from group members
@@ -1899,6 +1950,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={isGeneratingPdf} data-testid="btn-download-pdf-fs">
                   <Download className="h-4 w-4 mr-1" />
                   PDF
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setVersionHistoryOpen(true)} disabled={!existingCard?.id} data-testid="btn-version-history-fs">
+                  <History className="h-4 w-4 mr-1" />
+                  History
                 </Button>
                 <Button size="sm" variant="outline" onClick={handlePrint} data-testid="btn-print-card-fs">
                   <Printer className="h-4 w-4 mr-1" />
@@ -3377,6 +3432,79 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               className="flex-1 bg-amber-600 hover:bg-amber-700"
             >
               Overwrite with mine
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Version History Dialog */}
+      <Dialog open={versionHistoryOpen} onOpenChange={setVersionHistoryOpen}>
+        <DialogContent className="max-w-lg max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Version History
+            </DialogTitle>
+            <DialogDescription>
+              Previous versions of this casting card. Versions are saved automatically every 10 minutes during editing.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2 max-h-[400px] overflow-y-auto">
+            {loadingVersions ? (
+              <div className="text-center py-8 text-muted-foreground">Loading versions...</div>
+            ) : cardVersions.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <History className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                <p>No version history yet</p>
+                <p className="text-xs mt-1">Versions are saved automatically every 10 minutes during editing.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {cardVersions.map((version) => {
+                  // Handle both string and object cardData safely
+                  let parsedData: any = {};
+                  try {
+                    parsedData = typeof version.cardData === 'string' 
+                      ? JSON.parse(version.cardData) 
+                      : version.cardData;
+                  } catch (e) {
+                    console.error('Failed to parse version cardData:', e);
+                  }
+                  return (
+                    <div key={version.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-md border">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium">
+                          {new Date(version.createdAt).toLocaleDateString()} at {new Date(version.createdAt).toLocaleTimeString()}
+                        </div>
+                        <div className="text-xs text-muted-foreground flex items-center gap-2">
+                          {version.createdBy && <span>By: {version.createdBy}</span>}
+                          {parsedData.isReady && <Badge variant="outline" className="text-[10px] py-0">RX Ready</Badge>}
+                          {parsedData.isDraftComplete && <Badge variant="outline" className="text-[10px] py-0">Draft</Badge>}
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          if (existingCard?.id) {
+                            restoreVersionMutation.mutate({ cardId: existingCard.id, versionId: version.id });
+                          }
+                        }}
+                        disabled={restoreVersionMutation.isPending}
+                        data-testid={`btn-restore-version-${version.id}`}
+                      >
+                        <RotateCcw className="h-3 w-3 mr-1" />
+                        Restore
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setVersionHistoryOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
