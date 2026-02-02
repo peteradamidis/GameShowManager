@@ -4664,6 +4664,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Helper: Check if a contestant has blocking conditions that prevent auto-assignment
       const hasBlockingCondition = (c: typeof allContestants[0]): { blocked: boolean; reason: string } => {
+        // Block temporary contestants - they should only be manually assigned
+        if (c.isTemporary === true) {
+          return { blocked: true, reason: 'temporary contestant' };
+        }
         if (c.auditionRating === 'A' || c.auditionRating === 'A+') {
           return { blocked: true, reason: 'A/A+ rated' };
         }
