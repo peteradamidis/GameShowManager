@@ -1287,10 +1287,20 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
           });
-          // Producer corner in bottom left - ensure yellow background shows in print
+          // Producer corner in bottom left - ensure yellow background and positioning shows in print
+          clonedDoc.querySelectorAll('.casting-card-producer-corner').forEach((el: Element) => {
+            (el as HTMLElement).style.position = 'absolute';
+            (el as HTMLElement).style.bottom = '8px';
+            (el as HTMLElement).style.left = '16px';
+            (el as HTMLElement).style.zIndex = '10';
+          });
           clonedDoc.querySelectorAll('.casting-card-producer-corner span').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
+            (el as HTMLElement).style.display = 'inline-block';
+            (el as HTMLElement).style.padding = '6px 12px';
+            (el as HTMLElement).style.fontWeight = 'bold';
+            (el as HTMLElement).style.fontSize = '14px';
           });
           clonedDoc.querySelectorAll('.casting-card-photo-border').forEach((el: Element) => {
             (el as HTMLElement).style.border = '4px solid #f59e0b';
@@ -1613,10 +1623,20 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
           });
-          // Producer corner in bottom left - ensure yellow background shows in print
+          // Producer corner in bottom left - ensure yellow background and positioning shows in print
+          clonedDoc.querySelectorAll('.casting-card-producer-corner').forEach((el: Element) => {
+            (el as HTMLElement).style.position = 'absolute';
+            (el as HTMLElement).style.bottom = '8px';
+            (el as HTMLElement).style.left = '16px';
+            (el as HTMLElement).style.zIndex = '10';
+          });
           clonedDoc.querySelectorAll('.casting-card-producer-corner span').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
+            (el as HTMLElement).style.display = 'inline-block';
+            (el as HTMLElement).style.padding = '6px 12px';
+            (el as HTMLElement).style.fontWeight = 'bold';
+            (el as HTMLElement).style.fontSize = '14px';
           });
           clonedDoc.querySelectorAll('.casting-card-photo-border').forEach((el: Element) => {
             (el as HTMLElement).style.border = '4px solid #f59e0b';
@@ -2288,12 +2308,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               {/* Producer Name - Bottom Left Corner */}
               {cardData.producerName && (
                 <div 
-                  className="absolute bottom-3 left-4 casting-card-producer-corner"
-                  style={{ zIndex: 10 }}
+                  className="casting-card-producer-corner"
+                  style={{ 
+                    position: 'absolute', 
+                    bottom: '8px', 
+                    left: '16px', 
+                    zIndex: 10 
+                  }}
                 >
                   <span 
                     className="px-3 py-1.5 font-bold text-sm"
-                    style={{ backgroundColor: '#facc15', color: '#000000' }}
+                    style={{ backgroundColor: '#facc15', color: '#000000', display: 'inline-block' }}
                   >
                     {cardData.producerName}
                   </span>
@@ -3151,12 +3176,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   {/* Producer Name - Bottom Left Corner */}
                   {cardData.producerName && (
                     <div 
-                      className="absolute bottom-3 left-4 casting-card-producer-corner"
-                      style={{ zIndex: 10 }}
+                      className="casting-card-producer-corner"
+                      style={{ 
+                        position: 'absolute', 
+                        bottom: '8px', 
+                        left: '16px', 
+                        zIndex: 10 
+                      }}
                     >
                       <span 
                         className="px-3 py-1.5 font-bold text-sm"
-                        style={{ backgroundColor: '#facc15', color: '#000000' }}
+                        style={{ backgroundColor: '#facc15', color: '#000000', display: 'inline-block' }}
                       >
                         {cardData.producerName}
                       </span>
