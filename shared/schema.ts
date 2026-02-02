@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, pgEnum, date, unique, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, pgEnum, date, unique, boolean, jsonb, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -744,6 +744,23 @@ export const castingCards = pgTable("casting_cards", {
   // Card status
   isReady: boolean("is_ready").default(false), // Card marked as RX Ready
   isDraftComplete: boolean("is_draft_complete").default(false), // Draft marked as complete
+  
+  // Body text (single block format - replaces individual bullet points for easier editing)
+  bodyText: text("body_text"),
+  
+  // Position offsets for draggable elements
+  taglineOffsetY: real("tagline_offset_y"),
+  bodyOffsetY: real("body_offset_y"),
+  
+  // Use manual companions toggle
+  useManualCompanions: boolean("use_manual_companions").default(false),
+  
+  // Main photo override and positioning
+  mainPhotoOverride: text("main_photo_override"), // Base64 encoded photo
+  mainPhotoZoom: real("main_photo_zoom"),
+  mainPhotoOffsetX: real("main_photo_offset_x"),
+  mainPhotoOffsetY: real("main_photo_offset_y"),
+  mainPhotoRotation: real("main_photo_rotation"),
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
