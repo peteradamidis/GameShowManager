@@ -26,6 +26,7 @@ import {
   noticeboardLikes,
   postRecordTracking,
   castingCards,
+  castingCardVersions,
   birthdayEntries,
   blockNotes,
   type Contestant,
@@ -75,6 +76,8 @@ import {
   type InsertPostRecordTracking,
   type CastingCard,
   type InsertCastingCard,
+  type CastingCardVersion,
+  type InsertCastingCardVersion,
   type BirthdayEntry,
   type InsertBirthdayEntry,
   type BlockNote,
@@ -3083,6 +3086,41 @@ export class DbStorage implements IStorage {
   async deleteAllCastingCards(): Promise<void> {
     const db = getDb();
     await db.delete(castingCards);
+  }
+
+  // Casting Card Version History methods
+  async getCastingCardVersions(castingCardId: string): Promise<CastingCardVersion[]> {
+    const db = getDb();
+    return db
+      .select()
+      .from(castingCardVersions)
+      .where(eq(castingCardVersions.castingCardId, castingCardId))
+      .orderBy(desc(castingCardVersions.createdAt));
+  }
+
+  async getLatestCastingCardVersion(castingCardId: string): Promise<CastingCardVersion | undefined> {
+    const db = getDb();
+    const [latest] = await db
+      .select()
+      .from(castingCardVersions)
+      .where(eq(castingCardVersions.castingCardId, castingCardId))
+      .orderBy(desc(castingCardVersions.createdAt))
+      .limit(1);
+    return latest;
+  }
+
+  async createCastingCardVersion(data: InsertCastingCardVersion): Promise<CastingCardVersion> {
+    const db = getDb();
+    const [created] = await db
+      .insert(castingCardVersions)
+      .values(data)
+      .returning();
+    return created;
+  }
+
+  async deleteCastingCardVersion(id: string): Promise<void> {
+    const db = getDb();
+    await db.delete(castingCardVersions).where(eq(castingCardVersions.id, id));
   }
 
   // Birthday Entries methods

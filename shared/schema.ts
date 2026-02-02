@@ -776,6 +776,27 @@ export const insertCastingCardSchema = createInsertSchema(castingCards).omit({
 export type InsertCastingCard = z.infer<typeof insertCastingCardSchema>;
 export type CastingCard = typeof castingCards.$inferSelect;
 
+// Casting Card Versions table - stores version history for casting cards
+export const castingCardVersions = pgTable("casting_card_versions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  castingCardId: varchar("casting_card_id").references(() => castingCards.id, { onDelete: 'cascade' }).notNull(),
+  
+  // Snapshot of all card data as JSON
+  cardData: text("card_data").notNull(), // JSON string of the full card state
+  
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdBy: varchar("created_by"), // Username of who triggered the save
+});
+
+export const insertCastingCardVersionSchema = createInsertSchema(castingCardVersions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertCastingCardVersion = z.infer<typeof insertCastingCardVersionSchema>;
+export type CastingCardVersion = typeof castingCardVersions.$inferSelect;
+
 // Birthday Entries table for team birthday celebrations
 export const birthdayEntries = pgTable("birthday_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
