@@ -4953,6 +4953,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const groupBundles = bundles.filter(b => b.size > 1);
       const soloBundles = bundles.filter(b => b.size === 1);
       console.log(`[Auto-assign] Total bundles: ${bundles.length} (${groupBundles.length} groups, ${soloBundles.length} solos)`);
+      
+      // Log all group bundles for debugging
+      if (groupBundles.length > 0) {
+        console.log(`[Auto-assign] Group bundles:`);
+        groupBundles.forEach(g => {
+          console.log(`  - ${g.id}: ${g.contestants.map(c => `${c.name}(${c.auditionRating})`).join(' + ')} [hasCRating=${g.hasCRating}]`);
+        });
+      }
 
       // PHASE 2: Initialize Block States with rating tracking
       type BlockState = {
@@ -5374,18 +5382,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const plan: PlanItem[] = [];
       
       // Helper to get seat labels within a row, ensuring groups don't span rows
+      // allowedRowIndices: if provided, only search in those rows (e.g., [3, 4] for rows D and E)
       const assignSeatsToBundle = (
         bundle: GroupBundle,
         blockNumber: number,
         rowState: { currentRow: number; positionInRow: number },
-        usedSeats: Set<string>
+        usedSeats: Set<string>,
+        allowedRowIndices?: number[]
       ): { seatLabels: string[]; newRowState: { currentRow: number; positionInRow: number }; success: boolean } => {
         const seatLabels: string[] = [];
         const bundleSize = bundle.size;
         let { currentRow, positionInRow } = rowState;
         
+        // Helper to check if a row is allowed
+        const isRowAllowed = (rowIdx: number) => {
+          if (!allowedRowIndices || allowedRowIndices.length === 0) return true;
+          return allowedRowIndices.includes(rowIdx);
+        };
+        
+        // If current row is not allowed, skip to first allowed row
+        if (!isRowAllowed(currentRow)) {
+          const firstAllowed = allowedRowIndices?.find(idx => idx >= currentRow);
+          if (firstAllowed !== undefined) {
+            currentRow = firstAllowed;
+            positionInRow = 0;
+          } else {
+            // No allowed rows available
+            return { seatLabels: [], newRowState: rowState, success: false };
+          }
+        }
+        
         // Try to fit group in current row first (in remaining space)
-        if (currentRow < ROWS.length) {
+        if (currentRow < ROWS.length && isRowAllowed(currentRow)) {
           const row = ROWS[currentRow];
           
           // Find consecutive empty seats in current row starting from positionInRow
@@ -5418,10 +5446,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        // Doesn't fit in current row - find next row with enough consecutive empty seats
+        // Doesn't fit in current row - find next allowed row with enough consecutive empty seats
         currentRow++;
         
         while (currentRow < ROWS.length) {
+          // Skip rows that are not allowed
+          if (!isRowAllowed(currentRow)) {
+            currentRow++;
+            continue;
+          }
+          
           const row = ROWS[currentRow];
           let consecutiveEmpty = 0;
           let firstEmptyPos = -1;
@@ -5484,11 +5518,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         for (const { bundle } of blockAssignments) {
-          const result = assignSeatsToBundle(bundle, block.blockNumber, rowState, usedSeats);
+          // C-rated contestants can ONLY be placed in rows D and E (indices 3 and 4)
+          const allowedRows = bundle.hasCRating ? [3, 4] : undefined;
+          const result = assignSeatsToBundle(bundle, block.blockNumber, rowState, usedSeats, allowedRows);
           
           if (!result.success) {
-            // Skip this bundle - no capacity left in block
-            console.log(`Skipping bundle in block ${block.blockNumber} - no seat capacity`);
+            // Skip this bundle - no capacity left in block (or no allowed rows available)
+            console.log(`Skipping bundle in block ${block.blockNumber} - no seat capacity${bundle.hasCRating ? ' (C-rated, restricted to rows D/E)' : ''}`);
             continue;
           }
           
@@ -5505,9 +5541,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           });
           
-          // Log group placements
+          // Log group placements with row info
           if (bundle.size > 1) {
-            console.log(`[Auto-assign] Group placed in Block ${block.blockNumber}: ${bundle.contestants.map((c, i) => `${c.name} -> ${result.seatLabels[i]}`).join(', ')}`);
+            console.log(`[Auto-assign] Group placed in Block ${block.blockNumber}: ${bundle.contestants.map((c, i) => `${c.name}(${c.auditionRating}) -> ${result.seatLabels[i]}`).join(', ')} [hasCRating=${bundle.hasCRating}, allowedRows=${allowedRows ? allowedRows.map(i => ROWS[i]?.label).join(',') : 'any'}]`);
           }
         }
       }
@@ -5776,6 +5812,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // PHASE 3: Fill remaining seats with any eligible contestants (middle rows and leftovers)
+        // IMPORTANT: C-rated contestants can ONLY go in back rows (D, E)
         const remainingSeats = [...middleRowSeats, ...frontRowSeats, ...backRowSeats];
         for (const seatLabel of remainingSeats) {
           if (solosPlacedInBlock >= MAX_SOLOS_PER_BLOCK) {
@@ -5787,7 +5824,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                                 existingAssignments.filter(a => a.blockNumber === block.blockNumber).length;
           if (currentInBlock >= maxSeats) break;
           
-          const contestantIdx = remainingSolos.findIndex(c => isEligibleForBlock(c));
+          // Check if this seat is in a back row (D or E) - only back rows can have C-rated
+          const isBackRowSeat = seatLabel.startsWith('D') || seatLabel.startsWith('E');
+          
+          // Find eligible contestant - exclude C-rated unless it's a back row seat
+          const contestantIdx = remainingSolos.findIndex(c => {
+            if (!isEligibleForBlock(c)) return false;
+            // C-rated can ONLY go in back rows
+            if (c.auditionRating === 'C' && !isBackRowSeat) return false;
+            return true;
+          });
+          
           if (contestantIdx !== -1) {
             const contestant = remainingSolos[contestantIdx];
             placeSoloInSeat(contestant, seatLabel);
@@ -5860,6 +5907,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         for (const segment of emptySegments) {
           if (segment.length < 2) continue; // Need at least 2 seats for a group
           
+          // Check if this segment is in back rows (D or E) - required for C-rated groups
+          const allSeatsInBackRow = segment.every(seat => seat.startsWith('D') || seat.startsWith('E'));
+          
           // Find a group that fits this segment
           const groupIdx = unplacedGroups.findIndex(g => {
             if (g.size > segment.length) return false;
@@ -5874,6 +5924,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               // C-rated can ONLY go to NPB blocks
               if (isCRated && block.blockType !== 'NPB') return false;
+              
+              // C-rated groups can ONLY be placed in back rows (D, E)
+              if (isCRated && !allSeatsInBackRow) return false;
               
               return true;
             });
