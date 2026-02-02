@@ -1196,7 +1196,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       document.head.appendChild(printOverrideStyle);
 
       const canvas = await html2canvas(cardElement, {
-        scale: 2,
+        scale: 3, // Increased scale for better resolution (sharper photos)
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
@@ -1312,6 +1312,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             if (!htmlImg.style.objectFit) {
               htmlImg.style.objectFit = 'cover';
             }
+            // Add sharpness/rendering hints
+            htmlImg.style.imageRendering = 'auto'; // Browser default usually better for photos than crisp-edges
+            htmlImg.style.webkitFontSmoothing = 'antialiased';
             // Force visibility for all images
             htmlImg.style.display = 'block';
             htmlImg.style.visibility = 'visible';
@@ -1331,6 +1334,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 wrapper.style.backgroundSize = 'cover';
                 wrapper.style.backgroundPosition = 'center top';
                 wrapper.style.backgroundRepeat = 'no-repeat';
+                wrapper.style.imageRendering = 'auto'; // Sharpness hint
                 // Preserve the transform (zoom/pan) if any
                 const imgTransform = img.style.transform;
                 if (imgTransform && imgTransform !== 'none') {
@@ -1513,7 +1517,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       document.head.appendChild(printOverrideStyle);
       
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 3, // Increased scale for better resolution (sharper photos)
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
@@ -1628,6 +1632,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             if (!htmlImg.style.objectFit) {
               htmlImg.style.objectFit = 'cover';
             }
+            // Add sharpness/rendering hints
+            htmlImg.style.imageRendering = 'auto'; // Browser default usually better for photos than crisp-edges
+            htmlImg.style.webkitFontSmoothing = 'antialiased';
             // Force visibility for all images
             htmlImg.style.display = 'block';
             htmlImg.style.visibility = 'visible';
@@ -1647,6 +1654,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 wrapper.style.backgroundSize = 'cover';
                 wrapper.style.backgroundPosition = 'center top';
                 wrapper.style.backgroundRepeat = 'no-repeat';
+                wrapper.style.imageRendering = 'auto'; // Sharpness hint
                 // Preserve the transform (zoom/pan) if any
                 const imgTransform = img.style.transform;
                 if (imgTransform && imgTransform !== 'none') {
