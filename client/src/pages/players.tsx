@@ -2667,7 +2667,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name"
                     style={{ 
                       fontFamily: '"Century Gothic", sans-serif',
-                      fontSize: '32px',
+                      fontSize: '36px',
                       lineHeight: '80px',
                       textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                       color: '#fcd34d',
@@ -2685,7 +2685,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     contentEditable
                     suppressContentEditableWarning
                     className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                    style={{ fontFamily: 'Calibri, sans-serif', fontSize: '32px' }}
+                    style={{ fontFamily: 'Calibri, sans-serif', fontSize: '36px' }}
                     onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
                   >
                     {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
@@ -2694,7 +2694,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     contentEditable
                     suppressContentEditableWarning
                     className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                    style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '32px' }}
+                    style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '36px' }}
                     onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
                   >
                     {cardData.occupation || 'OCCUPATION'}
@@ -2741,7 +2741,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         contentEditable
                         suppressContentEditableWarning
                         className="mb-2 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline"
-                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '32px', color: '#dc2626' }}
+                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '36px', color: '#dc2626' }}
                         onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                       >
                         {cardData.tagline || 'SHORT TAGLINE'}
@@ -3479,7 +3479,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name"
                         style={{ 
                           fontFamily: '"Century Gothic", sans-serif',
-                          fontSize: '32px',
+                          fontSize: '36px',
                           lineHeight: '80px',
                           textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                           color: '#fcd34d',
@@ -3498,7 +3498,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         contentEditable
                         suppressContentEditableWarning
                         className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                        style={{ fontFamily: 'Calibri, sans-serif', fontSize: '32px' }}
+                        style={{ fontFamily: 'Calibri, sans-serif', fontSize: '36px' }}
                         onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
                         data-testid="preview-age-location"
                       >
@@ -3508,7 +3508,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         contentEditable
                         suppressContentEditableWarning
                         className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '32px' }}
+                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '36px' }}
                         onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
                         data-testid="edit-occupation"
                       >
@@ -3557,7 +3557,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             contentEditable
                             suppressContentEditableWarning
                             className="mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline"
-                            style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '32px', color: '#dc2626' }}
+                            style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '36px', color: '#dc2626' }}
                             onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
                             data-testid="edit-tagline"
                           >
