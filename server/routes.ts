@@ -11067,10 +11067,8 @@ Thank you.`;
         return res.status(400).json({ error: "Standby IDs array is required" });
       }
       
-      // Get all necessary data
-      const allStandbys = await storage.getAllStandbys();
-      const contestants = await storage.getContestants();
-      const recordDays = await storage.getRecordDays();
+      // Get all standbys with contestant and record day data
+      const allStandbys = await storage.getStandbyAssignments();
       
       // Filter to only the requested standbys
       const filteredStandbys = allStandbys.filter(s => standbyIds.includes(s.id));
@@ -11084,8 +11082,8 @@ Thank you.`;
       
       // Build export data
       const exportData = filteredStandbys.map(s => {
-        const contestant = contestants.find(c => c.id === s.contestantId);
-        const recordDay = recordDays.find(rd => rd.id === s.recordDayId);
+        const contestant = s.contestant;
+        const recordDay = s.recordDay;
         
         // Format mobile number with comma suffix for mail merge
         const mobileWithComma = contestant?.phone ? `${contestant.phone},` : '';
@@ -11099,7 +11097,7 @@ Thank you.`;
           'RX Number': recordDay?.rxNumber || '',
           'Email': contestant?.email || '',
           'Mobile,': mobileWithComma,
-          'Email Sent': s.reminderEmailSent ? 'Yes' : 'No',
+          'Email Sent': s.standbyEmailSent ? 'Yes' : 'No',
           'Status': getStatus(s),
           'Notes': s.notes || '',
         };
