@@ -68,6 +68,54 @@ import { Textarea } from "@/components/ui/textarea";
 import stageBackdropImage from "@/assets/stage-backdrop.png";
 import podiumSetImage from "@/assets/podium-set.png";
 import centreStageImage from "@/assets/centre-stage.png";
+import { useRef } from "react";
+
+// Debounced input for block notes - uses local state for instant feedback
+function DebouncedBlockNoteInput({ 
+  value, 
+  onChange, 
+  blockIndex 
+}: { 
+  value: string; 
+  onChange: (value: string) => void; 
+  blockIndex: number;
+}) {
+  const [localValue, setLocalValue] = useState(value);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Sync local value when external value changes (e.g., from server)
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setLocalValue(newValue); // Instant local update
+    
+    // Debounce the parent callback
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      onChange(newValue);
+    }, 300);
+  };
+  
+  return (
+    <input
+      type="text"
+      placeholder="Add block notes..."
+      value={localValue}
+      onChange={handleChange}
+      className={`w-full text-xs px-2 py-1 rounded border transition-colors ${
+        localValue 
+          ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-100' 
+          : 'bg-muted/50 border-transparent hover:border-muted-foreground/20'
+      } focus:outline-none focus:ring-1 focus:ring-primary/50`}
+      data-testid={`block-note-input-${blockIndex}`}
+    />
+  );
+}
 
 // Photo-only seat for Podium Visualiser mode
 function PhotoOnlySeat({ seat, seatLabel, blockIndex, seatIndex }: { 
@@ -873,17 +921,10 @@ function SeatingBlock({
         {/* Block Notes - editable text area for producer notes */}
         {!isPodiumVisualizerMode && onBlockNoteChange && (
           <div className="mt-2">
-            <input
-              type="text"
-              placeholder="Add block notes..."
+            <DebouncedBlockNoteInput
               value={blockNote || ''}
-              onChange={(e) => onBlockNoteChange(blockIndex + 1, e.target.value)}
-              className={`w-full text-xs px-2 py-1 rounded border transition-colors ${
-                blockNote 
-                  ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-100' 
-                  : 'bg-muted/50 border-transparent hover:border-muted-foreground/20'
-              } focus:outline-none focus:ring-1 focus:ring-primary/50`}
-              data-testid={`block-note-input-${blockIndex}`}
+              onChange={(value) => onBlockNoteChange(blockIndex + 1, value)}
+              blockIndex={blockIndex}
             />
           </div>
         )}
