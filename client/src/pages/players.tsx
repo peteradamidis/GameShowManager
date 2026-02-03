@@ -614,90 +614,84 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
   };
   
-  // Helper to insert dot point at cursor position or at the start of current line
+  // Helper to insert dot point at cursor position
   const insertDotPointAtCursor = (isFullscreen: boolean) => {
     const ref = isFullscreen ? bodyTextRefFs : bodyTextRef;
     const element = ref.current;
     if (!element) return;
     
-    // Get the current text content
-    const currentText = element.innerText || '';
-    
-    // Try to get cursor position from selection
     const selection = window.getSelection();
-    let insertPosition = currentText.length; // Default to end
-    let foundPosition = false;
+    if (!selection || selection.rangeCount === 0) {
+      // No selection - append bullet at the end
+      const currentText = element.innerText || '';
+      const newText = currentText + (currentText.endsWith('\n') ? '' : '\n') + '• ';
+      updateField('bodyText', newText);
+      return;
+    }
+    
+    const range = selection.getRangeAt(0);
     
     // Check if selection is within our element
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      if (element.contains(range.startContainer)) {
-        // Calculate the text offset from the start of the element
-        const preCaretRange = document.createRange();
-        preCaretRange.selectNodeContents(element);
-        preCaretRange.setEnd(range.startContainer, range.startOffset);
-        insertPosition = preCaretRange.toString().length;
-        foundPosition = true;
-      }
+    if (!element.contains(range.startContainer)) {
+      // Selection not in this element - append bullet at the end
+      const currentText = element.innerText || '';
+      const newText = currentText + (currentText.endsWith('\n') ? '' : '\n') + '• ';
+      updateField('bodyText', newText);
+      return;
     }
     
-    // If selection wasn't in the element, try using the saved cursor position
-    if (!foundPosition && lastCursorPositionRef.current && lastCursorPositionRef.current.node) {
-      const savedNode = lastCursorPositionRef.current.node;
-      const savedOffset = lastCursorPositionRef.current.offset;
-      if (element.contains(savedNode)) {
-        try {
-          const preCaretRange = document.createRange();
-          preCaretRange.selectNodeContents(element);
-          preCaretRange.setEnd(savedNode, savedOffset);
-          insertPosition = preCaretRange.toString().length;
-          foundPosition = true;
-        } catch (e) {
-          // Node may no longer be valid, fall back to end
-        }
+    // Get the current node and find the start of the line
+    let node = range.startContainer;
+    let offset = range.startOffset;
+    
+    // If we're at the start of a text node or in a BR, insert bullet here
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent || '';
+      // Find start of current line within this text node
+      let lineStart = offset;
+      while (lineStart > 0 && text[lineStart - 1] !== '\n') {
+        lineStart--;
       }
-    }
-    
-    // Find the start of the current line
-    let lineStart = insertPosition;
-    while (lineStart > 0 && currentText[lineStart - 1] !== '\n') {
-      lineStart--;
-    }
-    
-    // Insert "• " at the start of the current line
-    const newText = currentText.slice(0, lineStart) + '• ' + currentText.slice(lineStart);
-    updateField('bodyText', newText);
-    
-    // Focus back on element and set cursor after the bullet
-    setTimeout(() => {
-      element.focus();
-      const newSelection = window.getSelection();
-      if (newSelection && element.firstChild) {
-        // Set cursor position after the inserted bullet
-        const newCursorPos = lineStart + 2;
-        let charCount = 0;
-        const setPosition = (node: Node): boolean => {
-          if (node.nodeType === Node.TEXT_NODE) {
-            const len = (node.textContent || '').length;
-            if (charCount + len >= newCursorPos) {
-              const range = document.createRange();
-              range.setStart(node, newCursorPos - charCount);
-              range.collapse(true);
-              newSelection.removeAllRanges();
-              newSelection.addRange(range);
-              return true;
-            }
-            charCount += len;
-          } else {
-            for (const child of Array.from(node.childNodes)) {
-              if (setPosition(child)) return true;
-            }
-          }
-          return false;
-        };
-        setPosition(element);
+      // Insert bullet at line start
+      const before = text.slice(0, lineStart);
+      const after = text.slice(lineStart);
+      node.textContent = before + '• ' + after;
+      
+      // Update the stored bodyText
+      updateField('bodyText', element.innerText || '');
+      
+      // Set cursor after the bullet
+      setTimeout(() => {
+        const newRange = document.createRange();
+        newRange.setStart(node, lineStart + 2);
+        newRange.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+      }, 0);
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // Cursor might be in an empty line (after a <br>)
+      // Insert a text node with the bullet
+      const bulletNode = document.createTextNode('• ');
+      
+      // Find the right place to insert
+      if (offset < node.childNodes.length) {
+        node.insertBefore(bulletNode, node.childNodes[offset]);
+      } else {
+        node.appendChild(bulletNode);
       }
-    }, 10);
+      
+      // Update the stored bodyText
+      updateField('bodyText', element.innerText || '');
+      
+      // Set cursor after the bullet
+      setTimeout(() => {
+        const newRange = document.createRange();
+        newRange.setStart(bulletNode, 2);
+        newRange.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+      }, 0);
+    }
   };
 
   // Find all supporters (group members) for the selected contestant
@@ -1316,11 +1310,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.padding = '8px 16px';
             (el as HTMLElement).style.fontWeight = 'bold';
           });
-          // Producer corner in bottom left - ensure yellow background and positioning shows in print
+          // Producer corner in bottom RIGHT - ensure yellow background and positioning shows in print
           clonedDoc.querySelectorAll('.casting-card-producer-corner').forEach((el: Element) => {
             (el as HTMLElement).style.position = 'absolute';
-            (el as HTMLElement).style.bottom = '8px';
-            (el as HTMLElement).style.left = '16px';
+            (el as HTMLElement).style.bottom = '16px';
+            (el as HTMLElement).style.right = '16px';
+            (el as HTMLElement).style.left = 'auto';
             (el as HTMLElement).style.zIndex = '10';
           });
           clonedDoc.querySelectorAll('.casting-card-producer-corner span').forEach((el: Element) => {
@@ -1662,11 +1657,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.padding = '8px 16px';
             (el as HTMLElement).style.fontWeight = 'bold';
           });
-          // Producer corner in bottom left - ensure yellow background and positioning shows in print
+          // Producer corner in bottom RIGHT - ensure yellow background and positioning shows in print
           clonedDoc.querySelectorAll('.casting-card-producer-corner').forEach((el: Element) => {
             (el as HTMLElement).style.position = 'absolute';
-            (el as HTMLElement).style.bottom = '8px';
-            (el as HTMLElement).style.left = '16px';
+            (el as HTMLElement).style.bottom = '16px';
+            (el as HTMLElement).style.right = '16px';
+            (el as HTMLElement).style.left = 'auto';
             (el as HTMLElement).style.zIndex = '10';
           });
           clonedDoc.querySelectorAll('.casting-card-producer-corner span').forEach((el: Element) => {
