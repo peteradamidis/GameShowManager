@@ -15998,6 +15998,33 @@ Thank you.`;
     }
   });
 
+  // === System Settings API ===
+  
+  // Get system setting by key
+  app.get("/api/settings/:key", requireAuth, async (req, res) => {
+    try {
+      const { key } = req.params;
+      const setting = await storage.getSystemSetting(key);
+      res.json(setting || { key, value: "" });
+    } catch (error: any) {
+      console.error(`Error fetching setting ${req.params.key}:`, error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update system setting
+  app.post("/api/settings/:key", requireAuth, async (req, res) => {
+    try {
+      const { key } = req.params;
+      const { value } = req.body;
+      const updated = await storage.setSystemSetting(key, value);
+      res.json(updated);
+    } catch (error: any) {
+      console.error(`Error updating setting ${req.params.key}:`, error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // === Birthday Entries API ===
   
   // Get all birthday entries

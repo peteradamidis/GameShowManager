@@ -3,6 +3,13 @@ import { pgTable, text, varchar, integer, timestamp, pgEnum, date, unique, boole
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// System Settings table for various global configurations
+export const systemSettings = pgTable("system_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Enums
 export const availabilityStatusEnum = pgEnum('availability_status', ['available', 'assigned', 'invited', 'confirmed', 'returning_standby', 'rescheduled']);
 export const recordDayStatusEnum = pgEnum('record_day_status', ['draft', 'ready', 'invited', 'completed']);

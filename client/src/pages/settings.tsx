@@ -530,6 +530,155 @@ function PopupSettingsCard() {
   );
 }
 
+interface AnimatedMessageConfig {
+  enabled: boolean;
+  messageText: string;
+  animationStyle: 'fade' | 'slide' | 'zoom';
+  showConfetti: boolean;
+}
+
+function AnimatedMessageSettingsCard() {
+  const { toast } = useToast();
+  const [messageText, setMessageText] = useState("");
+  const [animationStyle, setAnimationStyle] = useState<'fade' | 'slide' | 'zoom'>('fade');
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [enabled, setEnabled] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  const { data: config, isLoading } = useQuery<AnimatedMessageConfig>({
+    queryKey: ['/api/settings/animated_message'],
+    select: (data: any) => {
+      try {
+        return data.value ? JSON.parse(data.value) : {
+          enabled: false,
+          messageText: "Welcome back!",
+          animationStyle: 'fade',
+          showConfetti: false
+        };
+      } catch (e) {
+        return {
+          enabled: false,
+          messageText: "Welcome back!",
+          animationStyle: 'fade',
+          showConfetti: false
+        };
+      }
+    }
+  });
+
+  useEffect(() => {
+    if (config) {
+      setMessageText(config.messageText);
+      setAnimationStyle(config.animationStyle);
+      setShowConfetti(config.showConfetti);
+      setEnabled(config.enabled);
+    }
+  }, [config]);
+
+  const updateMutation = useMutation({
+    mutationFn: async (updates: Partial<AnimatedMessageConfig>) => {
+      const newConfig = {
+        enabled: updates.enabled ?? enabled,
+        messageText: updates.messageText ?? messageText,
+        animationStyle: updates.animationStyle ?? animationStyle,
+        showConfetti: updates.showConfetti ?? showConfetti
+      };
+      return await apiRequest("POST", "/api/settings/animated_message", { value: JSON.stringify(newConfig) });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/settings/animated_message'] });
+      toast({ title: "Settings saved", description: "Animated message settings updated successfully." });
+      setHasChanges(false);
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleSave = () => {
+    updateMutation.mutate({});
+  };
+
+  const handleToggle = (val: boolean) => {
+    setEnabled(val);
+    updateMutation.mutate({ enabled: val });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Edit2 className="w-5 h-5 text-primary" />
+          Animated Welcome Message
+        </CardTitle>
+        <CardDescription>
+          Show a large animated message to users upon login
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label>Enable Animated Message</Label>
+            <p className="text-sm text-muted-foreground">
+              Show the message once per login session
+            </p>
+          </div>
+          <Switch
+            checked={enabled}
+            onCheckedChange={handleToggle}
+            disabled={isLoading || updateMutation.isPending}
+          />
+        </div>
+
+        <Separator />
+
+        <div className="space-y-2">
+          <Label htmlFor="msg-text">Message Text</Label>
+          <Input
+            id="msg-text"
+            value={messageText}
+            onChange={(e) => { setMessageText(e.target.value); setHasChanges(true); }}
+            placeholder="e.g. Welcome back!"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Animation Style</Label>
+            <Select 
+              value={animationStyle} 
+              onValueChange={(val: any) => { setAnimationStyle(val); setHasChanges(true); }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select style" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fade">Fade In</SelectItem>
+                <SelectItem value="slide">Slide Up</SelectItem>
+                <SelectItem value="zoom">Zoom In</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center justify-between mt-8">
+            <Label>Show Confetti</Label>
+            <Switch
+              checked={showConfetti}
+              onCheckedChange={(val) => { setShowConfetti(val); setHasChanges(true); }}
+            />
+          </div>
+        </div>
+
+        {hasChanges && (
+          <Button onClick={handleSave} disabled={updateMutation.isPending}>
+            {updateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+            Save Settings
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Settings() {
   const { toast } = useToast();
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
@@ -1106,100 +1255,195 @@ export default function Settings() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general">
-          <div className="grid gap-6 max-w-2xl">
-            <Card>
-              <CardHeader>
-                <CardTitle>Seating Configuration</CardTitle>
-            <CardDescription>
-              Default settings for seating assignments
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="blocks">Number of Blocks</Label>
-              <Input
-                id="blocks"
-                type="number"
-                defaultValue={7}
-                data-testid="input-blocks"
-              />
+        <TabsContent value="general" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <AnimatedMessageSettingsCard />
+              <PopupSettingsCard />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Seating Configuration</CardTitle>
+                  <CardDescription>
+                    Default settings for seating assignments
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="blocks">Number of Blocks</Label>
+                    <Input
+                      id="blocks"
+                      type="number"
+                      defaultValue={7}
+                      data-testid="input-blocks"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="seats">Seats Per Block</Label>
+                    <Input
+                      id="seats"
+                      type="number"
+                      defaultValue={20}
+                      data-testid="input-seats"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="female-target">Target Female Percentage</Label>
+                    <Input
+                      id="female-target"
+                      type="number"
+                      defaultValue={65}
+                      data-testid="input-female-target"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="seats">Seats Per Block</Label>
-              <Input
-                id="seats"
-                type="number"
-                defaultValue={20}
-                data-testid="input-seats"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="female-target">Target Female Percentage</Label>
-              <Input
-                id="female-target"
-                type="number"
-                defaultValue={65}
-                data-testid="input-female-target"
-              />
-            </div>
-          </CardContent>
-        </Card>
+            
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Lock className="w-5 h-5" />
+                    Change Username
+                  </CardTitle>
+                  <CardDescription>
+                    Update your account username
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...usernameForm}>
+                    <form onSubmit={usernameForm.handleSubmit(onUsernameSubmit)} className="space-y-4">
+                      <FormField
+                        control={usernameForm.control}
+                        name="newUsername"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>New Username</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="text" 
+                                placeholder="Enter new username (min 3 characters)" 
+                                {...field} 
+                                data-testid="input-new-username"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button 
+                        type="submit" 
+                        disabled={changeUsernameMutation.isPending}
+                        data-testid="button-change-username"
+                      >
+                        {changeUsernameMutation.isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Changing...
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-4 h-4 mr-2" />
+                            Change Username
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
 
-        <PopupSettingsCard />
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lock className="w-5 h-5" />
-              Change Username
-            </CardTitle>
-            <CardDescription>
-              Update your account username
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...usernameForm}>
-              <form onSubmit={usernameForm.handleSubmit(onUsernameSubmit)} className="space-y-4">
-                <FormField
-                  control={usernameForm.control}
-                  name="newUsername"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>New Username</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="text" 
-                          placeholder="Enter new username (min 3 characters)" 
-                          {...field} 
-                          data-testid="input-new-username"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button 
-                  type="submit" 
-                  disabled={changeUsernameMutation.isPending}
-                  data-testid="button-change-username"
-                >
-                  {changeUsernameMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Changing...
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-4 h-4 mr-2" />
-                      Change Username
-                    </>
-                  )}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Lock className="w-5 h-5" />
+                    Change Password
+                  </CardTitle>
+                  <CardDescription>
+                    Update your account password
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...passwordForm}>
+                    <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
+                      <FormField
+                        control={passwordForm.control}
+                        name="currentPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Current Password</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="password" 
+                                placeholder="Enter current password" 
+                                {...field} 
+                                data-testid="input-current-password"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={passwordForm.control}
+                        name="newPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>New Password</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="password" 
+                                placeholder="Enter new password (min 6 characters)" 
+                                {...field} 
+                                data-testid="input-new-password"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={passwordForm.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm New Password</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="password" 
+                                placeholder="Confirm new password" 
+                                {...field} 
+                                data-testid="input-confirm-password"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button 
+                        type="submit" 
+                        disabled={changePasswordMutation.isPending}
+                        data-testid="button-change-password"
+                      >
+                        {changePasswordMutation.isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Updating...
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-4 h-4 mr-2" />
+                            Update Password
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
 
         <Card>
           <CardHeader>

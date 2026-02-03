@@ -14,6 +14,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { MoneyRain } from "@/components/money-rain";
 import { AnnouncementPopupModal } from "@/components/farewell-video-modal";
 import { BirthdayBanner } from "@/components/birthday-banner";
+import { AnimatedMessageOverlay } from "@/components/animated-message-overlay";
 import Dashboard from "@/pages/dashboard";
 import Contestants from "@/pages/contestants";
 import RecordDays from "@/pages/record-days";
@@ -78,6 +79,18 @@ function AuthenticatedApp() {
   const { data: authData, refetch: refetchAuth, isLoading } = useQuery<AuthCheckResponse>({
     queryKey: ["/api/auth/check"],
     staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: animatedMessageConfig } = useQuery({
+    queryKey: ['/api/settings/animated_message'],
+    enabled: !!authData?.authenticated,
+    select: (data: any) => {
+      try {
+        return data.value ? JSON.parse(data.value) : null;
+      } catch (e) {
+        return null;
+      }
+    }
   });
 
   const logoutMutation = useMutation({
@@ -147,6 +160,7 @@ function AuthenticatedApp() {
     <>
     <MoneyRain isActive={showMoneyRain} onComplete={handleMoneyRainComplete} />
     <SidebarProvider style={style as React.CSSProperties}>
+      <AnimatedMessageOverlay config={animatedMessageConfig} />
       <div className="flex h-screen w-full">
         <AppSidebar />
         <div className="flex flex-col flex-1 overflow-hidden">

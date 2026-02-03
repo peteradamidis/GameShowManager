@@ -412,6 +412,14 @@ export interface IStorage {
   // Block Notes
   getBlockNotes(recordDayId: string): Promise<BlockNote[]>;
   upsertBlockNote(recordDayId: string, blockNumber: number, notes: string): Promise<BlockNote>;
+  getSystemSetting(key: string): Promise<SystemSetting | undefined>;
+  setSystemSetting(key: string, value: string): Promise<SystemSetting>;
+}
+
+export interface SystemSetting {
+  key: string;
+  value: string;
+  updatedAt: Date;
 }
 
 export class DbStorage implements IStorage {
@@ -3042,6 +3050,26 @@ export class DbStorage implements IStorage {
       .from(castingCards)
       .where(eq(castingCards.contestantId, contestantId));
     return card;
+  }
+
+  // System Settings
+  async getSystemSetting(key: string): Promise<SystemSetting | undefined> {
+    const db = getDb();
+    const [setting] = await db.select().from(systemSettings).where(eq(systemSettings.key, key));
+    return setting;
+  }
+
+  async setSystemSetting(key: string, value: string): Promise<SystemSetting> {
+    const db = getDb();
+    const [updated] = await db
+      .insert(systemSettings)
+      .values({ key, value, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: systemSettings.key,
+        set: { value, updatedAt: new Date() }
+      })
+      .returning();
+    return updated;
   }
 
   async createCastingCard(data: InsertCastingCard): Promise<CastingCard> {
