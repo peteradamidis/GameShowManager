@@ -2123,13 +2123,46 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const formatBold = () => applyFormat('bold');
   const formatItalic = () => applyFormat('italic');
   const formatUnderline = () => applyFormat('underline');
+  // Store the last selection for font size operations
+  const lastSelectionRef = useRef<{ range: Range; element: Element } | null>(null);
+  
+  // Save selection when user selects text in contentEditable
+  const saveSelectionForFormatting = () => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
+      const range = selection.getRangeAt(0);
+      const element = document.activeElement;
+      if (element) {
+        lastSelectionRef.current = { range: range.cloneRange(), element };
+      }
+    }
+  };
+  
   const formatFontSize = (size: string) => {
     try {
-      const selection = window.getSelection();
-      if (!selection || selection.rangeCount === 0) return;
+      let selection = window.getSelection();
+      let range: Range | null = null;
+      let targetElement: Element | null = null;
       
-      const range = selection.getRangeAt(0);
-      if (range.collapsed) return;
+      // Try current selection first
+      if (selection && selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
+        range = selection.getRangeAt(0);
+        targetElement = document.activeElement;
+      } 
+      // Fall back to saved selection
+      else if (lastSelectionRef.current) {
+        range = lastSelectionRef.current.range;
+        targetElement = lastSelectionRef.current.element;
+        // Restore focus and selection
+        if (targetElement && 'focus' in targetElement) {
+          (targetElement as HTMLElement).focus();
+          selection = window.getSelection();
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+        }
+      }
+      
+      if (!range || range.collapsed) return;
       
       // Handle 'bigger' and 'smaller' for A↑ and A↓ buttons
       let targetSize = size;
@@ -2161,6 +2194,19 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           font.parentNode?.replaceChild(span, font);
         });
       }
+      
+      // Re-select the text so user can continue adjusting
+      setTimeout(() => {
+        const newSelection = window.getSelection();
+        if (newSelection && range) {
+          newSelection.removeAllRanges();
+          newSelection.addRange(range);
+          // Update saved selection with new range
+          if (targetElement) {
+            lastSelectionRef.current = { range: range.cloneRange(), element: targetElement };
+          }
+        }
+      }, 0);
     } catch (error) {
       console.error('Error applying font size:', error);
     }
@@ -2366,10 +2412,24 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               </select>
               
               {/* Increase/Decrease Font Size buttons (like Word) */}
-              <Button size="icon" variant="ghost" onClick={() => formatFontSize('bigger')} title="Increase Font Size" data-testid="btn-font-size-up" className="h-8 w-8">
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                onMouseDown={(e) => { e.preventDefault(); saveSelectionForFormatting(); formatFontSize('bigger'); }} 
+                title="Increase Font Size" 
+                data-testid="btn-font-size-up" 
+                className="h-8 w-8"
+              >
                 <span className="text-sm font-bold">A</span><ChevronUp className="h-3 w-3 -ml-0.5" />
               </Button>
-              <Button size="icon" variant="ghost" onClick={() => formatFontSize('smaller')} title="Decrease Font Size" data-testid="btn-font-size-down" className="h-8 w-8">
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                onMouseDown={(e) => { e.preventDefault(); saveSelectionForFormatting(); formatFontSize('smaller'); }} 
+                title="Decrease Font Size" 
+                data-testid="btn-font-size-down" 
+                className="h-8 w-8"
+              >
                 <span className="text-sm font-bold">A</span><ChevronDown className="h-3 w-3 -ml-0.5" />
               </Button>
               
