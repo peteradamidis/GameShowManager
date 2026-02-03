@@ -1398,8 +1398,12 @@ export default function SeatingChartPage() {
   // Return a seated standby back to the standby list
   const handleReturnToStandby = async (assignmentId: string, contestantId: string) => {
     try {
-      // Find the standby record for this contestant on this record day
-      const standbyRecord = standbys?.find((s: any) => s.contestantId === contestantId);
+      // Fetch ALL standbys for this day (including seated ones) to find the record
+      const allStandbysResponse = await fetch(`/api/standbys/record-day/${recordDayId}?all=true`);
+      const allStandbys = await allStandbysResponse.json();
+      
+      // Find the standby record for this contestant (could be 'seated' status)
+      const standbyRecord = allStandbys?.find((s: any) => s.contestantId === contestantId);
       
       if (!standbyRecord) {
         toast({
@@ -1410,9 +1414,9 @@ export default function SeatingChartPage() {
         return;
       }
       
-      // Update standby status back to 'pending'
+      // Update standby status back to 'confirmed' (so they appear in standby panel)
       await apiRequest('PATCH', `/api/standbys/${standbyRecord.id}`, {
-        status: 'pending',
+        status: 'confirmed',
         assignedToSeat: null,
       });
       
