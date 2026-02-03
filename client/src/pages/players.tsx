@@ -2302,8 +2302,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     
     autoSaveTimeoutRef.current = setTimeout(() => {
       if (hasUnsavedChanges.current && cardData) {
-        // Get the current body text content from the DOM
-        const bodyTextElement = document.querySelector('[data-testid="body-text-editor"]') as HTMLElement;
+        // Get the current body text content from the DOM (check fullscreen first, then regular)
+        const fullscreenEditor = document.querySelector('[data-testid="body-text-editor-fullscreen"]') as HTMLElement;
+        const regularEditor = document.querySelector('[data-testid="body-text-editor"]') as HTMLElement;
+        // Use fullscreen if visible, otherwise regular
+        const bodyTextElement = (fullscreenEditor && fullscreenEditor.offsetParent !== null) ? fullscreenEditor : regularEditor;
         const currentBodyText = bodyTextElement?.innerHTML || cardData.bodyText;
         
         const dataToSave = { ...cardData, bodyText: currentBodyText };
@@ -3574,7 +3577,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
                       onMouseUp={saveCursorPosition}
                       onKeyUp={saveCursorPosition}
-                      data-testid="body-text-editor"
+                      data-testid="body-text-editor-fullscreen"
                       dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
                     />
                   </div>
