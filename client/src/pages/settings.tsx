@@ -534,6 +534,7 @@ interface AnimatedMessageConfig {
   enabled: boolean;
   messageText: string;
   animationStyle: 'fade' | 'slide' | 'zoom';
+  textStyle: 'simple' | 'bounce' | 'wave' | 'typewriter';
   showConfetti: boolean;
 }
 
@@ -541,6 +542,7 @@ function AnimatedMessageSettingsCard() {
   const { toast } = useToast();
   const [messageText, setMessageText] = useState("");
   const [animationStyle, setAnimationStyle] = useState<'fade' | 'slide' | 'zoom'>('fade');
+  const [textStyle, setTextStyle] = useState<'simple' | 'bounce' | 'wave' | 'typewriter'>('simple');
   const [showConfetti, setShowConfetti] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -553,6 +555,7 @@ function AnimatedMessageSettingsCard() {
           enabled: false,
           messageText: "Welcome back!",
           animationStyle: 'fade',
+          textStyle: 'simple',
           showConfetti: false
         };
       } catch (e) {
@@ -560,6 +563,7 @@ function AnimatedMessageSettingsCard() {
           enabled: false,
           messageText: "Welcome back!",
           animationStyle: 'fade',
+          textStyle: 'simple',
           showConfetti: false
         };
       }
@@ -570,6 +574,7 @@ function AnimatedMessageSettingsCard() {
     if (config) {
       setMessageText(config.messageText);
       setAnimationStyle(config.animationStyle);
+      setTextStyle(config.textStyle || 'simple');
       setShowConfetti(config.showConfetti);
       setEnabled(config.enabled);
     }
@@ -581,6 +586,7 @@ function AnimatedMessageSettingsCard() {
         enabled: updates.enabled ?? enabled,
         messageText: updates.messageText ?? messageText,
         animationStyle: updates.animationStyle ?? animationStyle,
+        textStyle: updates.textStyle ?? textStyle,
         showConfetti: updates.showConfetti ?? showConfetti
       };
       return await apiRequest("POST", "/api/settings/animated_message", { value: JSON.stringify(newConfig) });
@@ -646,7 +652,7 @@ function AnimatedMessageSettingsCard() {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Animation Style</Label>
+            <Label>Card Animation</Label>
             <Select 
               value={animationStyle} 
               onValueChange={(val: any) => { setAnimationStyle(val); setHasChanges(true); }}
@@ -661,14 +667,32 @@ function AnimatedMessageSettingsCard() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center justify-between mt-8">
-            <Label>Show Confetti</Label>
-            <Switch
-              checked={showConfetti}
-              onCheckedChange={(val) => { setShowConfetti(val); setHasChanges(true); }}
-              data-testid="switch-animated-message-confetti"
-            />
+          <div className="space-y-2">
+            <Label>Text Animation</Label>
+            <Select 
+              value={textStyle} 
+              onValueChange={(val: any) => { setTextStyle(val); setHasChanges(true); }}
+            >
+              <SelectTrigger data-testid="select-animated-message-text-style">
+                <SelectValue placeholder="Select text style" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="simple">Simple</SelectItem>
+                <SelectItem value="bounce">Bounce In</SelectItem>
+                <SelectItem value="wave">Wave</SelectItem>
+                <SelectItem value="typewriter">Typewriter</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label>Show Confetti</Label>
+          <Switch
+            checked={showConfetti}
+            onCheckedChange={(val) => { setShowConfetti(val); setHasChanges(true); }}
+            data-testid="switch-animated-message-confetti"
+          />
         </div>
 
         {hasChanges && (
