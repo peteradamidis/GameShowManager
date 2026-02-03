@@ -2227,9 +2227,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!Array.isArray(matchesArray)) {
           return res.status(400).json({ error: "Matches must be an array" });
         }
+        console.log('[PPTX Import] Matches received:', JSON.stringify(matchesArray.slice(0, 3)));
         for (const match of matchesArray) {
-          if (typeof match.slideNumber !== 'number' || typeof match.contestantId !== 'string') {
-            return res.status(400).json({ error: "Invalid match entry - slideNumber must be a number and contestantId must be a string" });
+          const slideNumType = typeof match.slideNumber;
+          const contestantIdType = typeof match.contestantId;
+          if (slideNumType !== 'number' || contestantIdType !== 'string') {
+            console.log(`[PPTX Import] Invalid match: slideNumber type=${slideNumType} (${match.slideNumber}), contestantId type=${contestantIdType} (${match.contestantId})`);
+            return res.status(400).json({ 
+              error: `Invalid match entry - slideNumber type is ${slideNumType} (expected number), contestantId type is ${contestantIdType} (expected string)` 
+            });
           }
         }
       } catch (parseError) {
