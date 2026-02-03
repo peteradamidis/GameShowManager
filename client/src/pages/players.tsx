@@ -2956,14 +2956,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 {/* Producer Field - in normal flow at bottom right of content area */}
                 <div className="flex justify-end mt-auto pt-4">
                   {cardData.showProducer !== false ? (
-                    <div className="flex items-center group casting-card-producer-corner relative">
+                    <div className="flex items-stretch group casting-card-producer-corner relative">
                       <span 
-                        className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
+                        className="casting-card-producer-label px-4 py-2 font-semibold text-sm flex items-center"
                         style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
                       >PRODUCER:</span>
                       {/* Plain text for print - always visible */}
                       <span 
-                        className="casting-card-producer-name-print px-4 py-2 font-bold text-sm min-w-[120px]"
+                        className="casting-card-producer-name-print px-4 py-2 font-bold text-sm min-w-[120px] flex items-center"
                         style={{ backgroundColor: '#facc15', color: '#000000' }}
                       >{cardData.producerName || 'SELECT'}</span>
                       {/* Dropdown for UI - positioned on top, hidden during PDF/print */}
@@ -3821,14 +3821,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     {/* Producer Field - in normal flow at bottom right of content area */}
                     <div className="flex justify-end mt-auto pt-4">
                       {cardData.showProducer !== false ? (
-                        <div className="flex items-center group casting-card-producer-corner relative">
+                        <div className="flex items-stretch group casting-card-producer-corner relative">
                           <span 
-                            className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
+                            className="casting-card-producer-label px-4 py-2 font-semibold text-sm flex items-center"
                             style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
                           >PRODUCER:</span>
                           {/* Plain text for print - always visible */}
                           <span 
-                            className="casting-card-producer-name-print px-4 py-2 font-bold text-sm min-w-[120px]"
+                            className="casting-card-producer-name-print px-4 py-2 font-bold text-sm min-w-[120px] flex items-center"
                             style={{ backgroundColor: '#facc15', color: '#000000' }}
                           >{cardData.producerName || 'SELECT'}</span>
                           {/* Dropdown for UI - positioned on top, hidden during PDF/print */}
