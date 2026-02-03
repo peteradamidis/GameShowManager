@@ -2227,6 +2227,24 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
   };
   
+  // Continuously save selection on any selection change (for toolbar interactions)
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
+        const range = selection.getRangeAt(0);
+        const activeElement = document.activeElement;
+        // Only save if selection is within a contentEditable element
+        if (activeElement?.getAttribute('contenteditable') === 'true') {
+          lastSelectionRef.current = { range: range.cloneRange(), element: activeElement };
+        }
+      }
+    };
+    
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => document.removeEventListener('selectionchange', handleSelectionChange);
+  }, []);
+  
   // Predefined font size steps for the up/down arrows
   const fontSizeSteps = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72];
   
