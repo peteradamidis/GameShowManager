@@ -116,7 +116,7 @@ const pdfUpload = multer({
 // PPTX upload configuration with size limit and file type validation
 const pptxUpload = multer({ 
   storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit for PowerPoint files
+  limits: { fileSize: 200 * 1024 * 1024 }, // 200MB limit for PowerPoint files (can contain many photos)
   fileFilter: (req, file, cb) => {
     const validMimeTypes = [
       'application/vnd.openxmlformats-officedocument.presentationml.presentation',
