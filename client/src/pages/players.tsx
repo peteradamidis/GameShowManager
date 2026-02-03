@@ -3145,7 +3145,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             </div>
           </div>
         </div>
-      </SafeRender>
+      </div>
       
       {/* Version History Dialog - also needed in fullscreen mode */}
       <Dialog open={versionHistoryOpen} onOpenChange={setVersionHistoryOpen}>
