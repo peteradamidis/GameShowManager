@@ -294,6 +294,31 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   // Version history state
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
 
+  // PowerPoint import state
+  const [pptxImportOpen, setPptxImportOpen] = useState(false);
+  const [pptxFile, setPptxFile] = useState<File | null>(null);
+  const [pptxPreviewData, setPptxPreviewData] = useState<Array<{
+    slideNumber: number;
+    extractedName: string;
+    ageState: string;
+    occupation: string;
+    sponsorCategory: string;
+    tagline: string;
+    bodyText: string;
+    producerName: string;
+    hasMainPhoto: boolean;
+    companionPhotoCount: number;
+    match: { id: string; name: string } | null;
+    confidence: number;
+    candidates: Array<{ id: string; name: string }>;
+    selectedContestantId?: string;
+  }> | null>(null);
+  const [pptxImportLoading, setPptxImportLoading] = useState(false);
+  const [pptxSearchQuery, setPptxSearchQuery] = useState('');
+  const [pptxSearchResults, setPptxSearchResults] = useState<Array<{ id: string; name: string; age: number; gender: string }>>([]);
+  const [pptxSearchingFor, setPptxSearchingFor] = useState<number | null>(null);
+  const pptxFileInputRef = useRef<HTMLInputElement>(null);
+
   // Debug: Log contestants with groupIds
   useEffect(() => {
     const withGroups = contestants.filter(c => c.groupId);
@@ -2229,6 +2254,143 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     </div>
   );
 
+  // PowerPoint import handlers
+  const handlePptxFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setPptxFile(file);
+    setPptxImportLoading(true);
+    setPptxPreviewData(null);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('/api/casting-cards/import-preview', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to parse PowerPoint file');
+      }
+      
+      const data = await response.json();
+      setPptxPreviewData(data.cards.map((card: any) => ({
+        ...card,
+        selectedContestantId: card.match?.id || undefined
+      })));
+    } catch (error: any) {
+      toast({
+        title: "Import Error",
+        description: error.message,
+        variant: "destructive"
+      });
+      setPptxPreviewData(null);
+    } finally {
+      setPptxImportLoading(false);
+    }
+    
+    e.target.value = '';
+  };
+
+  const handlePptxSearch = async (query: string, slideNumber: number) => {
+    setPptxSearchQuery(query);
+    setPptxSearchingFor(slideNumber);
+    
+    if (!query.trim()) {
+      setPptxSearchResults([]);
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/contestants/search?q=${encodeURIComponent(query)}`);
+      if (response.ok) {
+        const results = await response.json();
+        setPptxSearchResults(results);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+    }
+  };
+
+  const handlePptxSelectContestant = (slideNumber: number, contestantId: string, contestantName: string) => {
+    if (!pptxPreviewData) return;
+    
+    setPptxPreviewData(prev => prev?.map(card => 
+      card.slideNumber === slideNumber 
+        ? { ...card, selectedContestantId: contestantId, match: { id: contestantId, name: contestantName } }
+        : card
+    ) || null);
+    
+    setPptxSearchingFor(null);
+    setPptxSearchQuery('');
+    setPptxSearchResults([]);
+  };
+
+  const handlePptxImport = async () => {
+    if (!pptxFile || !pptxPreviewData) return;
+    
+    const cardsToImport = pptxPreviewData.filter(card => card.selectedContestantId);
+    if (cardsToImport.length === 0) {
+      toast({
+        title: "No Cards Selected",
+        description: "Please select at least one contestant match to import.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setPptxImportLoading(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', pptxFile);
+      formData.append('matches', JSON.stringify(cardsToImport.map(card => ({
+        slideNumber: card.slideNumber,
+        contestantId: card.selectedContestantId
+      }))));
+      
+      const response = await fetch('/api/casting-cards/import', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Import failed');
+      }
+      
+      const result = await response.json();
+      
+      toast({
+        title: "Import Successful",
+        description: `Imported ${result.imported} casting cards.`,
+      });
+      
+      // Refresh casting cards data
+      queryClient.invalidateQueries({ queryKey: ['/api/casting-cards'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      
+      // Close dialog and reset state
+      setPptxImportOpen(false);
+      setPptxFile(null);
+      setPptxPreviewData(null);
+    } catch (error: any) {
+      toast({
+        title: "Import Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setPptxImportLoading(false);
+    }
+  };
+
   // Fullscreen mode renders just the card
   if (isFullscreen && selectedContestant && cardData) {
     // Safely access cardData properties with defaults
@@ -2243,7 +2405,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       tagline: cardData.tagline || '',
       producerName: cardData.producerName || '',
     };
-    
+
     return (
       <SafeRender fallback={fullscreenErrorFallback} onError={(e) => { console.error('Fullscreen render error:', e); setRenderError(e.message); }}>
       <div className="fixed inset-0 z-50 bg-white overflow-auto p-6">
@@ -3229,7 +3391,19 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       <div className={`w-80 flex-shrink-0 flex flex-col ${isFullscreen ? 'hidden' : ''}`}>
         <Card className="flex-1 flex flex-col overflow-hidden">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Select Contestant</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Select Contestant</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPptxImportOpen(true)}
+                className="text-xs"
+                data-testid="btn-import-pptx"
+              >
+                <Upload className="h-3 w-3 mr-1" />
+                Import PPTX
+              </Button>
+            </div>
             <div className="space-y-2 mt-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -4156,6 +4330,232 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             <Button variant="outline" onClick={() => setVersionHistoryOpen(false)}>
               Close
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* PowerPoint Import Dialog */}
+      <Dialog open={pptxImportOpen} onOpenChange={(open) => {
+        setPptxImportOpen(open);
+        if (!open) {
+          setPptxFile(null);
+          setPptxPreviewData(null);
+          setPptxSearchQuery('');
+          setPptxSearchResults([]);
+          setPptxSearchingFor(null);
+        }
+      }}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5" />
+              Import Casting Cards from PowerPoint
+            </DialogTitle>
+            <DialogDescription>
+              Upload a PowerPoint file containing casting cards. The system will extract the content and match it to contestants.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-auto">
+            {!pptxPreviewData ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-4">
+                <input
+                  type="file"
+                  ref={pptxFileInputRef}
+                  className="hidden"
+                  accept=".pptx"
+                  onChange={handlePptxFileSelect}
+                />
+                <div className="text-center">
+                  <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">Upload PowerPoint File</h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Select a .pptx file containing your casting cards
+                  </p>
+                </div>
+                <Button
+                  onClick={() => pptxFileInputRef.current?.click()}
+                  disabled={pptxImportLoading}
+                  data-testid="btn-select-pptx-file"
+                >
+                  {pptxImportLoading ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Parsing...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Select File
+                    </>
+                  )}
+                </Button>
+                {pptxFile && (
+                  <p className="text-sm text-muted-foreground">
+                    Selected: {pptxFile.name}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Found {pptxPreviewData.length} cards. Match them to contestants below.
+                  </p>
+                  <Badge variant="outline">
+                    {pptxPreviewData.filter(c => c.selectedContestantId).length} / {pptxPreviewData.length} matched
+                  </Badge>
+                </div>
+                
+                <div className="border rounded-lg divide-y max-h-[400px] overflow-auto">
+                  {pptxPreviewData.map((card) => (
+                    <div key={card.slideNumber} className="p-4 hover:bg-muted/50">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
+                          {card.slideNumber}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold">{card.extractedName}</span>
+                            {card.hasMainPhoto && (
+                              <Badge variant="secondary" className="text-xs">Has Photo</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {card.occupation || card.ageState || 'No details'}
+                          </p>
+                          {card.bodyText && (
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                              {card.bodyText.substring(0, 150)}...
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex-shrink-0 w-64">
+                          {card.selectedContestantId ? (
+                            <div className="flex items-center gap-2">
+                              <Badge variant="default" className="flex-1 justify-center">
+                                <CheckCircle2 className="h-3 w-3 mr-1" />
+                                {card.match?.name}
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => {
+                                  setPptxPreviewData(prev => prev?.map(c => 
+                                    c.slideNumber === card.slideNumber 
+                                      ? { ...c, selectedContestantId: undefined, match: null }
+                                      : c
+                                  ) || null);
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {card.candidates.length > 0 && pptxSearchingFor !== card.slideNumber ? (
+                                <div className="space-y-1">
+                                  <p className="text-xs text-muted-foreground">Suggestions:</p>
+                                  {card.candidates.slice(0, 3).map(candidate => (
+                                    <button
+                                      key={candidate.id}
+                                      onClick={() => handlePptxSelectContestant(card.slideNumber, candidate.id, candidate.name)}
+                                      className="w-full text-left text-sm px-2 py-1 rounded hover:bg-accent truncate"
+                                    >
+                                      {candidate.name}
+                                    </button>
+                                  ))}
+                                </div>
+                              ) : null}
+                              
+                              {pptxSearchingFor === card.slideNumber ? (
+                                <div className="space-y-2">
+                                  <Input
+                                    placeholder="Search contestant..."
+                                    value={pptxSearchQuery}
+                                    onChange={(e) => handlePptxSearch(e.target.value, card.slideNumber)}
+                                    autoFocus
+                                    className="h-8 text-sm"
+                                  />
+                                  {pptxSearchResults.length > 0 && (
+                                    <div className="border rounded max-h-32 overflow-auto">
+                                      {pptxSearchResults.map(result => (
+                                        <button
+                                          key={result.id}
+                                          onClick={() => handlePptxSelectContestant(card.slideNumber, result.id, result.name)}
+                                          className="w-full text-left text-sm px-2 py-1.5 hover:bg-accent border-b last:border-b-0"
+                                        >
+                                          {result.name} ({result.gender === 'Female' ? 'F' : 'M'}, {result.age})
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setPptxSearchingFor(null);
+                                      setPptxSearchQuery('');
+                                      setPptxSearchResults([]);
+                                    }}
+                                    className="text-xs"
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setPptxSearchingFor(card.slideNumber)}
+                                  className="w-full text-xs"
+                                >
+                                  <Search className="h-3 w-3 mr-1" />
+                                  Search Contestant
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter className="border-t pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPptxImportOpen(false);
+                setPptxFile(null);
+                setPptxPreviewData(null);
+              }}
+            >
+              Cancel
+            </Button>
+            {pptxPreviewData && (
+              <Button
+                onClick={handlePptxImport}
+                disabled={pptxImportLoading || !pptxPreviewData.some(c => c.selectedContestantId)}
+                data-testid="btn-confirm-pptx-import"
+              >
+                {pptxImportLoading ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Import {pptxPreviewData.filter(c => c.selectedContestantId).length} Cards
+                  </>
+                )}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

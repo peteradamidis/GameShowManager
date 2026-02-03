@@ -39,6 +39,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { requireAuth, hashPassword, verifyPassword } from "./auth";
 import { wsManager } from "./websocket";
 import sharp from "sharp";
+import { parsePptxFile, matchContestantByName, ExtractedCard } from "./pptx-parser";
 
 // Google Sheets config keys for database storage
 const SHEETS_SPREADSHEET_ID_KEY = 'google_sheets_spreadsheet_id';
@@ -108,6 +109,23 @@ const pdfUpload = multer({
       cb(null, true);
     } else {
       cb(new Error('Only PDF files are allowed'));
+    }
+  }
+});
+
+// PPTX upload configuration with size limit and file type validation
+const pptxUpload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit for PowerPoint files
+  fileFilter: (req, file, cb) => {
+    const validMimeTypes = [
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/pptx'
+    ];
+    if (validMimeTypes.includes(file.mimetype) || file.originalname.toLowerCase().endsWith('.pptx')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PowerPoint (.pptx) files are allowed'));
     }
   }
 });
@@ -2122,6 +2140,224 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Import error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // PowerPoint Casting Card Import - Parse and preview
+  app.post("/api/casting-cards/import-preview", requireAuth, pptxUpload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const fileBuffer = req.file.buffer;
+      const parseResult = await parsePptxFile(fileBuffer);
+
+      if (!parseResult.success && parseResult.cards.length === 0) {
+        return res.status(400).json({ 
+          error: "Failed to parse PowerPoint file", 
+          details: parseResult.errors 
+        });
+      }
+
+      // Get all contestants for matching
+      const allContestants = await storage.getContestants();
+      const contestantList = allContestants.map(c => ({
+        id: parseInt(c.id) || 0,
+        name: c.name || ''
+      }));
+
+      // Match each extracted card to a contestant
+      const matchedCards = parseResult.cards.map(card => {
+        const matchResult = matchContestantByName(card.name, contestantList);
+        return {
+          slideNumber: card.slideNumber,
+          extractedName: card.name,
+          ageState: card.ageState,
+          occupation: card.occupation,
+          sponsorCategory: card.sponsorCategory,
+          tagline: card.tagline,
+          bodyText: card.bodyText,
+          producerName: card.producerName,
+          hasMainPhoto: !!card.photos.main,
+          companionPhotoCount: card.photos.companions.length,
+          match: matchResult.match ? {
+            id: matchResult.match.id,
+            name: matchResult.match.name
+          } : null,
+          confidence: matchResult.confidence,
+          candidates: matchResult.candidates.slice(0, 5).map(c => ({
+            id: c.id,
+            name: c.name
+          }))
+        };
+      });
+
+      res.json({
+        success: true,
+        cardsFound: parseResult.cards.length,
+        cards: matchedCards,
+        errors: parseResult.errors
+      });
+
+    } catch (error: any) {
+      console.error("PowerPoint import preview error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // PowerPoint Casting Card Import - Execute import with confirmed matches
+  app.post("/api/casting-cards/import", requireAuth, pptxUpload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const { matches } = req.body;
+      if (!matches) {
+        return res.status(400).json({ error: "No matches provided" });
+      }
+
+      // Parse and validate the matches from JSON string
+      let matchesArray: Array<{ slideNumber: number; contestantId: number }>;
+      try {
+        matchesArray = typeof matches === 'string' ? JSON.parse(matches) : matches;
+        // Validate structure
+        if (!Array.isArray(matchesArray)) {
+          return res.status(400).json({ error: "Matches must be an array" });
+        }
+        for (const match of matchesArray) {
+          if (typeof match.slideNumber !== 'number' || typeof match.contestantId !== 'number') {
+            return res.status(400).json({ error: "Invalid match entry - slideNumber and contestantId must be numbers" });
+          }
+        }
+      } catch (parseError) {
+        return res.status(400).json({ error: "Invalid matches JSON format" });
+      }
+
+      const fileBuffer = req.file.buffer;
+      const parseResult = await parsePptxFile(fileBuffer);
+
+      if (!parseResult.success && parseResult.cards.length === 0) {
+        return res.status(400).json({ 
+          error: "Failed to parse PowerPoint file", 
+          details: parseResult.errors 
+        });
+      }
+
+      const imported: Array<{ contestantId: number; name: string }> = [];
+      const errors: string[] = [];
+
+      for (const matchInfo of matchesArray) {
+        const { slideNumber, contestantId } = matchInfo;
+        if (!contestantId) continue;
+
+        const card = parseResult.cards.find(c => c.slideNumber === slideNumber);
+        if (!card) {
+          errors.push(`Card for slide ${slideNumber} not found`);
+          continue;
+        }
+
+        try {
+          // Get or create casting card for this contestant
+          let existingCard = await storage.getCastingCardByContestantId(contestantId);
+          
+          const cardFields = {
+            fullName: card.name,
+            ageState: card.ageState,
+            occupation: card.occupation,
+            sponsorCategory: card.sponsorCategory,
+            tagline: card.tagline,
+            bodyText: card.bodyText,
+            producerName: card.producerName,
+            showTagline: !!card.tagline,
+            showSponsorCategory: !!card.sponsorCategory,
+            showProducer: !!card.producerName
+          };
+
+          if (existingCard) {
+            // Update existing card
+            await storage.updateCastingCard(existingCard.id, cardFields);
+          } else {
+            // Create new casting card
+            await storage.createCastingCard({
+              contestantId,
+              ...cardFields
+            });
+          }
+
+          // Handle main photo if present
+          if (card.photos.main) {
+            const photoFilename = `contestant_${contestantId}_main_${Date.now()}.${card.photos.mainFilename?.split('.').pop() || 'jpg'}`;
+            const photoPath = path.join(process.cwd(), 'uploads', 'photos', photoFilename);
+            
+            // Ensure directory exists
+            const photoDir = path.dirname(photoPath);
+            if (!fs.existsSync(photoDir)) {
+              fs.mkdirSync(photoDir, { recursive: true });
+            }
+            
+            // Process and save the photo
+            await sharp(card.photos.main)
+              .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+              .jpeg({ quality: 85 })
+              .toFile(photoPath.replace(/\.[^.]+$/, '.jpg'));
+            
+            // Update contestant with photo URL
+            await storage.updateContestant(contestantId, {
+              photoUrl: `/uploads/photos/${photoFilename.replace(/\.[^.]+$/, '.jpg')}`
+            });
+          }
+
+          const contestant = await storage.getContestantById(contestantId);
+          imported.push({
+            contestantId,
+            name: contestant?.name || card.name
+          });
+
+        } catch (cardError: any) {
+          errors.push(`Error importing card for slide ${slideNumber}: ${cardError.message}`);
+        }
+      }
+
+      res.json({
+        success: true,
+        imported: imported.length,
+        importedCards: imported,
+        errors
+      });
+
+    } catch (error: any) {
+      console.error("PowerPoint import error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Search contestants for PPTX import matching
+  app.get("/api/contestants/search", async (req, res) => {
+    try {
+      const query = (req.query.q as string || '').toLowerCase().trim();
+      if (!query) {
+        return res.json([]);
+      }
+
+      const allContestants = await storage.getContestants();
+      const matches = allContestants
+        .filter(c => {
+          const name = (c.name || '').toLowerCase();
+          return name.includes(query);
+        })
+        .slice(0, 20)
+        .map(c => ({
+          id: c.id,
+          name: c.name || '',
+          age: c.age,
+          gender: c.gender
+        }));
+
+      res.json(matches);
+    } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
