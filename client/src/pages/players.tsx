@@ -2375,14 +2375,35 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             <div className="flex items-center gap-1 flex-wrap bg-gray-50 p-2 rounded border">
               <span className="text-xs text-gray-500 mr-2">Format:</span>
               
-              {/* Bold, Italic, Underline */}
-              <Button size="icon" variant="ghost" onClick={formatBold} title="Bold" data-testid="btn-format-bold" className="h-8 w-8">
+              {/* Bold, Italic, Underline - use onMouseDown to preserve selection */}
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                onMouseDown={(e) => { e.preventDefault(); saveSelectionForFormatting(); formatBold(); }} 
+                title="Bold (Ctrl+B)" 
+                data-testid="btn-format-bold" 
+                className="h-8 w-8"
+              >
                 <Bold className="h-4 w-4" />
               </Button>
-              <Button size="icon" variant="ghost" onClick={formatItalic} title="Italic" data-testid="btn-format-italic" className="h-8 w-8">
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                onMouseDown={(e) => { e.preventDefault(); saveSelectionForFormatting(); formatItalic(); }} 
+                title="Italic (Ctrl+I)" 
+                data-testid="btn-format-italic" 
+                className="h-8 w-8"
+              >
                 <Italic className="h-4 w-4" />
               </Button>
-              <Button size="icon" variant="ghost" onClick={formatUnderline} title="Underline" data-testid="btn-format-underline" className="h-8 w-8">
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                onMouseDown={(e) => { e.preventDefault(); saveSelectionForFormatting(); formatUnderline(); }} 
+                title="Underline (Ctrl+U)" 
+                data-testid="btn-format-underline" 
+                className="h-8 w-8"
+              >
                 <Underline className="h-4 w-4" />
               </Button>
               
