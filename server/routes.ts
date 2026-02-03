@@ -6886,7 +6886,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'firstNations', 'rating', 'location', 'medicalQuestion', 
         'criminalBankruptcy', 'castingCategory', 'notes', 
         'bookingEmailSent', 'confirmedRsvp', 'paperworkSent', 
-        'paperworkReceived', 'signedIn', 'otdNotes', 'standbyReplacementSwaps',
+        'paperworkReceived', 'paperworkOnDay', 'signedIn', 'otdNotes', 'standbyReplacementSwaps',
         'rxNumber', 'rxEpNumber', 'caseNumber', 'winningMoneyRole', 'winningMoneyAmount',
         'caseAmount', 'quickCash', 'bankOfferTaken', 'spinTheWheel', 'prize',
         'txNumber', 'txDate', 'notifiedOfTx', 'photosSent',
@@ -6898,7 +6898,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const timestampFields = [
         'bookingEmailSent', 'confirmedRsvp', 'paperworkSent', 
-        'paperworkReceived', 'signedIn', 'emailsCopiedAt', 'calledAt'
+        'paperworkReceived', 'paperworkOnDay', 'signedIn', 'emailsCopiedAt', 'calledAt'
       ];
       
       // PROTECTION: Check if bookingEmailSent is being cleared - this is NOT allowed once set
