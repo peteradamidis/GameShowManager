@@ -2902,15 +2902,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               
               {/* Add Dot Point */}
               <Button 
-                size="sm" 
+                size="icon" 
                 variant="ghost" 
                 onMouseDown={(e) => { e.preventDefault(); insertDotPointAtCursor(true); }} 
                 title="Add Dot Point" 
                 data-testid="btn-add-dot-point-fs" 
-                className="h-8 px-2 text-amber-600 hover:bg-amber-50"
+                className="h-8 w-8 text-amber-600 hover:bg-amber-50"
               >
-                <Plus className="h-4 w-4 mr-1" />
-                <span className="text-xs">Dot Point</span>
+                <Circle className="h-3 w-3 fill-current" />
               </Button>
               
               <div className="w-px h-6 bg-gray-300 mx-1" />
@@ -4527,8 +4526,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden ignore-print"
                         data-testid="btn-add-dot-point"
                       >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add Dot Point
+                        <Circle className="w-3 h-3 mr-1 fill-current" />
+                        Dot Point
                       </Button>
                       
                       {/* Producer Field - absolutely positioned at bottom right */}
