@@ -3049,22 +3049,22 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         <ChevronDown className="w-4 h-4" />
                       </button>
                     </div>
-                    {/* Body text area - flex container to push producer to bottom */}
-                    <div className="flex flex-col flex-1" style={{ minHeight: '280px' }}>
+                    {/* Body text area - relative container with absolutely positioned producer */}
+                    <div className="relative flex-1" style={{ minHeight: '280px' }}>
                       <div
                         ref={bodyTextRefFs}
                         contentEditable
                         suppressContentEditableWarning
-                        className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 flex-1 print-no-border"
-                        style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5', paddingBottom: cardData.showProducer !== false ? '50px' : '0' }}
+                        className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 print-no-border"
+                        style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5', paddingBottom: cardData.showProducer !== false ? '50px' : '0', paddingRight: cardData.showProducer !== false ? '250px' : '0' }}
                         onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
                         onMouseUp={saveCursorPosition}
                         onKeyUp={saveCursorPosition}
                         dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
                       />
                       
-                      {/* Producer Field - positioned at bottom right */}
-                      <div className="flex justify-end mt-auto">
+                      {/* Producer Field - absolutely positioned at bottom right */}
+                      <div className="absolute bottom-0 right-0">
                         {cardData.showProducer !== false ? (
                           <div className="flex items-stretch group casting-card-producer-corner relative">
                             <span 
@@ -3907,16 +3907,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       </Button>
                     )}
 
-                    {/* Body text - flex container with position controls and producer at bottom */}
+                    {/* Body text - relative container with absolutely positioned producer */}
                     <div 
-                      className="flex flex-col flex-1 group"
+                      className="relative flex-1 group"
                       style={{ 
                         marginTop: `${cardData.bodyOffsetY || 0}px`,
                         transition: 'margin-top 0.15s ease-out',
                         minHeight: '280px'
                       }}
                     >
-                      <div className="flex items-start gap-2 flex-1">
+                      <div className="flex items-start gap-2">
                         {/* Position controls */}
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden mt-1">
                           <button 
@@ -3940,7 +3940,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           contentEditable
                           suppressContentEditableWarning
                           className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 flex-1 print-no-border"
-                          style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5', paddingBottom: cardData.showProducer !== false ? '50px' : '0' }}
+                          style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5', paddingBottom: cardData.showProducer !== false ? '50px' : '0', paddingRight: cardData.showProducer !== false ? '250px' : '0' }}
                           onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
                           onMouseUp={saveCursorPosition}
                           onKeyUp={saveCursorPosition}
@@ -3957,15 +3957,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           e.preventDefault(); // Prevent focus change before capturing position
                           insertDotPointAtCursor(false);
                         }}
-                        className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden ignore-print self-start"
+                        className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden ignore-print"
                         data-testid="btn-add-dot-point"
                       >
                         <Plus className="w-4 h-4 mr-1" />
                         Add Dot Point
                       </Button>
                       
-                      {/* Producer Field - positioned at bottom right */}
-                      <div className="flex justify-end mt-auto">
+                      {/* Producer Field - absolutely positioned at bottom right */}
+                      <div className="absolute bottom-0 right-0">
                         {cardData.showProducer !== false ? (
                           <div className="flex items-stretch group/producer casting-card-producer-corner relative">
                             <span 
