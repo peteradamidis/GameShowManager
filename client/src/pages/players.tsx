@@ -2706,7 +2706,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name"
                     style={{ 
                       fontFamily: '"Century Gothic", sans-serif',
-                      fontSize: '40px',
+                      fontSize: '42px',
                       lineHeight: '80px',
                       textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                       color: '#fcd34d',
@@ -3512,7 +3512,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name"
                         style={{ 
                           fontFamily: '"Century Gothic", sans-serif',
-                          fontSize: '40px',
+                          fontSize: '42px',
                           lineHeight: '80px',
                           textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
                           color: '#fcd34d',
