@@ -119,12 +119,12 @@ export function AnimatedMessageOverlay({ config }: { config: AnimatedMessageConf
 
       case 'typewriter':
         return (
-          <motion.div className="mb-6 overflow-hidden">
+          <motion.div className="mb-6 overflow-hidden py-2">
             <motion.h1
               initial={{ width: 0 }}
               animate={{ width: "100%" }}
               transition={{ duration: 1.5, ease: "easeOut" }}
-              className="text-5xl md:text-6xl font-black bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 bg-clip-text text-transparent whitespace-nowrap overflow-hidden"
+              className="text-5xl md:text-6xl font-black bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 bg-clip-text text-transparent whitespace-nowrap overflow-hidden pr-1"
               style={{ borderRight: "3px solid #d97706" }}
             >
               {config.messageText}
