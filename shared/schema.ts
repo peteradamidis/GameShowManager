@@ -767,6 +767,7 @@ export const castingCards = pgTable("casting_cards", {
   // Font sizes for adjustable fields
   fontSizeOccupation: real("font_size_occupation"),
   fontSizeAgeState: real("font_size_age_state"),
+  fontSizeName: real("font_size_name"),
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

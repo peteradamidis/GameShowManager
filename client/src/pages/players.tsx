@@ -191,6 +191,7 @@ interface CastingCardData {
   // Font sizes for age/state and occupation
   fontSizeAgeState?: number | null;
   fontSizeOccupation?: number | null;
+  fontSizeName?: number | null;
 }
 
 // Default bullet points for new casting cards
@@ -2797,22 +2798,40 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     border: '2px solid #000000'
                   }}
                 >
-                  <h2 
-                    contentEditable
-                    suppressContentEditableWarning
-                    className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name"
-                    style={{ 
-                      fontFamily: '"Century Gothic", sans-serif',
-                      fontSize: '42px',
-                      lineHeight: '80px',
-                      textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
-                      color: '#fcd34d',
-                      margin: 0,
-                      padding: 0,
-                      paddingLeft: '16px'
-                    }}
-                    onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
-                  >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
+                  <div className="relative group flex items-center flex-1">
+                    <h2 
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name flex-1"
+                      style={{ 
+                        fontFamily: '"Century Gothic", sans-serif',
+                        fontSize: `${cardData.fontSizeName || 42}px`,
+                        lineHeight: '80px',
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
+                        color: '#fcd34d',
+                        margin: 0,
+                        padding: 0,
+                        paddingLeft: '16px'
+                      }}
+                      onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
+                    >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
+                    <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-2">
+                      <button 
+                        onClick={() => updateField('fontSizeName', (cardData.fontSizeName || 42) + 2)}
+                        className="text-yellow-300 hover:text-yellow-100 p-0.5"
+                        title="Increase font size"
+                      >
+                        <ChevronUp className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => updateField('fontSizeName', Math.max(20, (cardData.fontSizeName || 42) - 2))}
+                        className="text-yellow-300 hover:text-yellow-100 p-0.5"
+                        title="Decrease font size"
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
                   <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain" />
                 </div>
 
@@ -3651,23 +3670,41 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       }} 
                       data-testid="preview-header-banner"
                     >
-                      <h2 
-                        contentEditable
-                        suppressContentEditableWarning
-                        className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name"
-                        style={{ 
-                          fontFamily: '"Century Gothic", sans-serif',
-                          fontSize: '42px',
-                          lineHeight: '80px',
-                          textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
-                          color: '#fcd34d',
-                          margin: 0,
-                          padding: 0,
-                          paddingLeft: '16px'
-                        }}
-                        onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
-                        data-testid="preview-contestant-name"
-                      >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
+                      <div className="relative group flex items-center flex-1">
+                        <h2 
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name flex-1"
+                          style={{ 
+                            fontFamily: '"Century Gothic", sans-serif',
+                            fontSize: `${cardData.fontSizeName || 42}px`,
+                            lineHeight: '80px',
+                            textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
+                            color: '#fcd34d',
+                            margin: 0,
+                            padding: 0,
+                            paddingLeft: '16px'
+                          }}
+                          onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
+                          data-testid="preview-contestant-name"
+                        >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
+                        <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-2">
+                          <button 
+                            onClick={() => updateField('fontSizeName', (cardData.fontSizeName || 42) + 2)}
+                            className="text-yellow-300 hover:text-yellow-100 p-0.5"
+                            title="Increase font size"
+                          >
+                            <ChevronUp className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => updateField('fontSizeName', Math.max(20, (cardData.fontSizeName || 42) - 2))}
+                            className="text-yellow-300 hover:text-yellow-100 p-0.5"
+                            title="Decrease font size"
+                          >
+                            <ChevronDown className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
                       <img src={dondLogo} alt="Deal or No Deal" className="h-full object-contain" />
                     </div>
 
