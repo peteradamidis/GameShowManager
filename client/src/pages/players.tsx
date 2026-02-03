@@ -288,6 +288,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [pendingSaveData, setPendingSaveData] = useState<CastingCardData | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasUnsavedChanges = useRef(false);
+  const cardDataRef = useRef<CastingCardData | null>(null);
   
   // Version history state
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
@@ -906,6 +907,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           }
           
           setCardData(parsedCard);
+          cardDataRef.current = parsedCard;
           // Track when this card was loaded for conflict detection
           setLastKnownUpdatedAt((existingCard as any).updatedAt || new Date().toISOString());
         } else if (!loadingCard) {
@@ -933,6 +935,31 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             useManualCompanions: autoCompanions.length > 0,
             ageState: `${selectedContestant.age || ''} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`.trim(),
           });
+          // Also update ref for new cards
+          cardDataRef.current = {
+            contestantId: selectedContestant.id,
+            occupation: '',
+            sponsorCategory: '',
+            tagline: '',
+            energyLevel: '3',
+            characterTraits: '',
+            meetStory: '',
+            keyStories: '',
+            prizeGoalHigh: '',
+            prizeGoalLow: '',
+            howMuchToWin: '',
+            playStyle: '',
+            previousShows: '',
+            companionName: selectedContestant.attendingWith || '',
+            companionRelationship: '',
+            companionPhotoUrl: '',
+            producerName: '',
+            showProducer: true,
+            showTagline: true,
+            manualCompanions: autoCompanions.length > 0 ? autoCompanions : [],
+            useManualCompanions: autoCompanions.length > 0,
+            ageState: `${selectedContestant.age || ''} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`.trim(),
+          };
         }
       } catch (error: any) {
         console.error('Error initializing card data:', error);
@@ -2053,7 +2080,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         // Clear redo history on new change
         setRedoHistory([]);
         
-        setCardData({ ...cardData, [field]: value });
+        // Create new state with the update
+        const newCardData = { ...cardData, [field]: value };
+        setCardData(newCardData);
+        // Keep ref in sync so debounced save uses latest data
+        cardDataRef.current = newCardData;
         hasUnsavedChanges.current = true;
         
         // Debounced auto-save
@@ -2061,9 +2092,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           clearTimeout(autoSaveTimeoutRef.current);
         }
         autoSaveTimeoutRef.current = setTimeout(() => {
-          if (hasUnsavedChanges.current) {
+          if (hasUnsavedChanges.current && cardDataRef.current) {
             setAutoSaveStatus('saving');
-            const dataToSave = { ...cardData, [field]: value, skipInvalidate: true };
+            // Use ref to get latest data at save time, not stale closure data
+            const dataToSave = { ...cardDataRef.current, skipInvalidate: true };
             saveMutation.mutate(dataToSave as any, {
               onSuccess: () => {
                 hasUnsavedChanges.current = false;
