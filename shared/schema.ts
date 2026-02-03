@@ -751,6 +751,8 @@ export const castingCards = pgTable("casting_cards", {
   bodyText: text("body_text"),
   
   // Position offsets for draggable elements
+  ageStateOffsetY: real("age_state_offset_y"),
+  occupationOffsetY: real("occupation_offset_y"),
   taglineOffsetY: real("tagline_offset_y"),
   bodyOffsetY: real("body_offset_y"),
   
