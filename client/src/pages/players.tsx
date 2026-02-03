@@ -1334,26 +1334,33 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           if (cardPreviewForProducer) {
             (cardPreviewForProducer as HTMLElement).style.overflow = 'visible';
           }
-          // Style producer label (gray background)
+          // Style producer label (gray background) - matching height with name box
           clonedDoc.querySelectorAll('.casting-card-producer-corner .casting-card-producer-label').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#e5e7eb';
             (el as HTMLElement).style.border = '1px solid #d1d5db';
             (el as HTMLElement).style.color = '#000000';
-            (el as HTMLElement).style.display = 'inline-block';
-            (el as HTMLElement).style.padding = '6px 12px';
+            (el as HTMLElement).style.display = 'flex';
+            (el as HTMLElement).style.alignItems = 'center';
+            (el as HTMLElement).style.padding = '8px 16px';
             (el as HTMLElement).style.fontWeight = '600';
             (el as HTMLElement).style.fontSize = '14px';
+            (el as HTMLElement).style.height = '36px';
+            (el as HTMLElement).style.boxSizing = 'border-box';
           });
-          // Style producer name (yellow background) - make visible for print
+          // Style producer name (yellow background) - make visible for print, matching height
           clonedDoc.querySelectorAll('.casting-card-producer-corner .casting-card-producer-name-print').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
-            (el as HTMLElement).style.display = 'inline-block';
+            (el as HTMLElement).style.display = 'flex';
+            (el as HTMLElement).style.alignItems = 'center';
             (el as HTMLElement).style.position = 'static';
             (el as HTMLElement).style.left = 'auto';
-            (el as HTMLElement).style.padding = '6px 12px';
+            (el as HTMLElement).style.padding = '8px 16px';
             (el as HTMLElement).style.fontWeight = 'bold';
             (el as HTMLElement).style.fontSize = '14px';
+            (el as HTMLElement).style.minWidth = '120px';
+            (el as HTMLElement).style.height = '36px';
+            (el as HTMLElement).style.boxSizing = 'border-box';
           });
           clonedDoc.querySelectorAll('.casting-card-photo-border').forEach((el: Element) => {
             (el as HTMLElement).style.border = '4px solid #f59e0b';
@@ -1709,26 +1716,33 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           if (cardPreviewForProducer) {
             (cardPreviewForProducer as HTMLElement).style.overflow = 'visible';
           }
-          // Style producer label (gray background)
+          // Style producer label (gray background) - matching height with name box
           clonedDoc.querySelectorAll('.casting-card-producer-corner .casting-card-producer-label').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#e5e7eb';
             (el as HTMLElement).style.border = '1px solid #d1d5db';
             (el as HTMLElement).style.color = '#000000';
-            (el as HTMLElement).style.display = 'inline-block';
-            (el as HTMLElement).style.padding = '6px 12px';
+            (el as HTMLElement).style.display = 'flex';
+            (el as HTMLElement).style.alignItems = 'center';
+            (el as HTMLElement).style.padding = '8px 16px';
             (el as HTMLElement).style.fontWeight = '600';
             (el as HTMLElement).style.fontSize = '14px';
+            (el as HTMLElement).style.height = '36px';
+            (el as HTMLElement).style.boxSizing = 'border-box';
           });
-          // Style producer name (yellow background) - make visible for print
+          // Style producer name (yellow background) - make visible for print, matching height
           clonedDoc.querySelectorAll('.casting-card-producer-corner .casting-card-producer-name-print').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
-            (el as HTMLElement).style.display = 'inline-block';
+            (el as HTMLElement).style.display = 'flex';
+            (el as HTMLElement).style.alignItems = 'center';
             (el as HTMLElement).style.position = 'static';
             (el as HTMLElement).style.left = 'auto';
-            (el as HTMLElement).style.padding = '6px 12px';
+            (el as HTMLElement).style.padding = '8px 16px';
             (el as HTMLElement).style.fontWeight = 'bold';
             (el as HTMLElement).style.fontSize = '14px';
+            (el as HTMLElement).style.minWidth = '120px';
+            (el as HTMLElement).style.height = '36px';
+            (el as HTMLElement).style.boxSizing = 'border-box';
           });
           clonedDoc.querySelectorAll('.casting-card-photo-border').forEach((el: Element) => {
             (el as HTMLElement).style.border = '4px solid #f59e0b';
