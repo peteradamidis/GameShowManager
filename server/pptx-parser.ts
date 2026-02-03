@@ -75,6 +75,24 @@ function getShapePosition(shape: any): { x: number; y: number; width: number; he
   }
 }
 
+function getGroupPosition(group: any): { x: number; y: number; width: number; height: number } {
+  try {
+    const grpSpPr = group['p:grpSpPr']?.[0];
+    const xfrm = grpSpPr?.['a:xfrm']?.[0];
+    const off = xfrm?.['a:off']?.[0]?.$;
+    const ext = xfrm?.['a:ext']?.[0]?.$;
+    
+    return {
+      x: parseInt(off?.x || '0') / 914400,
+      y: parseInt(off?.y || '0') / 914400,
+      width: parseInt(ext?.cx || '0') / 914400,
+      height: parseInt(ext?.cy || '0') / 914400
+    };
+  } catch (e) {
+    return { x: 0, y: 0, width: 0, height: 0 };
+  }
+}
+
 function categorizeTextByPosition(texts: Array<{ text: string; pos: { x: number; y: number; width: number; height: number } }>): ExtractedCard {
   const card: ExtractedCard = {
     slideNumber: 0,
@@ -213,15 +231,51 @@ export async function parsePptxFile(fileBuffer: Buffer): Promise<ParseResult> {
           slideRels = await parseXml(relsXml);
         }
         
-        const shapes = slideData?.['p:sld']?.['p:cSld']?.[0]?.['p:spTree']?.[0]?.['p:sp'] || [];
+        const spTree = slideData?.['p:sld']?.['p:cSld']?.[0]?.['p:spTree']?.[0];
+        const shapes = spTree?.['p:sp'] || [];
+        const groupedShapes = spTree?.['p:grpSp'] || [];
         
         const textsWithPositions: Array<{ text: string; pos: { x: number; y: number; width: number; height: number } }> = [];
         
+        // Extract from regular shapes
         for (const shape of shapes) {
           const text = extractTextFromShape(shape);
           const pos = getShapePosition(shape);
           if (text) {
             textsWithPositions.push({ text, pos });
+          }
+        }
+        
+        // Extract from grouped shapes (like the orange header banner)
+        for (const group of groupedShapes) {
+          const groupPos = getGroupPosition(group);
+          const nestedShapes = group['p:sp'] || [];
+          for (const shape of nestedShapes) {
+            const text = extractTextFromShape(shape);
+            const shapePos = getShapePosition(shape);
+            // Use group position as base if shape position is relative
+            const finalPos = {
+              x: groupPos.x + (shapePos.x || 0),
+              y: groupPos.y + (shapePos.y || 0),
+              width: shapePos.width || groupPos.width,
+              height: shapePos.height || groupPos.height
+            };
+            if (text) {
+              textsWithPositions.push({ text, pos: finalPos });
+            }
+          }
+          
+          // Also check for nested groups
+          const nestedGroups = group['p:grpSp'] || [];
+          for (const nestedGroup of nestedGroups) {
+            const nestedShapes2 = nestedGroup['p:sp'] || [];
+            for (const shape of nestedShapes2) {
+              const text = extractTextFromShape(shape);
+              const pos = getShapePosition(shape);
+              if (text) {
+                textsWithPositions.push({ text, pos: { ...groupPos, ...pos } });
+              }
+            }
           }
         }
         
