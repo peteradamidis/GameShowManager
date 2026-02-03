@@ -225,8 +225,18 @@ export async function parsePptxFile(fileBuffer: Buffer): Promise<ParseResult> {
           }
         }
         
+        // Debug: log all extracted text with positions
+        console.log(`\n=== Slide ${slideNum} text extraction ===`);
+        for (const item of textsWithPositions) {
+          console.log(`  Y=${item.pos.y.toFixed(2)} H=${item.pos.height.toFixed(2)} X=${item.pos.x.toFixed(2)}: "${item.text.substring(0, 60)}${item.text.length > 60 ? '...' : ''}"`);
+        }
+        
         const card = categorizeTextByPosition(textsWithPositions);
         card.slideNumber = slideNum;
+        
+        console.log(`  -> Extracted name: "${card.name}"`);
+        console.log(`  -> Age/State: "${card.ageState}"`);
+        console.log(`  -> Occupation: "${card.occupation}"\n`);
         
         card.photos = await extractImagesFromSlide(zip, slideNum, slideRels);
         
