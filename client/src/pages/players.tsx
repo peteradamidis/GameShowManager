@@ -4139,7 +4139,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           contentEditable
                           suppressContentEditableWarning
                           className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 flex-1 print-no-border"
-                          style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5', paddingBottom: cardData.showProducer !== false ? '50px' : '0', paddingRight: cardData.showProducer !== false ? '250px' : '0' }}
+                          style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5', paddingBottom: cardData.showProducer !== false ? '50px' : '0' }}
                           onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
                           onMouseUp={saveCursorPosition}
                           onKeyUp={saveCursorPosition}
