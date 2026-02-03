@@ -741,6 +741,7 @@ export const castingCards = pgTable("casting_cards", {
   
   // Tagline visibility
   showTagline: boolean("show_tagline").default(true), // Whether to show tagline section
+  showSponsorCategory: boolean("show_sponsor_category").default(true), // Whether to show sponsor category
   
   // Card status
   isReady: boolean("is_ready").default(false), // Card marked as RX Ready

@@ -171,6 +171,7 @@ interface CastingCardData {
   producerName?: string | null;
   showProducer?: boolean;
   showTagline?: boolean;
+  showSponsorCategory?: boolean;
   // Position offsets for draggable elements
   taglineOffsetY?: number | null;
   bodyOffsetY?: number | null;
@@ -2753,15 +2754,37 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       </button>
                     </div>
                   </div>
-                  <div
-                    contentEditable
-                    suppressContentEditableWarning
-                    className="text-lg font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text casting-card-sponsor"
-                    style={{ color: '#16a34a' }}
-                    onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
-                  >
-                    {cardData.sponsorCategory || 'SPONSOR CATEGORY: X'}
-                  </div>
+                  {/* Sponsor Category - with remove button */}
+                  {cardData.showSponsorCategory !== false ? (
+                    <div className="relative group flex items-center gap-1 -mt-1">
+                      <div
+                        contentEditable
+                        suppressContentEditableWarning
+                        className="text-lg font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text casting-card-sponsor"
+                        style={{ color: '#16a34a' }}
+                        onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
+                      >
+                        {cardData.sponsorCategory || 'SPONSOR CATEGORY: X'}
+                      </div>
+                      <button
+                        onClick={() => updateField('showSponsorCategory', false)}
+                        className="bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity ignore-print"
+                        title="Remove sponsor category"
+                      >
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => updateField('showSponsorCategory', true)}
+                      className="text-xs print:hidden ignore-print -mt-1"
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Add Sponsor Category
+                    </Button>
+                  )}
                 </div>
 
                 {/* Tagline - with position controls */}
@@ -3584,16 +3607,40 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           </button>
                         </div>
                       </div>
-                      <div
-                        contentEditable
-                        suppressContentEditableWarning
-                        className="text-lg font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text casting-card-sponsor"
-                        style={{ color: '#16a34a' }}
-                        onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
-                        data-testid="edit-sponsor"
-                      >
-                        {cardData.sponsorCategory || 'SPONSOR CATEGORY: X'}
-                      </div>
+                      {/* Sponsor Category - with remove button */}
+                      {cardData.showSponsorCategory !== false ? (
+                        <div className="relative group flex items-center gap-1 -mt-1">
+                          <div
+                            contentEditable
+                            suppressContentEditableWarning
+                            className="text-lg font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text casting-card-sponsor"
+                            style={{ color: '#16a34a' }}
+                            onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
+                            data-testid="edit-sponsor"
+                          >
+                            {cardData.sponsorCategory || 'SPONSOR CATEGORY: X'}
+                          </div>
+                          <button
+                            onClick={() => updateField('showSponsorCategory', false)}
+                            className="bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity ignore-print"
+                            title="Remove sponsor category"
+                            data-testid="btn-remove-sponsor"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => updateField('showSponsorCategory', true)}
+                          className="text-xs print:hidden ignore-print -mt-1"
+                          data-testid="btn-add-sponsor"
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          Add Sponsor Category
+                        </Button>
+                      )}
                     </div>
 
                     {/* Tagline - with position controls */}
