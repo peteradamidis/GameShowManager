@@ -99,6 +99,8 @@ function AuthenticatedApp() {
       return response.json();
     },
     onSuccess: () => {
+      // Clear session-based flags so they reset on next login
+      sessionStorage.removeItem('hasSeenWelcomeMessage');
       toast({
         title: "Signed out",
         description: "You have been signed out successfully",

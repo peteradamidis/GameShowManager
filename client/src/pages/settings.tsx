@@ -627,6 +627,7 @@ function AnimatedMessageSettingsCard() {
             checked={enabled}
             onCheckedChange={handleToggle}
             disabled={isLoading || updateMutation.isPending}
+            data-testid="switch-animated-message-enabled"
           />
         </div>
 
@@ -639,6 +640,7 @@ function AnimatedMessageSettingsCard() {
             value={messageText}
             onChange={(e) => { setMessageText(e.target.value); setHasChanges(true); }}
             placeholder="e.g. Welcome back!"
+            data-testid="input-animated-message-text"
           />
         </div>
 
@@ -649,7 +651,7 @@ function AnimatedMessageSettingsCard() {
               value={animationStyle} 
               onValueChange={(val: any) => { setAnimationStyle(val); setHasChanges(true); }}
             >
-              <SelectTrigger>
+              <SelectTrigger data-testid="select-animated-message-style">
                 <SelectValue placeholder="Select style" />
               </SelectTrigger>
               <SelectContent>
@@ -664,12 +666,13 @@ function AnimatedMessageSettingsCard() {
             <Switch
               checked={showConfetti}
               onCheckedChange={(val) => { setShowConfetti(val); setHasChanges(true); }}
+              data-testid="switch-animated-message-confetti"
             />
           </div>
         </div>
 
         {hasChanges && (
-          <Button onClick={handleSave} disabled={updateMutation.isPending}>
+          <Button onClick={handleSave} disabled={updateMutation.isPending} data-testid="button-save-animated-message">
             {updateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
             Save Settings
           </Button>
@@ -1442,97 +1445,6 @@ export default function Settings() {
                 </CardContent>
               </Card>
             </div>
-          </div>
-        </TabsContent>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lock className="w-5 h-5" />
-              Change Password
-            </CardTitle>
-            <CardDescription>
-              Update your account password
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...passwordForm}>
-              <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
-                <FormField
-                  control={passwordForm.control}
-                  name="currentPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Current Password</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="Enter current password" 
-                          {...field} 
-                          data-testid="input-current-password"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={passwordForm.control}
-                  name="newPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>New Password</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="Enter new password (min 6 characters)" 
-                          {...field} 
-                          data-testid="input-new-password"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={passwordForm.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm New Password</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="Confirm new password" 
-                          {...field} 
-                          data-testid="input-confirm-password"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button 
-                  type="submit" 
-                  disabled={changePasswordMutation.isPending}
-                  data-testid="button-change-password"
-                >
-                  {changePasswordMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Changing...
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-4 h-4 mr-2" />
-                      Change Password
-                    </>
-                  )}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
           </div>
         </TabsContent>
 

@@ -64,18 +64,20 @@ export function AnimatedMessageOverlay({ config }: { config: AnimatedMessageConf
         exit={{ opacity: 0 }}
         onClick={handleDismiss}
         className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm cursor-pointer"
+        data-testid="overlay-animated-message"
       >
         <motion.div
           initial={selectedVariant.initial}
           animate={selectedVariant.animate}
           exit={selectedVariant.exit}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className="relative p-12 bg-white rounded-2xl shadow-2xl max-w-2xl text-center"
+          className="relative p-12 bg-white dark:bg-card rounded-2xl shadow-2xl max-w-2xl text-center"
+          data-testid="card-animated-message"
         >
-          <h1 className="text-5xl font-bold text-primary mb-4 leading-tight">
+          <h1 className="text-5xl font-bold text-primary mb-4 leading-tight" data-testid="text-animated-message">
             {config.messageText}
           </h1>
-          <p className="text-muted-foreground animate-pulse">
+          <p className="text-muted-foreground animate-pulse" data-testid="text-dismiss-hint">
             Click anywhere to continue
           </p>
         </motion.div>

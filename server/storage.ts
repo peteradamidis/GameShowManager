@@ -29,6 +29,7 @@ import {
   castingCardVersions,
   birthdayEntries,
   blockNotes,
+  systemSettings,
   type Contestant,
   type InsertContestant,
   type Group,
