@@ -2726,14 +2726,32 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   >
                     {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
                   </div>
-                  <div
-                    contentEditable
-                    suppressContentEditableWarning
-                    className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                    style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '36px' }}
-                    onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
-                  >
-                    {cardData.occupation || 'OCCUPATION'}
+                  <div className="relative group flex items-center gap-1">
+                    <div
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
+                      style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 36}px` }}
+                      onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
+                    >
+                      {cardData.occupation || 'OCCUPATION'}
+                    </div>
+                    <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print">
+                      <button 
+                        onClick={() => updateField('fontSizeOccupation', (cardData.fontSizeOccupation || 36) + 2)}
+                        className="text-gray-400 hover:text-gray-600 p-0.5"
+                        title="Increase font size"
+                      >
+                        <ChevronUp className="w-3 h-3" />
+                      </button>
+                      <button 
+                        onClick={() => updateField('fontSizeOccupation', Math.max(12, (cardData.fontSizeOccupation || 36) - 2))}
+                        className="text-gray-400 hover:text-gray-600 p-0.5"
+                        title="Decrease font size"
+                      >
+                        <ChevronDown className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                   <div
                     contentEditable
@@ -3537,15 +3555,33 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       >
                         {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
                       </div>
-                      <div
-                        contentEditable
-                        suppressContentEditableWarning
-                        className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '36px' }}
-                        onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
-                        data-testid="edit-occupation"
-                      >
-                        {cardData.occupation || 'OCCUPATION'}
+                      <div className="relative group flex items-center gap-1">
+                        <div
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
+                          style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 36}px` }}
+                          onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
+                          data-testid="edit-occupation"
+                        >
+                          {cardData.occupation || 'OCCUPATION'}
+                        </div>
+                        <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print">
+                          <button 
+                            onClick={() => updateField('fontSizeOccupation', (cardData.fontSizeOccupation || 36) + 2)}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Increase font size"
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </button>
+                          <button 
+                            onClick={() => updateField('fontSizeOccupation', Math.max(12, (cardData.fontSizeOccupation || 36) - 2))}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Decrease font size"
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
                       <div
                         contentEditable

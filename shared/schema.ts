@@ -763,6 +763,10 @@ export const castingCards = pgTable("casting_cards", {
   mainPhotoOffsetY: real("main_photo_offset_y"),
   mainPhotoRotation: real("main_photo_rotation"),
   
+  // Font sizes for adjustable fields
+  fontSizeOccupation: real("font_size_occupation"),
+  fontSizeAgeState: real("font_size_age_state"),
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
