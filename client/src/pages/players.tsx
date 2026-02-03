@@ -1274,8 +1274,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             .bg-gradient-to-r.from-amber-700 {
               background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important;
             }
-            /* Hide ignore-print elements */
-            .ignore-print {
+            /* Hide ignore-print and print-hidden elements */
+            .ignore-print, .print-hidden {
               display: none !important;
             }
             /* Show print-only producer name (hidden in UI) with yellow background */
@@ -1655,8 +1655,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             .bg-gradient-to-r.from-amber-700 {
               background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important;
             }
-            /* Hide ignore-print elements */
-            .ignore-print {
+            /* Hide ignore-print and print-hidden elements */
+            .ignore-print, .print-hidden {
               display: none !important;
             }
             /* Show print-only producer name (hidden in UI) with yellow background */
