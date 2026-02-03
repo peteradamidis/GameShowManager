@@ -144,9 +144,22 @@ function categorizeTextByPosition(texts: Array<{ text: string; pos: { x: number;
     }
     
     // Age/State/Occupation line - starts with number, positioned below header
+    // Format is typically: "74 - VICRETIRED PLUMBER" or "57 - VICBRICKLAYER"
     if (y >= 0.5 && y < 1.5 && text.match(/^\d+\s*(VIC|-|–)/i)) {
-      // This is the "57 - VIC" + "BRICKLAYER" combined line
-      card.ageState = text;
+      // Try to split age/state from occupation
+      // Pattern: "74 - VIC" followed by occupation text (uppercase)
+      const ageStateOccMatch = text.match(/^(\d+)\s*[-–]\s*(VIC)([A-Z\s]+)$/i);
+      if (ageStateOccMatch) {
+        const age = ageStateOccMatch[1];
+        const state = ageStateOccMatch[2].toUpperCase();
+        const occupation = ageStateOccMatch[3].trim();
+        card.ageState = `${age} - ${state}`;
+        card.occupation = occupation;
+        console.log(`  -> Split age/state/occupation: "${card.ageState}" | "${card.occupation}"`);
+      } else {
+        // Fallback - store entire line as ageState
+        card.ageState = text;
+      }
     }
     // Tagline - short text below age/state line
     else if (y >= 1.5 && y < 2.5 && !text.includes('\n') && text.length < 80) {
