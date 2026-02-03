@@ -2236,25 +2236,21 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       let range: Range | null = null;
       let targetElement: Element | null = null;
       
-      // Try current selection first
-      if (selection && selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
-        range = selection.getRangeAt(0);
-        targetElement = document.activeElement;
-      } 
-      // Fall back to saved selection
-      else if (lastSelectionRef.current) {
+      // Try saved selection first (more reliable for dropdowns)
+      if (lastSelectionRef.current && lastSelectionRef.current.range && !lastSelectionRef.current.range.collapsed) {
         range = lastSelectionRef.current.range;
         targetElement = lastSelectionRef.current.element;
-        // Restore focus and selection
-        if (targetElement && 'focus' in targetElement) {
-          (targetElement as HTMLElement).focus();
-          selection = window.getSelection();
-          selection?.removeAllRanges();
-          selection?.addRange(range);
-        }
+      }
+      // Fall back to current selection
+      else if (selection && selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
+        range = selection.getRangeAt(0);
+        targetElement = document.activeElement;
       }
       
-      if (!range || range.collapsed) return;
+      if (!range || range.collapsed) {
+        console.log('No valid selection for font size change');
+        return;
+      }
       
       // Get current font size from selection
       const getCurrentFontSize = (): number => {
@@ -2287,27 +2283,79 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         }
       }
       
-      // Wrap selected content in a span with the target font size
-      const selectedContent = range.extractContents();
+      // Restore focus to the target element first
+      if (targetElement && 'focus' in targetElement) {
+        (targetElement as HTMLElement).focus();
+      }
+      
+      // Clone the range to work with
+      const workingRange = range.cloneRange();
+      
+      // Extract selected content
+      const selectedContent = workingRange.extractContents();
+      
+      // Create wrapper span with the new font size
       const span = document.createElement('span');
       span.style.fontSize = `${targetSize}px`;
-      span.appendChild(selectedContent);
-      range.insertNode(span);
       
-      // Re-select the wrapped content
-      setTimeout(() => {
-        const newSelection = window.getSelection();
-        if (newSelection && span.firstChild) {
-          const newRange = document.createRange();
-          newRange.selectNodeContents(span);
-          newSelection.removeAllRanges();
-          newSelection.addRange(newRange);
-          // Update saved selection
-          if (targetElement) {
-            lastSelectionRef.current = { range: newRange.cloneRange(), element: targetElement };
+      // Flatten any existing font-size spans to avoid deep nesting
+      const flattenContent = (fragment: DocumentFragment): DocumentFragment => {
+        const result = document.createDocumentFragment();
+        const walker = document.createTreeWalker(fragment, NodeFilter.SHOW_ALL);
+        
+        const processNode = (node: Node) => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            result.appendChild(node.cloneNode());
+          } else if (node.nodeType === Node.ELEMENT_NODE) {
+            const el = node as HTMLElement;
+            // If it's a span with only font-size styling, unwrap it
+            if (el.tagName === 'SPAN' && el.style.length === 1 && el.style.fontSize) {
+              // Just add the text content
+              el.childNodes.forEach(child => {
+                if (child.nodeType === Node.TEXT_NODE) {
+                  result.appendChild(child.cloneNode());
+                } else {
+                  result.appendChild(child.cloneNode(true));
+                }
+              });
+            } else {
+              // Keep the element but process children
+              const clone = el.cloneNode(false) as HTMLElement;
+              el.childNodes.forEach(child => {
+                const processed = document.createDocumentFragment();
+                if (child.nodeType === Node.TEXT_NODE) {
+                  processed.appendChild(child.cloneNode());
+                } else {
+                  processed.appendChild(child.cloneNode(true));
+                }
+                clone.appendChild(processed);
+              });
+              result.appendChild(clone);
+            }
           }
-        }
-      }, 0);
+        };
+        
+        fragment.childNodes.forEach(processNode);
+        return result;
+      };
+      
+      span.appendChild(selectedContent);
+      workingRange.insertNode(span);
+      
+      // Re-select the content and update saved selection immediately
+      const newRange = document.createRange();
+      newRange.selectNodeContents(span);
+      
+      selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+      }
+      
+      // Update saved selection so subsequent changes work
+      if (targetElement) {
+        lastSelectionRef.current = { range: newRange.cloneRange(), element: targetElement };
+      }
       
       // Mark body text as changed
       hasUnsavedChanges.current = true;
@@ -2653,9 +2701,19 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               {/* Font Size */}
               <span className="text-xs text-gray-500 ml-1">Size:</span>
               <select 
-                onChange={(e) => formatFontSize(e.target.value)}
-                className="h-8 px-2 text-sm border rounded bg-white"
-                defaultValue=""
+                onMouseDown={(e) => { 
+                  e.preventDefault(); 
+                  saveSelectionForFormatting(); 
+                }}
+                onClick={(e) => {
+                  (e.target as HTMLSelectElement).focus();
+                }}
+                onChange={(e) => { 
+                  formatFontSize(e.target.value); 
+                  e.target.value = '';
+                }}
+                className="h-8 px-2 text-sm border rounded bg-white cursor-pointer"
+                value=""
                 data-testid="select-font-size"
               >
                 <option value="" disabled>Size</option>
@@ -2671,6 +2729,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 <option value="32">32</option>
                 <option value="36">36</option>
                 <option value="40">40</option>
+                <option value="48">48</option>
+                <option value="56">56</option>
+                <option value="72">72</option>
               </select>
               
               {/* Increase/Decrease Font Size buttons (like Word) */}
