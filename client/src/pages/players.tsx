@@ -1307,7 +1307,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           clonedDoc.querySelectorAll('.casting-card-producer-name-print').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
-            (el as HTMLElement).style.display = 'inline';
+            (el as HTMLElement).style.display = 'inline-block';
+            (el as HTMLElement).style.position = 'static';
+            (el as HTMLElement).style.left = 'auto';
             (el as HTMLElement).style.padding = '8px 16px';
             (el as HTMLElement).style.fontWeight = 'bold';
           });
@@ -1336,6 +1338,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
             (el as HTMLElement).style.display = 'inline-block';
+            (el as HTMLElement).style.position = 'static';
+            (el as HTMLElement).style.left = 'auto';
             (el as HTMLElement).style.padding = '6px 12px';
             (el as HTMLElement).style.fontWeight = 'bold';
             (el as HTMLElement).style.fontSize = '14px';
@@ -1667,7 +1671,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           clonedDoc.querySelectorAll('.casting-card-producer-name-print').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
-            (el as HTMLElement).style.display = 'inline';
+            (el as HTMLElement).style.display = 'inline-block';
+            (el as HTMLElement).style.position = 'static';
+            (el as HTMLElement).style.left = 'auto';
             (el as HTMLElement).style.padding = '8px 16px';
             (el as HTMLElement).style.fontWeight = 'bold';
           });
@@ -1696,6 +1702,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
             (el as HTMLElement).style.display = 'inline-block';
+            (el as HTMLElement).style.position = 'static';
+            (el as HTMLElement).style.left = 'auto';
             (el as HTMLElement).style.padding = '6px 12px';
             (el as HTMLElement).style.fontWeight = 'bold';
             (el as HTMLElement).style.fontSize = '14px';
@@ -2934,10 +2942,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
                   style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
                 >PRODUCER:</span>
-                {/* Plain text for print - shown during PDF/print, hidden in UI */}
+                {/* Plain text for print - shown during PDF/print, hidden in UI via absolute positioning */}
                 <span 
                   className="casting-card-producer-name-print px-4 py-2 font-bold text-sm min-w-[120px]"
-                  style={{ backgroundColor: '#facc15', color: '#000000', display: 'none' }}
+                  style={{ backgroundColor: '#facc15', color: '#000000', position: 'absolute', left: '-9999px' }}
                 >{cardData.producerName || 'SELECT'}</span>
                 {/* Dropdown for UI - hidden during PDF/print */}
                 <Select 
@@ -3791,8 +3799,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 {/* Fixed Producer Field - Bottom Right Corner */}
                 {cardData.showProducer !== false ? (
                   <div 
-                    className="casting-card-producer-corner absolute bottom-4 right-4 flex items-center relative group"
-                    style={{ zIndex: 10 }}
+                    className="casting-card-producer-corner absolute bottom-4 right-4 z-10 flex items-center group"
                   >
                     <span 
                       className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
