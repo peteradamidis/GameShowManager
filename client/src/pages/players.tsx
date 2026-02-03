@@ -1311,15 +1311,28 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.padding = '8px 16px';
             (el as HTMLElement).style.fontWeight = 'bold';
           });
-          // Producer corner in bottom RIGHT - ensure yellow background and positioning shows in print
+          // Producer corner in bottom RIGHT - ensure positioning shows in print
           clonedDoc.querySelectorAll('.casting-card-producer-corner').forEach((el: Element) => {
             (el as HTMLElement).style.position = 'absolute';
             (el as HTMLElement).style.bottom = '16px';
             (el as HTMLElement).style.right = '16px';
             (el as HTMLElement).style.left = 'auto';
             (el as HTMLElement).style.zIndex = '10';
+            (el as HTMLElement).style.display = 'flex';
+            (el as HTMLElement).style.alignItems = 'center';
           });
-          clonedDoc.querySelectorAll('.casting-card-producer-corner span').forEach((el: Element) => {
+          // Style producer label (gray background)
+          clonedDoc.querySelectorAll('.casting-card-producer-corner .casting-card-producer-label').forEach((el: Element) => {
+            (el as HTMLElement).style.backgroundColor = '#e5e7eb';
+            (el as HTMLElement).style.border = '1px solid #d1d5db';
+            (el as HTMLElement).style.color = '#000000';
+            (el as HTMLElement).style.display = 'inline-block';
+            (el as HTMLElement).style.padding = '6px 12px';
+            (el as HTMLElement).style.fontWeight = '600';
+            (el as HTMLElement).style.fontSize = '14px';
+          });
+          // Style producer name (yellow background) - make visible for print
+          clonedDoc.querySelectorAll('.casting-card-producer-corner .casting-card-producer-name-print').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
             (el as HTMLElement).style.display = 'inline-block';
@@ -1658,15 +1671,28 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.padding = '8px 16px';
             (el as HTMLElement).style.fontWeight = 'bold';
           });
-          // Producer corner in bottom RIGHT - ensure yellow background and positioning shows in print
+          // Producer corner in bottom RIGHT - ensure positioning shows in print
           clonedDoc.querySelectorAll('.casting-card-producer-corner').forEach((el: Element) => {
             (el as HTMLElement).style.position = 'absolute';
             (el as HTMLElement).style.bottom = '16px';
             (el as HTMLElement).style.right = '16px';
             (el as HTMLElement).style.left = 'auto';
             (el as HTMLElement).style.zIndex = '10';
+            (el as HTMLElement).style.display = 'flex';
+            (el as HTMLElement).style.alignItems = 'center';
           });
-          clonedDoc.querySelectorAll('.casting-card-producer-corner span').forEach((el: Element) => {
+          // Style producer label (gray background)
+          clonedDoc.querySelectorAll('.casting-card-producer-corner .casting-card-producer-label').forEach((el: Element) => {
+            (el as HTMLElement).style.backgroundColor = '#e5e7eb';
+            (el as HTMLElement).style.border = '1px solid #d1d5db';
+            (el as HTMLElement).style.color = '#000000';
+            (el as HTMLElement).style.display = 'inline-block';
+            (el as HTMLElement).style.padding = '6px 12px';
+            (el as HTMLElement).style.fontWeight = '600';
+            (el as HTMLElement).style.fontSize = '14px';
+          });
+          // Style producer name (yellow background) - make visible for print
+          clonedDoc.querySelectorAll('.casting-card-producer-corner .casting-card-producer-name-print').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#facc15';
             (el as HTMLElement).style.color = '#000000';
             (el as HTMLElement).style.display = 'inline-block';
