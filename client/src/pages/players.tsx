@@ -2874,59 +2874,60 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   </Button>
                 </div>
 
-                {/* Producer - matching PowerPoint style - minimal margin to fit on page */}
-                {cardData.showProducer !== false ? (
-                  <div className="mt-1 flex items-center relative group w-fit">
-                    <span 
-                      className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
-                      style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
-                    >PRODUCER:</span>
-                    {/* Plain text for print - shown during PDF/print, hidden in UI */}
-                    <span 
-                      className="casting-card-producer-name-print px-4 py-2 font-bold text-sm min-w-[120px]"
-                      style={{ backgroundColor: '#facc15', color: '#000000', display: 'none' }}
-                    >{cardData.producerName || 'SELECT'}</span>
-                    {/* Dropdown for UI - hidden during PDF/print */}
-                    <Select 
-                      value={cardData.producerName || ''} 
-                      onValueChange={(value) => updateField('producerName', value === '__clear__' ? '' : value)}
-                    >
-                      <SelectTrigger 
-                        className="casting-card-producer-name h-auto px-4 py-2 font-bold text-sm border-0 rounded-none min-w-[120px] ignore-print"
-                        style={{ backgroundColor: '#facc15', color: '#000000' }}
-                        data-testid="select-producer-name"
-                      >
-                        <SelectValue placeholder="SELECT" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__clear__" className="text-muted-foreground italic">Clear</SelectItem>
-                        {PRODUCER_NAMES.map(name => (
-                          <SelectItem key={name} value={name}>{name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <button
-                      onClick={() => updateField('showProducer', false)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity ignore-print"
-                      title="Remove producer field"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => updateField('showProducer', true)}
-                    className="mt-6 text-xs print:hidden ignore-print"
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Add Producer
-                  </Button>
-                )}
               </div>
             </div>
             </div>
+            
+            {/* Producer - absolutely positioned at bottom-right corner of casting card */}
+            {cardData.showProducer !== false ? (
+              <div className="absolute bottom-4 right-4 z-10 flex items-center group casting-card-producer-corner">
+                <span 
+                  className="casting-card-producer-label px-4 py-2 font-semibold text-sm"
+                  style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
+                >PRODUCER:</span>
+                {/* Plain text for print - shown during PDF/print, hidden in UI */}
+                <span 
+                  className="casting-card-producer-name-print px-4 py-2 font-bold text-sm min-w-[120px]"
+                  style={{ backgroundColor: '#facc15', color: '#000000', display: 'none' }}
+                >{cardData.producerName || 'SELECT'}</span>
+                {/* Dropdown for UI - hidden during PDF/print */}
+                <Select 
+                  value={cardData.producerName || ''} 
+                  onValueChange={(value) => updateField('producerName', value === '__clear__' ? '' : value)}
+                >
+                  <SelectTrigger 
+                    className="casting-card-producer-name h-auto px-4 py-2 font-bold text-sm border-0 rounded-none min-w-[120px] ignore-print"
+                    style={{ backgroundColor: '#facc15', color: '#000000' }}
+                    data-testid="select-producer-name-fs"
+                  >
+                    <SelectValue placeholder="SELECT" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__clear__" className="text-muted-foreground italic">Clear</SelectItem>
+                    {PRODUCER_NAMES.map(name => (
+                      <SelectItem key={name} value={name}>{name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <button
+                  onClick={() => updateField('showProducer', false)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity ignore-print"
+                  title="Remove producer field"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => updateField('showProducer', true)}
+                className="absolute bottom-4 right-4 z-10 text-xs print:hidden ignore-print"
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                Add Producer
+              </Button>
+            )}
           </div>
         </div>
       </div>
