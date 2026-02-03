@@ -1207,8 +1207,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         #casting-card-preview .casting-card-sponsor { color: #16a34a !important; }
         #casting-card-preview .casting-card-tagline { color: #dc2626 !important; }
         #casting-card-preview .casting-card-producer-label { background-color: #e5e7eb !important; border: 1px solid #d1d5db !important; color: #000000 !important; }
-        #casting-card-preview .casting-card-producer-name { background-color: #facc15 !important; color: #000000 !important; }
-        #casting-card-preview .casting-card-producer-corner span { background-color: #facc15 !important; color: #000000 !important; }
+        #casting-card-preview .casting-card-producer-name-print { background-color: #facc15 !important; color: #000000 !important; }
         #casting-card-preview .casting-card-photo-border { border: 4px solid #f59e0b !important; background-color: #f3f4f6 !important; }
       `;
       document.head.appendChild(printOverrideStyle);
@@ -1590,8 +1589,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         #casting-card-preview .casting-card-sponsor { color: #16a34a !important; }
         #casting-card-preview .casting-card-tagline { color: #dc2626 !important; }
         #casting-card-preview .casting-card-producer-label { background-color: #e5e7eb !important; border: 1px solid #d1d5db !important; color: #000000 !important; }
-        #casting-card-preview .casting-card-producer-name { background-color: #facc15 !important; color: #000000 !important; }
-        #casting-card-preview .casting-card-producer-corner span { background-color: #facc15 !important; color: #000000 !important; }
+        #casting-card-preview .casting-card-producer-name-print { background-color: #facc15 !important; color: #000000 !important; }
         #casting-card-preview .casting-card-photo-border { border: 4px solid #f59e0b !important; background-color: #f3f4f6 !important; }
       `;
       document.head.appendChild(printOverrideStyle);
