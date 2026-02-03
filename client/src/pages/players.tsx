@@ -275,7 +275,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [hideToolbar, setHideToolbar] = useState(false);
-  const [cardZoom, setCardZoom] = useState(0.65);
+  const [cardZoom, setCardZoom] = useState(0.5);
   const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   
@@ -2728,7 +2728,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               </Button>
               {/* Always show Exit button even when toolbar is hidden */}
               {hideToolbar && (
-                <Button size="sm" variant="outline" onClick={() => { setCardZoom(0.65); setIsFullscreen(false); setHideToolbar(false); }} data-testid="btn-exit-fullscreen-mini">
+                <Button size="sm" variant="outline" onClick={() => { setCardZoom(0.5); setIsFullscreen(false); setHideToolbar(false); }} data-testid="btn-exit-fullscreen-mini">
                   <Minimize2 className="h-4 w-4 mr-1" />
                   Exit
                 </Button>
@@ -2787,7 +2787,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <Printer className="h-4 w-4 mr-1" />
                   Print
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => { setCardZoom(0.65); setIsFullscreen(false); }} data-testid="btn-exit-fullscreen">
+                <Button size="sm" variant="outline" onClick={() => { setCardZoom(0.5); setIsFullscreen(false); }} data-testid="btn-exit-fullscreen">
                   <Minimize2 className="h-4 w-4 mr-1" />
                   Exit
                 </Button>
@@ -2924,7 +2924,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               <Button size="sm" variant="ghost" onClick={() => setCardZoom(Math.min(1.0, cardZoom + 0.05))} title="Zoom In" data-testid="btn-zoom-in" className="h-8 px-2">
                 <ZoomIn className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setCardZoom(0.65)} title="Reset Zoom" data-testid="btn-zoom-reset" className="h-8 px-2 text-xs">
+              <Button size="sm" variant="ghost" onClick={() => setCardZoom(0.5)} title="Reset Zoom" data-testid="btn-zoom-reset" className="h-8 px-2 text-xs">
                 Reset
               </Button>
               
@@ -3916,7 +3916,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                   </div>
               </div>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden p-4">
+            <CardContent className="flex-1 overflow-auto p-4">
               {/* A4 Landscape page container - 297mm x 210mm (scaled for preview) */}
               <div className="relative overflow-hidden" style={{ width: `calc(297mm * ${cardZoom})`, height: `calc(210mm * ${cardZoom})` }}>
                 <div 
