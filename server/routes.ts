@@ -2231,11 +2231,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         for (const match of matchesArray) {
           const slideNumType = typeof match.slideNumber;
           const contestantIdType = typeof match.contestantId;
-          if (slideNumType !== 'number' || contestantIdType !== 'string') {
+          // Accept both string UUIDs and numeric IDs for contestantId
+          if (slideNumType !== 'number' || (contestantIdType !== 'string' && contestantIdType !== 'number')) {
             console.log(`[PPTX Import] Invalid match: slideNumber type=${slideNumType} (${match.slideNumber}), contestantId type=${contestantIdType} (${match.contestantId})`);
             return res.status(400).json({ 
-              error: `Invalid match entry - slideNumber type is ${slideNumType} (expected number), contestantId type is ${contestantIdType} (expected string)` 
+              error: `Invalid match entry - slideNumber type is ${slideNumType} (expected number), contestantId type is ${contestantIdType} (expected string or number)` 
             });
+          }
+          // Convert numeric IDs to strings for consistent handling
+          if (typeof match.contestantId === 'number') {
+            match.contestantId = String(match.contestantId);
           }
         }
       } catch (parseError) {

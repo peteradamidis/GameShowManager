@@ -144,21 +144,27 @@ function categorizeTextByPosition(texts: Array<{ text: string; pos: { x: number;
     }
     
     // Age/State/Occupation line - starts with number, positioned below header
-    // Format is typically: "74 - VICRETIRED PLUMBER" or "57 - VICBRICKLAYER"
+    // Formats: "74 - VICRETIRED PLUMBER", "28 VICREAL ESTATE AGENT", "57 VIC - SIMPSONBRICKLAYER"
     if (y >= 0.5 && y < 1.5 && text.match(/^\d+\s*(VIC|-|–)/i)) {
       // Try to split age/state from occupation
-      // Pattern: "74 - VIC" followed by occupation text (uppercase)
-      const ageStateOccMatch = text.match(/^(\d+)\s*[-–]\s*(VIC)([A-Z\s]+)$/i);
-      if (ageStateOccMatch) {
+      // Pattern: age + optional dash + VIC + optional location + occupation
+      // Examples: "28 VICREAL ESTATE AGENT", "74 - VICRETIRED PLUMBER", "30 VIC - SIMPSONSWIM TEACHER"
+      const ageStateOccMatch = text.match(/^(\d+)\s*[-–]?\s*(VIC)(?:\s*[-–]\s*[A-Z]+)?([A-Z][A-Z\s&@.'–-]+)?/i);
+      if (ageStateOccMatch && ageStateOccMatch[3]) {
         const age = ageStateOccMatch[1];
         const state = ageStateOccMatch[2].toUpperCase();
-        const occupation = ageStateOccMatch[3].trim();
+        let occupation = ageStateOccMatch[3].trim();
+        // Clean up occupation - remove trailing notes like "DIVERSITY - LEBANESE" etc
+        occupation = occupation.replace(/DIVERSITY\s*[-–].*$/i, '').trim();
+        occupation = occupation.replace(/PRONOUNCED.*$/i, '').trim();
+        occupation = occupation.replace(/NEED TO AUDITION.*$/i, '').trim();
         card.ageState = `${age} - ${state}`;
         card.occupation = occupation;
         console.log(`  -> Split age/state/occupation: "${card.ageState}" | "${card.occupation}"`);
       } else {
         // Fallback - store entire line as ageState
         card.ageState = text;
+        console.log(`  -> Could not split, storing as ageState: "${text}"`);
       }
     }
     // Tagline - short text below age/state line
