@@ -1000,26 +1000,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     setRedoHistory([]);
   }, [selectedContestant]);
 
-  // Save body text content when user leaves the tab (prevents data loss)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        // Capture current body text content from the refs before tab becomes hidden
-        const bodyTextElement = bodyTextRef.current || bodyTextRefFs.current;
-        if (bodyTextElement && cardData) {
-          const currentHtml = bodyTextElement.innerHTML;
-          if (currentHtml && currentHtml !== cardData.bodyText) {
-            // Update card data with current content to prevent loss
-            setCardData(prev => prev ? { ...prev, bodyText: currentHtml } : prev);
-          }
-        }
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [cardData]);
-
   // Save casting card mutation - uses PATCH for updates, POST for new cards
   const saveMutation = useMutation({
     mutationFn: async (data: CastingCardData & { skipInvalidate?: boolean; forceOverwrite?: boolean }) => {
@@ -2139,6 +2119,44 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       console.error('Error updating field:', error);
     }
   };
+
+  // Save body text content when user leaves the tab (prevents data loss)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // Capture current body text content from the refs before tab becomes hidden
+        const bodyTextElement = bodyTextRef.current || bodyTextRefFs.current;
+        if (bodyTextElement && cardData) {
+          const currentHtml = bodyTextElement.innerHTML;
+          if (currentHtml && currentHtml !== cardData.bodyText) {
+            // Update card data with current content to prevent loss
+            const newCardData = { ...cardData, bodyText: currentHtml };
+            setCardData(newCardData);
+            cardDataRef.current = newCardData;
+            
+            // IMMEDIATELY save to server when tab loses focus - don't wait for debounce
+            console.log('[Visibility] Tab hidden - saving unsaved body text immediately');
+            setAutoSaveStatus('saving');
+            const dataToSave = { ...newCardData, skipInvalidate: true };
+            saveMutation.mutate(dataToSave as any, {
+              onSuccess: () => {
+                hasUnsavedChanges.current = false;
+                setAutoSaveStatus('saved');
+                setTimeout(() => setAutoSaveStatus('idle'), 2000);
+              },
+              onError: (error) => {
+                console.error('[Visibility] Save on tab hide failed:', error);
+                setAutoSaveStatus('idle');
+              }
+            });
+          }
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [cardData, saveMutation]);
 
   // Text formatting functions for contentEditable
   const applyFormat = (command: string, value?: string) => {
