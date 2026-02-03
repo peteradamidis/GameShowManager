@@ -2298,28 +2298,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
 
-          // Handle main photo if present
-          if (card.photos.main) {
-            const photoFilename = `contestant_${contestantId}_main_${Date.now()}.${card.photos.mainFilename?.split('.').pop() || 'jpg'}`;
-            const photoPath = path.join(process.cwd(), 'uploads', 'photos', photoFilename);
-            
-            // Ensure directory exists
-            const photoDir = path.dirname(photoPath);
-            if (!fs.existsSync(photoDir)) {
-              fs.mkdirSync(photoDir, { recursive: true });
-            }
-            
-            // Process and save the photo
-            await sharp(card.photos.main)
-              .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-              .jpeg({ quality: 85 })
-              .toFile(photoPath.replace(/\.[^.]+$/, '.jpg'));
-            
-            // Update contestant with photo URL
-            await storage.updateContestant(contestantId, {
-              photoUrl: `/uploads/photos/${photoFilename.replace(/\.[^.]+$/, '.jpg')}`
-            });
-          }
+          // Skip photo import from PowerPoint - not reliable
+          // Photos should be imported separately via Gallery PDF import
 
           const contestant = await storage.getContestantById(contestantId);
           imported.push({
