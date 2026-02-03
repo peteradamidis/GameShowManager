@@ -2716,7 +2716,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               <div className="flex-1">
                 {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
                 <div 
-                  className="pl-6 pr-0 rounded-l flex items-center justify-between mb-4 casting-card-header" 
+                  className="pl-6 pr-0 rounded-l flex items-center justify-between mb-2 casting-card-header" 
                   style={{ 
                     height: '80px',
                     background: 'linear-gradient(to right, #b45309, #d97706, #f59e0b)',
@@ -3565,7 +3565,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <div className="flex-1">
                     {/* Header banner with DOND logo - matching PowerPoint bronze/orange style */}
                     <div 
-                      className="pl-4 pr-0 rounded-l flex items-center justify-between mb-4 casting-card-header" 
+                      className="pl-4 pr-0 rounded-l flex items-center justify-between mb-2 casting-card-header" 
                       style={{ 
                         height: '80px',
                         background: 'linear-gradient(to right, #b45309, #d97706, #f59e0b)',
