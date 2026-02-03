@@ -144,20 +144,25 @@ function categorizeTextByPosition(texts: Array<{ text: string; pos: { x: number;
     }
     
     // Age/State/Occupation line - starts with number, positioned below header
-    // Formats: "74 - VICRETIRED PLUMBER", "28 VICREAL ESTATE AGENT", "57 VIC - SIMPSONBRICKLAYER"
-    if (y >= 0.5 && y < 1.5 && text.match(/^\d+\s*(VIC|-|–)/i)) {
+    // Formats: "24 (VIC)EVENTS CO-ORD", "74 - VICRETIRED PLUMBER", "28 VICREAL ESTATE AGENT", "27 (QLD)RADIO PRESENTER"
+    // Support all Australian states: VIC, NSW, QLD, SA, WA, TAS, ACT, NT
+    const statePattern = /(VIC|NSW|QLD|SA|WA|TAS|ACT|NT)/i;
+    if (y >= 0.5 && y < 1.5 && text.match(/^\d+\s*(\(|VIC|NSW|QLD|SA|WA|TAS|ACT|NT|-|–)/i)) {
       // Try to split age/state from occupation
-      // Pattern: age + optional dash + VIC + optional location + occupation
-      // Examples: "28 VICREAL ESTATE AGENT", "74 - VICRETIRED PLUMBER", "30 VIC - SIMPSONSWIM TEACHER"
-      const ageStateOccMatch = text.match(/^(\d+)\s*[-–]?\s*(VIC)(?:\s*[-–]\s*[A-Z]+)?([A-Z][A-Z\s&@.'–-]+)?/i);
-      if (ageStateOccMatch && ageStateOccMatch[3]) {
+      // Pattern: age + optional stuff + state (with or without parens) + occupation
+      // Examples: "24 (VIC)EVENTS CO-ORD", "28 VICREAL ESTATE", "27 (QLD)RADIO PRESENTER"
+      const ageStateOccMatch = text.match(/^(\d+)\s*[-–]?\s*\(?([A-Z]{2,3})\)?(.*)$/i);
+      if (ageStateOccMatch && statePattern.test(ageStateOccMatch[2])) {
         const age = ageStateOccMatch[1];
         const state = ageStateOccMatch[2].toUpperCase();
-        let occupation = ageStateOccMatch[3].trim();
+        let occupation = (ageStateOccMatch[3] || '').trim();
         // Clean up occupation - remove trailing notes like "DIVERSITY - LEBANESE" etc
         occupation = occupation.replace(/DIVERSITY\s*[-–].*$/i, '').trim();
         occupation = occupation.replace(/PRONOUNCED.*$/i, '').trim();
+        occupation = occupation.replace(/PRN:.*$/i, '').trim();
         occupation = occupation.replace(/NEED TO AUDITION.*$/i, '').trim();
+        // Remove leading hyphens, parentheses, etc
+        occupation = occupation.replace(/^[-–)\s]+/, '').trim();
         card.ageState = `${age} - ${state}`;
         card.occupation = occupation;
         console.log(`  -> Split age/state/occupation: "${card.ageState}" | "${card.occupation}"`);
