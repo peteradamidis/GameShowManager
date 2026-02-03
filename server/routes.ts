@@ -2220,7 +2220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Parse and validate the matches from JSON string
-      let matchesArray: Array<{ slideNumber: number; contestantId: number }>;
+      let matchesArray: Array<{ slideNumber: number; contestantId: string }>;
       try {
         matchesArray = typeof matches === 'string' ? JSON.parse(matches) : matches;
         // Validate structure
@@ -2228,8 +2228,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ error: "Matches must be an array" });
         }
         for (const match of matchesArray) {
-          if (typeof match.slideNumber !== 'number' || typeof match.contestantId !== 'number') {
-            return res.status(400).json({ error: "Invalid match entry - slideNumber and contestantId must be numbers" });
+          if (typeof match.slideNumber !== 'number' || typeof match.contestantId !== 'string') {
+            return res.status(400).json({ error: "Invalid match entry - slideNumber must be a number and contestantId must be a string" });
           }
         }
       } catch (parseError) {
@@ -2246,7 +2246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const imported: Array<{ contestantId: number; name: string }> = [];
+      const imported: Array<{ contestantId: string; name: string }> = [];
       const errors: string[] = [];
 
       for (const matchInfo of matchesArray) {
