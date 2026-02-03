@@ -313,9 +313,12 @@ export function AnimatedMessageOverlay({ config }: { config: AnimatedMessageConf
                 }}
               />
               <motion.div
-                initial={{ left: 0 }}
-                animate={{ left: 'calc(100% + 4px)' }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
+                initial={{ left: 0, opacity: 1 }}
+                animate={{ left: 'calc(100% + 4px)', opacity: 0 }}
+                transition={{ 
+                  left: { duration: 1.5, ease: "easeOut" },
+                  opacity: { duration: 0.3, delay: 1.5 }
+                }}
                 className="absolute top-0 bottom-0 w-[3px]"
                 style={{ backgroundColor: theme.accent }}
               />
