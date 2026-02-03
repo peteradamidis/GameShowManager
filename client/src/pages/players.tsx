@@ -2120,43 +2120,72 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
   };
 
-  // Save body text content when user leaves the tab (prevents data loss)
+  // Save ALL contentEditable content when user leaves the tab (prevents data loss)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
+      if (document.visibilityState === 'hidden' && cardDataRef.current) {
+        // Cancel any pending debounced saves
+        if (autoSaveTimeoutRef.current) {
+          clearTimeout(autoSaveTimeoutRef.current);
+          autoSaveTimeoutRef.current = null;
+        }
+        
         // Capture current body text content from the refs before tab becomes hidden
         const bodyTextElement = bodyTextRef.current || bodyTextRefFs.current;
-        if (bodyTextElement && cardData) {
+        let needsSave = hasUnsavedChanges.current;
+        let dataToSave = { ...cardDataRef.current };
+        
+        if (bodyTextElement) {
           const currentHtml = bodyTextElement.innerHTML;
-          if (currentHtml && currentHtml !== cardData.bodyText) {
-            // Update card data with current content to prevent loss
-            const newCardData = { ...cardData, bodyText: currentHtml };
-            setCardData(newCardData);
-            cardDataRef.current = newCardData;
-            
-            // IMMEDIATELY save to server when tab loses focus - don't wait for debounce
-            console.log('[Visibility] Tab hidden - saving unsaved body text immediately');
-            setAutoSaveStatus('saving');
-            const dataToSave = { ...newCardData, skipInvalidate: true };
-            saveMutation.mutate(dataToSave as any, {
-              onSuccess: () => {
-                hasUnsavedChanges.current = false;
-                setAutoSaveStatus('saved');
-                setTimeout(() => setAutoSaveStatus('idle'), 2000);
-              },
-              onError: (error) => {
-                console.error('[Visibility] Save on tab hide failed:', error);
-                setAutoSaveStatus('idle');
-              }
-            });
+          if (currentHtml && currentHtml !== cardDataRef.current.bodyText) {
+            dataToSave.bodyText = currentHtml;
+            needsSave = true;
           }
+        }
+        
+        // If we have unsaved changes OR body text changed, save immediately
+        if (needsSave) {
+          console.log('[Visibility] Tab hidden - saving unsaved changes immediately');
+          setAutoSaveStatus('saving');
+          cardDataRef.current = dataToSave;
+          setCardData(dataToSave);
+          
+          saveMutation.mutate({ ...dataToSave, skipInvalidate: true } as any, {
+            onSuccess: () => {
+              hasUnsavedChanges.current = false;
+              setAutoSaveStatus('saved');
+              setTimeout(() => setAutoSaveStatus('idle'), 2000);
+            },
+            onError: (error) => {
+              console.error('[Visibility] Save on tab hide failed:', error);
+              setAutoSaveStatus('idle');
+            }
+          });
         }
       }
     };
     
+    // Also handle beforeunload for browser close/refresh
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges.current && cardDataRef.current) {
+        // Try to save synchronously using sendBeacon if available
+        const dataToSend = JSON.stringify({ ...cardDataRef.current, skipInvalidate: true });
+        navigator.sendBeacon?.(`/api/casting-cards/${cardDataRef.current.contestantId}`, 
+          new Blob([dataToSend], { type: 'application/json' }));
+        
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+    
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [cardData, saveMutation]);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [saveMutation]);
 
   // Text formatting functions for contentEditable
   const applyFormat = (command: string, value?: string) => {
@@ -3257,6 +3286,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       suppressContentEditableWarning
                       className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 flex-1 print-no-border"
                       style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5', paddingBottom: cardData.showProducer !== false ? '50px' : '0' }}
+                      onInput={() => { hasUnsavedChanges.current = true; }}
                       onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
                       onMouseUp={saveCursorPosition}
                       onKeyUp={saveCursorPosition}
@@ -4140,6 +4170,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           suppressContentEditableWarning
                           className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 flex-1 print-no-border"
                           style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5', paddingBottom: cardData.showProducer !== false ? '50px' : '0' }}
+                          onInput={() => { hasUnsavedChanges.current = true; }}
                           onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
                           onMouseUp={saveCursorPosition}
                           onKeyUp={saveCursorPosition}
