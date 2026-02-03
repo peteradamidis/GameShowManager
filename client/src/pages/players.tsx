@@ -1319,10 +1319,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.bottom = '16px';
             (el as HTMLElement).style.right = '16px';
             (el as HTMLElement).style.left = 'auto';
-            (el as HTMLElement).style.zIndex = '10';
+            (el as HTMLElement).style.zIndex = '9999';
             (el as HTMLElement).style.display = 'flex';
             (el as HTMLElement).style.alignItems = 'center';
+            (el as HTMLElement).style.visibility = 'visible';
+            (el as HTMLElement).style.opacity = '1';
           });
+          // Ensure parent casting-card-preview doesn't clip the producer corner
+          const cardPreviewForProducer = clonedDoc.querySelector('#casting-card-preview');
+          if (cardPreviewForProducer) {
+            (cardPreviewForProducer as HTMLElement).style.overflow = 'visible';
+          }
           // Style producer label (gray background)
           clonedDoc.querySelectorAll('.casting-card-producer-corner .casting-card-producer-label').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#e5e7eb';
@@ -1683,10 +1690,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.bottom = '16px';
             (el as HTMLElement).style.right = '16px';
             (el as HTMLElement).style.left = 'auto';
-            (el as HTMLElement).style.zIndex = '10';
+            (el as HTMLElement).style.zIndex = '9999';
             (el as HTMLElement).style.display = 'flex';
             (el as HTMLElement).style.alignItems = 'center';
+            (el as HTMLElement).style.visibility = 'visible';
+            (el as HTMLElement).style.opacity = '1';
           });
+          // Ensure parent casting-card-preview doesn't clip the producer corner
+          const cardPreviewForProducer = clonedDoc.querySelector('#casting-card-preview');
+          if (cardPreviewForProducer) {
+            (cardPreviewForProducer as HTMLElement).style.overflow = 'visible';
+          }
           // Style producer label (gray background)
           clonedDoc.querySelectorAll('.casting-card-producer-corner .casting-card-producer-label').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#e5e7eb';
