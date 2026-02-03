@@ -290,6 +290,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasUnsavedChanges = useRef(false);
   const cardDataRef = useRef<CastingCardData | null>(null);
+  const lastLoadedContestantId = useRef<string | null>(null); // Track which contestant's card we've loaded
   
   // Version history state
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
@@ -895,8 +896,18 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   };
 
   // Initialize card data when contestant is selected or existing card loads
+  // IMPORTANT: Only load from existingCard when switching to a NEW contestant
+  // This prevents query refetches from overwriting unsaved local edits
   useEffect(() => {
     if (selectedContestant) {
+      // Skip if we've already loaded this contestant's card and haven't switched
+      const isNewContestant = lastLoadedContestantId.current !== selectedContestant.id;
+      
+      if (!isNewContestant && cardData?.contestantId === selectedContestant.id) {
+        // Already loaded this contestant, don't overwrite local edits
+        return;
+      }
+      
       try {
         setRenderError(null); // Clear any previous errors
         
@@ -934,6 +945,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           
           setCardData(parsedCard);
           cardDataRef.current = parsedCard;
+          lastLoadedContestantId.current = selectedContestant.id; // Mark as loaded
           // Track when this card was loaded for conflict detection
           setLastKnownUpdatedAt((existingCard as any).updatedAt || new Date().toISOString());
         } else if (!loadingCard) {
@@ -986,6 +998,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             useManualCompanions: autoCompanions.length > 0,
             ageState: `${selectedContestant.age || ''} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`.trim(),
           };
+          lastLoadedContestantId.current = selectedContestant.id; // Mark as loaded
         }
       } catch (error: any) {
         console.error('Error initializing card data:', error);
@@ -998,6 +1011,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   useEffect(() => {
     setUndoHistory([]);
     setRedoHistory([]);
+    // Reset hasUnsavedChanges when switching contestants
+    hasUnsavedChanges.current = false;
   }, [selectedContestant]);
 
   // Save casting card mutation - uses PATCH for updates, POST for new cards
