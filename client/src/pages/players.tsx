@@ -2225,6 +2225,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
   };
   
+  // Predefined font size steps for the up/down arrows
+  const fontSizeSteps = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72];
+  
   const formatFontSize = (size: string) => {
     try {
       let selection = window.getSelection();
@@ -2251,49 +2254,61 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       
       if (!range || range.collapsed) return;
       
+      // Get current font size from selection
+      const getCurrentFontSize = (): number => {
+        const parentEl = range!.commonAncestorContainer.parentElement;
+        if (parentEl) {
+          // Check for inline style first
+          if (parentEl.style.fontSize) {
+            return parseInt(parentEl.style.fontSize);
+          }
+          // Fall back to computed style
+          const computedStyle = window.getComputedStyle(parentEl);
+          return parseInt(computedStyle.fontSize) || 20;
+        }
+        return 20; // Default body text size
+      };
+      
       // Handle 'bigger' and 'smaller' for A↑ and A↓ buttons
       let targetSize = size;
       if (size === 'bigger' || size === 'smaller') {
-        // Try to detect current font size from selection
-        const parentEl = range.commonAncestorContainer.parentElement;
-        const computedStyle = parentEl ? window.getComputedStyle(parentEl) : null;
-        const currentSize = computedStyle ? parseInt(computedStyle.fontSize) : 16;
-        const step = 2;
+        const currentSize = getCurrentFontSize();
+        
         if (size === 'bigger') {
-          targetSize = String(Math.min(currentSize + step, 72));
+          // Find next step up
+          const nextStep = fontSizeSteps.find(s => s > currentSize);
+          targetSize = String(nextStep || fontSizeSteps[fontSizeSteps.length - 1]);
         } else {
-          targetSize = String(Math.max(currentSize - step, 8));
+          // Find next step down
+          const prevSteps = fontSizeSteps.filter(s => s < currentSize);
+          targetSize = String(prevSteps.length > 0 ? prevSteps[prevSteps.length - 1] : fontSizeSteps[0]);
         }
       }
       
-      // Use execCommand with a font size, then find and replace the font tags
-      // execCommand fontSize uses values 1-7, we'll use 7 as a marker
-      document.execCommand('fontSize', false, '7');
+      // Wrap selected content in a span with the target font size
+      const selectedContent = range.extractContents();
+      const span = document.createElement('span');
+      span.style.fontSize = `${targetSize}px`;
+      span.appendChild(selectedContent);
+      range.insertNode(span);
       
-      // Find all font elements with size="7" and replace with span with actual size
-      const activeElement = document.activeElement;
-      if (activeElement) {
-        const fontElements = activeElement.querySelectorAll('font[size="7"]');
-        fontElements.forEach((font) => {
-          const span = document.createElement('span');
-          span.style.fontSize = `${targetSize}px`;
-          span.innerHTML = font.innerHTML;
-          font.parentNode?.replaceChild(span, font);
-        });
-      }
-      
-      // Re-select the text so user can continue adjusting
+      // Re-select the wrapped content
       setTimeout(() => {
         const newSelection = window.getSelection();
-        if (newSelection && range) {
+        if (newSelection && span.firstChild) {
+          const newRange = document.createRange();
+          newRange.selectNodeContents(span);
           newSelection.removeAllRanges();
-          newSelection.addRange(range);
-          // Update saved selection with new range
+          newSelection.addRange(newRange);
+          // Update saved selection
           if (targetElement) {
-            lastSelectionRef.current = { range: range.cloneRange(), element: targetElement };
+            lastSelectionRef.current = { range: newRange.cloneRange(), element: targetElement };
           }
         }
       }, 0);
+      
+      // Mark body text as changed
+      hasUnsavedChanges.current = true;
     } catch (error) {
       console.error('Error applying font size:', error);
     }
