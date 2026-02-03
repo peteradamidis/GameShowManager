@@ -1246,9 +1246,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             .ignore-print {
               display: none !important;
             }
-            /* Show print-only producer name (hidden in UI) */
+            /* Show print-only producer name (hidden in UI) with yellow background */
             .casting-card-producer-name-print {
-              display: inline !important;
+              display: inline-block !important;
+              background-color: #facc15 !important;
+              color: #000000 !important;
+              padding: 8px 16px !important;
+              font-weight: bold !important;
             }
             /* Remove border from body text for print */
             .print-no-border {
@@ -1617,9 +1621,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             .ignore-print {
               display: none !important;
             }
-            /* Show print-only producer name (hidden in UI) */
+            /* Show print-only producer name (hidden in UI) with yellow background */
             .casting-card-producer-name-print {
-              display: inline !important;
+              display: inline-block !important;
+              background-color: #facc15 !important;
+              color: #000000 !important;
+              padding: 8px 16px !important;
+              font-weight: bold !important;
             }
             /* Remove border from body text for print */
             .print-no-border {
