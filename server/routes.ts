@@ -2299,8 +2299,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           if (existingCard) {
             // Update existing card - REPLACE with PowerPoint data
-            console.log(`[PPTX Import] Updating existing card for ${card.name}, fields:`, Object.keys(cardFields));
-            await storage.updateCastingCard(existingCard.id, cardFields);
+            console.log(`[PPTX Import] Updating existing card for ${card.name}, contestantId: ${contestantId}, fields:`, Object.keys(cardFields));
+            await storage.updateCastingCard(contestantId, cardFields);
           } else {
             // Create new casting card
             console.log(`[PPTX Import] Creating new card for ${card.name}`);
