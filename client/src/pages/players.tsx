@@ -173,6 +173,8 @@ interface CastingCardData {
   showTagline?: boolean;
   showSponsorCategory?: boolean;
   // Position offsets for draggable elements
+  ageStateOffsetY?: number | null;
+  occupationOffsetY?: number | null;
   taglineOffsetY?: number | null;
   bodyOffsetY?: number | null;
   // Manual companions (up to 4)
@@ -3172,16 +3174,64 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
                 {/* Age and details - all editable */}
                 <div className="mb-6">
-                  <div
-                    contentEditable
-                    suppressContentEditableWarning
-                    className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                    style={{ fontFamily: 'Calibri, sans-serif', fontSize: '34px' }}
-                    onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
+                  {/* Age/State - with position controls */}
+                  <div 
+                    className="relative group flex items-center gap-1"
+                    style={{ 
+                      marginTop: `${cardData.ageStateOffsetY || 0}px`,
+                      transition: 'margin-top 0.15s ease-out'
+                    }}
                   >
-                    {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
+                    <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
+                      <button 
+                        onClick={() => updateField('ageStateOffsetY', (cardData.ageStateOffsetY || 0) - 5)}
+                        className="text-gray-400 hover:text-gray-600 p-0.5"
+                        title="Move up"
+                      >
+                        <ChevronUp className="w-3 h-3" />
+                      </button>
+                      <button 
+                        onClick={() => updateField('ageStateOffsetY', (cardData.ageStateOffsetY || 0) + 5)}
+                        className="text-gray-400 hover:text-gray-600 p-0.5"
+                        title="Move down"
+                      >
+                        <ChevronDown className="w-3 h-3" />
+                      </button>
+                    </div>
+                    <div
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
+                      style={{ fontFamily: 'Calibri, sans-serif', fontSize: '34px' }}
+                      onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
+                    >
+                      {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
+                    </div>
                   </div>
-                  <div className="relative group flex items-center gap-1">
+                  {/* Occupation - with position controls */}
+                  <div 
+                    className="relative group flex items-center gap-1"
+                    style={{ 
+                      marginTop: `${cardData.occupationOffsetY || 0}px`,
+                      transition: 'margin-top 0.15s ease-out'
+                    }}
+                  >
+                    <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
+                      <button 
+                        onClick={() => updateField('occupationOffsetY', (cardData.occupationOffsetY || 0) - 5)}
+                        className="text-gray-400 hover:text-gray-600 p-0.5"
+                        title="Move up"
+                      >
+                        <ChevronUp className="w-3 h-3" />
+                      </button>
+                      <button 
+                        onClick={() => updateField('occupationOffsetY', (cardData.occupationOffsetY || 0) + 5)}
+                        className="text-gray-400 hover:text-gray-600 p-0.5"
+                        title="Move down"
+                      >
+                        <ChevronDown className="w-3 h-3" />
+                      </button>
+                    </div>
                     <div
                       contentEditable
                       suppressContentEditableWarning
@@ -3191,6 +3241,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     >
                       {cardData.occupation || 'OCCUPATION'}
                     </div>
+                    {/* Font size controls for occupation */}
                     <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print">
                       <button 
                         onClick={() => updateField('fontSizeOccupation', (cardData.fontSizeOccupation || 36) + 2)}
@@ -4047,17 +4098,65 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
                     {/* Age and details - all editable */}
                     <div className="mb-6">
-                      <div
-                        contentEditable
-                        suppressContentEditableWarning
-                        className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text"
-                        style={{ fontFamily: 'Calibri, sans-serif', fontSize: '34px' }}
-                        onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
-                        data-testid="preview-age-location"
+                      {/* Age/State - with position controls */}
+                      <div 
+                        className="relative group flex items-center gap-1"
+                        style={{ 
+                          marginTop: `${cardData.ageStateOffsetY || 0}px`,
+                          transition: 'margin-top 0.15s ease-out'
+                        }}
                       >
-                        {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
+                        <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
+                          <button 
+                            onClick={() => updateField('ageStateOffsetY', (cardData.ageStateOffsetY || 0) - 5)}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Move up"
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </button>
+                          <button 
+                            onClick={() => updateField('ageStateOffsetY', (cardData.ageStateOffsetY || 0) + 5)}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Move down"
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <div
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
+                          style={{ fontFamily: 'Calibri, sans-serif', fontSize: '34px' }}
+                          onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
+                          data-testid="preview-age-location"
+                        >
+                          {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
+                        </div>
                       </div>
-                      <div className="relative group flex items-center gap-1">
+                      {/* Occupation - with position controls */}
+                      <div 
+                        className="relative group flex items-center gap-1"
+                        style={{ 
+                          marginTop: `${cardData.occupationOffsetY || 0}px`,
+                          transition: 'margin-top 0.15s ease-out'
+                        }}
+                      >
+                        <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
+                          <button 
+                            onClick={() => updateField('occupationOffsetY', (cardData.occupationOffsetY || 0) - 5)}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Move up"
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </button>
+                          <button 
+                            onClick={() => updateField('occupationOffsetY', (cardData.occupationOffsetY || 0) + 5)}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Move down"
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                        </div>
                         <div
                           contentEditable
                           suppressContentEditableWarning
@@ -4068,6 +4167,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         >
                           {cardData.occupation || 'OCCUPATION'}
                         </div>
+                        {/* Font size controls for occupation */}
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print">
                           <button 
                             onClick={() => updateField('fontSizeOccupation', (cardData.fontSizeOccupation || 36) + 2)}
