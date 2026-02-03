@@ -535,6 +535,9 @@ interface AnimatedMessageConfig {
   messageText: string;
   animationStyle: 'fade' | 'slide' | 'zoom';
   textStyle: 'simple' | 'bounce' | 'wave' | 'typewriter';
+  colorTheme: 'gold' | 'red-orange' | 'blue-purple' | 'rainbow' | 'custom';
+  customColor?: string;
+  backgroundPattern: 'none' | 'sparkles' | 'stars' | 'particles';
   showConfetti: boolean;
 }
 
@@ -543,6 +546,9 @@ function AnimatedMessageSettingsCard() {
   const [messageText, setMessageText] = useState("");
   const [animationStyle, setAnimationStyle] = useState<'fade' | 'slide' | 'zoom'>('fade');
   const [textStyle, setTextStyle] = useState<'simple' | 'bounce' | 'wave' | 'typewriter'>('simple');
+  const [colorTheme, setColorTheme] = useState<'gold' | 'red-orange' | 'blue-purple' | 'rainbow' | 'custom'>('gold');
+  const [customColor, setCustomColor] = useState('#d97706');
+  const [backgroundPattern, setBackgroundPattern] = useState<'none' | 'sparkles' | 'stars' | 'particles'>('none');
   const [showConfetti, setShowConfetti] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -556,6 +562,9 @@ function AnimatedMessageSettingsCard() {
           messageText: "Welcome back!",
           animationStyle: 'fade',
           textStyle: 'simple',
+          colorTheme: 'gold',
+          customColor: '#d97706',
+          backgroundPattern: 'none',
           showConfetti: false
         };
       } catch (e) {
@@ -564,6 +573,9 @@ function AnimatedMessageSettingsCard() {
           messageText: "Welcome back!",
           animationStyle: 'fade',
           textStyle: 'simple',
+          colorTheme: 'gold',
+          customColor: '#d97706',
+          backgroundPattern: 'none',
           showConfetti: false
         };
       }
@@ -575,6 +587,9 @@ function AnimatedMessageSettingsCard() {
       setMessageText(config.messageText);
       setAnimationStyle(config.animationStyle);
       setTextStyle(config.textStyle || 'simple');
+      setColorTheme(config.colorTheme || 'gold');
+      setCustomColor(config.customColor || '#d97706');
+      setBackgroundPattern(config.backgroundPattern || 'none');
       setShowConfetti(config.showConfetti);
       setEnabled(config.enabled);
     }
@@ -587,6 +602,9 @@ function AnimatedMessageSettingsCard() {
         messageText: updates.messageText ?? messageText,
         animationStyle: updates.animationStyle ?? animationStyle,
         textStyle: updates.textStyle ?? textStyle,
+        colorTheme: updates.colorTheme ?? colorTheme,
+        customColor: updates.customColor ?? customColor,
+        backgroundPattern: updates.backgroundPattern ?? backgroundPattern,
         showConfetti: updates.showConfetti ?? showConfetti
       };
       return await apiRequest("POST", "/api/settings/animated_message", { value: JSON.stringify(newConfig) });
@@ -685,6 +703,90 @@ function AnimatedMessageSettingsCard() {
             </Select>
           </div>
         </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Color Theme</Label>
+            <Select 
+              value={colorTheme} 
+              onValueChange={(val: any) => { setColorTheme(val); setHasChanges(true); }}
+            >
+              <SelectTrigger data-testid="select-animated-message-color-theme">
+                <SelectValue placeholder="Select color theme" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="gold">
+                  <span className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-amber-500" />
+                    Gold / Amber
+                  </span>
+                </SelectItem>
+                <SelectItem value="red-orange">
+                  <span className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-orange-500" />
+                    Red / Orange
+                  </span>
+                </SelectItem>
+                <SelectItem value="blue-purple">
+                  <span className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-purple-500" />
+                    Blue / Purple
+                  </span>
+                </SelectItem>
+                <SelectItem value="rainbow">
+                  <span className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-gradient-to-r from-red-500 via-yellow-500 to-blue-500" />
+                    Rainbow
+                  </span>
+                </SelectItem>
+                <SelectItem value="custom">
+                  <span className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: customColor }} />
+                    Custom
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Background Effect</Label>
+            <Select 
+              value={backgroundPattern} 
+              onValueChange={(val: any) => { setBackgroundPattern(val); setHasChanges(true); }}
+            >
+              <SelectTrigger data-testid="select-animated-message-bg-pattern">
+                <SelectValue placeholder="Select background" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="sparkles">Sparkles</SelectItem>
+                <SelectItem value="stars">Floating Stars</SelectItem>
+                <SelectItem value="particles">Rising Particles</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {colorTheme === 'custom' && (
+          <div className="space-y-2">
+            <Label>Custom Color</Label>
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={customColor}
+                onChange={(e) => { setCustomColor(e.target.value); setHasChanges(true); }}
+                className="w-10 h-10 rounded-md border border-border cursor-pointer"
+                data-testid="input-animated-message-custom-color"
+              />
+              <Input
+                value={customColor}
+                onChange={(e) => { setCustomColor(e.target.value); setHasChanges(true); }}
+                placeholder="#d97706"
+                className="w-32"
+              />
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-between">
           <Label>Show Confetti</Label>
