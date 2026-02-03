@@ -5538,10 +5538,10 @@ export default function PlayersPage() {
               </div>
             )}
             
-            {isPlayer && (
-              <div className="mt-3 flex items-center gap-2 flex-wrap">
-                {/* Show PDF badge if PDF is uploaded, otherwise show system card status */}
-                {assignment.castingCardUrl ? (
+            {/* Casting card actions - available for both Players and Backups */}
+            <div className="mt-3 flex items-center gap-2 flex-wrap">
+              {/* Show PDF badge if PDF is uploaded, otherwise show system card status */}
+              {assignment.castingCardUrl ? (
                   // PDF is uploaded - show PDF badge and controls
                   <>
                     <Badge className="bg-purple-600 text-white">
@@ -5644,8 +5644,7 @@ export default function PlayersPage() {
                     </Button>
                   </>
                 )}
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
