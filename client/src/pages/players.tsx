@@ -2974,7 +2974,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       ref={bodyTextRefFs}
                       contentEditable
                       suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] print-no-border"
+                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] max-h-[280px] overflow-y-auto print-no-border"
                       style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5' }}
                       onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
                       onMouseUp={saveCursorPosition}
@@ -3837,7 +3837,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           ref={bodyTextRef}
                           contentEditable
                           suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text flex-1 whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] print-no-border"
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] max-h-[280px] overflow-y-auto print-no-border"
                           style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5' }}
                           onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
                           onMouseUp={saveCursorPosition}
