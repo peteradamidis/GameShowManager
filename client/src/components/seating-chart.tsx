@@ -1156,8 +1156,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   const [seatSelectionStandby, setSeatSelectionStandby] = useState<StandbyData | null>(null);
   const [selectedSeatForStandby, setSelectedSeatForStandby] = useState<string>("");
   const [seatSelectionNotes, setSeatSelectionNotes] = useState("");
-  // Prize winner toggle states: { winnerId: { prize: boolean, briefcase: boolean } }
-  const [prizeWinnerToggles, setPrizeWinnerToggles] = useState<Record<string, { prize: boolean; briefcase: boolean }>>({});
   const { toast } = useToast();
 
   // Fetch block types for this record day
@@ -1171,9 +1169,26 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   });
 
   // Fetch prize winners for this record day (only when in RX mode)
-  const { data: prizeWinners = [] } = useQuery<{id: string; contestantId: string; contestantName: string; blockNumber: number; seatLabel: string; createdAt: string}[]>({
+  const { data: prizeWinners = [] } = useQuery<{id: string; contestantId: string; contestantName: string; blockNumber: number; seatLabel: string; hasPresent: boolean; hasBriefcase: boolean; createdAt: string}[]>({
     queryKey: ['/api/record-days', recordDayId, 'prize-winners'],
     enabled: isLocked,
+  });
+
+  // Mutation to update prize winner toggle states
+  const updatePrizeWinnerMutation = useMutation({
+    mutationFn: async ({ id, hasPresent, hasBriefcase }: { id: string; hasPresent?: boolean; hasBriefcase?: boolean }) => {
+      await apiRequest('PATCH', `/api/prize-winners/${id}`, { hasPresent, hasBriefcase });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/record-days', recordDayId, 'prize-winners'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error updating prize winner",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   // Mutation to remove prize winner
@@ -2170,7 +2185,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     ) : (
                       <div className="space-y-2 max-h-[200px] overflow-y-auto">
                         {prizeWinners.map((winner) => {
-                          const toggleState = prizeWinnerToggles[winner.id] || { prize: false, briefcase: false };
                           return (
                             <div 
                               key={winner.id} 
@@ -2191,16 +2205,14 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                   size="icon"
                                   variant="ghost"
                                   className={`h-6 w-6 transition-colors ${
-                                    toggleState.prize 
+                                    winner.hasPresent 
                                       ? 'text-white bg-pink-500 hover:bg-pink-600 dark:bg-pink-600 dark:hover:bg-pink-500' 
                                       : 'text-gray-400 hover:text-pink-500 hover:bg-pink-100 dark:hover:bg-pink-900/30'
                                   }`}
-                                  onClick={() => setPrizeWinnerToggles(prev => ({
-                                    ...prev,
-                                    [winner.id]: { ...toggleState, prize: !toggleState.prize }
-                                  }))}
+                                  onClick={() => updatePrizeWinnerMutation.mutate({ id: winner.id, hasPresent: !winner.hasPresent })}
+                                  disabled={updatePrizeWinnerMutation.isPending}
                                   data-testid={`button-prize-toggle-${winner.id}`}
-                                  title={toggleState.prize ? "Prize selected" : "Select prize"}
+                                  title={winner.hasPresent ? "Prize selected" : "Select prize"}
                                 >
                                   <Gift className="h-3.5 w-3.5" />
                                 </Button>
@@ -2209,16 +2221,14 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                   size="icon"
                                   variant="ghost"
                                   className={`h-6 w-6 transition-colors ${
-                                    toggleState.briefcase 
+                                    winner.hasBriefcase 
                                       ? 'text-white bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500' 
                                       : 'text-gray-400 hover:text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/30'
                                   }`}
-                                  onClick={() => setPrizeWinnerToggles(prev => ({
-                                    ...prev,
-                                    [winner.id]: { ...toggleState, briefcase: !toggleState.briefcase }
-                                  }))}
+                                  onClick={() => updatePrizeWinnerMutation.mutate({ id: winner.id, hasBriefcase: !winner.hasBriefcase })}
+                                  disabled={updatePrizeWinnerMutation.isPending}
                                   data-testid={`button-briefcase-toggle-${winner.id}`}
-                                  title={toggleState.briefcase ? "Briefcase selected" : "Select briefcase"}
+                                  title={winner.hasBriefcase ? "Briefcase selected" : "Select briefcase"}
                                 >
                                   <Briefcase className="h-3.5 w-3.5" />
                                 </Button>

@@ -15087,6 +15087,19 @@ Thank you.`;
     }
   });
 
+  // Update prize winner toggle states (present/briefcase icons)
+  app.patch("/api/prize-winners/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { hasPresent, hasBriefcase } = req.body;
+      const updated = await storage.updatePrizeWinner(id, { hasPresent, hasBriefcase });
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating prize winner:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Remove a contestant from prize winners list by contestant ID
   app.delete("/api/record-days/:recordDayId/prize-winners/:contestantId", async (req, res) => {
     try {

@@ -326,6 +326,8 @@ export const prizeWinners = pgTable("prize_winners", {
   blockNumber: integer("block_number").notNull(), // Block they were in when added
   seatLabel: text("seat_label").notNull(), // Seat they were in when added
   contestantName: text("contestant_name").notNull(), // Denormalized for quick display
+  hasPresent: boolean("has_present").default(false), // Has received present/gift
+  hasBriefcase: boolean("has_briefcase").default(false), // Has briefcase/case
   addedAt: timestamp("added_at").defaultNow().notNull(),
 }, (table) => ({
   // One prize entry per contestant per record day

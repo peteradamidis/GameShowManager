@@ -332,6 +332,7 @@ export interface IStorage {
   // Prize Winners
   addPrizeWinner(data: InsertPrizeWinner): Promise<PrizeWinner>;
   getPrizeWinnersByRecordDay(recordDayId: string): Promise<PrizeWinner[]>;
+  updatePrizeWinner(id: string, data: { hasPresent?: boolean; hasBriefcase?: boolean }): Promise<PrizeWinner | null>;
   removePrizeWinner(id: string): Promise<void>;
   removePrizeWinnerByContestant(recordDayId: string, contestantId: string): Promise<void>;
   
@@ -2769,6 +2770,19 @@ export class DbStorage implements IStorage {
       .select()
       .from(prizeWinners)
       .where(eq(prizeWinners.recordDayId, recordDayId));
+  }
+
+  async updatePrizeWinner(id: string, data: { hasPresent?: boolean; hasBriefcase?: boolean }): Promise<PrizeWinner | null> {
+    const updateData: any = {};
+    if (typeof data.hasPresent === 'boolean') updateData.hasPresent = data.hasPresent;
+    if (typeof data.hasBriefcase === 'boolean') updateData.hasBriefcase = data.hasBriefcase;
+    
+    const [updated] = await db
+      .update(prizeWinners)
+      .set(updateData)
+      .where(eq(prizeWinners.id, id))
+      .returning();
+    return updated || null;
   }
 
   async removePrizeWinner(id: string): Promise<void> {
