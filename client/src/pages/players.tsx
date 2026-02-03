@@ -2849,7 +2849,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => insertDotPointAtCursor(true)}
+                    onMouseDown={(e) => {
+                      e.preventDefault(); // Prevent focus change before capturing position
+                      insertDotPointAtCursor(true);
+                    }}
                     className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden ignore-print"
                   >
                     <Plus className="w-4 h-4 mr-1" />
@@ -3663,7 +3666,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => insertDotPointAtCursor(false)}
+                        onMouseDown={(e) => {
+                          e.preventDefault(); // Prevent focus change before capturing position
+                          insertDotPointAtCursor(false);
+                        }}
                         className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden ignore-print"
                         data-testid="btn-add-dot-point"
                       >
