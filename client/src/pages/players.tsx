@@ -2692,6 +2692,21 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               
               <div className="w-px h-6 bg-gray-300 mx-1" />
               
+              {/* Add Dot Point */}
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onMouseDown={(e) => { e.preventDefault(); insertDotPointAtCursor(true); }} 
+                title="Add Dot Point" 
+                data-testid="btn-add-dot-point-fs" 
+                className="h-8 px-2 text-amber-600 hover:bg-amber-50"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                <span className="text-xs">Dot Point</span>
+              </Button>
+              
+              <div className="w-px h-6 bg-gray-300 mx-1" />
+              
               {/* Zoom Controls */}
               <span className="text-xs text-gray-500 ml-1">Zoom:</span>
               <Button size="sm" variant="ghost" onClick={() => setCardZoom(Math.max(0.3, cardZoom - 0.05))} title="Zoom Out" data-testid="btn-zoom-out" className="h-8 px-2">
