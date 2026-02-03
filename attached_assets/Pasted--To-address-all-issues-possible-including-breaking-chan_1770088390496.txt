@@ -1,0 +1,57 @@
+
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details.
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 11.8.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.8.0
+npm notice To update run: npm install -g npm@11.8.0
+npm notice
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+vite v5.4.21 building for production...
+transforming (1) index.html
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+✓ 3011 modules transformed.
+../dist/public/index.html                                                                  2.07 kB │ gzip:   0.80 kB
+../dist/public/assets/dond-logo-QD_SPDoK.png                                              38.47 kB
+../dist/public/assets/cute_robot_holding_deal_or_no_deal_clapperboard-OZfWcIrC.png     1,088.11 kB
+../dist/public/assets/6b13f568-ecb4-421a-8c1d-6edbe0b1a6c7_1764305481833-BtA7jm15.png  1,175.91 kB
+../dist/public/assets/stage-backdrop-CJ8BtoEI.png                                      1,241.24 kB
+../dist/public/assets/podium-set-BDckeEJU.png                                          1,942.53 kB
+../dist/public/assets/centre-stage-CzGLmQka.png                                        2,639.42 kB
+../dist/public/assets/index-DedkEhr4.css                                                 136.86 kB │ gzip:  20.72 kB
+../dist/public/assets/purify.es-C5KSVp3G.js                                               22.74 kB │ gzip:   8.75 kB
+../dist/public/assets/index.es-D20MDNLR.js                                               150.62 kB │ gzip:  51.36 kB
+../dist/public/assets/html2canvas.esm-CBrSDip1.js                                        201.42 kB │ gzip:  47.70 kB
+../dist/public/assets/jspdf.es.min-C6AMBJMV.js                                           413.72 kB │ gzip: 133.51 kB
+../dist/public/assets/index-Bx1PQHrJ.js                                                1,849.28 kB │ gzip: 487.11 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 4.60s
+▲ [WARNING] Duplicate member "updateCanceledAssignment" in class body [duplicate-class-member]
+
+    server/storage.ts:1398:8:
+      1398 │   async updateCanceledAssignment(id: string, data: Partial<CanceledAssignment>): Promise<CanceledAssignment> {
+           ╵         ~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The original member "updateCanceledAssignment" is here:
+
+    server/storage.ts:1285:8:
+      1285 │   async updateCanceledAssignment(id: string, data: Partial<CanceledAssignment>): Promise<CanceledAssignment | undefined> {
+           ╵         ~~~~~~~~~~~~~~~~~~~~~~~~
+
+1 warning
+
+  dist/index.js  743.4kb
+
+⚡ Done in 23ms
