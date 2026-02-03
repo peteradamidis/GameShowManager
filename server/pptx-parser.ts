@@ -350,7 +350,7 @@ export async function parsePptxFile(fileBuffer: Buffer): Promise<ParseResult> {
 
 export function matchContestantByName(
   extractedName: string, 
-  contestants: Array<{ id: number; name: string }>
+  contestants: Array<{ id: string | number; name: string }>
 ): { match: typeof contestants[0] | null; confidence: number; candidates: typeof contestants } {
   const normalizedExtracted = extractedName.toLowerCase().trim().replace(/\s+/g, ' ');
   

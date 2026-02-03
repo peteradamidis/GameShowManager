@@ -2164,7 +2164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all contestants for matching
       const allContestants = await storage.getContestants();
       const contestantList = allContestants.map(c => ({
-        id: parseInt(c.id) || 0,
+        id: c.id,  // Keep as string - database uses UUID strings
         name: c.name || ''
       }));
 
