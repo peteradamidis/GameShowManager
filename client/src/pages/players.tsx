@@ -3049,15 +3049,24 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         <ChevronDown className="w-4 h-4" />
                       </button>
                     </div>
-                    {/* Body text area with floated producer section */}
-                    <div className="relative" style={{ minHeight: '200px' }}>
-                      {/* Producer Field - floated to bottom right so text wraps around it */}
-                      {cardData.showProducer !== false && (
-                        <div 
-                          className="float-right clear-right ml-4 mb-2 mt-2 group casting-card-producer-corner relative"
-                          style={{ shapeMargin: '8px' }}
-                        >
-                          <div className="flex items-stretch">
+                    {/* Body text area - flex container to push producer to bottom */}
+                    <div className="flex flex-col flex-1" style={{ minHeight: '280px' }}>
+                      <div
+                        ref={bodyTextRefFs}
+                        contentEditable
+                        suppressContentEditableWarning
+                        className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 flex-1 print-no-border"
+                        style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5', paddingBottom: cardData.showProducer !== false ? '50px' : '0' }}
+                        onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
+                        onMouseUp={saveCursorPosition}
+                        onKeyUp={saveCursorPosition}
+                        dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
+                      />
+                      
+                      {/* Producer Field - positioned at bottom right */}
+                      <div className="flex justify-end mt-auto">
+                        {cardData.showProducer !== false ? (
+                          <div className="flex items-stretch group casting-card-producer-corner relative">
                             <span 
                               className="casting-card-producer-label px-4 py-2 font-semibold text-sm flex items-center"
                               style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
@@ -3088,20 +3097,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                 </SelectContent>
                               </Select>
                             </div>
+                            <button
+                              onClick={() => updateField('showProducer', false)}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity ignore-print"
+                              title="Remove producer field"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => updateField('showProducer', false)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity ignore-print"
-                            title="Remove producer field"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      )}
-                      
-                      {/* Add Producer button when hidden - floated */}
-                      {cardData.showProducer === false && (
-                        <div className="float-right clear-right ml-4 mb-2">
+                        ) : (
                           <Button
                             variant="outline"
                             size="sm"
@@ -3111,20 +3115,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             <Plus className="w-3 h-3 mr-1" />
                             Add Producer
                           </Button>
-                        </div>
-                      )}
-                      
-                      <div
-                        ref={bodyTextRefFs}
-                        contentEditable
-                        suppressContentEditableWarning
-                        className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] print-no-border"
-                        style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5' }}
-                        onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
-                        onMouseUp={saveCursorPosition}
-                        onKeyUp={saveCursorPosition}
-                        dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
-                      />
+                        )}
+                      </div>
                     </div>
                   </div>
                   {/* Add dot point button */}
@@ -3915,40 +3907,67 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       </Button>
                     )}
 
-                    {/* Body text - single text box with position controls and floated producer */}
+                    {/* Body text - flex container with position controls and producer at bottom */}
                     <div 
-                      className="relative group"
+                      className="flex flex-col flex-1 group"
                       style={{ 
                         marginTop: `${cardData.bodyOffsetY || 0}px`,
                         transition: 'margin-top 0.15s ease-out',
-                        minHeight: '200px'
+                        minHeight: '280px'
                       }}
                     >
-                      {/* Position controls - floated left */}
-                      <div className="float-left flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden mt-1 mr-2">
-                        <button 
-                          onClick={() => updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) - 10)}
-                          className="text-gray-400 hover:text-gray-600 p-0.5"
-                          title="Move up"
-                        >
-                          <ChevronUp className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={() => updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) + 10)}
-                          className="text-gray-400 hover:text-gray-600 p-0.5"
-                          title="Move down"
-                        >
-                          <ChevronDown className="w-4 h-4" />
-                        </button>
+                      <div className="flex items-start gap-2 flex-1">
+                        {/* Position controls */}
+                        <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden mt-1">
+                          <button 
+                            onClick={() => updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) - 10)}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Move up"
+                          >
+                            <ChevronUp className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) + 10)}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Move down"
+                          >
+                            <ChevronDown className="w-4 h-4" />
+                          </button>
+                        </div>
+                        
+                        <div
+                          ref={bodyTextRef}
+                          contentEditable
+                          suppressContentEditableWarning
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 flex-1 print-no-border"
+                          style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5', paddingBottom: cardData.showProducer !== false ? '50px' : '0' }}
+                          onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
+                          onMouseUp={saveCursorPosition}
+                          onKeyUp={saveCursorPosition}
+                          dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
+                          data-testid="edit-body-text"
+                        />
                       </div>
                       
-                      {/* Producer Field - floated to right so text wraps around it */}
-                      {cardData.showProducer !== false && (
-                        <div 
-                          className="float-right clear-right ml-4 mb-2 mt-2 group/producer casting-card-producer-corner relative"
-                          style={{ shapeMargin: '8px' }}
-                        >
-                          <div className="flex items-stretch">
+                      {/* Add dot point button */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onMouseDown={(e) => {
+                          e.preventDefault(); // Prevent focus change before capturing position
+                          insertDotPointAtCursor(false);
+                        }}
+                        className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden ignore-print self-start"
+                        data-testid="btn-add-dot-point"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add Dot Point
+                      </Button>
+                      
+                      {/* Producer Field - positioned at bottom right */}
+                      <div className="flex justify-end mt-auto">
+                        {cardData.showProducer !== false ? (
+                          <div className="flex items-stretch group/producer casting-card-producer-corner relative">
                             <span 
                               className="casting-card-producer-label px-4 py-2 font-semibold text-sm flex items-center"
                               style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
@@ -3979,21 +3998,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                 </SelectContent>
                               </Select>
                             </div>
+                            <button
+                              onClick={() => updateField('showProducer', false)}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover/producer:opacity-100 transition-opacity ignore-print print:hidden"
+                              title="Remove producer field"
+                              data-testid="btn-remove-producer"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => updateField('showProducer', false)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover/producer:opacity-100 transition-opacity ignore-print print:hidden"
-                            title="Remove producer field"
-                            data-testid="btn-remove-producer"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      )}
-                      
-                      {/* Add Producer button when hidden - floated */}
-                      {cardData.showProducer === false && (
-                        <div className="float-right clear-right ml-4 mb-2">
+                        ) : (
                           <Button
                             variant="outline"
                             size="sm"
@@ -4004,36 +4018,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             <Plus className="w-3 h-3 mr-1" />
                             Add Producer
                           </Button>
-                        </div>
-                      )}
-                      
-                      <div
-                        ref={bodyTextRef}
-                        contentEditable
-                        suppressContentEditableWarning
-                        className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] print-no-border"
-                        style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5' }}
-                        onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
-                        onMouseUp={saveCursorPosition}
-                        onKeyUp={saveCursorPosition}
-                        dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
-                        data-testid="edit-body-text"
-                      />
-                      
-                      {/* Add dot point button */}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onMouseDown={(e) => {
-                          e.preventDefault(); // Prevent focus change before capturing position
-                          insertDotPointAtCursor(false);
-                        }}
-                        className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden ignore-print clear-both"
-                        data-testid="btn-add-dot-point"
-                      >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add Dot Point
-                      </Button>
+                        )}
+                      </div>
                     </div>
 
                   </div>
