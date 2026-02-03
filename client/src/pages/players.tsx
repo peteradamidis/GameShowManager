@@ -803,7 +803,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           }
         }
         setCardData(parsedCard);
+        cardDataRef.current = parsedCard; // Also update the ref
         setLastKnownUpdatedAt(restoredCard.updatedAt);
+        hasUnsavedChanges.current = false; // Mark as saved since we just restored
       }
       queryClient.invalidateQueries({ queryKey: ['/api/casting-cards', selectedContestant?.id] });
       refetchVersions();
