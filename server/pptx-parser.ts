@@ -108,6 +108,25 @@ function categorizeTextByPosition(texts: Array<{ text: string; pos: { x: number;
   
   const sortedByY = [...texts].sort((a, b) => a.pos.y - b.pos.y);
   
+  // First pass: Find the name in the orange header (top-right area, typically Y < 0.5)
+  // The name is usually the topmost text on the right side that doesn't start with a number
+  for (const item of sortedByY) {
+    const text = item.text.trim();
+    if (!text) continue;
+    
+    const y = item.pos.y;
+    const x = item.pos.x;
+    
+    // Name is in the orange header: very top of slide (Y < 0.5), right side (X > 3.5)
+    // and doesn't start with a number (which would be age/state)
+    if (y < 0.5 && x > 3.5 && !text.match(/^\d/) && !text.toUpperCase().startsWith('PRODUCER')) {
+      // This is likely the name in the header
+      card.name = text.toUpperCase();
+      break;
+    }
+  }
+  
+  // Second pass: categorize remaining content
   for (const item of sortedByY) {
     const text = item.text.trim();
     if (!text) continue;
@@ -119,29 +138,24 @@ function categorizeTextByPosition(texts: Array<{ text: string; pos: { x: number;
       continue;
     }
     
-    if (y < 1.5 && item.pos.height > 0.5) {
-      if (!card.name || text.length > card.name.length) {
-        card.name = text.toUpperCase();
-      }
+    // Skip the name we already found
+    if (text.toUpperCase() === card.name) {
+      continue;
     }
-    else if (y >= 1.2 && y < 2.0 && !text.includes('\n') && text.length < 50) {
-      const ageMatch = text.match(/^\d+\s*\([^)]+\)/);
-      if (ageMatch || text.match(/^\d+/)) {
-        card.ageState = text;
-      } else if (text.toUpperCase().startsWith('SPONSOR') || text.includes(':')) {
-        card.sponsorCategory = text;
-      } else if (!card.occupation) {
-        card.occupation = text;
-      }
+    
+    // Age/State/Occupation line - starts with number, positioned below header
+    if (y >= 0.5 && y < 1.5 && text.match(/^\d+\s*(VIC|-|–)/i)) {
+      // This is the "57 - VIC" + "BRICKLAYER" combined line
+      card.ageState = text;
     }
-    else if (y >= 2.0 && y < 3.0 && text.length < 100 && !text.includes('\n')) {
-      if (text.toUpperCase().startsWith('SPONSOR') || text.includes('CATEGORY')) {
-        card.sponsorCategory = text;
-      } else if (!card.tagline && text.length < 80) {
+    // Tagline - short text below age/state line
+    else if (y >= 1.5 && y < 2.5 && !text.includes('\n') && text.length < 80) {
+      if (!card.tagline && !text.match(/^Energy/i)) {
         card.tagline = text;
       }
     }
-    else if (text.length > 50 || text.includes('\n')) {
+    // Body text - longer content
+    else if ((text.length > 50 || text.includes('\n')) && y > 1.0) {
       if (card.bodyText) {
         card.bodyText += '\n' + text;
       } else {
@@ -149,6 +163,7 @@ function categorizeTextByPosition(texts: Array<{ text: string; pos: { x: number;
       }
     }
     
+    // Producer name - bottom right
     if (x > 6 && y > 6) {
       const producerMatch = text.match(/^(Peter|Kathleen|Maggie|Lochie|Felicity)/i);
       if (producerMatch) {
