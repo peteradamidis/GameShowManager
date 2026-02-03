@@ -281,16 +281,45 @@ export function AnimatedMessageOverlay({ config }: { config: AnimatedMessageConf
 
       case 'typewriter':
         return (
-          <motion.div className="mb-6 overflow-hidden py-4">
-            <motion.h1
-              initial={{ width: 0 }}
-              animate={{ width: "100%" }}
-              transition={{ duration: 1.5, ease: "easeOut" }}
-              className={`${textClass} whitespace-nowrap overflow-hidden pr-2 pb-2`}
-              style={{ borderRight: `3px solid ${theme.accent}`, lineHeight: 1.3, ...customColorStyle }}
-            >
-              {config.messageText}
-            </motion.h1>
+          <motion.div className="mb-6 py-4 relative">
+            <div className="relative inline-block">
+              <h1
+                className={`${textClass} whitespace-nowrap pb-2`}
+                style={{ lineHeight: 1.3, ...customColorStyle }}
+              >
+                {config.messageText}
+              </h1>
+              <motion.div
+                initial={{ left: 0 }}
+                animate={{ left: '100%' }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                className="absolute top-0 bottom-0 right-0 bg-gradient-to-br"
+                style={{ 
+                  background: 'inherit',
+                  borderLeft: `3px solid ${theme.accent}`
+                }}
+              />
+              <motion.div
+                initial={{ width: '100%' }}
+                animate={{ width: 0 }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                className="absolute top-0 right-0 bottom-0"
+                style={{ 
+                  background: colorTheme === 'gold' ? 'linear-gradient(to bottom right, #fefce8, #fef9c3)' :
+                              colorTheme === 'red-orange' ? 'linear-gradient(to bottom right, #fef2f2, #ffedd5)' :
+                              colorTheme === 'blue-purple' ? 'linear-gradient(to bottom right, #eff6ff, #f3e8ff)' :
+                              colorTheme === 'rainbow' ? 'linear-gradient(to bottom right, #fdf2f8, #fefce8, #ecfeff)' :
+                              'linear-gradient(to bottom right, #f9fafb, #f3f4f6)'
+                }}
+              />
+              <motion.div
+                initial={{ left: 0 }}
+                animate={{ left: 'calc(100% + 4px)' }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                className="absolute top-0 bottom-0 w-[3px]"
+                style={{ backgroundColor: theme.accent }}
+              />
+            </div>
           </motion.div>
         );
 
