@@ -2701,13 +2701,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               {/* Font Size */}
               <span className="text-xs text-gray-500 ml-1">Size:</span>
               <select 
-                onMouseDown={(e) => { 
-                  e.preventDefault(); 
-                  saveSelectionForFormatting(); 
-                }}
-                onClick={(e) => {
-                  (e.target as HTMLSelectElement).focus();
-                }}
+                onMouseDown={() => saveSelectionForFormatting()}
                 onChange={(e) => { 
                   formatFontSize(e.target.value); 
                   e.target.value = '';
