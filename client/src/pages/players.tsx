@@ -3049,17 +3049,83 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         <ChevronDown className="w-4 h-4" />
                       </button>
                     </div>
-                    <div
-                      ref={bodyTextRefFs}
-                      contentEditable
-                      suppressContentEditableWarning
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] max-h-[280px] overflow-y-auto print-no-border"
-                      style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5' }}
-                      onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
-                      onMouseUp={saveCursorPosition}
-                      onKeyUp={saveCursorPosition}
-                      dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
-                    />
+                    {/* Body text area with floated producer section */}
+                    <div className="relative" style={{ minHeight: '200px' }}>
+                      {/* Producer Field - floated to bottom right so text wraps around it */}
+                      {cardData.showProducer !== false && (
+                        <div 
+                          className="float-right clear-right ml-4 mb-2 mt-2 group casting-card-producer-corner relative"
+                          style={{ shapeMargin: '8px' }}
+                        >
+                          <div className="flex items-stretch">
+                            <span 
+                              className="casting-card-producer-label px-4 py-2 font-semibold text-sm flex items-center"
+                              style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
+                            >PRODUCER:</span>
+                            {/* Plain text for print - always visible */}
+                            <span 
+                              className="casting-card-producer-name-print px-4 py-2 font-bold text-sm min-w-[120px] flex items-center"
+                              style={{ backgroundColor: '#facc15', color: '#000000' }}
+                            >{cardData.producerName || 'SELECT'}</span>
+                            {/* Dropdown for UI - positioned on top, hidden during PDF/print */}
+                            <div className="absolute right-0 ignore-print" style={{ left: 'calc(100% - 120px - 16px)', top: 0 }}>
+                              <Select 
+                                value={cardData.producerName || ''} 
+                                onValueChange={(value) => updateField('producerName', value === '__clear__' ? '' : value)}
+                              >
+                                <SelectTrigger 
+                                  className="casting-card-producer-name h-auto px-4 py-2 font-bold text-sm border-0 rounded-none min-w-[120px]"
+                                  style={{ backgroundColor: '#facc15', color: '#000000' }}
+                                  data-testid="select-producer-name-fs"
+                                >
+                                  <SelectValue placeholder="SELECT" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="__clear__" className="text-muted-foreground italic">Clear</SelectItem>
+                                  {PRODUCER_NAMES.map(name => (
+                                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => updateField('showProducer', false)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity ignore-print"
+                            title="Remove producer field"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                      
+                      {/* Add Producer button when hidden - floated */}
+                      {cardData.showProducer === false && (
+                        <div className="float-right clear-right ml-4 mb-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateField('showProducer', true)}
+                            className="text-xs print:hidden ignore-print"
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Add Producer
+                          </Button>
+                        </div>
+                      )}
+                      
+                      <div
+                        ref={bodyTextRefFs}
+                        contentEditable
+                        suppressContentEditableWarning
+                        className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] print-no-border"
+                        style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5' }}
+                        onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
+                        onMouseUp={saveCursorPosition}
+                        onKeyUp={saveCursorPosition}
+                        dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
+                      />
+                    </div>
                   </div>
                   {/* Add dot point button */}
                   <Button
@@ -3074,61 +3140,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <Plus className="w-4 h-4 mr-1" />
                     Add Dot Point
                   </Button>
-                </div>
-
-                {/* Producer Field - in normal flow at bottom right of content area */}
-                <div className="flex justify-end mt-auto pt-4">
-                  {cardData.showProducer !== false ? (
-                    <div className="flex items-stretch group casting-card-producer-corner relative">
-                      <span 
-                        className="casting-card-producer-label px-4 py-2 font-semibold text-sm flex items-center"
-                        style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
-                      >PRODUCER:</span>
-                      {/* Plain text for print - always visible */}
-                      <span 
-                        className="casting-card-producer-name-print px-4 py-2 font-bold text-sm min-w-[120px] flex items-center"
-                        style={{ backgroundColor: '#facc15', color: '#000000' }}
-                      >{cardData.producerName || 'SELECT'}</span>
-                      {/* Dropdown for UI - positioned on top, hidden during PDF/print */}
-                      <div className="absolute right-0 ignore-print" style={{ left: 'calc(100% - 120px - 16px)' }}>
-                        <Select 
-                          value={cardData.producerName || ''} 
-                          onValueChange={(value) => updateField('producerName', value === '__clear__' ? '' : value)}
-                        >
-                          <SelectTrigger 
-                            className="casting-card-producer-name h-auto px-4 py-2 font-bold text-sm border-0 rounded-none min-w-[120px]"
-                            style={{ backgroundColor: '#facc15', color: '#000000' }}
-                            data-testid="select-producer-name-fs"
-                          >
-                            <SelectValue placeholder="SELECT" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__clear__" className="text-muted-foreground italic">Clear</SelectItem>
-                            {PRODUCER_NAMES.map(name => (
-                              <SelectItem key={name} value={name}>{name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <button
-                        onClick={() => updateField('showProducer', false)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity ignore-print"
-                        title="Remove producer field"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateField('showProducer', true)}
-                      className="text-xs print:hidden ignore-print"
-                    >
-                      <Plus className="w-3 h-3 mr-1" />
-                      Add Producer
-                    </Button>
-                  )}
                 </div>
 
               </div>
@@ -3904,45 +3915,111 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       </Button>
                     )}
 
-                    {/* Body text - single text box with position controls */}
+                    {/* Body text - single text box with position controls and floated producer */}
                     <div 
                       className="relative group"
                       style={{ 
                         marginTop: `${cardData.bodyOffsetY || 0}px`,
-                        transition: 'margin-top 0.15s ease-out'
+                        transition: 'margin-top 0.15s ease-out',
+                        minHeight: '200px'
                       }}
                     >
-                      <div className="flex items-start gap-2">
-                        {/* Position controls */}
-                        <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden mt-1">
-                          <button 
-                            onClick={() => updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) - 10)}
-                            className="text-gray-400 hover:text-gray-600 p-0.5"
-                            title="Move up"
+                      {/* Position controls - floated left */}
+                      <div className="float-left flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden mt-1 mr-2">
+                        <button 
+                          onClick={() => updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) - 10)}
+                          className="text-gray-400 hover:text-gray-600 p-0.5"
+                          title="Move up"
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) + 10)}
+                          className="text-gray-400 hover:text-gray-600 p-0.5"
+                          title="Move down"
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </button>
+                      </div>
+                      
+                      {/* Producer Field - floated to right so text wraps around it */}
+                      {cardData.showProducer !== false && (
+                        <div 
+                          className="float-right clear-right ml-4 mb-2 mt-2 group/producer casting-card-producer-corner relative"
+                          style={{ shapeMargin: '8px' }}
+                        >
+                          <div className="flex items-stretch">
+                            <span 
+                              className="casting-card-producer-label px-4 py-2 font-semibold text-sm flex items-center"
+                              style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
+                            >PRODUCER:</span>
+                            {/* Plain text for print - always visible */}
+                            <span 
+                              className="casting-card-producer-name-print px-4 py-2 font-bold text-sm min-w-[120px] flex items-center"
+                              style={{ backgroundColor: '#facc15', color: '#000000' }}
+                            >{cardData.producerName || 'SELECT'}</span>
+                            {/* Dropdown for UI - positioned on top, hidden during PDF/print */}
+                            <div className="absolute right-0 ignore-print" style={{ left: 'calc(100% - 120px - 16px)', top: 0 }}>
+                              <Select 
+                                value={cardData.producerName || ''} 
+                                onValueChange={(value) => updateField('producerName', value === '__clear__' ? '' : value)}
+                              >
+                                <SelectTrigger 
+                                  className="casting-card-producer-name h-auto px-4 py-2 font-bold text-sm border-0 rounded-none min-w-[120px]"
+                                  style={{ backgroundColor: '#facc15', color: '#000000' }}
+                                  data-testid="select-producer-name-preview"
+                                >
+                                  <SelectValue placeholder="SELECT" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="__clear__" className="text-muted-foreground italic">Clear</SelectItem>
+                                  {PRODUCER_NAMES.map(name => (
+                                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => updateField('showProducer', false)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover/producer:opacity-100 transition-opacity ignore-print print:hidden"
+                            title="Remove producer field"
+                            data-testid="btn-remove-producer"
                           >
-                            <ChevronUp className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => updateField('bodyOffsetY', (cardData.bodyOffsetY || 0) + 10)}
-                            className="text-gray-400 hover:text-gray-600 p-0.5"
-                            title="Move down"
-                          >
-                            <ChevronDown className="w-4 h-4" />
+                            <X className="w-3 h-3" />
                           </button>
                         </div>
-                        <div
-                          ref={bodyTextRef}
-                          contentEditable
-                          suppressContentEditableWarning
-                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] max-h-[280px] overflow-y-auto print-no-border"
-                          style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5' }}
-                          onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
-                          onMouseUp={saveCursorPosition}
-                          onKeyUp={saveCursorPosition}
-                          dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
-                          data-testid="edit-body-text"
-                        />
-                      </div>
+                      )}
+                      
+                      {/* Add Producer button when hidden - floated */}
+                      {cardData.showProducer === false && (
+                        <div className="float-right clear-right ml-4 mb-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateField('showProducer', true)}
+                            className="text-xs print:hidden ignore-print"
+                            data-testid="btn-add-producer"
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Add Producer
+                          </Button>
+                        </div>
+                      )}
+                      
+                      <div
+                        ref={bodyTextRef}
+                        contentEditable
+                        suppressContentEditableWarning
+                        className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 min-h-[160px] print-no-border"
+                        style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5' }}
+                        onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
+                        onMouseUp={saveCursorPosition}
+                        onKeyUp={saveCursorPosition}
+                        dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
+                        data-testid="edit-body-text"
+                      />
+                      
                       {/* Add dot point button */}
                       <Button
                         size="sm"
@@ -3951,69 +4028,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           e.preventDefault(); // Prevent focus change before capturing position
                           insertDotPointAtCursor(false);
                         }}
-                        className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden ignore-print"
+                        className="mt-2 text-amber-600 border-amber-300 hover:bg-amber-50 print-hidden ignore-print clear-both"
                         data-testid="btn-add-dot-point"
                       >
                         <Plus className="w-4 h-4 mr-1" />
                         Add Dot Point
                       </Button>
-                    </div>
-
-                    {/* Producer Field - in normal flow at bottom right of content area */}
-                    <div className="flex justify-end mt-auto pt-4">
-                      {cardData.showProducer !== false ? (
-                        <div className="flex items-stretch group casting-card-producer-corner relative">
-                          <span 
-                            className="casting-card-producer-label px-4 py-2 font-semibold text-sm flex items-center"
-                            style={{ backgroundColor: '#e5e7eb', border: '1px solid #d1d5db', color: '#000000' }}
-                          >PRODUCER:</span>
-                          {/* Plain text for print - always visible */}
-                          <span 
-                            className="casting-card-producer-name-print px-4 py-2 font-bold text-sm min-w-[120px] flex items-center"
-                            style={{ backgroundColor: '#facc15', color: '#000000' }}
-                          >{cardData.producerName || 'SELECT'}</span>
-                          {/* Dropdown for UI - positioned on top, hidden during PDF/print */}
-                          <div className="absolute right-0 ignore-print" style={{ left: 'calc(100% - 120px - 16px)' }}>
-                            <Select 
-                              value={cardData.producerName || ''} 
-                              onValueChange={(value) => updateField('producerName', value === '__clear__' ? '' : value)}
-                            >
-                              <SelectTrigger 
-                                className="casting-card-producer-name h-auto px-4 py-2 font-bold text-sm border-0 rounded-none min-w-[120px]"
-                                style={{ backgroundColor: '#facc15', color: '#000000' }}
-                                data-testid="select-producer-name-preview"
-                              >
-                                <SelectValue placeholder="SELECT" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="__clear__" className="text-muted-foreground italic">Clear</SelectItem>
-                                {PRODUCER_NAMES.map(name => (
-                                  <SelectItem key={name} value={name}>{name}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <button
-                            onClick={() => updateField('showProducer', false)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity ignore-print print:hidden"
-                            title="Remove producer field"
-                            data-testid="btn-remove-producer"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateField('showProducer', true)}
-                          className="text-xs print:hidden ignore-print"
-                          data-testid="btn-add-producer"
-                        >
-                          <Plus className="w-3 h-3 mr-1" />
-                          Add Producer
-                        </Button>
-                      )}
                     </div>
 
                   </div>
