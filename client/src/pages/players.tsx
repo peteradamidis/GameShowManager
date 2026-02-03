@@ -2204,15 +2204,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     };
   }, [saveMutation]);
 
-  // Text formatting functions for contentEditable
-  const applyFormat = (command: string, value?: string) => {
-    document.execCommand(command, false, value);
-  };
-
-  const formatBold = () => applyFormat('bold');
-  const formatItalic = () => applyFormat('italic');
-  const formatUnderline = () => applyFormat('underline');
-  // Store the last selection for font size operations
+  // Store the last selection for formatting operations
   const lastSelectionRef = useRef<{ range: Range; element: Element } | null>(null);
   
   // Save selection when user selects text in contentEditable
@@ -2225,6 +2217,31 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         lastSelectionRef.current = { range: range.cloneRange(), element };
       }
     }
+  };
+  
+  // Restore selection from saved ref
+  const restoreSelection = (): boolean => {
+    if (!lastSelectionRef.current) return false;
+    
+    try {
+      const { range, element } = lastSelectionRef.current;
+      
+      // Focus the element first
+      if (element && 'focus' in element) {
+        (element as HTMLElement).focus();
+      }
+      
+      // Restore the selection
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+        return true;
+      }
+    } catch (e) {
+      console.warn('Failed to restore selection:', e);
+    }
+    return false;
   };
   
   // Continuously save selection on any selection change (for toolbar interactions)
@@ -2244,6 +2261,105 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     document.addEventListener('selectionchange', handleSelectionChange);
     return () => document.removeEventListener('selectionchange', handleSelectionChange);
   }, []);
+  
+  // Keyboard shortcuts for formatting (Ctrl+B, Ctrl+I, Ctrl+U)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle if we're in a contentEditable element
+      const activeElement = document.activeElement;
+      if (!activeElement?.getAttribute('contenteditable')) return;
+      
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        switch (e.key.toLowerCase()) {
+          case 'b':
+            e.preventDefault();
+            formatBold();
+            break;
+          case 'i':
+            e.preventDefault();
+            formatItalic();
+            break;
+          case 'u':
+            e.preventDefault();
+            formatUnderline();
+            break;
+        }
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+  
+  // Trigger debounced auto-save for formatting operations
+  const triggerFormattingAutoSave = () => {
+    hasUnsavedChanges.current = true;
+    
+    // Clear existing timeout and set a new one
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      if (hasUnsavedChanges.current && cardData) {
+        // Get the current body text content from the DOM
+        const bodyTextElement = document.querySelector('[data-testid="body-text-editor"]') as HTMLElement;
+        const currentBodyText = bodyTextElement?.innerHTML || cardData.bodyText;
+        
+        const dataToSave = { ...cardData, bodyText: currentBodyText };
+        setAutoSaveStatus('saving');
+        saveMutation.mutate(dataToSave, {
+          onSuccess: () => {
+            hasUnsavedChanges.current = false;
+            setAutoSaveStatus('saved');
+            setTimeout(() => setAutoSaveStatus('idle'), 2000);
+          },
+          onError: () => {
+            setAutoSaveStatus('idle');
+          }
+        });
+      }
+    }, 1500); // 1.5 second delay for formatting changes
+  };
+  
+  // Robust text formatting that uses saved selection
+  const applyFormat = (command: string, value?: string) => {
+    try {
+      // First try to use current selection
+      const selection = window.getSelection();
+      const hasCurrentSelection = selection && selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed;
+      
+      // If no current selection, restore from saved
+      if (!hasCurrentSelection) {
+        restoreSelection();
+      }
+      
+      // Apply the format
+      document.execCommand(command, false, value);
+      
+      // Trigger debounced auto-save
+      triggerFormattingAutoSave();
+      
+      // Re-save the selection after formatting (selection may have changed)
+      setTimeout(() => {
+        const newSelection = window.getSelection();
+        if (newSelection && newSelection.rangeCount > 0 && !newSelection.getRangeAt(0).collapsed) {
+          const range = newSelection.getRangeAt(0);
+          const activeElement = document.activeElement;
+          if (activeElement?.getAttribute('contenteditable') === 'true') {
+            lastSelectionRef.current = { range: range.cloneRange(), element: activeElement };
+          }
+        }
+      }, 0);
+    } catch (e) {
+      console.error('Error applying format:', e);
+    }
+  };
+
+  const formatBold = () => applyFormat('bold');
+  const formatItalic = () => applyFormat('italic');
+  const formatUnderline = () => applyFormat('underline');
+  const formatColor = (color: string) => applyFormat('foreColor', color);
   
   // Predefined font size steps for the up/down arrows
   const fontSizeSteps = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72];
@@ -2375,13 +2491,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         lastSelectionRef.current = { range: newRange.cloneRange(), element: targetElement };
       }
       
-      // Mark body text as changed
-      hasUnsavedChanges.current = true;
+      // Trigger debounced auto-save
+      triggerFormattingAutoSave();
     } catch (error) {
       console.error('Error applying font size:', error);
     }
   };
-  const formatColor = (color: string) => applyFormat('foreColor', color);
 
   // Error fallback for fullscreen mode
   const fullscreenErrorFallback = (
@@ -3459,6 +3574,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
                       onMouseUp={saveCursorPosition}
                       onKeyUp={saveCursorPosition}
+                      data-testid="body-text-editor"
                       dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
                     />
                   </div>
@@ -4392,8 +4508,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
                           onMouseUp={saveCursorPosition}
                           onKeyUp={saveCursorPosition}
+                          data-testid="body-text-editor"
                           dangerouslySetInnerHTML={{ __html: (cardData.bodyText || defaultBodyText).replace(/\n/g, '<br/>') }}
-                          data-testid="edit-body-text"
                         />
                       </div>
                       
