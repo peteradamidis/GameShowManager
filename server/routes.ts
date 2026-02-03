@@ -2274,24 +2274,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Get or create casting card for this contestant
           let existingCard = await storage.getCastingCardByContestantId(contestantId);
           
-          const cardFields = {
-            fullName: card.name,
-            ageState: card.ageState,
-            occupation: card.occupation,
-            sponsorCategory: card.sponsorCategory,
-            tagline: card.tagline,
-            bodyText: card.bodyText,
-            producerName: card.producerName,
-            showTagline: !!card.tagline,
-            showSponsorCategory: !!card.sponsorCategory,
-            showProducer: !!card.producerName
-          };
+          // Build card fields - only include non-empty values to avoid overwriting good data with blanks
+          const cardFields: Record<string, any> = {};
+          
+          // Always update these core fields from PowerPoint
+          if (card.name) cardFields.fullName = card.name;
+          if (card.ageState) cardFields.ageState = card.ageState;
+          if (card.occupation) cardFields.occupation = card.occupation;
+          if (card.bodyText) cardFields.bodyText = card.bodyText;
+          
+          // Optional fields - only update if present in PowerPoint
+          if (card.sponsorCategory) {
+            cardFields.sponsorCategory = card.sponsorCategory;
+            cardFields.showSponsorCategory = true;
+          }
+          if (card.tagline) {
+            cardFields.tagline = card.tagline;
+            cardFields.showTagline = true;
+          }
+          if (card.producerName) {
+            cardFields.producerName = card.producerName;
+            cardFields.showProducer = true;
+          }
 
           if (existingCard) {
-            // Update existing card
+            // Update existing card - REPLACE with PowerPoint data
+            console.log(`[PPTX Import] Updating existing card for ${card.name}, fields:`, Object.keys(cardFields));
             await storage.updateCastingCard(existingCard.id, cardFields);
           } else {
             // Create new casting card
+            console.log(`[PPTX Import] Creating new card for ${card.name}`);
             await storage.createCastingCard({
               contestantId,
               ...cardFields
