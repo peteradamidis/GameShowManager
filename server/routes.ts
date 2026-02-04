@@ -4966,10 +4966,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const alreadyAssignedIds = new Set(currentAssignments.map(a => a.contestantId));
       availableAll = availableAll.filter(c => !alreadyAssignedIds.has(c.id));
       
-      // Exclude contestants who are standbys for this record day
-      const standbyAssignments = await storage.getStandbyAssignmentsByRecordDay(recordDayId);
-      const standbyContestantIds = new Set(standbyAssignments.map(s => s.contestantId));
-      availableAll = availableAll.filter(c => !standbyContestantIds.has(c.id));
+      // Exclude contestants who are standbys for ANY record day (not just this one)
+      // This ensures standby-tagged contestants are never auto-assigned
+      const allStandbyAssignments = await storage.getStandbyAssignments();
+      const allStandbyContestantIds = new Set(
+        allStandbyAssignments
+          .filter((s: any) => !s.movedToReschedule && s.status !== 'seated')
+          .map(s => s.contestantId)
+      );
+      availableAll = availableAll.filter(c => !allStandbyContestantIds.has(c.id));
       
       // If onlyConfirmedAvailability is true, filter to only contestants who confirmed for this record day
       if (onlyConfirmedAvailability) {
