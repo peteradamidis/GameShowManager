@@ -4980,7 +4980,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
   const [selectedDayId, setSelectedDayId] = useState<string>('');
   const [selectedWeekKey, setSelectedWeekKey] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [ratingFilter, setRatingFilter] = useState<string>('all');
+  const [ratingFilters, setRatingFilters] = useState<string[]>([]);
   const [genderFilter, setGenderFilter] = useState<string>('all');
   const [ageFilter, setAgeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -5285,7 +5285,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
             !c.email?.toLowerCase().includes(term) &&
             !c.phone?.includes(term)) return false;
       }
-      if (ratingFilter !== 'all' && c.auditionRating?.toUpperCase() !== ratingFilter) return false;
+      if (ratingFilters.length > 0 && !ratingFilters.includes(c.auditionRating?.toUpperCase() || '')) return false;
       if (genderFilter !== 'all' && c.gender?.toLowerCase() !== genderFilter.toLowerCase()) return false;
       // Status filter
       if (statusFilter !== 'all' && (c as any).availabilityStatus !== statusFilter) return false;
@@ -5305,7 +5305,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
       }
       return true;
     });
-  }, [eligibleContestants, plannedContestantIds, weekPlannedContestantIds, viewMode, searchTerm, ratingFilter, genderFilter, ageFilter, statusFilter]);
+  }, [eligibleContestants, plannedContestantIds, weekPlannedContestantIds, viewMode, searchTerm, ratingFilters, genderFilter, ageFilter, statusFilter]);
 
   // Get blocks for current day
   const currentDayBlocks = useMemo(() => {
@@ -5756,16 +5756,45 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                     />
                   </div>
                   <div className="flex gap-2">
-                    <Select value={ratingFilter} onValueChange={setRatingFilter}>
-                      <SelectTrigger className="flex-1" data-testid="select-rating-filter">
-                        <SelectValue placeholder="Rating" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Ratings</SelectItem>
-                        <SelectItem value="A+">A+ Only</SelectItem>
-                        <SelectItem value="A">A Only</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="flex-1 justify-between" data-testid="select-rating-filter">
+                          {ratingFilters.length === 0 ? 'All Ratings' : ratingFilters.join(', ')}
+                          <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48 p-2" align="start">
+                        <div className="space-y-2">
+                          {['A+', 'A', 'B', 'C'].map(rating => (
+                            <label key={rating} className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded">
+                              <input
+                                type="checkbox"
+                                checked={ratingFilters.includes(rating)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setRatingFilters([...ratingFilters, rating]);
+                                  } else {
+                                    setRatingFilters(ratingFilters.filter(r => r !== rating));
+                                  }
+                                }}
+                                className="h-4 w-4 rounded border-gray-300"
+                              />
+                              <span className="text-sm">{rating}</span>
+                            </label>
+                          ))}
+                          {ratingFilters.length > 0 && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="w-full mt-2"
+                              onClick={() => setRatingFilters([])}
+                            >
+                              Clear All
+                            </Button>
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                     <Select value={genderFilter} onValueChange={setGenderFilter}>
                       <SelectTrigger className="flex-1" data-testid="select-gender-filter">
                         <SelectValue placeholder="Gender" />
