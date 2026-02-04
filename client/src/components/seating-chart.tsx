@@ -1707,11 +1707,16 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     const sourceLocation = getBlockAndSeat(sourceSeat.seat.id);
     const targetLocation = getBlockAndSeat(clickedSeat.seat.id);
 
-    // Clear selection before executing
+    // Clear selection before showing confirmation
     setQuickMoveSelectedSeatId(null);
 
-    // Execute swap using the tracked endpoint (we're in RX mode)
-    await executeSwap(sourceSeat, clickedSeat, sourceLocation, targetLocation, true);
+    // Show confirmation dialog instead of executing immediately
+    setPendingSwap({
+      sourceSeat,
+      targetSeat: clickedSeat,
+      sourceLocation,
+      targetLocation,
+    });
   };
 
   // Handle drag end - check if locked and require confirmation
