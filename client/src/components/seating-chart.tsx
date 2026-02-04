@@ -2322,15 +2322,18 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                             strategy={verticalListSortingStrategy}
                           >
                             <div className="space-y-1">
-                              {flatListWithGroupInfo.map((item, idx) => (
+                              {flatListWithGroupInfo.map((item, idx) => {
+                                // Use the standby's actual priority (original order) rather than display position
+                                const tierNumber = item.standby.priority || (idx + 1);
+                                return (
                                 <div key={item.standby.id} className="flex items-center gap-1">
-                                  {/* Tier number badge - inline with standby for perfect alignment */}
+                                  {/* Tier number badge - uses original priority to preserve order across check-ins */}
                                   <div className="flex-shrink-0 w-7 flex items-center justify-center">
                                     <span 
                                       className="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center"
-                                      title={`Tier ${idx + 1}`}
+                                      title={`Tier ${tierNumber}`}
                                     >
-                                      {idx + 1}
+                                      {tierNumber}
                                     </span>
                                   </div>
                                   {/* Standby card */}
@@ -2347,7 +2350,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                     />
                                   </div>
                                 </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           </SortableContext>
                         </div>
