@@ -505,26 +505,28 @@ function isInterstatePostcode(postcode: string): boolean {
 function detectInterstate(location: string): { isInterstate: boolean; state?: string } {
   const locationLower = location.toLowerCase().trim();
   
-  // Check for explicit state indicators
-  if (/\bnsw\b/i.test(location) || /\bnew south wales\b/i.test(location)) {
+  // Check for explicit state indicators (standalone abbreviations only - e.g., ", NSW" or "NSW ")
+  // Use stricter patterns to avoid false positives (e.g., matching "sa" in "Horsham")
+  if (/\bNSW\b/.test(location) || /\bnew south wales\b/i.test(location)) {
     return { isInterstate: true, state: 'NSW' };
   }
-  if (/\bqld\b/i.test(location) || /\bqueensland\b/i.test(location)) {
+  if (/\bQLD\b/.test(location) || /\bqueensland\b/i.test(location)) {
     return { isInterstate: true, state: 'QLD' };
   }
-  if (/\b(^|\s)sa\b/i.test(location) || /\bsouth australia\b/i.test(location)) {
+  // SA/WA/NT require comma or space before to avoid false positives
+  if (/[,\s]SA\b/.test(location) || /\bsouth australia\b/i.test(location)) {
     return { isInterstate: true, state: 'SA' };
   }
-  if (/\b(^|\s)wa\b/i.test(location) || /\bwestern australia\b/i.test(location)) {
+  if (/[,\s]WA\b/.test(location) || /\bwestern australia\b/i.test(location)) {
     return { isInterstate: true, state: 'WA' };
   }
-  if (/\btas\b/i.test(location) || /\btasmania\b/i.test(location)) {
+  if (/\bTAS\b/.test(location) || /\btasmania\b/i.test(location)) {
     return { isInterstate: true, state: 'TAS' };
   }
-  if (/\b(^|\s)nt\b/i.test(location) || /\bnorthern territory\b/i.test(location)) {
+  if (/[,\s]NT\b/.test(location) || /\bnorthern territory\b/i.test(location)) {
     return { isInterstate: true, state: 'NT' };
   }
-  if (/\bact\b/i.test(location) || /\bcanberra\b/i.test(location)) {
+  if (/\bACT\b/.test(location) || /\bcanberra\b/i.test(location)) {
     return { isInterstate: true, state: 'ACT' };
   }
   

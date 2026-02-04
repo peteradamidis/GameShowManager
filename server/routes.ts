@@ -4164,6 +4164,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return (pc >= 3000 && pc <= 3999) || (pc >= 8000 && pc <= 8999);
   };
 
+  // Helper: Check if location string indicates interstate (not Victoria)
+  const detectInterstateFromLocation = (location: string | null | undefined): { isInterstate: boolean; state?: string } => {
+    if (!location) return { isInterstate: false };
+    
+    // Check for explicit state indicators (standalone abbreviations only - e.g., ", NSW" or "NSW ")
+    // Use stricter patterns to avoid false positives (e.g., matching "sa" in "Horsham")
+    if (/\bNSW\b/.test(location) || /\bnew south wales\b/i.test(location)) {
+      return { isInterstate: true, state: 'NSW' };
+    }
+    if (/\bQLD\b/.test(location) || /\bqueensland\b/i.test(location)) {
+      return { isInterstate: true, state: 'QLD' };
+    }
+    // SA/WA/NT require comma or space before to avoid false positives
+    if (/[,\s]SA\b/.test(location) || /\bsouth australia\b/i.test(location)) {
+      return { isInterstate: true, state: 'SA' };
+    }
+    if (/[,\s]WA\b/.test(location) || /\bwestern australia\b/i.test(location)) {
+      return { isInterstate: true, state: 'WA' };
+    }
+    if (/\bTAS\b/.test(location) || /\btasmania\b/i.test(location)) {
+      return { isInterstate: true, state: 'TAS' };
+    }
+    if (/[,\s]NT\b/.test(location) || /\bnorthern territory\b/i.test(location)) {
+      return { isInterstate: true, state: 'NT' };
+    }
+    if (/\bACT\b/.test(location) || /\bcanberra\b/i.test(location)) {
+      return { isInterstate: true, state: 'ACT' };
+    }
+    
+    // Check for known interstate cities
+    const interstateCities = [
+      { pattern: /\bsydney\b/i, state: 'NSW' },
+      { pattern: /\bbrisbane\b/i, state: 'QLD' },
+      { pattern: /\badelaide\b/i, state: 'SA' },
+      { pattern: /\bperth\b/i, state: 'WA' },
+      { pattern: /\bhobart\b/i, state: 'TAS' },
+      { pattern: /\bdarwin\b/i, state: 'NT' },
+      { pattern: /\bgold coast\b/i, state: 'QLD' },
+      { pattern: /\bnewcastle\b/i, state: 'NSW' },
+      { pattern: /\bwollongong\b/i, state: 'NSW' },
+      { pattern: /\bcairns\b/i, state: 'QLD' },
+      { pattern: /\btownsville\b/i, state: 'QLD' },
+      { pattern: /\blaunceston\b/i, state: 'TAS' },
+      { pattern: /\balice springs\b/i, state: 'NT' },
+    ];
+    
+    for (const { pattern, state } of interstateCities) {
+      if (pattern.test(location)) {
+        return { isInterstate: true, state };
+      }
+    }
+    
+    return { isInterstate: false };
+  };
+
+  // Combined check for whether a contestant is from outside Victoria
+  const isContestantInterstate = (contestant: { postcode?: string | null; location?: string | null }): { isInterstate: boolean; state?: string } => {
+    // First check postcode
+    if (contestant.postcode) {
+      const pc = parseInt(contestant.postcode.trim(), 10);
+      if (!isNaN(pc)) {
+        // Not Victorian postcode
+        if (!((pc >= 3000 && pc <= 3999) || (pc >= 8000 && pc <= 8999))) {
+          let state = 'Interstate';
+          if (pc >= 1000 && pc <= 2999) state = 'NSW';
+          else if (pc >= 4000 && pc <= 4999) state = 'QLD';
+          else if (pc >= 5000 && pc <= 5999) state = 'SA';
+          else if (pc >= 6000 && pc <= 6999) state = 'WA';
+          else if (pc >= 7000 && pc <= 7999) state = 'TAS';
+          else if (pc >= 800 && pc <= 899) state = 'NT';
+          else if ((pc >= 200 && pc <= 299) || (pc >= 2600 && pc <= 2618)) state = 'ACT';
+          return { isInterstate: true, state };
+        }
+      }
+    }
+    
+    // Then check location string
+    return detectInterstateFromLocation(contestant.location);
+  };
+
   // Create a seat assignment
   app.post("/api/seat-assignments", async (req, res) => {
     try {
@@ -4194,16 +4274,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Cannot seat a DNU-rated contestant (Do Not Use)" });
       }
 
-      // Check if contestant is outside Victoria (postcode check)
+      // Check if contestant is from interstate (checks both postcode and location string)
       // This requires confirmation from the user (skipPostcodeWarning must be true)
-      if (contestant && !isVictorianPostcode(contestant.postcode) && !skipPostcodeWarning) {
-        return res.status(422).json({ 
-          error: `${contestant.name} has postcode ${contestant.postcode || 'unknown'} which is outside Victoria. Are you sure you want to book them?`,
-          code: "OUTSIDE_VICTORIA",
-          requiresConfirmation: true,
-          contestantName: contestant.name,
-          postcode: contestant.postcode
-        });
+      if (contestant && !skipPostcodeWarning) {
+        const interstateCheck = isContestantInterstate({ postcode: contestant.postcode, location: contestant.location });
+        if (interstateCheck.isInterstate) {
+          return res.status(422).json({ 
+            error: `${contestant.name} is from ${interstateCheck.state || 'outside Victoria'}. Interstate contestants require confirmation. Are you sure you want to book them?`,
+            code: "OUTSIDE_VICTORIA",
+            requiresConfirmation: true,
+            contestantName: contestant.name,
+            postcode: contestant.postcode,
+            state: interstateCheck.state
+          });
+        }
       }
 
       // Check for duplicate assignments - contestant should not be seated in ANY record day
@@ -4322,22 +4406,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Must provide 2-4 contestants for group seating" });
       }
 
-      // Check if any contestant is DNU-rated (Do Not Use) or outside Victoria
+      // Check if any contestant is DNU-rated (Do Not Use) or from interstate
       const { skipPostcodeWarning } = req.body;
       for (const contestantId of contestantIds) {
         const contestant = await storage.getContestantById(contestantId);
         if (contestant?.auditionRating?.toUpperCase().trim() === 'DNU') {
           return res.status(400).json({ error: `Cannot seat ${contestant.name} - they are DNU-rated (Do Not Use)` });
         }
-        // Check Victoria postcode - require confirmation if outside Victoria
-        if (contestant && !isVictorianPostcode(contestant.postcode) && !skipPostcodeWarning) {
-          return res.status(422).json({ 
-            error: `${contestant.name} has postcode ${contestant.postcode || 'unknown'} which is outside Victoria. Are you sure you want to book them?`,
-            code: "OUTSIDE_VICTORIA",
-            requiresConfirmation: true,
-            contestantName: contestant.name,
-            postcode: contestant.postcode
-          });
+        // Check if contestant is from interstate - require confirmation
+        if (contestant && !skipPostcodeWarning) {
+          const interstateCheck = isContestantInterstate({ postcode: contestant.postcode, location: contestant.location });
+          if (interstateCheck.isInterstate) {
+            return res.status(422).json({ 
+              error: `${contestant.name} is from ${interstateCheck.state || 'outside Victoria'}. Interstate contestants require confirmation. Are you sure you want to book them?`,
+              code: "OUTSIDE_VICTORIA",
+              requiresConfirmation: true,
+              contestantName: contestant.name,
+              postcode: contestant.postcode,
+              state: interstateCheck.state
+            });
+          }
         }
       }
 
@@ -4953,15 +5041,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return attendingWithMentionsName(personB.attendingWith, personA.name);
       };
 
-      // Helper: Check if a postcode is within Victoria, Australia
-      // Victoria postcodes: 3000-3999 (main), 8000-8999 (PO boxes/delivery areas)
-      const isVictorianPostcode = (postcode: string | null | undefined): boolean => {
-        if (!postcode) return false;
-        const pc = parseInt(postcode.trim(), 10);
-        if (isNaN(pc)) return false;
-        return (pc >= 3000 && pc <= 3999) || (pc >= 8000 && pc <= 8999);
-      };
-
       // Helper: Check if a contestant has blocking conditions that prevent auto-assignment
       const hasBlockingCondition = (c: typeof allContestants[0]): { blocked: boolean; reason: string } => {
         // Block temporary contestants - they should only be manually assigned
@@ -4980,9 +5059,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (c.podiumStory === true) {
           return { blocked: true, reason: 'has podium story' };
         }
-        // Block contestants outside Victoria (postcode not 3000-3999 or 8000-8999)
-        if (c.postcode && !isVictorianPostcode(c.postcode)) {
-          return { blocked: true, reason: 'outside Victoria (postcode)' };
+        // Block interstate contestants using the shared helper (checks both postcode and location)
+        const interstateCheck = isContestantInterstate({ postcode: c.postcode, location: c.location });
+        if (interstateCheck.isInterstate) {
+          return { blocked: true, reason: `interstate (${interstateCheck.state || 'outside Victoria'})` };
         }
         return { blocked: false, reason: '' };
       };
