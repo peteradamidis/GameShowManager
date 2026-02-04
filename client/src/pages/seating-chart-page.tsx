@@ -254,6 +254,9 @@ export default function SeatingChartPage() {
   const [cancelAssignmentId, setCancelAssignmentId] = useState<string>("");
   const [cancelReason, setCancelReason] = useState<string>("");
   
+  // Return to standby loading state (prevents double-clicks)
+  const [returningToStandbyId, setReturningToStandbyId] = useState<string | null>(null);
+  
   // Reset confirmation dialog state
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [resetConfirmationStep, setResetConfirmationStep] = useState(0);
@@ -1397,6 +1400,13 @@ export default function SeatingChartPage() {
 
   // Return a seated standby back to the standby list
   const handleReturnToStandby = async (assignmentId: string, contestantId: string) => {
+    // Prevent double-clicks by checking if already in progress
+    if (returningToStandbyId === assignmentId) {
+      return;
+    }
+    
+    setReturningToStandbyId(assignmentId);
+    
     try {
       // Fetch ALL standbys for this day (including seated ones) to find the record
       const allStandbysResponse = await fetch(`/api/standbys/record-day/${recordDayId}?all=true`);
@@ -1440,6 +1450,8 @@ export default function SeatingChartPage() {
         description: error?.message || "Could not return contestant to standby list.",
         variant: "destructive",
       });
+    } finally {
+      setReturningToStandbyId(null);
     }
   };
 
