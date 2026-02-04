@@ -47,7 +47,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
-import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical, Briefcase, MapPin, ShieldAlert, Heart, StickyNote } from "lucide-react";
+import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical, Briefcase, MapPin, ShieldAlert, Heart, StickyNote, MousePointerClick } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -251,6 +251,9 @@ function DraggableDroppableSeat({
   onDeleteTestSubject,
   neighbors,
   onLinkWithNeighbor,
+  isQuickMoveMode,
+  isQuickMoveSelected,
+  onQuickMoveClick,
 }: {
   seat: SeatData;
   blockIndex: number;
@@ -272,11 +275,14 @@ function DraggableDroppableSeat({
   onDeleteTestSubject?: (contestantId: string) => void;
   neighbors?: NeighborSeat[];
   onLinkWithNeighbor?: (contestantId: string, neighborContestantId: string) => void;
+  isQuickMoveMode?: boolean;
+  isQuickMoveSelected?: boolean;
+  onQuickMoveClick?: (seatId: string) => void;
 }) {
-  // Make occupied seats draggable
+  // Make occupied seats draggable (but not in Quick Move mode)
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
     id: seat.id,
-    disabled: !seat.contestantName,
+    disabled: !seat.contestantName || isQuickMoveMode,
   });
 
   // Make all seats droppable
@@ -294,14 +300,27 @@ function DraggableDroppableSeat({
     ? "ring-4 ring-yellow-400 dark:ring-yellow-500 rounded-lg animate-pulse" 
     : "";
   const overClass = isOver ? "ring-4 ring-primary rounded-lg scale-105 transition-all" : "";
+  const quickMoveSelectedClass = isQuickMoveSelected
+    ? "ring-4 ring-cyan-500 dark:ring-cyan-400 rounded-lg shadow-lg shadow-cyan-500/30"
+    : "";
+  const quickMoveCursorClass = isQuickMoveMode ? "cursor-pointer" : "";
+  
+  const handleClick = (e: React.MouseEvent) => {
+    if (isQuickMoveMode && onQuickMoveClick) {
+      e.preventDefault();
+      e.stopPropagation();
+      onQuickMoveClick(seat.id);
+    }
+  };
   
   return (
     <div 
       ref={setRefs} 
-      {...attributes} 
-      {...listeners}
-      className={`${overClass} ${highlightClass}`.trim()}
-      style={isOver || isHighlighted ? { zIndex: 10 } : undefined}
+      {...(isQuickMoveMode ? {} : attributes)} 
+      {...(isQuickMoveMode ? {} : listeners)}
+      onClick={handleClick}
+      className={`${overClass} ${highlightClass} ${quickMoveSelectedClass} ${quickMoveCursorClass}`.trim()}
+      style={isOver || isHighlighted || isQuickMoveSelected ? { zIndex: 10 } : undefined}
     >
       <SeatCard
         seat={seat}
@@ -721,6 +740,9 @@ function SeatingBlock({
   onLinkWithNeighbor,
   blockNote,
   onBlockNoteChange,
+  quickMoveEnabled,
+  quickMoveSelectedSeatId,
+  onQuickMoveClick,
 }: { 
   block: SeatData[]; 
   blockIndex: number;
@@ -748,6 +770,9 @@ function SeatingBlock({
   onLinkWithNeighbor?: (contestantId: string, neighborContestantId: string) => void;
   blockNote?: string;
   onBlockNoteChange?: (blockNumber: number, notes: string) => void;
+  quickMoveEnabled?: boolean;
+  quickMoveSelectedSeatId?: string | null;
+  onQuickMoveClick?: (seatId: string) => void;
 }) {
   const stats = calculateBlockStats(block);
 
@@ -1002,6 +1027,9 @@ function SeatingBlock({
                           onDeleteTestSubject={onDeleteTestSubject}
                           neighbors={getNeighborsForSeat?.(blockIndex, absoluteSeatIdx) || []}
                           onLinkWithNeighbor={onLinkWithNeighbor}
+                          isQuickMoveMode={quickMoveEnabled}
+                          isQuickMoveSelected={quickMoveSelectedSeatId === seat.id}
+                          onQuickMoveClick={onQuickMoveClick}
                         />
                         {/* Horizontal link to next seat in same row */}
                         {hasLinkToNext && (
@@ -1148,6 +1176,10 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   const [overId, setOverId] = useState<string | null>(null);
   const [pendingSwap, setPendingSwap] = useState<PendingSwap | null>(null);
   const [standbyError, setStandbyError] = useState<string | null>(null);
+  
+  // Quick Move Mode - click-to-select, click-to-move (faster than drag-drop for RX Day)
+  const [quickMoveEnabled, setQuickMoveEnabled] = useState(false);
+  const [quickMoveSelectedSeatId, setQuickMoveSelectedSeatId] = useState<string | null>(null);
   const [pendingStandbyAssign, setPendingStandbyAssign] = useState<{
     standby: StandbyData;
     targetBlockNumber: number;
@@ -1451,6 +1483,32 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     })
   );
 
+  // Clear quick move selection when mode is disabled
+  useEffect(() => {
+    if (!quickMoveEnabled) {
+      setQuickMoveSelectedSeatId(null);
+    }
+  }, [quickMoveEnabled]);
+
+  // Escape key to deselect in quick move mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && quickMoveSelectedSeatId) {
+        setQuickMoveSelectedSeatId(null);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [quickMoveSelectedSeatId]);
+
+  // Auto-disable Quick Move when the day is unlocked
+  useEffect(() => {
+    if (!isLocked) {
+      setQuickMoveEnabled(false);
+      setQuickMoveSelectedSeatId(null);
+    }
+  }, [isLocked]);
+
   // Custom collision detection: prioritize where the pointer actually is (more intuitive)
   // Falls back to rectangle intersection if pointer isn't directly over a droppable
   const customCollisionDetection: CollisionDetection = useCallback((args) => {
@@ -1615,6 +1673,44 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
         variant: "destructive",
       });
     }
+  };
+
+  // Handle quick move click - select first, then execute move/swap on second click
+  const handleQuickMoveClick = async (clickedSeatId: string) => {
+    if (!quickMoveEnabled || !isLocked) return;
+
+    const clickedSeat = findSeat(clickedSeatId);
+    if (!clickedSeat) return;
+
+    // If no seat is selected, select this one (if it has a contestant)
+    if (!quickMoveSelectedSeatId) {
+      if (clickedSeat.seat.contestantName) {
+        setQuickMoveSelectedSeatId(clickedSeatId);
+      }
+      return;
+    }
+
+    // If clicking the same seat, deselect
+    if (quickMoveSelectedSeatId === clickedSeatId) {
+      setQuickMoveSelectedSeatId(null);
+      return;
+    }
+
+    // Execute the move/swap
+    const sourceSeat = findSeat(quickMoveSelectedSeatId);
+    if (!sourceSeat) {
+      setQuickMoveSelectedSeatId(null);
+      return;
+    }
+
+    const sourceLocation = getBlockAndSeat(sourceSeat.seat.id);
+    const targetLocation = getBlockAndSeat(clickedSeat.seat.id);
+
+    // Clear selection before executing
+    setQuickMoveSelectedSeatId(null);
+
+    // Execute swap using the tracked endpoint (we're in RX mode)
+    await executeSwap(sourceSeat, clickedSeat, sourceLocation, targetLocation, true);
   };
 
   // Handle drag end - check if locked and require confirmation
@@ -1910,6 +2006,46 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
             </div>
           )}
 
+          {/* Quick Move Mode Controls - Only visible in RX Day Mode */}
+          {isLocked && (
+            <div className="flex items-center gap-3 mb-4">
+              <Button
+                variant={quickMoveEnabled ? "default" : "outline"}
+                size="sm"
+                onClick={() => setQuickMoveEnabled(!quickMoveEnabled)}
+                data-testid="button-quick-move-toggle"
+              >
+                <MousePointerClick className="h-4 w-4 mr-2" />
+                {quickMoveEnabled ? "Quick Move ON" : "Quick Move"}
+              </Button>
+              {quickMoveEnabled && (
+                <span className="text-sm text-muted-foreground">
+                  Click a person to select, then click another seat to move/swap
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Quick Move Selection Indicator */}
+          {quickMoveEnabled && quickMoveSelectedSeatId && (
+            <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+              <div className="bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-3">
+                <MousePointerClick className="h-5 w-5" />
+                <span className="font-medium">
+                  Moving: {findSeat(quickMoveSelectedSeatId)?.seat.contestantName || 'Unknown'}
+                </span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setQuickMoveSelectedSeatId(null)}
+                  className="h-6 px-2"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Circular Seating Area */}
           <div>
             <div className="space-y-6">
@@ -1944,6 +2080,9 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onLinkWithNeighbor={handleLinkWithNeighbor}
                   blockNote={blockNotes[idx + 1]}
                   onBlockNoteChange={onBlockNoteChange}
+                  quickMoveEnabled={quickMoveEnabled}
+                  quickMoveSelectedSeatId={quickMoveSelectedSeatId}
+                  onQuickMoveClick={handleQuickMoveClick}
                 />
               ))}
             </div>
@@ -2014,6 +2153,9 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     onLinkWithNeighbor={handleLinkWithNeighbor}
                     blockNote={blockNotes[originalIdx + 1]}
                     onBlockNoteChange={onBlockNoteChange}
+                    quickMoveEnabled={quickMoveEnabled}
+                    quickMoveSelectedSeatId={quickMoveSelectedSeatId}
+                    onQuickMoveClick={handleQuickMoveClick}
                   />
                 );
               })}
@@ -2056,6 +2198,9 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onLinkWithNeighbor={handleLinkWithNeighbor}
                   blockNote={blockNotes[7]}
                   onBlockNoteChange={onBlockNoteChange}
+                  quickMoveEnabled={quickMoveEnabled}
+                  quickMoveSelectedSeatId={quickMoveSelectedSeatId}
+                  onQuickMoveClick={handleQuickMoveClick}
                 />
               </div>
               
