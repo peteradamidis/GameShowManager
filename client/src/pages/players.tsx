@@ -6480,152 +6480,35 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
   );
 }
 
-// Casting Card Preview component for RX Planning
+// Casting Card Preview component for RX Planning - displays visual card via iframe
 function CastingCardPreview({ contestantId }: { contestantId: string }) {
-  const { data: castingCard, isLoading } = useQuery<any>({
-    queryKey: ['/api/casting-cards', contestantId],
-    queryFn: async () => {
-      const response = await fetch(`/api/casting-cards/${contestantId}`, { credentials: 'include' });
-      if (!response.ok) {
-        if (response.status === 404) return null;
-        throw new Error('Failed to fetch casting card');
-      }
-      return response.json();
-    },
-    enabled: !!contestantId,
-  });
-
-  const { data: contestant } = useQuery<Contestant>({
-    queryKey: ['/api/contestants', contestantId],
-    queryFn: async () => {
-      const response = await fetch(`/api/contestants/${contestantId}`, { credentials: 'include' });
-      if (!response.ok) throw new Error('Failed to fetch contestant');
-      return response.json();
-    },
-    enabled: !!contestantId,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
-  if (!castingCard) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        No casting card found for this contestant.
-      </div>
-    );
-  }
-
-  const bulletPoints = castingCard.bulletPoints ? JSON.parse(castingCard.bulletPoints) : [];
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   return (
-    <div className="space-y-4">
-      {/* Header with photo */}
-      <div className="flex gap-4">
-        <Avatar className="h-24 w-24 rounded-lg border-2">
-          <AvatarImage src={contestant?.photoUrl || undefined} className="object-cover" />
-          <AvatarFallback className="text-2xl rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white">
-            {(castingCard.fullName || contestant?.name)?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <h3 className="text-xl font-bold">{castingCard.fullName || contestant?.name}</h3>
-          <p className="text-muted-foreground">{castingCard.ageState || `${contestant?.age || ''} (${contestant?.suburb || ''})`}</p>
-          {castingCard.occupation && <p className="text-sm">{castingCard.occupation}</p>}
-          {castingCard.tagline && (
-            <p className="text-green-600 dark:text-green-400 font-medium mt-1 italic">"{castingCard.tagline}"</p>
-          )}
-        </div>
-      </div>
-
-      {/* Bullet points */}
-      {bulletPoints.length > 0 && (
-        <div className="space-y-1">
-          {bulletPoints.map((point: string, idx: number) => (
-            <p key={idx} className="text-sm flex items-start gap-2">
-              <span className="text-primary">•</span>
-              <span>{point}</span>
-            </p>
-          ))}
+    <div className="relative">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
         </div>
       )}
-
-      {/* Character traits & energy */}
-      <div className="grid grid-cols-2 gap-4">
-        {castingCard.characterTraits && (
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase">Character Traits</p>
-            <p className="text-sm">{castingCard.characterTraits}</p>
-          </div>
-        )}
-        {castingCard.energyLevel && (
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase">Energy Level</p>
-            <p className="text-sm">{castingCard.energyLevel}/5</p>
-          </div>
-        )}
-      </div>
-
-      {/* Key stories */}
-      {castingCard.keyStories && (
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase">Key Stories</p>
-          <p className="text-sm whitespace-pre-wrap">{castingCard.keyStories}</p>
+      {hasError ? (
+        <div className="text-center py-8 text-muted-foreground">
+          No casting card found for this contestant.
         </div>
-      )}
-
-      {/* Play style */}
-      {castingCard.playStyle && (
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase">Play Style / Risk Taker?</p>
-          <p className="text-sm">{castingCard.playStyle}</p>
-        </div>
-      )}
-
-      {/* Prize goals */}
-      <div className="grid grid-cols-2 gap-4">
-        {castingCard.prizeGoalHigh && (
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase">$100K Goal</p>
-            <p className="text-sm">{castingCard.prizeGoalHigh}</p>
-          </div>
-        )}
-        {castingCard.prizeGoalLow && (
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase">$1,000 Goal</p>
-            <p className="text-sm">{castingCard.prizeGoalLow}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Meet story */}
-      {castingCard.meetStory && (
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase">Meet Story</p>
-          <p className="text-sm whitespace-pre-wrap">{castingCard.meetStory}</p>
-        </div>
-      )}
-
-      {/* Companion info */}
-      {castingCard.companionName && (
-        <div className="p-3 rounded-lg bg-muted/50 border">
-          <p className="text-xs font-medium text-muted-foreground uppercase mb-2">Attending With</p>
-          <div className="flex items-center gap-3">
-            {castingCard.companionPhotoUrl && (
-              <img src={castingCard.companionPhotoUrl} alt={castingCard.companionName} className="h-12 w-12 rounded-full object-cover" />
-            )}
-            <div>
-              <p className="font-medium">{castingCard.companionName}</p>
-              {castingCard.companionRelationship && (
-                <p className="text-sm text-muted-foreground">{castingCard.companionRelationship}</p>
-              )}
-            </div>
-          </div>
+      ) : (
+        <div className="border rounded-lg overflow-hidden bg-white" style={{ height: '500px' }}>
+          <iframe
+            src={`/api/casting-cards/${contestantId}/print`}
+            className="w-full h-full border-0"
+            style={{ transform: 'scale(0.5)', transformOrigin: 'top left', width: '200%', height: '200%' }}
+            onLoad={() => setIsLoading(false)}
+            onError={() => {
+              setIsLoading(false);
+              setHasError(true);
+            }}
+            title="Casting Card Preview"
+          />
         </div>
       )}
     </div>
