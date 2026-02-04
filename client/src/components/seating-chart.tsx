@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   DndContext,
-  closestCenter,
+  pointerWithin,
+  rectIntersection,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -11,6 +12,7 @@ import {
   useDraggable,
   useDroppable,
   DragOverlay,
+  CollisionDetection,
 } from "@dnd-kit/core";
 import {
   Dialog,
@@ -1449,6 +1451,18 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     })
   );
 
+  // Custom collision detection: prioritize where the pointer actually is (more intuitive)
+  // Falls back to rectangle intersection if pointer isn't directly over a droppable
+  const customCollisionDetection: CollisionDetection = useCallback((args) => {
+    // First try pointerWithin - this checks if pointer is inside a droppable
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) {
+      return pointerCollisions;
+    }
+    // Fall back to rectangle intersection for edge cases
+    return rectIntersection(args);
+  }, []);
+
   // Helper to find seat by ID across all blocks
   const findSeat = (seatId: string): { blockIdx: number; seatIdx: number; seat: SeatData } | null => {
     for (let blockIdx = 0; blockIdx < blocks.length; blockIdx++) {
@@ -1867,7 +1881,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={customCollisionDetection}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
