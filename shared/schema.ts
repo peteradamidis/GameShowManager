@@ -537,6 +537,69 @@ export const attendanceIssues = pgTable("attendance_issues", {
   movedToReschedule: boolean("moved_to_reschedule").default(false), // True when moved to reschedule list
   movedToRescheduleAt: timestamp("moved_to_reschedule_at"), // When they were moved
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  
+  // Historical seat assignment data - preserved when marking as no-show/early leaver
+  originalSeatAssignmentId: varchar("original_seat_assignment_id"), // Original seat assignment ID
+  playerType: playerTypeEnum("player_type"), // PLAYER, BACKUP, PLAYER_PARTNER
+  firstNations: text("first_nations"),
+  rating: text("rating"),
+  location: text("location"),
+  medicalQuestion: text("medical_question"),
+  criminalBankruptcy: text("criminal_bankruptcy"),
+  castingCategory: text("casting_category"),
+  assignmentNotes: text("assignment_notes"), // The notes from the seat assignment
+  bookingEmailSent: timestamp("booking_email_sent"),
+  bookingEmailError: text("booking_email_error"),
+  confirmedRsvp: timestamp("confirmed_rsvp"),
+  ticketEmailSent: timestamp("ticket_email_sent"),
+  emailsCopiedAt: timestamp("emails_copied_at"),
+  paperworkSent: timestamp("paperwork_sent"),
+  paperworkSentBy: text("paperwork_sent_by"),
+  paperworkReceived: timestamp("paperwork_received"),
+  paperworkReceivedBy: text("paperwork_received_by"),
+  paperworkOnDay: timestamp("paperwork_on_day"),
+  signedIn: timestamp("signed_in"),
+  otdNotes: text("otd_notes"),
+  standbyReplacementSwaps: text("standby_replacement_swaps"),
+  
+  // Original position tracking
+  originalBlockNumber: integer("original_block_number"),
+  originalSeatLabel: text("original_seat_label"),
+  swappedAt: timestamp("swapped_at"),
+  
+  // RX Day Mode - Winning money tracking (preserved from seat assignment)
+  rxNumber: text("rx_number"),
+  rxEpNumber: text("rx_ep_number"),
+  caseNumber: text("case_number"),
+  winningMoneyRole: text("winning_money_role"),
+  winningMoneyAmount: integer("winning_money_amount"),
+  winningMoneyText: text("winning_money_text"),
+  caseAmount: integer("case_amount"),
+  quickCash: integer("quick_cash"),
+  bankOfferTaken: boolean("bank_offer_taken"),
+  spinTheWheel: boolean("spin_the_wheel"),
+  prize: text("prize"),
+  
+  // TX tracking fields
+  txNumber: text("tx_number"),
+  txDate: date("tx_date"),
+  notifiedOfTx: boolean("notified_of_tx"),
+  photosSent: boolean("photos_sent"),
+  
+  // Override fields
+  seatNotes: text("seat_notes"),
+  attendingWithOverride: text("attending_with_override"),
+  mobilityNotesOverride: text("mobility_notes_override"),
+  castingCardUrl: text("casting_card_url"),
+  
+  // Standby seating tracking
+  seatedAsBlockType: blockTypeEnum("seated_as_block_type"),
+  seatedFromStandby: boolean("seated_from_standby"),
+  standbyMovementNotes: text("standby_movement_notes"),
+  
+  // Call tracking
+  called: boolean("called"),
+  calledAt: timestamp("called_at"),
 });
 
 export const insertAttendanceIssueSchema = createInsertSchema(attendanceIssues).omit({

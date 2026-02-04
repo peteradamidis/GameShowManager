@@ -2392,8 +2392,80 @@ export class DbStorage implements IStorage {
   // Attendance Issues (No-Shows and Early Leavers)
   async createAttendanceIssue(issue: InsertAttendanceIssue): Promise<AttendanceIssue> {
     return await db.transaction(async (tx) => {
-      // Create the attendance issue
-      const [created] = await tx.insert(attendanceIssues).values(issue).returning();
+      // First, get the seat assignment data to preserve history
+      const [seatAssignment] = await tx
+        .select()
+        .from(seatAssignments)
+        .where(
+          and(
+            eq(seatAssignments.contestantId, issue.contestantId),
+            eq(seatAssignments.recordDayId, issue.recordDayId)
+          )
+        );
+      
+      // Create the attendance issue with historical data from seat assignment
+      const issueData: any = {
+        ...issue,
+      };
+      
+      // If we have a seat assignment, preserve all its historical data
+      if (seatAssignment) {
+        issueData.originalSeatAssignmentId = seatAssignment.id;
+        issueData.playerType = seatAssignment.playerType;
+        issueData.firstNations = seatAssignment.firstNations;
+        issueData.rating = seatAssignment.rating;
+        issueData.location = seatAssignment.location;
+        issueData.medicalQuestion = seatAssignment.medicalQuestion;
+        issueData.criminalBankruptcy = seatAssignment.criminalBankruptcy;
+        issueData.castingCategory = seatAssignment.castingCategory;
+        issueData.assignmentNotes = seatAssignment.notes;
+        issueData.bookingEmailSent = seatAssignment.bookingEmailSent;
+        issueData.bookingEmailError = seatAssignment.bookingEmailError;
+        issueData.confirmedRsvp = seatAssignment.confirmedRsvp;
+        issueData.ticketEmailSent = seatAssignment.ticketEmailSent;
+        issueData.emailsCopiedAt = seatAssignment.emailsCopiedAt;
+        issueData.paperworkSent = seatAssignment.paperworkSent;
+        issueData.paperworkSentBy = seatAssignment.paperworkSentBy;
+        issueData.paperworkReceived = seatAssignment.paperworkReceived;
+        issueData.paperworkReceivedBy = seatAssignment.paperworkReceivedBy;
+        issueData.paperworkOnDay = seatAssignment.paperworkOnDay;
+        issueData.signedIn = seatAssignment.signedIn;
+        issueData.otdNotes = seatAssignment.otdNotes;
+        issueData.standbyReplacementSwaps = seatAssignment.standbyReplacementSwaps;
+        issueData.originalBlockNumber = seatAssignment.originalBlockNumber;
+        issueData.originalSeatLabel = seatAssignment.originalSeatLabel;
+        issueData.swappedAt = seatAssignment.swappedAt;
+        // RX/TX tracking fields
+        issueData.rxNumber = seatAssignment.rxNumber;
+        issueData.rxEpNumber = seatAssignment.rxEpNumber;
+        issueData.caseNumber = seatAssignment.caseNumber;
+        issueData.winningMoneyRole = seatAssignment.winningMoneyRole;
+        issueData.winningMoneyAmount = seatAssignment.winningMoneyAmount;
+        issueData.winningMoneyText = seatAssignment.winningMoneyText;
+        issueData.caseAmount = seatAssignment.caseAmount;
+        issueData.quickCash = seatAssignment.quickCash;
+        issueData.bankOfferTaken = seatAssignment.bankOfferTaken;
+        issueData.spinTheWheel = seatAssignment.spinTheWheel;
+        issueData.prize = seatAssignment.prize;
+        issueData.txNumber = seatAssignment.txNumber;
+        issueData.txDate = seatAssignment.txDate;
+        issueData.notifiedOfTx = seatAssignment.notifiedOfTx;
+        issueData.photosSent = seatAssignment.photosSent;
+        // Override fields
+        issueData.seatNotes = seatAssignment.seatNotes;
+        issueData.attendingWithOverride = seatAssignment.attendingWithOverride;
+        issueData.mobilityNotesOverride = seatAssignment.mobilityNotesOverride;
+        issueData.castingCardUrl = seatAssignment.castingCardUrl;
+        // Standby seating tracking
+        issueData.seatedAsBlockType = seatAssignment.seatedAsBlockType;
+        issueData.seatedFromStandby = seatAssignment.seatedFromStandby;
+        issueData.standbyMovementNotes = seatAssignment.standbyMovementNotes;
+        // Call tracking
+        issueData.called = seatAssignment.called;
+        issueData.calledAt = seatAssignment.calledAt;
+      }
+      
+      const [created] = await tx.insert(attendanceIssues).values(issueData).returning();
       
       // Increment the appropriate counter on the contestant
       if (issue.issueType === 'no_show') {
@@ -2409,12 +2481,15 @@ export class DbStorage implements IStorage {
       }
       
       // Delete the seat assignment to free up the seat
-      await tx.delete(seatAssignments).where(
-        and(
-          eq(seatAssignments.contestantId, issue.contestantId),
-          eq(seatAssignments.recordDayId, issue.recordDayId)
-        )
-      );
+      if (seatAssignment) {
+        // Nullify any post_record_tracking references to this seat assignment
+        await tx
+          .update(postRecordTracking)
+          .set({ seatAssignmentId: null })
+          .where(eq(postRecordTracking.seatAssignmentId, seatAssignment.id));
+        
+        await tx.delete(seatAssignments).where(eq(seatAssignments.id, seatAssignment.id));
+      }
       
       return created;
     });
@@ -2425,8 +2500,19 @@ export class DbStorage implements IStorage {
       const createdIssues: AttendanceIssue[] = [];
       
       for (const issue of issues) {
-        // Create the attendance issue
-        const [created] = await tx.insert(attendanceIssues).values({
+        // First, get the seat assignment data to preserve history
+        const [seatAssignment] = await tx
+          .select()
+          .from(seatAssignments)
+          .where(
+            and(
+              eq(seatAssignments.contestantId, issue.contestantId),
+              eq(seatAssignments.recordDayId, issue.recordDayId)
+            )
+          );
+        
+        // Create the attendance issue with historical data from seat assignment
+        const issueData: any = {
           contestantId: issue.contestantId,
           recordDayId: issue.recordDayId,
           blockNumber: issue.blockNumber,
@@ -2434,7 +2520,66 @@ export class DbStorage implements IStorage {
           issueType: 'no_show',
           notes: issue.notes || 'Marked via Booking Master bulk action',
           markedBy: issue.markedBy || 'System',
-        }).returning();
+        };
+        
+        // If we have a seat assignment, preserve all its historical data
+        if (seatAssignment) {
+          issueData.originalSeatAssignmentId = seatAssignment.id;
+          issueData.playerType = seatAssignment.playerType;
+          issueData.firstNations = seatAssignment.firstNations;
+          issueData.rating = seatAssignment.rating;
+          issueData.location = seatAssignment.location;
+          issueData.medicalQuestion = seatAssignment.medicalQuestion;
+          issueData.criminalBankruptcy = seatAssignment.criminalBankruptcy;
+          issueData.castingCategory = seatAssignment.castingCategory;
+          issueData.assignmentNotes = seatAssignment.notes;
+          issueData.bookingEmailSent = seatAssignment.bookingEmailSent;
+          issueData.bookingEmailError = seatAssignment.bookingEmailError;
+          issueData.confirmedRsvp = seatAssignment.confirmedRsvp;
+          issueData.ticketEmailSent = seatAssignment.ticketEmailSent;
+          issueData.emailsCopiedAt = seatAssignment.emailsCopiedAt;
+          issueData.paperworkSent = seatAssignment.paperworkSent;
+          issueData.paperworkSentBy = seatAssignment.paperworkSentBy;
+          issueData.paperworkReceived = seatAssignment.paperworkReceived;
+          issueData.paperworkReceivedBy = seatAssignment.paperworkReceivedBy;
+          issueData.paperworkOnDay = seatAssignment.paperworkOnDay;
+          issueData.signedIn = seatAssignment.signedIn;
+          issueData.otdNotes = seatAssignment.otdNotes;
+          issueData.standbyReplacementSwaps = seatAssignment.standbyReplacementSwaps;
+          issueData.originalBlockNumber = seatAssignment.originalBlockNumber;
+          issueData.originalSeatLabel = seatAssignment.originalSeatLabel;
+          issueData.swappedAt = seatAssignment.swappedAt;
+          // RX/TX tracking fields
+          issueData.rxNumber = seatAssignment.rxNumber;
+          issueData.rxEpNumber = seatAssignment.rxEpNumber;
+          issueData.caseNumber = seatAssignment.caseNumber;
+          issueData.winningMoneyRole = seatAssignment.winningMoneyRole;
+          issueData.winningMoneyAmount = seatAssignment.winningMoneyAmount;
+          issueData.winningMoneyText = seatAssignment.winningMoneyText;
+          issueData.caseAmount = seatAssignment.caseAmount;
+          issueData.quickCash = seatAssignment.quickCash;
+          issueData.bankOfferTaken = seatAssignment.bankOfferTaken;
+          issueData.spinTheWheel = seatAssignment.spinTheWheel;
+          issueData.prize = seatAssignment.prize;
+          issueData.txNumber = seatAssignment.txNumber;
+          issueData.txDate = seatAssignment.txDate;
+          issueData.notifiedOfTx = seatAssignment.notifiedOfTx;
+          issueData.photosSent = seatAssignment.photosSent;
+          // Override fields
+          issueData.seatNotes = seatAssignment.seatNotes;
+          issueData.attendingWithOverride = seatAssignment.attendingWithOverride;
+          issueData.mobilityNotesOverride = seatAssignment.mobilityNotesOverride;
+          issueData.castingCardUrl = seatAssignment.castingCardUrl;
+          // Standby seating tracking
+          issueData.seatedAsBlockType = seatAssignment.seatedAsBlockType;
+          issueData.seatedFromStandby = seatAssignment.seatedFromStandby;
+          issueData.standbyMovementNotes = seatAssignment.standbyMovementNotes;
+          // Call tracking
+          issueData.called = seatAssignment.called;
+          issueData.calledAt = seatAssignment.calledAt;
+        }
+        
+        const [created] = await tx.insert(attendanceIssues).values(issueData).returning();
         
         createdIssues.push(created);
         
@@ -2443,17 +2588,6 @@ export class DbStorage implements IStorage {
           .update(contestants)
           .set({ noShowCount: sql`COALESCE(${contestants.noShowCount}, 0) + 1` })
           .where(eq(contestants.id, issue.contestantId));
-        
-        // Get the seat assignment ID before deleting
-        const [seatAssignment] = await tx
-          .select({ id: seatAssignments.id })
-          .from(seatAssignments)
-          .where(
-            and(
-              eq(seatAssignments.contestantId, issue.contestantId),
-              eq(seatAssignments.recordDayId, issue.recordDayId)
-            )
-          );
         
         if (seatAssignment) {
           // Nullify any post_record_tracking references to this seat assignment
