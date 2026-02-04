@@ -453,18 +453,163 @@ const POSTCODE_COORDINATES: Record<string, { lat: number; lng: number }> = {
   "3957": { lat: -37.6000, lng: 144.3000 }, // Diggers Rest
 };
 
+// Victorian postcode ranges that are WITHIN 60km of Docklands (Melbourne inner/middle suburbs)
+// Postcodes outside these ranges in Victoria are considered 60km+
+const MELBOURNE_METRO_POSTCODES = new Set([
+  // CBD and inner suburbs 3000-3010
+  ...Array.from({ length: 11 }, (_, i) => String(3000 + i)),
+  // Inner suburbs 3011-3100
+  ...Array.from({ length: 90 }, (_, i) => String(3011 + i)),
+  // Eastern suburbs 3100-3200
+  ...Array.from({ length: 100 }, (_, i) => String(3100 + i)),
+  // South-eastern suburbs 3800-3820 (partial - Berwick, Pakenham area is border)
+  ...Array.from({ length: 15 }, (_, i) => String(3800 + i)),
+]);
+
+// State indicators for detecting interstate locations
+const INTERSTATE_PATTERNS = [
+  // NSW indicators
+  /\bnsw\b/i, /\bnew south wales\b/i, /\bsydney\b/i,
+  // QLD indicators  
+  /\bqld\b/i, /\bqueensland\b/i, /\bbrisbane\b/i,
+  // SA indicators
+  /\bsa\b/i, /\bsouth australia\b/i, /\badelaide\b/i,
+  // WA indicators
+  /\bwa\b/i, /\bwestern australia\b/i, /\bperth\b/i,
+  // TAS indicators
+  /\btas\b/i, /\btasmania\b/i, /\bhobart\b/i,
+  // NT indicators
+  /\bnt\b/i, /\bnorthern territory\b/i, /\bdarwin\b/i,
+  // ACT indicators
+  /\bact\b/i, /\bcanberra\b/i,
+];
+
+// Interstate postcodes (not Victoria)
+function isInterstatePostcode(postcode: string): boolean {
+  const code = parseInt(postcode, 10);
+  if (isNaN(code)) return false;
+  // Victoria: 3000-3999, 8000-8999
+  // NSW: 1000-2999, 2619-2899, 2921-2999
+  // QLD: 4000-4999, 9000-9999
+  // SA: 5000-5999
+  // WA: 6000-6999
+  // TAS: 7000-7999
+  // NT: 0800-0899
+  // ACT: 0200-0299, 2600-2618, 2900-2920
+  if (code >= 3000 && code <= 3999) return false; // Victoria
+  if (code >= 8000 && code <= 8999) return false; // Victoria PO Boxes
+  return true; // Everything else is interstate
+}
+
+// Check if location string indicates interstate
+function detectInterstate(location: string): { isInterstate: boolean; state?: string } {
+  const locationLower = location.toLowerCase().trim();
+  
+  // Check for explicit state indicators
+  if (/\bnsw\b/i.test(location) || /\bnew south wales\b/i.test(location)) {
+    return { isInterstate: true, state: 'NSW' };
+  }
+  if (/\bqld\b/i.test(location) || /\bqueensland\b/i.test(location)) {
+    return { isInterstate: true, state: 'QLD' };
+  }
+  if (/\b(^|\s)sa\b/i.test(location) || /\bsouth australia\b/i.test(location)) {
+    return { isInterstate: true, state: 'SA' };
+  }
+  if (/\b(^|\s)wa\b/i.test(location) || /\bwestern australia\b/i.test(location)) {
+    return { isInterstate: true, state: 'WA' };
+  }
+  if (/\btas\b/i.test(location) || /\btasmania\b/i.test(location)) {
+    return { isInterstate: true, state: 'TAS' };
+  }
+  if (/\b(^|\s)nt\b/i.test(location) || /\bnorthern territory\b/i.test(location)) {
+    return { isInterstate: true, state: 'NT' };
+  }
+  if (/\bact\b/i.test(location) || /\bcanberra\b/i.test(location)) {
+    return { isInterstate: true, state: 'ACT' };
+  }
+  
+  // Check for interstate postcodes in the location string
+  const postcodeMatch = location.match(/\b(\d{4})\b/);
+  if (postcodeMatch) {
+    const postcode = postcodeMatch[1];
+    if (isInterstatePostcode(postcode)) {
+      const code = parseInt(postcode, 10);
+      let state = 'Interstate';
+      if (code >= 1000 && code <= 2999) state = 'NSW';
+      else if (code >= 4000 && code <= 4999) state = 'QLD';
+      else if (code >= 5000 && code <= 5999) state = 'SA';
+      else if (code >= 6000 && code <= 6999) state = 'WA';
+      else if (code >= 7000 && code <= 7999) state = 'TAS';
+      else if (code >= 800 && code <= 899) state = 'NT';
+      else if ((code >= 200 && code <= 299) || (code >= 2600 && code <= 2618)) state = 'ACT';
+      return { isInterstate: true, state };
+    }
+  }
+  
+  // Check for known interstate cities
+  const interstateCities = [
+    { pattern: /\bsydney\b/i, state: 'NSW' },
+    { pattern: /\bbrisbane\b/i, state: 'QLD' },
+    { pattern: /\badelaide\b/i, state: 'SA' },
+    { pattern: /\bperth\b/i, state: 'WA' },
+    { pattern: /\bhobart\b/i, state: 'TAS' },
+    { pattern: /\bdarwin\b/i, state: 'NT' },
+    { pattern: /\bgold coast\b/i, state: 'QLD' },
+    { pattern: /\bnewcastle\b/i, state: 'NSW' },
+    { pattern: /\bwollongong\b/i, state: 'NSW' },
+    { pattern: /\bcairns\b/i, state: 'QLD' },
+    { pattern: /\btownsville\b/i, state: 'QLD' },
+    { pattern: /\blaunceston\b/i, state: 'TAS' },
+    { pattern: /\balice springs\b/i, state: 'NT' },
+  ];
+  
+  for (const { pattern, state } of interstateCities) {
+    if (pattern.test(location)) {
+      return { isInterstate: true, state };
+    }
+  }
+  
+  return { isInterstate: false };
+}
+
+// Export function to check if location is interstate
+export function isLocationInterstate(location: string | undefined | null): { isInterstate: boolean; state?: string } {
+  if (!location) return { isInterstate: false };
+  return detectInterstate(location);
+}
+
 // Get distance from Docklands for a city name or postcode
-export function getDistanceFromDocklands(location: string | undefined | null): { distance: number; isOver60km: boolean } | null {
+export function getDistanceFromDocklands(location: string | undefined | null): { distance: number; isOver60km: boolean; isInterstate?: boolean; state?: string } | null {
   if (!location) return null;
   
   const locationLower = location.toLowerCase().trim();
   
+  // First check if interstate
+  const interstateCheck = detectInterstate(location);
+  if (interstateCheck.isInterstate) {
+    // Return a large distance for interstate locations
+    return { distance: 999, isOver60km: true, isInterstate: true, state: interstateCheck.state };
+  }
+  
   // Try postcode lookup first (if it's 4 digits)
-  if (/^\d{4}$/.test(locationLower)) {
-    const coords = POSTCODE_COORDINATES[locationLower];
+  const postcodeMatch = location.match(/\b(\d{4})\b/);
+  if (postcodeMatch) {
+    const postcode = postcodeMatch[1];
+    const coords = POSTCODE_COORDINATES[postcode];
     if (coords) {
       const distance = calculateDistanceKm(DOCKLANDS_COORDS.lat, DOCKLANDS_COORDS.lng, coords.lat, coords.lng);
       return { distance: Math.round(distance), isOver60km: distance > 60 };
+    }
+    // If Victorian postcode but not in our detailed list, check if in metro area
+    const code = parseInt(postcode, 10);
+    if (code >= 3000 && code <= 3999) {
+      // Check if it's in the Melbourne metro set (within 60km)
+      if (MELBOURNE_METRO_POSTCODES.has(postcode)) {
+        return { distance: 30, isOver60km: false }; // Approximate metro distance
+      } else {
+        // Victorian postcode but outside metro - flag as over 60km
+        return { distance: 80, isOver60km: true }; // Approximate regional distance
+      }
     }
   }
   
@@ -475,6 +620,7 @@ export function getDistanceFromDocklands(location: string | undefined | null): {
       return { distance: Math.round(distance), isOver60km: distance > 60 };
     }
   }
+  
   return null;
 }
 

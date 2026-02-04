@@ -501,7 +501,23 @@ export function SeatCard({
             )}
             {(() => {
               const distanceInfo = getDistanceFromDocklands(seat.contestantLocation);
-              if (distanceInfo?.isOver60km) {
+              if (distanceInfo?.isInterstate) {
+                return (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span 
+                        className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-red-200/70 text-red-700 dark:bg-red-900/50 dark:text-red-400 text-[8px] font-bold flex-shrink-0" 
+                        data-testid={`distance-icon-${seat.assignmentId}`}
+                      >
+                        !!
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      <p>Interstate: {distanceInfo.state || 'Not Victoria'}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              } else if (distanceInfo?.isOver60km) {
                 return (
                   <Tooltip>
                     <TooltipTrigger asChild>
