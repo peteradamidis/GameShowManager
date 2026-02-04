@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueries } from "@tanstack/react-query";
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { getPartnerNames, attendingWithMentionsName } from "@shared/attendingWithParser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown, AlertTriangle, RefreshCw, Undo2, Redo2, History, Eye, EyeOff, PanelTop } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown, AlertTriangle, RefreshCw, Undo2, Redo2, History, Eye, EyeOff, PanelTop, MessageSquare, Check } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -110,6 +110,7 @@ interface PlannedContestant {
   photoUrl: string | null;
   attendingWith: string | null;
   isCustom?: boolean; // For manually entered names not in the contestant list
+  note?: string; // Planning notes for this contestant
 }
 
 interface RXPlanningData {
@@ -4995,6 +4996,8 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
   const [selectedBlock, setSelectedBlock] = useState<string>('');
   const [selectedSeat, setSelectedSeat] = useState<string>('');
   const [customNameInputs, setCustomNameInputs] = useState<{ [blockKey: string]: string }>({});
+  const [editingNoteKey, setEditingNoteKey] = useState<string | null>(null); // Format: "dayId-blockNum-contestantId"
+  const [noteInputValue, setNoteInputValue] = useState<string>('');
 
   // Fetch block types from API - refetch when tab is shown to sync with seating chart changes
   const { data: blockTypes = [] } = useQuery<BlockTypeData[]>({
@@ -5214,6 +5217,30 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
     return week?.days || [];
   }, [selectedWeekKey, weekGroups]);
 
+  // Fetch block types for all week days (for weekly view NPB filtering)
+  const weekBlockTypesQueries = useQueries({
+    queries: weekDays.map(day => ({
+      queryKey: ['/api/record-days', day.id, 'block-types'],
+      enabled: viewMode === 'weekly' && weekDays.length > 0,
+      staleTime: 0,
+    })),
+  });
+
+  // Create a map of day.id -> block number -> block type for weekly view
+  const weekBlockTypesMap = useMemo(() => {
+    const map: { [dayId: string]: { [blockNum: string]: 'PB' | 'NPB' | null } } = {};
+    weekDays.forEach((day, index) => {
+      map[day.id] = {};
+      const queryData = weekBlockTypesQueries[index]?.data as BlockTypeData[] | undefined;
+      if (queryData) {
+        queryData.forEach(bt => {
+          map[day.id][bt.blockNumber.toString()] = bt.blockType;
+        });
+      }
+    });
+    return map;
+  }, [weekDays, weekBlockTypesQueries]);
+
   // Get all planned contestant IDs across week (for filtering pool in weekly view)
   const weekPlannedContestantIds = useMemo(() => {
     const ids = new Set<string>();
@@ -5339,6 +5366,35 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
       savePlanningData(updated);
       return updated;
     });
+  };
+
+  // Update note for a contestant in a block
+  const updateContestantNote = (blockNumber: string, contestantId: string, note: string, dayId?: string) => {
+    const updateDayId = dayId || selectedDayId;
+    if (!updateDayId) return;
+    setPlanningData(prev => {
+      const updated = { ...prev };
+      if (updated[updateDayId]?.blocks[blockNumber]) {
+        updated[updateDayId].blocks[blockNumber] = updated[updateDayId].blocks[blockNumber].map(c =>
+          c.id === contestantId ? { ...c, note: note.trim() || undefined } : c
+        );
+      }
+      savePlanningData(updated);
+      return updated;
+    });
+  };
+
+  // Start editing a note
+  const startEditingNote = (dayId: string, blockNum: string, contestantId: string, currentNote?: string) => {
+    setEditingNoteKey(`${dayId}-${blockNum}-${contestantId}`);
+    setNoteInputValue(currentNote || '');
+  };
+
+  // Save and close note editing
+  const saveNote = (blockNum: string, contestantId: string, dayId?: string) => {
+    updateContestantNote(blockNum, contestantId, noteInputValue, dayId);
+    setEditingNoteKey(null);
+    setNoteInputValue('');
   };
 
   // Add custom name to a block (for names not in contestant list)
@@ -5845,43 +5901,94 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                               {blockContestants.length === 0 ? (
                                 <span className="text-xs text-muted-foreground self-center">Drop players here or type a name below</span>
                               ) : (
-                                blockContestants.map(c => (
+                                blockContestants.map(c => {
+                                const noteKey = `${selectedDayId}-${blockNum}-${c.id}`;
+                                const isEditingThisNote = editingNoteKey === noteKey;
+                                return (
                                   <div
                                     key={c.id}
-                                    draggable={!c.isCustom}
-                                    onDragStart={() => !c.isCustom && handleDragStart(c, { type: 'block', block: blockNum, dayId: selectedDayId })}
-                                    onDragEnd={handleDragEnd}
-                                    onClick={() => { if (!c.isCustom) { const full = findContestant(c.id); if (full) openBookingDialog(full, selectedDayId); } }}
-                                    className={`flex items-center gap-3 px-3 py-2 rounded-lg group ${c.isCustom ? 'bg-purple-500/10 border border-purple-500/30 cursor-default' : `cursor-grab ${isPB ? 'bg-blue-500/10 border border-blue-500/30' : 'bg-green-500/10 border border-green-500/30'}`}`}
+                                    className={`flex flex-col gap-1 px-3 py-2 rounded-lg group ${c.isCustom ? 'bg-purple-500/10 border border-purple-500/30' : `${isPB ? 'bg-blue-500/10 border border-blue-500/30' : 'bg-green-500/10 border border-green-500/30'}`}`}
                                     data-testid={`planned-contestant-${blockNum}-${c.id}`}
                                   >
-                                    <Avatar className="h-12 w-12 rounded-lg flex-shrink-0">
-                                      <AvatarImage src={c.photoUrl || undefined} className="object-cover" />
-                                      <AvatarFallback className={`text-sm rounded-lg text-white ${c.isCustom ? 'bg-gradient-to-br from-purple-400 to-pink-500' : 'bg-gradient-to-br from-blue-400 to-purple-500'}`}>
-                                        {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div className="text-sm min-w-0">
-                                      <span className="font-medium block truncate">{c.name}</span>
-                                      {c.isCustom ? (
-                                        <span className="text-xs text-purple-600 dark:text-purple-400">Custom entry</span>
-                                      ) : (
-                                        <span className="text-xs text-muted-foreground">
-                                          {c.gender === 'Female' ? 'F' : 'M'}{c.age ? ` • ${c.age}y` : ''}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-6 w-6 opacity-0 group-hover:opacity-100 flex-shrink-0"
-                                      onClick={(e) => { e.stopPropagation(); removeFromBlock(blockNum, c.id); }}
-                                      data-testid={`remove-contestant-${blockNum}-${c.id}`}
+                                    <div 
+                                      className={`flex items-center gap-3 ${c.isCustom ? 'cursor-default' : 'cursor-grab'}`}
+                                      draggable={!c.isCustom}
+                                      onDragStart={() => !c.isCustom && handleDragStart(c, { type: 'block', block: blockNum, dayId: selectedDayId })}
+                                      onDragEnd={handleDragEnd}
+                                      onClick={() => { if (!c.isCustom) { const full = findContestant(c.id); if (full) openBookingDialog(full, selectedDayId); } }}
                                     >
-                                      <X className="h-4 w-4" />
-                                    </Button>
+                                      <Avatar className="h-12 w-12 rounded-lg flex-shrink-0">
+                                        <AvatarImage src={c.photoUrl || undefined} className="object-cover" />
+                                        <AvatarFallback className={`text-sm rounded-lg text-white ${c.isCustom ? 'bg-gradient-to-br from-purple-400 to-pink-500' : 'bg-gradient-to-br from-blue-400 to-purple-500'}`}>
+                                          {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div className="text-sm min-w-0 flex-1">
+                                        <span className="font-medium block truncate">{c.name}</span>
+                                        {c.isCustom ? (
+                                          <span className="text-xs text-purple-600 dark:text-purple-400">Custom entry</span>
+                                        ) : (
+                                          <span className="text-xs text-muted-foreground">
+                                            {c.gender === 'Female' ? 'F' : 'M'}{c.age ? ` • ${c.age}y` : ''}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-1 flex-shrink-0">
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className={`h-6 w-6 ${c.note ? 'opacity-100 text-amber-600' : 'opacity-0 group-hover:opacity-100'}`}
+                                          onClick={(e) => { e.stopPropagation(); startEditingNote(selectedDayId, blockNum, c.id, c.note); }}
+                                          data-testid={`note-contestant-${blockNum}-${c.id}`}
+                                          title={c.note || 'Add note'}
+                                        >
+                                          <MessageSquare className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                                          onClick={(e) => { e.stopPropagation(); removeFromBlock(blockNum, c.id); }}
+                                          data-testid={`remove-contestant-${blockNum}-${c.id}`}
+                                        >
+                                          <X className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                    {/* Note display/edit area */}
+                                    {isEditingThisNote ? (
+                                      <div className="flex gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
+                                        <Input
+                                          autoFocus
+                                          placeholder="Add a note..."
+                                          className="h-7 text-xs flex-1"
+                                          value={noteInputValue}
+                                          onChange={(e) => setNoteInputValue(e.target.value)}
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter') { saveNote(blockNum, c.id); }
+                                            if (e.key === 'Escape') { setEditingNoteKey(null); setNoteInputValue(''); }
+                                          }}
+                                          data-testid={`input-note-${blockNum}-${c.id}`}
+                                        />
+                                        <Button size="icon" className="h-7 w-7" onClick={() => saveNote(blockNum, c.id)}>
+                                          <Check className="h-3 w-3" />
+                                        </Button>
+                                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingNoteKey(null); setNoteInputValue(''); }}>
+                                          <X className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    ) : c.note ? (
+                                      <div 
+                                        className="text-xs text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-1 rounded cursor-pointer"
+                                        onClick={(e) => { e.stopPropagation(); startEditingNote(selectedDayId, blockNum, c.id, c.note); }}
+                                        data-testid={`note-display-${blockNum}-${c.id}`}
+                                      >
+                                        📝 {c.note}
+                                      </div>
+                                    ) : null}
                                   </div>
-                                ))
+                                );
+                              })
                               )}
                             </div>
                             {/* Custom name input */}
@@ -5943,59 +6050,121 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                       <div className="space-y-2">
                         {['1', '2', '3', '4', '5', '6', '7'].map(blockNum => {
                           const blockContestants = dayBlocks[blockNum] || [];
+                          const dayBlockType = weekBlockTypesMap[day.id]?.[blockNum];
+                          const isNPB = dayBlockType === 'NPB';
+                          const isPB = dayBlockType === 'PB';
+                          
+                          // Hide NPB blocks when toggle is active
+                          if (hideNPBs && isNPB) return null;
+                          
                           return (
                             <Card 
                               key={blockNum}
-                              className={`transition-colors ${draggedContestant ? 'border-dashed border-primary/50' : ''}`}
-                              onDragOver={e => e.preventDefault()}
-                              onDrop={() => handleDrop(blockNum, day.id)}
+                              className={`transition-colors ${draggedContestant && !isNPB ? 'border-dashed border-primary/50' : ''} ${isPB ? 'border-blue-500/50' : isNPB ? 'border-amber-500/50' : ''}`}
+                              onDragOver={e => !isNPB && e.preventDefault()}
+                              onDrop={() => !isNPB && handleDrop(blockNum, day.id, dayBlockType)}
                               data-testid={`weekly-block-${day.id}-${blockNum}`}
                             >
-                              <div className="p-2">
+                              <div className={isNPB ? "p-1" : "p-2"}>
                                 <div className="flex items-center gap-2 mb-2">
-                                  <Badge variant="outline" className="text-xs">B{blockNum}</Badge>
-                                  <span className="text-xs text-muted-foreground">{blockContestants.length} planned</span>
-                                </div>
-                                <div className="space-y-2 min-h-[48px]">
-                                  {blockContestants.length === 0 ? (
-                                    <div className="text-xs text-muted-foreground text-center py-2 border border-dashed rounded">
-                                      Drop here
-                                    </div>
+                                  <Badge variant="outline" className={`text-xs ${isPB ? 'bg-blue-500/10 border-blue-300' : isNPB ? 'bg-amber-500/10 border-amber-300' : ''}`}>B{blockNum}</Badge>
+                                  {isNPB ? (
+                                    <span className="text-xs text-amber-600 dark:text-amber-400">NPB</span>
                                   ) : (
-                                    blockContestants.map(c => (
-                                      <div
-                                        key={c.id}
-                                        draggable
-                                        onDragStart={() => handleDragStart(c, { type: 'block', block: blockNum, dayId: day.id })}
-                                        onDragEnd={handleDragEnd}
-                                        onClick={() => { const full = findContestant(c.id); if (full) openBookingDialog(full, day.id); }}
-                                        className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border cursor-grab group"
-                                        data-testid={`weekly-contestant-${day.id}-${blockNum}-${c.id}`}
-                                      >
-                                        <Avatar className="h-10 w-10 rounded-lg flex-shrink-0">
-                                          <AvatarImage src={c.photoUrl || undefined} className="object-cover" />
-                                          <AvatarFallback className="text-xs rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white">
-                                            {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                                          </AvatarFallback>
-                                        </Avatar>
-                                        <div className="min-w-0 flex-1">
-                                          <span className="text-sm font-medium truncate block">{c.name}</span>
-                                          <span className="text-xs text-muted-foreground">
-                                            {c.gender === 'Female' ? 'F' : 'M'}{c.age ? ` • ${c.age}y` : ''}
-                                          </span>
-                                        </div>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-6 w-6 opacity-0 group-hover:opacity-100 flex-shrink-0"
-                                          onClick={(e) => { e.stopPropagation(); removeFromBlock(blockNum, c.id, day.id); }}
-                                        >
-                                          <X className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    ))
+                                    <span className="text-xs text-muted-foreground">{blockContestants.length} planned</span>
                                   )}
                                 </div>
+                                {!isNPB && (
+                                  <div className="space-y-2 min-h-[48px]">
+                                    {blockContestants.length === 0 ? (
+                                      <div className="text-xs text-muted-foreground text-center py-2 border border-dashed rounded">
+                                        Drop here
+                                      </div>
+                                    ) : (
+                                      blockContestants.map(c => {
+                                        const noteKey = `${day.id}-${blockNum}-${c.id}`;
+                                        const isEditingThisNote = editingNoteKey === noteKey;
+                                        return (
+                                          <div
+                                            key={c.id}
+                                            className="flex flex-col gap-1 p-2 rounded-lg bg-muted/50 border group"
+                                            data-testid={`weekly-contestant-${day.id}-${blockNum}-${c.id}`}
+                                          >
+                                            <div
+                                              className={`flex items-center gap-2 ${c.isCustom ? 'cursor-default' : 'cursor-grab'}`}
+                                              draggable={!c.isCustom}
+                                              onDragStart={() => !c.isCustom && handleDragStart(c, { type: 'block', block: blockNum, dayId: day.id })}
+                                              onDragEnd={handleDragEnd}
+                                              onClick={() => { if (!c.isCustom) { const full = findContestant(c.id); if (full) openBookingDialog(full, day.id); } }}
+                                            >
+                                              <Avatar className="h-10 w-10 rounded-lg flex-shrink-0">
+                                                <AvatarImage src={c.photoUrl || undefined} className="object-cover" />
+                                                <AvatarFallback className={`text-xs rounded-lg text-white ${c.isCustom ? 'bg-gradient-to-br from-purple-400 to-pink-500' : 'bg-gradient-to-br from-amber-400 to-orange-500'}`}>
+                                                  {c.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                                </AvatarFallback>
+                                              </Avatar>
+                                              <div className="min-w-0 flex-1">
+                                                <span className="text-sm font-medium truncate block">{c.name}</span>
+                                                {c.isCustom ? (
+                                                  <span className="text-xs text-purple-600 dark:text-purple-400">Custom</span>
+                                                ) : (
+                                                  <span className="text-xs text-muted-foreground">
+                                                    {c.gender === 'Female' ? 'F' : 'M'}{c.age ? ` • ${c.age}y` : ''}
+                                                  </span>
+                                                )}
+                                              </div>
+                                              <div className="flex items-center gap-0.5 flex-shrink-0">
+                                                <Button
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  className={`h-5 w-5 ${c.note ? 'opacity-100 text-amber-600' : 'opacity-0 group-hover:opacity-100'}`}
+                                                  onClick={(e) => { e.stopPropagation(); startEditingNote(day.id, blockNum, c.id, c.note); }}
+                                                >
+                                                  <MessageSquare className="h-3 w-3" />
+                                                </Button>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  className="h-5 w-5 opacity-0 group-hover:opacity-100"
+                                                  onClick={(e) => { e.stopPropagation(); removeFromBlock(blockNum, c.id, day.id); }}
+                                                >
+                                                  <X className="h-3 w-3" />
+                                                </Button>
+                                              </div>
+                                            </div>
+                                            {/* Note display/edit area */}
+                                            {isEditingThisNote ? (
+                                              <div className="flex gap-1 mt-1" onClick={(e) => e.stopPropagation()}>
+                                                <Input
+                                                  autoFocus
+                                                  placeholder="Add a note..."
+                                                  className="h-6 text-xs flex-1"
+                                                  value={noteInputValue}
+                                                  onChange={(e) => setNoteInputValue(e.target.value)}
+                                                  onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') { saveNote(blockNum, c.id, day.id); }
+                                                    if (e.key === 'Escape') { setEditingNoteKey(null); setNoteInputValue(''); }
+                                                  }}
+                                                />
+                                                <Button size="icon" className="h-6 w-6" onClick={() => saveNote(blockNum, c.id, day.id)}>
+                                                  <Check className="h-3 w-3" />
+                                                </Button>
+                                              </div>
+                                            ) : c.note ? (
+                                              <div 
+                                                className="text-xs text-amber-700 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded cursor-pointer truncate"
+                                                onClick={(e) => { e.stopPropagation(); startEditingNote(day.id, blockNum, c.id, c.note); }}
+                                                title={c.note}
+                                              >
+                                                📝 {c.note}
+                                              </div>
+                                            ) : null}
+                                          </div>
+                                        );
+                                      })
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </Card>
                           );
