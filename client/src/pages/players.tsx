@@ -5024,6 +5024,25 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
     enabled: !!bookingDayId,
   });
 
+  // Fetch casting cards to check for draft complete status
+  const { data: castingCards = [] } = useQuery<any[]>({
+    queryKey: ['/api/casting-cards'],
+  });
+
+  // Create a set of contestant IDs with draft complete casting cards
+  const draftCompleteContestantIds = useMemo(() => {
+    const ids = new Set<string>();
+    castingCards.forEach(card => {
+      if (card.isDraftComplete && card.contestantId) {
+        ids.add(card.contestantId);
+      }
+    });
+    return ids;
+  }, [castingCards]);
+
+  // State for viewing casting card preview
+  const [viewingCastingCardContestantId, setViewingCastingCardContestantId] = useState<string | null>(null);
+
   // Book contestant mutation
   const bookContestantMutation = useMutation({
     mutationFn: async ({ recordDayId, contestantId, blockNumber, seatLabel, skipPostcodeWarning }: { 
@@ -5819,6 +5838,18 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1">
                                 <span className="font-medium text-sm truncate">{c.name}</span>
+                                {draftCompleteContestantIds.has(c.id) && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-5 w-5 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+                                    onClick={(e) => { e.stopPropagation(); setViewingCastingCardContestantId(c.id); }}
+                                    title="View Casting Card"
+                                    data-testid={`button-view-casting-card-${c.id}`}
+                                  >
+                                    <Eye className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
                                 <Badge variant="outline" className={`text-[10px] px-1 py-0 ${c.auditionRating === 'A+' ? 'bg-amber-500/10 text-amber-700 border-amber-300' : 'bg-blue-500/10 text-blue-700 border-blue-300'}`}>
                                   {c.auditionRating}
                                 </Badge>
@@ -5934,6 +5965,18 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                                         )}
                                       </div>
                                       <div className="flex items-center gap-1 flex-shrink-0">
+                                        {!c.isCustom && draftCompleteContestantIds.has(c.id) && (
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6 text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+                                            onClick={(e) => { e.stopPropagation(); setViewingCastingCardContestantId(c.id); }}
+                                            title="View Casting Card"
+                                            data-testid={`button-view-casting-card-block-${c.id}`}
+                                          >
+                                            <Eye className="h-4 w-4" />
+                                          </Button>
+                                        )}
                                         <Button
                                           variant="ghost"
                                           size="icon"
@@ -6114,6 +6157,17 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                                                 )}
                                               </div>
                                               <div className="flex items-center gap-0.5 flex-shrink-0">
+                                                {!c.isCustom && draftCompleteContestantIds.has(c.id) && (
+                                                  <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-5 w-5 text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+                                                    onClick={(e) => { e.stopPropagation(); setViewingCastingCardContestantId(c.id); }}
+                                                    title="View Casting Card"
+                                                  >
+                                                    <Eye className="h-3 w-3" />
+                                                  </Button>
+                                                )}
                                                 <Button
                                                   variant="ghost"
                                                   size="icon"
@@ -6407,6 +6461,160 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Casting Card Preview Dialog */}
+      <Dialog open={!!viewingCastingCardContestantId} onOpenChange={(open) => !open && setViewingCastingCardContestantId(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto" data-testid="dialog-casting-card-preview">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-blue-600" />
+              Casting Card Preview
+            </DialogTitle>
+          </DialogHeader>
+          {viewingCastingCardContestantId && (
+            <CastingCardPreview contestantId={viewingCastingCardContestantId} />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Casting Card Preview component for RX Planning
+function CastingCardPreview({ contestantId }: { contestantId: string }) {
+  const { data: castingCard, isLoading } = useQuery<any>({
+    queryKey: ['/api/casting-cards', contestantId],
+    enabled: !!contestantId,
+  });
+
+  const { data: contestant } = useQuery<Contestant>({
+    queryKey: ['/api/contestants', contestantId],
+    enabled: !!contestantId,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!castingCard) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        No casting card found for this contestant.
+      </div>
+    );
+  }
+
+  const bulletPoints = castingCard.bulletPoints ? JSON.parse(castingCard.bulletPoints) : [];
+
+  return (
+    <div className="space-y-4">
+      {/* Header with photo */}
+      <div className="flex gap-4">
+        <Avatar className="h-24 w-24 rounded-lg border-2">
+          <AvatarImage src={contestant?.photoUrl || undefined} className="object-cover" />
+          <AvatarFallback className="text-2xl rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+            {(castingCard.fullName || contestant?.name)?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1">
+          <h3 className="text-xl font-bold">{castingCard.fullName || contestant?.name}</h3>
+          <p className="text-muted-foreground">{castingCard.ageState || `${contestant?.age || ''} (${contestant?.suburb || ''})`}</p>
+          {castingCard.occupation && <p className="text-sm">{castingCard.occupation}</p>}
+          {castingCard.tagline && (
+            <p className="text-green-600 dark:text-green-400 font-medium mt-1 italic">"{castingCard.tagline}"</p>
+          )}
+        </div>
+      </div>
+
+      {/* Bullet points */}
+      {bulletPoints.length > 0 && (
+        <div className="space-y-1">
+          {bulletPoints.map((point: string, idx: number) => (
+            <p key={idx} className="text-sm flex items-start gap-2">
+              <span className="text-primary">•</span>
+              <span>{point}</span>
+            </p>
+          ))}
+        </div>
+      )}
+
+      {/* Character traits & energy */}
+      <div className="grid grid-cols-2 gap-4">
+        {castingCard.characterTraits && (
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase">Character Traits</p>
+            <p className="text-sm">{castingCard.characterTraits}</p>
+          </div>
+        )}
+        {castingCard.energyLevel && (
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase">Energy Level</p>
+            <p className="text-sm">{castingCard.energyLevel}/5</p>
+          </div>
+        )}
+      </div>
+
+      {/* Key stories */}
+      {castingCard.keyStories && (
+        <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase">Key Stories</p>
+          <p className="text-sm whitespace-pre-wrap">{castingCard.keyStories}</p>
+        </div>
+      )}
+
+      {/* Play style */}
+      {castingCard.playStyle && (
+        <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase">Play Style / Risk Taker?</p>
+          <p className="text-sm">{castingCard.playStyle}</p>
+        </div>
+      )}
+
+      {/* Prize goals */}
+      <div className="grid grid-cols-2 gap-4">
+        {castingCard.prizeGoalHigh && (
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase">$100K Goal</p>
+            <p className="text-sm">{castingCard.prizeGoalHigh}</p>
+          </div>
+        )}
+        {castingCard.prizeGoalLow && (
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase">$1,000 Goal</p>
+            <p className="text-sm">{castingCard.prizeGoalLow}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Meet story */}
+      {castingCard.meetStory && (
+        <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase">Meet Story</p>
+          <p className="text-sm whitespace-pre-wrap">{castingCard.meetStory}</p>
+        </div>
+      )}
+
+      {/* Companion info */}
+      {castingCard.companionName && (
+        <div className="p-3 rounded-lg bg-muted/50 border">
+          <p className="text-xs font-medium text-muted-foreground uppercase mb-2">Attending With</p>
+          <div className="flex items-center gap-3">
+            {castingCard.companionPhotoUrl && (
+              <img src={castingCard.companionPhotoUrl} alt={castingCard.companionName} className="h-12 w-12 rounded-full object-cover" />
+            )}
+            <div>
+              <p className="font-medium">{castingCard.companionName}</p>
+              {castingCard.companionRelationship && (
+                <p className="text-sm text-muted-foreground">{castingCard.companionRelationship}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
