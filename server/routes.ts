@@ -3180,15 +3180,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all canceled assignments
       const allCanceled = await storage.getCanceledAssignments();
       
-      // Get unique contestant IDs from canceled assignments
-      const contestantIds = [...new Set(allCanceled.map(c => c.contestantId))];
+      // Only get contestant IDs from UNREBOOKED canceled assignments (rebookedToRecordDayId is null)
+      const unrebookedContestantIds = [...new Set(
+        allCanceled
+          .filter((c: any) => !c.rebookedToRecordDayId)
+          .map(c => c.contestantId)
+      )];
       
       // Get all contestants to check their current status
       const allContestants = await storage.getContestants();
       
-      // Find contestants who are in canceled_assignments but don't have 'rescheduled' status
+      // Find contestants who are in UNREBOOKED canceled_assignments but don't have 'rescheduled' status
       const contestantsToFix = allContestants.filter(c => 
-        contestantIds.includes(c.id) && 
+        unrebookedContestantIds.includes(c.id) && 
         c.availabilityStatus !== 'rescheduled'
       );
       
@@ -3211,11 +3215,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         message: `Fixed ${fixedCount} contestants to 'rescheduled' status`,
         fixedCount,
-        totalInReschedule: contestantIds.length,
+        totalInReschedule: unrebookedContestantIds.length,
         fixedRecords,
       });
     } catch (error: any) {
       console.error("[Fix Reschedule Status] Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Fix rebooked contestants - updates contestants who were rebooked to have 'assigned' status instead of 'rescheduled'
+  app.post("/api/contestants/fix-rebooked-status", requireAuth, async (req, res) => {
+    try {
+      // Get all canceled assignments that have been rebooked
+      const allCanceled = await storage.getCanceledAssignments();
+      const rebookedContestantIds = [...new Set(
+        allCanceled
+          .filter((c: any) => c.rebookedToRecordDayId)
+          .map(c => c.contestantId)
+      )];
+      
+      // Also get all seat assignments to check who is currently seated
+      const allSeatAssignments = await storage.getAllSeatAssignments();
+      const seatedContestantIds = new Set(allSeatAssignments.map((a: any) => a.contestantId));
+      
+      // Get all contestants to check their current status
+      const allContestants = await storage.getContestants();
+      
+      // Find contestants who are rebooked or currently seated but have 'rescheduled' status
+      const contestantsToFix = allContestants.filter(c => 
+        (rebookedContestantIds.includes(c.id) || seatedContestantIds.has(c.id)) && 
+        c.availabilityStatus === 'rescheduled'
+      );
+      
+      // Update each contestant's status to 'assigned'
+      let fixedCount = 0;
+      const fixedRecords: Array<{ id: string; name: string; previousStatus: string }> = [];
+      
+      for (const contestant of contestantsToFix) {
+        await storage.updateContestant(contestant.id, { availabilityStatus: 'assigned' });
+        fixedCount++;
+        fixedRecords.push({
+          id: contestant.id,
+          name: contestant.name,
+          previousStatus: contestant.availabilityStatus || 'unknown',
+        });
+      }
+      
+      console.log(`[Fix Rebooked Status] Fixed ${fixedCount} contestants from 'rescheduled' to 'assigned'`);
+      
+      res.json({
+        message: `Fixed ${fixedCount} rebooked contestants to 'assigned' status`,
+        fixedCount,
+        totalRebooked: rebookedContestantIds.length,
+        totalSeated: seatedContestantIds.size,
+        fixedRecords,
+      });
+    } catch (error: any) {
+      console.error("[Fix Rebooked Status] Error:", error);
       res.status(500).json({ error: error.message });
     }
   });
