@@ -101,6 +101,7 @@ interface SeatCardProps {
   isDragging?: boolean;
   isGlobalDragging?: boolean; // True when ANY seat is being dragged - disables hover cards
   isRXDayLocked?: boolean;
+  isQuickMoveMode?: boolean; // True when Quick Move mode is active - suppresses click-to-edit-winning-money
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
   onRemove?: (assignmentId: string) => void;
   onCancel?: (assignmentId: string) => void;
@@ -174,6 +175,7 @@ export function SeatCard({
   isDragging = false, 
   isGlobalDragging = false,
   isRXDayLocked = false,
+  isQuickMoveMode = false,
   onEmptySeatClick, 
   onRemove, 
   onCancel,
@@ -338,7 +340,12 @@ export function SeatCard({
   });
 
   const handleClick = (e: React.MouseEvent) => {
-    // Stop propagation to prevent drag-and-drop from interfering
+    // Quick Move mode is active - let the parent DraggableDroppableSeat handle clicks
+    if (isQuickMoveMode) {
+      return;
+    }
+    
+    // Stop propagation to prevent drag-and-drop from interfering (only when not in quick move)
     e.stopPropagation();
     
     // RX Day Locked: Click occupied seat to edit winning money
@@ -951,7 +958,7 @@ export function SeatCard({
                   </div>
                 )}
 
-                {isRXDayLocked && seat.winningMoneyAmount > 0 && (
+                {isRXDayLocked && (seat.winningMoneyAmount ?? 0) > 0 && (
                   <div className="text-sm p-2 bg-green-50 dark:bg-green-950/50 rounded-md border border-green-200 dark:border-green-800">
                     <label className="text-xs font-medium text-green-700 dark:text-green-300 block mb-2">Winning Money</label>
                     <div className="space-y-1 text-xs text-green-600 dark:text-green-400">
@@ -1005,7 +1012,7 @@ export function SeatCard({
                     Remove Test Subject
                   </Button>
                 )}
-                {isRXDayLocked && seat.winningMoneyAmount > 0 && (
+                {isRXDayLocked && (seat.winningMoneyAmount ?? 0) > 0 && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -1017,6 +1024,21 @@ export function SeatCard({
                     data-testid={`button-edit-winning-money-${seat.assignmentId}`}
                   >
                     Edit Winning Money
+                  </Button>
+                )}
+                {isRXDayLocked && !((seat.winningMoneyAmount ?? 0) > 0) && seat.assignmentId && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onWinningMoneyClick?.(seat.assignmentId!);
+                    }}
+                    data-testid={`button-add-winning-money-${seat.assignmentId}`}
+                  >
+                    <DollarSign className="h-3 w-3 mr-1" />
+                    Add Winning Money
                   </Button>
                 )}
                 {seat.wasStandby && seat.contestantId && (

@@ -329,6 +329,7 @@ function DraggableDroppableSeat({
         isDragging={isDragging}
         isGlobalDragging={isGlobalDragging}
         isRXDayLocked={isRXDayLocked}
+        isQuickMoveMode={isQuickMoveMode}
         onEmptySeatClick={onEmptySeatClick}
         onRemove={onRemove}
         onCancel={onCancel}
