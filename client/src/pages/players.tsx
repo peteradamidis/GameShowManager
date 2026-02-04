@@ -6749,6 +6749,49 @@ export default function PlayersPage() {
     input.click();
   };
 
+  const handleExportToExcel = async () => {
+    try {
+      const XLSX = await import('xlsx');
+      
+      const allContestants = [...players, ...backups];
+      
+      if (allContestants.length === 0) {
+        toast({ title: "No data", description: "No contestants to export", variant: "destructive" });
+        return;
+      }
+      
+      const selectedDay = recordDays.find(d => d.id === selectedRecordDayId);
+      
+      const exportData = allContestants.map(a => ({
+        'Name': `${a.contestant?.firstName || ''} ${a.contestant?.lastName || ''}`.trim(),
+        'Type': a.playerType === 'player' ? 'Player' : 'Backup',
+        'Episode': a.rxEpNumber || '',
+        'Block': a.blockNumber || '',
+        'Seat': a.seatLabel || '',
+        'Gender': a.contestant?.gender || '',
+        'Age': a.contestant?.age || '',
+        'Phone': a.contestant?.phone ? `, ${a.contestant.phone}` : '',
+        'Email': a.contestant?.email || '',
+        'Suburb': a.contestant?.suburb || '',
+        'Rating': a.contestant?.rating || '',
+        'Status': a.confirmedRsvp ? 'Confirmed' : (a.bookingEmailSent ? 'Invited' : 'Pending'),
+        'Attending With': a.contestant?.attendingWith || '',
+      }));
+      
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Contestants');
+      
+      const dayLabel = selectedDay ? `${selectedDay.rxNumber}_${format(new Date(selectedDay.date), 'yyyy-MM-dd')}` : 'all';
+      XLSX.writeFile(workbook, `contestants_${dayLabel}.xlsx`);
+      
+      toast({ title: "Exported", description: `${allContestants.length} contestants exported to Excel` });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({ title: "Error", description: "Failed to export data", variant: "destructive" });
+    }
+  };
+
   const toggleCallMutation = useMutation({
     mutationFn: async ({ assignmentId, called }: { assignmentId: string; called: boolean }) => {
       const response = await apiRequest('PATCH', `/api/seat-assignments/${assignmentId}/workflow`, {
@@ -7076,6 +7119,16 @@ export default function PlayersPage() {
                   ))}
                 </SelectContent>
               </Select>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleExportToExcel}
+                disabled={players.length === 0 && backups.length === 0}
+                data-testid="button-export-contestants"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
             </div>
           </div>
 
