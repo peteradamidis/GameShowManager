@@ -2215,9 +2215,24 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 <CardHeader className="pb-2">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-sm">Standbys</span>
-                    <Badge variant="secondary" className="text-[10px] px-1">
-                      {standbys.filter(s => s.status !== 'seated').length}
-                    </Badge>
+                    {(() => {
+                      const totalNonSeated = standbys.filter(s => s.status !== 'seated').length;
+                      const checkedInCount = standbys.filter(s => s.status !== 'seated' && s.signedIn).length;
+                      
+                      if (isLocked) {
+                        // In RX Lock mode, show checked-in count with total in parentheses
+                        return (
+                          <Badge variant="secondary" className="text-[10px] px-1">
+                            {checkedInCount} checked in{totalNonSeated > checkedInCount ? ` (${totalNonSeated} total)` : ''}
+                          </Badge>
+                        );
+                      }
+                      return (
+                        <Badge variant="secondary" className="text-[10px] px-1">
+                          {totalNonSeated}
+                        </Badge>
+                      );
+                    })()}
                   </div>
                   {!isLocked && (
                     <p className="text-xs text-muted-foreground mt-2">
@@ -2227,13 +2242,28 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                 </CardHeader>
                 <CardContent className="pt-0">
                   {(() => {
-                    const activeStandbys = standbys.filter(s => s.status !== 'seated');
+                    // Filter standbys: not seated, and in RX Lock mode only show those who have checked in
+                    const activeStandbys = standbys.filter(s => {
+                      if (s.status === 'seated') return false;
+                      // In RX Lock mode, only show standbys who have checked in (signedIn is set)
+                      if (isLocked && !s.signedIn) return false;
+                      return true;
+                    });
+                    
+                    // Count total non-seated standbys (before check-in filter) for info message
+                    const totalNonSeatedStandbys = standbys.filter(s => s.status !== 'seated').length;
+                    const notCheckedInCount = totalNonSeatedStandbys - activeStandbys.length;
                     
                     if (activeStandbys.length === 0) {
                       return (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          No standbys for this day
-                        </p>
+                        <div className="text-center py-4">
+                          <p className="text-sm text-muted-foreground">
+                            {isLocked && notCheckedInCount > 0 
+                              ? `No checked-in standbys (${notCheckedInCount} not yet checked in)`
+                              : 'No standbys for this day'
+                            }
+                          </p>
+                        </div>
                       );
                     }
                     
