@@ -2637,7 +2637,7 @@ export class DbStorage implements IStorage {
         throw new Error(`Seat (Block ${issue.blockNumber}, Seat ${issue.seatLabel}) is already occupied`);
       }
 
-      // 3. Create the seat assignment back
+      // 3. Create the seat assignment back with ALL preserved historical data
       const [assignment] = await tx
         .insert(seatAssignments)
         .values({
@@ -2645,7 +2645,64 @@ export class DbStorage implements IStorage {
           recordDayId: issue.recordDayId,
           blockNumber: issue.blockNumber,
           seatLabel: issue.seatLabel,
-          status: 'confirmed'
+          status: 'confirmed',
+          // Restore all historical data from attendance issue
+          playerType: issue.playerType,
+          firstNations: issue.firstNations,
+          rating: issue.rating,
+          location: issue.location,
+          medicalQuestion: issue.medicalQuestion,
+          criminalBankruptcy: issue.criminalBankruptcy,
+          castingCategory: issue.castingCategory,
+          notes: issue.assignmentNotes,
+          // Booking workflow fields
+          bookingEmailSent: issue.bookingEmailSent,
+          bookingEmailError: issue.bookingEmailError,
+          confirmedRsvp: issue.confirmedRsvp,
+          ticketEmailSent: issue.ticketEmailSent,
+          emailsCopiedAt: issue.emailsCopiedAt,
+          // Paperwork tracking
+          paperworkSent: issue.paperworkSent,
+          paperworkSentBy: issue.paperworkSentBy,
+          paperworkReceived: issue.paperworkReceived,
+          paperworkReceivedBy: issue.paperworkReceivedBy,
+          paperworkOnDay: issue.paperworkOnDay,
+          // Sign-in and OTD
+          signedIn: issue.signedIn,
+          otdNotes: issue.otdNotes,
+          standbyReplacementSwaps: issue.standbyReplacementSwaps,
+          // Original position tracking
+          originalBlockNumber: issue.originalBlockNumber,
+          originalSeatLabel: issue.originalSeatLabel,
+          swappedAt: issue.swappedAt,
+          // RX/TX tracking fields
+          rxNumber: issue.rxNumber,
+          rxEpNumber: issue.rxEpNumber,
+          caseNumber: issue.caseNumber,
+          winningMoneyRole: issue.winningMoneyRole,
+          winningMoneyAmount: issue.winningMoneyAmount,
+          winningMoneyText: issue.winningMoneyText,
+          caseAmount: issue.caseAmount,
+          quickCash: issue.quickCash,
+          bankOfferTaken: issue.bankOfferTaken,
+          spinTheWheel: issue.spinTheWheel,
+          prize: issue.prize,
+          txNumber: issue.txNumber,
+          txDate: issue.txDate,
+          notifiedOfTx: issue.notifiedOfTx,
+          photosSent: issue.photosSent,
+          // Override fields
+          seatNotes: issue.seatNotes,
+          attendingWithOverride: issue.attendingWithOverride,
+          mobilityNotesOverride: issue.mobilityNotesOverride,
+          castingCardUrl: issue.castingCardUrl,
+          // Standby seating tracking
+          seatedAsBlockType: issue.seatedAsBlockType,
+          seatedFromStandby: issue.seatedFromStandby,
+          standbyMovementNotes: issue.standbyMovementNotes,
+          // Call tracking
+          called: issue.called,
+          calledAt: issue.calledAt,
         })
         .returning();
 
