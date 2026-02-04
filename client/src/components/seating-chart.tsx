@@ -2382,7 +2382,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                         No prize draw entries yet
                       </p>
                     ) : (
-                      <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                      <div className="space-y-2">
                         {prizeWinners.map((winner) => {
                           return (
                             <div 
