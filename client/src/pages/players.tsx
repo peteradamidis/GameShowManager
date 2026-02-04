@@ -6484,11 +6484,24 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
 function CastingCardPreview({ contestantId }: { contestantId: string }) {
   const { data: castingCard, isLoading } = useQuery<any>({
     queryKey: ['/api/casting-cards', contestantId],
+    queryFn: async () => {
+      const response = await fetch(`/api/casting-cards/${contestantId}`, { credentials: 'include' });
+      if (!response.ok) {
+        if (response.status === 404) return null;
+        throw new Error('Failed to fetch casting card');
+      }
+      return response.json();
+    },
     enabled: !!contestantId,
   });
 
   const { data: contestant } = useQuery<Contestant>({
     queryKey: ['/api/contestants', contestantId],
+    queryFn: async () => {
+      const response = await fetch(`/api/contestants/${contestantId}`, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch contestant');
+      return response.json();
+    },
     enabled: !!contestantId,
   });
 
@@ -6625,6 +6638,7 @@ export default function PlayersPage() {
   const [viewingPhoto, setViewingPhoto] = useState<{ url: string; name: string } | null>(null);
   const [activeTab, setActiveTab] = useState<string>('players');
   const [editContestantId, setEditContestantId] = useState<string | null>(null);
+  const [block7Ep1Confirmation, setBlock7Ep1Confirmation] = useState<{ assignmentId: string; contestantName: string } | null>(null);
 
   const { data: recordDays = [], isLoading: loadingDays } = useQuery<RecordDay[]>({
     queryKey: ['/api/record-days'],
