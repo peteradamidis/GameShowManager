@@ -751,9 +751,10 @@ export default function BookingMaster() {
       }
     }
     // Filter by medical information (includes both Medical App and Medical AUD, excludes NA/N/A/No, OR age 70+)
+    // Also checks assignment-level overrides (mobilityNotesOverride) for cases where notes were added after import
     if (filterMedicalNotes) {
       const hasMedicalApp = hasMeaningfulValue(row.contestant?.medicalInfo);
-      const hasMedicalAud = hasMeaningfulValue(row.contestant?.mobilityNotes);
+      const hasMedicalAud = hasMeaningfulValue(row.contestant?.mobilityNotes) || hasMeaningfulValue(row.assignment?.mobilityNotesOverride);
       const isOver70 = row.contestant?.age !== undefined && row.contestant?.age !== null && row.contestant.age >= 70;
       if (!hasMedicalApp && !hasMedicalAud && !isOver70) {
         return false;
