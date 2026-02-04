@@ -320,6 +320,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [pptxSearchQuery, setPptxSearchQuery] = useState('');
   const [pptxSearchResults, setPptxSearchResults] = useState<Array<{ id: string; name: string; age: number; gender: string }>>([]);
   const [pptxSearchingFor, setPptxSearchingFor] = useState<number | null>(null);
+  const [block7Ep1Confirmation, setBlock7Ep1Confirmation] = useState<{ assignmentId: string; contestantName: string } | null>(null);
   const pptxFileInputRef = useRef<HTMLInputElement>(null);
 
   // Debug: Log contestants with groupIds
@@ -6388,20 +6389,29 @@ export default function PlayersPage() {
   const handleEpisodeChange = (assignmentId: string, value: string) => {
     const episodeNumber = value === 'none' ? null : value;
     
-    // Prevent Block 7 from being assigned to EP1
+    // Warn about Block 7 being assigned to EP1 (but allow with confirmation)
     if (episodeNumber === '1') {
       const assignment = allAssignments.find(a => a.id === assignmentId);
       if (assignment && assignment.blockNumber === 7) {
-        toast({ 
-          title: "Block 7 Cannot Be EP1", 
-          description: "Block 7 contestants cannot be assigned to Episode 1. Please select a different episode.", 
-          variant: "destructive" 
-        });
+        const contestantName = assignment.contestant 
+          ? `${assignment.contestant.firstName || ''} ${assignment.contestant.lastName || ''}`.trim() || 'Unknown'
+          : 'Unknown';
+        setBlock7Ep1Confirmation({ assignmentId, contestantName });
         return;
       }
     }
     
     updateEpisodeMutation.mutate({ assignmentId, episodeNumber });
+  };
+  
+  const confirmBlock7Ep1 = () => {
+    if (block7Ep1Confirmation) {
+      updateEpisodeMutation.mutate({ 
+        assignmentId: block7Ep1Confirmation.assignmentId, 
+        episodeNumber: '1' 
+      });
+      setBlock7Ep1Confirmation(null);
+    }
   };
 
   const uploadCastingCardMutation = useMutation({
@@ -6990,6 +7000,45 @@ export default function PlayersPage() {
           </SafeRender>
         </TabsContent>
       </Tabs>
+
+      {/* Block 7 to EP1 Confirmation Dialog */}
+      <Dialog open={!!block7Ep1Confirmation} onOpenChange={(open) => !open && setBlock7Ep1Confirmation(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <AlertTriangle className="h-5 w-5" />
+              Block 7 Player Warning
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              You are about to assign a <strong>Block 7</strong> contestant to <strong>Episode 1</strong>.
+              {block7Ep1Confirmation && (
+                <div className="mt-2 p-2 bg-muted rounded text-foreground">
+                  <strong>{block7Ep1Confirmation.contestantName}</strong> is from Block 7
+                </div>
+              )}
+              <div className="mt-3 text-sm">
+                Block 7 contestants are typically assigned to later episodes. Are you sure you want to proceed?
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button 
+              variant="outline" 
+              onClick={() => setBlock7Ep1Confirmation(null)}
+              data-testid="button-cancel-block7-ep1"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={confirmBlock7Ep1}
+              className="bg-amber-600 hover:bg-amber-700"
+              data-testid="button-confirm-block7-ep1"
+            >
+              Yes, Assign to EP 1
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
