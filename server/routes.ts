@@ -4976,6 +4976,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       availableAll = availableAll.filter(c => !allStandbyContestantIds.has(c.id));
       
+      // Exclude contestants marked as "available for standby" from import
+      // These contestants should only be manually assigned as standbys, not auto-assigned to seats
+      availableAll = availableAll.filter(c => !c.availableForStandby);
+      
       // If onlyConfirmedAvailability is true, filter to only contestants who confirmed for this record day
       if (onlyConfirmedAvailability) {
         const availabilityResponses = await storage.getAvailabilityByRecordDay(recordDayId);
