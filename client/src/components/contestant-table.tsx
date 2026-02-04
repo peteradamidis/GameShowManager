@@ -308,6 +308,53 @@ const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
   "Powelltown": { lat: -37.7933, lng: 145.5667 },
   "Narbethong": { lat: -37.7400, lng: 145.5867 },
   "Cherrybank": { lat: -37.8167, lng: 145.6333 },
+  // East Gippsland - Very remote (over 60km)
+  "Lakes Entrance": { lat: -37.8720, lng: 147.9990 },
+  "Orbost": { lat: -37.7005, lng: 148.4567 },
+  "Mallacoota": { lat: -37.5567, lng: 149.7500 },
+  "Metung": { lat: -37.8908, lng: 147.8550 },
+  "Paynesville": { lat: -37.9167, lng: 147.7167 },
+  "Marlo": { lat: -37.7833, lng: 148.5333 },
+  "Cann River": { lat: -37.5674, lng: 149.1519 },
+  // Gippsland - Remote
+  "Yarram": { lat: -38.5617, lng: 146.6734 },
+  "Foster": { lat: -38.6517, lng: 146.2117 },
+  "Leongatha": { lat: -38.4817, lng: 145.9417 },
+  "Korumburra": { lat: -38.4317, lng: 145.8217 },
+  "Inverloch": { lat: -38.6367, lng: 145.7300 },
+  "Wonthaggi": { lat: -38.6050, lng: 145.5900 },
+  "San Remo": { lat: -38.5167, lng: 145.3667 },
+  "Cowes": { lat: -38.4550, lng: 145.2350 }, // Phillip Island
+  "Drouin": { lat: -38.1340, lng: 145.8550 },
+  "Moe": { lat: -38.1770, lng: 146.2620 },
+  "Morwell": { lat: -38.2350, lng: 146.3950 },
+  "Churchill": { lat: -38.3120, lng: 146.4220 },
+  // Western Victoria - Remote
+  "Stawell": { lat: -37.0560, lng: 142.7750 },
+  "Ararat": { lat: -37.2830, lng: 142.9340 },
+  "Nhill": { lat: -36.3333, lng: 141.6500 },
+  "Dimboola": { lat: -36.4617, lng: 142.0333 },
+  // Coastal - Southwest
+  "Port Fairy": { lat: -38.3850, lng: 142.2300 },
+  "Port Campbell": { lat: -38.6194, lng: 142.9967 },
+  // Border towns
+  "Kerang": { lat: -35.7330, lng: 143.9200 },
+  "Cohuna": { lat: -35.8069, lng: 144.2194 },
+  "Kyabram": { lat: -36.3167, lng: 145.0500 },
+  "Rochester": { lat: -36.3667, lng: 144.7000 },
+  "Cobram": { lat: -35.9222, lng: 145.6556 },
+  "Numurkah": { lat: -36.0833, lng: 145.4333 },
+  // High Country
+  "Bright": { lat: -36.7300, lng: 146.9600 },
+  "Myrtleford": { lat: -36.5600, lng: 146.7250 },
+  "Beechworth": { lat: -36.3620, lng: 146.6880 },
+  "Mansfield": { lat: -37.0530, lng: 146.0840 },
+  "Benalla": { lat: -36.5520, lng: 145.9820 },
+  "Euroa": { lat: -36.7500, lng: 145.7667 },
+  "Nagambie": { lat: -36.7850, lng: 145.1567 },
+  // Additional common locations
+  "Phillip Island": { lat: -38.4890, lng: 145.2350 },
+  "Gippsland": { lat: -38.1000, lng: 146.5000 },
 };
 
 // Calculate distance between two coordinates using Haversine formula
