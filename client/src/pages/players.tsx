@@ -676,7 +676,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     
     console.log('[syncAndExitFullscreen] Current data font sizes:', {
       fontSizeOccupation: currentData.fontSizeOccupation,
-      fontSizeTagline: currentData.fontSizeTagline,
+      fontSizeAgeState: currentData.fontSizeAgeState,
       fontSizeName: currentData.fontSizeName
     });
     
@@ -699,11 +699,21 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     // Update ref immediately (synchronous)
     cardDataRef.current = updatedData;
     
+    console.log('[syncAndExitFullscreen] Setting cardData with:', {
+      fontSizeOccupation: updatedData.fontSizeOccupation,
+      fontSizeAgeState: updatedData.fontSizeAgeState,
+      occupation: updatedData.occupation?.substring(0, 30),
+      tagline: updatedData.tagline?.substring(0, 30),
+      hasChanges
+    });
+    
     // Use flushSync to force React to process state updates synchronously
     // This ensures cardData is updated BEFORE we switch views
     flushSync(() => {
       setCardData(updatedData);
     });
+    
+    console.log('[syncAndExitFullscreen] After flushSync, isFullscreen will be set to false');
     
     // Trigger immediate save if there were changes
     if (hasChanges || hasUnsavedChanges.current) {
@@ -996,13 +1006,26 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       const hasLocalData = cardData?.contestantId === selectedContestant.id || 
                           cardDataRef.current?.contestantId === selectedContestant.id;
       
+      // DEBUG: Log current state
+      console.log('[CardData useEffect] Check:', { 
+        isNewContestant, 
+        hasLocalData, 
+        lastLoadedId: lastLoadedContestantId.current,
+        selectedId: selectedContestant.id,
+        cardDataContestantId: cardData?.contestantId,
+        refContestantId: cardDataRef.current?.contestantId,
+        currentFontSizeOccupation: cardDataRef.current?.fontSizeOccupation,
+        existingCardFontSizeOccupation: existingCard?.fontSizeOccupation,
+        isFullscreen
+      });
+      
       if (!isNewContestant && hasLocalData) {
         // Already loaded this contestant, don't overwrite local edits
         console.log('[CardData useEffect] Skipping - already have local data for this contestant');
         return;
       }
       
-      console.log('[CardData useEffect] Loading card data:', { isNewContestant, hasLocalData, contestantId: selectedContestant.id });
+      console.log('[CardData useEffect] WILL LOAD card data - THIS MIGHT OVERWRITE LOCAL CHANGES');
       
       try {
         setRenderError(null); // Clear any previous errors
