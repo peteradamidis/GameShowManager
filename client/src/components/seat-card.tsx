@@ -263,10 +263,55 @@ export function SeatCard({
   // Local state for optimistic player type updates
   const [localPlayerType, setLocalPlayerType] = useState<string | undefined>(seat.playerType);
   
+  // Local state for podium story toggle
+  const [localPodiumStory, setLocalPodiumStory] = useState<boolean>(!!seat.podiumStory);
+  
   // Sync local player type with prop changes
   useEffect(() => {
     setLocalPlayerType(seat.playerType);
   }, [seat.playerType]);
+  
+  // Sync local podium story with prop changes
+  useEffect(() => {
+    setLocalPodiumStory(!!seat.podiumStory);
+  }, [seat.podiumStory]);
+  
+  // Mutation for toggling podium story
+  const togglePodiumStoryMutation = useMutation({
+    mutationFn: async (podiumStory: boolean) => {
+      const response = await apiRequest('PATCH', `/api/contestants/${seat.contestantId}`, { podiumStory });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.includes('/api/seat-assignments');
+        }
+      });
+      toast({
+        title: localPodiumStory ? "Podium Story Added" : "Podium Story Removed",
+        description: localPodiumStory ? "Contestant marked for podium story" : "Podium story tag removed",
+      });
+    },
+    onError: (error: any) => {
+      setLocalPodiumStory(!localPodiumStory);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update podium story",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handle podium story toggle
+  const handlePodiumStoryToggle = () => {
+    if (!seat.contestantId) return;
+    const newValue = !localPodiumStory;
+    setLocalPodiumStory(newValue);
+    togglePodiumStoryMutation.mutate(newValue);
+  };
   
   // Mutation for updating player type
   const updatePlayerTypeMutation = useMutation({
@@ -749,6 +794,28 @@ export function SeatCard({
                         </button>
                       )}
                     </div>
+                  </div>
+                )}
+
+                {/* Podium Story Toggle */}
+                {seat.contestantId && (
+                  <div className="text-sm">
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Podium Story</label>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePodiumStoryToggle();
+                      }}
+                      disabled={togglePodiumStoryMutation.isPending}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                        localPodiumStory 
+                          ? 'bg-pink-500 text-white border-pink-600 dark:bg-pink-600 dark:border-pink-500' 
+                          : 'bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-300 dark:border-pink-700 hover:bg-pink-500/20'
+                      } disabled:opacity-50`}
+                      data-testid={`button-podium-story-toggle-${seat.contestantId}`}
+                    >
+                      {localPodiumStory ? 'PS ✓' : 'Add PS'}
+                    </button>
                   </div>
                 )}
 
