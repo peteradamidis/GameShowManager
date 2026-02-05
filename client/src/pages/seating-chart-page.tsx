@@ -217,13 +217,15 @@ function generateEmptyBlocks(recordDayId: string): SeatData[][] {
   });
 }
 
-// Podium Story Card component with editable notes
+// Podium Story Card component with editable notes and case number
 function PodiumStoryCard({ 
   contestant, 
-  onNoteUpdate 
+  onNoteUpdate,
+  onCaseNumberUpdate
 }: { 
-  contestant: { id: string; name: string; seatNumber?: number; seatLabel?: string; gender?: string; age?: number; location?: string; podiumStoryNote?: string };
+  contestant: { id: string; name: string; seatNumber?: number; seatLabel?: string; gender?: string; age?: number; location?: string; podiumStoryNote?: string; caseNumber?: string };
   onNoteUpdate: (note: string) => void;
+  onCaseNumberUpdate: (caseNumber: string | null) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [note, setNote] = useState(contestant.podiumStoryNote || '');
@@ -232,6 +234,8 @@ function PodiumStoryCard({
     onNoteUpdate(note);
     setIsEditing(false);
   };
+
+  const caseNumbers = Array.from({ length: 22 }, (_, i) => (i + 1).toString());
 
   return (
     <div className="p-3 rounded-lg bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800">
@@ -247,6 +251,31 @@ function PodiumStoryCard({
         {contestant.age && <span>{contestant.age}yo</span>}
         {contestant.location && <span className="truncate">{contestant.location}</span>}
       </div>
+      
+      {/* Case Number Selector */}
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-[11px] font-medium text-muted-foreground">Case:</span>
+        <Select
+          value={contestant.caseNumber || ''}
+          onValueChange={(value) => onCaseNumberUpdate(value || null)}
+        >
+          <SelectTrigger className="h-7 w-20 text-xs" data-testid={`select-case-number-${contestant.id}`}>
+            <SelectValue placeholder="--" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">--</SelectItem>
+            {caseNumbers.map(num => (
+              <SelectItem key={num} value={num}>{num}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {contestant.caseNumber && (
+          <Badge className="bg-amber-500 text-white text-[10px] px-1.5">
+            Case {contestant.caseNumber}
+          </Badge>
+        )}
+      </div>
+
       {isEditing ? (
         <div className="space-y-2">
           <Textarea
@@ -2020,6 +2049,7 @@ export default function SeatingChartPage() {
                     seatLabel: a.seatLabel,
                     podiumStory: a.podiumStory,
                     podiumStoryNote: contestant?.podiumStoryNote || '',
+                    caseNumber: contestant?.caseNumber || '',
                     gender: contestant?.gender,
                     age: contestant?.age,
                     location: contestant?.location || a.contestantLocation,
@@ -2052,6 +2082,16 @@ export default function SeatingChartPage() {
                               })
                               .catch(() => {
                                 toast({ title: "Error", description: "Failed to save note", variant: "destructive" });
+                              });
+                          }}
+                          onCaseNumberUpdate={(caseNumber) => {
+                            apiRequest('PATCH', `/api/contestants/${contestant.id}`, { caseNumber: caseNumber === 'none' ? null : caseNumber })
+                              .then(() => {
+                                queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+                                toast({ title: "Case updated", description: caseNumber && caseNumber !== 'none' ? `Assigned to Case ${caseNumber}` : "Case number removed" });
+                              })
+                              .catch(() => {
+                                toast({ title: "Error", description: "Failed to update case number", variant: "destructive" });
                               });
                           }}
                         />
