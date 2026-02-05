@@ -1098,6 +1098,8 @@ export default function SeatingChartPage() {
               podiumStory: assignment.podiumStory,
               availabilityStatus: assignment.availabilityStatus,
               signedIn: assignment.signedIn,
+              bookingEmailSent: assignment.bookingEmailSent,
+              confirmedRsvp: assignment.confirmedRsvp,
             };
           }
         }

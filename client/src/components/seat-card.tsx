@@ -76,6 +76,8 @@ export interface SeatData {
   mobilityNotesOverride?: string; // Override for mobility/medical notes when they change after invitation
   podiumStory?: boolean; // True if contestant has a podium story
   signedIn?: string; // Timestamp when contestant signed in on RX day
+  bookingEmailSent?: boolean; // True if booking email has been sent
+  confirmedRsvp?: boolean; // True if contestant has confirmed RSVP
   previouslyCanceled?: { // Info about who was previously in this seat (if canceled)
     contestantName: string;
     canceledAt?: string;
@@ -494,6 +496,16 @@ export function SeatCard({
             {seat.wasStandby && (
               <Badge variant="outline" className="text-[7px] px-0.5 py-0 h-3 border-purple-400 bg-purple-100 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300" title="Originally booked as standby">
                 STBY
+              </Badge>
+            )}
+            {!isRXDayLocked && seat.confirmedRsvp && (
+              <Badge variant="outline" className="text-[7px] px-0.5 py-0 h-3 border-green-400 bg-green-100 text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300" title="Booking confirmed">
+                OK
+              </Badge>
+            )}
+            {!isRXDayLocked && seat.bookingEmailSent && !seat.confirmedRsvp && (
+              <Badge variant="outline" className="text-[7px] px-0.5 py-0 h-3 border-amber-400 bg-amber-100 text-amber-700 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300" title="Awaiting reply">
+                WAIT
               </Badge>
             )}
             {seat.signedIn && isRXDayLocked && (
