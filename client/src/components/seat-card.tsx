@@ -135,7 +135,7 @@ const groupColors = [
 const ratingColorsLight: Record<string, { bg: string; border: string; text: string }> = {
   'A+': { bg: '#dcfce7', border: '#16a34a', text: '#14532d' }, // Bright green - dark text
   'A': { bg: '#dbeafe', border: '#3b82f6', text: '#1e3a8a' }, // Faded blue - dark text
-  'P': { bg: '#e0f2e0', border: '#6aaa6a', text: '#1a3a1a' }, // Faded/muted green - dark text
+  'P': { bg: '#f1f5f9', border: '#94a3b8', text: '#334155' }, // Subtle slate/gray - neutral partner color
   'B+': { bg: '#fef3c7', border: '#f59e0b', text: '#78350f' }, // Amber - dark text
   'B': { bg: '#fed7aa', border: '#f97316', text: '#7c2d12' }, // Orange - dark text
   'C': { bg: '#fee2e2', border: '#ef4444', text: '#7f1d1d' }, // Red - dark text
@@ -144,7 +144,7 @@ const ratingColorsLight: Record<string, { bg: string; border: string; text: stri
 const ratingColorsDark: Record<string, { bg: string; border: string; text: string }> = {
   'A+': { bg: '#14532d', border: '#22c55e', text: '#dcfce7' }, // Dark green bg - light text
   'A': { bg: '#1e3a5f', border: '#60a5fa', text: '#dbeafe' }, // Dark blue bg - light text
-  'P': { bg: '#1a3a1a', border: '#6aaa6a', text: '#e0f2e0' }, // Dark muted green - light text
+  'P': { bg: '#1e293b', border: '#64748b', text: '#e2e8f0' }, // Dark slate bg - neutral partner color
   'B+': { bg: '#451a03', border: '#fbbf24', text: '#fef3c7' }, // Dark amber bg - light text
   'B': { bg: '#431407', border: '#fb923c', text: '#fed7aa' }, // Dark orange bg - light text
   'C': { bg: '#450a0a', border: '#f87171', text: '#fee2e2' }, // Dark red bg - light text
