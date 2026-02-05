@@ -2417,9 +2417,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         body.availabilityStatus = null;
       }
       
+      // Handle podiumStoryCaseNumber - convert to integer or null
+      if ('podiumStoryCaseNumber' in body) {
+        const caseNum = body.podiumStoryCaseNumber;
+        body.podiumStoryCaseNumber = caseNum === null || caseNum === '' ? null : parseInt(caseNum, 10);
+      }
+      
       const updated = await storage.updateContestant(req.params.id, body);
       res.json(updated);
     } catch (error: any) {
+      console.error('Error updating contestant:', error);
       res.status(500).json({ error: error.message });
     }
   });
