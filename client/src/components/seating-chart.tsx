@@ -753,6 +753,7 @@ function SeatingBlock({
   quickMoveSelectedSeatId,
   onQuickMoveClick,
   showBookingStatus,
+  onRatingChange,
 }: { 
   block: SeatData[]; 
   blockIndex: number;
@@ -784,6 +785,7 @@ function SeatingBlock({
   quickMoveSelectedSeatId?: string | null;
   onQuickMoveClick?: (seatId: string) => void;
   showBookingStatus?: boolean;
+  onRatingChange?: (contestantId: string, newRating: string) => void;
 }) {
   const stats = calculateBlockStats(block);
 
@@ -2108,6 +2110,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   quickMoveSelectedSeatId={quickMoveSelectedSeatId}
                   onQuickMoveClick={handleQuickMoveClick}
                   showBookingStatus={showBookingStatus}
+                  onRatingChange={onRatingChange}
                 />
               ))}
             </div>
@@ -2182,6 +2185,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     quickMoveSelectedSeatId={quickMoveSelectedSeatId}
                     onQuickMoveClick={handleQuickMoveClick}
                     showBookingStatus={showBookingStatus}
+                    onRatingChange={onRatingChange}
                   />
                 );
               })}
@@ -2228,6 +2232,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   quickMoveSelectedSeatId={quickMoveSelectedSeatId}
                   onQuickMoveClick={handleQuickMoveClick}
                   showBookingStatus={showBookingStatus}
+                  onRatingChange={onRatingChange}
                 />
               </div>
               
