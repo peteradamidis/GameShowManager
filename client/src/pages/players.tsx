@@ -713,9 +713,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       hasChanges
     });
     
-    // Mark that we just saved locally - this prevents useEffect from overwriting for 2 seconds
-    lastLocalSaveTime.current = Date.now();
-    
     // Use flushSync to force React to process state updates synchronously
     // This ensures cardData is updated BEFORE we switch views
     flushSync(() => {
@@ -740,6 +737,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         onSuccess: () => {
           hasUnsavedChanges.current = false;
           setAutoSaveStatus('saved');
+          // CRITICAL: Set timestamp AFTER save completes to protect for 5 seconds
+          lastLocalSaveTime.current = Date.now();
           setTimeout(() => setAutoSaveStatus('idle'), 2000);
           // Clear the flag AFTER the save completes successfully
           // Add extra delay to ensure any refetches have completed
@@ -754,7 +753,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         },
       });
     } else {
-      // No changes to save, clear the flag after a short delay
+      // No changes to save, but still set timestamp to protect against refetches
+      lastLocalSaveTime.current = Date.now();
+      // Clear the flag after a short delay
       setTimeout(() => {
         isExitingFullscreen.current = false;
       }, 200);
@@ -1027,10 +1028,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         return;
       }
       
-      // CRITICAL: Skip if we recently saved data locally (within 2 seconds)
+      // CRITICAL: Skip if we recently saved data locally (within 5 seconds)
       // This prevents React Query refetches from overwriting our local edits
       const timeSinceLastSave = Date.now() - lastLocalSaveTime.current;
-      if (timeSinceLastSave < 2000 && cardDataRef.current?.contestantId === selectedContestant.id) {
+      if (timeSinceLastSave < 5000 && cardDataRef.current?.contestantId === selectedContestant.id) {
         console.log('[CardData useEffect] Skipping - recently saved locally:', timeSinceLastSave, 'ms ago');
         return;
       }
@@ -1045,6 +1046,24 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       if (!isNewContestant && hasLocalData) {
         // Already loaded this contestant, don't overwrite local edits
         return;
+      }
+      
+      // ADDITIONAL CHECK: If we have local data with content that differs from existingCard, skip overwrite
+      // This catches cases where the timing checks above fail
+      const localData = cardDataRef.current || cardData;
+      if (localData && localData.contestantId === selectedContestant.id && existingCard) {
+        // Check if local data has edits that would be lost
+        const localHasTagline = localData.tagline && localData.tagline.trim().length > 0;
+        const localHasOccupation = localData.occupation && localData.occupation.trim().length > 0;
+        const serverTagline = existingCard.tagline || '';
+        const serverOccupation = existingCard.occupation || '';
+        
+        // If local has meaningful content that differs from server, preserve local
+        if ((localHasTagline && localData.tagline !== serverTagline) ||
+            (localHasOccupation && localData.occupation !== serverOccupation)) {
+          console.log('[CardData useEffect] Skipping - local data has unsaved edits that differ from server');
+          return;
+        }
       }
       
       try {
