@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -749,8 +755,8 @@ export function SeatCard({
                             {contestantDetails.auditionRating}
                           </span>
                           {onRatingChange && seat.contestantId && (
-                            <Popover>
-                              <PopoverTrigger asChild>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
                                 <button
                                   className="p-0.5 rounded hover:bg-muted/50 transition-colors opacity-40 hover:opacity-100"
                                   onClick={(e) => e.stopPropagation()}
@@ -758,9 +764,9 @@ export function SeatCard({
                                 >
                                   <Edit2 className="w-2.5 h-2.5 text-muted-foreground" />
                                 </button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-2" align="end">
-                                <div className="flex flex-wrap gap-1">
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="min-w-0">
+                                <div className="flex flex-wrap gap-1 p-1">
                                   {['A+', 'A', 'P', 'B+', 'B', 'C'].map((rating) => {
                                     const isSelected = contestantDetails?.auditionRating === rating;
                                     const colors = isDarkMode ? ratingColorsDark[rating] : ratingColorsLight[rating];
@@ -790,8 +796,8 @@ export function SeatCard({
                                     );
                                   })}
                                 </div>
-                              </PopoverContent>
-                            </Popover>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           )}
                         </div>
                       )}
