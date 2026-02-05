@@ -230,6 +230,7 @@ function PodiumStoryCard({
   const [isEditing, setIsEditing] = useState(false);
   const [note, setNote] = useState(contestant.podiumStoryNote || '');
   const [savedNote, setSavedNote] = useState(contestant.podiumStoryNote || '');
+  const [savedCaseNumber, setSavedCaseNumber] = useState(contestant.caseNumber || '');
 
   // Sync local state with prop changes (after refetch)
   useEffect(() => {
@@ -237,10 +238,20 @@ function PodiumStoryCard({
     setSavedNote(contestant.podiumStoryNote || '');
   }, [contestant.podiumStoryNote]);
 
+  useEffect(() => {
+    setSavedCaseNumber(contestant.caseNumber || '');
+  }, [contestant.caseNumber]);
+
   const handleSave = () => {
     onNoteUpdate(note);
     setSavedNote(note); // Optimistically update the saved note display
     setIsEditing(false);
+  };
+
+  const handleCaseNumberChange = (value: string) => {
+    const newValue = value === 'none' ? '' : value;
+    setSavedCaseNumber(newValue); // Optimistic update
+    onCaseNumberUpdate(value || null);
   };
 
   const caseNumbers = Array.from({ length: 22 }, (_, i) => (i + 1).toString());
@@ -264,8 +275,8 @@ function PodiumStoryCard({
       <div className="flex items-center gap-2 mb-2">
         <span className="text-[11px] font-medium text-muted-foreground">Case:</span>
         <Select
-          value={contestant.caseNumber || ''}
-          onValueChange={(value) => onCaseNumberUpdate(value || null)}
+          value={savedCaseNumber || 'none'}
+          onValueChange={handleCaseNumberChange}
         >
           <SelectTrigger className="h-7 w-20 text-xs" data-testid={`select-case-number-${contestant.id}`}>
             <SelectValue placeholder="--" />
@@ -277,9 +288,9 @@ function PodiumStoryCard({
             ))}
           </SelectContent>
         </Select>
-        {contestant.caseNumber && (
+        {savedCaseNumber && (
           <Badge className="bg-amber-500 text-white text-[10px] px-1.5">
-            Case {contestant.caseNumber}
+            Case {savedCaseNumber}
           </Badge>
         )}
       </div>
