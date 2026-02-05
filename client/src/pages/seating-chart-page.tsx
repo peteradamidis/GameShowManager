@@ -871,6 +871,23 @@ export default function SeatingChartPage() {
     },
   });
 
+  // Toggle podium story mutation
+  const togglePodiumStoryMutation = useMutation({
+    mutationFn: async ({ contestantId, podiumStory }: { contestantId: string; podiumStory: boolean }) => {
+      return await apiRequest('PATCH', `/api/contestants/${contestantId}`, { podiumStory });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update",
+        description: error?.message || "Could not update podium story status.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Producer update handler
   const handleProducerChange = async (newProducer: string) => {
     setSelectedProducer(newProducer);
@@ -2377,15 +2394,27 @@ export default function SeatingChartPage() {
                                   S
                                 </span>
                               )}
-                              {hasPodiumStory && (
-                                <span className={`px-1 py-0.5 rounded text-[9px] font-bold flex-shrink-0 ${
-                                  isSelected 
-                                    ? 'bg-primary-foreground/20 text-primary-foreground' 
-                                    : 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'
-                                }`}>
-                                  PS
-                                </span>
-                              )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  togglePodiumStoryMutation.mutate({ 
+                                    contestantId: contestant.id, 
+                                    podiumStory: !hasPodiumStory 
+                                  });
+                                }}
+                                className={`px-1 py-0.5 rounded text-[9px] font-bold flex-shrink-0 transition-all ${
+                                  hasPodiumStory
+                                    ? isSelected 
+                                      ? 'bg-primary-foreground/30 text-primary-foreground ring-1 ring-primary-foreground/50' 
+                                      : 'bg-pink-500 text-white'
+                                    : isSelected
+                                      ? 'bg-primary-foreground/10 text-primary-foreground/50 hover:bg-primary-foreground/20'
+                                      : 'bg-muted text-muted-foreground/50 hover:bg-pink-100 hover:text-pink-600 dark:hover:bg-pink-900/50 dark:hover:text-pink-300'
+                                }`}
+                                title={hasPodiumStory ? "Remove podium story tag" : "Add podium story tag"}
+                              >
+                                PS
+                              </button>
                               {hasGroup && (
                                 <Users className={`h-3.5 w-3.5 flex-shrink-0 ${isSelected ? 'text-primary-foreground/70' : 'text-blue-500'}`} />
                               )}
