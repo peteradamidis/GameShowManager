@@ -1,0 +1,1537 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+players.tsx:334 [CastingCardsTab] Total contestants: 692, with groupId: 285
+players.tsx:336 [CastingCardsTab] Sample contestants with groups: Array(3)
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1141 [CardData useEffect] Load check: Object
+players.tsx:1037 [getAutoCompanions] Trying attendingWith for Jessy Brown, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:1091 [getAutoCompanions] Found 4 group members via attendingWith: Sally Davis, Matilda Davis, Sandra  Anderson, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1141 [CardData useEffect] Load check: Object
+players.tsx:1037 [getAutoCompanions] Trying attendingWith for Jessy Brown, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:1091 [getAutoCompanions] Found 4 group members via attendingWith: Sally Davis, Matilda Davis, Sandra  Anderson, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1141 [CardData useEffect] Load check: Object
+players.tsx:1149 [CardData useEffect] Skipping - already loaded this contestant
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1141 [CardData useEffect] Load check: Object
+players.tsx:1149 [CardData useEffect] Skipping - already loaded this contestant
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 1369 ms ago (Threshold: 10s)
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 3376 ms ago (Threshold: 10s)
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:707 [syncAndExitFullscreen] Current data font sizes: Object
+players.tsx:713 [syncAndExitFullscreen] Found 5 editable fields in DOM
+players.tsx:724 [syncAndExitFullscreen] Field "fullName": DOM="JESSY BROWN", State="JESSY BROWN"
+players.tsx:724 [syncAndExitFullscreen] Field "ageState": DOM="24 (STATE)", State="24 (STATE)"
+players.tsx:724 [syncAndExitFullscreen] Field "occupation": DOM="AOISHFOIASFOISDF bn nvjhsJHDFGSDGFJSDGFJHSGHFJ", State="AOISHFOIASFOISDF bn nvjhsJHDFGSDGFJSDGFJHSGHFJ"
+players.tsx:724 [syncAndExitFullscreen] Field "tagline": DOM="ojfdopufoiu jfajsdklfjaksd jlalsdkfjl dsiofuoisduf", State="ojfdopufoiu jfajsdklfjaksd jlalsdkfjl dsiofuoisduf"
+players.tsx:724 [syncAndExitFullscreen] Field "bodyText": DOM="<span style="font-size: 24px;"><span style="font-s", State="<span style="font-size: 24px;"><span style="font-s"
+players.tsx:752 [syncAndExitFullscreen] Header field "fullName": new="JESSY BROWN", old="JESSY BROWN"
+players.tsx:752 [syncAndExitFullscreen] Header field "tagline": new="ojfdopufoiu jfajsdklfjaksd jla", old="ojfdopufoiu jfajsdklfjaksd jla"
+players.tsx:752 [syncAndExitFullscreen] Header field "occupation": new="AOISHFOIASFOISDF bn nvjhsJHDFG", old="AOISHFOIASFOISDF bn nvjhsJHDFG"
+players.tsx:752 [syncAndExitFullscreen] Header field "ageState": new="24 (STATE)", old="24 (STATE)"
+players.tsx:759 [syncAndExitFullscreen] Header field "sponsorCategory" NOT FOUND in DOM with selector "[data-field="sponsorCategory"]"
+(anonymous) @ players.tsx:759Understand this warning
+players.tsx:752 [syncAndExitFullscreen] Header field "bodyText": new="<span style="font-size: 24px;"", old="<span style="font-size: 24px;""
+players.tsx:766 [syncAndExitFullscreen] Final updatedData before save: Object
+players.tsx:777 [syncAndExitFullscreen] About to update state with updatedData: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1111 [CardData useEffect] Skipping - isExitingFullscreen is true
+players.tsx:809 [syncAndExitFullscreen] After flushSync - state updates complete
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:825 [syncAndExitFullscreen] Clearing isExitingFullscreen after save success
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:334 [CastingCardsTab] Total contestants: 692, with groupId: 285
+players.tsx:336 [CastingCardsTab] Sample contestants with groups: Array(3)
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1141 [CardData useEffect] Load check: Object
+players.tsx:1037 [getAutoCompanions] Trying attendingWith for Jessy Brown, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:1091 [getAutoCompanions] Found 4 group members via attendingWith: Sally Davis, Matilda Davis, Sandra  Anderson, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1141 [CardData useEffect] Load check: Object
+players.tsx:1149 [CardData useEffect] Skipping - already loaded this contestant
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1141 [CardData useEffect] Load check: Object
+players.tsx:1149 [CardData useEffect] Skipping - already loaded this contestant
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+api/casting-cards/955fa8c2-9530-4004-9276-97433cafb589:1  Failed to load resource: the server responded with a status of 409 (Conflict)Understand this error
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+api/casting-cards/955fa8c2-9530-4004-9276-97433cafb589:1  Failed to load resource: the server responded with a status of 409 (Conflict)Understand this error
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+api/casting-cards/955fa8c2-9530-4004-9276-97433cafb589:1  Failed to load resource: the server responded with a status of 409 (Conflict)Understand this error
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:707 [syncAndExitFullscreen] Current data font sizes: Object
+players.tsx:713 [syncAndExitFullscreen] Found 5 editable fields in DOM
+players.tsx:724 [syncAndExitFullscreen] Field "fullName": DOM="JESSY BROWN", State="JESSY BROWN"
+players.tsx:724 [syncAndExitFullscreen] Field "ageState": DOM="24 (STATE)", State="24 (STATE)"
+players.tsx:724 [syncAndExitFullscreen] Field "occupation": DOM="AOISHFOIASFOISDF bn nvjhsJHDFGSDGFJSDGFJHSGHFJ", State="AOISHFOIASFOISDF bn nvjhsJHDFGSDGFJSDGFJHSGHFJ"
+players.tsx:724 [syncAndExitFullscreen] Field "tagline": DOM="ojfdopufoiu jfajsdklfjaksd jlalsdkfjl dsiofuoisduf", State="ojfdopufoiu jfajsdklfjaksd jlalsdkfjl dsiofuoisduf"
+players.tsx:724 [syncAndExitFullscreen] Field "bodyText": DOM="<span style="font-size: 24px;"><span style="font-s", State="<span style="font-size: 24px;"><span style="font-s"
+players.tsx:752 [syncAndExitFullscreen] Header field "fullName": new="JESSY BROWN", old="JESSY BROWN"
+players.tsx:752 [syncAndExitFullscreen] Header field "tagline": new="ojfdopufoiu jfajsdklfjaksd jla", old="ojfdopufoiu jfajsdklfjaksd jla"
+players.tsx:752 [syncAndExitFullscreen] Header field "occupation": new="AOISHFOIASFOISDF bn nvjhsJHDFG", old="AOISHFOIASFOISDF bn nvjhsJHDFG"
+players.tsx:752 [syncAndExitFullscreen] Header field "ageState": new="24 (STATE)", old="24 (STATE)"
+players.tsx:759 [syncAndExitFullscreen] Header field "sponsorCategory" NOT FOUND in DOM with selector "[data-field="sponsorCategory"]"
+(anonymous) @ players.tsx:759Understand this warning
+players.tsx:752 [syncAndExitFullscreen] Header field "bodyText": new="<span style="font-size: 24px;"", old="<span style="font-size: 24px;""
+players.tsx:766 [syncAndExitFullscreen] Final updatedData before save: Object
+players.tsx:777 [syncAndExitFullscreen] About to update state with updatedData: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:809 [syncAndExitFullscreen] After flushSync - state updates complete
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:843 [syncAndExitFullscreen] Clearing isExitingFullscreen (no changes)
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 1918 ms ago (Threshold: 10s)
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:707 [syncAndExitFullscreen] Current data font sizes: Object
+players.tsx:713 [syncAndExitFullscreen] Found 5 editable fields in DOM
+players.tsx:724 [syncAndExitFullscreen] Field "fullName": DOM="JESSY BROWN", State="JESSY BROWN"
+players.tsx:724 [syncAndExitFullscreen] Field "ageState": DOM="24 (STATE)", State="24 (STATE)"
+players.tsx:724 [syncAndExitFullscreen] Field "occupation": DOM="AOISHFOIASFOISDF bn nvjhsJHDFGSDGFJSDGFJHSGHFJ", State="AOISHFOIASFOISDF bn nvjhsJHDFGSDGFJSDGFJHSGHFJ"
+players.tsx:724 [syncAndExitFullscreen] Field "tagline": DOM="ojfdopufoiu jfajsdklfjaksd jlalsdkfjl dsiofuoisduf", State="ojfdopufoiu jfajsdklfjaksd jlalsdkfjl dsiofuoisduf"
+players.tsx:724 [syncAndExitFullscreen] Field "bodyText": DOM="<span style="font-size: 24px;"><span style="font-s", State="<span style="font-size: 24px;"><span style="font-s"
+players.tsx:752 [syncAndExitFullscreen] Header field "fullName": new="JESSY BROWN", old="JESSY BROWN"
+players.tsx:752 [syncAndExitFullscreen] Header field "tagline": new="ojfdopufoiu jfajsdklfjaksd jla", old="ojfdopufoiu jfajsdklfjaksd jla"
+players.tsx:752 [syncAndExitFullscreen] Header field "occupation": new="AOISHFOIASFOISDF bn nvjhsJHDFG", old="AOISHFOIASFOISDF bn nvjhsJHDFG"
+players.tsx:752 [syncAndExitFullscreen] Header field "ageState": new="24 (STATE)", old="24 (STATE)"
+players.tsx:759 [syncAndExitFullscreen] Header field "sponsorCategory" NOT FOUND in DOM with selector "[data-field="sponsorCategory"]"
+(anonymous) @ players.tsx:759Understand this warning
+players.tsx:752 [syncAndExitFullscreen] Header field "bodyText": new="<span style="font-size: 24px;"", old="<span style="font-size: 24px;""
+players.tsx:766 [syncAndExitFullscreen] Final updatedData before save: Object
+players.tsx:777 [syncAndExitFullscreen] About to update state with updatedData: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1111 [CardData useEffect] Skipping - isExitingFullscreen is true
+players.tsx:809 [syncAndExitFullscreen] After flushSync - state updates complete
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:843 [syncAndExitFullscreen] Clearing isExitingFullscreen (no changes)
+queryClient.ts:32  GET https://4ca2a1f8-42ce-4303-beff-eb92e3283d4c-00-19mxi87g61u3s.janeway.replit.dev/api/settings/animated_message 401 (Unauthorized)
+(anonymous) @ queryClient.ts:32
+fetchFn @ @tanstack_react-query.js?v=2d3ac851:840
+run @ @tanstack_react-query.js?v=2d3ac851:494
+start @ @tanstack_react-query.js?v=2d3ac851:536
+fetch @ @tanstack_react-query.js?v=2d3ac851:926
+executeFetch_fn @ @tanstack_react-query.js?v=2d3ac851:2211
+fetch @ @tanstack_react-query.js?v=2d3ac851:2011
+refetch @ @tanstack_react-query.js?v=2d3ac851:2001
+onFocus @ @tanstack_react-query.js?v=2d3ac851:749
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1112
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1111
+batch @ @tanstack_react-query.js?v=2d3ac851:583
+onFocus @ @tanstack_react-query.js?v=2d3ac851:1110
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1601
+await in (anonymous)
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:313
+onFocus @ @tanstack_react-query.js?v=2d3ac851:312
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:299
+listener @ @tanstack_react-query.js?v=2d3ac851:270Understand this error
+queryClient.ts:32  GET https://4ca2a1f8-42ce-4303-beff-eb92e3283d4c-00-19mxi87g61u3s.janeway.replit.dev/api/casting-cards 401 (Unauthorized)
+(anonymous) @ queryClient.ts:32
+fetchFn @ @tanstack_react-query.js?v=2d3ac851:840
+run @ @tanstack_react-query.js?v=2d3ac851:494
+start @ @tanstack_react-query.js?v=2d3ac851:536
+fetch @ @tanstack_react-query.js?v=2d3ac851:926
+executeFetch_fn @ @tanstack_react-query.js?v=2d3ac851:2211
+fetch @ @tanstack_react-query.js?v=2d3ac851:2011
+refetch @ @tanstack_react-query.js?v=2d3ac851:2001
+onFocus @ @tanstack_react-query.js?v=2d3ac851:749
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1112
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1111
+batch @ @tanstack_react-query.js?v=2d3ac851:583
+onFocus @ @tanstack_react-query.js?v=2d3ac851:1110
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1601
+await in (anonymous)
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:313
+onFocus @ @tanstack_react-query.js?v=2d3ac851:312
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:299
+listener @ @tanstack_react-query.js?v=2d3ac851:270Understand this error
+queryClient.ts:32  GET https://4ca2a1f8-42ce-4303-beff-eb92e3283d4c-00-19mxi87g61u3s.janeway.replit.dev/api/contestants 401 (Unauthorized)
+(anonymous) @ queryClient.ts:32
+fetchFn @ @tanstack_react-query.js?v=2d3ac851:840
+run @ @tanstack_react-query.js?v=2d3ac851:494
+start @ @tanstack_react-query.js?v=2d3ac851:536
+fetch @ @tanstack_react-query.js?v=2d3ac851:926
+executeFetch_fn @ @tanstack_react-query.js?v=2d3ac851:2211
+fetch @ @tanstack_react-query.js?v=2d3ac851:2011
+refetch @ @tanstack_react-query.js?v=2d3ac851:2001
+onFocus @ @tanstack_react-query.js?v=2d3ac851:749
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1112
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1111
+batch @ @tanstack_react-query.js?v=2d3ac851:583
+onFocus @ @tanstack_react-query.js?v=2d3ac851:1110
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1601
+await in (anonymous)
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:313
+onFocus @ @tanstack_react-query.js?v=2d3ac851:312
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:299
+listener @ @tanstack_react-query.js?v=2d3ac851:270Understand this error
+players.tsx:7073  GET https://4ca2a1f8-42ce-4303-beff-eb92e3283d4c-00-19mxi87g61u3s.janeway.replit.dev/api/seat-assignments?recordDayId=e432f0fe-1383-44a2-990c-5f787da5008a 401 (Unauthorized)
+queryFn @ players.tsx:7073
+fetchFn @ @tanstack_react-query.js?v=2d3ac851:840
+run @ @tanstack_react-query.js?v=2d3ac851:494
+start @ @tanstack_react-query.js?v=2d3ac851:536
+fetch @ @tanstack_react-query.js?v=2d3ac851:926
+executeFetch_fn @ @tanstack_react-query.js?v=2d3ac851:2211
+fetch @ @tanstack_react-query.js?v=2d3ac851:2011
+refetch @ @tanstack_react-query.js?v=2d3ac851:2001
+onFocus @ @tanstack_react-query.js?v=2d3ac851:749
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1112
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1111
+batch @ @tanstack_react-query.js?v=2d3ac851:583
+onFocus @ @tanstack_react-query.js?v=2d3ac851:1110
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1601
+await in (anonymous)
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:313
+onFocus @ @tanstack_react-query.js?v=2d3ac851:312
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:299
+listener @ @tanstack_react-query.js?v=2d3ac851:270Understand this error
+queryClient.ts:32  GET https://4ca2a1f8-42ce-4303-beff-eb92e3283d4c-00-19mxi87g61u3s.janeway.replit.dev/api/birthdays/today 401 (Unauthorized)
+(anonymous) @ queryClient.ts:32
+fetchFn @ @tanstack_react-query.js?v=2d3ac851:840
+run @ @tanstack_react-query.js?v=2d3ac851:494
+start @ @tanstack_react-query.js?v=2d3ac851:536
+fetch @ @tanstack_react-query.js?v=2d3ac851:926
+executeFetch_fn @ @tanstack_react-query.js?v=2d3ac851:2211
+fetch @ @tanstack_react-query.js?v=2d3ac851:2011
+refetch @ @tanstack_react-query.js?v=2d3ac851:2001
+onFocus @ @tanstack_react-query.js?v=2d3ac851:749
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1112
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1111
+batch @ @tanstack_react-query.js?v=2d3ac851:583
+onFocus @ @tanstack_react-query.js?v=2d3ac851:1110
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1601
+await in (anonymous)
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:313
+onFocus @ @tanstack_react-query.js?v=2d3ac851:312
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:299
+listener @ @tanstack_react-query.js?v=2d3ac851:270Understand this error
+queryClient.ts:32  GET https://4ca2a1f8-42ce-4303-beff-eb92e3283d4c-00-19mxi87g61u3s.janeway.replit.dev/api/record-days 401 (Unauthorized)
+(anonymous) @ queryClient.ts:32
+fetchFn @ @tanstack_react-query.js?v=2d3ac851:840
+run @ @tanstack_react-query.js?v=2d3ac851:494
+start @ @tanstack_react-query.js?v=2d3ac851:536
+fetch @ @tanstack_react-query.js?v=2d3ac851:926
+executeFetch_fn @ @tanstack_react-query.js?v=2d3ac851:2211
+fetch @ @tanstack_react-query.js?v=2d3ac851:2011
+refetch @ @tanstack_react-query.js?v=2d3ac851:2001
+onFocus @ @tanstack_react-query.js?v=2d3ac851:749
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1112
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1111
+batch @ @tanstack_react-query.js?v=2d3ac851:583
+onFocus @ @tanstack_react-query.js?v=2d3ac851:1110
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:1601
+await in (anonymous)
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:313
+onFocus @ @tanstack_react-query.js?v=2d3ac851:312
+(anonymous) @ @tanstack_react-query.js?v=2d3ac851:299
+listener @ @tanstack_react-query.js?v=2d3ac851:270Understand this error

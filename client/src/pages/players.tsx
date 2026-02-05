@@ -2754,6 +2754,32 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   // Robust text formatting that uses saved selection
   const applyFormat = (command: string, value?: string) => {
     try {
+      // CRITICAL: Sync header fields to React state BEFORE any formatting
+      // This prevents text loss when React re-renders
+      const syncHeaderFieldsNow = () => {
+        if (!cardData) return;
+        const getFieldText = (selector: string, fallback: string): string => {
+          const fullscreenEl = document.querySelector(`[data-fullscreen-mode="true"] ${selector}`) as HTMLElement;
+          const regularEl = document.querySelector(selector) as HTMLElement;
+          const el = (fullscreenEl && fullscreenEl.offsetParent !== null) ? fullscreenEl : regularEl;
+          return el?.textContent?.trim() || fallback;
+        };
+        const currentFullName = getFieldText('[data-field="fullName"]', cardData.fullName || '');
+        const currentOccupation = getFieldText('[data-field="occupation"]', cardData.occupation || '');
+        const currentTagline = getFieldText('[data-field="tagline"]', cardData.tagline || '');
+        const currentSponsorCategory = getFieldText('[data-field="sponsorCategory"]', cardData.sponsorCategory || '');
+        
+        if (currentFullName !== cardData.fullName || currentOccupation !== cardData.occupation ||
+            currentTagline !== cardData.tagline || currentSponsorCategory !== cardData.sponsorCategory) {
+          const updatedData = { ...cardData, fullName: currentFullName, occupation: currentOccupation, 
+                               tagline: currentTagline, sponsorCategory: currentSponsorCategory };
+          setCardData(updatedData);
+          cardDataRef.current = updatedData;
+          hasUnsavedChanges.current = true;
+        }
+      };
+      syncHeaderFieldsNow();
+      
       // First try to use current selection
       const selection = window.getSelection();
       const hasCurrentSelection = selection && selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed;
@@ -2795,6 +2821,57 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   
   const formatFontSize = (size: string) => {
     try {
+      console.log('[formatFontSize] Called with size:', size);
+      
+      // CRITICAL: Immediately sync ALL header fields from DOM to React state
+      // This captures the current text BEFORE any DOM manipulation
+      const syncHeaderFieldsToState = () => {
+        if (!cardData) return;
+        
+        const getFieldText = (selector: string, fallback: string): string => {
+          const fullscreenEl = document.querySelector(`[data-fullscreen-mode="true"] ${selector}`) as HTMLElement;
+          const regularEl = document.querySelector(selector) as HTMLElement;
+          const el = (fullscreenEl && fullscreenEl.offsetParent !== null) ? fullscreenEl : regularEl;
+          return el?.textContent?.trim() || fallback;
+        };
+        
+        const currentFullName = getFieldText('[data-field="fullName"]', cardData.fullName || '');
+        const currentOccupation = getFieldText('[data-field="occupation"]', cardData.occupation || '');
+        const currentTagline = getFieldText('[data-field="tagline"]', cardData.tagline || '');
+        const currentSponsorCategory = getFieldText('[data-field="sponsorCategory"]', cardData.sponsorCategory || '');
+        
+        // Check if any changed
+        const hasChanges = currentFullName !== cardData.fullName || 
+                          currentOccupation !== cardData.occupation ||
+                          currentTagline !== cardData.tagline ||
+                          currentSponsorCategory !== cardData.sponsorCategory;
+        
+        if (hasChanges) {
+          console.log('[formatFontSize] Syncing header fields before DOM change:', {
+            fullName: currentFullName !== cardData.fullName ? `"${cardData.fullName?.substring(0,20)}" -> "${currentFullName?.substring(0,20)}"` : '(same)',
+            occupation: currentOccupation !== cardData.occupation ? `"${cardData.occupation?.substring(0,20)}" -> "${currentOccupation?.substring(0,20)}"` : '(same)',
+            tagline: currentTagline !== cardData.tagline ? `"${cardData.tagline?.substring(0,20)}" -> "${currentTagline?.substring(0,20)}"` : '(same)',
+            sponsorCategory: currentSponsorCategory !== cardData.sponsorCategory ? 'changed' : '(same)',
+          });
+          
+          const updatedData = {
+            ...cardData,
+            fullName: currentFullName,
+            occupation: currentOccupation,
+            tagline: currentTagline,
+            sponsorCategory: currentSponsorCategory,
+          };
+          
+          // Update React state immediately
+          setCardData(updatedData);
+          cardDataRef.current = updatedData;
+          hasUnsavedChanges.current = true;
+        }
+      };
+      
+      // Sync header fields FIRST
+      syncHeaderFieldsToState();
+      
       let selection = window.getSelection();
       let range: Range | null = null;
       let targetElement: Element | null = null;
@@ -2811,7 +2888,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       }
       
       if (!range || range.collapsed) {
-        console.log('No valid selection for font size change');
+        console.log('[formatFontSize] No valid selection for font size change');
         return;
       }
       
