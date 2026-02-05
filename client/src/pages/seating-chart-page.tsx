@@ -217,6 +217,73 @@ function generateEmptyBlocks(recordDayId: string): SeatData[][] {
   });
 }
 
+// Podium Story Card component with editable notes
+function PodiumStoryCard({ 
+  contestant, 
+  onNoteUpdate 
+}: { 
+  contestant: { id: string; name: string; seatNumber?: number; seatLabel?: string; gender?: string; age?: number; location?: string; podiumStoryNote?: string };
+  onNoteUpdate: (note: string) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [note, setNote] = useState(contestant.podiumStoryNote || '');
+
+  const handleSave = () => {
+    onNoteUpdate(note);
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="p-3 rounded-lg bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800">
+      <div className="flex items-center gap-2 mb-2">
+        <Badge className="bg-pink-500 text-white text-[10px] px-1.5">PS</Badge>
+        <span className="text-sm font-medium truncate flex-1">{contestant.name}</span>
+        <Badge variant="outline" className="text-[10px]">
+          Seat {contestant.seatLabel || contestant.seatNumber}
+        </Badge>
+      </div>
+      <div className="text-[11px] text-muted-foreground mb-2 flex items-center gap-2">
+        {contestant.gender && <span>{contestant.gender === 'female' ? 'F' : 'M'}</span>}
+        {contestant.age && <span>{contestant.age}yo</span>}
+        {contestant.location && <span className="truncate">{contestant.location}</span>}
+      </div>
+      {isEditing ? (
+        <div className="space-y-2">
+          <Textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Enter podium story notes..."
+            className="text-xs min-h-[60px] resize-none"
+            data-testid={`textarea-ps-note-${contestant.id}`}
+          />
+          <div className="flex gap-1">
+            <Button size="sm" className="h-6 text-xs" onClick={handleSave}>
+              Save
+            </Button>
+            <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => { setNote(contestant.podiumStoryNote || ''); setIsEditing(false); }}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div 
+          onClick={() => setIsEditing(true)} 
+          className="cursor-pointer hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded p-1 -m-1"
+          data-testid={`div-ps-note-view-${contestant.id}`}
+        >
+          {contestant.podiumStoryNote ? (
+            <p className="text-xs text-muted-foreground">{contestant.podiumStoryNote}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground/50 italic flex items-center gap-1">
+              <Pencil className="h-3 w-3" /> Click to add story notes...
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SeatingChartPage() {
   const { toast } = useToast();
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -1939,42 +2006,55 @@ export default function SeatingChartPage() {
             </Badge>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {(['PB', 'NPB', 'Block 1', 'Block 2', 'Block 3', 'Block 4', 'Block 5'] as const).map(block => {
-              const blockAssignments = assignments?.filter((a: any) => a.blockType === block) || [];
+            {[1, 2, 3, 4, 5, 6, 7].map(blockNum => {
+              const blockLabel = blockNum === 7 ? 'Block 7 (Standing)' : `Block ${blockNum}`;
+              const blockAssignments = assignments?.filter((a: any) => a.blockNumber === blockNum) || [];
               const psContestants = blockAssignments
                 .filter((a: any) => a.podiumStory === true)
                 .map((a: any) => {
                   const contestant = availableContestants.find((c: any) => c.id === a.contestantId);
-                  return contestant ? { ...contestant, seatNumber: a.seatNumber, podiumStory: a.podiumStory } : { id: a.contestantId, name: a.contestantName, seatNumber: a.seatNumber, podiumStory: a.podiumStory };
+                  return {
+                    id: a.contestantId,
+                    name: a.contestantName || contestant?.name || 'Unknown',
+                    seatNumber: a.seatNumber,
+                    seatLabel: a.seatLabel,
+                    podiumStory: a.podiumStory,
+                    podiumStoryNote: contestant?.podiumStoryNote || '',
+                    gender: contestant?.gender,
+                    age: contestant?.age,
+                    location: contestant?.location || a.contestantLocation,
+                  };
                 });
               
               return (
-                <Card key={block} className="overflow-hidden">
+                <Card key={blockNum} className="overflow-hidden">
                   <CardHeader className="py-2 px-3 bg-gradient-to-r from-pink-500 to-rose-500">
                     <CardTitle className="text-sm font-semibold text-white flex items-center justify-between">
-                      <span>{block}</span>
+                      <span>{blockLabel}</span>
                       <Badge variant="secondary" className="bg-white/20 text-white text-xs">
                         {psContestants.length} PS
                       </Badge>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-3 space-y-2 max-h-64 overflow-y-auto">
+                  <CardContent className="p-3 space-y-2 max-h-80 overflow-y-auto">
                     {psContestants.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-4">No podium stories in this block</p>
                     ) : (
                       psContestants.map((contestant: any) => (
-                        <div key={contestant.id} className="p-2 rounded-lg bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge className="bg-pink-500 text-white text-[10px] px-1.5">PS</Badge>
-                            <span className="text-sm font-medium truncate">{contestant.name}</span>
-                            <Badge variant="outline" className="text-[10px] ml-auto">Seat {contestant.seatNumber}</Badge>
-                          </div>
-                          {contestant.podiumStoryNote ? (
-                            <p className="text-xs text-muted-foreground line-clamp-3">{contestant.podiumStoryNote}</p>
-                          ) : (
-                            <p className="text-xs text-muted-foreground/50 italic">No story notes added yet</p>
-                          )}
-                        </div>
+                        <PodiumStoryCard
+                          key={contestant.id}
+                          contestant={contestant}
+                          onNoteUpdate={(note) => {
+                            apiRequest('PATCH', `/api/contestants/${contestant.id}`, { podiumStoryNote: note })
+                              .then(() => {
+                                queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+                                toast({ title: "Note saved", description: "Podium story note updated" });
+                              })
+                              .catch(() => {
+                                toast({ title: "Error", description: "Failed to save note", variant: "destructive" });
+                              });
+                          }}
+                        />
                       ))
                     )}
                   </CardContent>
