@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -28,7 +29,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert, Pencil, MessageSquare, UserCheck, Gift, Trash2, Check, Link2 } from "lucide-react";
+import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert, Pencil, MessageSquare, UserCheck, Gift, Trash2, Check, Link2, Edit2 } from "lucide-react";
 import { getDistanceFromDocklands } from "@/components/contestant-table";
 
 // Helper function to check if a medical field has meaningful content (not NA/N/A/No/None/empty)
@@ -755,40 +756,63 @@ export function SeatCard({
                   </div>
                 </div>
 
-                {/* Rating Change - clickable buttons */}
-                {onRatingChange && seat.contestantId && (
-                  <div className="text-sm">
-                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Rating</label>
-                    <div className="flex flex-wrap gap-1">
-                      {['A+', 'A', 'P', 'B+', 'B', 'C'].map((rating) => {
-                        const isSelected = contestantDetails?.auditionRating === rating;
-                        const colors = isDarkMode ? ratingColorsDark[rating] : ratingColorsLight[rating];
-                        return (
-                          <button
-                            key={rating}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (!isSelected) {
-                                onRatingChange(seat.contestantId!, rating);
-                              }
-                            }}
-                            className={`px-2 py-0.5 text-xs font-bold rounded border transition-colors ${
-                              isSelected 
-                                ? '' 
-                                : 'opacity-50 hover:opacity-100'
-                            }`}
-                            style={{
-                              backgroundColor: colors?.bg || 'transparent',
-                              borderColor: colors?.border || 'currentColor',
-                              color: colors?.text || 'inherit',
-                            }}
-                            data-testid={`button-rating-${rating}-${seat.contestantId}`}
-                          >
-                            {rating}
-                          </button>
-                        );
-                      })}
-                    </div>
+                {/* Rating with edit dropdown */}
+                {onRatingChange && seat.contestantId && contestantDetails?.auditionRating && (
+                  <div className="text-sm flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">Rating:</span>
+                    <span className={`font-bold ${
+                      contestantDetails.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
+                      contestantDetails.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
+                      contestantDetails.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
+                      contestantDetails.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
+                      contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' :
+                      contestantDetails.auditionRating === 'P' ? 'text-purple-600 dark:text-purple-400' : ''
+                    }`}>
+                      {contestantDetails.auditionRating}
+                    </span>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          className="p-0.5 rounded hover:bg-muted transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                          data-testid={`button-edit-rating-${seat.contestantId}`}
+                        >
+                          <Edit2 className="w-3 h-3 text-muted-foreground" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-2" align="start">
+                        <div className="flex flex-wrap gap-1">
+                          {['A+', 'A', 'P', 'B+', 'B', 'C'].map((rating) => {
+                            const isSelected = contestantDetails?.auditionRating === rating;
+                            const colors = isDarkMode ? ratingColorsDark[rating] : ratingColorsLight[rating];
+                            return (
+                              <button
+                                key={rating}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (!isSelected) {
+                                    onRatingChange(seat.contestantId!, rating);
+                                  }
+                                }}
+                                className={`px-2 py-0.5 text-xs font-bold rounded border transition-colors ${
+                                  isSelected 
+                                    ? '' 
+                                    : 'opacity-50 hover:opacity-100'
+                                }`}
+                                style={{
+                                  backgroundColor: colors?.bg || 'transparent',
+                                  borderColor: colors?.border || 'currentColor',
+                                  color: colors?.text || 'inherit',
+                                }}
+                                data-testid={`button-rating-${rating}-${seat.contestantId}`}
+                              >
+                                {rating}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 )}
 

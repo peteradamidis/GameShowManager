@@ -3592,8 +3592,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     >
                       {cardData.occupation || 'OCCUPATION'}
                     </div>
-                    {/* DEBUG: Show current font size */}
-                    <span className="text-xs text-red-500 ml-2">[FS: {cardData.fontSizeOccupation || 34}]</span>
                     {/* Font size controls for occupation */}
                     <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print">
                       <button 
@@ -4525,8 +4523,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         >
                           {cardData.occupation || 'OCCUPATION'}
                         </div>
-                        {/* DEBUG: Show current font size in fullscreen */}
-                        <span className="text-xs text-blue-500 ml-2">[FS-FS: {cardData.fontSizeOccupation || 34}]</span>
                         {/* Font size controls for occupation */}
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print">
                           <button 
