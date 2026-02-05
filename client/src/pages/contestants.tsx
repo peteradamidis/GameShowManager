@@ -1016,10 +1016,22 @@ export default function Contestants() {
       setSelectedBlock("");
       setSelectedSeat("");
     } catch (error: any) {
+      // Try to parse the error message as JSON (API errors come as "status: {json}")
+      let parsedError: any = null;
+      try {
+        const errorMsg = error?.message || '';
+        const jsonMatch = errorMsg.match(/^\d+:\s*(.+)$/);
+        if (jsonMatch) {
+          parsedError = JSON.parse(jsonMatch[1]);
+        }
+      } catch (e) {
+        // Not JSON, continue with regular error handling
+      }
+      
       // Check if this is an OUTSIDE_VICTORIA warning that requires confirmation
-      if (error?.code === 'OUTSIDE_VICTORIA' && error?.requiresConfirmation) {
+      if (parsedError?.code === 'OUTSIDE_VICTORIA' && parsedError?.requiresConfirmation) {
         const confirmed = window.confirm(
-          `⚠️ OUTSIDE VICTORIA WARNING\n\n${error.contestantName} has postcode ${error.postcode || 'unknown'} which is outside Victoria.\n\nAre you sure you want to book this contestant?`
+          `⚠️ INTERSTATE CONTESTANT\n\n${parsedError.contestantName} is from ${parsedError.state || 'outside Victoria'}.\n\nDo you want to proceed with booking?`
         );
         if (confirmed) {
           // Retry with skip flag
@@ -1028,9 +1040,10 @@ export default function Contestants() {
         return;
       }
       
+      const errorMessage = parsedError?.error || error?.message || "Could not assign contestant(s).";
       toast({
         title: "Assignment failed",
-        description: error?.message || "Could not assign contestant(s).",
+        description: errorMessage,
         variant: "destructive",
       });
     }
