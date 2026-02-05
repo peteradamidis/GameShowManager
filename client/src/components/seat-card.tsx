@@ -736,17 +736,64 @@ export function SeatCard({
                           </Badge>
                         )}
                       </div>
-                      {contestantDetails.auditionRating && !onRatingChange && (
-                        <span className={`text-sm font-bold ${
-                          contestantDetails.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
-                          contestantDetails.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
-                          contestantDetails.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
-                          contestantDetails.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
-                          contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' :
-                          contestantDetails.auditionRating === 'P' ? 'text-purple-600 dark:text-purple-400' : ''
-                        }`}>
-                          {contestantDetails.auditionRating}
-                        </span>
+                      {contestantDetails.auditionRating && (
+                        <div className="flex flex-col items-center">
+                          <span className={`text-sm font-bold ${
+                            contestantDetails.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
+                            contestantDetails.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
+                            contestantDetails.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
+                            contestantDetails.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
+                            contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' :
+                            contestantDetails.auditionRating === 'P' ? 'text-purple-600 dark:text-purple-400' : ''
+                          }`}>
+                            {contestantDetails.auditionRating}
+                          </span>
+                          {onRatingChange && seat.contestantId && (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button
+                                  className="p-0.5 rounded hover:bg-muted/50 transition-colors opacity-40 hover:opacity-100"
+                                  onClick={(e) => e.stopPropagation()}
+                                  data-testid={`button-edit-rating-${seat.contestantId}`}
+                                >
+                                  <Edit2 className="w-2.5 h-2.5 text-muted-foreground" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-2" align="end">
+                                <div className="flex flex-wrap gap-1">
+                                  {['A+', 'A', 'P', 'B+', 'B', 'C'].map((rating) => {
+                                    const isSelected = contestantDetails?.auditionRating === rating;
+                                    const colors = isDarkMode ? ratingColorsDark[rating] : ratingColorsLight[rating];
+                                    return (
+                                      <button
+                                        key={rating}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (!isSelected) {
+                                            onRatingChange(seat.contestantId!, rating);
+                                          }
+                                        }}
+                                        className={`px-2 py-0.5 text-xs font-bold rounded border transition-colors ${
+                                          isSelected 
+                                            ? '' 
+                                            : 'opacity-50 hover:opacity-100'
+                                        }`}
+                                        style={{
+                                          backgroundColor: colors?.bg || 'transparent',
+                                          borderColor: colors?.border || 'currentColor',
+                                          color: colors?.text || 'inherit',
+                                        }}
+                                        data-testid={`button-rating-${rating}-${seat.contestantId}`}
+                                      >
+                                        {rating}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                        </div>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">{contestantDetails.age} years old • {contestantDetails.gender}</p>
@@ -755,66 +802,6 @@ export function SeatCard({
                     )}
                   </div>
                 </div>
-
-                {/* Rating with edit dropdown */}
-                {onRatingChange && seat.contestantId && contestantDetails?.auditionRating && (
-                  <div className="text-sm flex items-center gap-2">
-                    <span className="text-xs font-medium text-muted-foreground">Rating:</span>
-                    <span className={`font-bold ${
-                      contestantDetails.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
-                      contestantDetails.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
-                      contestantDetails.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
-                      contestantDetails.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
-                      contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' :
-                      contestantDetails.auditionRating === 'P' ? 'text-purple-600 dark:text-purple-400' : ''
-                    }`}>
-                      {contestantDetails.auditionRating}
-                    </span>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button
-                          className="p-0.5 rounded hover:bg-muted transition-colors"
-                          onClick={(e) => e.stopPropagation()}
-                          data-testid={`button-edit-rating-${seat.contestantId}`}
-                        >
-                          <Edit2 className="w-3 h-3 text-muted-foreground" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-2" align="start">
-                        <div className="flex flex-wrap gap-1">
-                          {['A+', 'A', 'P', 'B+', 'B', 'C'].map((rating) => {
-                            const isSelected = contestantDetails?.auditionRating === rating;
-                            const colors = isDarkMode ? ratingColorsDark[rating] : ratingColorsLight[rating];
-                            return (
-                              <button
-                                key={rating}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (!isSelected) {
-                                    onRatingChange(seat.contestantId!, rating);
-                                  }
-                                }}
-                                className={`px-2 py-0.5 text-xs font-bold rounded border transition-colors ${
-                                  isSelected 
-                                    ? '' 
-                                    : 'opacity-50 hover:opacity-100'
-                                }`}
-                                style={{
-                                  backgroundColor: colors?.bg || 'transparent',
-                                  borderColor: colors?.border || 'currentColor',
-                                  color: colors?.text || 'inherit',
-                                }}
-                                data-testid={`button-rating-${rating}-${seat.contestantId}`}
-                              >
-                                {rating}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                )}
 
                 {/* Player Type - clickable badges (only for A+, A, and P rated contestants) */}
                 {(seat.auditionRating === 'A+' || seat.auditionRating === 'A' || seat.auditionRating === 'P') && (
