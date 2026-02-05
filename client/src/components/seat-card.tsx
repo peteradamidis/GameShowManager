@@ -118,6 +118,7 @@ interface SeatCardProps {
   // Neighbor linking props
   neighbors?: NeighborSeat[];
   onLinkWithNeighbor?: (contestantId: string, neighborContestantId: string) => void;
+  showBookingStatus?: boolean; // Show CONF/PENDING indicators on seat cards
 }
 
 const groupColors = [
@@ -191,6 +192,7 @@ export function SeatCard({
   onDeleteTestSubject,
   neighbors = [],
   onLinkWithNeighbor,
+  showBookingStatus = false,
 }: SeatCardProps) {
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [localNotes, setLocalNotes] = useState(seat.notes || '');
@@ -441,8 +443,8 @@ export function SeatCard({
           </TooltipContent>
         </Tooltip>
       )}
-      {/* Booking status indicator - CONF (teal) or PENDING (red) - only when not in RX day mode */}
-      {!isRXDayLocked && !isEmpty && seat.confirmedRsvp && (
+      {/* Booking status indicator - CONF (teal) or PENDING (red) - only when toggle is on and not in RX day mode */}
+      {showBookingStatus && !isRXDayLocked && !isEmpty && seat.confirmedRsvp && (
         <div 
           data-testid={`badge-conf-${seat.assignmentId}`}
           className="absolute top-0.5 right-0.5 z-10 px-1 py-0 rounded text-[6px] font-bold bg-teal-600 text-white shadow-sm"
@@ -451,7 +453,7 @@ export function SeatCard({
           CONF
         </div>
       )}
-      {!isRXDayLocked && !isEmpty && seat.bookingEmailSent && !seat.confirmedRsvp && (
+      {showBookingStatus && !isRXDayLocked && !isEmpty && seat.bookingEmailSent && !seat.confirmedRsvp && (
         <div 
           data-testid={`badge-pending-${seat.assignmentId}`}
           className="absolute top-0.5 right-0.5 z-10 px-1 py-0 rounded text-[6px] font-bold bg-red-800 text-white shadow-sm"

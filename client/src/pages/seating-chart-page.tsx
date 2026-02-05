@@ -419,6 +419,9 @@ export default function SeatingChartPage() {
   // Podium Stories (PS) view mode - shows contestants with podium stories per block
   const [isPodiumStoriesMode, setIsPodiumStoriesMode] = useState(false);
   
+  // Show booking status indicators (CONF/PENDING) on seat cards
+  const [showBookingStatus, setShowBookingStatus] = useState(false);
+  
   // Readiness tab state
   const [isReadinessMode, setIsReadinessMode] = useState(false);
   
@@ -2031,6 +2034,16 @@ export default function SeatingChartPage() {
               <ClipboardCheck className="h-4 w-4" />
             </Button>
             <Button 
+              variant={showBookingStatus ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setShowBookingStatus(!showBookingStatus)} 
+              title={showBookingStatus ? "Hide booking status indicators" : "Show booking status (CONF/PENDING)"}
+              data-testid="button-booking-status-toggle"
+              className={showBookingStatus ? "bg-slate-600 hover:bg-slate-700 text-white px-2" : "text-muted-foreground px-2"}
+            >
+              <span className="font-bold text-[10px]">RSVP</span>
+            </Button>
+            <Button 
               variant={isPodiumStoriesMode ? "default" : "ghost"}
               size="sm"
               onClick={() => setIsPodiumStoriesMode(!isPodiumStoriesMode)} 
@@ -2285,6 +2298,7 @@ export default function SeatingChartPage() {
             searchQuery={seatSearchQuery}
             blockNotes={mergedBlockNotes}
             onBlockNoteChange={handleBlockNoteChange}
+            showBookingStatus={showBookingStatus}
           />
         )
       )}

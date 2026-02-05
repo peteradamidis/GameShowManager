@@ -228,6 +228,7 @@ interface SeatingChartProps {
   searchQuery?: string; // Search for contestant by name
   blockNotes?: Record<number, string>; // Block notes by block number (1-7)
   onBlockNoteChange?: (blockNumber: number, notes: string) => void;
+  showBookingStatus?: boolean; // Show CONF/PENDING indicators on seat cards
 }
 
 function DraggableDroppableSeat({
@@ -254,6 +255,7 @@ function DraggableDroppableSeat({
   isQuickMoveMode,
   isQuickMoveSelected,
   onQuickMoveClick,
+  showBookingStatus,
 }: {
   seat: SeatData;
   blockIndex: number;
@@ -278,6 +280,7 @@ function DraggableDroppableSeat({
   isQuickMoveMode?: boolean;
   isQuickMoveSelected?: boolean;
   onQuickMoveClick?: (seatId: string) => void;
+  showBookingStatus?: boolean;
 }) {
   // Make occupied seats draggable (but not in Quick Move mode)
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
@@ -343,6 +346,7 @@ function DraggableDroppableSeat({
         onDeleteTestSubject={onDeleteTestSubject}
         neighbors={neighbors}
         onLinkWithNeighbor={onLinkWithNeighbor}
+        showBookingStatus={showBookingStatus}
       />
     </div>
   );
@@ -744,6 +748,7 @@ function SeatingBlock({
   quickMoveEnabled,
   quickMoveSelectedSeatId,
   onQuickMoveClick,
+  showBookingStatus,
 }: { 
   block: SeatData[]; 
   blockIndex: number;
@@ -774,6 +779,7 @@ function SeatingBlock({
   quickMoveEnabled?: boolean;
   quickMoveSelectedSeatId?: string | null;
   onQuickMoveClick?: (seatId: string) => void;
+  showBookingStatus?: boolean;
 }) {
   const stats = calculateBlockStats(block);
 
@@ -1031,6 +1037,7 @@ function SeatingBlock({
                           isQuickMoveMode={quickMoveEnabled}
                           isQuickMoveSelected={quickMoveSelectedSeatId === seat.id}
                           onQuickMoveClick={onQuickMoveClick}
+                          showBookingStatus={showBookingStatus}
                         />
                         {/* Horizontal link to next seat in same row */}
                         {hasLinkToNext && (
@@ -1125,7 +1132,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "", blockNotes = {}, onBlockNoteChange }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "", blockNotes = {}, onBlockNoteChange, showBookingStatus = false }: SeatingChartProps) {
   // Use initialSeats as source of truth - derive blocks from props, not state
   // Only use local state for temporary overrides during active drag operations
   const defaultBlocks = useMemo(() => 
@@ -2082,6 +2089,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   quickMoveEnabled={quickMoveEnabled}
                   quickMoveSelectedSeatId={quickMoveSelectedSeatId}
                   onQuickMoveClick={handleQuickMoveClick}
+                  showBookingStatus={showBookingStatus}
                 />
               ))}
             </div>
@@ -2155,6 +2163,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     quickMoveEnabled={quickMoveEnabled}
                     quickMoveSelectedSeatId={quickMoveSelectedSeatId}
                     onQuickMoveClick={handleQuickMoveClick}
+                    showBookingStatus={showBookingStatus}
                   />
                 );
               })}
@@ -2200,6 +2209,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   quickMoveEnabled={quickMoveEnabled}
                   quickMoveSelectedSeatId={quickMoveSelectedSeatId}
                   onQuickMoveClick={handleQuickMoveClick}
+                  showBookingStatus={showBookingStatus}
                 />
               </div>
               
