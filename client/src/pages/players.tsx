@@ -764,6 +764,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       occupation: updatedData.occupation?.substring(0, 30)
     });
     
+    // CRITICAL: Update React Query cache BEFORE state updates
+    // This ensures that even if React Query refetches, it will have our updated data
+    if (selectedContestant) {
+      queryClient.setQueryData(['/api/casting-cards', selectedContestant.id], (oldData: any) => {
+        if (oldData) {
+          return { ...oldData, ...updatedData };
+        }
+        return updatedData;
+      });
+    }
+    
     // CRITICAL: Combine ALL state updates in a SINGLE flushSync to make them truly atomic
     // This prevents React from re-rendering between updates and potentially overwriting values
     flushSync(() => {
@@ -2367,6 +2378,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         
         // Create new state with the update
         const newCardData = { ...cardData, [field]: value };
+        
+        // CRITICAL: Also update React Query cache to prevent overwrites from refetches
+        if (selectedContestant) {
+          queryClient.setQueryData(['/api/casting-cards', selectedContestant.id], (oldData: any) => {
+            if (oldData) {
+              return { ...oldData, ...newCardData };
+            }
+            return newCardData;
+          });
+        }
+        
         setCardData(newCardData);
         // Keep ref in sync so debounced save uses latest data
         cardDataRef.current = newCardData;
@@ -2422,6 +2444,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         [fontSizeField]: newSize,
         [textField]: currentText 
       };
+      
+      // CRITICAL: Also update React Query cache to prevent overwrites
+      if (selectedContestant) {
+        queryClient.setQueryData(['/api/casting-cards', selectedContestant.id], (oldData: any) => {
+          if (oldData) {
+            return { ...oldData, ...newCardData };
+          }
+          return newCardData;
+        });
+      }
+      
       setCardData(newCardData);
       cardDataRef.current = newCardData;
       hasUnsavedChanges.current = true;
