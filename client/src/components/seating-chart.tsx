@@ -229,6 +229,7 @@ interface SeatingChartProps {
   blockNotes?: Record<number, string>; // Block notes by block number (1-7)
   onBlockNoteChange?: (blockNumber: number, notes: string) => void;
   showBookingStatus?: boolean; // Show CONF/PENDING indicators on seat cards
+  onRatingChange?: (contestantId: string, newRating: string) => void; // Change contestant rating
 }
 
 function DraggableDroppableSeat({
@@ -256,6 +257,7 @@ function DraggableDroppableSeat({
   isQuickMoveSelected,
   onQuickMoveClick,
   showBookingStatus,
+  onRatingChange,
 }: {
   seat: SeatData;
   blockIndex: number;
@@ -281,6 +283,7 @@ function DraggableDroppableSeat({
   isQuickMoveSelected?: boolean;
   onQuickMoveClick?: (seatId: string) => void;
   showBookingStatus?: boolean;
+  onRatingChange?: (contestantId: string, newRating: string) => void;
 }) {
   // Make occupied seats draggable (but not in Quick Move mode)
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
@@ -347,6 +350,7 @@ function DraggableDroppableSeat({
         neighbors={neighbors}
         onLinkWithNeighbor={onLinkWithNeighbor}
         showBookingStatus={showBookingStatus}
+        onRatingChange={onRatingChange}
       />
     </div>
   );
@@ -1038,6 +1042,7 @@ function SeatingBlock({
                           isQuickMoveSelected={quickMoveSelectedSeatId === seat.id}
                           onQuickMoveClick={onQuickMoveClick}
                           showBookingStatus={showBookingStatus}
+                          onRatingChange={onRatingChange}
                         />
                         {/* Horizontal link to next seat in same row */}
                         {hasLinkToNext && (
@@ -1132,7 +1137,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "", blockNotes = {}, onBlockNoteChange, showBookingStatus = false }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "", blockNotes = {}, onBlockNoteChange, showBookingStatus = false, onRatingChange }: SeatingChartProps) {
   // Use initialSeats as source of truth - derive blocks from props, not state
   // Only use local state for temporary overrides during active drag operations
   const defaultBlocks = useMemo(() => 

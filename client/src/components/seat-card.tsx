@@ -119,6 +119,7 @@ interface SeatCardProps {
   neighbors?: NeighborSeat[];
   onLinkWithNeighbor?: (contestantId: string, neighborContestantId: string) => void;
   showBookingStatus?: boolean; // Show CONF/PENDING indicators on seat cards
+  onRatingChange?: (contestantId: string, newRating: string) => void; // Change contestant rating
 }
 
 const groupColors = [
@@ -193,6 +194,7 @@ export function SeatCard({
   neighbors = [],
   onLinkWithNeighbor,
   showBookingStatus = false,
+  onRatingChange,
 }: SeatCardProps) {
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [localNotes, setLocalNotes] = useState(seat.notes || '');
@@ -733,7 +735,7 @@ export function SeatCard({
                           </Badge>
                         )}
                       </div>
-                      {contestantDetails.auditionRating && (
+                      {contestantDetails.auditionRating && !onRatingChange && (
                         <span className={`text-sm font-bold ${
                           contestantDetails.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
                           contestantDetails.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
@@ -752,6 +754,43 @@ export function SeatCard({
                     )}
                   </div>
                 </div>
+
+                {/* Rating Change - clickable buttons */}
+                {onRatingChange && seat.contestantId && (
+                  <div className="text-sm">
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Rating</label>
+                    <div className="flex flex-wrap gap-1">
+                      {['A+', 'A', 'P', 'B+', 'B', 'C'].map((rating) => {
+                        const isSelected = contestantDetails?.auditionRating === rating;
+                        const colors = isDarkMode ? ratingColorsDark[rating] : ratingColorsLight[rating];
+                        return (
+                          <button
+                            key={rating}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!isSelected) {
+                                onRatingChange(seat.contestantId!, rating);
+                              }
+                            }}
+                            className={`px-2 py-0.5 text-xs font-bold rounded border transition-colors ${
+                              isSelected 
+                                ? '' 
+                                : 'opacity-50 hover:opacity-100'
+                            }`}
+                            style={{
+                              backgroundColor: colors?.bg || 'transparent',
+                              borderColor: colors?.border || 'currentColor',
+                              color: colors?.text || 'inherit',
+                            }}
+                            data-testid={`button-rating-${rating}-${seat.contestantId}`}
+                          >
+                            {rating}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Player Type - clickable badges (only for A+, A, and P rated contestants) */}
                 {(seat.auditionRating === 'A+' || seat.auditionRating === 'A' || seat.auditionRating === 'P') && (

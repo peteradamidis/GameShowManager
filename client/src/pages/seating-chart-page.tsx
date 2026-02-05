@@ -1557,6 +1557,31 @@ export default function SeatingChartPage() {
     setCancelDialogOpen(true);
   };
 
+  // Handle rating change for a contestant
+  const handleRatingChange = async (contestantId: string, newRating: string) => {
+    try {
+      await apiRequest('PATCH', `/api/contestants/${contestantId}`, {
+        auditionRating: newRating,
+      });
+      
+      // Invalidate queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      refetch();
+      
+      toast({
+        title: "Rating updated",
+        description: `Rating changed to ${newRating}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to update rating",
+        description: error?.message || "Could not update contestant rating.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Return a seated standby back to the standby list
   const handleReturnToStandby = async (assignmentId: string, contestantId: string) => {
     // Prevent double-clicks by checking if already in progress
@@ -2311,6 +2336,7 @@ export default function SeatingChartPage() {
             blockNotes={mergedBlockNotes}
             onBlockNoteChange={handleBlockNoteChange}
             showBookingStatus={showBookingStatus}
+            onRatingChange={handleRatingChange}
           />
         )
       )}
