@@ -720,22 +720,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     
     console.log('[syncAndExitFullscreen] After flushSync, isFullscreen will be set to false');
     
-    // Trigger immediate save if there were changes
-    if (hasChanges || hasUnsavedChanges.current) {
-      hasUnsavedChanges.current = true;
-      setAutoSaveStatus('saving');
-      saveMutation.mutate({ ...updatedData, skipInvalidate: true } as any, {
-        onSuccess: () => {
-          hasUnsavedChanges.current = false;
-          setAutoSaveStatus('saved');
-          setTimeout(() => setAutoSaveStatus('idle'), 2000);
-        },
-        onError: () => {
-          setAutoSaveStatus('idle');
-        },
-      });
-    }
-    
     // Now exit fullscreen - use flushSync to ensure atomic update
     flushSync(() => {
       setCardZoom(0.5);
@@ -744,10 +728,33 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       setContentEditableKey(prev => prev + 1);
     });
     
-    // Clear the flag after render completes (use requestAnimationFrame to wait for next frame)
-    requestAnimationFrame(() => {
-      isExitingFullscreen.current = false;
-    });
+    // Trigger save AFTER exiting fullscreen, and keep the flag set until save completes
+    if (hasChanges || hasUnsavedChanges.current) {
+      hasUnsavedChanges.current = true;
+      setAutoSaveStatus('saving');
+      saveMutation.mutate({ ...updatedData, skipInvalidate: true } as any, {
+        onSuccess: () => {
+          hasUnsavedChanges.current = false;
+          setAutoSaveStatus('saved');
+          setTimeout(() => setAutoSaveStatus('idle'), 2000);
+          // Clear the flag AFTER the save completes successfully
+          // Add extra delay to ensure any refetches have completed
+          setTimeout(() => {
+            isExitingFullscreen.current = false;
+          }, 500);
+        },
+        onError: () => {
+          setAutoSaveStatus('idle');
+          // Clear the flag even on error
+          isExitingFullscreen.current = false;
+        },
+      });
+    } else {
+      // No changes to save, clear the flag after a short delay
+      setTimeout(() => {
+        isExitingFullscreen.current = false;
+      }, 200);
+    }
   };
   
   // Helper to insert dot point at cursor position
