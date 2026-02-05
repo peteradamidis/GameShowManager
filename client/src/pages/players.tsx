@@ -644,6 +644,22 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const ageStateRefFs = useRef<HTMLDivElement>(null);
   const bodyTextRefFs = useRef<HTMLDivElement>(null);
   
+  // CRITICAL: Refs to track pending (unsaved) text for header fields
+  // These are updated on every keystroke via onInput
+  const pendingTextRefs = useRef<{
+    occupation: string | null;
+    tagline: string | null;
+    sponsorCategory: string | null;
+    ageState: string | null;
+    fullName: string | null;
+  }>({
+    occupation: null,
+    tagline: null,
+    sponsorCategory: null,
+    ageState: null,
+    fullName: null,
+  });
+  
   // Track last cursor position for dot point insertion
   const lastCursorPositionRef = useRef<{ node: Node | null; offset: number } | null>(null);
   
@@ -2430,9 +2446,21 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     try {
       if (!cardData) return;
       
-      // First, capture the current text from the DOM element
-      const element = document.querySelector(selector) as HTMLElement;
-      const currentText = element?.textContent?.trim() || (cardData as any)[textField] || '';
+      // CRITICAL: First check our pending text refs (updated on every keystroke)
+      // This is more reliable than querying DOM which may have already re-rendered
+      const pendingKey = textField as keyof typeof pendingTextRefs.current;
+      let currentText = pendingTextRefs.current[pendingKey];
+      
+      // If no pending text, fall back to DOM query
+      if (currentText === null) {
+        const element = document.querySelector(selector) as HTMLElement;
+        currentText = element?.textContent?.trim() || (cardData as any)[textField] || '';
+      }
+      
+      // Clear the pending ref since we're saving it
+      if (pendingKey in pendingTextRefs.current) {
+        pendingTextRefs.current[pendingKey] = null;
+      }
       
       // Push current state to undo history before making changes
       setUndoHistory(prev => [...prev.slice(-(maxHistorySize - 1)), cardData]);
@@ -3706,7 +3734,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             padding: 0,
                             paddingLeft: '16px'
                           }}
-                          onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
+                          onInput={(e) => { pendingTextRefs.current.fullName = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
+                          onBlur={(e) => { pendingTextRefs.current.fullName = null; updateField('fullName', e.currentTarget.textContent || ''); }}
                           data-testid="preview-contestant-name"
                         >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
                     <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-2">
@@ -3761,7 +3790,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           data-field="ageState"
                           className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
                           style={{ fontFamily: 'Calibri, sans-serif', fontSize: '34px' }}
-                          onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
+                          onInput={(e) => { pendingTextRefs.current.ageState = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
+                          onBlur={(e) => { pendingTextRefs.current.ageState = null; updateField('ageState', e.currentTarget.textContent || ''); }}
                         >
                           {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
                         </div>
@@ -3796,7 +3826,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           data-field="occupation"
                           className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
                           style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 34}px` }}
-                          onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
+                          onInput={(e) => { pendingTextRefs.current.occupation = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
+                          onBlur={(e) => { pendingTextRefs.current.occupation = null; updateField('occupation', e.currentTarget.textContent || ''); }}
                         >
                           {cardData.occupation || 'OCCUPATION'}
                         </div>
@@ -3827,7 +3858,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         data-field="sponsorCategory"
                         className="text-lg font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text casting-card-sponsor"
                         style={{ color: '#16a34a' }}
-                        onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
+                        onInput={(e) => { pendingTextRefs.current.sponsorCategory = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
+                        onBlur={(e) => { pendingTextRefs.current.sponsorCategory = null; updateField('sponsorCategory', e.currentTarget.textContent || ''); }}
                       >
                         {cardData.sponsorCategory || 'SPONSOR CATEGORY: X'}
                       </div>
@@ -3885,7 +3917,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         data-field="tagline"
                         className="mb-2 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline"
                         style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '36px', color: '#dc2626' }}
-                        onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
+                        onInput={(e) => { pendingTextRefs.current.tagline = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
+                        onBlur={(e) => { pendingTextRefs.current.tagline = null; updateField('tagline', e.currentTarget.textContent || ''); }}
                       >
                         {cardData.tagline || 'SHORT TAGLINE'}
                       </h3>
@@ -4639,7 +4672,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             padding: 0,
                             paddingLeft: '16px'
                           }}
-                          onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
+                          onInput={(e) => { pendingTextRefs.current.fullName = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
+                          onBlur={(e) => { pendingTextRefs.current.fullName = null; updateField('fullName', e.currentTarget.textContent || ''); }}
                           data-testid="preview-contestant-name"
                         >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-2">
@@ -4728,9 +4762,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           ref={isFullscreen ? occupationRefFs : occupationRef}
                           contentEditable
                           suppressContentEditableWarning
+                          data-field="occupation"
                           className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
                           style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 34}px` }}
-                          onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
+                          onInput={(e) => { pendingTextRefs.current.occupation = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
+                          onBlur={(e) => { pendingTextRefs.current.occupation = null; updateField('occupation', e.currentTarget.textContent || ''); }}
                           data-testid="edit-occupation"
                         >
                           {cardData.occupation || 'OCCUPATION'}
@@ -4820,9 +4856,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             ref={isFullscreen ? taglineRefFs : taglineRef}
                             contentEditable
                             suppressContentEditableWarning
+                            data-field="tagline"
                             className="mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline"
                             style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '36px', color: '#dc2626' }}
-                            onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
+                            onInput={(e) => { pendingTextRefs.current.tagline = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
+                            onBlur={(e) => { pendingTextRefs.current.tagline = null; updateField('tagline', e.currentTarget.textContent || ''); }}
                             data-testid="edit-tagline"
                           >
                             {cardData.tagline || 'SHORT TAGLINE'}
