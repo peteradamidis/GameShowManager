@@ -2908,6 +2908,61 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         return;
       }
       
+      // CRITICAL: Check if we're in a header field that uses fontSizeXxx properties
+      // These fields should NOT use span wrapping - they use container-level font-size
+      const headerFieldMapping: Record<string, { fontSizeKey: keyof typeof cardData, textKey: keyof typeof cardData, defaultSize: number }> = {
+        'fullName': { fontSizeKey: 'fontSizeName', textKey: 'fullName', defaultSize: 42 },
+        'occupation': { fontSizeKey: 'fontSizeOccupation', textKey: 'occupation', defaultSize: 36 },
+        'tagline': { fontSizeKey: 'fontSizeTagline', textKey: 'tagline', defaultSize: 36 },
+      };
+      
+      // Find which header field (if any) contains the selection
+      const findHeaderField = (): string | null => {
+        let node: Node | null = range!.startContainer;
+        while (node) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const el = node as HTMLElement;
+            const fieldName = el.getAttribute('data-field');
+            if (fieldName && headerFieldMapping[fieldName]) {
+              return fieldName;
+            }
+          }
+          node = node.parentNode;
+        }
+        return null;
+      };
+      
+      const headerField = findHeaderField();
+      
+      if (headerField && cardData) {
+        console.log('[formatFontSize] Selection is in header field:', headerField);
+        const mapping = headerFieldMapping[headerField];
+        const currentSize = (cardData[mapping.fontSizeKey] as number) || mapping.defaultSize;
+        
+        let newSize = currentSize;
+        if (size === 'bigger') {
+          const nextStep = fontSizeSteps.find(s => s > currentSize);
+          newSize = nextStep || currentSize + 4;
+        } else if (size === 'smaller') {
+          const prevSteps = fontSizeSteps.filter(s => s < currentSize);
+          newSize = prevSteps.length > 0 ? prevSteps[prevSteps.length - 1] : Math.max(12, currentSize - 2);
+        } else {
+          newSize = parseInt(size) || currentSize;
+        }
+        
+        console.log('[formatFontSize] Header field font size change:', currentSize, '->', newSize);
+        
+        // Use updateFontSizeWithSync to properly update the font size property
+        const selector = `[data-field="${headerField}"]`;
+        updateFontSizeWithSync(mapping.fontSizeKey as any, newSize, mapping.textKey as any, selector);
+        
+        // Trigger auto-save
+        hasUnsavedChanges.current = true;
+        triggerFormattingAutoSave();
+        
+        return; // Don't continue with span wrapping for header fields
+      }
+      
       // Get current font size from selection - traverse up DOM to find accurate size
       const getCurrentFontSize = (): number => {
         // First, try to find font size from the actual selected node
