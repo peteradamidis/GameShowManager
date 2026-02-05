@@ -648,50 +648,66 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
   };
   
-  // Sync contentEditable content to cardData before exiting fullscreen
+  // Sync ALL contentEditable content to cardData before exiting fullscreen
   const syncAndExitFullscreen = () => {
-    // Get the current HTML from the fullscreen contentEditable
-    const bodyTextElement = bodyTextRefFs.current;
-    if (bodyTextElement && cardData) {
-      const currentHtml = bodyTextElement.innerHTML;
-      // Always sync the content, even if it looks the same (to handle formatting changes)
-      const updatedData = { ...cardData, bodyText: currentHtml };
-      
-      // Update local state and ref synchronously
-      setCardData(updatedData);
-      cardDataRef.current = updatedData;
-      
-      // Trigger immediate save
-      if (currentHtml !== cardData.bodyText) {
-        hasUnsavedChanges.current = true;
-        setAutoSaveStatus('saving');
-        saveMutation.mutate({ ...updatedData, skipInvalidate: true } as any, {
-          onSuccess: () => {
-            hasUnsavedChanges.current = false;
-            setAutoSaveStatus('saved');
-            setTimeout(() => setAutoSaveStatus('idle'), 2000);
-          },
-          onError: () => {
-            setAutoSaveStatus('idle');
-          },
-        });
-      }
-      
-      // Use setTimeout to allow React state to propagate before switching views
-      setTimeout(() => {
-        setCardZoom(0.5);
-        setIsFullscreen(false);
-        setHideToolbar(false);
-        // Increment key to force contentEditable to remount with new content
-        setContentEditableKey(prev => prev + 1);
-      }, 50);
+    if (!cardData) {
+      setCardZoom(0.5);
+      setIsFullscreen(false);
+      setHideToolbar(false);
       return;
     }
     
-    // If no content to sync, exit immediately
-    setCardZoom(0.5);
-    setIsFullscreen(false);
-    setHideToolbar(false);
+    // Find all contentEditable elements with data-field attribute in the fullscreen view
+    const fullscreenCard = document.querySelector('[data-testid="casting-card-fullscreen"]') || document;
+    const editableFields = fullscreenCard.querySelectorAll('[data-field]');
+    
+    let updatedData = { ...cardData };
+    let hasChanges = false;
+    
+    editableFields.forEach((element) => {
+      const fieldName = element.getAttribute('data-field');
+      const isHtml = element.getAttribute('data-is-html') === 'true';
+      if (!fieldName) return;
+      
+      // Get the current value from the DOM
+      const currentValue = isHtml ? (element as HTMLElement).innerHTML : (element as HTMLElement).textContent;
+      const existingValue = (updatedData as any)[fieldName];
+      
+      // Update if different
+      if (currentValue !== existingValue) {
+        (updatedData as any)[fieldName] = currentValue || '';
+        hasChanges = true;
+      }
+    });
+    
+    // Update local state and ref synchronously
+    setCardData(updatedData);
+    cardDataRef.current = updatedData;
+    
+    // Trigger immediate save if there were changes
+    if (hasChanges) {
+      hasUnsavedChanges.current = true;
+      setAutoSaveStatus('saving');
+      saveMutation.mutate({ ...updatedData, skipInvalidate: true } as any, {
+        onSuccess: () => {
+          hasUnsavedChanges.current = false;
+          setAutoSaveStatus('saved');
+          setTimeout(() => setAutoSaveStatus('idle'), 2000);
+        },
+        onError: () => {
+          setAutoSaveStatus('idle');
+        },
+      });
+    }
+    
+    // Use setTimeout to allow React state to propagate before switching views
+    setTimeout(() => {
+      setCardZoom(0.5);
+      setIsFullscreen(false);
+      setHideToolbar(false);
+      // Increment key to force contentEditable to remount with new content
+      setContentEditableKey(prev => prev + 1);
+    }, 100);
   };
   
   // Helper to insert dot point at cursor position
@@ -2755,7 +2771,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
     return (
       <SafeRender fallback={fullscreenErrorFallback} onError={(e) => { console.error('Fullscreen render error:', e); setRenderError(e.message); }}>
-      <div className="fixed inset-0 z-50 bg-white overflow-auto p-6">
+      <div className="fixed inset-0 z-50 bg-white overflow-auto p-6" data-testid="casting-card-fullscreen">
         {/* Hidden file inputs for fullscreen mode */}
         <input
           type="file"
@@ -3413,6 +3429,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <h2 
                       contentEditable
                       suppressContentEditableWarning
+                      data-field="fullName"
                       className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name flex-1"
                       style={{ 
                         fontFamily: '"Century Gothic", sans-serif',
@@ -3475,6 +3492,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <div
                       contentEditable
                       suppressContentEditableWarning
+                      data-field="ageState"
                       className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
                       style={{ fontFamily: 'Calibri, sans-serif', fontSize: '34px' }}
                       onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
@@ -3509,6 +3527,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <div
                       contentEditable
                       suppressContentEditableWarning
+                      data-field="occupation"
                       className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
                       style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 34}px` }}
                       onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
@@ -3539,6 +3558,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div
                         contentEditable
                         suppressContentEditableWarning
+                        data-field="sponsorCategory"
                         className="text-lg font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text casting-card-sponsor"
                         style={{ color: '#16a34a' }}
                         onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
@@ -3596,6 +3616,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <h3 
                         contentEditable
                         suppressContentEditableWarning
+                        data-field="tagline"
                         className="mb-2 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline"
                         style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '36px', color: '#dc2626' }}
                         onBlur={(e) => updateField('tagline', e.currentTarget.textContent || '')}
@@ -3654,6 +3675,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       ref={bodyTextRefFs}
                       contentEditable
                       suppressContentEditableWarning
+                      data-field="bodyText"
+                      data-is-html="true"
                       className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-2 py-1 rounded cursor-text whitespace-pre-wrap border border-transparent hover:border-gray-200 focus:border-amber-300 flex-1 print-no-border"
                       style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5', paddingBottom: cardData.showProducer !== false ? '50px' : '0' }}
                       onInput={() => { hasUnsavedChanges.current = true; }}
