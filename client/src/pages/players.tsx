@@ -4910,9 +4910,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           onInput={(e) => { pendingTextRefs.current.occupation = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
                           onBlur={(e) => { pendingTextRefs.current.occupation = null; updateField('occupation', e.currentTarget.textContent || ''); }}
                           data-testid="edit-occupation"
-                        >
-                          {cardData.occupation || 'OCCUPATION'}
-                        </div>
+                          dangerouslySetInnerHTML={{ __html: cardData.occupation || 'OCCUPATION' }}
+                        />
                         {/* Font size controls for occupation */}
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print">
                           <button 
