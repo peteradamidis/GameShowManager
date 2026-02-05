@@ -296,6 +296,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const hasUnsavedChanges = useRef(false);
   const cardDataRef = useRef<CastingCardData | null>(null);
   const lastLoadedContestantId = useRef<string | null>(null); // Track which contestant's card we've loaded
+  const isExitingFullscreen = useRef(false); // Prevent useEffect from overwriting during fullscreen exit
   
   // Version history state
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
@@ -651,12 +652,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   
   // Sync ALL contentEditable content to cardData before exiting fullscreen
   const syncAndExitFullscreen = () => {
+    // Set flag to prevent useEffect from overwriting our data
+    isExitingFullscreen.current = true;
+    
     // Use ref for latest data (React state updates are async, ref is sync)
     const currentData = cardDataRef.current || cardData;
     if (!currentData) {
       setCardZoom(0.5);
       setIsFullscreen(false);
       setHideToolbar(false);
+      isExitingFullscreen.current = false;
       return;
     }
     
@@ -737,6 +742,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       setIsFullscreen(false);
       setHideToolbar(false);
       setContentEditableKey(prev => prev + 1);
+    });
+    
+    // Clear the flag after render completes (use requestAnimationFrame to wait for next frame)
+    requestAnimationFrame(() => {
+      isExitingFullscreen.current = false;
     });
   };
   
@@ -999,6 +1009,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   // This prevents query refetches from overwriting unsaved local edits
   useEffect(() => {
     if (selectedContestant) {
+      // CRITICAL: Skip if we're in the process of exiting fullscreen
+      // This prevents the useEffect from overwriting local changes during view transition
+      if (isExitingFullscreen.current) {
+        console.log('[CardData useEffect] Skipping - currently exiting fullscreen');
+        return;
+      }
+      
       // Skip if we've already loaded this contestant's card and haven't switched
       const isNewContestant = lastLoadedContestantId.current !== selectedContestant.id;
       
@@ -1006,26 +1023,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       const hasLocalData = cardData?.contestantId === selectedContestant.id || 
                           cardDataRef.current?.contestantId === selectedContestant.id;
       
-      // DEBUG: Log current state
-      console.log('[CardData useEffect] Check:', { 
-        isNewContestant, 
-        hasLocalData, 
-        lastLoadedId: lastLoadedContestantId.current,
-        selectedId: selectedContestant.id,
-        cardDataContestantId: cardData?.contestantId,
-        refContestantId: cardDataRef.current?.contestantId,
-        currentFontSizeOccupation: cardDataRef.current?.fontSizeOccupation,
-        existingCardFontSizeOccupation: existingCard?.fontSizeOccupation,
-        isFullscreen
-      });
-      
       if (!isNewContestant && hasLocalData) {
         // Already loaded this contestant, don't overwrite local edits
-        console.log('[CardData useEffect] Skipping - already have local data for this contestant');
         return;
       }
-      
-      console.log('[CardData useEffect] WILL LOAD card data - THIS MIGHT OVERWRITE LOCAL CHANGES');
       
       try {
         setRenderError(null); // Clear any previous errors
