@@ -454,7 +454,7 @@ export function SeatCard({
       {!isRXDayLocked && !isEmpty && seat.bookingEmailSent && !seat.confirmedRsvp && (
         <div 
           data-testid={`badge-pending-${seat.assignmentId}`}
-          className="absolute top-0.5 right-0.5 z-10 px-1 py-0 rounded text-[6px] font-bold bg-red-600 text-white shadow-sm"
+          className="absolute top-0.5 right-0.5 z-10 px-1 py-0 rounded text-[6px] font-bold bg-red-800 text-white shadow-sm"
           title="Awaiting reply"
         >
           PENDING
