@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2, Users, AlertTriangle, RefreshCw, Link, Unlink } from "lucide-react";
+import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2, Users, AlertTriangle, RefreshCw, Link, Unlink, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -558,6 +558,42 @@ export default function Contestants() {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+
+  // Excel export for filtered contestants
+  const handleExportToExcel = async () => {
+    try {
+      const XLSX = await import('xlsx');
+      
+      const exportData = displayedContestants.map(c => ({
+        'Name': c.name,
+        'Email': c.email || '',
+        'Phone': c.phone || '',
+        'Age': c.age || '',
+        'Gender': c.gender || '',
+        'State': c.state || '',
+        'Suburb': c.suburb || '',
+        'Location': c.location || '',
+        'Rating': c.auditionRating || '',
+        'Status': c.availabilityStatus || '',
+        'Attending With': c.attendingWith || '',
+        'Group Size': c.groupSize || 1,
+        'Podium Story': c.podiumStory ? 'Yes' : 'No',
+        'Notes': c.notes || '',
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Contestants');
+
+      const timestamp = format(new Date(), 'yyyy-MM-dd_HHmm');
+      XLSX.writeFile(workbook, `contestants_export_${timestamp}.xlsx`);
+
+      toast({ title: "Exported", description: `${displayedContestants.length} contestants exported to Excel` });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({ title: "Export Failed", description: "Could not export contestants", variant: "destructive" });
+    }
+  };
 
   const importMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -1144,9 +1180,18 @@ export default function Contestants() {
             )}
           </div>
         </div>
-        {/* Import buttons - always visible */}
+        {/* Import/Export buttons - always visible */}
         <div className="flex gap-2 justify-end flex-wrap">
           <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
+          <Button 
+            variant="outline"
+            onClick={handleExportToExcel}
+            disabled={displayedContestants.length === 0}
+            data-testid="button-export-contestants"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export ({displayedContestants.length})
+          </Button>
           <ImportGalleryDialog />
           <Button 
             variant="outline"
