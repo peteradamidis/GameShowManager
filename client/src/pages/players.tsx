@@ -6526,11 +6526,17 @@ function CastingCardPreview({ contestantId }: { contestantId: string }) {
           No casting card found for this contestant.
         </div>
       ) : (
-        <div className="border rounded-lg overflow-hidden bg-white" style={{ height: '500px' }}>
+        <div className="border rounded-lg overflow-hidden bg-white" style={{ height: '420px', width: '100%' }}>
           <iframe
-            src={`/api/casting-cards/${contestantId}/print`}
-            className="w-full h-full border-0"
-            style={{ transform: 'scale(0.5)', transformOrigin: 'top left', width: '200%', height: '200%' }}
+            src={`/api/casting-cards/${contestantId}/print?preview=true`}
+            className="border-0"
+            style={{ 
+              transform: 'scale(0.55)', 
+              transformOrigin: 'top left', 
+              width: '182%', 
+              height: '182%',
+              pointerEvents: 'none'
+            }}
             onLoad={() => setIsLoading(false)}
             onError={() => {
               setIsLoading(false);

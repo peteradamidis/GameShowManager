@@ -16063,9 +16063,9 @@ Thank you.`;
       </div>
     </div>
   </div>
-  <script>
+  ${req.query.preview !== 'true' ? `<script>
     window.onload = function() { window.print(); };
-  </script>
+  </script>` : ''}
 </body>
 </html>`;
 
