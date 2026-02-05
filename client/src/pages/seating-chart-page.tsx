@@ -3,7 +3,7 @@ import { getDistanceFromDocklands } from "@/components/contestant-table";
 import { WinningMoneyModal } from "@/components/winning-money-modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check, Eye, User, Mail, Phone, MapPin, ArrowLeftRight, Camera, UserPlus, Pencil, ClipboardCheck, CheckCircle2, XCircle, AlertCircle, PartyPopper, ChevronLeft, ChevronRight } from "lucide-react";
+import { Wand2, RotateCcw, Lock, Unlock, AlertTriangle, Search, Users, Check, Eye, User, Mail, Phone, MapPin, ArrowLeftRight, Camera, UserPlus, Pencil, ClipboardCheck, CheckCircle2, XCircle, AlertCircle, PartyPopper, ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -300,6 +300,9 @@ export default function SeatingChartPage() {
   
   // Podium Visualiser mode - shows only contestant photos
   const [isPodiumVisualizerMode, setIsPodiumVisualizerMode] = useState(false);
+  
+  // Podium Stories (PS) view mode - shows contestants with podium stories per block
+  const [isPodiumStoriesMode, setIsPodiumStoriesMode] = useState(false);
   
   // Readiness tab state
   const [isReadinessMode, setIsReadinessMode] = useState(false);
@@ -1893,11 +1896,80 @@ export default function SeatingChartPage() {
             >
               <ClipboardCheck className="h-4 w-4" />
             </Button>
+            <Button 
+              variant={isPodiumStoriesMode ? "default" : "ghost"}
+              size="icon"
+              onClick={() => setIsPodiumStoriesMode(!isPodiumStoriesMode)} 
+              title={isPodiumStoriesMode ? "Exit Podium Stories View" : "PS - View Podium Stories by block"}
+              data-testid="button-podium-stories-view"
+              className={isPodiumStoriesMode ? "bg-pink-600 hover:bg-pink-700 text-white" : "text-muted-foreground"}
+            >
+              <BookOpen className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
 
-      {isReadinessMode ? (
+      {isPodiumStoriesMode ? (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-pink-600" />
+              Podium Stories by Block
+            </h2>
+            <Badge variant="outline" className="bg-pink-50 text-pink-700 border-pink-300 dark:bg-pink-950 dark:text-pink-300 dark:border-pink-700">
+              {assignments?.filter((a: any) => {
+                const contestant = availableContestants.find((c: any) => c.id === a.contestantId);
+                return contestant?.podiumStory;
+              }).length || 0} contestants with PS
+            </Badge>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {(['PB', 'NPB', 'Block 1', 'Block 2', 'Block 3', 'Block 4', 'Block 5'] as const).map(block => {
+              const blockAssignments = assignments?.filter((a: any) => a.blockType === block) || [];
+              const psContestants = blockAssignments
+                .map((a: any) => {
+                  const contestant = availableContestants.find((c: any) => c.id === a.contestantId);
+                  return contestant?.podiumStory ? { ...contestant, seatNumber: a.seatNumber } : null;
+                })
+                .filter(Boolean);
+              
+              return (
+                <Card key={block} className="overflow-hidden">
+                  <CardHeader className="py-2 px-3 bg-gradient-to-r from-pink-500 to-rose-500">
+                    <CardTitle className="text-sm font-semibold text-white flex items-center justify-between">
+                      <span>{block}</span>
+                      <Badge variant="secondary" className="bg-white/20 text-white text-xs">
+                        {psContestants.length} PS
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 space-y-2 max-h-64 overflow-y-auto">
+                    {psContestants.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-4">No podium stories in this block</p>
+                    ) : (
+                      psContestants.map((contestant: any) => (
+                        <div key={contestant.id} className="p-2 rounded-lg bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge className="bg-pink-500 text-white text-[10px] px-1.5">PS</Badge>
+                            <span className="text-sm font-medium truncate">{contestant.name}</span>
+                            <Badge variant="outline" className="text-[10px] ml-auto">Seat {contestant.seatNumber}</Badge>
+                          </div>
+                          {contestant.podiumStoryNote ? (
+                            <p className="text-xs text-muted-foreground line-clamp-3">{contestant.podiumStoryNote}</p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground/50 italic">No story notes added yet</p>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      ) : isReadinessMode ? (
         <div className="space-y-6">
           {/* Summary Cards */}
           <div className="grid grid-cols-4 gap-4">

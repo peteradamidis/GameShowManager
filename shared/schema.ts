@@ -51,6 +51,7 @@ export const contestants = pgTable("contestants", {
   playerType: playerTypeEnum("player_type"), // Player, Backup, Player Partner
   groupSize: integer("group_size"), // Group size (1 = solo, 2+ = group), null = undefined
   podiumStory: boolean("podium_story").default(false), // Has podium story
+  podiumStoryNote: text("podium_story_note"), // Podium story content/notes
   availableForStandby: boolean("available_for_standby").default(false), // Marked as available for standby in import
   availabilityNotes: text("availability_notes"), // Free-form availability notes from Excel import
   noShowCount: integer("no_show_count").default(0), // Number of times contestant was a no-show
