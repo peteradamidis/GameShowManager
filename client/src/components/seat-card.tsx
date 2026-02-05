@@ -441,6 +441,25 @@ export function SeatCard({
           </TooltipContent>
         </Tooltip>
       )}
+      {/* Booking status indicator - CONF (teal) or PENDING (red) - only when not in RX day mode */}
+      {!isRXDayLocked && !isEmpty && seat.confirmedRsvp && (
+        <div 
+          data-testid={`badge-conf-${seat.assignmentId}`}
+          className="absolute top-0.5 right-0.5 z-10 px-1 py-0 rounded text-[6px] font-bold bg-teal-600 text-white shadow-sm"
+          title="Booking confirmed"
+        >
+          CONF
+        </div>
+      )}
+      {!isRXDayLocked && !isEmpty && seat.bookingEmailSent && !seat.confirmedRsvp && (
+        <div 
+          data-testid={`badge-pending-${seat.assignmentId}`}
+          className="absolute top-0.5 right-0.5 z-10 px-1 py-0 rounded text-[6px] font-bold bg-red-600 text-white shadow-sm"
+          title="Awaiting reply"
+        >
+          PENDING
+        </div>
+      )}
       {isEmpty ? (
         <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-1">
           <User className="h-3 w-3" />
@@ -498,17 +517,7 @@ export function SeatCard({
                 STBY
               </Badge>
             )}
-            {!isRXDayLocked && seat.confirmedRsvp && (
-              <Badge variant="outline" className="text-[7px] px-0.5 py-0 h-3 border-green-400 bg-green-100 text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300" title="Booking confirmed">
-                OK
-              </Badge>
-            )}
-            {!isRXDayLocked && seat.bookingEmailSent && !seat.confirmedRsvp && (
-              <Badge variant="outline" className="text-[7px] px-0.5 py-0 h-3 border-amber-400 bg-amber-100 text-amber-700 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300" title="Awaiting reply">
-                WAIT
-              </Badge>
-            )}
-            {seat.signedIn && isRXDayLocked && (
+                        {seat.signedIn && isRXDayLocked && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div data-testid={`signed-in-icon-${seat.assignmentId}`} className="flex items-center justify-center w-3 h-3 rounded-full bg-green-500 dark:bg-green-600">
