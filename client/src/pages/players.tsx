@@ -2451,10 +2451,26 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       const pendingKey = textField as keyof typeof pendingTextRefs.current;
       let currentText = pendingTextRefs.current[pendingKey];
       
+      console.log('[updateFontSizeWithSync] START', {
+        fontSizeField,
+        newSize,
+        textField,
+        pendingKey,
+        pendingTextValue: currentText,
+        currentStateValue: (cardData as any)[textField]
+      });
+      
       // If no pending text, fall back to DOM query
       if (currentText === null) {
         const element = document.querySelector(selector) as HTMLElement;
         currentText = element?.textContent?.trim() || (cardData as any)[textField] || '';
+        console.log('[updateFontSizeWithSync] No pending text, queried DOM:', {
+          elementFound: !!element,
+          domText: element?.textContent,
+          fallbackToState: currentText === (cardData as any)[textField]
+        });
+      } else {
+        console.log('[updateFontSizeWithSync] Using pending text:', currentText);
       }
       
       // Clear the pending ref since we're saving it
