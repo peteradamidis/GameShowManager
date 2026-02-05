@@ -1915,13 +1915,13 @@ export default function SeatingChartPage() {
             </Button>
             <Button 
               variant={isPodiumStoriesMode ? "default" : "ghost"}
-              size="icon"
+              size="sm"
               onClick={() => setIsPodiumStoriesMode(!isPodiumStoriesMode)} 
               title={isPodiumStoriesMode ? "Exit Podium Stories View" : "PS - View Podium Stories by block"}
               data-testid="button-podium-stories-view"
-              className={isPodiumStoriesMode ? "bg-pink-600 hover:bg-pink-700 text-white" : "text-muted-foreground"}
+              className={isPodiumStoriesMode ? "bg-pink-600 hover:bg-pink-700 text-white px-2" : "text-muted-foreground px-2"}
             >
-              <BookOpen className="h-4 w-4" />
+              <span className="font-bold text-xs">PS</span>
             </Button>
           </div>
         </div>
