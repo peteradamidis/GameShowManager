@@ -650,18 +650,27 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   
   // Sync ALL contentEditable content to cardData before exiting fullscreen
   const syncAndExitFullscreen = () => {
-    if (!cardData) {
+    // Use ref for latest data (React state updates are async, ref is sync)
+    const currentData = cardDataRef.current || cardData;
+    if (!currentData) {
       setCardZoom(0.5);
       setIsFullscreen(false);
       setHideToolbar(false);
       return;
     }
     
+    // Cancel any pending auto-save to prevent race conditions
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+      autoSaveTimeoutRef.current = null;
+    }
+    
     // Find all contentEditable elements with data-field attribute in the fullscreen view
     const fullscreenCard = document.querySelector('[data-testid="casting-card-fullscreen"]') || document;
     const editableFields = fullscreenCard.querySelectorAll('[data-field]');
     
-    let updatedData = { ...cardData };
+    // Start with the LATEST data from ref (includes font sizes, offsets, etc.)
+    let updatedData = { ...currentData };
     let hasChanges = false;
     
     editableFields.forEach((element) => {
