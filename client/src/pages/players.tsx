@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueries } from "@tanstack/react-query";
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { flushSync } from "react-dom";
 import { getPartnerNames, attendingWithMentionsName } from "@shared/attendingWithParser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import dondLogo from "@assets/dond-logo.png";
@@ -673,6 +674,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     let updatedData = { ...currentData };
     let hasChanges = false;
     
+    console.log('[syncAndExitFullscreen] Current data font sizes:', {
+      fontSizeOccupation: currentData.fontSizeOccupation,
+      fontSizeTagline: currentData.fontSizeTagline,
+      fontSizeName: currentData.fontSizeName
+    });
+    
     editableFields.forEach((element) => {
       const fieldName = element.getAttribute('data-field');
       const isHtml = element.getAttribute('data-is-html') === 'true';
@@ -689,12 +696,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       }
     });
     
-    // Update local state and ref synchronously
-    setCardData(updatedData);
+    // Update ref immediately (synchronous)
     cardDataRef.current = updatedData;
     
+    // Use flushSync to force React to process state updates synchronously
+    // This ensures cardData is updated BEFORE we switch views
+    flushSync(() => {
+      setCardData(updatedData);
+    });
+    
     // Trigger immediate save if there were changes
-    if (hasChanges) {
+    if (hasChanges || hasUnsavedChanges.current) {
       hasUnsavedChanges.current = true;
       setAutoSaveStatus('saving');
       saveMutation.mutate({ ...updatedData, skipInvalidate: true } as any, {
@@ -709,14 +721,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       });
     }
     
-    // Use setTimeout to allow React state to propagate before switching views
-    setTimeout(() => {
+    // Now exit fullscreen - use flushSync to ensure atomic update
+    flushSync(() => {
       setCardZoom(0.5);
       setIsFullscreen(false);
       setHideToolbar(false);
-      // Increment key to force contentEditable to remount with new content
       setContentEditableKey(prev => prev + 1);
-    }, 100);
+    });
   };
   
   // Helper to insert dot point at cursor position
@@ -981,10 +992,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       // Skip if we've already loaded this contestant's card and haven't switched
       const isNewContestant = lastLoadedContestantId.current !== selectedContestant.id;
       
-      if (!isNewContestant && cardData?.contestantId === selectedContestant.id) {
+      // Check BOTH state and ref to prevent overwriting (ref is more reliable for recent changes)
+      const hasLocalData = cardData?.contestantId === selectedContestant.id || 
+                          cardDataRef.current?.contestantId === selectedContestant.id;
+      
+      if (!isNewContestant && hasLocalData) {
         // Already loaded this contestant, don't overwrite local edits
+        console.log('[CardData useEffect] Skipping - already have local data for this contestant');
         return;
       }
+      
+      console.log('[CardData useEffect] Loading card data:', { isNewContestant, hasLocalData, contestantId: selectedContestant.id });
       
       try {
         setRenderError(null); // Clear any previous errors
