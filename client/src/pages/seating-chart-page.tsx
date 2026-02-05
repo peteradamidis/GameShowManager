@@ -309,7 +309,7 @@ function PodiumStoryCard({
           data-testid={`div-ps-note-view-${contestant.id}`}
         >
           {savedNote ? (
-            <p className="text-xs text-muted-foreground">{savedNote}</p>
+            <p className="text-xs text-muted-foreground whitespace-pre-wrap break-words">{savedNote}</p>
           ) : (
             <p className="text-xs text-muted-foreground/50 italic flex items-center gap-1">
               <Pencil className="h-3 w-3" /> Click to add story notes...
