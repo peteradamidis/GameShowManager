@@ -1502,13 +1502,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [quickMoveSelectedSeatId]);
 
-  // Auto-disable Quick Move when the day is unlocked
-  useEffect(() => {
-    if (!isLocked) {
-      setQuickMoveEnabled(false);
-      setQuickMoveSelectedSeatId(null);
-    }
-  }, [isLocked]);
+  // Quick Move is now available in both locked and unlocked modes
+  // No auto-disable needed
 
   // Custom collision detection: prioritize where the pointer actually is (more intuitive)
   // Falls back to rectangle intersection if pointer isn't directly over a droppable
@@ -1678,7 +1673,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
 
   // Handle quick move click - select first, then execute move/swap on second click
   const handleQuickMoveClick = async (clickedSeatId: string) => {
-    if (!quickMoveEnabled || !isLocked) return;
+    if (!quickMoveEnabled) return;
 
     const clickedSeat = findSeat(clickedSeatId);
     if (!clickedSeat) return;
@@ -2012,25 +2007,23 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
             </div>
           )}
 
-          {/* Quick Move Mode Controls - Only visible in RX Day Mode */}
-          {isLocked && (
-            <div className="flex items-center gap-3 mb-4">
-              <Button
-                variant={quickMoveEnabled ? "default" : "outline"}
-                size="sm"
-                onClick={() => setQuickMoveEnabled(!quickMoveEnabled)}
-                data-testid="button-quick-move-toggle"
-              >
-                <MousePointerClick className="h-4 w-4 mr-2" />
-                {quickMoveEnabled ? "Quick Move ON" : "Quick Move"}
-              </Button>
-              {quickMoveEnabled && (
-                <span className="text-sm text-muted-foreground">
-                  Click a person to select, then click another seat to move/swap
-                </span>
-              )}
-            </div>
-          )}
+          {/* Quick Move Mode Controls - Available in both locked and unlocked modes */}
+          <div className="flex items-center gap-3 mb-4">
+            <Button
+              variant={quickMoveEnabled ? "default" : "outline"}
+              size="sm"
+              onClick={() => setQuickMoveEnabled(!quickMoveEnabled)}
+              data-testid="button-quick-move-toggle"
+            >
+              <MousePointerClick className="h-4 w-4 mr-2" />
+              {quickMoveEnabled ? "Quick Move ON" : "Quick Move"}
+            </Button>
+            {quickMoveEnabled && (
+              <span className="text-sm text-muted-foreground">
+                Click a person to select, then click another seat to move/swap
+              </span>
+            )}
+          </div>
 
           {/* Quick Move Selection Indicator */}
           {quickMoveEnabled && quickMoveSelectedSeatId && (
