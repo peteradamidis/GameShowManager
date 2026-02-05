@@ -694,6 +694,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       fontSizeName: currentData.fontSizeName
     });
     
+    console.log('[syncAndExitFullscreen] Found', editableFields.length, 'editable fields in DOM');
+    
     editableFields.forEach((element) => {
       const fieldName = element.getAttribute('data-field');
       const isHtml = element.getAttribute('data-is-html') === 'true';
@@ -702,6 +704,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       // Get the current value from the DOM
       const currentValue = isHtml ? (element as HTMLElement).innerHTML : (element as HTMLElement).textContent;
       const existingValue = (updatedData as any)[fieldName];
+      
+      console.log(`[syncAndExitFullscreen] Field "${fieldName}": DOM="${currentValue?.substring(0, 50)}", State="${existingValue?.substring(0, 50)}"`);
       
       // Update if different
       if (currentValue !== existingValue) {
@@ -726,12 +730,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       if (element) {
         // Use innerHTML for bodyText, textContent for others
         const val = field === 'bodyText' ? (element as HTMLElement).innerHTML : (element as HTMLElement).textContent?.trim() || '';
+        const oldVal = (currentData as any)[field];
         (updatedData as any)[field] = val;
         
+        console.log(`[syncAndExitFullscreen] Header field "${field}": new="${val?.substring(0, 30)}", old="${oldVal?.substring(0, 30)}"`);
+        
         // Check if value actually changed
-        if (val !== (currentData as any)[field]) {
+        if (val !== oldVal) {
           hasChanges = true;
         }
+      } else {
+        console.warn(`[syncAndExitFullscreen] Header field "${field}" NOT FOUND in DOM with selector "${selector}"`);
       }
     });
 
@@ -749,27 +758,28 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     // CRITICAL: Set timestamp BEFORE any state changes to protect against race conditions
     lastLocalSaveTime.current = Date.now();
     
-    // Use flushSync to force React to process state updates synchronously
-    flushSync(() => {
-      setCardData(updatedData);
-      cardDataRef.current = updatedData;
+    console.log('[syncAndExitFullscreen] About to update state with updatedData:', {
+      fullName: updatedData.fullName?.substring(0, 30),
+      tagline: updatedData.tagline?.substring(0, 30),
+      occupation: updatedData.occupation?.substring(0, 30)
     });
     
-    console.log('[syncAndExitFullscreen] After flushSync, isFullscreen will be set to false');
-    
-    // Now exit fullscreen - use flushSync to ensure atomic update
+    // CRITICAL: Combine ALL state updates in a SINGLE flushSync to make them truly atomic
+    // This prevents React from re-rendering between updates and potentially overwriting values
     flushSync(() => {
+      // First update cardData with the DOM values
+      setCardData(updatedData);
+      cardDataRef.current = updatedData;
+      
+      // Then exit fullscreen in the same synchronous batch
       setCardZoom(0.5);
       setIsFullscreen(false);
       setHideToolbar(false);
+      // Increment key to force preview contentEditable elements to remount with fresh cardData values
       setContentEditableKey(prev => prev + 1);
     });
-
-    // CRITICAL: Force a small delay to ensure React has unmounted the fullscreen view 
-    // and the preview view is ready to receive the updated state before we do anything else
-    setTimeout(() => {
-      isExitingFullscreen.current = false;
-    }, 100);
+    
+    console.log('[syncAndExitFullscreen] After flushSync - state updates complete');
     
     // Trigger save AFTER exiting fullscreen, and keep the flag set until save completes
     if (hasChanges || hasUnsavedChanges.current) {
@@ -785,15 +795,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           // Clear the flag AFTER the save completes successfully
           // Add extra delay to ensure any refetches have completed
           setTimeout(() => {
+            console.log('[syncAndExitFullscreen] Clearing isExitingFullscreen after save success');
             isExitingFullscreen.current = false;
-          }, 1000);
+          }, 3000);
         },
         onError: () => {
           setAutoSaveStatus('idle');
           // Clear the flag even on error
           setTimeout(() => {
+            console.log('[syncAndExitFullscreen] Clearing isExitingFullscreen after save error');
             isExitingFullscreen.current = false;
-          }, 1000);
+          }, 3000);
         },
       });
     } else {
@@ -801,8 +813,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       lastLocalSaveTime.current = Date.now();
       // Clear the flag after a short delay
       setTimeout(() => {
+        console.log('[syncAndExitFullscreen] Clearing isExitingFullscreen (no changes)');
         isExitingFullscreen.current = false;
-      }, 500);
+      }, 3000);
     }
   };
   
@@ -1118,18 +1131,26 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         const localTagline = localData.tagline || '';
         const localOccupation = localData.occupation || '';
         const localAgeState = localData.ageState || '';
+        const localFullName = localData.fullName || '';
+        const localSponsorCategory = localData.sponsorCategory || '';
         const serverTagline = existingCard.tagline || '';
         const serverOccupation = existingCard.occupation || '';
         const serverAgeState = (existingCard as any).ageState || '';
+        const serverFullName = (existingCard as any).fullName || '';
+        const serverSponsorCategory = (existingCard as any).sponsorCategory || '';
         
         // If local has content that differs from server, preserve local
         if (localTagline !== serverTagline ||
             localOccupation !== serverOccupation ||
-            localAgeState !== serverAgeState) {
+            localAgeState !== serverAgeState ||
+            localFullName !== serverFullName ||
+            localSponsorCategory !== serverSponsorCategory) {
           console.log('[CardData useEffect] Skipping - local data differs from server', {
             localTagline, serverTagline,
             localOccupation, serverOccupation,
-            localAgeState, serverAgeState
+            localAgeState, serverAgeState,
+            localFullName, serverFullName,
+            localSponsorCategory, serverSponsorCategory
           });
           return;
         }
@@ -2380,6 +2401,57 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
   };
 
+  // CRITICAL: Update font size while also capturing current DOM text to prevent data loss
+  // When font size buttons are clicked, React re-renders and overwrites contentEditable text
+  // This function syncs the DOM text to state BEFORE the re-render
+  const updateFontSizeWithSync = (fontSizeField: keyof CastingCardData, newSize: number, textField: keyof CastingCardData, selector: string) => {
+    try {
+      if (!cardData) return;
+      
+      // First, capture the current text from the DOM element
+      const element = document.querySelector(selector) as HTMLElement;
+      const currentText = element?.textContent?.trim() || (cardData as any)[textField] || '';
+      
+      // Push current state to undo history before making changes
+      setUndoHistory(prev => [...prev.slice(-(maxHistorySize - 1)), cardData]);
+      setRedoHistory([]);
+      
+      // Update BOTH the font size AND the text in a single state update
+      const newCardData = { 
+        ...cardData, 
+        [fontSizeField]: newSize,
+        [textField]: currentText 
+      };
+      setCardData(newCardData);
+      cardDataRef.current = newCardData;
+      hasUnsavedChanges.current = true;
+      
+      // Debounced auto-save
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        if (hasUnsavedChanges.current && cardDataRef.current) {
+          setAutoSaveStatus('saving');
+          const dataToSave = { ...cardDataRef.current, skipInvalidate: true };
+          saveMutation.mutate(dataToSave as any, {
+            onSuccess: () => {
+              hasUnsavedChanges.current = false;
+              setAutoSaveStatus('saved');
+              lastLocalSaveTime.current = Date.now();
+              setTimeout(() => setAutoSaveStatus('idle'), 2000);
+            },
+            onError: () => {
+              setAutoSaveStatus('idle');
+            }
+          });
+        }
+      }, 1500);
+    } catch (error) {
+      console.error('Error updating font size with sync:', error);
+    }
+  };
+
   // Save ALL contentEditable content when user leaves the tab (prevents data loss)
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -3606,14 +3678,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
                     <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-2">
                       <button 
-                        onClick={() => updateField('fontSizeName', (cardData.fontSizeName || 42) + 2)}
+                        onClick={() => updateFontSizeWithSync('fontSizeName', (cardData.fontSizeName || 42) + 2, 'fullName', '[data-field="fullName"]')}
                         className="text-yellow-300 hover:text-yellow-100 p-0.5"
                         title="Increase font size"
                       >
                         <ChevronUp className="w-4 h-4" />
                       </button>
                       <button 
-                        onClick={() => updateField('fontSizeName', Math.max(20, (cardData.fontSizeName || 42) - 2))}
+                        onClick={() => updateFontSizeWithSync('fontSizeName', Math.max(20, (cardData.fontSizeName || 42) - 2), 'fullName', '[data-field="fullName"]')}
                         className="text-yellow-300 hover:text-yellow-100 p-0.5"
                         title="Decrease font size"
                       >
@@ -3698,14 +3770,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     {/* Font size controls for occupation */}
                     <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print">
                       <button 
-                        onClick={() => updateField('fontSizeOccupation', (cardData.fontSizeOccupation || 36) + 2)}
+                        onClick={() => updateFontSizeWithSync('fontSizeOccupation', (cardData.fontSizeOccupation || 36) + 2, 'occupation', '[data-field="occupation"]')}
                         className="text-gray-400 hover:text-gray-600 p-0.5"
                         title="Increase font size"
                       >
                         <ChevronUp className="w-3 h-3" />
                       </button>
                       <button 
-                        onClick={() => updateField('fontSizeOccupation', Math.max(12, (cardData.fontSizeOccupation || 36) - 2))}
+                        onClick={() => updateFontSizeWithSync('fontSizeOccupation', Math.max(12, (cardData.fontSizeOccupation || 36) - 2), 'occupation', '[data-field="occupation"]')}
                         className="text-gray-400 hover:text-gray-600 p-0.5"
                         title="Decrease font size"
                       >
@@ -4185,7 +4257,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             </CardHeader>
             <CardContent className="flex-1 overflow-auto p-4">
               {/* A4 Landscape page container - 297mm x 210mm (scaled for preview) */}
-              <div className="relative overflow-hidden" style={{ width: `calc(297mm * ${cardZoom})`, height: `calc(210mm * ${cardZoom})` }}>
+              {/* Key forces remount when contentEditableKey changes (on fullscreen exit) */}
+              <div key={`preview-container-${contentEditableKey}`} className="relative overflow-hidden" style={{ width: `calc(297mm * ${cardZoom})`, height: `calc(210mm * ${cardZoom})` }}>
                 <div 
                   id="casting-card-preview"
                   className="bg-white p-4 border-2 border-gray-300 shadow-lg relative overflow-hidden origin-top-left print:border-0 print:shadow-none"
@@ -4538,14 +4611,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-2">
                           <button 
-                            onClick={() => updateField('fontSizeName', (cardData.fontSizeName || 42) + 2)}
+                            onClick={() => updateFontSizeWithSync('fontSizeName', (cardData.fontSizeName || 42) + 2, 'fullName', '[data-field="fullName"]')}
                             className="text-yellow-300 hover:text-yellow-100 p-0.5"
                             title="Increase font size"
                           >
                             <ChevronUp className="w-4 h-4" />
                           </button>
                           <button 
-                            onClick={() => updateField('fontSizeName', Math.max(20, (cardData.fontSizeName || 42) - 2))}
+                            onClick={() => updateFontSizeWithSync('fontSizeName', Math.max(20, (cardData.fontSizeName || 42) - 2), 'fullName', '[data-field="fullName"]')}
                             className="text-yellow-300 hover:text-yellow-100 p-0.5"
                             title="Decrease font size"
                           >
@@ -4632,14 +4705,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         {/* Font size controls for occupation */}
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print">
                           <button 
-                            onClick={() => updateField('fontSizeOccupation', (cardData.fontSizeOccupation || 36) + 2)}
+                            onClick={() => updateFontSizeWithSync('fontSizeOccupation', (cardData.fontSizeOccupation || 36) + 2, 'occupation', '[data-field="occupation"]')}
                             className="text-gray-400 hover:text-gray-600 p-0.5"
                             title="Increase font size"
                           >
                             <ChevronUp className="w-3 h-3" />
                           </button>
                           <button 
-                            onClick={() => updateField('fontSizeOccupation', Math.max(12, (cardData.fontSizeOccupation || 36) - 2))}
+                            onClick={() => updateFontSizeWithSync('fontSizeOccupation', Math.max(12, (cardData.fontSizeOccupation || 36) - 2), 'occupation', '[data-field="occupation"]')}
                             className="text-gray-400 hover:text-gray-600 p-0.5"
                             title="Decrease font size"
                           >
