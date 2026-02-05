@@ -2826,19 +2826,38 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       // CRITICAL: Immediately sync ALL header fields from DOM to React state
       // This captures the current text BEFORE any DOM manipulation
       const syncHeaderFieldsToState = () => {
-        if (!cardData) return;
+        if (!cardData) {
+          console.log('[formatFontSize] No cardData available');
+          return;
+        }
         
         const getFieldText = (selector: string, fallback: string): string => {
-          const fullscreenEl = document.querySelector(`[data-fullscreen-mode="true"] ${selector}`) as HTMLElement;
-          const regularEl = document.querySelector(selector) as HTMLElement;
-          const el = (fullscreenEl && fullscreenEl.offsetParent !== null) ? fullscreenEl : regularEl;
-          return el?.textContent?.trim() || fallback;
+          // Try fullscreen container first
+          const fullscreenContainer = document.querySelector('[data-testid="casting-card-fullscreen"]');
+          let el: HTMLElement | null = null;
+          
+          if (fullscreenContainer) {
+            el = fullscreenContainer.querySelector(selector) as HTMLElement;
+          }
+          if (!el) {
+            el = document.querySelector(selector) as HTMLElement;
+          }
+          
+          const text = el?.textContent?.trim() || fallback;
+          console.log(`[formatFontSize] getFieldText("${selector}"): found=${!!el}, text="${text?.substring(0,30)}"`);
+          return text;
         };
         
         const currentFullName = getFieldText('[data-field="fullName"]', cardData.fullName || '');
         const currentOccupation = getFieldText('[data-field="occupation"]', cardData.occupation || '');
         const currentTagline = getFieldText('[data-field="tagline"]', cardData.tagline || '');
         const currentSponsorCategory = getFieldText('[data-field="sponsorCategory"]', cardData.sponsorCategory || '');
+        
+        console.log('[formatFontSize] Comparing DOM vs State:', {
+          fullName: { dom: currentFullName?.substring(0,20), state: cardData.fullName?.substring(0,20), same: currentFullName === cardData.fullName },
+          occupation: { dom: currentOccupation?.substring(0,20), state: cardData.occupation?.substring(0,20), same: currentOccupation === cardData.occupation },
+          tagline: { dom: currentTagline?.substring(0,20), state: cardData.tagline?.substring(0,20), same: currentTagline === cardData.tagline },
+        });
         
         // Check if any changed
         const hasChanges = currentFullName !== cardData.fullName || 
@@ -2847,12 +2866,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           currentSponsorCategory !== cardData.sponsorCategory;
         
         if (hasChanges) {
-          console.log('[formatFontSize] Syncing header fields before DOM change:', {
-            fullName: currentFullName !== cardData.fullName ? `"${cardData.fullName?.substring(0,20)}" -> "${currentFullName?.substring(0,20)}"` : '(same)',
-            occupation: currentOccupation !== cardData.occupation ? `"${cardData.occupation?.substring(0,20)}" -> "${currentOccupation?.substring(0,20)}"` : '(same)',
-            tagline: currentTagline !== cardData.tagline ? `"${cardData.tagline?.substring(0,20)}" -> "${currentTagline?.substring(0,20)}"` : '(same)',
-            sponsorCategory: currentSponsorCategory !== cardData.sponsorCategory ? 'changed' : '(same)',
-          });
+          console.log('[formatFontSize] CHANGES DETECTED - updating React state');
           
           const updatedData = {
             ...cardData,
@@ -2866,6 +2880,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           setCardData(updatedData);
           cardDataRef.current = updatedData;
           hasUnsavedChanges.current = true;
+        } else {
+          console.log('[formatFontSize] No changes detected between DOM and state');
         }
       };
       
