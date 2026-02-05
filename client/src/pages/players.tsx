@@ -2910,29 +2910,34 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       
       // CRITICAL: Check if we're in a header field that uses fontSizeXxx properties
       // These fields should NOT use span wrapping - they use container-level font-size
+      // Note: Only name and occupation have fontSizeXxx properties in the schema
       const headerFieldMapping: Record<string, { fontSizeKey: keyof typeof cardData, textKey: keyof typeof cardData, defaultSize: number }> = {
         'fullName': { fontSizeKey: 'fontSizeName', textKey: 'fullName', defaultSize: 42 },
         'occupation': { fontSizeKey: 'fontSizeOccupation', textKey: 'occupation', defaultSize: 36 },
-        'tagline': { fontSizeKey: 'fontSizeTagline', textKey: 'tagline', defaultSize: 36 },
+        'ageState': { fontSizeKey: 'fontSizeAgeState', textKey: 'ageState', defaultSize: 28 },
       };
       
       // Find which header field (if any) contains the selection
       const findHeaderField = (): string | null => {
         let node: Node | null = range!.startContainer;
+        console.log('[formatFontSize] findHeaderField starting from:', node?.nodeName, node?.nodeType);
         while (node) {
           if (node.nodeType === Node.ELEMENT_NODE) {
             const el = node as HTMLElement;
             const fieldName = el.getAttribute('data-field');
+            console.log('[formatFontSize] Checking element:', el.tagName, 'data-field:', fieldName);
             if (fieldName && headerFieldMapping[fieldName]) {
               return fieldName;
             }
           }
           node = node.parentNode;
         }
+        console.log('[formatFontSize] No header field found in parent chain');
         return null;
       };
       
       const headerField = findHeaderField();
+      console.log('[formatFontSize] Header field detection result:', headerField);
       
       if (headerField && cardData) {
         console.log('[formatFontSize] Selection is in header field:', headerField);
