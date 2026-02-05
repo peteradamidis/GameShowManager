@@ -713,10 +713,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       hasChanges
     });
     
+    // CRITICAL: Set timestamp BEFORE any state changes to protect against race conditions
+    // This ensures any refetches that happen during the save process are ignored
+    lastLocalSaveTime.current = Date.now();
+    
     // Use flushSync to force React to process state updates synchronously
     // This ensures cardData is updated BEFORE we switch views
     flushSync(() => {
       setCardData(updatedData);
+      // Also update the ref immediately so it's available for useEffect checks
+      cardDataRef.current = updatedData;
     });
     
     console.log('[syncAndExitFullscreen] After flushSync, isFullscreen will be set to false');
@@ -737,19 +743,21 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         onSuccess: () => {
           hasUnsavedChanges.current = false;
           setAutoSaveStatus('saved');
-          // CRITICAL: Set timestamp AFTER save completes to protect for 5 seconds
+          // CRITICAL: Refresh timestamp again after save completes for extended protection
           lastLocalSaveTime.current = Date.now();
           setTimeout(() => setAutoSaveStatus('idle'), 2000);
           // Clear the flag AFTER the save completes successfully
           // Add extra delay to ensure any refetches have completed
           setTimeout(() => {
             isExitingFullscreen.current = false;
-          }, 500);
+          }, 1000);
         },
         onError: () => {
           setAutoSaveStatus('idle');
           // Clear the flag even on error
-          isExitingFullscreen.current = false;
+          setTimeout(() => {
+            isExitingFullscreen.current = false;
+          }, 1000);
         },
       });
     } else {
@@ -758,7 +766,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       // Clear the flag after a short delay
       setTimeout(() => {
         isExitingFullscreen.current = false;
-      }, 200);
+      }, 500);
     }
   };
   
@@ -1024,14 +1032,25 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       // CRITICAL: Skip if we're in the process of exiting fullscreen
       // This prevents the useEffect from overwriting local changes during view transition
       if (isExitingFullscreen.current) {
-        console.log('[CardData useEffect] Skipping - currently exiting fullscreen');
+        console.log('[CardData useEffect] Skipping - isExitingFullscreen is true');
         return;
       }
       
       // CRITICAL: Skip if we recently saved data locally (within 5 seconds)
       // This prevents React Query refetches from overwriting our local edits
       const timeSinceLastSave = Date.now() - lastLocalSaveTime.current;
-      if (timeSinceLastSave < 5000 && cardDataRef.current?.contestantId === selectedContestant.id) {
+      const refMatchesContestant = cardDataRef.current?.contestantId === selectedContestant.id;
+      
+      console.log('[CardData useEffect] Protection check:', {
+        timeSinceLastSave,
+        threshold: 5000,
+        refMatchesContestant,
+        lastLocalSaveTime: lastLocalSaveTime.current,
+        refContestantId: cardDataRef.current?.contestantId,
+        selectedContestantId: selectedContestant.id
+      });
+      
+      if (timeSinceLastSave < 5000 && refMatchesContestant) {
         console.log('[CardData useEffect] Skipping - recently saved locally:', timeSinceLastSave, 'ms ago');
         return;
       }
@@ -1043,8 +1062,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       const hasLocalData = cardData?.contestantId === selectedContestant.id || 
                           cardDataRef.current?.contestantId === selectedContestant.id;
       
+      console.log('[CardData useEffect] Load check:', {
+        isNewContestant,
+        hasLocalData,
+        lastLoadedContestantId: lastLoadedContestantId.current
+      });
+      
       if (!isNewContestant && hasLocalData) {
         // Already loaded this contestant, don't overwrite local edits
+        console.log('[CardData useEffect] Skipping - already loaded this contestant');
         return;
       }
       
@@ -1052,16 +1078,24 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       // This catches cases where the timing checks above fail
       const localData = cardDataRef.current || cardData;
       if (localData && localData.contestantId === selectedContestant.id && existingCard) {
-        // Check if local data has edits that would be lost
-        const localHasTagline = localData.tagline && localData.tagline.trim().length > 0;
-        const localHasOccupation = localData.occupation && localData.occupation.trim().length > 0;
+        // Check if local data has edits that would be lost - check ALL header fields
+        const localTagline = localData.tagline || '';
+        const localOccupation = localData.occupation || '';
+        const localAgeState = localData.ageState || '';
         const serverTagline = existingCard.tagline || '';
         const serverOccupation = existingCard.occupation || '';
+        const serverAgeState = (existingCard as any).ageState || '';
         
         // If local has meaningful content that differs from server, preserve local
-        if ((localHasTagline && localData.tagline !== serverTagline) ||
-            (localHasOccupation && localData.occupation !== serverOccupation)) {
-          console.log('[CardData useEffect] Skipping - local data has unsaved edits that differ from server');
+        if ((localTagline.trim() && localTagline !== serverTagline) ||
+            (localOccupation.trim() && localOccupation !== serverOccupation) ||
+            (localAgeState.trim() && localAgeState !== serverAgeState)) {
+          console.log('[CardData useEffect] Skipping - local data has unsaved edits that differ from server', {
+            localTagline: localTagline.substring(0, 20),
+            serverTagline: serverTagline.substring(0, 20),
+            localOccupation: localOccupation.substring(0, 20),
+            serverOccupation: serverOccupation.substring(0, 20)
+          });
           return;
         }
       }
