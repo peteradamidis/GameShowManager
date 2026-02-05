@@ -567,7 +567,7 @@ export default function Contestants() {
       const exportData = displayedContestants.map(c => ({
         'Name': c.name,
         'Email': c.email || '',
-        'Phone': c.phone || '',
+        'Phone': c.phone ? `${c.phone},` : '',
         'Age': c.age || '',
         'Gender': c.gender || '',
         'State': c.state || '',
