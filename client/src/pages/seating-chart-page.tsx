@@ -229,9 +229,17 @@ function PodiumStoryCard({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [note, setNote] = useState(contestant.podiumStoryNote || '');
+  const [savedNote, setSavedNote] = useState(contestant.podiumStoryNote || '');
+
+  // Sync local state with prop changes (after refetch)
+  useEffect(() => {
+    setNote(contestant.podiumStoryNote || '');
+    setSavedNote(contestant.podiumStoryNote || '');
+  }, [contestant.podiumStoryNote]);
 
   const handleSave = () => {
     onNoteUpdate(note);
+    setSavedNote(note); // Optimistically update the saved note display
     setIsEditing(false);
   };
 
@@ -300,8 +308,8 @@ function PodiumStoryCard({
           className="cursor-pointer hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded p-1 -m-1"
           data-testid={`div-ps-note-view-${contestant.id}`}
         >
-          {contestant.podiumStoryNote ? (
-            <p className="text-xs text-muted-foreground">{contestant.podiumStoryNote}</p>
+          {savedNote ? (
+            <p className="text-xs text-muted-foreground">{savedNote}</p>
           ) : (
             <p className="text-xs text-muted-foreground/50 italic flex items-center gap-1">
               <Pencil className="h-3 w-3" /> Click to add story notes...
