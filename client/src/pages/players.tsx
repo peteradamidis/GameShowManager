@@ -647,6 +647,40 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
   };
   
+  // Sync contentEditable content to cardData before exiting fullscreen
+  const syncAndExitFullscreen = () => {
+    // Get the current HTML from whichever contentEditable is active
+    const bodyTextElement = bodyTextRefFs.current || bodyTextRef.current;
+    if (bodyTextElement && cardData) {
+      const currentHtml = bodyTextElement.innerHTML;
+      if (currentHtml && currentHtml !== cardData.bodyText) {
+        // Update cardData with the latest content
+        const updatedData = { ...cardData, bodyText: currentHtml };
+        setCardData(updatedData);
+        cardDataRef.current = updatedData;
+        hasUnsavedChanges.current = true;
+        
+        // Trigger immediate save
+        setAutoSaveStatus('saving');
+        saveMutation.mutate({ ...updatedData, skipInvalidate: true } as any, {
+          onSuccess: () => {
+            hasUnsavedChanges.current = false;
+            setAutoSaveStatus('saved');
+            setTimeout(() => setAutoSaveStatus('idle'), 2000);
+          },
+          onError: () => {
+            setAutoSaveStatus('idle');
+          },
+        });
+      }
+    }
+    
+    // Now exit fullscreen
+    setCardZoom(0.5);
+    setIsFullscreen(false);
+    setHideToolbar(false);
+  };
+  
   // Helper to insert dot point at cursor position
   const insertDotPointAtCursor = (isFullscreen: boolean) => {
     const ref = isFullscreen ? bodyTextRefFs : bodyTextRef;
@@ -1310,6 +1344,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             /* Remove border from body text for print */
             .print-no-border {
               border: none !important;
+              white-space: pre-wrap !important;
+              word-wrap: break-word !important;
+              overflow-wrap: break-word !important;
+              line-height: 1.5 !important;
             }
             /* Force casting card colors for PDF rendering */
             .casting-card-name {
@@ -1542,9 +1580,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.display = 'none';
           });
           
-          // Remove border from body text
+          // Remove border from body text and fix line spacing for print
           clonedDoc.querySelectorAll('.print-no-border').forEach((el: Element) => {
             (el as HTMLElement).style.border = 'none';
+            (el as HTMLElement).style.whiteSpace = 'pre-wrap';
+            (el as HTMLElement).style.wordWrap = 'break-word';
+            (el as HTMLElement).style.overflowWrap = 'break-word';
+            (el as HTMLElement).style.lineHeight = '1.5';
           });
           
           // Remove outer border and shadow from card container for print
@@ -1691,6 +1733,10 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             /* Remove border from body text for print */
             .print-no-border {
               border: none !important;
+              white-space: pre-wrap !important;
+              word-wrap: break-word !important;
+              overflow-wrap: break-word !important;
+              line-height: 1.5 !important;
             }
             /* Force casting card colors for print rendering */
             .casting-card-name {
@@ -1923,9 +1969,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.display = 'none';
           });
           
-          // Remove border from body text
+          // Remove border from body text and fix line spacing for print
           clonedDoc.querySelectorAll('.print-no-border').forEach((el: Element) => {
             (el as HTMLElement).style.border = 'none';
+            (el as HTMLElement).style.whiteSpace = 'pre-wrap';
+            (el as HTMLElement).style.wordWrap = 'break-word';
+            (el as HTMLElement).style.overflowWrap = 'break-word';
+            (el as HTMLElement).style.lineHeight = '1.5';
           });
           
           // Remove outer border and shadow from card container for print
@@ -2732,7 +2782,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               </Button>
               {/* Always show Exit button even when toolbar is hidden */}
               {hideToolbar && (
-                <Button size="sm" variant="outline" onClick={() => { setCardZoom(0.5); setIsFullscreen(false); setHideToolbar(false); }} data-testid="btn-exit-fullscreen-mini">
+                <Button size="sm" variant="outline" onClick={syncAndExitFullscreen} data-testid="btn-exit-fullscreen-mini">
                   <Minimize2 className="h-4 w-4 mr-1" />
                   Exit
                 </Button>
@@ -2791,7 +2841,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <Printer className="h-4 w-4 mr-1" />
                   Print
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => { setCardZoom(0.5); setIsFullscreen(false); }} data-testid="btn-exit-fullscreen">
+                <Button size="sm" variant="outline" onClick={syncAndExitFullscreen} data-testid="btn-exit-fullscreen">
                   <Minimize2 className="h-4 w-4 mr-1" />
                   Exit
                 </Button>
