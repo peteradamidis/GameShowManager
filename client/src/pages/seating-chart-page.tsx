@@ -1964,18 +1964,6 @@ export default function SeatingChartPage() {
               <Wand2 className="h-4 w-4 mr-2" />
               Auto-Assign Seats
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setSwapBlocksDialogOpen(true)} 
-              title="Swap all contestants between two blocks"
-              data-testid="button-swap-blocks"
-              className="text-muted-foreground"
-            >
-              <ArrowLeftRight className="h-4 w-4" />
-            </Button>
-            {/* Spacer to push search to far right */}
-            <div className="flex-1" />
             {/* Search by full name */}
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1999,6 +1987,16 @@ export default function SeatingChartPage() {
                 </Button>
               )}
             </div>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setSwapBlocksDialogOpen(true)} 
+              title="Swap all contestants between two blocks"
+              data-testid="button-swap-blocks"
+              className="text-muted-foreground"
+            >
+              <ArrowLeftRight className="h-4 w-4" />
+            </Button>
             <Button 
               variant={isPodiumVisualizerMode ? "default" : "ghost"}
               size="icon"
