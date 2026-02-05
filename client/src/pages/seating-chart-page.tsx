@@ -1935,21 +1935,18 @@ export default function SeatingChartPage() {
               Podium Stories by Block
             </h2>
             <Badge variant="outline" className="bg-pink-50 text-pink-700 border-pink-300 dark:bg-pink-950 dark:text-pink-300 dark:border-pink-700">
-              {assignments?.filter((a: any) => {
-                const contestant = availableContestants.find((c: any) => c.id === a.contestantId);
-                return contestant?.podiumStory;
-              }).length || 0} contestants with PS
+              {assignments?.filter((a: any) => a.podiumStory === true).length || 0} contestants with PS
             </Badge>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {(['PB', 'NPB', 'Block 1', 'Block 2', 'Block 3', 'Block 4', 'Block 5'] as const).map(block => {
               const blockAssignments = assignments?.filter((a: any) => a.blockType === block) || [];
               const psContestants = blockAssignments
+                .filter((a: any) => a.podiumStory === true)
                 .map((a: any) => {
                   const contestant = availableContestants.find((c: any) => c.id === a.contestantId);
-                  return contestant?.podiumStory ? { ...contestant, seatNumber: a.seatNumber } : null;
-                })
-                .filter(Boolean);
+                  return contestant ? { ...contestant, seatNumber: a.seatNumber, podiumStory: a.podiumStory } : { id: a.contestantId, name: a.contestantName, seatNumber: a.seatNumber, podiumStory: a.podiumStory };
+                });
               
               return (
                 <Card key={block} className="overflow-hidden">
