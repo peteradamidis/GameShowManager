@@ -3737,7 +3737,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           onInput={(e) => { pendingTextRefs.current.fullName = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
                           onBlur={(e) => { pendingTextRefs.current.fullName = null; updateField('fullName', e.currentTarget.textContent || ''); }}
                           data-testid="preview-contestant-name"
-                        >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
+                          dangerouslySetInnerHTML={{ __html: cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase() }}
+                        />
                     <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-2">
                       <button 
                         onClick={() => updateFontSizeWithSync('fontSizeName', (cardData.fontSizeName || 42) + 2, 'fullName', '[data-field="fullName"]')}
@@ -3792,9 +3793,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           style={{ fontFamily: 'Calibri, sans-serif', fontSize: '34px' }}
                           onInput={(e) => { pendingTextRefs.current.ageState = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
                           onBlur={(e) => { pendingTextRefs.current.ageState = null; updateField('ageState', e.currentTarget.textContent || ''); }}
-                        >
-                          {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
-                        </div>
+                          dangerouslySetInnerHTML={{ __html: cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})` }}
+                        />
                       </div>
                   {/* Occupation - with position controls */}
                       <div 
@@ -3828,9 +3828,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 34}px` }}
                           onInput={(e) => { pendingTextRefs.current.occupation = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
                           onBlur={(e) => { pendingTextRefs.current.occupation = null; updateField('occupation', e.currentTarget.textContent || ''); }}
-                        >
-                          {cardData.occupation || 'OCCUPATION'}
-                        </div>
+                          dangerouslySetInnerHTML={{ __html: cardData.occupation || 'OCCUPATION' }}
+                        />
                     {/* Font size controls for occupation */}
                     <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print">
                       <button 
@@ -3860,9 +3859,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         style={{ color: '#16a34a' }}
                         onInput={(e) => { pendingTextRefs.current.sponsorCategory = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
                         onBlur={(e) => { pendingTextRefs.current.sponsorCategory = null; updateField('sponsorCategory', e.currentTarget.textContent || ''); }}
-                      >
-                        {cardData.sponsorCategory || 'SPONSOR CATEGORY: X'}
-                      </div>
+                        dangerouslySetInnerHTML={{ __html: cardData.sponsorCategory || 'SPONSOR CATEGORY: X' }}
+                      />
                       <button
                         onClick={() => updateField('showSponsorCategory', false)}
                         className="bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity ignore-print"
@@ -3919,9 +3917,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '36px', color: '#dc2626' }}
                         onInput={(e) => { pendingTextRefs.current.tagline = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
                         onBlur={(e) => { pendingTextRefs.current.tagline = null; updateField('tagline', e.currentTarget.textContent || ''); }}
-                      >
-                        {cardData.tagline || 'SHORT TAGLINE'}
-                      </h3>
+                        dangerouslySetInnerHTML={{ __html: cardData.tagline || 'SHORT TAGLINE' }}
+                      />
                     </div>
                     <button
                       onClick={() => updateField('showTagline', false)}
@@ -4675,7 +4672,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           onInput={(e) => { pendingTextRefs.current.fullName = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
                           onBlur={(e) => { pendingTextRefs.current.fullName = null; updateField('fullName', e.currentTarget.textContent || ''); }}
                           data-testid="preview-contestant-name"
-                        >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
+                          dangerouslySetInnerHTML={{ __html: cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase() }}
+                        />
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-2">
                           <button 
                             onClick={() => updateFontSizeWithSync('fontSizeName', (cardData.fontSizeName || 42) + 2, 'fullName', '[data-field="fullName"]')}
@@ -4726,13 +4724,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           ref={isFullscreen ? ageStateRefFs : ageStateRef}
                           contentEditable
                           suppressContentEditableWarning
+                          data-field="ageState"
                           className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
                           style={{ fontFamily: 'Calibri, sans-serif', fontSize: '34px' }}
-                          onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
+                          onInput={(e) => { pendingTextRefs.current.ageState = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
+                          onBlur={(e) => { pendingTextRefs.current.ageState = null; updateField('ageState', e.currentTarget.textContent || ''); }}
                           data-testid="preview-age-location"
-                        >
-                          {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
-                        </div>
+                          dangerouslySetInnerHTML={{ __html: cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})` }}
+                        />
                       </div>
                       {/* Occupation - with position controls */}
                       <div 
@@ -4795,13 +4794,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           <div
                             contentEditable
                             suppressContentEditableWarning
+                            data-field="sponsorCategory"
                             className="text-lg font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text casting-card-sponsor"
                             style={{ color: '#16a34a' }}
-                            onBlur={(e) => updateField('sponsorCategory', e.currentTarget.textContent || '')}
+                            onInput={(e) => { pendingTextRefs.current.sponsorCategory = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
+                            onBlur={(e) => { pendingTextRefs.current.sponsorCategory = null; updateField('sponsorCategory', e.currentTarget.textContent || ''); }}
                             data-testid="edit-sponsor"
-                          >
-                            {cardData.sponsorCategory || 'SPONSOR CATEGORY: X'}
-                          </div>
+                            dangerouslySetInnerHTML={{ __html: cardData.sponsorCategory || 'SPONSOR CATEGORY: X' }}
+                          />
                           <button
                             onClick={() => updateField('showSponsorCategory', false)}
                             className="bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity ignore-print"
@@ -4862,9 +4862,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             onInput={(e) => { pendingTextRefs.current.tagline = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
                             onBlur={(e) => { pendingTextRefs.current.tagline = null; updateField('tagline', e.currentTarget.textContent || ''); }}
                             data-testid="edit-tagline"
-                          >
-                            {cardData.tagline || 'SHORT TAGLINE'}
-                          </h3>
+                            dangerouslySetInnerHTML={{ __html: cardData.tagline || 'SHORT TAGLINE' }}
+                          />
                         </div>
                         <button
                           onClick={() => updateField('showTagline', false)}
