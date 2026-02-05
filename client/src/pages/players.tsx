@@ -712,15 +712,26 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     
     // Force sync refs with current DOM content for ALL header fields BEFORE saving
     const headerFields = [
-      { field: 'tagline', ref: isFullscreen ? taglineRefFs : taglineRef },
-      { field: 'occupation', ref: isFullscreen ? occupationRefFs : occupationRef },
-      { field: 'ageState', ref: isFullscreen ? ageStateRefFs : ageStateRef }
+      { field: 'fullName', selector: '[data-field="fullName"]' },
+      { field: 'tagline', selector: '[data-field="tagline"]' },
+      { field: 'occupation', selector: '[data-field="occupation"]' },
+      { field: 'ageState', selector: '[data-field="ageState"]' },
+      { field: 'sponsorCategory', selector: '[data-field="sponsorCategory"]' },
+      { field: 'bodyText', selector: '[data-field="bodyText"]' }
     ];
     
-    headerFields.forEach(({ field, ref }) => {
-      if (ref.current) {
-        const val = ref.current.innerText.trim();
+    headerFields.forEach(({ field, selector }) => {
+      // Look specifically within the fullscreen card first, then fall back to document
+      const element = fullscreenCard.querySelector(selector) || document.querySelector(`[data-testid="casting-card-fullscreen"] ${selector}`);
+      if (element) {
+        // Use innerHTML for bodyText, textContent for others
+        const val = field === 'bodyText' ? (element as HTMLElement).innerHTML : (element as HTMLElement).textContent?.trim() || '';
         (updatedData as any)[field] = val;
+        
+        // Check if value actually changed
+        if (val !== (currentData as any)[field]) {
+          hasChanges = true;
+        }
       }
     });
 
@@ -728,9 +739,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     cardDataRef.current = updatedData;
     
     console.log('[syncAndExitFullscreen] Final updatedData before save:', {
+      fullName: updatedData.fullName,
       tagline: updatedData.tagline,
       occupation: updatedData.occupation,
-      ageState: (updatedData as any).ageState
+      ageState: (updatedData as any).ageState,
+      sponsorCategory: (updatedData as any).sponsorCategory
     });
     
     // CRITICAL: Set timestamp BEFORE any state changes to protect against race conditions
@@ -751,6 +764,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       setHideToolbar(false);
       setContentEditableKey(prev => prev + 1);
     });
+
+    // CRITICAL: Force a small delay to ensure React has unmounted the fullscreen view 
+    // and the preview view is ready to receive the updated state before we do anything else
+    setTimeout(() => {
+      isExitingFullscreen.current = false;
+    }, 100);
     
     // Trigger save AFTER exiting fullscreen, and keep the flag set until save completes
     if (hasChanges || hasUnsavedChanges.current) {
@@ -3566,24 +3585,25 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     border: '2px solid #000000'
                   }}
                 >
-                  <div className="relative group flex items-center flex-1">
-                    <h2 
-                      contentEditable
-                      suppressContentEditableWarning
-                      data-field="fullName"
-                      className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name flex-1"
-                      style={{ 
-                        fontFamily: '"Century Gothic", sans-serif',
-                        fontSize: `${cardData.fontSizeName || 42}px`,
-                        lineHeight: '80px',
-                        textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
-                        color: '#fcd34d',
-                        margin: 0,
-                        padding: 0,
-                        paddingLeft: '16px'
-                      }}
-                      onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
-                    >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
+                      <div className="relative group flex items-center flex-1">
+                        <h2 
+                          contentEditable
+                          suppressContentEditableWarning
+                          data-field="fullName"
+                          className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name flex-1"
+                          style={{ 
+                            fontFamily: '"Century Gothic", sans-serif',
+                            fontSize: `${cardData.fontSizeName || 42}px`,
+                            lineHeight: '80px',
+                            textShadow: '1px 1px 2px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
+                            color: '#fcd34d',
+                            margin: 0,
+                            padding: 0,
+                            paddingLeft: '16px'
+                          }}
+                          onBlur={(e) => updateField('fullName', e.currentTarget.textContent || '')}
+                          data-testid="preview-contestant-name"
+                        >{cardData.fullName || (selectedContestant.name || `${selectedContestant.firstName || ''} ${selectedContestant.lastName || ''}`.trim() || 'Unknown').toUpperCase()}</h2>
                     <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-2">
                       <button 
                         onClick={() => updateField('fontSizeName', (cardData.fontSizeName || 42) + 2)}
@@ -3607,74 +3627,74 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 {/* Age and details - all editable */}
                 <div className="mb-6">
                   {/* Age/State - with position controls */}
-                  <div 
-                    className="relative group flex items-center gap-1"
-                    style={{ 
-                      marginTop: `${cardData.ageStateOffsetY || 0}px`,
-                      transition: 'margin-top 0.15s ease-out'
-                    }}
-                  >
-                    <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
-                      <button 
-                        onClick={() => updateField('ageStateOffsetY', (cardData.ageStateOffsetY || 0) - 5)}
-                        className="text-gray-400 hover:text-gray-600 p-0.5"
-                        title="Move up"
+                      <div 
+                        className="relative group flex items-center gap-1"
+                        style={{ 
+                          marginTop: `${cardData.ageStateOffsetY || 0}px`,
+                          transition: 'margin-top 0.15s ease-out'
+                        }}
                       >
-                        <ChevronUp className="w-3 h-3" />
-                      </button>
-                      <button 
-                        onClick={() => updateField('ageStateOffsetY', (cardData.ageStateOffsetY || 0) + 5)}
-                        className="text-gray-400 hover:text-gray-600 p-0.5"
-                        title="Move down"
-                      >
-                        <ChevronDown className="w-3 h-3" />
-                      </button>
-                    </div>
-                    <div
-                      contentEditable
-                      suppressContentEditableWarning
-                      data-field="ageState"
-                      className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
-                      style={{ fontFamily: 'Calibri, sans-serif', fontSize: '34px' }}
-                      onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
-                    >
-                      {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
-                    </div>
-                  </div>
+                        <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
+                          <button 
+                            onClick={() => updateField('ageStateOffsetY', (cardData.ageStateOffsetY || 0) - 5)}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Move up"
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </button>
+                          <button 
+                            onClick={() => updateField('ageStateOffsetY', (cardData.ageStateOffsetY || 0) + 5)}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Move down"
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <div
+                          contentEditable
+                          suppressContentEditableWarning
+                          data-field="ageState"
+                          className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
+                          style={{ fontFamily: 'Calibri, sans-serif', fontSize: '34px' }}
+                          onBlur={(e) => updateField('ageState', e.currentTarget.textContent || '')}
+                        >
+                          {cardData.ageState || `${selectedContestant.age || 'AGE'} (${((selectedContestant as any).state || 'STATE').toUpperCase()})`}
+                        </div>
+                      </div>
                   {/* Occupation - with position controls */}
-                  <div 
-                    className="relative group flex items-center gap-1"
-                    style={{ 
-                      marginTop: `${cardData.occupationOffsetY || 0}px`,
-                      transition: 'margin-top 0.15s ease-out'
-                    }}
-                  >
-                    <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
-                      <button 
-                        onClick={() => updateField('occupationOffsetY', (cardData.occupationOffsetY || 0) - 5)}
-                        className="text-gray-400 hover:text-gray-600 p-0.5"
-                        title="Move up"
+                      <div 
+                        className="relative group flex items-center gap-1"
+                        style={{ 
+                          marginTop: `${cardData.occupationOffsetY || 0}px`,
+                          transition: 'margin-top 0.15s ease-out'
+                        }}
                       >
-                        <ChevronUp className="w-3 h-3" />
-                      </button>
-                      <button 
-                        onClick={() => updateField('occupationOffsetY', (cardData.occupationOffsetY || 0) + 5)}
-                        className="text-gray-400 hover:text-gray-600 p-0.5"
-                        title="Move down"
-                      >
-                        <ChevronDown className="w-3 h-3" />
-                      </button>
-                    </div>
-                    <div
-                      contentEditable
-                      suppressContentEditableWarning
-                      data-field="occupation"
-                      className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
-                      style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 34}px` }}
-                      onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
-                    >
-                      {cardData.occupation || 'OCCUPATION'}
-                    </div>
+                        <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
+                          <button 
+                            onClick={() => updateField('occupationOffsetY', (cardData.occupationOffsetY || 0) - 5)}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Move up"
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </button>
+                          <button 
+                            onClick={() => updateField('occupationOffsetY', (cardData.occupationOffsetY || 0) + 5)}
+                            className="text-gray-400 hover:text-gray-600 p-0.5"
+                            title="Move down"
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <div
+                          contentEditable
+                          suppressContentEditableWarning
+                          data-field="occupation"
+                          className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
+                          style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 34}px` }}
+                          onBlur={(e) => updateField('occupation', e.currentTarget.textContent || '')}
+                        >
+                          {cardData.occupation || 'OCCUPATION'}
+                        </div>
                     {/* Font size controls for occupation */}
                     <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print">
                       <button 
@@ -4501,6 +4521,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         <h2 
                           contentEditable
                           suppressContentEditableWarning
+                          data-field="fullName"
                           className="font-bold italic tracking-wide outline-none hover:bg-amber-600/50 focus:bg-amber-600/50 px-1 rounded cursor-text casting-card-name flex-1"
                           style={{ 
                             fontFamily: '"Century Gothic", sans-serif',
