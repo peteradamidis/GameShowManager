@@ -649,18 +649,20 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   
   // Sync contentEditable content to cardData before exiting fullscreen
   const syncAndExitFullscreen = () => {
-    // Get the current HTML from whichever contentEditable is active
-    const bodyTextElement = bodyTextRefFs.current || bodyTextRef.current;
+    // Get the current HTML from the fullscreen contentEditable
+    const bodyTextElement = bodyTextRefFs.current;
     if (bodyTextElement && cardData) {
       const currentHtml = bodyTextElement.innerHTML;
-      if (currentHtml && currentHtml !== cardData.bodyText) {
-        // Update cardData with the latest content
-        const updatedData = { ...cardData, bodyText: currentHtml };
-        setCardData(updatedData);
-        cardDataRef.current = updatedData;
+      // Always sync the content, even if it looks the same (to handle formatting changes)
+      const updatedData = { ...cardData, bodyText: currentHtml };
+      
+      // Update local state and ref synchronously
+      setCardData(updatedData);
+      cardDataRef.current = updatedData;
+      
+      // Trigger immediate save
+      if (currentHtml !== cardData.bodyText) {
         hasUnsavedChanges.current = true;
-        
-        // Trigger immediate save
         setAutoSaveStatus('saving');
         saveMutation.mutate({ ...updatedData, skipInvalidate: true } as any, {
           onSuccess: () => {
@@ -673,9 +675,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           },
         });
       }
+      
+      // Use setTimeout to allow React state to propagate before switching views
+      setTimeout(() => {
+        setCardZoom(0.5);
+        setIsFullscreen(false);
+        setHideToolbar(false);
+      }, 50);
+      return;
     }
     
-    // Now exit fullscreen
+    // If no content to sync, exit immediately
     setCardZoom(0.5);
     setIsFullscreen(false);
     setHideToolbar(false);
