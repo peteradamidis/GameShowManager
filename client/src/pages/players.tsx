@@ -2910,11 +2910,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       
       // CRITICAL: Check if we're in a header field that uses fontSizeXxx properties
       // These fields should NOT use span wrapping - they use container-level font-size
-      // Note: Only name and occupation have fontSizeXxx properties in the schema
       const headerFieldMapping: Record<string, { fontSizeKey: keyof typeof cardData, textKey: keyof typeof cardData, defaultSize: number }> = {
         'fullName': { fontSizeKey: 'fontSizeName', textKey: 'fullName', defaultSize: 42 },
         'occupation': { fontSizeKey: 'fontSizeOccupation', textKey: 'occupation', defaultSize: 36 },
         'ageState': { fontSizeKey: 'fontSizeAgeState', textKey: 'ageState', defaultSize: 28 },
+        'tagline': { fontSizeKey: 'fontSizeTagline', textKey: 'tagline', defaultSize: 36 },
       };
       
       // Find which header field (if any) contains the selection
@@ -4117,7 +4117,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         suppressContentEditableWarning
                         data-field="tagline"
                         className="mb-2 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline"
-                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '36px', color: '#dc2626' }}
+                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeTagline || 36}px`, color: '#dc2626' }}
                         onInput={(e) => { pendingTextRefs.current.tagline = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
                         onBlur={(e) => { pendingTextRefs.current.tagline = null; updateField('tagline', e.currentTarget.textContent || ''); }}
                         dangerouslySetInnerHTML={{ __html: cardData.tagline || 'SHORT TAGLINE' }}
@@ -5060,7 +5060,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             suppressContentEditableWarning
                             data-field="tagline"
                             className="mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline"
-                            style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: '36px', color: '#dc2626' }}
+                            style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeTagline || 36}px`, color: '#dc2626' }}
                             onInput={(e) => { pendingTextRefs.current.tagline = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
                             onBlur={(e) => { pendingTextRefs.current.tagline = null; updateField('tagline', e.currentTarget.textContent || ''); }}
                             data-testid="edit-tagline"

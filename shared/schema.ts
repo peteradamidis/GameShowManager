@@ -844,6 +844,7 @@ export const castingCards = pgTable("casting_cards", {
   fontSizeOccupation: real("font_size_occupation"),
   fontSizeAgeState: real("font_size_age_state"),
   fontSizeName: real("font_size_name"),
+  fontSizeTagline: real("font_size_tagline"),
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

@@ -1,0 +1,1638 @@
+[CardData useEffect] Skipping - already loaded this contestant
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: occupation
+players.tsx:2940 [formatFontSize] Header field detection result: occupation
+players.tsx:2943 [formatFontSize] Selection is in header field: occupation
+players.tsx:2958 [formatFontSize] Header field font size change: 24 -> 20
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1141 [CardData useEffect] Load check: Object
+players.tsx:1149 [CardData useEffect] Skipping - already loaded this contestant
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: occupation
+players.tsx:2940 [formatFontSize] Header field detection result: occupation
+players.tsx:2943 [formatFontSize] Selection is in header field: occupation
+players.tsx:2958 [formatFontSize] Header field font size change: 20 -> 18
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1141 [CardData useEffect] Load check: Object
+players.tsx:1149 [CardData useEffect] Skipping - already loaded this contestant
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1141 [CardData useEffect] Load check: Object
+players.tsx:1149 [CardData useEffect] Skipping - already loaded this contestant
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: H2 data-field: fullName
+players.tsx:2940 [formatFontSize] Header field detection result: fullName
+players.tsx:2943 [formatFontSize] Selection is in header field: fullName
+players.tsx:2958 [formatFontSize] Header field font size change: 32 -> 28
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 1658 ms ago (Threshold: 10s)
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: H2 data-field: fullName
+players.tsx:2940 [formatFontSize] Header field detection result: fullName
+players.tsx:2943 [formatFontSize] Selection is in header field: fullName
+players.tsx:2958 [formatFontSize] Header field font size change: 28 -> 24
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 1840 ms ago (Threshold: 10s)
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: H2 data-field: fullName
+players.tsx:2940 [formatFontSize] Header field detection result: fullName
+players.tsx:2943 [formatFontSize] Selection is in header field: fullName
+players.tsx:2958 [formatFontSize] Header field font size change: 24 -> 20
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 2118 ms ago (Threshold: 10s)
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: H2 data-field: fullName
+players.tsx:2940 [formatFontSize] Header field detection result: fullName
+players.tsx:2943 [formatFontSize] Selection is in header field: fullName
+players.tsx:2958 [formatFontSize] Header field font size change: 20 -> 18
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 2268 ms ago (Threshold: 10s)
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: H2 data-field: fullName
+players.tsx:2940 [formatFontSize] Header field detection result: fullName
+players.tsx:2943 [formatFontSize] Selection is in header field: fullName
+players.tsx:2958 [formatFontSize] Header field font size change: 18 -> 16
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 2423 ms ago (Threshold: 10s)
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: ageState
+players.tsx:2940 [formatFontSize] Header field detection result: ageState
+players.tsx:2943 [formatFontSize] Selection is in header field: ageState
+players.tsx:2958 [formatFontSize] Header field font size change: 28 -> 24
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 4591 ms ago (Threshold: 10s)
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: ageState
+players.tsx:2940 [formatFontSize] Header field detection result: ageState
+players.tsx:2943 [formatFontSize] Selection is in header field: ageState
+players.tsx:2958 [formatFontSize] Header field font size change: 24 -> 20
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 4757 ms ago (Threshold: 10s)
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: ageState
+players.tsx:2940 [formatFontSize] Header field detection result: ageState
+players.tsx:2943 [formatFontSize] Selection is in header field: ageState
+players.tsx:2958 [formatFontSize] Header field font size change: 20 -> 18
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 4905 ms ago (Threshold: 10s)
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: ageState
+players.tsx:2940 [formatFontSize] Header field detection result: ageState
+players.tsx:2943 [formatFontSize] Selection is in header field: ageState
+players.tsx:2958 [formatFontSize] Header field font size change: 18 -> 16
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 5071 ms ago (Threshold: 10s)
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: ageState
+players.tsx:2940 [formatFontSize] Header field detection result: ageState
+players.tsx:2943 [formatFontSize] Selection is in header field: ageState
+players.tsx:2958 [formatFontSize] Header field font size change: 16 -> 14
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 5239 ms ago (Threshold: 10s)
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: ageState
+players.tsx:2940 [formatFontSize] Header field detection result: ageState
+players.tsx:2943 [formatFontSize] Selection is in header field: ageState
+players.tsx:2958 [formatFontSize] Header field font size change: 14 -> 12
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 5404 ms ago (Threshold: 10s)
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: ageState
+players.tsx:2940 [formatFontSize] Header field detection result: ageState
+players.tsx:2943 [formatFontSize] Selection is in header field: ageState
+players.tsx:2958 [formatFontSize] Header field font size change: 12 -> 10
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 5573 ms ago (Threshold: 10s)
+players.tsx:2824 [formatFontSize] Called with size: bigger
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: ageState
+players.tsx:2940 [formatFontSize] Header field detection result: ageState
+players.tsx:2943 [formatFontSize] Selection is in header field: ageState
+players.tsx:2958 [formatFontSize] Header field font size change: 10 -> 12
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 5840 ms ago (Threshold: 10s)
+players.tsx:2824 [formatFontSize] Called with size: bigger
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: ageState
+players.tsx:2940 [formatFontSize] Header field detection result: ageState
+players.tsx:2943 [formatFontSize] Selection is in header field: ageState
+players.tsx:2958 [formatFontSize] Header field font size change: 12 -> 14
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 6004 ms ago (Threshold: 10s)
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: ageState
+players.tsx:2940 [formatFontSize] Header field detection result: ageState
+players.tsx:2943 [formatFontSize] Selection is in header field: ageState
+players.tsx:2958 [formatFontSize] Header field font size change: 14 -> 12
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 7773 ms ago (Threshold: 10s)
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: ageState
+players.tsx:2940 [formatFontSize] Header field detection result: ageState
+players.tsx:2943 [formatFontSize] Selection is in header field: ageState
+players.tsx:2958 [formatFontSize] Header field font size change: 12 -> 10
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 7940 ms ago (Threshold: 10s)
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: ageState
+players.tsx:2940 [formatFontSize] Header field detection result: ageState
+players.tsx:2943 [formatFontSize] Selection is in header field: ageState
+players.tsx:2958 [formatFontSize] Header field font size change: 10 -> 8
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 8106 ms ago (Threshold: 10s)
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:2824 [formatFontSize] Called with size: 18
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: ageState
+players.tsx:2940 [formatFontSize] Header field detection result: ageState
+players.tsx:2943 [formatFontSize] Selection is in header field: ageState
+players.tsx:2958 [formatFontSize] Header field font size change: 8 -> 18
+players.tsx:2454 [updateFontSizeWithSync] START Object
+players.tsx:2467 [updateFontSizeWithSync] No pending text, queried DOM: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 9253 ms ago (Threshold: 10s)
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:2720 [triggerFormattingAutoSave] Syncing header fields: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1141 [CardData useEffect] Load check: Object
+players.tsx:1149 [CardData useEffect] Skipping - already loaded this contestant
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:707 [syncAndExitFullscreen] Current data font sizes: Object
+players.tsx:713 [syncAndExitFullscreen] Found 5 editable fields in DOM
+players.tsx:724 [syncAndExitFullscreen] Field "fullName": DOM="HELLO HELLO", State="HELLO HELLO"
+players.tsx:724 [syncAndExitFullscreen] Field "ageState": DOM="24 (STATE)", State="24 (STATE)"
+players.tsx:724 [syncAndExitFullscreen] Field "occupation": DOM="hello hello hello hello", State="hello hello hello hello"
+players.tsx:724 [syncAndExitFullscreen] Field "tagline": DOM="hello hasfdello hello", State="hello hasfdello hello"
+players.tsx:724 [syncAndExitFullscreen] Field "bodyText": DOM="<span style="font-size: 24px;"><span style="font-s", State="<span style="font-size: 24px;"><span style="font-s"
+players.tsx:752 [syncAndExitFullscreen] Header field "fullName": new="HELLO HELLO", old="HELLO HELLO"
+players.tsx:752 [syncAndExitFullscreen] Header field "tagline": new="hello hasfdello hello", old="hello hasfdello hello"
+players.tsx:752 [syncAndExitFullscreen] Header field "occupation": new="hello hello hello hello", old="hello hello hello hello"
+players.tsx:752 [syncAndExitFullscreen] Header field "ageState": new="24 (STATE)", old="24 (STATE)"
+players.tsx:759 [syncAndExitFullscreen] Header field "sponsorCategory" NOT FOUND in DOM with selector "[data-field="sponsorCategory"]"
+(anonymous) @ players.tsx:759Understand this warning
+players.tsx:752 [syncAndExitFullscreen] Header field "bodyText": new="<span style="font-size: 24px;"", old="<span style="font-size: 24px;""
+players.tsx:766 [syncAndExitFullscreen] Final updatedData before save: Object
+players.tsx:777 [syncAndExitFullscreen] About to update state with updatedData: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1111 [CardData useEffect] Skipping - isExitingFullscreen is true
+players.tsx:809 [syncAndExitFullscreen] After flushSync - state updates complete
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:843 [syncAndExitFullscreen] Clearing isExitingFullscreen (no changes)
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: #text 3
+players.tsx:2928 [formatFontSize] Checking element: H3 data-field: tagline
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: MAIN data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: BODY data-field: null
+players.tsx:2928 [formatFontSize] Checking element: HTML data-field: null
+players.tsx:2935 [formatFontSize] No header field found in parent chain
+players.tsx:2940 [formatFontSize] Header field detection result: null
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: SPAN 1
+players.tsx:2928 [formatFontSize] Checking element: SPAN data-field: null
+players.tsx:2928 [formatFontSize] Checking element: H3 data-field: tagline
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: MAIN data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: BODY data-field: null
+players.tsx:2928 [formatFontSize] Checking element: HTML data-field: null
+players.tsx:2935 [formatFontSize] No header field found in parent chain
+players.tsx:2940 [formatFontSize] Header field detection result: null
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: SPAN 1
+players.tsx:2928 [formatFontSize] Checking element: SPAN data-field: null
+players.tsx:2928 [formatFontSize] Checking element: SPAN data-field: null
+players.tsx:2928 [formatFontSize] Checking element: H3 data-field: tagline
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: MAIN data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: BODY data-field: null
+players.tsx:2928 [formatFontSize] Checking element: HTML data-field: null
+players.tsx:2935 [formatFontSize] No header field found in parent chain
+players.tsx:2940 [formatFontSize] Header field detection result: null
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: SPAN 1
+players.tsx:2928 [formatFontSize] Checking element: SPAN data-field: null
+players.tsx:2928 [formatFontSize] Checking element: SPAN data-field: null
+players.tsx:2928 [formatFontSize] Checking element: SPAN data-field: null
+players.tsx:2928 [formatFontSize] Checking element: H3 data-field: tagline
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: MAIN data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: BODY data-field: null
+players.tsx:2928 [formatFontSize] Checking element: HTML data-field: null
+players.tsx:2935 [formatFontSize] No header field found in parent chain
+players.tsx:2940 [formatFontSize] Header field detection result: null
+players.tsx:2824 [formatFontSize] Called with size: smaller
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="fullName"]"): found=true, text="HELLO HELLO"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="occupation"]"): found=true, text="hello hello hello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="tagline"]"): found=true, text="hello hasfdello hello"
+players.tsx:2847 [formatFontSize] getFieldText("[data-field="sponsorCategory"]"): found=false, text="SPONSOR CATEGORY: X"
+players.tsx:2856 [formatFontSize] Comparing DOM vs State: Object
+players.tsx:2884 [formatFontSize] No changes detected between DOM and state
+players.tsx:2923 [formatFontSize] findHeaderField starting from: SPAN 1
+players.tsx:2928 [formatFontSize] Checking element: SPAN data-field: null
+players.tsx:2928 [formatFontSize] Checking element: SPAN data-field: null
+players.tsx:2928 [formatFontSize] Checking element: SPAN data-field: null
+players.tsx:2928 [formatFontSize] Checking element: SPAN data-field: null
+players.tsx:2928 [formatFontSize] Checking element: H3 data-field: tagline
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: MAIN data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: DIV data-field: null
+players.tsx:2928 [formatFontSize] Checking element: BODY data-field: null
+players.tsx:2928 [formatFontSize] Checking element: HTML data-field: null
+players.tsx:2935 [formatFontSize] No header field found in parent chain
+players.tsx:2940 [formatFontSize] Header field detection result: null
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1120 [CardData useEffect] Protection check: Object
+players.tsx:1130 [CardData useEffect] Skipping - recently saved locally: 8255 ms ago (Threshold: 10s)
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:707 [syncAndExitFullscreen] Current data font sizes: Object
+players.tsx:713 [syncAndExitFullscreen] Found 5 editable fields in DOM
+players.tsx:724 [syncAndExitFullscreen] Field "fullName": DOM="HELLO HELLO", State="HELLO HELLO"
+players.tsx:724 [syncAndExitFullscreen] Field "ageState": DOM="24 (STATE)", State="24 (STATE)"
+players.tsx:724 [syncAndExitFullscreen] Field "occupation": DOM="hello hello hello hello", State="hello hello hello hello"
+players.tsx:724 [syncAndExitFullscreen] Field "tagline": DOM="hello hasfdello hello", State="hello hasfdello hello"
+players.tsx:724 [syncAndExitFullscreen] Field "bodyText": DOM="<span style="font-size: 24px;"><span style="font-s", State="<span style="font-size: 24px;"><span style="font-s"
+players.tsx:752 [syncAndExitFullscreen] Header field "fullName": new="HELLO HELLO", old="HELLO HELLO"
+players.tsx:752 [syncAndExitFullscreen] Header field "tagline": new="hello hasfdello hello", old="hello hasfdello hello"
+players.tsx:752 [syncAndExitFullscreen] Header field "occupation": new="hello hello hello hello", old="hello hello hello hello"
+players.tsx:752 [syncAndExitFullscreen] Header field "ageState": new="24 (STATE)", old="24 (STATE)"
+players.tsx:759 [syncAndExitFullscreen] Header field "sponsorCategory" NOT FOUND in DOM with selector "[data-field="sponsorCategory"]"
+(anonymous) @ players.tsx:759Understand this warning
+players.tsx:752 [syncAndExitFullscreen] Header field "bodyText": new="<span style="font-size: 24px;"", old="<span style="font-size: 24px;""
+players.tsx:766 [syncAndExitFullscreen] Final updatedData before save: Object
+players.tsx:777 [syncAndExitFullscreen] About to update state with updatedData: Object
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:470 [getLinkedPartners] Contestant: Jessy Brown, groupId: null, attendingWith: Jessy Brown
+Matilda Davis
+Colin Anderson
+Sandra Anderson
+Sally Davis, contestants count: 692
+players.tsx:484 [getLinkedPartners] Checking attendingWith, partnerNames: Jessy Brown, Matilda Davis, Colin Anderson, Sandra Anderson, Sally Davis
+players.tsx:521 [getLinkedPartners] Total combined partners: 11 - Sally Davis, Matilda Davis, Matilda Sutherland, Jess Cossari, Sally Costandy, Jess Anderson, Sally Georgeson, Jess Holgate, Sandra  Anderson, Jess Lloyd, Colin  Anderson
+players.tsx:1111 [CardData useEffect] Skipping - isExitingFullscreen is true
+players.tsx:809 [syncAndExitFullscreen] After flushSync - state updates complete
+players.tsx:843 [syncAndExitFullscreen] Clearing isExitingFullscreen (no changes)
