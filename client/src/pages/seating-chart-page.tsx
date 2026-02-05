@@ -2057,7 +2057,7 @@ export default function SeatingChartPage() {
                     seatLabel: a.seatLabel,
                     podiumStory: a.podiumStory,
                     podiumStoryNote: contestant?.podiumStoryNote || '',
-                    caseNumber: contestant?.caseNumber || '',
+                    caseNumber: contestant?.podiumStoryCaseNumber?.toString() || '',
                     gender: contestant?.gender,
                     age: contestant?.age,
                     location: contestant?.location || a.contestantLocation,
@@ -2093,7 +2093,7 @@ export default function SeatingChartPage() {
                               });
                           }}
                           onCaseNumberUpdate={(caseNumber) => {
-                            apiRequest('PATCH', `/api/contestants/${contestant.id}`, { caseNumber: caseNumber === 'none' ? null : caseNumber })
+                            apiRequest('PATCH', `/api/contestants/${contestant.id}`, { podiumStoryCaseNumber: caseNumber === 'none' ? null : parseInt(caseNumber, 10) })
                               .then(() => {
                                 queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
                                 toast({ title: "Case updated", description: caseNumber && caseNumber !== 'none' ? `Assigned to Case ${caseNumber}` : "Case number removed" });
