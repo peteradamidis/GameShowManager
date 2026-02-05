@@ -797,26 +797,23 @@ export function SeatCard({
                   </div>
                 )}
 
-                {/* Podium Story Toggle */}
+                {/* Podium Story Toggle - compact inline */}
                 {seat.contestantId && (
-                  <div className="text-sm">
-                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Podium Story</label>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePodiumStoryToggle();
-                      }}
-                      disabled={togglePodiumStoryMutation.isPending}
-                      className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-                        localPodiumStory 
-                          ? 'bg-pink-500 text-white border-pink-600 dark:bg-pink-600 dark:border-pink-500' 
-                          : 'bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-300 dark:border-pink-700 hover:bg-pink-500/20'
-                      } disabled:opacity-50`}
-                      data-testid={`button-podium-story-toggle-${seat.contestantId}`}
-                    >
-                      {localPodiumStory ? 'PS ✓' : 'Add PS'}
-                    </button>
-                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePodiumStoryToggle();
+                    }}
+                    disabled={togglePodiumStoryMutation.isPending}
+                    className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
+                      localPodiumStory 
+                        ? 'bg-pink-500 text-white' 
+                        : 'text-pink-400 hover:text-pink-600 hover:bg-pink-500/10'
+                    } disabled:opacity-50`}
+                    data-testid={`button-podium-story-toggle-${seat.contestantId}`}
+                  >
+                    {localPodiumStory ? 'PS' : '+PS'}
+                  </button>
                 )}
 
                 {/* Attending With - shows original and allows override editing */}
