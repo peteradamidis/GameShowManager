@@ -633,7 +633,15 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const companionPhotoRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
   
   // Refs for body text contentEditable divs (regular and fullscreen)
+  const taglineRef = useRef<HTMLDivElement>(null);
+  const occupationRef = useRef<HTMLDivElement>(null);
+  const ageStateRef = useRef<HTMLDivElement>(null);
   const bodyTextRef = useRef<HTMLDivElement>(null);
+
+  // Fullscreen refs
+  const taglineRefFs = useRef<HTMLDivElement>(null);
+  const occupationRefFs = useRef<HTMLDivElement>(null);
+  const ageStateRefFs = useRef<HTMLDivElement>(null);
   const bodyTextRefFs = useRef<HTMLDivElement>(null);
   
   // Track last cursor position for dot point insertion
@@ -702,26 +710,35 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       }
     });
     
+    // Force sync refs with current DOM content for ALL header fields BEFORE saving
+    const headerFields = [
+      { field: 'tagline', ref: isFullscreen ? taglineRefFs : taglineRef },
+      { field: 'occupation', ref: isFullscreen ? occupationRefFs : occupationRef },
+      { field: 'ageState', ref: isFullscreen ? ageStateRefFs : ageStateRef }
+    ];
+    
+    headerFields.forEach(({ field, ref }) => {
+      if (ref.current) {
+        const val = ref.current.innerText.trim();
+        (updatedData as any)[field] = val;
+      }
+    });
+
     // Update ref immediately (synchronous)
     cardDataRef.current = updatedData;
     
-    console.log('[syncAndExitFullscreen] Setting cardData with:', {
-      fontSizeOccupation: updatedData.fontSizeOccupation,
-      fontSizeAgeState: updatedData.fontSizeAgeState,
-      occupation: updatedData.occupation?.substring(0, 30),
-      tagline: updatedData.tagline?.substring(0, 30),
-      hasChanges
+    console.log('[syncAndExitFullscreen] Final updatedData before save:', {
+      tagline: updatedData.tagline,
+      occupation: updatedData.occupation,
+      ageState: (updatedData as any).ageState
     });
     
     // CRITICAL: Set timestamp BEFORE any state changes to protect against race conditions
-    // This ensures any refetches that happen during the save process are ignored
     lastLocalSaveTime.current = Date.now();
     
     // Use flushSync to force React to process state updates synchronously
-    // This ensures cardData is updated BEFORE we switch views
     flushSync(() => {
       setCardData(updatedData);
-      // Also update the ref immediately so it's available for useEffect checks
       cardDataRef.current = updatedData;
     });
     
@@ -1050,8 +1067,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         selectedContestantId: selectedContestant.id
       });
       
-      if (timeSinceLastSave < 5000 && refMatchesContestant) {
-        console.log('[CardData useEffect] Skipping - recently saved locally:', timeSinceLastSave, 'ms ago');
+      if (timeSinceLastSave < 10000 && refMatchesContestant) {
+        console.log('[CardData useEffect] Skipping - recently saved locally:', timeSinceLastSave, 'ms ago (Threshold: 10s)');
         return;
       }
       
@@ -1086,15 +1103,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         const serverOccupation = existingCard.occupation || '';
         const serverAgeState = (existingCard as any).ageState || '';
         
-        // If local has meaningful content that differs from server, preserve local
-        if ((localTagline.trim() && localTagline !== serverTagline) ||
-            (localOccupation.trim() && localOccupation !== serverOccupation) ||
-            (localAgeState.trim() && localAgeState !== serverAgeState)) {
-          console.log('[CardData useEffect] Skipping - local data has unsaved edits that differ from server', {
-            localTagline: localTagline.substring(0, 20),
-            serverTagline: serverTagline.substring(0, 20),
-            localOccupation: localOccupation.substring(0, 20),
-            serverOccupation: serverOccupation.substring(0, 20)
+        // If local has content that differs from server, preserve local
+        if (localTagline !== serverTagline ||
+            localOccupation !== serverOccupation ||
+            localAgeState !== serverAgeState) {
+          console.log('[CardData useEffect] Skipping - local data differs from server', {
+            localTagline, serverTagline,
+            localOccupation, serverOccupation,
+            localAgeState, serverAgeState
           });
           return;
         }
@@ -4546,6 +4562,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           </button>
                         </div>
                         <div
+                          ref={isFullscreen ? ageStateRefFs : ageStateRef}
                           contentEditable
                           suppressContentEditableWarning
                           className="outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
@@ -4581,6 +4598,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           </button>
                         </div>
                         <div
+                          ref={isFullscreen ? occupationRefFs : occupationRef}
                           contentEditable
                           suppressContentEditableWarning
                           className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
@@ -4672,6 +4690,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             </button>
                           </div>
                           <h3 
+                            ref={isFullscreen ? taglineRefFs : taglineRef}
                             contentEditable
                             suppressContentEditableWarning
                             className="mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline"
