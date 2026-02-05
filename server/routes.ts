@@ -15872,8 +15872,8 @@ Thank you.`;
         console.error("Error parsing manualCompanions:", e);
       }
 
-      // Get contestant photo URL
-      const photoUrl = contestant.photoPath ? `/photos/${contestant.photoPath.split('/').pop()}` : '';
+      // Get contestant photo URL - use full /uploads/photos/ path
+      const photoUrl = contestant.photoUrl || (contestant.photoPath ? `/uploads/photos/${contestant.photoPath.split('/').pop()}` : '');
 
       // Build companions HTML
       const companionCount = manualCompanions.length;
