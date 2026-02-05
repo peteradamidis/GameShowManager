@@ -2443,18 +2443,42 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         return;
       }
       
-      // Get current font size from selection
+      // Get current font size from selection - traverse up DOM to find accurate size
       const getCurrentFontSize = (): number => {
-        const parentEl = range!.commonAncestorContainer.parentElement;
-        if (parentEl) {
-          // Check for inline style first
-          if (parentEl.style.fontSize) {
-            return parseInt(parentEl.style.fontSize);
-          }
-          // Fall back to computed style
-          const computedStyle = window.getComputedStyle(parentEl);
-          return parseInt(computedStyle.fontSize) || 20;
+        // First, try to find font size from the actual selected node
+        let node: Node | null = range!.startContainer;
+        
+        // If it's a text node, get its parent element
+        if (node.nodeType === Node.TEXT_NODE) {
+          node = node.parentElement;
         }
+        
+        // Traverse up the DOM looking for explicit font-size styling
+        while (node && node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as HTMLElement;
+          
+          // Check inline style first (most specific)
+          if (el.style && el.style.fontSize) {
+            const parsed = parseInt(el.style.fontSize);
+            if (!isNaN(parsed) && parsed > 0) {
+              return parsed;
+            }
+          }
+          
+          // Move up to parent
+          node = el.parentElement;
+        }
+        
+        // Fall back to computed style on the start container's parent
+        const parentEl = range!.startContainer.parentElement;
+        if (parentEl) {
+          const computedStyle = window.getComputedStyle(parentEl);
+          const computed = parseInt(computedStyle.fontSize);
+          if (!isNaN(computed) && computed > 0) {
+            return computed;
+          }
+        }
+        
         return 20; // Default body text size
       };
       
@@ -2464,13 +2488,23 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         const currentSize = getCurrentFontSize();
         
         if (size === 'bigger') {
-          // Find next step up
+          // Find next step up - if current size is between steps, go to next higher step
           const nextStep = fontSizeSteps.find(s => s > currentSize);
-          targetSize = String(nextStep || fontSizeSteps[fontSizeSteps.length - 1]);
+          if (nextStep) {
+            targetSize = String(nextStep);
+          } else {
+            // Already at or above max, just add 4px
+            targetSize = String(currentSize + 4);
+          }
         } else {
-          // Find next step down
+          // Find next step down - if current size is between steps, go to next lower step
           const prevSteps = fontSizeSteps.filter(s => s < currentSize);
-          targetSize = String(prevSteps.length > 0 ? prevSteps[prevSteps.length - 1] : fontSizeSteps[0]);
+          if (prevSteps.length > 0) {
+            targetSize = String(prevSteps[prevSteps.length - 1]);
+          } else {
+            // Already at or below min, just subtract 2px but not below 6
+            targetSize = String(Math.max(6, currentSize - 2));
+          }
         }
       }
       
@@ -2490,45 +2524,28 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       span.style.fontSize = `${targetSize}px`;
       
       // Flatten any existing font-size spans to avoid deep nesting
-      const flattenContent = (fragment: DocumentFragment): DocumentFragment => {
-        const result = document.createDocumentFragment();
-        const walker = document.createTreeWalker(fragment, NodeFilter.SHOW_ALL);
-        
-        const processNode = (node: Node) => {
-          if (node.nodeType === Node.TEXT_NODE) {
-            result.appendChild(node.cloneNode());
-          } else if (node.nodeType === Node.ELEMENT_NODE) {
-            const el = node as HTMLElement;
-            // If it's a span with only font-size styling, unwrap it
-            if (el.tagName === 'SPAN' && el.style.length === 1 && el.style.fontSize) {
-              // Just add the text content
-              el.childNodes.forEach(child => {
-                if (child.nodeType === Node.TEXT_NODE) {
-                  result.appendChild(child.cloneNode());
-                } else {
-                  result.appendChild(child.cloneNode(true));
-                }
-              });
-            } else {
-              // Keep the element but process children
-              const clone = el.cloneNode(false) as HTMLElement;
-              el.childNodes.forEach(child => {
-                const processed = document.createDocumentFragment();
-                if (child.nodeType === Node.TEXT_NODE) {
-                  processed.appendChild(child.cloneNode());
-                } else {
-                  processed.appendChild(child.cloneNode(true));
-                }
-                clone.appendChild(processed);
-              });
-              result.appendChild(clone);
+      const flattenFontSizeSpans = (fragment: DocumentFragment): void => {
+        // Find all spans with only font-size styling and unwrap them
+        const spans = fragment.querySelectorAll('span');
+        spans.forEach(spanEl => {
+          // Check if this span only has font-size styling
+          if (spanEl.style.length === 1 && spanEl.style.fontSize) {
+            // Remove the font-size so it inherits from parent
+            spanEl.style.removeProperty('font-size');
+            // If no other styles remain, unwrap the span
+            if (spanEl.style.length === 0 && !spanEl.className) {
+              const parent = spanEl.parentNode;
+              while (spanEl.firstChild) {
+                parent?.insertBefore(spanEl.firstChild, spanEl);
+              }
+              parent?.removeChild(spanEl);
             }
           }
-        };
-        
-        fragment.childNodes.forEach(processNode);
-        return result;
+        });
       };
+      
+      // Flatten before appending
+      flattenFontSizeSpans(selectedContent);
       
       span.appendChild(selectedContent);
       workingRange.insertNode(span);
