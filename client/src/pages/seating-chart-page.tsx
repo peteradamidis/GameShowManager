@@ -1564,9 +1564,13 @@ export default function SeatingChartPage() {
         auditionRating: newRating,
       });
       
-      // Invalidate queries to refresh the data
-      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+      // Invalidate ALL relevant queries to refresh the data across all tabs
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants', contestantId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/casting-cards'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'] });
       refetch();
       
       toast({
