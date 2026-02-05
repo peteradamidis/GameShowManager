@@ -1974,6 +1974,8 @@ export default function SeatingChartPage() {
             >
               <ArrowLeftRight className="h-4 w-4" />
             </Button>
+            {/* Spacer to push search to far right */}
+            <div className="flex-1" />
             {/* Search by full name */}
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
