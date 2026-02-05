@@ -297,6 +297,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const cardDataRef = useRef<CastingCardData | null>(null);
   const lastLoadedContestantId = useRef<string | null>(null); // Track which contestant's card we've loaded
   const isExitingFullscreen = useRef(false); // Prevent useEffect from overwriting during fullscreen exit
+  const lastLocalSaveTime = useRef<number>(0); // Timestamp of last local save to prevent query overwrites
   
   // Version history state
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
@@ -712,6 +713,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       hasChanges
     });
     
+    // Mark that we just saved locally - this prevents useEffect from overwriting for 2 seconds
+    lastLocalSaveTime.current = Date.now();
+    
     // Use flushSync to force React to process state updates synchronously
     // This ensures cardData is updated BEFORE we switch views
     flushSync(() => {
@@ -1020,6 +1024,14 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       // This prevents the useEffect from overwriting local changes during view transition
       if (isExitingFullscreen.current) {
         console.log('[CardData useEffect] Skipping - currently exiting fullscreen');
+        return;
+      }
+      
+      // CRITICAL: Skip if we recently saved data locally (within 2 seconds)
+      // This prevents React Query refetches from overwriting our local edits
+      const timeSinceLastSave = Date.now() - lastLocalSaveTime.current;
+      if (timeSinceLastSave < 2000 && cardDataRef.current?.contestantId === selectedContestant.id) {
+        console.log('[CardData useEffect] Skipping - recently saved locally:', timeSinceLastSave, 'ms ago');
         return;
       }
       
@@ -2264,6 +2276,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               onSuccess: () => {
                 hasUnsavedChanges.current = false;
                 setAutoSaveStatus('saved');
+                // Mark save time to prevent query refetches from overwriting
+                lastLocalSaveTime.current = Date.now();
                 setTimeout(() => setAutoSaveStatus('idle'), 2000);
               },
               onError: () => {
