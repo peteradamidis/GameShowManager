@@ -2701,7 +2701,41 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         const bodyTextElement = (fullscreenEditor && fullscreenEditor.offsetParent !== null) ? fullscreenEditor : regularEditor;
         const currentBodyText = bodyTextElement?.innerHTML || cardData.bodyText;
         
-        const dataToSave = { ...cardData, bodyText: currentBodyText };
+        // CRITICAL: Also sync header fields from DOM to prevent data loss
+        // when using toolbar formatting on header elements
+        const getHeaderFieldText = (selector: string, fallback: string): string => {
+          const fullscreenEl = document.querySelector(`[data-fullscreen-mode="true"] ${selector}`) as HTMLElement;
+          const regularEl = document.querySelector(selector) as HTMLElement;
+          const el = (fullscreenEl && fullscreenEl.offsetParent !== null) ? fullscreenEl : regularEl;
+          return el?.textContent?.trim() || fallback;
+        };
+        
+        // Sync all header fields that might have been edited
+        // Note: name field uses data-field="fullName" in DOM
+        const currentFullName = getHeaderFieldText('[data-field="fullName"]', cardData.fullName || '');
+        const currentOccupation = getHeaderFieldText('[data-field="occupation"]', cardData.occupation || '');
+        const currentTagline = getHeaderFieldText('[data-field="tagline"]', cardData.tagline || '');
+        const currentSponsorCategory = getHeaderFieldText('[data-field="sponsorCategory"]', cardData.sponsorCategory || '');
+        
+        console.log('[triggerFormattingAutoSave] Syncing header fields:', {
+          fullName: currentFullName !== cardData.fullName ? `"${cardData.fullName}" -> "${currentFullName}"` : '(unchanged)',
+          occupation: currentOccupation !== cardData.occupation ? `"${cardData.occupation}" -> "${currentOccupation}"` : '(unchanged)',
+          tagline: currentTagline !== cardData.tagline ? `"${cardData.tagline}" -> "${currentTagline}"` : '(unchanged)',
+          sponsorCategory: currentSponsorCategory !== cardData.sponsorCategory ? `"${cardData.sponsorCategory}" -> "${currentSponsorCategory}"` : '(unchanged)',
+        });
+        
+        const dataToSave = { 
+          ...cardData, 
+          bodyText: currentBodyText,
+          fullName: currentFullName,
+          occupation: currentOccupation,
+          tagline: currentTagline,
+          sponsorCategory: currentSponsorCategory,
+        };
+        
+        // Also update React state to prevent revert on re-render
+        setCardData(dataToSave);
+        
         setAutoSaveStatus('saving');
         saveMutation.mutate(dataToSave, {
           onSuccess: () => {
