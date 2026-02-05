@@ -2085,7 +2085,7 @@ export default function SeatingChartPage() {
                       </Badge>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-3 space-y-2 max-h-80 overflow-y-auto">
+                  <CardContent className="p-3 space-y-2">
                     {psContestants.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-4">No podium stories in this block</p>
                     ) : (
