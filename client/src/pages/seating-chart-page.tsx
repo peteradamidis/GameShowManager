@@ -2240,7 +2240,7 @@ export default function SeatingChartPage() {
                       'B+': 'bg-amber-500 text-white',
                       'B': 'bg-orange-500 text-white',
                       'C': 'bg-red-500 text-white',
-                      'P': 'bg-violet-500 text-white',
+                      'P': 'bg-cyan-500 text-white',
                     };
                     const statusColors: Record<string, string> = {
                       'available': 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
@@ -2774,7 +2774,7 @@ export default function SeatingChartPage() {
               'B+': 'text-amber-600 dark:text-amber-400',
               'B': 'text-orange-600 dark:text-orange-400',
               'C': 'text-red-500 dark:text-red-400',
-              'P': 'text-violet-600 dark:text-violet-400',
+              'P': 'text-cyan-600 dark:text-cyan-400',
             };
             
             return (
