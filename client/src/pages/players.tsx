@@ -277,6 +277,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [hideToolbar, setHideToolbar] = useState(false);
   const [cardZoom, setCardZoom] = useState(0.5);
+  const [contentEditableKey, setContentEditableKey] = useState(0);
   const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   
@@ -681,6 +682,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         setCardZoom(0.5);
         setIsFullscreen(false);
         setHideToolbar(false);
+        // Increment key to force contentEditable to remount with new content
+        setContentEditableKey(prev => prev + 1);
       }, 50);
       return;
     }
@@ -4582,6 +4585,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         </div>
                         
                         <div
+                          key={`body-text-${contentEditableKey}`}
                           ref={bodyTextRef}
                           contentEditable
                           suppressContentEditableWarning
