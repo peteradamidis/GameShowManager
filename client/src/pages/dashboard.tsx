@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight, Clapperboard, Bell, Send, Loader2, Eye } from "lucide-react";
+import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight, Clapperboard, Bell, Send, Loader2, Eye, Download, FileText } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -612,6 +612,32 @@ export default function Dashboard() {
           subtitle="Standby tag + Available"
         />
       </div>
+
+      {/* System Guide Download */}
+      <Card className="border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20" data-testid="card-system-guide">
+        <CardContent className="py-3 px-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">System Guide</p>
+                <p className="text-xs text-muted-foreground">Download the complete user manual</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.open('/api/guide/download', '_blank')}
+              data-testid="button-download-guide"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              Download PDF
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Ratings Breakdown */}
       <div className="flex flex-wrap gap-3">

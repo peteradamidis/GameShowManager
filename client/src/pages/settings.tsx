@@ -1385,6 +1385,29 @@ export default function Settings() {
         </TabsList>
 
         <TabsContent value="general" className="space-y-6">
+          {/* System Guide Download */}
+          <Card data-testid="card-system-guide-settings">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                System Guide
+              </CardTitle>
+              <CardDescription>
+                Download the complete user manual covering all features and workflows
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="outline"
+                onClick={() => window.open('/api/guide/download', '_blank')}
+                data-testid="button-download-guide-settings"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF Guide
+              </Button>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-6">
               <PopupSettingsCard />

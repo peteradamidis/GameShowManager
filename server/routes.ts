@@ -14959,6 +14959,19 @@ Thank you.`;
   });
 
   // =============================================
+  // System Guide Download
+  // =============================================
+  app.get("/api/guide/download", async (req, res) => {
+    try {
+      const { generateGuide } = await import('./guide');
+      generateGuide(res);
+    } catch (error: any) {
+      console.error("Error generating guide:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // =============================================
   // Form Configuration Routes
   // =============================================
 
