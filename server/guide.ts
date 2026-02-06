@@ -158,33 +158,48 @@ function addNote(doc: PDFKit.PDFDocument, text: string) {
   addCalloutBox(doc, "NOTE:", text, COLORS.noteBg, COLORS.noteBorder, COLORS.noteBorder);
 }
 
-function addScreenshot(doc: PDFKit.PDFDocument, _filename: string, caption: string) {
-  const maxWidth = doc.page.width - 120;
-  const boxHeight = 60;
+function addScreenshot(doc: PDFKit.PDFDocument, filename: string, caption: string) {
+  const imgPath = path.join(ASSETS_DIR, filename);
+  if (!fs.existsSync(imgPath)) return;
 
-  if (doc.y > 650) doc.addPage();
+  const maxWidth = doc.page.width - 120;
+  const maxHeight = 280;
+
+  if (doc.y > 420) doc.addPage();
 
   doc.moveDown(0.3);
-  const boxX = 60;
-  const boxY = doc.y;
+  const imgX = 60;
+  const imgY = doc.y;
 
-  doc.save();
-  doc.rect(boxX, boxY, maxWidth, boxHeight).fill('#f0f4f8');
-  doc.rect(boxX, boxY, maxWidth, boxHeight).lineWidth(0.5).stroke(COLORS.border);
+  try {
+    const imgBuffer = fs.readFileSync(imgPath);
+    let imgWidth = 1400, imgHeight = 900;
+    if (imgBuffer[0] === 0x89 && imgBuffer[1] === 0x50) {
+      imgWidth = imgBuffer.readUInt32BE(16);
+      imgHeight = imgBuffer.readUInt32BE(20);
+    }
 
-  doc.fill(COLORS.lightText)
-    .fontSize(9)
-    .font("Helvetica-Oblique")
-    .text("[ Screenshot: See this page in the live application ]", boxX, boxY + 18, { width: maxWidth, align: "center" });
-  doc.restore();
+    const scale = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
+    const displayWidth = imgWidth * scale;
+    const displayHeight = imgHeight * scale;
 
-  doc.y = boxY + boxHeight + 4;
+    doc.image(imgPath, imgX, imgY, {
+      fit: [maxWidth, maxHeight],
+      align: "center",
+    });
 
-  doc.fill(COLORS.lightText)
-    .fontSize(8.5)
-    .font("Helvetica-Oblique")
-    .text(caption, 60, undefined, { width: maxWidth, align: "center" });
-  doc.moveDown(0.5);
+    doc.rect(imgX, imgY, displayWidth, displayHeight).lineWidth(0.5).stroke(COLORS.border);
+
+    doc.y = imgY + displayHeight + 4;
+
+    doc.fill(COLORS.lightText)
+      .fontSize(8.5)
+      .font("Helvetica-Oblique")
+      .text(caption, 60, undefined, { width: maxWidth, align: "center" });
+    doc.moveDown(0.5);
+  } catch (e) {
+    // Skip image if it fails to load
+  }
 }
 
 function addKeyboardShortcut(doc: PDFKit.PDFDocument, shortcut: string, description: string) {
