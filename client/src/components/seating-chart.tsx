@@ -1716,16 +1716,21 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     const sourceLocation = getBlockAndSeat(sourceSeat.seat.id);
     const targetLocation = getBlockAndSeat(clickedSeat.seat.id);
 
-    // Clear selection before showing confirmation
+    // Clear selection
     setQuickMoveSelectedSeatId(null);
 
-    // Show confirmation dialog instead of executing immediately
-    setPendingSwap({
-      sourceSeat,
-      targetSeat: clickedSeat,
-      sourceLocation,
-      targetLocation,
-    });
+    if (isLocked) {
+      // Locked (RX Day Mode) - show confirmation dialog
+      setPendingSwap({
+        sourceSeat,
+        targetSeat: clickedSeat,
+        sourceLocation,
+        targetLocation,
+      });
+    } else {
+      // Not locked - execute swap immediately without prompt
+      await executeSwap(sourceSeat, clickedSeat, sourceLocation, targetLocation, false);
+    }
   };
 
   // Handle drag end - check if locked and require confirmation
