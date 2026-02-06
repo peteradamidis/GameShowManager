@@ -188,6 +188,7 @@ interface SeatAssignment {
   medicalQuestion?: string;
   criminalBankruptcy?: string;
   castingCategory?: string;
+  playerType?: 'player' | 'backup' | 'player_partner' | null;
   notes?: string;
   bookingEmailSent?: string;
   confirmedRsvp?: string;
@@ -1652,7 +1653,7 @@ export default function BookingMaster() {
                             {row.contestant?.name ? (
                               <div className="flex items-center gap-1 flex-wrap">
                                 <span className={row.assignment?.standbyReplacementSwaps && row.assignment.standbyReplacementSwaps !== "none" ? "text-red-600 line-through" : ""}>
-                                  {row.contestant.name}
+                                  {row.contestant.name}{(row.assignment?.playerType === 'player' || row.contestant.playerType === 'player') ? ' **' : ''}
                                 </span>
                                 {row.contestant.isTemporary && (
                                   <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700">

@@ -787,6 +787,7 @@ export class DbStorage implements IStorage {
       ticketEmailSent: workflowFields.ticketEmailSent,
       paperworkSent: workflowFields.paperworkSent,
       paperworkReceived: workflowFields.paperworkReceived,
+      paperworkOnDay: workflowFields.paperworkOnDay,
       signedIn: workflowFields.signedIn,
       otdNotes: workflowFields.otdNotes,
       standbyReplacementSwaps: workflowFields.standbyReplacementSwaps,
