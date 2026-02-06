@@ -1154,7 +1154,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       // This catches cases where the timing checks above fail
       const localData = cardDataRef.current || cardData;
       if (localData && localData.contestantId === selectedContestant.id && existingCard) {
-        // Check if local data has edits that would be lost - check ALL header fields
+        // Check if local data has edits that would be lost - check ALL header fields AND font sizes
         const localTagline = localData.tagline || '';
         const localOccupation = localData.occupation || '';
         const localAgeState = localData.ageState || '';
@@ -1166,19 +1166,27 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         const serverFullName = (existingCard as any).fullName || '';
         const serverSponsorCategory = (existingCard as any).sponsorCategory || '';
         
-        // If local has content that differs from server, preserve local
+        // Also check font sizes - these must be preserved too
+        const localFontSizeName = localData.fontSizeName || 0;
+        const localFontSizeOccupation = localData.fontSizeOccupation || 0;
+        const localFontSizeTagline = localData.fontSizeTagline || 0;
+        const localFontSizeAgeState = localData.fontSizeAgeState || 0;
+        const serverFontSizeName = (existingCard as any).fontSizeName || 0;
+        const serverFontSizeOccupation = (existingCard as any).fontSizeOccupation || 0;
+        const serverFontSizeTagline = (existingCard as any).fontSizeTagline || 0;
+        const serverFontSizeAgeState = (existingCard as any).fontSizeAgeState || 0;
+        
+        // If local has content or font sizes that differ from server, preserve local
         if (localTagline !== serverTagline ||
             localOccupation !== serverOccupation ||
             localAgeState !== serverAgeState ||
             localFullName !== serverFullName ||
-            localSponsorCategory !== serverSponsorCategory) {
-          console.log('[CardData useEffect] Skipping - local data differs from server', {
-            localTagline, serverTagline,
-            localOccupation, serverOccupation,
-            localAgeState, serverAgeState,
-            localFullName, serverFullName,
-            localSponsorCategory, serverSponsorCategory
-          });
+            localSponsorCategory !== serverSponsorCategory ||
+            localFontSizeName !== serverFontSizeName ||
+            localFontSizeOccupation !== serverFontSizeOccupation ||
+            localFontSizeTagline !== serverFontSizeTagline ||
+            localFontSizeAgeState !== serverFontSizeAgeState) {
+          console.log('[CardData useEffect] Skipping - local data differs from server (text or font sizes)');
           return;
         }
       }
