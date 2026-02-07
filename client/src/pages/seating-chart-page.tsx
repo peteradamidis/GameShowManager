@@ -890,11 +890,11 @@ export default function SeatingChartPage() {
     
     const totalFilled = blockReadiness.reduce((sum, b) => sum + b.filledSeats, 0);
     const totalConfirmed = blockReadiness.reduce((sum, b) => sum + b.confirmedSeats, 0);
-    const isFullyConfirmed = totalFilled > 0 && totalFilled === totalConfirmed;
+    const isFullyConfirmed = totalConfirmed === 154;
     
     // Reset celebration state when day is no longer fully confirmed
     // This allows confetti to trigger again when day becomes fully confirmed after a removal
-    if (!isFullyConfirmed && hasCelebratedRef.current === recordDayId) {
+    if (hasCelebratedRef.current === recordDayId && totalConfirmed < 154) {
       hasCelebratedRef.current = null;
     }
     
