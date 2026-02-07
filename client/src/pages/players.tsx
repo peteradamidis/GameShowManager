@@ -1844,7 +1844,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             const htmlEl = el as HTMLElement;
             const computedStyle = window.getComputedStyle(htmlEl);
             htmlEl.style.marginTop = computedStyle.marginTop;
+            htmlEl.style.position = 'relative';
+            htmlEl.style.display = 'block';
+            htmlEl.style.width = '100%';
           });
+
+          // Ensure age/state line has correct spacing
+          const ageStateEl = clonedDoc.querySelector('[data-field="ageState"]')?.parentElement;
+          if (ageStateEl) {
+            (ageStateEl as HTMLElement).style.marginBottom = '4px';
+          }
 
           // Walk through all elements and remove any inline styles with color() function
           const allElements = clonedDoc.querySelectorAll('*');
@@ -2240,7 +2249,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             const htmlEl = el as HTMLElement;
             const computedStyle = window.getComputedStyle(htmlEl);
             htmlEl.style.marginTop = computedStyle.marginTop;
+            htmlEl.style.position = 'relative';
+            htmlEl.style.display = 'block';
+            htmlEl.style.width = '100%';
           });
+
+          // Ensure age/state line has correct spacing
+          const ageStateEl = clonedDoc.querySelector('[data-field="ageState"]')?.parentElement;
+          if (ageStateEl) {
+            (ageStateEl as HTMLElement).style.marginBottom = '4px';
+          }
 
           // Walk through all elements and remove any inline styles with color() function
           const allElements = clonedDoc.querySelectorAll('*');
