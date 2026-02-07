@@ -1839,6 +1839,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (cardPreview as HTMLElement).style.boxShadow = 'none';
           }
           
+          // Fix any elements with dynamic margins that might render differently
+          clonedDoc.querySelectorAll('.relative.group').forEach((el: Element) => {
+            const htmlEl = el as HTMLElement;
+            const computedStyle = window.getComputedStyle(htmlEl);
+            htmlEl.style.marginTop = computedStyle.marginTop;
+          });
+
           // Walk through all elements and remove any inline styles with color() function
           const allElements = clonedDoc.querySelectorAll('*');
           allElements.forEach((el: Element) => {
@@ -2228,6 +2235,13 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (cardPreview as HTMLElement).style.boxShadow = 'none';
           }
           
+          // Fix any elements with dynamic margins that might render differently
+          clonedDoc.querySelectorAll('.relative.group').forEach((el: Element) => {
+            const htmlEl = el as HTMLElement;
+            const computedStyle = window.getComputedStyle(htmlEl);
+            htmlEl.style.marginTop = computedStyle.marginTop;
+          });
+
           // Walk through all elements and remove any inline styles with color() function
           const allElements = clonedDoc.querySelectorAll('*');
           allElements.forEach((el: Element) => {
@@ -4011,8 +4025,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div 
                         className="relative group flex items-center gap-1"
                         style={{ 
-                          marginTop: `${cardData.occupationOffsetY || 0}px`,
-                          transition: 'margin-top 0.15s ease-out'
+                          marginTop: `${cardData.occupationOffsetY || 0}px`
                         }}
                       >
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
@@ -4101,7 +4114,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     className="relative group"
                     style={{ 
                       marginTop: `${(cardData.taglineOffsetY || 0) - 15}px`,
-                      transition: 'margin-top 0.15s ease-out',
                       zIndex: 10,
                       position: 'relative',
                       background: 'white'
@@ -4953,8 +4965,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div 
                         className="relative group flex items-center gap-1"
                         style={{ 
-                          marginTop: `${cardData.occupationOffsetY || 0}px`,
-                          transition: 'margin-top 0.15s ease-out'
+                          marginTop: `${cardData.occupationOffsetY || 0}px`
                         }}
                       >
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
