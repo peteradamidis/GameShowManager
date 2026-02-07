@@ -4061,7 +4061,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   </div>
                   {/* Sponsor Category - with remove button */}
                   {cardData.showSponsorCategory !== false ? (
-                    <div className="relative group flex items-center gap-1 -mt-1">
+                    <div className="relative group flex items-center gap-1 -mt-1 h-[28px] overflow-visible">
                       <div
                         contentEditable
                         suppressContentEditableWarning
@@ -4081,15 +4081,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       </button>
                     </div>
                   ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateField('showSponsorCategory', true)}
-                      className="text-xs print:hidden ignore-print -mt-1"
-                    >
-                      <Plus className="w-3 h-3 mr-1" />
-                      Add Sponsor Category
-                    </Button>
+                    <div className="h-[28px] flex items-center ignore-print">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateField('showSponsorCategory', true)}
+                        className="text-xs print:hidden -mt-1"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add Sponsor Category
+                      </Button>
+                    </div>
                   )}
                 </div>
 
@@ -5000,7 +5002,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       </div>
                       {/* Sponsor Category - with remove button */}
                       {cardData.showSponsorCategory !== false ? (
-                        <div className="relative group flex items-center gap-1 -mt-1">
+                        <div className="relative group flex items-center gap-1 -mt-1 h-[28px] overflow-visible">
                           <div
                             contentEditable
                             suppressContentEditableWarning
@@ -5022,16 +5024,18 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           </button>
                         </div>
                       ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateField('showSponsorCategory', true)}
-                          className="text-xs print:hidden ignore-print -mt-1"
-                          data-testid="btn-add-sponsor"
-                        >
-                          <Plus className="w-3 h-3 mr-1" />
-                          Add Sponsor Category
-                        </Button>
+                        <div className="h-[28px] flex items-center ignore-print">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateField('showSponsorCategory', true)}
+                            className="text-xs print:hidden -mt-1"
+                            data-testid="btn-add-sponsor"
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Add Sponsor Category
+                          </Button>
+                        </div>
                       )}
                     </div>
 
