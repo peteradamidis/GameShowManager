@@ -1,4 +1,5 @@
 import PDFDocument from "pdfkit";
+import { PDFDocument as PDFLib } from "pdf-lib";
 import type { Response } from "express";
 import path from "path";
 import fs from "fs";
@@ -67,6 +68,7 @@ function addCoverPage(doc: PDFKit.PDFDocument) {
 function addHeader(doc: PDFKit.PDFDocument, title: string, level: number = 1) {
   if (level === 1) {
     doc.addPage();
+    trackPage(doc);
     doc.rect(0, 0, doc.page.width, 80).fill(COLORS.primary);
     doc.rect(0, 80, doc.page.width, 3).fill(COLORS.accent);
     doc.fill(COLORS.white)
@@ -75,7 +77,7 @@ function addHeader(doc: PDFKit.PDFDocument, title: string, level: number = 1) {
       .text(title, 50, 28, { width: doc.page.width - 100 });
     doc.y = 105;
   } else if (level === 2) {
-    if (doc.y > 640) doc.addPage();
+    if (doc.y + 40 > doc.page.height - 60) { doc.addPage(); trackPage(doc); }
     doc.moveDown(0.8);
     doc.fill(COLORS.subheading)
       .fontSize(15)
@@ -84,7 +86,7 @@ function addHeader(doc: PDFKit.PDFDocument, title: string, level: number = 1) {
     doc.moveTo(50, doc.y + 2).lineTo(250, doc.y + 2).lineWidth(1).stroke(COLORS.accent);
     doc.moveDown(0.4);
   } else {
-    if (doc.y > 660) doc.addPage();
+    if (doc.y + 30 > doc.page.height - 60) { doc.addPage(); trackPage(doc); }
     doc.moveDown(0.5);
     doc.fill(COLORS.secondary)
       .fontSize(12)
@@ -94,20 +96,40 @@ function addHeader(doc: PDFKit.PDFDocument, title: string, level: number = 1) {
   }
 }
 
+const contentPageSet = new Set<number>();
+
+function trackPage(doc: PDFKit.PDFDocument) {
+  contentPageSet.add(doc.bufferedPageRange().count - 1);
+}
+
+function ensureSpace(doc: PDFKit.PDFDocument, neededHeight: number) {
+  if (doc.y + neededHeight > doc.page.height - 60) {
+    doc.addPage();
+    trackPage(doc);
+  }
+}
+
 function addParagraph(doc: PDFKit.PDFDocument, text: string) {
-  if (doc.y > 680) doc.addPage();
+  doc.fontSize(10).font("Helvetica");
+  const textWidth = doc.page.width - 100;
+  const textHeight = doc.heightOfString(text, { width: textWidth, lineGap: 3 });
+  ensureSpace(doc, textHeight + 10);
   doc.fill(COLORS.text)
     .fontSize(10)
     .font("Helvetica")
-    .text(text, 50, undefined, { width: doc.page.width - 100, lineGap: 3 });
+    .text(text, 50, undefined, { width: textWidth, lineGap: 3 });
   doc.moveDown(0.4);
 }
 
 function addBulletList(doc: PDFKit.PDFDocument, items: string[]) {
   items.forEach((item) => {
-    if (doc.y > 690) doc.addPage();
-    doc.fill(COLORS.accent).fontSize(10).font("Helvetica").text("\u2022  ", 60, undefined, { continued: true });
-    doc.fill(COLORS.text).font("Helvetica").text(item, { width: doc.page.width - 130, lineGap: 2 });
+    const bulletText = "\u2022  " + item;
+    doc.fontSize(10).font("Helvetica");
+    const itemHeight = doc.heightOfString(bulletText, { width: doc.page.width - 120, lineGap: 2 });
+    ensureSpace(doc, itemHeight + 5);
+    const bulletY = doc.y;
+    doc.fill(COLORS.accent).fontSize(10).font("Helvetica").text("\u2022", 60, bulletY);
+    doc.fill(COLORS.text).font("Helvetica").text(item, 75, bulletY, { width: doc.page.width - 140, lineGap: 2 });
     doc.moveDown(0.15);
   });
   doc.moveDown(0.3);
@@ -115,35 +137,40 @@ function addBulletList(doc: PDFKit.PDFDocument, items: string[]) {
 
 function addNumberedList(doc: PDFKit.PDFDocument, items: string[]) {
   items.forEach((item, idx) => {
-    if (doc.y > 690) doc.addPage();
-    doc.fill(COLORS.subheading).fontSize(10).font("Helvetica-Bold").text(`${idx + 1}.  `, 60, undefined, { continued: true });
-    doc.fill(COLORS.text).font("Helvetica").text(item, { width: doc.page.width - 130, lineGap: 2 });
+    const numText = `${idx + 1}.  ${item}`;
+    doc.fontSize(10).font("Helvetica");
+    const itemHeight = doc.heightOfString(numText, { width: doc.page.width - 120, lineGap: 2 });
+    ensureSpace(doc, itemHeight + 5);
+    const numY = doc.y;
+    doc.fill(COLORS.subheading).fontSize(10).font("Helvetica-Bold").text(`${idx + 1}.`, 60, numY);
+    doc.fill(COLORS.text).font("Helvetica").text(item, 75, numY, { width: doc.page.width - 140, lineGap: 2 });
     doc.moveDown(0.15);
   });
   doc.moveDown(0.3);
 }
 
 function addCalloutBox(doc: PDFKit.PDFDocument, label: string, text: string, bgColor: string, borderColor: string, labelColor: string) {
-  if (doc.y > 650) doc.addPage();
-  const startY = doc.y;
   const x = 50;
   const w = doc.page.width - 100;
+  const fullText = label + "  " + text;
+
+  doc.fontSize(9.5).font("Helvetica");
+  const textHeight = doc.heightOfString(fullText, { width: w - 28, lineGap: 2 });
+  const boxHeight = textHeight + 20;
+
+  ensureSpace(doc, boxHeight + 10);
+
+  const startY = doc.y;
 
   doc.save();
-  doc.rect(x + 4, startY, w - 4, 1000).fill(bgColor);
-  doc.fill(labelColor).fontSize(9).font("Helvetica-Bold").text(label, x + 14, startY + 8, { continued: true, width: w - 24 });
-  doc.fill(COLORS.text).font("Helvetica").fontSize(9.5).text("  " + text, { width: w - 28, lineGap: 2 });
-  const endY = doc.y + 8;
+  doc.rect(x + 4, startY, w - 4, boxHeight).fill(bgColor);
+  doc.rect(x, startY, 4, boxHeight).fill(borderColor);
   doc.restore();
 
-  doc.save();
-  doc.rect(x + 4, startY, w - 4, endY - startY).fill(bgColor);
-  doc.fill(labelColor).fontSize(9).font("Helvetica-Bold").text(label, x + 14, startY + 8, { continued: true, width: w - 24 });
-  doc.fill(COLORS.text).font("Helvetica").fontSize(9.5).text("  " + text, { width: w - 28, lineGap: 2 });
-  doc.rect(x, startY, 4, endY - startY).fill(borderColor);
-  doc.restore();
+  doc.fill(labelColor).fontSize(9).font("Helvetica-Bold").text(label + "  ", x + 14, startY + 8, { continued: true, width: w - 24 });
+  doc.fill(COLORS.text).font("Helvetica").fontSize(9.5).text(text, { width: w - 28, lineGap: 2 });
 
-  doc.y = endY + 6;
+  doc.y = startY + boxHeight + 6;
 }
 
 function addTip(doc: PDFKit.PDFDocument, text: string) {
@@ -163,13 +190,7 @@ function addScreenshot(doc: PDFKit.PDFDocument, filename: string, caption: strin
   if (!fs.existsSync(imgPath)) return;
 
   const maxWidth = doc.page.width - 120;
-  const maxHeight = 280;
-
-  if (doc.y > 420) doc.addPage();
-
-  doc.moveDown(0.3);
-  const imgX = 60;
-  const imgY = doc.y;
+  const maxHeight = 250;
 
   try {
     const imgBuffer = fs.readFileSync(imgPath);
@@ -182,10 +203,17 @@ function addScreenshot(doc: PDFKit.PDFDocument, filename: string, caption: strin
     const scale = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
     const displayWidth = imgWidth * scale;
     const displayHeight = imgHeight * scale;
+    const neededSpace = displayHeight + 30;
+
+    if (doc.y + neededSpace > doc.page.height - 60) { doc.addPage(); trackPage(doc); }
+
+    doc.moveDown(0.3);
+    const imgX = 60;
+    const imgY = doc.y;
 
     doc.image(imgPath, imgX, imgY, {
-      fit: [maxWidth, maxHeight],
-      align: "center",
+      width: displayWidth,
+      height: displayHeight,
     });
 
     doc.rect(imgX, imgY, displayWidth, displayHeight).lineWidth(0.5).stroke(COLORS.border);
@@ -203,14 +231,18 @@ function addScreenshot(doc: PDFKit.PDFDocument, filename: string, caption: strin
 }
 
 function addKeyboardShortcut(doc: PDFKit.PDFDocument, shortcut: string, description: string) {
-  if (doc.y > 700) doc.addPage();
-  doc.fill(COLORS.secondary).fontSize(9.5).font("Helvetica-Bold").text(shortcut, 70, undefined, { continued: true, width: 120 });
-  doc.fill(COLORS.text).font("Helvetica").text("  " + description, { width: doc.page.width - 200 });
+  doc.fontSize(9.5).font("Helvetica");
+  const h = doc.heightOfString(description, { width: doc.page.width - 200 });
+  ensureSpace(doc, h + 5);
+  const startY = doc.y;
+  doc.fill(COLORS.secondary).fontSize(9.5).font("Helvetica-Bold").text(shortcut, 70, startY, { width: 120 });
+  doc.fill(COLORS.text).font("Helvetica").text(description, 190, startY, { width: doc.page.width - 240 });
   doc.moveDown(0.1);
 }
 
 function addTableOfContents(doc: PDFKit.PDFDocument) {
   doc.addPage();
+  trackPage(doc);
   doc.fill(COLORS.primary).fontSize(24).font("Helvetica-Bold").text("Table of Contents", 50, 50);
   doc.moveTo(50, 80).lineTo(250, 80).lineWidth(2).stroke(COLORS.accent);
   doc.y = 100;
@@ -246,7 +278,7 @@ function addTableOfContents(doc: PDFKit.PDFDocument) {
   });
 }
 
-export function generateGuide(res: Response) {
+export async function generateGuide(res: Response) {
   const doc = new PDFDocument({
     size: "A4",
     margins: { top: 50, bottom: 50, left: 50, right: 50 },
@@ -260,11 +292,12 @@ export function generateGuide(res: Response) {
     autoFirstPage: false,
   });
 
-  res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", 'attachment; filename="DOND-System-Guide.pdf"');
-  doc.pipe(res);
+  const chunks: Buffer[] = [];
+  doc.on("data", (chunk: Buffer) => chunks.push(chunk));
 
+  contentPageSet.clear();
   doc.addPage();
+  trackPage(doc);
   addCoverPage(doc);
   addTableOfContents(doc);
 
@@ -1100,16 +1133,22 @@ export function generateGuide(res: Response) {
     "Search Highlight - Matching contestants are highlighted when using the seating chart search bar",
   ]);
 
-  // ───────────────── Footer on all pages ─────────────────
-  const pageCount = doc.bufferedPageRange().count;
-  for (let i = 0; i < pageCount; i++) {
+  // ───────────────── Footer on content pages only ─────────────────
+  const range = doc.bufferedPageRange();
+  const totalPages = range.count;
+  const realPageCount = contentPageSet.size;
+
+  let pageNum = 0;
+  for (let i = 0; i < totalPages; i++) {
+    if (!contentPageSet.has(i)) continue;
     doc.switchToPage(i);
-    if (i === 0) continue;
+    pageNum++;
+    if (pageNum === 1) continue;
     doc.fill(COLORS.lightText)
       .fontSize(7.5)
       .font("Helvetica")
       .text(
-        `Deal or No Deal - Contestant Management System Guide  |  Page ${i + 1} of ${pageCount}`,
+        `Deal or No Deal - Contestant Management System Guide  |  Page ${pageNum} of ${realPageCount}`,
         50,
         doc.page.height - 35,
         { width: doc.page.width - 100, align: "center" }
@@ -1117,4 +1156,53 @@ export function generateGuide(res: Response) {
   }
 
   doc.end();
+
+  // Wait for PDFKit to finish writing
+  await new Promise<void>((resolve) => doc.on("end", resolve));
+  const pdfKitBuffer = Buffer.concat(chunks);
+
+  // Post-process with pdf-lib to remove blank pages
+  try {
+    const pdfDoc = await PDFLib.load(pdfKitBuffer);
+    const pages = pdfDoc.getPages();
+    const pagesToRemove: number[] = [];
+
+    for (let i = pages.length - 1; i >= 0; i--) {
+      const page = pages[i];
+      const { Contents } = page.node.normalizedEntries();
+      if (!Contents || Contents.size() === 0) {
+        pagesToRemove.push(i);
+        continue;
+      }
+      let totalStreamSize = 0;
+      for (let j = 0; j < Contents.size(); j++) {
+        const ref = Contents.get(j);
+        const stream = pdfDoc.context.lookup(ref);
+        if (stream && typeof (stream as any).getContentsSize === 'function') {
+          totalStreamSize += (stream as any).getContentsSize();
+        } else if (stream && (stream as any).contents) {
+          totalStreamSize += (stream as any).contents.length;
+        }
+      }
+      if (totalStreamSize < 250 && i > 0) {
+        pagesToRemove.push(i);
+      }
+    }
+
+    for (const idx of pagesToRemove.sort((a, b) => b - a)) {
+      pdfDoc.removePage(idx);
+    }
+
+    const finalPdf = await pdfDoc.save();
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'attachment; filename="DOND-System-Guide.pdf"');
+    res.setHeader("Content-Length", finalPdf.length.toString());
+    res.end(Buffer.from(finalPdf));
+  } catch (err) {
+    console.error("PDF post-processing failed, sending original:", err);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'attachment; filename="DOND-System-Guide.pdf"');
+    res.setHeader("Content-Length", pdfKitBuffer.length.toString());
+    res.end(pdfKitBuffer);
+  }
 }
