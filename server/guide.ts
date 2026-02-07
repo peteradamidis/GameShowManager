@@ -1,5 +1,4 @@
 import PDFDocument from "pdfkit";
-import { PDFDocument as PDFLib } from "pdf-lib";
 import type { Response } from "express";
 import path from "path";
 import fs from "fs";
@@ -278,7 +277,7 @@ function addTableOfContents(doc: PDFKit.PDFDocument) {
   });
 }
 
-export async function generateGuide(res: Response) {
+export function generateGuide(res: Response) {
   const doc = new PDFDocument({
     size: "A4",
     margins: { top: 50, bottom: 50, left: 50, right: 50 },
@@ -292,8 +291,9 @@ export async function generateGuide(res: Response) {
     autoFirstPage: false,
   });
 
-  const chunks: Buffer[] = [];
-  doc.on("data", (chunk: Buffer) => chunks.push(chunk));
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", 'attachment; filename="DOND-System-Guide.pdf"');
+  doc.pipe(res);
 
   contentPageSet.clear();
   doc.addPage();
@@ -1133,22 +1133,17 @@ export async function generateGuide(res: Response) {
     "Search Highlight - Matching contestants are highlighted when using the seating chart search bar",
   ]);
 
-  // ───────────────── Footer on content pages only ─────────────────
+  // ───────────────── Footers ─────────────────
   const range = doc.bufferedPageRange();
   const totalPages = range.count;
-  const realPageCount = contentPageSet.size;
 
-  let pageNum = 0;
-  for (let i = 0; i < totalPages; i++) {
-    if (!contentPageSet.has(i)) continue;
+  for (let i = 1; i < totalPages; i++) {
     doc.switchToPage(i);
-    pageNum++;
-    if (pageNum === 1) continue;
     doc.fill(COLORS.lightText)
       .fontSize(7.5)
       .font("Helvetica")
       .text(
-        `Deal or No Deal - Contestant Management System Guide  |  Page ${pageNum} of ${realPageCount}`,
+        `Deal or No Deal - Contestant Management System Guide  |  Page ${i + 1} of ${totalPages}`,
         50,
         doc.page.height - 35,
         { width: doc.page.width - 100, align: "center" }
@@ -1156,53 +1151,4 @@ export async function generateGuide(res: Response) {
   }
 
   doc.end();
-
-  // Wait for PDFKit to finish writing
-  await new Promise<void>((resolve) => doc.on("end", resolve));
-  const pdfKitBuffer = Buffer.concat(chunks);
-
-  // Post-process with pdf-lib to remove blank pages
-  try {
-    const pdfDoc = await PDFLib.load(pdfKitBuffer);
-    const pages = pdfDoc.getPages();
-    const pagesToRemove: number[] = [];
-
-    for (let i = pages.length - 1; i >= 0; i--) {
-      const page = pages[i];
-      const { Contents } = page.node.normalizedEntries();
-      if (!Contents || Contents.size() === 0) {
-        pagesToRemove.push(i);
-        continue;
-      }
-      let totalStreamSize = 0;
-      for (let j = 0; j < Contents.size(); j++) {
-        const ref = Contents.get(j);
-        const stream = pdfDoc.context.lookup(ref);
-        if (stream && typeof (stream as any).getContentsSize === 'function') {
-          totalStreamSize += (stream as any).getContentsSize();
-        } else if (stream && (stream as any).contents) {
-          totalStreamSize += (stream as any).contents.length;
-        }
-      }
-      if (totalStreamSize < 250 && i > 0) {
-        pagesToRemove.push(i);
-      }
-    }
-
-    for (const idx of pagesToRemove.sort((a, b) => b - a)) {
-      pdfDoc.removePage(idx);
-    }
-
-    const finalPdf = await pdfDoc.save();
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", 'attachment; filename="DOND-System-Guide.pdf"');
-    res.setHeader("Content-Length", finalPdf.length.toString());
-    res.end(Buffer.from(finalPdf));
-  } catch (err) {
-    console.error("PDF post-processing failed, sending original:", err);
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", 'attachment; filename="DOND-System-Guide.pdf"');
-    res.setHeader("Content-Length", pdfKitBuffer.length.toString());
-    res.end(pdfKitBuffer);
-  }
 }
