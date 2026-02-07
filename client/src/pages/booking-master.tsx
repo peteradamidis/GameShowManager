@@ -1,3 +1,4 @@
+import { cn, getNextRecordDayId } from "@/lib/utils";
 import { useState, useRef, useEffect, Fragment, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -387,18 +388,19 @@ export default function BookingMaster() {
     queryKey: ["/api/record-days"],
   });
 
-  // Validate stored record day exists in available record days
+  // Validate stored record day exists in available record days or default to next day
   useEffect(() => {
-    if (recordDays.length > 0 && selectedRecordDay) {
-      const exists = recordDays.some(rd => rd.id === selectedRecordDay);
-      if (!exists) {
-        // Stored record day no longer exists, clear it
-        setSelectedRecordDay("");
-        try {
-          localStorage.removeItem(RECORD_DAY_STORAGE_KEY);
-        } catch (e) {
-          console.error("Failed to clear invalid record day:", e);
+    if (recordDays.length > 0) {
+      if (selectedRecordDay) {
+        const exists = recordDays.some(rd => rd.id === selectedRecordDay);
+        if (!exists) {
+          const nextDayId = getNextRecordDayId(recordDays);
+          if (nextDayId) setSelectedRecordDay(nextDayId);
         }
+      } else {
+        // No day selected yet, pick the next/upcoming day
+        const nextDayId = getNextRecordDayId(recordDays);
+        if (nextDayId) setSelectedRecordDay(nextDayId);
       }
     }
   }, [recordDays, selectedRecordDay]);

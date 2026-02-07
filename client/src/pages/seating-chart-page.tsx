@@ -1,3 +1,4 @@
+import { cn, getNextRecordDayId } from "@/lib/utils";
 import { SeatingChart } from "@/components/seating-chart";
 import { getDistanceFromDocklands } from "@/components/contestant-table";
 import { WinningMoneyModal } from "@/components/winning-money-modal";
@@ -475,12 +476,12 @@ export default function SeatingChartPage() {
 
   // Use selected ID or first available record day (and save to localStorage)
   const recordDayId = useMemo(() => {
-    // Priority: URL param > selected state > first available
+    // Priority: URL param > selected state > next/upcoming available
     if (urlRecordDayId) return urlRecordDayId;
     if (selectedRecordDayId && recordDays?.some((rd: any) => rd.id === selectedRecordDayId)) {
       return selectedRecordDayId;
     }
-    return recordDays?.[0]?.id || null;
+    return getNextRecordDayId(recordDays);
   }, [urlRecordDayId, selectedRecordDayId, recordDays]);
   
   // Persist selected record day to localStorage when it changes
