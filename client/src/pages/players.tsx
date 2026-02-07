@@ -4098,10 +4098,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 {/* Tagline - with position controls */}
                 {cardData.showTagline !== false ? (
                   <div 
-                    className="relative group"
+                    className="relative group bg-white"
                     style={{ 
                       marginTop: `${(cardData.taglineOffsetY || 0) - 15}px`,
-                      transition: 'margin-top 0.15s ease-out'
+                      transition: 'margin-top 0.15s ease-out',
+                      zIndex: 10,
+                      position: 'relative'
                     }}
                   >
                     <div className="flex items-center gap-2">
@@ -5042,10 +5044,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     {/* Tagline - with position controls */}
                     {cardData.showTagline !== false ? (
                       <div 
-                        className="relative group"
+                        className="relative group bg-white"
                         style={{ 
                           marginTop: `${(cardData.taglineOffsetY || 0) - 15}px`,
-                          transition: 'margin-top 0.15s ease-out'
+                          transition: 'margin-top 0.15s ease-out',
+                          zIndex: 10,
+                          position: 'relative'
                         }}
                       >
                         <div className="flex items-center gap-2">
