@@ -887,18 +887,32 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       // Insert bullet at line start
       const before = text.slice(0, lineStart);
       const after = text.slice(lineStart);
-      node.textContent = before + '• ' + after;
       
-      // Update the stored bodyText
+      // Instead of node.textContent, use document.execCommand if possible to preserve formatting,
+      // but execCommand is deprecated and unreliable with selection.
+      // A better way is to use a range to insert the text node to keep existing formatting in other nodes.
+      const bulletNode = document.createTextNode('• ');
+      const newRange = document.createRange();
+      newRange.setStart(node, lineStart);
+      newRange.collapse(true);
+      newRange.insertNode(bulletNode);
+
+      // Update the stored bodyText - use innerHTML to preserve formatting, 
+      // but the app seems to expect innerText for the database.
+      // However, innerText/textContent wipes out the HTML structure of contentEditable.
+      // We should update the field but the rendering relies on innerHTML/DOM state.
       updateField('bodyText', element.innerText || '');
       
       // Set cursor after the bullet
       setTimeout(() => {
-        const newRange = document.createRange();
-        newRange.setStart(node, lineStart + 2);
-        newRange.collapse(true);
-        selection.removeAllRanges();
-        selection.addRange(newRange);
+        const sel = window.getSelection();
+        if (sel) {
+          const resRange = document.createRange();
+          resRange.setStart(bulletNode, 2);
+          resRange.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(resRange);
+        }
       }, 0);
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       // Cursor might be in an empty line (after a <br>)
