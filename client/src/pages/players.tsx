@@ -7680,20 +7680,32 @@ export default function PlayersPage() {
             const compStartY = nameY + 58;
             ctx.fillStyle = '#888888';
             ctx.font = 'italic 11px Inter, Arial, sans-serif';
+            ctx.textAlign = 'center';
             ctx.fillText('Attending With:', x + CARD_WIDTH / 2, compStartY);
 
             const DISPLAY_COMP_PHOTO_SIZE = 80;
             const maxComps = Math.min(companionContestants.length, 3);
-            const totalCompWidth = maxComps * (DISPLAY_COMP_PHOTO_SIZE + 15); // Increased spacing
+            const totalCompWidth = maxComps * (DISPLAY_COMP_PHOTO_SIZE + 15);
             const compStartX = x + (CARD_WIDTH - totalCompWidth) / 2;
 
             for (let ci = 0; ci < maxComps; ci++) {
               const comp = companionContestants[ci];
               const cx = compStartX + ci * (DISPLAY_COMP_PHOTO_SIZE + 15);
-              const cy = compStartY + 25; // More space below "Attending With:" label
+              const cy = compStartY + 25;
 
+              // 1. Draw Name FIRST (background layer)
+              ctx.save();
+              ctx.fillStyle = '#000000'; 
+              ctx.font = 'bold 12px Inter, Arial, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'top';
+              const compName = `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
+              const nameYPos = cy + DISPLAY_COMP_PHOTO_SIZE + 6;
+              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, nameYPos, DISPLAY_COMP_PHOTO_SIZE + 30);
+              ctx.restore();
+
+              // 2. Draw Photo or Placeholder
               const compImg = await loadImage(comp.photoUrl || '');
-              
               if (compImg) {
                 ctx.save();
                 ctx.beginPath();
@@ -7720,14 +7732,12 @@ export default function PlayersPage() {
                 ctx.fillText(compInitials, cx + DISPLAY_COMP_PHOTO_SIZE / 2, cy + DISPLAY_COMP_PHOTO_SIZE / 2);
               }
 
-              // CRITICAL: Draw Companion Name AFTER photo block is completely finished
+              // 3. Draw Name AGAIN (top layer) to be absolutely sure
               ctx.save();
               ctx.fillStyle = '#000000'; 
               ctx.font = 'bold 12px Inter, Arial, sans-serif';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
-              const compName = `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
-              const nameYPos = cy + DISPLAY_COMP_PHOTO_SIZE + 6;
               ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, nameYPos, DISPLAY_COMP_PHOTO_SIZE + 30);
               ctx.restore();
             }
