@@ -1843,22 +1843,50 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           clonedDoc.querySelectorAll('.relative.group').forEach((el: Element) => {
             const htmlEl = el as HTMLElement;
             const computedStyle = window.getComputedStyle(htmlEl);
+            
+            // For print, we want to exactly replicate the visually perceived layout
+            // Get the bounding rect to find absolute positioning relative to parent if needed
+            const rect = htmlEl.getBoundingClientRect();
+            const parentRect = htmlEl.parentElement?.getBoundingClientRect() || { top: 0, left: 0 };
+            
             htmlEl.style.marginTop = computedStyle.marginTop;
             htmlEl.style.position = 'relative';
             htmlEl.style.display = 'block';
             htmlEl.style.width = '100%';
+            
+            // Force reset any vertical shifts caused by transitions or animations
+            htmlEl.style.transition = 'none';
+            htmlEl.style.transform = 'none';
+            
+            // Ensure no negative margins survive computed style capture without being explicit
+            if (parseInt(computedStyle.marginTop) < 0) {
+              htmlEl.style.marginTop = computedStyle.marginTop;
+            }
+            
+            // Specific fix for tagline overlapping: ensure it has height and clear background
+            if (htmlEl.innerHTML.includes('casting-card-tagline')) {
+              htmlEl.style.minHeight = computedStyle.height;
+              htmlEl.style.backgroundColor = 'white';
+            }
           });
 
-          // Ensure age/state line has correct spacing
-          const ageStateEl = clonedDoc.querySelector('[data-field="ageState"]')?.parentElement;
-          if (ageStateEl) {
-            (ageStateEl as HTMLElement).style.marginBottom = '4px';
-          }
+          // Ensure the occupation field doesn't have extra padding/margin in print
+          clonedDoc.querySelectorAll('[data-field="occupation"]').forEach((el: Element) => {
+            const htmlEl = el as HTMLElement;
+            htmlEl.style.lineHeight = '1.2';
+            htmlEl.style.paddingTop = '0';
+            htmlEl.style.paddingBottom = '0';
+          });
 
           // Walk through all elements and remove any inline styles with color() function
           const allElements = clonedDoc.querySelectorAll('*');
           allElements.forEach((el: Element) => {
             const htmlEl = el as HTMLElement;
+            // Force reset any lingering line-height or transform issues
+            if (htmlEl.classList.contains('casting-card-tagline') || htmlEl.classList.contains('casting-card-sponsor')) {
+               htmlEl.style.lineHeight = '1';
+               htmlEl.style.transform = 'none';
+            }
             if (htmlEl.style) {
               const cssText = htmlEl.style.cssText;
               if (cssText && (cssText.includes('color(') || cssText.includes('oklch') || cssText.includes('oklab'))) {
@@ -2248,22 +2276,50 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           clonedDoc.querySelectorAll('.relative.group').forEach((el: Element) => {
             const htmlEl = el as HTMLElement;
             const computedStyle = window.getComputedStyle(htmlEl);
+            
+            // For print, we want to exactly replicate the visually perceived layout
+            // Get the bounding rect to find absolute positioning relative to parent if needed
+            const rect = htmlEl.getBoundingClientRect();
+            const parentRect = htmlEl.parentElement?.getBoundingClientRect() || { top: 0, left: 0 };
+            
             htmlEl.style.marginTop = computedStyle.marginTop;
             htmlEl.style.position = 'relative';
             htmlEl.style.display = 'block';
             htmlEl.style.width = '100%';
+            
+            // Force reset any vertical shifts caused by transitions or animations
+            htmlEl.style.transition = 'none';
+            htmlEl.style.transform = 'none';
+            
+            // Ensure no negative margins survive computed style capture without being explicit
+            if (parseInt(computedStyle.marginTop) < 0) {
+              htmlEl.style.marginTop = computedStyle.marginTop;
+            }
+            
+            // Specific fix for tagline overlapping: ensure it has height and clear background
+            if (htmlEl.innerHTML.includes('casting-card-tagline')) {
+              htmlEl.style.minHeight = computedStyle.height;
+              htmlEl.style.backgroundColor = 'white';
+            }
           });
 
-          // Ensure age/state line has correct spacing
-          const ageStateEl = clonedDoc.querySelector('[data-field="ageState"]')?.parentElement;
-          if (ageStateEl) {
-            (ageStateEl as HTMLElement).style.marginBottom = '4px';
-          }
+          // Ensure the occupation field doesn't have extra padding/margin in print
+          clonedDoc.querySelectorAll('[data-field="occupation"]').forEach((el: Element) => {
+            const htmlEl = el as HTMLElement;
+            htmlEl.style.lineHeight = '1.2';
+            htmlEl.style.paddingTop = '0';
+            htmlEl.style.paddingBottom = '0';
+          });
 
           // Walk through all elements and remove any inline styles with color() function
           const allElements = clonedDoc.querySelectorAll('*');
           allElements.forEach((el: Element) => {
             const htmlEl = el as HTMLElement;
+            // Force reset any lingering line-height or transform issues
+            if (htmlEl.classList.contains('casting-card-tagline') || htmlEl.classList.contains('casting-card-sponsor')) {
+               htmlEl.style.lineHeight = '1';
+               htmlEl.style.transform = 'none';
+            }
             if (htmlEl.style) {
               const cssText = htmlEl.style.cssText;
               if (cssText && (cssText.includes('color(') || cssText.includes('oklch') || cssText.includes('oklab'))) {
