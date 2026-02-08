@@ -7720,15 +7720,16 @@ export default function PlayersPage() {
                 ctx.fillText(compInitials, cx + DISPLAY_COMP_PHOTO_SIZE / 2, cy + DISPLAY_COMP_PHOTO_SIZE / 2);
               }
 
-              // Draw Companion Name FARTHER below photo to prevent clipping or overlay issues
+              // CRITICAL: Draw Companion Name AFTER photo block is completely finished
+              ctx.save();
               ctx.fillStyle = '#000000'; 
               ctx.font = 'bold 12px Inter, Arial, sans-serif';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
               const compName = `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
-              
-              const nameYPos = cy + DISPLAY_COMP_PHOTO_SIZE + 8;
-              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, nameYPos, DISPLAY_COMP_PHOTO_SIZE + 20);
+              const nameYPos = cy + DISPLAY_COMP_PHOTO_SIZE + 6;
+              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, nameYPos, DISPLAY_COMP_PHOTO_SIZE + 30);
+              ctx.restore();
             }
           } else if (attendingWith && attendingWith.toLowerCase() !== 'solo' && attendingWith.toLowerCase() !== 'flying solo') {
             const compStartY = nameY + 58;
