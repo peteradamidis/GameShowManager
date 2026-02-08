@@ -7738,7 +7738,7 @@ export default function PlayersPage() {
       if (backups.length > 0) {
         finalCanvas = await drawHeadshotPage(
           backups,
-          `Backups - ${dayLabel}`,
+          `B - ${dayLabel}`,
           '',
           finalCanvas
         );
