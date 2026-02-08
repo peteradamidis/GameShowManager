@@ -7693,15 +7693,6 @@ export default function PlayersPage() {
               const cy = compStartY + 16;
 
               const compImg = await loadImage(comp.photoUrl || '');
-              
-              // Draw Companion Name FIRST so it's always there
-              ctx.fillStyle = '#1a1a1a'; // Darker for visibility
-              ctx.font = 'bold 10px Inter, Arial, sans-serif';
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'top';
-              const compName = `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
-              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, cy + DISPLAY_COMP_PHOTO_SIZE + 4, DISPLAY_COMP_PHOTO_SIZE + 10);
-
               if (compImg) {
                 ctx.save();
                 ctx.beginPath();
@@ -7727,6 +7718,14 @@ export default function PlayersPage() {
                 const compInitials = `${comp.firstName?.charAt(0) || ''}${comp.lastName?.charAt(0) || ''}`.toUpperCase();
                 ctx.fillText(compInitials, cx + DISPLAY_COMP_PHOTO_SIZE / 2, cy + DISPLAY_COMP_PHOTO_SIZE / 2);
               }
+
+              // Draw Companion Name AFTER photo to ensure it's on top and positioned correctly
+              ctx.fillStyle = '#1a1a1a'; // Darker for visibility
+              ctx.font = 'bold 10px Inter, Arial, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'top';
+              const compName = `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
+              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, cy + DISPLAY_COMP_PHOTO_SIZE + 4, DISPLAY_COMP_PHOTO_SIZE + 10);
             }
           } else if (attendingWith && attendingWith.toLowerCase() !== 'solo' && attendingWith.toLowerCase() !== 'flying solo') {
             const compStartY = nameY + 58;
