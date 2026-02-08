@@ -7720,7 +7720,7 @@ export default function PlayersPage() {
               }
 
               ctx.fillStyle = '#666666';
-              ctx.font = '10px Inter, Arial, sans-serif';
+              ctx.font = 'bold 10px Inter, Arial, sans-serif'; // Made bold for visibility
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
               const compName = `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
@@ -7728,8 +7728,8 @@ export default function PlayersPage() {
             }
           } else if (attendingWith && attendingWith.toLowerCase() !== 'solo' && attendingWith.toLowerCase() !== 'flying solo') {
             const compStartY = nameY + 58;
-            ctx.fillStyle = '#888888';
-            ctx.font = 'italic 11px Inter, Arial, sans-serif';
+            ctx.fillStyle = '#1a1a1a'; // Changed to darker color for visibility
+            ctx.font = 'bold 11px Inter, Arial, sans-serif'; // Made bold and slightly larger
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
             const names = attendingWith.split(/[,\n]+/).map(n => n.trim()).filter(n => n && n.toLowerCase() !== 'solo' && n.toLowerCase() !== 'flying solo' && n.toLowerCase() !== fullName.toLowerCase());
