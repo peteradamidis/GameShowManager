@@ -1817,10 +1817,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             }
           });
           
-          // Hide all elements with ignore-print class
+          // Hide all elements with ignore-print class using visibility:hidden
+          // so they still occupy their layout space (prevents content shifting)
           const ignorePrintElements = clonedDoc.querySelectorAll('.ignore-print');
           ignorePrintElements.forEach((el: Element) => {
-            (el as HTMLElement).style.display = 'none';
+            (el as HTMLElement).style.visibility = 'hidden';
+          });
+
+          // Also hide print-hidden elements with visibility
+          clonedDoc.querySelectorAll('.print-hidden').forEach((el: Element) => {
+            (el as HTMLElement).style.visibility = 'hidden';
           });
           
           // Remove border from body text and fix line spacing for print
@@ -1838,55 +1844,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (cardPreview as HTMLElement).style.border = 'none';
             (cardPreview as HTMLElement).style.boxShadow = 'none';
           }
-          
-          // Fix any elements with dynamic margins that might render differently
-          clonedDoc.querySelectorAll('.relative.group').forEach((el: Element) => {
-            const htmlEl = el as HTMLElement;
-            const computedStyle = window.getComputedStyle(htmlEl);
-            
-            // For print, we want to exactly replicate the visually perceived layout
-            // Get the bounding rect to find absolute positioning relative to parent if needed
-            const rect = htmlEl.getBoundingClientRect();
-            const parentRect = htmlEl.parentElement?.getBoundingClientRect() || { top: 0, left: 0 };
-            
-            htmlEl.style.marginTop = computedStyle.marginTop;
-            htmlEl.style.position = 'relative';
-            htmlEl.style.display = 'block';
-            htmlEl.style.width = '100%';
-            
-            // Force reset any vertical shifts caused by transitions or animations
-            htmlEl.style.transition = 'none';
-            htmlEl.style.transform = 'none';
-            
-            // Ensure no negative margins survive computed style capture without being explicit
-            if (parseInt(computedStyle.marginTop) < 0) {
-              htmlEl.style.marginTop = computedStyle.marginTop;
-            }
-            
-            // Specific fix for tagline overlapping: ensure it has height and clear background
-            if (htmlEl.innerHTML.includes('casting-card-tagline')) {
-              htmlEl.style.minHeight = computedStyle.height;
-              htmlEl.style.backgroundColor = 'white';
-            }
-          });
 
-          // Ensure the occupation field doesn't have extra padding/margin in print
-          clonedDoc.querySelectorAll('[data-field="occupation"]').forEach((el: Element) => {
+          // Remove all CSS transitions to prevent mid-animation capture
+          clonedDoc.querySelectorAll('*').forEach((el: Element) => {
             const htmlEl = el as HTMLElement;
-            htmlEl.style.lineHeight = '1.2';
-            htmlEl.style.paddingTop = '0';
-            htmlEl.style.paddingBottom = '0';
+            htmlEl.style.transition = 'none';
           });
 
           // Walk through all elements and remove any inline styles with color() function
           const allElements = clonedDoc.querySelectorAll('*');
           allElements.forEach((el: Element) => {
             const htmlEl = el as HTMLElement;
-            // Force reset any lingering line-height or transform issues
-            if (htmlEl.classList.contains('casting-card-tagline') || htmlEl.classList.contains('casting-card-sponsor')) {
-               htmlEl.style.lineHeight = '1';
-               htmlEl.style.transform = 'none';
-            }
             if (htmlEl.style) {
               const cssText = htmlEl.style.cssText;
               if (cssText && (cssText.includes('color(') || cssText.includes('oklch') || cssText.includes('oklab'))) {
@@ -2250,10 +2218,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             }
           });
           
-          // Hide all elements with ignore-print class
+          // Hide all elements with ignore-print class using visibility:hidden
+          // so they still occupy their layout space (prevents content shifting)
           const ignorePrintElements = clonedDoc.querySelectorAll('.ignore-print');
           ignorePrintElements.forEach((el: Element) => {
-            (el as HTMLElement).style.display = 'none';
+            (el as HTMLElement).style.visibility = 'hidden';
+          });
+
+          // Also hide print-hidden elements with visibility
+          clonedDoc.querySelectorAll('.print-hidden').forEach((el: Element) => {
+            (el as HTMLElement).style.visibility = 'hidden';
           });
           
           // Remove border from body text and fix line spacing for print
@@ -2271,55 +2245,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (cardPreview as HTMLElement).style.border = 'none';
             (cardPreview as HTMLElement).style.boxShadow = 'none';
           }
-          
-          // Fix any elements with dynamic margins that might render differently
-          clonedDoc.querySelectorAll('.relative.group').forEach((el: Element) => {
-            const htmlEl = el as HTMLElement;
-            const computedStyle = window.getComputedStyle(htmlEl);
-            
-            // For print, we want to exactly replicate the visually perceived layout
-            // Get the bounding rect to find absolute positioning relative to parent if needed
-            const rect = htmlEl.getBoundingClientRect();
-            const parentRect = htmlEl.parentElement?.getBoundingClientRect() || { top: 0, left: 0 };
-            
-            htmlEl.style.marginTop = computedStyle.marginTop;
-            htmlEl.style.position = 'relative';
-            htmlEl.style.display = 'block';
-            htmlEl.style.width = '100%';
-            
-            // Force reset any vertical shifts caused by transitions or animations
-            htmlEl.style.transition = 'none';
-            htmlEl.style.transform = 'none';
-            
-            // Ensure no negative margins survive computed style capture without being explicit
-            if (parseInt(computedStyle.marginTop) < 0) {
-              htmlEl.style.marginTop = computedStyle.marginTop;
-            }
-            
-            // Specific fix for tagline overlapping: ensure it has height and clear background
-            if (htmlEl.innerHTML.includes('casting-card-tagline')) {
-              htmlEl.style.minHeight = computedStyle.height;
-              htmlEl.style.backgroundColor = 'white';
-            }
-          });
 
-          // Ensure the occupation field doesn't have extra padding/margin in print
-          clonedDoc.querySelectorAll('[data-field="occupation"]').forEach((el: Element) => {
+          // Remove all CSS transitions to prevent mid-animation capture
+          clonedDoc.querySelectorAll('*').forEach((el: Element) => {
             const htmlEl = el as HTMLElement;
-            htmlEl.style.lineHeight = '1.2';
-            htmlEl.style.paddingTop = '0';
-            htmlEl.style.paddingBottom = '0';
+            htmlEl.style.transition = 'none';
           });
 
           // Walk through all elements and remove any inline styles with color() function
           const allElements = clonedDoc.querySelectorAll('*');
           allElements.forEach((el: Element) => {
             const htmlEl = el as HTMLElement;
-            // Force reset any lingering line-height or transform issues
-            if (htmlEl.classList.contains('casting-card-tagline') || htmlEl.classList.contains('casting-card-sponsor')) {
-               htmlEl.style.lineHeight = '1';
-               htmlEl.style.transform = 'none';
-            }
             if (htmlEl.style) {
               const cssText = htmlEl.style.cssText;
               if (cssText && (cssText.includes('color(') || cssText.includes('oklch') || cssText.includes('oklab'))) {
@@ -4064,8 +4000,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div 
                         className="relative group flex items-center gap-1"
                         style={{ 
-                          marginTop: `${cardData.ageStateOffsetY || 0}px`,
-                          transition: 'margin-top 0.15s ease-out'
+                          marginTop: `${cardData.ageStateOffsetY || 0}px`
                         }}
                       >
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
@@ -4187,10 +4122,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <div 
                     className="relative group"
                     style={{ 
-                      marginTop: `${(cardData.taglineOffsetY || 0) - 15}px`,
-                      zIndex: 10,
-                      position: 'relative',
-                      background: 'white'
+                      marginTop: `${(cardData.taglineOffsetY || 0) - 15}px`
                     }}
                   >
                     <div className="flex items-center gap-2">
@@ -4246,8 +4178,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 <div 
                   className="relative group"
                   style={{ 
-                    marginTop: `${cardData.bodyOffsetY || 0}px`,
-                    transition: 'margin-top 0.15s ease-out'
+                    marginTop: `${cardData.bodyOffsetY || 0}px`
                   }}
                 >
                   <div className="flex items-start gap-2">
@@ -5002,8 +4933,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div 
                         className="relative group flex items-center gap-1"
                         style={{ 
-                          marginTop: `${cardData.ageStateOffsetY || 0}px`,
-                          transition: 'margin-top 0.15s ease-out'
+                          marginTop: `${cardData.ageStateOffsetY || 0}px`
                         }}
                       >
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
@@ -5132,11 +5062,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div 
                         className="relative group"
                         style={{ 
-                          marginTop: `${(cardData.taglineOffsetY || 0) - 15}px`,
-                          transition: 'margin-top 0.15s ease-out',
-                          zIndex: 10,
-                          position: 'relative',
-                          background: 'white'
+                          marginTop: `${(cardData.taglineOffsetY || 0) - 15}px`
                         }}
                       >
                         <div className="flex items-center gap-2">
@@ -5197,7 +5123,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       className="relative flex-1 group"
                       style={{ 
                         marginTop: `${cardData.bodyOffsetY || 0}px`,
-                        transition: 'margin-top 0.15s ease-out',
                         minHeight: '280px'
                       }}
                     >
