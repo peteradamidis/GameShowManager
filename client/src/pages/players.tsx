@@ -4048,7 +4048,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div 
                         className="relative group flex items-center gap-1"
                         style={{ 
-                          marginTop: `${cardData.occupationOffsetY || 0}px`
+                          marginTop: `${(cardData.occupationOffsetY || 0) + 10}px`,
+                          marginBottom: '10px'
                         }}
                       >
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
@@ -4136,7 +4137,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <div 
                     className="relative group"
                     style={{ 
-                      marginTop: `${(cardData.taglineOffsetY || 0) - 15}px`
+                      marginTop: `${(cardData.taglineOffsetY || 0) + 15}px` // Increased default gap
                     }}
                   >
                     <div className="flex items-center gap-2">
@@ -4983,7 +4984,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div 
                         className="relative group flex items-center gap-1"
                         style={{ 
-                          marginTop: `${cardData.occupationOffsetY || 0}px`
+                          marginTop: `${(cardData.occupationOffsetY || 0) + 10}px`,
+                          marginBottom: '10px'
                         }}
                       >
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
