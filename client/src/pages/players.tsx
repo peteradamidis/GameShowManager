@@ -7693,6 +7693,10 @@ export default function PlayersPage() {
               const cy = compStartY + 16;
 
               const compImg = await loadImage(comp.photoUrl || '');
+              
+              // Draw Companion Name FIRST so it's always behind or at least at its own Y position
+              // But we will actually draw it AFTER the photo logic to be sure
+              
               if (compImg) {
                 ctx.save();
                 ctx.beginPath();
@@ -7720,12 +7724,16 @@ export default function PlayersPage() {
               }
 
               // Draw Companion Name AFTER photo to ensure it's on top and positioned correctly
-              ctx.fillStyle = '#1a1a1a'; // Darker for visibility
-              ctx.font = 'bold 10px Inter, Arial, sans-serif';
+              // We'll use a slightly larger font and ensure the color is dark
+              ctx.fillStyle = '#000000'; // Pure black for maximum contrast
+              ctx.font = 'bold 12px Inter, Arial, sans-serif'; // Increased font size from 10 to 12
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
               const compName = `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
-              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, cy + DISPLAY_COMP_PHOTO_SIZE + 4, DISPLAY_COMP_PHOTO_SIZE + 10);
+              
+              // Ensure we draw the name far enough below the photo
+              const nameYPos = cy + DISPLAY_COMP_PHOTO_SIZE + 6;
+              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, nameYPos, DISPLAY_COMP_PHOTO_SIZE + 20);
             }
           } else if (attendingWith && attendingWith.toLowerCase() !== 'solo' && attendingWith.toLowerCase() !== 'flying solo') {
             const compStartY = nameY + 58;
