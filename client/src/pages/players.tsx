@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown, AlertTriangle, RefreshCw, Undo2, Redo2, History, Eye, EyeOff, PanelTop, MessageSquare, Check } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown, AlertTriangle, RefreshCw, Undo2, Redo2, History, Eye, EyeOff, PanelTop, MessageSquare, Check, Camera } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -7495,6 +7495,248 @@ export default function PlayersPage() {
     }
   };
 
+  const [isGeneratingHeadshots, setIsGeneratingHeadshots] = useState(false);
+
+  const handleDownloadHeadshots = async () => {
+    if (players.length === 0 && backups.length === 0) {
+      toast({ title: "No data", description: "No contestants to generate headshots for", variant: "destructive" });
+      return;
+    }
+
+    setIsGeneratingHeadshots(true);
+    toast({ title: "Generating...", description: "Creating headshot sheets, please wait..." });
+
+    try {
+      const selectedDay = recordDays.find(d => d.id === selectedRecordDayId);
+      const dayLabel = selectedDay ? `${selectedDay.rxNumber}_${format(new Date(selectedDay.date), 'dd-MM-yyyy')}` : 'all';
+
+      const loadImage = (url: string): Promise<HTMLImageElement | null> => {
+        return new Promise((resolve) => {
+          if (!url) { resolve(null); return; }
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = url;
+        });
+      };
+
+      const findCompanionContestants = (attendingWith: string | null) => {
+        if (!attendingWith) return [];
+        const names = attendingWith.split(/[,\n]+/).map(n => n.trim()).filter(n => n && n.toLowerCase() !== 'solo' && n.toLowerCase() !== 'flying solo');
+        const matched: Contestant[] = [];
+        for (const name of names) {
+          const cleanName = name.replace(/\s*-\s*.*$/, '').replace(/\s*\(.*\)/, '').trim().toLowerCase();
+          if (!cleanName || cleanName.length < 3) continue;
+          const found = contestants.find(c => {
+            const fullName = `${c.firstName} ${c.lastName}`.toLowerCase();
+            return fullName === cleanName || c.name?.toLowerCase() === cleanName;
+          });
+          if (found) matched.push(found);
+        }
+        return matched;
+      };
+
+      const PHOTO_SIZE = 160;
+      const COMPANION_PHOTO_SIZE = 80;
+      const CARD_WIDTH = 280;
+      const CARD_HEIGHT = 320;
+      const COLS = 4;
+      const PADDING = 30;
+      const HEADER_HEIGHT = 60;
+      const PAGE_WIDTH = PADDING * 2 + COLS * CARD_WIDTH + (COLS - 1) * 15;
+
+      const drawHeadshotPage = async (
+        assignmentList: SeatAssignment[],
+        title: string,
+        filename: string
+      ) => {
+        if (assignmentList.length === 0) return;
+
+        const rows = Math.ceil(assignmentList.length / COLS);
+        const PAGE_HEIGHT = HEADER_HEIGHT + PADDING + rows * CARD_HEIGHT + (rows - 1) * 10 + PADDING;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = PAGE_WIDTH;
+        canvas.height = PAGE_HEIGHT;
+        const ctx = canvas.getContext('2d')!;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, PAGE_WIDTH, PAGE_HEIGHT);
+
+        ctx.fillStyle = '#1a1a1a';
+        ctx.font = 'bold 28px Inter, Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(title, PAGE_WIDTH / 2, 42);
+
+        for (let i = 0; i < assignmentList.length; i++) {
+          const a = assignmentList[i];
+          const c = a.contestant;
+          if (!c) continue;
+
+          const col = i % COLS;
+          const row = Math.floor(i / COLS);
+          const x = PADDING + col * (CARD_WIDTH + 15);
+          const y = HEADER_HEIGHT + PADDING + row * (CARD_HEIGHT + 10);
+
+          ctx.fillStyle = '#f8f8f8';
+          ctx.strokeStyle = '#e0e0e0';
+          ctx.lineWidth = 1;
+          const r = 8;
+          ctx.beginPath();
+          ctx.moveTo(x + r, y);
+          ctx.lineTo(x + CARD_WIDTH - r, y);
+          ctx.quadraticCurveTo(x + CARD_WIDTH, y, x + CARD_WIDTH, y + r);
+          ctx.lineTo(x + CARD_WIDTH, y + CARD_HEIGHT - r);
+          ctx.quadraticCurveTo(x + CARD_WIDTH, y + CARD_HEIGHT, x + CARD_WIDTH - r, y + CARD_HEIGHT);
+          ctx.lineTo(x + r, y + CARD_HEIGHT);
+          ctx.quadraticCurveTo(x, y + CARD_HEIGHT, x, y + CARD_HEIGHT - r);
+          ctx.lineTo(x, y + r);
+          ctx.quadraticCurveTo(x, y, x + r, y);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          const photoX = x + (CARD_WIDTH - PHOTO_SIZE) / 2;
+          const photoY = y + 12;
+          const mainImg = await loadImage(c.photoUrl || '');
+          if (mainImg) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(photoX + PHOTO_SIZE / 2, photoY + PHOTO_SIZE / 2, PHOTO_SIZE / 2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            const aspect = mainImg.width / mainImg.height;
+            let drawW = PHOTO_SIZE, drawH = PHOTO_SIZE;
+            if (aspect > 1) { drawW = PHOTO_SIZE * aspect; }
+            else { drawH = PHOTO_SIZE / aspect; }
+            ctx.drawImage(mainImg, photoX + (PHOTO_SIZE - drawW) / 2, photoY + (PHOTO_SIZE - drawH) / 2, drawW, drawH);
+            ctx.restore();
+          } else {
+            ctx.fillStyle = '#d1d5db';
+            ctx.beginPath();
+            ctx.arc(photoX + PHOTO_SIZE / 2, photoY + PHOTO_SIZE / 2, PHOTO_SIZE / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#6b7280';
+            ctx.font = 'bold 40px Inter, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const initials = `${c.firstName?.charAt(0) || ''}${c.lastName?.charAt(0) || ''}`.toUpperCase();
+            ctx.fillText(initials, photoX + PHOTO_SIZE / 2, photoY + PHOTO_SIZE / 2);
+          }
+
+          const nameY = photoY + PHOTO_SIZE + 20;
+          ctx.fillStyle = '#1a1a1a';
+          ctx.font = 'bold 16px Inter, Arial, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          const fullName = `${c.firstName} ${c.lastName}`.trim();
+          ctx.fillText(fullName, x + CARD_WIDTH / 2, nameY, CARD_WIDTH - 20);
+
+          ctx.fillStyle = '#555555';
+          ctx.font = '14px Inter, Arial, sans-serif';
+          const ageText = c.age ? `Age: ${c.age}` : '';
+          ctx.fillText(ageText, x + CARD_WIDTH / 2, nameY + 22, CARD_WIDTH - 20);
+
+          const blockSeat = `Block ${a.blockNumber} - Seat ${a.seatLabel}`;
+          ctx.fillStyle = '#777777';
+          ctx.font = '12px Inter, Arial, sans-serif';
+          ctx.fillText(blockSeat, x + CARD_WIDTH / 2, nameY + 40, CARD_WIDTH - 20);
+
+          const attendingWith = a.attendingWithOverride || c.attendingWith;
+          const companionContestants = findCompanionContestants(attendingWith);
+
+          if (companionContestants.length > 0) {
+            const compStartY = nameY + 58;
+            ctx.fillStyle = '#888888';
+            ctx.font = 'italic 11px Inter, Arial, sans-serif';
+            ctx.fillText('Attending With:', x + CARD_WIDTH / 2, compStartY);
+
+            const maxComps = Math.min(companionContestants.length, 3);
+            const totalCompWidth = maxComps * (COMPANION_PHOTO_SIZE + 8);
+            const compStartX = x + (CARD_WIDTH - totalCompWidth) / 2;
+
+            for (let ci = 0; ci < maxComps; ci++) {
+              const comp = companionContestants[ci];
+              const cx = compStartX + ci * (COMPANION_PHOTO_SIZE + 8);
+              const cy = compStartY + 16;
+
+              const compImg = await loadImage(comp.photoUrl || '');
+              if (compImg) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(cx + COMPANION_PHOTO_SIZE / 2, cy + COMPANION_PHOTO_SIZE / 2, COMPANION_PHOTO_SIZE / 2, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.clip();
+                const cAspect = compImg.width / compImg.height;
+                let cDrawW = COMPANION_PHOTO_SIZE, cDrawH = COMPANION_PHOTO_SIZE;
+                if (cAspect > 1) { cDrawW = COMPANION_PHOTO_SIZE * cAspect; }
+                else { cDrawH = COMPANION_PHOTO_SIZE / cAspect; }
+                ctx.drawImage(compImg, cx + (COMPANION_PHOTO_SIZE - cDrawW) / 2, cy + (COMPANION_PHOTO_SIZE - cDrawH) / 2, cDrawW, cDrawH);
+                ctx.restore();
+              } else {
+                ctx.fillStyle = '#e5e7eb';
+                ctx.beginPath();
+                ctx.arc(cx + COMPANION_PHOTO_SIZE / 2, cy + COMPANION_PHOTO_SIZE / 2, COMPANION_PHOTO_SIZE / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#9ca3af';
+                ctx.font = 'bold 20px Inter, Arial, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const compInitials = `${comp.firstName?.charAt(0) || ''}${comp.lastName?.charAt(0) || ''}`.toUpperCase();
+                ctx.fillText(compInitials, cx + COMPANION_PHOTO_SIZE / 2, cy + COMPANION_PHOTO_SIZE / 2);
+              }
+
+              ctx.fillStyle = '#666666';
+              ctx.font = '10px Inter, Arial, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'top';
+              const compName = `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
+              ctx.fillText(compName, cx + COMPANION_PHOTO_SIZE / 2, cy + COMPANION_PHOTO_SIZE + 4, COMPANION_PHOTO_SIZE + 10);
+            }
+          } else if (attendingWith && attendingWith.toLowerCase() !== 'solo' && attendingWith.toLowerCase() !== 'flying solo') {
+            const compStartY = nameY + 58;
+            ctx.fillStyle = '#888888';
+            ctx.font = 'italic 11px Inter, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            const truncated = attendingWith.length > 40 ? attendingWith.substring(0, 37) + '...' : attendingWith;
+            ctx.fillText(`With: ${truncated}`, x + CARD_WIDTH / 2, compStartY, CARD_WIDTH - 20);
+          }
+        }
+
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/jpeg', 0.92);
+        link.click();
+      };
+
+      if (players.length > 0) {
+        await drawHeadshotPage(
+          players,
+          `Players - ${dayLabel}`,
+          `headshots_players_${dayLabel}.jpg`
+        );
+      }
+
+      if (backups.length > 0) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await drawHeadshotPage(
+          backups,
+          `Backups - ${dayLabel}`,
+          `headshots_backups_${dayLabel}.jpg`
+        );
+      }
+
+      toast({ title: "Downloaded", description: `Headshot sheets generated successfully` });
+    } catch (error) {
+      console.error('Headshot generation error:', error);
+      toast({ title: "Error", description: "Failed to generate headshot sheets", variant: "destructive" });
+    } finally {
+      setIsGeneratingHeadshots(false);
+    }
+  };
+
   const toggleCallMutation = useMutation({
     mutationFn: async ({ assignmentId, called }: { assignmentId: string; called: boolean }) => {
       const response = await apiRequest('PATCH', `/api/seat-assignments/${assignmentId}/workflow`, {
@@ -7822,6 +8064,16 @@ export default function PlayersPage() {
                   ))}
                 </SelectContent>
               </Select>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleDownloadHeadshots}
+                disabled={(players.length === 0 && backups.length === 0) || isGeneratingHeadshots}
+                data-testid="button-download-headshots"
+              >
+                <Camera className="h-4 w-4 mr-2" />
+                {isGeneratingHeadshots ? 'Generating...' : 'Headshots'}
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
