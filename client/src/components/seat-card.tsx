@@ -755,17 +755,25 @@ export function SeatCard({
                             {contestantDetails.auditionRating}
                           </span>
                           {onRatingChange && seat.contestantId && (
-                            <DropdownMenu>
+                            <DropdownMenu modal={false}>
                               <DropdownMenuTrigger asChild>
                                 <button
                                   className="p-0.5 rounded hover:bg-muted/50 transition-colors opacity-40 hover:opacity-100"
-                                  onClick={(e) => e.stopPropagation()}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
                                   data-testid={`button-edit-rating-${seat.contestantId}`}
                                 >
                                   <Edit2 className="w-2.5 h-2.5 text-muted-foreground" />
                                 </button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="min-w-0">
+                              <DropdownMenuContent 
+                                align="end" 
+                                className="min-w-0 z-[11000]"
+                                onPointerDownOutside={(e) => e.preventDefault()}
+                                onCloseAutoFocus={(e) => e.preventDefault()}
+                              >
                                 <div className="flex flex-wrap gap-1 p-1">
                                   {['A+', 'A', 'P', 'B+', 'B', 'C'].map((rating) => {
                                     const isSelected = contestantDetails?.auditionRating === rating;
