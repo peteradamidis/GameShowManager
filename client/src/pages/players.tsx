@@ -7544,7 +7544,7 @@ export default function PlayersPage() {
       const PHOTO_SIZE = 160;
       const COMPANION_PHOTO_SIZE = 80;
       const CARD_WIDTH = 280;
-      const CARD_HEIGHT = 320;
+      const CARD_HEIGHT = 380; // Increased to prevent overlap
       const COLS = 4;
       const PADDING = 30;
       const HEADER_HEIGHT = 60;
@@ -7553,14 +7553,12 @@ export default function PlayersPage() {
       const drawHeadshotPage = async (
         assignmentList: SeatAssignment[],
         title: string,
-        filename: string,
-        existingCanvas?: HTMLCanvasElement
+        filename: string
       ) => {
-        if (assignmentList.length === 0) return existingCanvas;
+        if (assignmentList.length === 0) return;
 
         const rows = Math.ceil(assignmentList.length / COLS);
-        const sectionHeight = HEADER_HEIGHT + PADDING + rows * CARD_HEIGHT + (rows - 1) * 10 + PADDING;
-        const totalHeight = (existingCanvas?.height || 0) + sectionHeight;
+        const totalHeight = HEADER_HEIGHT + PADDING + rows * CARD_HEIGHT + (rows - 1) * 10 + PADDING;
 
         const canvas = document.createElement('canvas');
         canvas.width = PAGE_WIDTH;
@@ -7570,16 +7568,10 @@ export default function PlayersPage() {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, PAGE_WIDTH, totalHeight);
 
-        let currentY = 0;
-        if (existingCanvas) {
-          ctx.drawImage(existingCanvas, 0, 0);
-          currentY = existingCanvas.height;
-        }
-
         ctx.fillStyle = '#1a1a1a';
         ctx.font = 'bold 28px Inter, Arial, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(title, PAGE_WIDTH / 2, currentY + 42);
+        ctx.fillText(title, PAGE_WIDTH / 2, 42);
 
         for (let i = 0; i < assignmentList.length; i++) {
           const a = assignmentList[i];
@@ -7589,7 +7581,7 @@ export default function PlayersPage() {
           const col = i % COLS;
           const row = Math.floor(i / COLS);
           const x = PADDING + col * (CARD_WIDTH + 15);
-          const y = currentY + HEADER_HEIGHT + PADDING + row * (CARD_HEIGHT + 10);
+          const y = HEADER_HEIGHT + PADDING + row * (CARD_HEIGHT + 10);
 
           ctx.fillStyle = '#f8f8f8';
           ctx.strokeStyle = '#e0e0e0';
@@ -7615,7 +7607,7 @@ export default function PlayersPage() {
           if (mainImg) {
             ctx.save();
             ctx.beginPath();
-            ctx.arc(photoX + PHOTO_SIZE / 2, photoY + PHOTO_SIZE / 2, PHOTO_SIZE / 2, 0, Math.PI * 2);
+            ctx.rect(photoX, photoY, PHOTO_SIZE, PHOTO_SIZE);
             ctx.closePath();
             ctx.clip();
             const aspect = mainImg.width / mainImg.height;
@@ -7624,11 +7616,13 @@ export default function PlayersPage() {
             else { drawH = PHOTO_SIZE / aspect; }
             ctx.drawImage(mainImg, photoX + (PHOTO_SIZE - drawW) / 2, photoY + (PHOTO_SIZE - drawH) / 2, drawW, drawH);
             ctx.restore();
+            // Optional: add a subtle border around the square photo
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(photoX, photoY, PHOTO_SIZE, PHOTO_SIZE);
           } else {
             ctx.fillStyle = '#d1d5db';
-            ctx.beginPath();
-            ctx.arc(photoX + PHOTO_SIZE / 2, photoY + PHOTO_SIZE / 2, PHOTO_SIZE / 2, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillRect(photoX, photoY, PHOTO_SIZE, PHOTO_SIZE);
             ctx.fillStyle = '#6b7280';
             ctx.font = 'bold 40px Inter, Arial, sans-serif';
             ctx.textAlign = 'center';
@@ -7677,7 +7671,7 @@ export default function PlayersPage() {
               if (compImg) {
                 ctx.save();
                 ctx.beginPath();
-                ctx.arc(cx + COMPANION_PHOTO_SIZE / 2, cy + COMPANION_PHOTO_SIZE / 2, COMPANION_PHOTO_SIZE / 2, 0, Math.PI * 2);
+                ctx.rect(cx, cy, COMPANION_PHOTO_SIZE, COMPANION_PHOTO_SIZE);
                 ctx.closePath();
                 ctx.clip();
                 const cAspect = compImg.width / compImg.height;
@@ -7686,11 +7680,12 @@ export default function PlayersPage() {
                 else { cDrawH = COMPANION_PHOTO_SIZE / cAspect; }
                 ctx.drawImage(compImg, cx + (COMPANION_PHOTO_SIZE - cDrawW) / 2, cy + (COMPANION_PHOTO_SIZE - cDrawH) / 2, cDrawW, cDrawH);
                 ctx.restore();
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(cx, cy, COMPANION_PHOTO_SIZE, COMPANION_PHOTO_SIZE);
               } else {
                 ctx.fillStyle = '#e5e7eb';
-                ctx.beginPath();
-                ctx.arc(cx + COMPANION_PHOTO_SIZE / 2, cy + COMPANION_PHOTO_SIZE / 2, COMPANION_PHOTO_SIZE / 2, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.fillRect(cx, cy, COMPANION_PHOTO_SIZE, COMPANION_PHOTO_SIZE);
                 ctx.fillStyle = '#9ca3af';
                 ctx.font = 'bold 20px Inter, Arial, sans-serif';
                 ctx.textAlign = 'center';
@@ -7721,37 +7716,30 @@ export default function PlayersPage() {
           }
         }
 
-        return canvas;
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/jpeg', 0.92);
+        link.click();
       };
 
-      let finalCanvas: HTMLCanvasElement | undefined;
-
       if (players.length > 0) {
-        finalCanvas = await drawHeadshotPage(
+        await drawHeadshotPage(
           players,
-          `Contestants - ${dayLabel}`,
-          '',
-          finalCanvas
+          `P - ${dayLabel}`,
+          `headshots_players_${dayLabel}.jpg`
         );
       }
 
       if (backups.length > 0) {
-        finalCanvas = await drawHeadshotPage(
+        if (players.length > 0) await new Promise(resolve => setTimeout(resolve, 500));
+        await drawHeadshotPage(
           backups,
           `B - ${dayLabel}`,
-          '',
-          finalCanvas
+          `headshots_backups_${dayLabel}.jpg`
         );
       }
 
-      if (finalCanvas) {
-        const link = document.createElement('a');
-        link.download = `headshots_${dayLabel}.jpg`;
-        link.href = finalCanvas.toDataURL('image/jpeg', 0.92);
-        link.click();
-      }
-
-      toast({ title: "Downloaded", description: `Headshot sheet generated successfully` });
+      toast({ title: "Downloaded", description: `Headshot sheets generated successfully` });
     } catch (error) {
       console.error('Headshot generation error:', error);
       toast({ title: "Error", description: "Failed to generate headshot sheets", variant: "destructive" });
