@@ -7291,7 +7291,22 @@ export default function PlayersPage() {
 
   useEffect(() => {
     if (!selectedRecordDayId && sortedRecordDays.length > 0) {
-      setSelectedRecordDayId(sortedRecordDays[0].id);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      
+      // Find first day that is today or in the future
+      const nextDay = sortedRecordDays.find(d => {
+        const dayDate = new Date(d.date);
+        dayDate.setHours(0, 0, 0, 0);
+        return dayDate.getTime() >= now.getTime();
+      });
+      
+      if (nextDay) {
+        setSelectedRecordDayId(nextDay.id);
+      } else {
+        // Fallback to the latest day if all are in the past
+        setSelectedRecordDayId(sortedRecordDays[sortedRecordDays.length - 1].id);
+      }
     }
   }, [sortedRecordDays, selectedRecordDayId]);
 
