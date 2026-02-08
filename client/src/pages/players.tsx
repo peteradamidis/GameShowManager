@@ -7712,12 +7712,12 @@ export default function PlayersPage() {
               // 1. Draw Name FIRST (background layer)
               ctx.save();
               ctx.fillStyle = '#000000'; 
-              ctx.font = 'bold 12px Inter, Arial, sans-serif';
+              ctx.font = 'bold 24px Inter, Arial, sans-serif'; // Dramatically increased font size for visibility
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
               const compName = `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
-              const nameYPos = cy + DISPLAY_COMP_PHOTO_SIZE + 6;
-              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, nameYPos, DISPLAY_COMP_PHOTO_SIZE + 30);
+              const nameYPos = cy + DISPLAY_COMP_PHOTO_SIZE + 15; // More vertical offset
+              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, nameYPos, DISPLAY_COMP_PHOTO_SIZE + 60);
               ctx.restore();
 
               // 2. Draw Photo or Placeholder
@@ -7748,16 +7748,13 @@ export default function PlayersPage() {
                 ctx.fillText(compInitials, cx + DISPLAY_COMP_PHOTO_SIZE / 2, cy + DISPLAY_COMP_PHOTO_SIZE / 2);
               }
 
-              // 3. Draw Name AGAIN (top layer) to be absolutely sure
+              // 3. Draw Name AGAIN (top layer) with even MORE visibility
               ctx.save();
               ctx.fillStyle = '#000000'; 
-              ctx.font = 'bold 12px Inter, Arial, sans-serif';
+              ctx.font = 'bold 24px Inter, Arial, sans-serif';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
-              // Ensure we draw the name far enough below the photo - added more space (12px instead of 6px)
-              // and ensured it's not being clipped by the card boundary
-              const finalNameYPos = cy + DISPLAY_COMP_PHOTO_SIZE + 12;
-              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, finalNameYPos, DISPLAY_COMP_PHOTO_SIZE + 40);
+              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, nameYPos, DISPLAY_COMP_PHOTO_SIZE + 60);
               ctx.restore();
             }
           } else if (attendingWith && attendingWith.toLowerCase() !== 'solo' && attendingWith.toLowerCase() !== 'flying solo') {
