@@ -7521,13 +7521,17 @@ export default function PlayersPage() {
         });
       };
 
-      const findCompanionContestants = (attendingWith: string | null) => {
+      const findCompanionContestants = (attendingWith: string | null, originalContestantName: string) => {
         if (!attendingWith) return [];
         const names = attendingWith.split(/[,\n]+/).map(n => n.trim()).filter(n => n && n.toLowerCase() !== 'solo' && n.toLowerCase() !== 'flying solo');
         const matched: Contestant[] = [];
         for (const name of names) {
           const cleanName = name.replace(/\s*-\s*.*$/, '').replace(/\s*\(.*\)/, '').trim().toLowerCase();
           if (!cleanName || cleanName.length < 3) continue;
+          
+          // Filter out the original contestant's name from companions
+          if (cleanName === originalContestantName.toLowerCase()) continue;
+
           const found = contestants.find(c => {
             const fullName = `${c.firstName} ${c.lastName}`.toLowerCase();
             return fullName === cleanName || c.name?.toLowerCase() === cleanName;
@@ -7549,25 +7553,33 @@ export default function PlayersPage() {
       const drawHeadshotPage = async (
         assignmentList: SeatAssignment[],
         title: string,
-        filename: string
+        filename: string,
+        existingCanvas?: HTMLCanvasElement
       ) => {
-        if (assignmentList.length === 0) return;
+        if (assignmentList.length === 0) return existingCanvas;
 
         const rows = Math.ceil(assignmentList.length / COLS);
-        const PAGE_HEIGHT = HEADER_HEIGHT + PADDING + rows * CARD_HEIGHT + (rows - 1) * 10 + PADDING;
+        const sectionHeight = HEADER_HEIGHT + PADDING + rows * CARD_HEIGHT + (rows - 1) * 10 + PADDING;
+        const totalHeight = (existingCanvas?.height || 0) + sectionHeight;
 
         const canvas = document.createElement('canvas');
         canvas.width = PAGE_WIDTH;
-        canvas.height = PAGE_HEIGHT;
+        canvas.height = totalHeight;
         const ctx = canvas.getContext('2d')!;
 
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, PAGE_WIDTH, PAGE_HEIGHT);
+        ctx.fillRect(0, 0, PAGE_WIDTH, totalHeight);
+
+        let currentY = 0;
+        if (existingCanvas) {
+          ctx.drawImage(existingCanvas, 0, 0);
+          currentY = existingCanvas.height;
+        }
 
         ctx.fillStyle = '#1a1a1a';
         ctx.font = 'bold 28px Inter, Arial, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(title, PAGE_WIDTH / 2, 42);
+        ctx.fillText(title, PAGE_WIDTH / 2, currentY + 42);
 
         for (let i = 0; i < assignmentList.length; i++) {
           const a = assignmentList[i];
@@ -7577,7 +7589,7 @@ export default function PlayersPage() {
           const col = i % COLS;
           const row = Math.floor(i / COLS);
           const x = PADDING + col * (CARD_WIDTH + 15);
-          const y = HEADER_HEIGHT + PADDING + row * (CARD_HEIGHT + 10);
+          const y = currentY + HEADER_HEIGHT + PADDING + row * (CARD_HEIGHT + 10);
 
           ctx.fillStyle = '#f8f8f8';
           ctx.strokeStyle = '#e0e0e0';
@@ -7644,7 +7656,7 @@ export default function PlayersPage() {
           ctx.fillText(blockSeat, x + CARD_WIDTH / 2, nameY + 40, CARD_WIDTH - 20);
 
           const attendingWith = a.attendingWithOverride || c.attendingWith;
-          const companionContestants = findCompanionContestants(attendingWith);
+          const companionContestants = findCompanionContestants(attendingWith, fullName);
 
           if (companionContestants.length > 0) {
             const compStartY = nameY + 58;
@@ -7700,35 +7712,46 @@ export default function PlayersPage() {
             ctx.font = 'italic 11px Inter, Arial, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
-            const truncated = attendingWith.length > 40 ? attendingWith.substring(0, 37) + '...' : attendingWith;
-            ctx.fillText(`With: ${truncated}`, x + CARD_WIDTH / 2, compStartY, CARD_WIDTH - 20);
+            const names = attendingWith.split(/[,\n]+/).map(n => n.trim()).filter(n => n && n.toLowerCase() !== 'solo' && n.toLowerCase() !== 'flying solo' && n.toLowerCase() !== fullName.toLowerCase());
+            const attendingWithNameText = names.join(', ');
+            const truncated = attendingWithNameText.length > 40 ? attendingWithNameText.substring(0, 37) + '...' : attendingWithNameText;
+            if (truncated) {
+              ctx.fillText(`With: ${truncated}`, x + CARD_WIDTH / 2, compStartY, CARD_WIDTH - 20);
+            }
           }
         }
 
-        const link = document.createElement('a');
-        link.download = filename;
-        link.href = canvas.toDataURL('image/jpeg', 0.92);
-        link.click();
+        return canvas;
       };
 
+      let finalCanvas: HTMLCanvasElement | undefined;
+
       if (players.length > 0) {
-        await drawHeadshotPage(
+        finalCanvas = await drawHeadshotPage(
           players,
-          `Players - ${dayLabel}`,
-          `headshots_players_${dayLabel}.jpg`
+          `Contestants - ${dayLabel}`,
+          '',
+          finalCanvas
         );
       }
 
       if (backups.length > 0) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        await drawHeadshotPage(
+        finalCanvas = await drawHeadshotPage(
           backups,
           `Backups - ${dayLabel}`,
-          `headshots_backups_${dayLabel}.jpg`
+          '',
+          finalCanvas
         );
       }
 
-      toast({ title: "Downloaded", description: `Headshot sheets generated successfully` });
+      if (finalCanvas) {
+        const link = document.createElement('a');
+        link.download = `headshots_${dayLabel}.jpg`;
+        link.href = finalCanvas.toDataURL('image/jpeg', 0.92);
+        link.click();
+      }
+
+      toast({ title: "Downloaded", description: `Headshot sheet generated successfully` });
     } catch (error) {
       console.error('Headshot generation error:', error);
       toast({ title: "Error", description: "Failed to generate headshot sheets", variant: "destructive" });
