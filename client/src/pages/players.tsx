@@ -7709,17 +7709,6 @@ export default function PlayersPage() {
               const cx = compStartX + ci * (DISPLAY_COMP_PHOTO_SIZE + 15);
               const cy = compStartY + 25;
 
-              // 1. Draw Name FIRST (background layer)
-              ctx.save();
-              ctx.fillStyle = '#000000'; 
-              ctx.font = 'bold 24px Inter, Arial, sans-serif'; // Dramatically increased font size for visibility
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'top';
-              const compName = `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
-              const nameYPos = cy + DISPLAY_COMP_PHOTO_SIZE + 15; // More vertical offset
-              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, nameYPos, DISPLAY_COMP_PHOTO_SIZE + 60);
-              ctx.restore();
-
               // 2. Draw Photo or Placeholder
               const compImg = await loadImage(comp.photoUrl || '');
               if (compImg) {
@@ -7748,13 +7737,15 @@ export default function PlayersPage() {
                 ctx.fillText(compInitials, cx + DISPLAY_COMP_PHOTO_SIZE / 2, cy + DISPLAY_COMP_PHOTO_SIZE / 2);
               }
 
-              // 3. Draw Name AGAIN (top layer) with even MORE visibility
+              // 3. Draw Name - Positioned absolutely relative to the card's x and y
               ctx.save();
               ctx.fillStyle = '#000000'; 
-              ctx.font = 'bold 24px Inter, Arial, sans-serif';
+              ctx.font = 'bold 12px Inter, Arial, sans-serif';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
-              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, nameYPos, DISPLAY_COMP_PHOTO_SIZE + 60);
+              const compName = `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
+              const nameYPos = cy + DISPLAY_COMP_PHOTO_SIZE + 10;
+              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, nameYPos, DISPLAY_COMP_PHOTO_SIZE + 40);
               ctx.restore();
             }
           } else if (attendingWith && attendingWith.toLowerCase() !== 'solo' && attendingWith.toLowerCase() !== 'flying solo') {
