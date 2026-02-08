@@ -7684,18 +7684,15 @@ export default function PlayersPage() {
 
             const DISPLAY_COMP_PHOTO_SIZE = 80;
             const maxComps = Math.min(companionContestants.length, 3);
-            const totalCompWidth = maxComps * (DISPLAY_COMP_PHOTO_SIZE + 8);
+            const totalCompWidth = maxComps * (DISPLAY_COMP_PHOTO_SIZE + 15); // Increased spacing
             const compStartX = x + (CARD_WIDTH - totalCompWidth) / 2;
 
             for (let ci = 0; ci < maxComps; ci++) {
               const comp = companionContestants[ci];
-              const cx = compStartX + ci * (DISPLAY_COMP_PHOTO_SIZE + 8);
-              const cy = compStartY + 16;
+              const cx = compStartX + ci * (DISPLAY_COMP_PHOTO_SIZE + 15);
+              const cy = compStartY + 25; // More space below "Attending With:" label
 
               const compImg = await loadImage(comp.photoUrl || '');
-              
-              // Draw Companion Name FIRST so it's always behind or at least at its own Y position
-              // But we will actually draw it AFTER the photo logic to be sure
               
               if (compImg) {
                 ctx.save();
@@ -7723,16 +7720,14 @@ export default function PlayersPage() {
                 ctx.fillText(compInitials, cx + DISPLAY_COMP_PHOTO_SIZE / 2, cy + DISPLAY_COMP_PHOTO_SIZE / 2);
               }
 
-              // Draw Companion Name AFTER photo to ensure it's on top and positioned correctly
-              // We'll use a slightly larger font and ensure the color is dark
-              ctx.fillStyle = '#000000'; // Pure black for maximum contrast
-              ctx.font = 'bold 12px Inter, Arial, sans-serif'; // Increased font size from 10 to 12
+              // Draw Companion Name FARTHER below photo to prevent clipping or overlay issues
+              ctx.fillStyle = '#000000'; 
+              ctx.font = 'bold 12px Inter, Arial, sans-serif';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
               const compName = `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
               
-              // Ensure we draw the name far enough below the photo
-              const nameYPos = cy + DISPLAY_COMP_PHOTO_SIZE + 6;
+              const nameYPos = cy + DISPLAY_COMP_PHOTO_SIZE + 8;
               ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, nameYPos, DISPLAY_COMP_PHOTO_SIZE + 20);
             }
           } else if (attendingWith && attendingWith.toLowerCase() !== 'solo' && attendingWith.toLowerCase() !== 'flying solo') {
