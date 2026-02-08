@@ -7556,14 +7556,15 @@ export default function PlayersPage() {
         return matched;
       };
 
-      const PHOTO_SIZE = 160;
-      const COMPANION_PHOTO_SIZE = 80;
+      const PHOTO_SIZE = 320; // Increased base size for better resolution
+      const COMPANION_PHOTO_SIZE = 160; // Increased base size
       const CARD_WIDTH = 280;
-      const CARD_HEIGHT = 380; // Increased to prevent overlap
+      const CARD_HEIGHT = 380;
       const COLS = 4;
       const PADDING = 30;
       const HEADER_HEIGHT = 60;
-      const PAGE_WIDTH = PADDING * 2 + COLS * CARD_WIDTH + (COLS - 1) * 15;
+      const SCALE_FACTOR = 2; // High-DPI scaling for sharpening
+      const PAGE_WIDTH = (PADDING * 2 + COLS * CARD_WIDTH + (COLS - 1) * 15) * SCALE_FACTOR;
 
       const drawHeadshotPage = async (
         assignmentList: SeatAssignment[],
@@ -7573,20 +7574,26 @@ export default function PlayersPage() {
         if (assignmentList.length === 0) return;
 
         const rows = Math.ceil(assignmentList.length / COLS);
-        const totalHeight = HEADER_HEIGHT + PADDING + rows * CARD_HEIGHT + (rows - 1) * 10 + PADDING;
+        const totalHeight = (HEADER_HEIGHT + PADDING + rows * CARD_HEIGHT + (rows - 1) * 10 + PADDING) * SCALE_FACTOR;
 
         const canvas = document.createElement('canvas');
         canvas.width = PAGE_WIDTH;
         canvas.height = totalHeight;
         const ctx = canvas.getContext('2d')!;
+        
+        // Enable image smoothing but use a higher quality scaling
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
+        ctx.scale(SCALE_FACTOR, SCALE_FACTOR);
 
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, PAGE_WIDTH, totalHeight);
+        ctx.fillRect(0, 0, PAGE_WIDTH / SCALE_FACTOR, totalHeight / SCALE_FACTOR);
 
         ctx.fillStyle = '#1a1a1a';
         ctx.font = 'bold 28px Inter, Arial, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(title, PAGE_WIDTH / 2, 42);
+        ctx.fillText(title, (PAGE_WIDTH / SCALE_FACTOR) / 2, 42);
 
         for (let i = 0; i < assignmentList.length; i++) {
           const a = assignmentList[i];
@@ -7616,37 +7623,39 @@ export default function PlayersPage() {
           ctx.fill();
           ctx.stroke();
 
-          const photoX = x + (CARD_WIDTH - PHOTO_SIZE) / 2;
+          // Scale down the draw sizes back to layout units, but since the canvas is scaled up, 
+          // the actual pixel data will be higher resolution
+          const DISPLAY_PHOTO_SIZE = 160;
+          const photoX = x + (CARD_WIDTH - DISPLAY_PHOTO_SIZE) / 2;
           const photoY = y + 12;
           const mainImg = await loadImage(c.photoUrl || '');
           if (mainImg) {
             ctx.save();
             ctx.beginPath();
-            ctx.rect(photoX, photoY, PHOTO_SIZE, PHOTO_SIZE);
+            ctx.rect(photoX, photoY, DISPLAY_PHOTO_SIZE, DISPLAY_PHOTO_SIZE);
             ctx.closePath();
             ctx.clip();
             const aspect = mainImg.width / mainImg.height;
-            let drawW = PHOTO_SIZE, drawH = PHOTO_SIZE;
-            if (aspect > 1) { drawW = PHOTO_SIZE * aspect; }
-            else { drawH = PHOTO_SIZE / aspect; }
-            ctx.drawImage(mainImg, photoX + (PHOTO_SIZE - drawW) / 2, photoY + (PHOTO_SIZE - drawH) / 2, drawW, drawH);
+            let drawW = DISPLAY_PHOTO_SIZE, drawH = DISPLAY_PHOTO_SIZE;
+            if (aspect > 1) { drawW = DISPLAY_PHOTO_SIZE * aspect; }
+            else { drawH = DISPLAY_PHOTO_SIZE / aspect; }
+            ctx.drawImage(mainImg, photoX + (DISPLAY_PHOTO_SIZE - drawW) / 2, photoY + (DISPLAY_PHOTO_SIZE - drawH) / 2, drawW, drawH);
             ctx.restore();
-            // Optional: add a subtle border around the square photo
             ctx.strokeStyle = '#e2e8f0';
             ctx.lineWidth = 1;
-            ctx.strokeRect(photoX, photoY, PHOTO_SIZE, PHOTO_SIZE);
+            ctx.strokeRect(photoX, photoY, DISPLAY_PHOTO_SIZE, DISPLAY_PHOTO_SIZE);
           } else {
             ctx.fillStyle = '#d1d5db';
-            ctx.fillRect(photoX, photoY, PHOTO_SIZE, PHOTO_SIZE);
+            ctx.fillRect(photoX, photoY, DISPLAY_PHOTO_SIZE, DISPLAY_PHOTO_SIZE);
             ctx.fillStyle = '#6b7280';
             ctx.font = 'bold 40px Inter, Arial, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             const initials = `${c.firstName?.charAt(0) || ''}${c.lastName?.charAt(0) || ''}`.toUpperCase();
-            ctx.fillText(initials, photoX + PHOTO_SIZE / 2, photoY + PHOTO_SIZE / 2);
+            ctx.fillText(initials, photoX + DISPLAY_PHOTO_SIZE / 2, photoY + DISPLAY_PHOTO_SIZE / 2);
           }
 
-          const nameY = photoY + PHOTO_SIZE + 20;
+          const nameY = photoY + DISPLAY_PHOTO_SIZE + 20;
           ctx.fillStyle = '#1a1a1a';
           ctx.font = 'bold 16px Inter, Arial, sans-serif';
           ctx.textAlign = 'center';
@@ -7673,40 +7682,41 @@ export default function PlayersPage() {
             ctx.font = 'italic 11px Inter, Arial, sans-serif';
             ctx.fillText('Attending With:', x + CARD_WIDTH / 2, compStartY);
 
+            const DISPLAY_COMP_PHOTO_SIZE = 80;
             const maxComps = Math.min(companionContestants.length, 3);
-            const totalCompWidth = maxComps * (COMPANION_PHOTO_SIZE + 8);
+            const totalCompWidth = maxComps * (DISPLAY_COMP_PHOTO_SIZE + 8);
             const compStartX = x + (CARD_WIDTH - totalCompWidth) / 2;
 
             for (let ci = 0; ci < maxComps; ci++) {
               const comp = companionContestants[ci];
-              const cx = compStartX + ci * (COMPANION_PHOTO_SIZE + 8);
+              const cx = compStartX + ci * (DISPLAY_COMP_PHOTO_SIZE + 8);
               const cy = compStartY + 16;
 
               const compImg = await loadImage(comp.photoUrl || '');
               if (compImg) {
                 ctx.save();
                 ctx.beginPath();
-                ctx.rect(cx, cy, COMPANION_PHOTO_SIZE, COMPANION_PHOTO_SIZE);
+                ctx.rect(cx, cy, DISPLAY_COMP_PHOTO_SIZE, DISPLAY_COMP_PHOTO_SIZE);
                 ctx.closePath();
                 ctx.clip();
                 const cAspect = compImg.width / compImg.height;
-                let cDrawW = COMPANION_PHOTO_SIZE, cDrawH = COMPANION_PHOTO_SIZE;
-                if (cAspect > 1) { cDrawW = COMPANION_PHOTO_SIZE * cAspect; }
-                else { cDrawH = COMPANION_PHOTO_SIZE / cAspect; }
-                ctx.drawImage(compImg, cx + (COMPANION_PHOTO_SIZE - cDrawW) / 2, cy + (COMPANION_PHOTO_SIZE - cDrawH) / 2, cDrawW, cDrawH);
+                let cDrawW = DISPLAY_COMP_PHOTO_SIZE, cDrawH = DISPLAY_COMP_PHOTO_SIZE;
+                if (cAspect > 1) { cDrawW = DISPLAY_COMP_PHOTO_SIZE * cAspect; }
+                else { cDrawH = DISPLAY_COMP_PHOTO_SIZE / cAspect; }
+                ctx.drawImage(compImg, cx + (DISPLAY_COMP_PHOTO_SIZE - cDrawW) / 2, cy + (DISPLAY_COMP_PHOTO_SIZE - cDrawH) / 2, cDrawW, cDrawH);
                 ctx.restore();
                 ctx.strokeStyle = '#e2e8f0';
                 ctx.lineWidth = 1;
-                ctx.strokeRect(cx, cy, COMPANION_PHOTO_SIZE, COMPANION_PHOTO_SIZE);
+                ctx.strokeRect(cx, cy, DISPLAY_COMP_PHOTO_SIZE, DISPLAY_COMP_PHOTO_SIZE);
               } else {
                 ctx.fillStyle = '#e5e7eb';
-                ctx.fillRect(cx, cy, COMPANION_PHOTO_SIZE, COMPANION_PHOTO_SIZE);
+                ctx.fillRect(cx, cy, DISPLAY_COMP_PHOTO_SIZE, DISPLAY_COMP_PHOTO_SIZE);
                 ctx.fillStyle = '#9ca3af';
                 ctx.font = 'bold 20px Inter, Arial, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 const compInitials = `${comp.firstName?.charAt(0) || ''}${comp.lastName?.charAt(0) || ''}`.toUpperCase();
-                ctx.fillText(compInitials, cx + COMPANION_PHOTO_SIZE / 2, cy + COMPANION_PHOTO_SIZE / 2);
+                ctx.fillText(compInitials, cx + DISPLAY_COMP_PHOTO_SIZE / 2, cy + DISPLAY_COMP_PHOTO_SIZE / 2);
               }
 
               ctx.fillStyle = '#666666';
@@ -7714,7 +7724,7 @@ export default function PlayersPage() {
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
               const compName = `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
-              ctx.fillText(compName, cx + COMPANION_PHOTO_SIZE / 2, cy + COMPANION_PHOTO_SIZE + 4, COMPANION_PHOTO_SIZE + 10);
+              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, cy + DISPLAY_COMP_PHOTO_SIZE + 4, DISPLAY_COMP_PHOTO_SIZE + 10);
             }
           } else if (attendingWith && attendingWith.toLowerCase() !== 'solo' && attendingWith.toLowerCase() !== 'flying solo') {
             const compStartY = nameY + 58;
@@ -7733,7 +7743,7 @@ export default function PlayersPage() {
 
         const link = document.createElement('a');
         link.download = filename;
-        link.href = canvas.toDataURL('image/jpeg', 0.92);
+        link.href = canvas.toDataURL('image/jpeg', 0.95); // High quality JPEG
         link.click();
       };
 
