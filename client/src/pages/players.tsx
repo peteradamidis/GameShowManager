@@ -854,21 +854,18 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
-      // No selection - append bullet at the end
-      const currentText = element.innerText || '';
-      const newText = currentText + (currentText.endsWith('\n') ? '' : '\n') + '• ';
-      updateField('bodyText', newText);
+      const currentHtml = element.innerHTML || '';
+      element.innerHTML = currentHtml + '<br>• ';
+      updateField('bodyText', element.innerHTML);
       return;
     }
     
     const range = selection.getRangeAt(0);
     
-    // Check if selection is within our element
     if (!element.contains(range.startContainer)) {
-      // Selection not in this element - append bullet at the end
-      const currentText = element.innerText || '';
-      const newText = currentText + (currentText.endsWith('\n') ? '' : '\n') + '• ';
-      updateField('bodyText', newText);
+      const currentHtml = element.innerHTML || '';
+      element.innerHTML = currentHtml + '<br>• ';
+      updateField('bodyText', element.innerHTML);
       return;
     }
     
@@ -897,11 +894,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       newRange.collapse(true);
       newRange.insertNode(bulletNode);
 
-      // Update the stored bodyText - use innerHTML to preserve formatting, 
-      // but the app seems to expect innerText for the database.
-      // However, innerText/textContent wipes out the HTML structure of contentEditable.
-      // We should update the field but the rendering relies on innerHTML/DOM state.
-      updateField('bodyText', element.innerText || '');
+      updateField('bodyText', element.innerHTML || '');
       
       // Set cursor after the bullet
       setTimeout(() => {
@@ -926,8 +919,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         node.appendChild(bulletNode);
       }
       
-      // Update the stored bodyText
-      updateField('bodyText', element.innerText || '');
+      updateField('bodyText', element.innerHTML || '');
       
       // Set cursor after the bullet
       setTimeout(() => {
