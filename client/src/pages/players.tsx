@@ -7738,7 +7738,10 @@ export default function PlayersPage() {
               ctx.font = 'bold 12px Inter, Arial, sans-serif';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
-              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, nameYPos, DISPLAY_COMP_PHOTO_SIZE + 30);
+              // Ensure we draw the name far enough below the photo - added more space (12px instead of 6px)
+              // and ensured it's not being clipped by the card boundary
+              const finalNameYPos = cy + DISPLAY_COMP_PHOTO_SIZE + 12;
+              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, finalNameYPos, DISPLAY_COMP_PHOTO_SIZE + 40);
               ctx.restore();
             }
           } else if (attendingWith && attendingWith.toLowerCase() !== 'solo' && attendingWith.toLowerCase() !== 'flying solo') {
