@@ -7554,18 +7554,29 @@ export default function PlayersPage() {
 
       const findCompanionContestants = (attendingWith: string | null, originalContestantName: string) => {
         if (!attendingWith) return [];
-        const names = attendingWith.split(/[,\n]+/).map(n => n.trim()).filter(n => n && n.toLowerCase() !== 'solo' && n.toLowerCase() !== 'flying solo');
+        // Support more delimiters and cleanup
+        const names = attendingWith.split(/[,\n\/&]+/).map(n => n.trim()).filter(n => n && n.toLowerCase() !== 'solo' && n.toLowerCase() !== 'flying solo');
         const matched: Contestant[] = [];
         for (const name of names) {
-          const cleanName = name.replace(/\s*-\s*.*$/, '').replace(/\s*\(.*\)/, '').trim().toLowerCase();
-          if (!cleanName || cleanName.length < 3) continue;
+          // Improve cleaning logic to match more formats
+          const cleanName = name.replace(/\s*-\s*.*$/, '').replace(/\s*\(.*\)/, '').replace(/\s*\[.*\]/, '').trim().toLowerCase();
+          if (!cleanName || cleanName.length < 2) continue;
           
           // Filter out the original contestant's name from companions
           if (cleanName === originalContestantName.toLowerCase()) continue;
 
           const found = contestants.find(c => {
-            const fullName = `${c.firstName} ${c.lastName}`.toLowerCase();
-            return fullName === cleanName || c.name?.toLowerCase() === cleanName;
+            const firstName = (c.firstName || '').toLowerCase();
+            const lastName = (c.lastName || '').toLowerCase();
+            const fullName = `${firstName} ${lastName}`.trim();
+            const altName = (c.name || '').toLowerCase();
+            
+            return fullName === cleanName || 
+                   altName === cleanName || 
+                   firstName === cleanName || 
+                   lastName === cleanName ||
+                   fullName.includes(cleanName) ||
+                   cleanName.includes(fullName);
           });
           if (found) matched.push(found);
         }
