@@ -7715,16 +7715,19 @@ export default function PlayersPage() {
                 ctx.font = 'bold 16px Inter, Arial, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                const compInitials = `${comp.firstName?.charAt(0) || ''}${comp.lastName?.charAt(0) || ''}`.toUpperCase();
+                const compNameForInitials = comp.name || `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
+                const nameParts = compNameForInitials.split(' ');
+                const compInitials = nameParts.length >= 2 
+                  ? `${nameParts[0].charAt(0)}${nameParts[nameParts.length - 1].charAt(0)}`.toUpperCase()
+                  : compNameForInitials.charAt(0).toUpperCase();
                 ctx.fillText(compInitials, cx + DISPLAY_COMP_PHOTO_SIZE / 2, cy + DISPLAY_COMP_PHOTO_SIZE / 2);
               }
 
-              // Draw name below companion photo
               ctx.fillStyle = '#111827';
               ctx.font = 'bold 11px Inter, Arial, sans-serif';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
-              const compName = `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
+              const compName = comp.name || `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
               ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, cy + DISPLAY_COMP_PHOTO_SIZE + 6, DISPLAY_COMP_PHOTO_SIZE + 20);
             }
           } else if (attendingWith && attendingWith.toLowerCase() !== 'solo' && attendingWith.toLowerCase() !== 'flying solo') {
