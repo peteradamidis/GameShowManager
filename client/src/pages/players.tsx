@@ -7575,11 +7575,11 @@ export default function PlayersPage() {
       const PHOTO_SIZE = 320; // Increased base size for better resolution
       const COMPANION_PHOTO_SIZE = 160; // Increased base size
       const CARD_WIDTH = 280;
-      const CARD_HEIGHT = 380;
-      const COLS = 5; // Changed from 4 to 5
+      const CARD_HEIGHT = 420; // Increased to ensure names aren't clipped
+      const COLS = 5; 
       const PADDING = 30;
       const HEADER_HEIGHT = 60;
-      const SCALE_FACTOR = 2; // High-DPI scaling for sharpening
+      const SCALE_FACTOR = 2; 
       const PAGE_WIDTH = (PADDING * 2 + COLS * CARD_WIDTH + (COLS - 1) * 15) * SCALE_FACTOR;
 
       const drawHeadshotPage = async (
@@ -7590,14 +7590,13 @@ export default function PlayersPage() {
         if (assignmentList.length === 0) return;
 
         const rows = Math.ceil(assignmentList.length / COLS);
-        const totalHeight = (HEADER_HEIGHT + PADDING + rows * CARD_HEIGHT + (rows - 1) * 10 + PADDING) * SCALE_FACTOR;
+        const totalHeight = (HEADER_HEIGHT + PADDING + rows * CARD_HEIGHT + (rows - 1) * 15 + PADDING) * SCALE_FACTOR;
 
         const canvas = document.createElement('canvas');
         canvas.width = PAGE_WIDTH;
         canvas.height = totalHeight;
         const ctx = canvas.getContext('2d')!;
         
-        // Enable image smoothing but use a higher quality scaling
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         
@@ -7606,10 +7605,10 @@ export default function PlayersPage() {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, PAGE_WIDTH / SCALE_FACTOR, totalHeight / SCALE_FACTOR);
 
-        ctx.fillStyle = '#1a1a1a';
-        ctx.font = 'bold 28px Inter, Arial, sans-serif';
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 32px Inter, Arial, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(title, (PAGE_WIDTH / SCALE_FACTOR) / 2, 42);
+        ctx.fillText(title, (PAGE_WIDTH / SCALE_FACTOR) / 2, 45);
 
         for (let i = 0; i < assignmentList.length; i++) {
           const a = assignmentList[i];
@@ -7619,37 +7618,27 @@ export default function PlayersPage() {
           const col = i % COLS;
           const row = Math.floor(i / COLS);
           const x = PADDING + col * (CARD_WIDTH + 15);
-          const y = HEADER_HEIGHT + PADDING + row * (CARD_HEIGHT + 10);
+          const y = HEADER_HEIGHT + PADDING + row * (CARD_HEIGHT + 15);
 
-          ctx.fillStyle = '#f8f8f8';
-          ctx.strokeStyle = '#e0e0e0';
+          // Draw Card background
+          ctx.fillStyle = '#f9fafb';
+          ctx.strokeStyle = '#e5e7eb';
           ctx.lineWidth = 1;
-          const r = 8;
+          const r = 12;
           ctx.beginPath();
-          ctx.moveTo(x + r, y);
-          ctx.lineTo(x + CARD_WIDTH - r, y);
-          ctx.quadraticCurveTo(x + CARD_WIDTH, y, x + CARD_WIDTH, y + r);
-          ctx.lineTo(x + CARD_WIDTH, y + CARD_HEIGHT - r);
-          ctx.quadraticCurveTo(x + CARD_WIDTH, y + CARD_HEIGHT, x + CARD_WIDTH - r, y + CARD_HEIGHT);
-          ctx.lineTo(x + r, y + CARD_HEIGHT);
-          ctx.quadraticCurveTo(x, y + CARD_HEIGHT, x, y + CARD_HEIGHT - r);
-          ctx.lineTo(x, y + r);
-          ctx.quadraticCurveTo(x, y, x + r, y);
-          ctx.closePath();
+          ctx.roundRect(x, y, CARD_WIDTH, CARD_HEIGHT, r);
           ctx.fill();
           ctx.stroke();
 
-          // Scale down the draw sizes back to layout units, but since the canvas is scaled up, 
-          // the actual pixel data will be higher resolution
           const DISPLAY_PHOTO_SIZE = 160;
           const photoX = x + (CARD_WIDTH - DISPLAY_PHOTO_SIZE) / 2;
-          const photoY = y + 12;
+          const photoY = y + 15;
           const mainImg = await loadImage(c.photoUrl || '');
+          
           if (mainImg) {
             ctx.save();
             ctx.beginPath();
-            ctx.rect(photoX, photoY, DISPLAY_PHOTO_SIZE, DISPLAY_PHOTO_SIZE);
-            ctx.closePath();
+            ctx.roundRect(photoX, photoY, DISPLAY_PHOTO_SIZE, DISPLAY_PHOTO_SIZE, 4);
             ctx.clip();
             const aspect = mainImg.width / mainImg.height;
             let drawW = DISPLAY_PHOTO_SIZE, drawH = DISPLAY_PHOTO_SIZE;
@@ -7657,13 +7646,10 @@ export default function PlayersPage() {
             else { drawH = DISPLAY_PHOTO_SIZE / aspect; }
             ctx.drawImage(mainImg, photoX + (DISPLAY_PHOTO_SIZE - drawW) / 2, photoY + (DISPLAY_PHOTO_SIZE - drawH) / 2, drawW, drawH);
             ctx.restore();
-            ctx.strokeStyle = '#e2e8f0';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(photoX, photoY, DISPLAY_PHOTO_SIZE, DISPLAY_PHOTO_SIZE);
           } else {
-            ctx.fillStyle = '#d1d5db';
+            ctx.fillStyle = '#e5e7eb';
             ctx.fillRect(photoX, photoY, DISPLAY_PHOTO_SIZE, DISPLAY_PHOTO_SIZE);
-            ctx.fillStyle = '#6b7280';
+            ctx.fillStyle = '#9ca3af';
             ctx.font = 'bold 40px Inter, Arial, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -7672,50 +7658,49 @@ export default function PlayersPage() {
           }
 
           const nameY = photoY + DISPLAY_PHOTO_SIZE + 20;
-          ctx.fillStyle = '#1a1a1a';
-          ctx.font = 'bold 16px Inter, Arial, sans-serif';
+          ctx.fillStyle = '#111827';
+          ctx.font = 'bold 18px Inter, Arial, sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'top';
           const fullName = `${c.firstName} ${c.lastName}`.trim();
           ctx.fillText(fullName, x + CARD_WIDTH / 2, nameY, CARD_WIDTH - 20);
 
-          ctx.fillStyle = '#555555';
+          ctx.fillStyle = '#4b5563';
           ctx.font = '14px Inter, Arial, sans-serif';
           const ageText = c.age ? `Age: ${c.age}` : '';
-          ctx.fillText(ageText, x + CARD_WIDTH / 2, nameY + 22, CARD_WIDTH - 20);
+          ctx.fillText(ageText, x + CARD_WIDTH / 2, nameY + 24);
 
           const blockSeat = `Block ${a.blockNumber} - Seat ${a.seatLabel}`;
-          ctx.fillStyle = '#777777';
+          ctx.fillStyle = '#6b7280';
           ctx.font = '12px Inter, Arial, sans-serif';
-          ctx.fillText(blockSeat, x + CARD_WIDTH / 2, nameY + 40, CARD_WIDTH - 20);
+          ctx.fillText(blockSeat, x + CARD_WIDTH / 2, nameY + 42);
 
           const attendingWith = a.attendingWithOverride || c.attendingWith;
           const companionContestants = findCompanionContestants(attendingWith, fullName);
 
           if (companionContestants.length > 0) {
-            const compStartY = nameY + 58;
-            ctx.fillStyle = '#888888';
+            const compLabelY = nameY + 62;
+            ctx.fillStyle = '#9ca3af';
             ctx.font = 'italic 11px Inter, Arial, sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('Attending With:', x + CARD_WIDTH / 2, compStartY);
+            ctx.fillText('Attending With:', x + CARD_WIDTH / 2, compLabelY);
 
-            const DISPLAY_COMP_PHOTO_SIZE = 80;
+            const DISPLAY_COMP_PHOTO_SIZE = 75;
             const maxComps = Math.min(companionContestants.length, 3);
-            const totalCompWidth = maxComps * (DISPLAY_COMP_PHOTO_SIZE + 15);
+            const gap = 12;
+            const totalCompWidth = maxComps * DISPLAY_COMP_PHOTO_SIZE + (maxComps - 1) * gap;
             const compStartX = x + (CARD_WIDTH - totalCompWidth) / 2;
 
             for (let ci = 0; ci < maxComps; ci++) {
               const comp = companionContestants[ci];
-              const cx = compStartX + ci * (DISPLAY_COMP_PHOTO_SIZE + 15);
-              const cy = compStartY + 25;
+              const cx = compStartX + ci * (DISPLAY_COMP_PHOTO_SIZE + gap);
+              const cy = compLabelY + 18;
 
-              // 2. Draw Photo or Placeholder
               const compImg = await loadImage(comp.photoUrl || '');
               if (compImg) {
                 ctx.save();
                 ctx.beginPath();
-                ctx.rect(cx, cy, DISPLAY_COMP_PHOTO_SIZE, DISPLAY_COMP_PHOTO_SIZE);
-                ctx.closePath();
+                ctx.roundRect(cx, cy, DISPLAY_COMP_PHOTO_SIZE, DISPLAY_COMP_PHOTO_SIZE, 4);
                 ctx.clip();
                 const cAspect = compImg.width / compImg.height;
                 let cDrawW = DISPLAY_COMP_PHOTO_SIZE, cDrawH = DISPLAY_COMP_PHOTO_SIZE;
@@ -7723,40 +7708,34 @@ export default function PlayersPage() {
                 else { cDrawH = DISPLAY_COMP_PHOTO_SIZE / cAspect; }
                 ctx.drawImage(compImg, cx + (DISPLAY_COMP_PHOTO_SIZE - cDrawW) / 2, cy + (DISPLAY_COMP_PHOTO_SIZE - cDrawH) / 2, cDrawW, cDrawH);
                 ctx.restore();
-                ctx.strokeStyle = '#e2e8f0';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(cx, cy, DISPLAY_COMP_PHOTO_SIZE, DISPLAY_COMP_PHOTO_SIZE);
               } else {
-                ctx.fillStyle = '#e5e7eb';
+                ctx.fillStyle = '#f3f4f6';
                 ctx.fillRect(cx, cy, DISPLAY_COMP_PHOTO_SIZE, DISPLAY_COMP_PHOTO_SIZE);
                 ctx.fillStyle = '#9ca3af';
-                ctx.font = 'bold 20px Inter, Arial, sans-serif';
+                ctx.font = 'bold 16px Inter, Arial, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 const compInitials = `${comp.firstName?.charAt(0) || ''}${comp.lastName?.charAt(0) || ''}`.toUpperCase();
                 ctx.fillText(compInitials, cx + DISPLAY_COMP_PHOTO_SIZE / 2, cy + DISPLAY_COMP_PHOTO_SIZE / 2);
               }
 
-              // 3. Draw Name - Positioned absolutely relative to the card's x and y
-              ctx.save();
-              ctx.fillStyle = '#000000'; 
-              ctx.font = 'bold 12px Inter, Arial, sans-serif';
+              // Draw name below companion photo
+              ctx.fillStyle = '#111827';
+              ctx.font = 'bold 11px Inter, Arial, sans-serif';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
               const compName = `${comp.firstName || ''} ${comp.lastName || ''}`.trim();
-              const nameYPos = cy + DISPLAY_COMP_PHOTO_SIZE + 10;
-              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, nameYPos, DISPLAY_COMP_PHOTO_SIZE + 40);
-              ctx.restore();
+              ctx.fillText(compName, cx + DISPLAY_COMP_PHOTO_SIZE / 2, cy + DISPLAY_COMP_PHOTO_SIZE + 6, DISPLAY_COMP_PHOTO_SIZE + 20);
             }
           } else if (attendingWith && attendingWith.toLowerCase() !== 'solo' && attendingWith.toLowerCase() !== 'flying solo') {
-            const compStartY = nameY + 58;
-            ctx.fillStyle = '#1a1a1a'; // Changed to darker color for visibility
-            ctx.font = 'bold 11px Inter, Arial, sans-serif'; // Made bold and slightly larger
+            const compStartY = nameY + 62;
+            ctx.fillStyle = '#1f2937';
+            ctx.font = 'bold 12px Inter, Arial, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
             const names = attendingWith.split(/[,\n]+/).map(n => n.trim()).filter(n => n && n.toLowerCase() !== 'solo' && n.toLowerCase() !== 'flying solo' && n.toLowerCase() !== fullName.toLowerCase());
             const attendingWithNameText = names.join(', ');
-            const truncated = attendingWithNameText.length > 40 ? attendingWithNameText.substring(0, 37) + '...' : attendingWithNameText;
+            const truncated = attendingWithNameText.length > 35 ? attendingWithNameText.substring(0, 32) + '...' : attendingWithNameText;
             if (truncated) {
               ctx.fillText(`With: ${truncated}`, x + CARD_WIDTH / 2, compStartY, CARD_WIDTH - 20);
             }
