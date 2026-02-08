@@ -7560,7 +7560,7 @@ export default function PlayersPage() {
       const COMPANION_PHOTO_SIZE = 160; // Increased base size
       const CARD_WIDTH = 280;
       const CARD_HEIGHT = 380;
-      const COLS = 4;
+      const COLS = 5; // Changed from 4 to 5
       const PADDING = 30;
       const HEADER_HEIGHT = 60;
       const SCALE_FACTOR = 2; // High-DPI scaling for sharpening
