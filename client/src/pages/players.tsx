@@ -7567,12 +7567,13 @@ export default function PlayersPage() {
       const PHOTO_SIZE = 320; // Increased base size for better resolution
       const COMPANION_PHOTO_SIZE = 160; // Increased base size
       const CARD_WIDTH = 280;
-      const CARD_HEIGHT = 420; // Increased to ensure names aren't clipped
-      const COLS = 5; 
+      const CARD_HEIGHT = 420;
+      const COLS = 5;
+      const GAP = 15;
       const PADDING = 30;
       const HEADER_HEIGHT = 60;
-      const SCALE_FACTOR = 2; 
-      const PAGE_WIDTH = (PADDING * 2 + COLS * CARD_WIDTH + (COLS - 1) * 15) * SCALE_FACTOR;
+      const SCALE_FACTOR = 2;
+      const PAGE_WIDTH = (PADDING * 2 + COLS * CARD_WIDTH + (COLS - 1) * GAP) * SCALE_FACTOR;
 
       const drawHeadshotPage = async (
         assignmentList: SeatAssignment[],
@@ -7582,7 +7583,7 @@ export default function PlayersPage() {
         if (assignmentList.length === 0) return;
 
         const rows = Math.ceil(assignmentList.length / COLS);
-        const totalHeight = (HEADER_HEIGHT + PADDING + rows * CARD_HEIGHT + (rows - 1) * 15 + PADDING) * SCALE_FACTOR;
+        const totalHeight = (HEADER_HEIGHT + PADDING + rows * CARD_HEIGHT + (rows - 1) * GAP + PADDING) * SCALE_FACTOR;
 
         const canvas = document.createElement('canvas');
         canvas.width = PAGE_WIDTH;
@@ -7609,8 +7610,8 @@ export default function PlayersPage() {
 
           const col = i % COLS;
           const row = Math.floor(i / COLS);
-          const x = PADDING + col * (CARD_WIDTH + 15);
-          const y = HEADER_HEIGHT + PADDING + row * (CARD_HEIGHT + 15);
+          const x = PADDING + col * (CARD_WIDTH + GAP);
+          const y = HEADER_HEIGHT + PADDING + row * (CARD_HEIGHT + GAP);
 
           // Draw Card background
           ctx.fillStyle = '#f9fafb';
@@ -7679,13 +7680,13 @@ export default function PlayersPage() {
 
             const DISPLAY_COMP_PHOTO_SIZE = 75;
             const maxComps = Math.min(companionContestants.length, 3);
-            const gap = 12;
-            const totalCompWidth = maxComps * DISPLAY_COMP_PHOTO_SIZE + (maxComps - 1) * gap;
+            const compGap = 12;
+            const totalCompWidth = maxComps * DISPLAY_COMP_PHOTO_SIZE + (maxComps - 1) * compGap;
             const compStartX = x + (CARD_WIDTH - totalCompWidth) / 2;
 
             for (let ci = 0; ci < maxComps; ci++) {
               const comp = companionContestants[ci];
-              const cx = compStartX + ci * (DISPLAY_COMP_PHOTO_SIZE + gap);
+              const cx = compStartX + ci * (DISPLAY_COMP_PHOTO_SIZE + compGap);
               const cy = compLabelY + 18;
 
               const compImg = await loadImage(comp.photoUrl || '');
