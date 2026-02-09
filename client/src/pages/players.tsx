@@ -846,6 +846,63 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     }
   };
   
+  const handleBodyPaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const html = e.clipboardData.getData('text/html');
+    const plain = e.clipboardData.getData('text/plain');
+    
+    let cleanHtml = '';
+    if (html) {
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      
+      const cleanNode = (node: Node): string => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          return node.textContent || '';
+        }
+        if (node.nodeType !== Node.ELEMENT_NODE) return '';
+        const el = node as HTMLElement;
+        const tag = el.tagName.toLowerCase();
+        let inner = '';
+        el.childNodes.forEach(child => { inner += cleanNode(child); });
+        
+        if (tag === 'b' || tag === 'strong') return `<b>${inner}</b>`;
+        if (tag === 'i' || tag === 'em') return `<i>${inner}</i>`;
+        if (tag === 'u') return `<u>${inner}</u>`;
+        if (tag === 'br') return '<br>';
+        if (tag === 'p' || tag === 'div') return inner + '<br>';
+        if (tag === 'li') return '• ' + inner + '<br>';
+        if (tag === 'span') {
+          const fw = el.style.fontWeight;
+          const fs = el.style.fontStyle;
+          let result = inner;
+          if (fw === 'bold' || fw === '700' || fw === '800' || fw === '900') result = `<b>${result}</b>`;
+          if (fs === 'italic') result = `<i>${result}</i>`;
+          return result;
+        }
+        return inner;
+      };
+      
+      cleanHtml = cleanNode(temp).replace(/<br>\s*$/, '');
+    } else {
+      cleanHtml = plain.replace(/\n/g, '<br>');
+    }
+    
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      const frag = document.createRange().createContextualFragment(cleanHtml);
+      range.insertNode(frag);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+    
+    const target = e.currentTarget;
+    updateField('bodyText', target.innerHTML || '');
+  };
+
   // Helper to insert dot point at cursor position
   const insertDotPointAtCursor = (isFullscreen: boolean) => {
     const ref = isFullscreen ? bodyTextRefFs : bodyTextRef;
@@ -4217,6 +4274,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5', paddingBottom: cardData.showProducer !== false ? '50px' : '0' }}
                       onInput={() => { hasUnsavedChanges.current = true; }}
                       onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
+                      onPaste={handleBodyPaste}
                       onMouseUp={saveCursorPosition}
                       onKeyUp={saveCursorPosition}
                       data-testid="body-text-editor-fullscreen"
@@ -5162,6 +5220,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           style={{ fontFamily: 'Calibri, sans-serif', fontSize: '20px', lineHeight: '1.5', paddingBottom: cardData.showProducer !== false ? '50px' : '0' }}
                           onInput={() => { hasUnsavedChanges.current = true; }}
                           onBlur={(e) => updateField('bodyText', e.currentTarget.innerHTML || '')}
+                          onPaste={handleBodyPaste}
                           onMouseUp={saveCursorPosition}
                           onKeyUp={saveCursorPosition}
                           data-testid="body-text-editor"
