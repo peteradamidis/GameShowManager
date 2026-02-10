@@ -287,6 +287,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [renderError, setRenderError] = useState<string | null>(null);
   const [showLinkedPartnersPicker, setShowLinkedPartnersPicker] = useState(false);
   const [lastKnownUpdatedAt, setLastKnownUpdatedAt] = useState<string | null>(null);
+  const lastKnownUpdatedAtRef = useRef<string | null>(null);
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
   const [conflictData, setConflictData] = useState<{ serverUpdatedAt: string; currentData: any } | null>(null);
   const [pendingSaveData, setPendingSaveData] = useState<CastingCardData | null>(null);
@@ -810,7 +811,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     if (hasChanges || hasUnsavedChanges.current) {
       hasUnsavedChanges.current = true;
       setAutoSaveStatus('saving');
-      saveMutation.mutate({ ...updatedData, skipInvalidate: true } as any, {
+      saveMutation.mutate({ ...updatedData, skipInvalidate: true, forceOverwrite: true } as any, {
         onSuccess: () => {
           hasUnsavedChanges.current = false;
           setAutoSaveStatus('saved');
@@ -1067,6 +1068,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         setCardData(parsedCard);
         cardDataRef.current = parsedCard; // Also update the ref
         setLastKnownUpdatedAt(restoredCard.updatedAt);
+        lastKnownUpdatedAtRef.current = restoredCard.updatedAt;
         hasUnsavedChanges.current = false; // Mark as saved since we just restored
       }
       queryClient.invalidateQueries({ queryKey: ['/api/casting-cards', selectedContestant?.id] });
@@ -1291,7 +1293,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           cardDataRef.current = parsedCard;
           lastLoadedContestantId.current = selectedContestant.id; // Mark as loaded
           // Track when this card was loaded for conflict detection
-          setLastKnownUpdatedAt((existingCard as any).updatedAt || new Date().toISOString());
+          const cardTimestamp = (existingCard as any).updatedAt || new Date().toISOString();
+          setLastKnownUpdatedAt(cardTimestamp);
+          lastKnownUpdatedAtRef.current = cardTimestamp;
         } else if (!loadingCard) {
           setCardData({
             contestantId: selectedContestant.id,
@@ -1367,7 +1371,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       const dataToSend = {
         ...cardDataToSend,
         manualCompanions: cardDataToSend.manualCompanions ? JSON.stringify(cardDataToSend.manualCompanions) : null,
-        lastKnownUpdatedAt: lastKnownUpdatedAt,
+        lastKnownUpdatedAt: lastKnownUpdatedAtRef.current,
         forceOverwrite: forceOverwrite || false,
       };
       
@@ -1411,6 +1415,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       // Update lastKnownUpdatedAt with the server's new timestamp
       if (result?.updatedAt) {
         setLastKnownUpdatedAt(result.updatedAt);
+        lastKnownUpdatedAtRef.current = result.updatedAt;
       }
       
       // Only invalidate on manual saves, not auto-saves (to prevent state overwrite)
