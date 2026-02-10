@@ -1699,10 +1699,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             if (currentMarginTop < 0) {
               const prevSibling = wrapper.previousElementSibling as HTMLElement;
               if (prevSibling) {
-                const existingMb = parseInt(window.getComputedStyle(prevSibling).marginBottom) || 0;
-                prevSibling.style.marginBottom = `${Math.max(0, existingMb + currentMarginTop)}px`;
+                const reducedGap = Math.max(0, 24 + currentMarginTop);
+                prevSibling.style.marginBottom = `${reducedGap}px`;
               }
               wrapper.style.marginTop = '0px';
+              wrapper.style.paddingTop = '0px';
             }
           });
           clonedDoc.querySelectorAll('.casting-card-producer-label').forEach((el: Element) => {
@@ -2112,10 +2113,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             if (currentMarginTop < 0) {
               const prevSibling = wrapper.previousElementSibling as HTMLElement;
               if (prevSibling) {
-                const existingMb = parseInt(window.getComputedStyle(prevSibling).marginBottom) || 0;
-                prevSibling.style.marginBottom = `${Math.max(0, existingMb + currentMarginTop)}px`;
+                const reducedGap = Math.max(0, 24 + currentMarginTop);
+                prevSibling.style.marginBottom = `${reducedGap}px`;
               }
               wrapper.style.marginTop = '0px';
+              wrapper.style.paddingTop = '0px';
             }
           });
           clonedDoc.querySelectorAll('.casting-card-producer-label').forEach((el: Element) => {
