@@ -648,7 +648,7 @@ export function SeatCard({
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  <p>Rescheduled contestant</p>
+                  <p>Reschedule contestant</p>
                 </TooltipContent>
               </Tooltip>
             )}

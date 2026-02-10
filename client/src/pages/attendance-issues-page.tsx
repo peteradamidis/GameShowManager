@@ -338,7 +338,7 @@ export default function AttendanceIssuesPage() {
                           {issue.movedToReschedule ? (
                             <Badge variant="outline" className="text-green-600 border-green-600" data-testid={`badge-rescheduled-${issue.id}`}>
                               <Check className="h-3 w-3 mr-1" />
-                              Rescheduled
+                              Reschedule
                             </Badge>
                           ) : (
                             <Button

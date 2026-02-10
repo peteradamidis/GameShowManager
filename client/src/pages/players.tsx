@@ -6611,7 +6611,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                         <SelectItem value="available">Available</SelectItem>
                         <SelectItem value="assigned">Assigned</SelectItem>
                         <SelectItem value="standby">Standby</SelectItem>
-                        <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                        <SelectItem value="rescheduled">Reschedule</SelectItem>
                         <SelectItem value="confirmed">Confirmed</SelectItem>
                         <SelectItem value="appeared">Appeared</SelectItem>
                       </SelectContent>

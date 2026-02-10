@@ -2456,7 +2456,7 @@ export default function SeatingChartPage() {
                         <SelectItem value="assigned">Assigned</SelectItem>
                         <SelectItem value="invited">Invited</SelectItem>
                         <SelectItem value="confirmed">Confirmed</SelectItem>
-                        <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                        <SelectItem value="rescheduled">Reschedule</SelectItem>
                         <SelectItem value="returning_standby">Returning Standby</SelectItem>
                       </SelectContent>
                     </Select>
@@ -2540,7 +2540,7 @@ export default function SeatingChartPage() {
                       'assigned': 'Asgnd',
                       'invited': 'Invited',
                       'confirmed': 'Conf',
-                      'rescheduled': 'Resch',
+                      'rescheduled': 'Resc',
                       'returning_standby': 'RetSB',
                     };
                     // Paginate contestants for performance

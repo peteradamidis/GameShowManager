@@ -815,7 +815,7 @@ Deal or No Deal Production Team`);
                     <SelectItem value="all">All Invited</SelectItem>
                     <SelectItem value="invited">Invited Only</SelectItem>
                     <SelectItem value="confirmed">Confirmed Only</SelectItem>
-                    <SelectItem value="declined">Declined (Rescheduled)</SelectItem>
+                    <SelectItem value="declined">Declined (Reschedule)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1284,7 +1284,7 @@ Deal or No Deal Production Team`);
                           <div className="flex flex-col">
                             <span className="font-medium">{item.contestant?.name || "Unknown"}</span>
                             <Badge variant="outline" className="w-fit text-[10px] px-1 py-0 border-amber-500 text-amber-600 mt-1">
-                              Rescheduled
+                              Reschedule
                             </Badge>
                           </div>
                         </TableCell>

@@ -413,7 +413,7 @@ export default function ReschedulePage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                  <SelectItem value="rescheduled">Reschedule</SelectItem>
                   <SelectItem value="assigned">Assigned</SelectItem>
                   <SelectItem value="invited">Invited</SelectItem>
                   <SelectItem value="confirmed">Confirmed</SelectItem>
@@ -577,7 +577,7 @@ export default function ReschedulePage() {
                         )}
                         {/* Show reschedule count if > 1 */}
                         {(cancellation.rescheduleCount || 1) > 1 && (
-                          <Badge variant="outline" className="border-red-300 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900 dark:text-red-300 text-[10px]" title={`Rescheduled ${cancellation.rescheduleCount} times`}>
+                          <Badge variant="outline" className="border-red-300 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900 dark:text-red-300 text-[10px]" title={`In reschedule ${cancellation.rescheduleCount} times`}>
                             x{cancellation.rescheduleCount}
                           </Badge>
                         )}
@@ -587,7 +587,7 @@ export default function ReschedulePage() {
                       {(() => {
                         const status = cancellation.contestant?.availabilityStatus;
                         if (status === 'assigned') return <Badge className="bg-blue-500/15 text-blue-700 border-blue-300 dark:text-blue-400 dark:border-blue-700">Assigned</Badge>;
-                        if (status === 'rescheduled') return <Badge className="bg-orange-500/15 text-orange-700 border-orange-300 dark:text-orange-400 dark:border-orange-700">Rescheduled</Badge>;
+                        if (status === 'rescheduled') return <Badge className="bg-orange-500/15 text-orange-700 border-orange-300 dark:text-orange-400 dark:border-orange-700">Reschedule</Badge>;
                         if (status === 'invited') return <Badge className="bg-purple-500/15 text-purple-700 border-purple-300 dark:text-purple-400 dark:border-purple-700">Invited</Badge>;
                         if (status === 'confirmed') return <Badge className="bg-green-500/15 text-green-700 border-green-300 dark:text-green-400 dark:border-green-700">Confirmed</Badge>;
                         if (status === 'available') return <Badge className="bg-gray-500/15 text-gray-700 border-gray-300 dark:text-gray-400 dark:border-gray-600">Available</Badge>;

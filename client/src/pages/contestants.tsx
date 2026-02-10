@@ -45,7 +45,7 @@ const StatusBadge = ({ status }: { status: string }) => {
   
   const displayLabels: Record<string, string> = {
     returning_standby: "Returning Standby",
-    rescheduled: "Rescheduled",
+    rescheduled: "Reschedule",
   };
   
   const colorClasses = colors[status.toLowerCase()] || colors.available;

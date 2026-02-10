@@ -2006,7 +2006,7 @@ export function ContestantTable({
                             <SelectItem value="assigned">Assigned</SelectItem>
                             <SelectItem value="invited">Invited</SelectItem>
                             <SelectItem value="confirmed">Confirmed</SelectItem>
-                            <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                            <SelectItem value="rescheduled">Reschedule</SelectItem>
                             <SelectItem value="returning_standby">Returning Standby</SelectItem>
                           </SelectContent>
                         </Select>
