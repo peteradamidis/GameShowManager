@@ -16307,6 +16307,81 @@ Thank you.`;
     }
   });
 
+  // ============ RX Planning Data (shared across all users) ============
+
+  app.get("/api/rx-planning", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getAllRxPlanningData();
+      const data: Record<string, { blocks: Record<string, any[]> }> = {};
+      for (const entry of entries) {
+        if (!data[entry.recordDayId]) {
+          data[entry.recordDayId] = { blocks: {} };
+        }
+        try {
+          data[entry.recordDayId].blocks[String(entry.blockNumber)] = JSON.parse(entry.contestantData);
+        } catch {
+          data[entry.recordDayId].blocks[String(entry.blockNumber)] = [];
+        }
+      }
+      res.json(data);
+    } catch (error: any) {
+      console.error("Error getting RX planning data:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/rx-planning/:recordDayId", requireAuth, async (req, res) => {
+    try {
+      const { recordDayId } = req.params;
+      const entries = await storage.getRxPlanningData(recordDayId);
+      const blocks: Record<string, any[]> = {};
+      for (const entry of entries) {
+        try {
+          blocks[String(entry.blockNumber)] = JSON.parse(entry.contestantData);
+        } catch {
+          blocks[String(entry.blockNumber)] = [];
+        }
+      }
+      res.json({ blocks });
+    } catch (error: any) {
+      console.error("Error getting RX planning data for day:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/rx-planning/:recordDayId/:blockNumber", requireAuth, async (req, res) => {
+    try {
+      const { recordDayId, blockNumber } = req.params;
+      const { contestants } = req.body;
+      const blockNum = parseInt(blockNumber);
+      if (isNaN(blockNum) || blockNum < 1 || blockNum > 7) {
+        return res.status(400).json({ error: "Invalid block number (must be 1-7)" });
+      }
+      const contestantData = JSON.stringify(contestants || []);
+      if (!contestants || contestants.length === 0) {
+        await storage.deleteRxPlanningBlock(recordDayId, blockNum);
+        res.json({ success: true });
+      } else {
+        const result = await storage.saveRxPlanningBlock(recordDayId, blockNum, contestantData);
+        res.json(result);
+      }
+    } catch (error: any) {
+      console.error("Error saving RX planning block:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/rx-planning/:recordDayId", requireAuth, async (req, res) => {
+    try {
+      const { recordDayId } = req.params;
+      await storage.clearRxPlanningDay(recordDayId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error clearing RX planning day:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize WebSocket server for real-time updates
