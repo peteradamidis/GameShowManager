@@ -665,7 +665,7 @@ export function SeatCard({
                 {seat.playerType === 'player' ? 'P' : seat.playerType === 'backup' ? 'B' : 'PP'}
               </Badge>
             )}
-            {isRXDayLocked && (seat.winningMoneyAmount ?? 0) > 0 && (
+            {isRXDayLocked && seat.winningMoneyAmount != null && seat.winningMoneyRole && (
               <div title={`$${seat.winningMoneyAmount}`}>
                 <DollarSign className="h-3 w-3 text-green-600 dark:text-green-400 flex-shrink-0" />
               </div>
@@ -1125,7 +1125,7 @@ export function SeatCard({
                   </div>
                 )}
 
-                {isRXDayLocked && (seat.winningMoneyAmount ?? 0) > 0 && (
+                {isRXDayLocked && seat.winningMoneyAmount != null && seat.winningMoneyRole && (
                   <div className="text-sm p-2 bg-green-50 dark:bg-green-950/50 rounded-md border border-green-200 dark:border-green-800">
                     <label className="text-xs font-medium text-green-700 dark:text-green-300 block mb-2">Winning Money</label>
                     <div className="space-y-1 text-xs text-green-600 dark:text-green-400">
@@ -1179,7 +1179,7 @@ export function SeatCard({
                     Remove Test Subject
                   </Button>
                 )}
-                {isRXDayLocked && (seat.winningMoneyAmount ?? 0) > 0 && (
+                {isRXDayLocked && seat.winningMoneyAmount != null && seat.winningMoneyRole && (
                   <Button
                     size="sm"
                     variant="outline"

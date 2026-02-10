@@ -4671,7 +4671,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter for winners: must have valid role AND positive amount
       const winnersRaw = allAssignments.filter((a) => {
         const hasValidRole = a.winningMoneyRole && typeof a.winningMoneyRole === 'string' && a.winningMoneyRole.trim() !== '';
-        const hasValidAmount = typeof a.winningMoneyAmount === 'number' && a.winningMoneyAmount > 0;
+        const hasValidAmount = typeof a.winningMoneyAmount === 'number' && a.winningMoneyAmount >= 0;
         return hasValidRole && hasValidAmount;
       });
 
@@ -4731,7 +4731,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const winnersRaw = allAssignments.filter((a) => {
         const hasValidRole = a.winningMoneyRole && typeof a.winningMoneyRole === 'string' && a.winningMoneyRole.trim() !== '';
-        const hasValidAmount = typeof a.winningMoneyAmount === 'number' && a.winningMoneyAmount > 0;
+        const hasValidAmount = typeof a.winningMoneyAmount === 'number' && a.winningMoneyAmount >= 0;
         return hasValidRole && hasValidAmount;
       });
 
@@ -15680,7 +15680,7 @@ Thank you.`;
       // Filter for winners: must have valid role AND positive amount
       const winners = allAssignments.filter((a) => {
         const hasValidRole = a.winningMoneyRole && typeof a.winningMoneyRole === 'string' && a.winningMoneyRole.trim() !== '';
-        const hasValidAmount = typeof a.winningMoneyAmount === 'number' && a.winningMoneyAmount > 0;
+        const hasValidAmount = typeof a.winningMoneyAmount === 'number' && a.winningMoneyAmount >= 0;
         return hasValidRole && hasValidAmount;
       });
 

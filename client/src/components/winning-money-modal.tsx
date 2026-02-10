@@ -112,14 +112,13 @@ export function WinningMoneyModal({
       setRxEpNumber(currentRxEpNumber || "");
       setCaseNumber(currentCaseNumber || "");
       setRole(currentRole || "player");
-      // For case holders, prefer text amount if available
       if (currentRole === "case_holder" && currentAmountText) {
         setAmount(currentAmountText);
       } else {
-        setAmount(currentAmount != null && currentAmount !== 0 ? currentAmount.toString() : "");
+        setAmount(currentAmount != null ? currentAmount.toString() : "");
       }
-      setCaseAmount(currentCaseAmount != null && currentCaseAmount !== 0 ? currentCaseAmount.toString() : "");
-      setQuickCash(currentQuickCash != null && currentQuickCash !== 0 ? currentQuickCash.toString() : "");
+      setCaseAmount(currentCaseAmount != null ? currentCaseAmount.toString() : "");
+      setQuickCash(currentQuickCash != null ? currentQuickCash.toString() : "");
       setBankOfferTaken(currentBankOfferTaken ?? false);
       setSpinTheWheel(currentSpinTheWheel ?? false);
       setPrize(currentPrize || "");
@@ -187,7 +186,7 @@ export function WinningMoneyModal({
     onOpenChange(false);
   };
 
-  const hasExistingData = (currentAmount != null && currentAmount > 0) || !!currentAmountText;
+  const hasExistingData = (currentAmount != null && currentAmount >= 0) || !!currentAmountText;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
