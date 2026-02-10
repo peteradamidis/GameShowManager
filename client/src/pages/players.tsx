@@ -4095,8 +4095,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div 
                         className="relative group flex items-center gap-1"
                         style={{ 
-                          marginTop: `${(cardData.occupationOffsetY || 0) + 10}px`,
-                          marginBottom: '10px'
+                          paddingTop: `${Math.max(0, (cardData.occupationOffsetY || 0) + 10)}px`,
+                          marginBottom: '4px'
                         }}
                       >
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
@@ -4119,8 +4119,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           contentEditable
                           suppressContentEditableWarning
                           data-field="occupation"
-                          className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
-                          style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 34}px` }}
+                          className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1 break-words"
+                          style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 34}px`, wordBreak: 'break-word', overflowWrap: 'break-word' }}
                           onInput={(e) => { pendingTextRefs.current.occupation = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
                           onBlur={(e) => { pendingTextRefs.current.occupation = null; updateField('occupation', e.currentTarget.textContent || ''); }}
                           dangerouslySetInnerHTML={{ __html: cardData.occupation || 'OCCUPATION' }}
@@ -4145,7 +4145,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   </div>
                   {/* Sponsor Category - with remove button */}
                   {cardData.showSponsorCategory !== false ? (
-                    <div className="relative group flex items-center gap-1 -mt-1 h-[28px] overflow-visible">
+                    <div className="relative group flex items-center gap-1 overflow-visible" style={{ minHeight: '28px' }}>
                       <div
                         contentEditable
                         suppressContentEditableWarning
@@ -4165,12 +4165,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       </button>
                     </div>
                   ) : (
-                    <div className="h-[28px] flex items-center ignore-print">
+                    <div style={{ minHeight: '28px' }} className="flex items-center ignore-print">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => updateField('showSponsorCategory', true)}
-                        className="text-xs print:hidden -mt-1"
+                        className="text-xs print:hidden"
                       >
                         <Plus className="w-3 h-3 mr-1" />
                         Add Sponsor Category
@@ -4184,7 +4184,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <div 
                     className="relative group"
                     style={{ 
-                      marginTop: `${(cardData.taglineOffsetY || 0) + 15}px` // Increased default gap
+                      paddingTop: `${Math.max(4, (cardData.taglineOffsetY || 0) + 15)}px`
                     }}
                   >
                     <div className="flex items-center gap-2">
@@ -4209,8 +4209,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         contentEditable
                         suppressContentEditableWarning
                         data-field="tagline"
-                        className="mb-2 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline"
-                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeTagline || 36}px`, color: '#dc2626' }}
+                        className="mb-2 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline break-words"
+                        style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeTagline || 36}px`, color: '#dc2626', wordBreak: 'break-word', overflowWrap: 'break-word' }}
                         onInput={(e) => { pendingTextRefs.current.tagline = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
                         onBlur={(e) => { pendingTextRefs.current.tagline = null; updateField('tagline', e.currentTarget.textContent || ''); }}
                         dangerouslySetInnerHTML={{ __html: cardData.tagline || 'SHORT TAGLINE' }}
@@ -4229,8 +4229,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     variant="outline"
                     size="sm"
                     onClick={() => updateField('showTagline', true)}
-                    className="mb-3 text-xs print-hidden"
-                    style={{ marginTop: '-10px' }}
+                    className="mb-3 text-xs print-hidden mt-2"
                   >
                     + Add Tagline
                   </Button>
@@ -5032,8 +5031,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div 
                         className="relative group flex items-center gap-1"
                         style={{ 
-                          marginTop: `${(cardData.occupationOffsetY || 0) + 10}px`,
-                          marginBottom: '10px'
+                          paddingTop: `${Math.max(0, (cardData.occupationOffsetY || 0) + 10)}px`,
+                          marginBottom: '4px'
                         }}
                       >
                         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden ignore-print mr-1">
@@ -5057,8 +5056,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           contentEditable
                           suppressContentEditableWarning
                           data-field="occupation"
-                          className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1"
-                          style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 34}px` }}
+                          className="text-gray-800 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text flex-1 break-words"
+                          style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeOccupation || 34}px`, wordBreak: 'break-word', overflowWrap: 'break-word' }}
                           onInput={(e) => { pendingTextRefs.current.occupation = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
                           onBlur={(e) => { pendingTextRefs.current.occupation = null; updateField('occupation', e.currentTarget.textContent || ''); }}
                           data-testid="edit-occupation"
@@ -5084,7 +5083,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       </div>
                       {/* Sponsor Category - with remove button */}
                       {cardData.showSponsorCategory !== false ? (
-                        <div className="relative group flex items-center gap-1 -mt-1 h-[28px] overflow-visible">
+                        <div className="relative group flex items-center gap-1 overflow-visible" style={{ minHeight: '28px' }}>
                           <div
                             contentEditable
                             suppressContentEditableWarning
@@ -5106,12 +5105,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           </button>
                         </div>
                       ) : (
-                        <div className="h-[28px] flex items-center ignore-print">
+                        <div style={{ minHeight: '28px' }} className="flex items-center ignore-print">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => updateField('showSponsorCategory', true)}
-                            className="text-xs print:hidden -mt-1"
+                            className="text-xs print:hidden"
                             data-testid="btn-add-sponsor"
                           >
                             <Plus className="w-3 h-3 mr-1" />
@@ -5126,7 +5125,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div 
                         className="relative group"
                         style={{ 
-                          marginTop: `${(cardData.taglineOffsetY || 0) - 15}px`
+                          paddingTop: `${Math.max(4, (cardData.taglineOffsetY || 0) + 15)}px`
                         }}
                       >
                         <div className="flex items-center gap-2">
@@ -5152,8 +5151,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             contentEditable
                             suppressContentEditableWarning
                             data-field="tagline"
-                            className="mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline"
-                            style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeTagline || 36}px`, color: '#dc2626' }}
+                            className="mb-3 outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 rounded cursor-text flex-1 casting-card-tagline break-words"
+                            style={{ fontFamily: '"Calibri Light", Calibri, sans-serif', fontSize: `${cardData.fontSizeTagline || 36}px`, color: '#dc2626', wordBreak: 'break-word', overflowWrap: 'break-word' }}
                             onInput={(e) => { pendingTextRefs.current.tagline = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
                             onBlur={(e) => { pendingTextRefs.current.tagline = null; updateField('tagline', e.currentTarget.textContent || ''); }}
                             data-testid="edit-tagline"
@@ -5174,8 +5173,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                         variant="outline"
                         size="sm"
                         onClick={() => updateField('showTagline', true)}
-                        className="mb-3 text-xs print-hidden"
-                        style={{ marginTop: '-10px' }}
+                        className="mb-3 text-xs print-hidden mt-2"
                         data-testid="btn-add-tagline"
                       >
                         + Add Tagline
