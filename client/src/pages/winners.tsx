@@ -13,8 +13,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Trophy, Users, Check, X, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 
 export default function WinnersPage() {
   const { toast } = useToast();
@@ -23,6 +31,7 @@ export default function WinnersPage() {
   const [showTX, setShowTX] = useState(false);
   const [editingTX, setEditingTX] = useState<{ id: string; field: string; value: any } | null>(null);
   const [searchRxDayOrDate, setSearchRxDayOrDate] = useState('');
+  const [selectedRxDay, setSelectedRxDay] = useState<string>('all');
 
   const updateTXMutation = useMutation({
     mutationFn: async ({ id, txNumber, txDate, notifiedOfTx, photosSent }: any) => {
@@ -50,40 +59,6 @@ export default function WinnersPage() {
     },
   });
 
-  const handleDownloadExcel = async () => {
-    try {
-      setIsDownloading(true);
-      const response = await fetch('/api/seat-assignments/with-winning-money/export', {
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error('Failed to download Excel file');
-      }
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `winners-${new Date().toISOString().split('T')[0]}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      toast({
-        title: "Download successful",
-        description: "Winners data exported to Excel"
-      });
-    } catch (error: any) {
-      toast({
-        title: "Download failed",
-        description: error.message || "Could not download Excel file",
-        variant: "destructive"
-      });
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
-  // Fetch all seat assignments with winning money data
   const { data: allAssignments = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/seat-assignments/with-winning-money'],
     queryFn: async () => {
@@ -100,26 +75,110 @@ export default function WinnersPage() {
     gcTime: 0,
   });
 
-  // Get all winners with winning money and sort by RX day order
+  const sortByDate = (a: any, b: any) => {
+    const dateA = a.recordDayDateISO || a.recordDayDate || '';
+    const dateB = b.recordDayDateISO || b.recordDayDate || '';
+    return dateA.localeCompare(dateB);
+  };
+
+  const availableRxDays = useMemo(() => {
+    const rxDaySet = new Map<string, { rxNumber: string; recordDayDate: string; recordDayId: string }>();
+    allAssignments
+      .sort(sortByDate)
+      .forEach((a) => {
+        const key = a.recordDayId;
+        if (!rxDaySet.has(key)) {
+          rxDaySet.set(key, {
+            rxNumber: a.rxNumber || '',
+            recordDayDate: a.recordDayDate || '',
+            recordDayId: a.recordDayId,
+          });
+        }
+      });
+    return Array.from(rxDaySet.values());
+  }, [allAssignments]);
+
   const allWinners = useMemo(() => {
     let winners = allAssignments
-      .filter((a) => a.winningMoneyAmount !== null && a.winningMoneyAmount !== undefined)
-      .sort((a, b) => new Date(a.recordDayDate).getTime() - new Date(b.recordDayDate).getTime());
-    
+      .sort(sortByDate);
+
+    if (selectedRxDay !== 'all') {
+      winners = winners.filter((w) => w.recordDayId === selectedRxDay);
+    }
+
     if (filterType !== 'all') {
       winners = winners.filter((w) => w.winningMoneyRole === filterType);
     }
-    
+
     if (searchRxDayOrDate.trim()) {
       const search = searchRxDayOrDate.toLowerCase().trim();
-      winners = winners.filter((w) => 
+      winners = winners.filter((w) =>
         (w.rxNumber && w.rxNumber.toLowerCase().includes(search)) ||
         (w.recordDayDate && w.recordDayDate.includes(search))
       );
     }
-    
+
     return winners;
-  }, [allAssignments, filterType, searchRxDayOrDate]);
+  }, [allAssignments, filterType, searchRxDayOrDate, selectedRxDay]);
+
+  const handleDownloadExcel = () => {
+    try {
+      setIsDownloading(true);
+
+      if (allWinners.length === 0) {
+        toast({
+          title: "No data to export",
+          description: "There are no winners matching the current filters.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const winnersData = allWinners.map((w: any) => ({
+        'RX Date': w.recordDayDate || '',
+        'RX Day': w.rxNumber || '',
+        'RX Ep No.': w.rxEpNumber || '',
+        'TX Number': w.txNumber || '',
+        'TX Date': w.txDate || '',
+        'Notified of TX': w.notifiedOfTx ? 'Yes' : 'No',
+        'Photos Sent': w.photosSent ? 'Yes' : 'No',
+        'Contestant Type': w.winningMoneyRole === 'player' ? 'Player' : 'Case',
+        'Contestant Name': w.contestantName || '',
+        'Phone': w.phone || '',
+        'Email': w.email || '',
+        'Case Number': w.caseNumber || '',
+        'Case Amount': w.caseAmount || '',
+        'Quick Cash': w.quickCash || '',
+        'Bank Offer Taken': w.bankOfferTaken ? 'Yes' : 'No',
+        'Spin the Wheel': w.spinTheWheel ? 'Yes' : 'No',
+        'Wheel Prize': w.prize || '',
+        'Amount Won': w.winningMoneyAmount ?? '',
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(winnersData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Winners');
+
+      const fileName = selectedRxDay !== 'all'
+        ? `winners-${availableRxDays.find(d => d.recordDayId === selectedRxDay)?.rxNumber || 'filtered'}-${new Date().toISOString().split('T')[0]}.xlsx`
+        : `winners-${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      XLSX.writeFile(wb, fileName);
+
+      toast({
+        title: "Download successful",
+        description: `Exported ${allWinners.length} winner${allWinners.length !== 1 ? 's' : ''} to Excel`
+      });
+    } catch (error: any) {
+      toast({
+        title: "Download failed",
+        description: error.message || "Could not download Excel file",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -143,16 +202,15 @@ export default function WinnersPage() {
         </p>
       </div>
 
-      {/* Quick Export */}
       <div className="flex justify-end gap-2">
         <Button
           onClick={handleDownloadExcel}
-          disabled={isDownloading}
+          disabled={isDownloading || allWinners.length === 0}
           size="sm"
           data-testid="button-download-winners-excel"
         >
           <Download className="h-4 w-4 mr-2" />
-          {isDownloading ? 'Downloading...' : 'Export to Excel'}
+          {isDownloading ? 'Downloading...' : `Export${selectedRxDay !== 'all' ? ' Filtered' : ''} to Excel`}
         </Button>
       </div>
 
@@ -165,6 +223,19 @@ export default function WinnersPage() {
           </div>
 
           <div className="flex gap-2 items-center flex-wrap">
+            <Select value={selectedRxDay} onValueChange={setSelectedRxDay}>
+              <SelectTrigger className="w-[220px]" data-testid="select-rx-day-filter">
+                <SelectValue placeholder="Filter by RX Day" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" data-testid="select-rx-day-all">All RX Days</SelectItem>
+                {availableRxDays.map((rd) => (
+                  <SelectItem key={rd.recordDayId} value={rd.recordDayId} data-testid={`select-rx-day-${rd.recordDayId}`}>
+                    {rd.rxNumber ? `${rd.rxNumber}` : rd.recordDayDate || 'Unknown'}{rd.rxNumber && rd.recordDayDate ? ` (${rd.recordDayDate})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button
               variant={filterType === 'all' ? 'default' : 'outline'}
               onClick={() => setFilterType('all')}
@@ -217,7 +288,6 @@ export default function WinnersPage() {
           <div className="border rounded-lg overflow-hidden overflow-x-auto">
             <Table>
               <TableHeader>
-                {/* Group header row */}
                 <TableRow className="bg-yellow-100 dark:bg-yellow-900 border-b-2">
                   <TableHead colSpan={3} className="text-center font-bold bg-yellow-100 dark:bg-yellow-900 border-r">RECORD</TableHead>
                   {showTX && (
@@ -226,7 +296,6 @@ export default function WinnersPage() {
                   <TableHead colSpan={4} className="text-center font-bold bg-yellow-100 dark:bg-yellow-900 border-r">CONTESTANTS</TableHead>
                   <TableHead colSpan={8} className="text-center font-bold bg-green-100 dark:bg-green-900">WINNINGS</TableHead>
                 </TableRow>
-                {/* Column headers */}
                 <TableRow className="bg-muted/50">
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950">RX DATE</TableHead>
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950">RX DAY</TableHead>
@@ -371,15 +440,15 @@ export default function WinnersPage() {
                     </TableCell>
                     <TableCell className="text-center">
                       {winner.bankOfferTaken !== null && winner.bankOfferTaken !== undefined ? (
-                        winner.bankOfferTaken ? 
-                          <Check className="h-4 w-4 text-green-600 dark:text-green-400 mx-auto" /> : 
+                        winner.bankOfferTaken ?
+                          <Check className="h-4 w-4 text-green-600 dark:text-green-400 mx-auto" /> :
                           <X className="h-4 w-4 text-muted-foreground mx-auto" />
                       ) : '-'}
                     </TableCell>
                     <TableCell className="text-center">
                       {winner.spinTheWheel !== null && winner.spinTheWheel !== undefined ? (
-                        winner.spinTheWheel ? 
-                          <Check className="h-4 w-4 text-green-600 dark:text-green-400 mx-auto" /> : 
+                        winner.spinTheWheel ?
+                          <Check className="h-4 w-4 text-green-600 dark:text-green-400 mx-auto" /> :
                           <X className="h-4 w-4 text-muted-foreground mx-auto" />
                       ) : '-'}
                     </TableCell>

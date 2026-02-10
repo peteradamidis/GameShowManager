@@ -4687,6 +4687,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: a.id,
           recordDayId: a.recordDayId,
           recordDayDate: recordDay?.date ? new Date(recordDay.date).toLocaleDateString() : '',
+          recordDayDateISO: recordDay?.date ? new Date(recordDay.date).toISOString() : '',
           contestantId: a.contestantId,
           contestantName: contestant?.name,
           age: contestant?.age,
