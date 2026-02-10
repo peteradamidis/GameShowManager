@@ -4184,7 +4184,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   <div 
                     className="relative group"
                     style={{ 
-                      paddingTop: `${Math.max(4, (cardData.taglineOffsetY || 0) + 15)}px`
+                      marginTop: `${(cardData.taglineOffsetY || 0)}px`,
+                      paddingTop: '4px'
                     }}
                   >
                     <div className="flex items-center gap-2">
@@ -5125,7 +5126,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       <div 
                         className="relative group"
                         style={{ 
-                          paddingTop: `${Math.max(4, (cardData.taglineOffsetY || 0) + 15)}px`
+                          marginTop: `${(cardData.taglineOffsetY || 0)}px`,
+                          paddingTop: '4px'
                         }}
                       >
                         <div className="flex items-center gap-2">
