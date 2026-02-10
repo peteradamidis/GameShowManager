@@ -1324,6 +1324,18 @@ export class DbStorage implements IStorage {
         movedBy: data.movedBy ?? null,
         isFromStandby: data.isFromStandby ?? false,
         originalAttendanceDate: data.originalAttendanceDate ?? null,
+        wasDeclined: (data as any).wasDeclined ?? false,
+        declinedAt: (data as any).declinedAt ?? null,
+        declinedBy: (data as any).declinedBy ?? null,
+        bookingEmailSent: (data as any).bookingEmailSent ?? null,
+        confirmedRsvp: (data as any).confirmedRsvp ?? null,
+        paperworkSent: (data as any).paperworkSent ?? null,
+        paperworkSentBy: (data as any).paperworkSentBy ?? null,
+        paperworkReceived: (data as any).paperworkReceived ?? null,
+        paperworkReceivedBy: (data as any).paperworkReceivedBy ?? null,
+        paperworkOnDay: (data as any).paperworkOnDay ?? null,
+        seatedAsBlockType: (data as any).seatedAsBlockType ?? null,
+        standbyMovementNotes: (data as any).standbyMovementNotes ?? null,
       })
       .returning();
     

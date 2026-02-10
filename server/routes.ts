@@ -3158,7 +3158,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fixedRecords: Array<{ id: string; contestantId: string; reason: string }> = [];
       
       for (const canceled of legacyDeclined) {
-        await storage.updateCanceledAssignment(canceled.id, { wasDeclined: true });
+        await storage.updateCanceledAssignment(canceled.id, { 
+          wasDeclined: true,
+          declinedAt: canceled.declinedAt || canceled.canceledAt || new Date(),
+        });
         fixedCount++;
         fixedRecords.push({
           id: canceled.id,
