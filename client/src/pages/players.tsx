@@ -1693,6 +1693,18 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           clonedDoc.querySelectorAll('.casting-card-tagline').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#dc2626';
           });
+          clonedDoc.querySelectorAll('.casting-card-tagline-wrapper').forEach((el: Element) => {
+            const wrapper = el as HTMLElement;
+            const currentMarginTop = parseInt(wrapper.style.marginTop) || 0;
+            if (currentMarginTop < 0) {
+              const prevSibling = wrapper.previousElementSibling as HTMLElement;
+              if (prevSibling) {
+                const existingMb = parseInt(window.getComputedStyle(prevSibling).marginBottom) || 0;
+                prevSibling.style.marginBottom = `${Math.max(0, existingMb + currentMarginTop)}px`;
+              }
+              wrapper.style.marginTop = '0px';
+            }
+          });
           clonedDoc.querySelectorAll('.casting-card-producer-label').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#e5e7eb';
             (el as HTMLElement).style.border = '1px solid #d1d5db';
@@ -2093,6 +2105,18 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           });
           clonedDoc.querySelectorAll('.casting-card-tagline').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#dc2626';
+          });
+          clonedDoc.querySelectorAll('.casting-card-tagline-wrapper').forEach((el: Element) => {
+            const wrapper = el as HTMLElement;
+            const currentMarginTop = parseInt(wrapper.style.marginTop) || 0;
+            if (currentMarginTop < 0) {
+              const prevSibling = wrapper.previousElementSibling as HTMLElement;
+              if (prevSibling) {
+                const existingMb = parseInt(window.getComputedStyle(prevSibling).marginBottom) || 0;
+                prevSibling.style.marginBottom = `${Math.max(0, existingMb + currentMarginTop)}px`;
+              }
+              wrapper.style.marginTop = '0px';
+            }
           });
           clonedDoc.querySelectorAll('.casting-card-producer-label').forEach((el: Element) => {
             (el as HTMLElement).style.backgroundColor = '#e5e7eb';
@@ -4056,7 +4080,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 </div>
 
                 {/* Age and details - all editable */}
-                <div style={{ marginBottom: `${Math.max(0, 24 + (cardData.taglineOffsetY || 0))}px` }}>
+                <div className="mb-6">
                   {/* Age/State - with position controls */}
                       <div 
                         className="relative group flex items-center gap-1"
@@ -4179,25 +4203,29 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   )}
                 </div>
 
-                {/* Tagline - with position controls (offset controls gap above, not margins) */}
+                {/* Tagline - with position controls */}
                 {cardData.showTagline !== false ? (
                   <div 
-                    className="relative group"
+                    className="relative group casting-card-tagline-wrapper"
+                    style={{ 
+                      marginTop: `${(cardData.taglineOffsetY || 0)}px`,
+                      paddingTop: '4px'
+                    }}
                   >
                     <div className="flex items-center gap-2">
-                      {/* Position controls - adjusts gap between content above and tagline */}
+                      {/* Position controls */}
                       <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden">
                         <button 
                           onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) - 5)}
                           className="text-gray-400 hover:text-gray-600 p-0.5"
-                          title="Move up (reduce gap)"
+                          title="Move up"
                         >
                           <ChevronUp className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) + 5)}
                           className="text-gray-400 hover:text-gray-600 p-0.5"
-                          title="Move down (increase gap)"
+                          title="Move down"
                         >
                           <ChevronDown className="w-4 h-4" />
                         </button>
@@ -4987,7 +5015,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     </div>
 
                     {/* Age and details - all editable */}
-                    <div style={{ marginBottom: `${Math.max(0, 24 + (cardData.taglineOffsetY || 0))}px` }}>
+                    <div className="mb-6">
                       {/* Age/State - with position controls */}
                       <div 
                         className="relative group flex items-center gap-1"
@@ -5117,25 +5145,29 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       )}
                     </div>
 
-                    {/* Tagline - with position controls (offset controls gap above, not margins) */}
+                    {/* Tagline - with position controls */}
                     {cardData.showTagline !== false ? (
                       <div 
-                        className="relative group"
+                        className="relative group casting-card-tagline-wrapper"
+                        style={{ 
+                          marginTop: `${(cardData.taglineOffsetY || 0)}px`,
+                          paddingTop: '4px'
+                        }}
                       >
                         <div className="flex items-center gap-2">
-                          {/* Position controls - adjusts gap between content above and tagline */}
+                          {/* Position controls */}
                           <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden">
                             <button 
                               onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) - 5)}
                               className="text-gray-400 hover:text-gray-600 p-0.5"
-                              title="Move up (reduce gap)"
+                              title="Move up"
                             >
                               <ChevronUp className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) + 5)}
                               className="text-gray-400 hover:text-gray-600 p-0.5"
-                              title="Move down (increase gap)"
+                              title="Move down"
                             >
                               <ChevronDown className="w-4 h-4" />
                             </button>
