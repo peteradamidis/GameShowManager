@@ -912,3 +912,19 @@ export const insertBlockNoteSchema = createInsertSchema(blockNotes).omit({
 
 export type InsertBlockNote = z.infer<typeof insertBlockNoteSchema>;
 export type BlockNote = typeof blockNotes.$inferSelect;
+
+export const rxPlanningEntries = pgTable("rx_planning_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  recordDayId: varchar("record_day_id").references(() => recordDays.id).notNull(),
+  blockNumber: integer("block_number").notNull(),
+  contestantData: text("contestant_data").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertRxPlanningEntrySchema = createInsertSchema(rxPlanningEntries).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertRxPlanningEntry = z.infer<typeof insertRxPlanningEntrySchema>;
+export type RxPlanningEntry = typeof rxPlanningEntries.$inferSelect;
