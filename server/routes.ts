@@ -3358,7 +3358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fixedRecords: Array<{ standbyId: string; contestantId: string; contestantName: string }> = [];
       
       for (const standby of standbysNeedingFix) {
-        await storage.createOrUpdateCanceledAssignment({
+        const retroFixData: any = {
           contestantId: standby.contestantId,
           recordDayId: standby.recordDayId,
           blockNumber: null,
@@ -3366,7 +3366,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           reason: standby.notes || 'STANDBY - Moved to reschedule (retroactive fix)',
           isFromStandby: true,
           originalAttendanceDate: standby.recordDay?.date ? new Date(standby.recordDay.date) : new Date(),
-        });
+        };
+        // Carry over workflow fields from standby
+        if (standby.bookingEmailSent) retroFixData.bookingEmailSent = standby.bookingEmailSent;
+        if (standby.confirmedRsvp) retroFixData.confirmedRsvp = standby.confirmedRsvp;
+        if (standby.paperworkSent) retroFixData.paperworkSent = standby.paperworkSent;
+        if (standby.paperworkSentBy) retroFixData.paperworkSentBy = standby.paperworkSentBy;
+        if (standby.paperworkReceived) retroFixData.paperworkReceived = standby.paperworkReceived;
+        if (standby.paperworkReceivedBy) retroFixData.paperworkReceivedBy = standby.paperworkReceivedBy;
+        if (standby.paperworkOnDay) retroFixData.paperworkOnDay = standby.paperworkOnDay;
+        if (standby.signedIn) retroFixData.signedIn = standby.signedIn;
+        if (standby.attendingWithOverride) retroFixData.attendingWithOverride = standby.attendingWithOverride;
+        if (standby.emailsCopiedAt) retroFixData.emailsCopiedAt = standby.emailsCopiedAt;
+        if (standby.ticketEmailSent) retroFixData.ticketEmailSent = standby.ticketEmailSent;
+        
+        await storage.createOrUpdateCanceledAssignment(retroFixData);
         
         fixedCount++;
         fixedRecords.push({
@@ -4602,24 +4616,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (let i = 0; i < contestantIds.length; i++) {
         const contestantId = contestantIds[i];
         
-        // Check for previous canceled assignments to carry over paperwork status
+        // Check for previous canceled assignments to carry over workflow status
         const previousCanceled = allCanceledAssignments.find(
-          (c: any) => c.contestantId === contestantId && (c.paperworkSent || c.paperworkReceived)
+          (c: any) => c.contestantId === contestantId && (c.paperworkSent || c.paperworkReceived || c.bookingEmailSent || c.confirmedRsvp || c.paperworkOnDay)
         );
         // Also find any canceled assignment for this contestant (to update rebook status)
         const anyCanceled = allCanceledAssignments.find(
           (c: any) => c.contestantId === contestantId
         );
         
-        const assignment = await storage.createSeatAssignment({
+        const bulkAssignData: any = {
           recordDayId,
           contestantId,
           blockNumber: parseInt(blockNumber),
           seatLabel: seatLabels[i],
-          // Carry over paperwork status from previous bookings
-          paperworkSent: previousCanceled?.paperworkSent || undefined,
-          paperworkReceived: previousCanceled?.paperworkReceived || undefined,
-        });
+        };
+        if (previousCanceled) {
+          if (previousCanceled.bookingEmailSent) bulkAssignData.bookingEmailSent = previousCanceled.bookingEmailSent;
+          if (previousCanceled.confirmedRsvp) bulkAssignData.confirmedRsvp = previousCanceled.confirmedRsvp;
+          if (previousCanceled.paperworkSent) bulkAssignData.paperworkSent = previousCanceled.paperworkSent;
+          if (previousCanceled.paperworkSentBy) bulkAssignData.paperworkSentBy = previousCanceled.paperworkSentBy;
+          if (previousCanceled.paperworkReceived) bulkAssignData.paperworkReceived = previousCanceled.paperworkReceived;
+          if (previousCanceled.paperworkReceivedBy) bulkAssignData.paperworkReceivedBy = previousCanceled.paperworkReceivedBy;
+          if (previousCanceled.paperworkOnDay) bulkAssignData.paperworkOnDay = previousCanceled.paperworkOnDay;
+          if (previousCanceled.signedIn) bulkAssignData.signedIn = previousCanceled.signedIn;
+          if (previousCanceled.attendingWithOverride) bulkAssignData.attendingWithOverride = previousCanceled.attendingWithOverride;
+          if (previousCanceled.mobilityNotesOverride) bulkAssignData.mobilityNotesOverride = previousCanceled.mobilityNotesOverride;
+          if (previousCanceled.emailsCopiedAt) bulkAssignData.emailsCopiedAt = previousCanceled.emailsCopiedAt;
+          if (previousCanceled.ticketEmailSent) bulkAssignData.ticketEmailSent = previousCanceled.ticketEmailSent;
+        }
+        
+        const assignment = await storage.createSeatAssignment(bulkAssignData);
         assignments.push(assignment);
         
         // Update contestant status to assigned
@@ -6500,24 +6527,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
             continue;
           }
           
-          // Check for previous canceled assignments to carry over paperwork status
+          // Check for previous canceled assignments to carry over workflow status
           const previousCanceled = allCanceledAssignments.find(
-            (c: any) => c.contestantId === item.contestant.id && (c.paperworkSent || c.paperworkReceived)
+            (c: any) => c.contestantId === item.contestant.id && (c.paperworkSent || c.paperworkReceived || c.bookingEmailSent || c.confirmedRsvp || c.paperworkOnDay)
           );
           // Also find any canceled assignment for this contestant (to update rebook status)
           const anyCanceled = allCanceledAssignments.find(
             (c: any) => c.contestantId === item.contestant.id
           );
           
-          const assignment = await storage.createSeatAssignment({
+          const autoAssignData: any = {
             recordDayId,
             contestantId: item.contestant.id,
             blockNumber: item.blockNumber,
             seatLabel: item.seatLabel,
-            // Carry over paperwork status from previous bookings
-            paperworkSent: previousCanceled?.paperworkSent || undefined,
-            paperworkReceived: previousCanceled?.paperworkReceived || undefined,
-          });
+          };
+          if (previousCanceled) {
+            if (previousCanceled.bookingEmailSent) autoAssignData.bookingEmailSent = previousCanceled.bookingEmailSent;
+            if (previousCanceled.confirmedRsvp) autoAssignData.confirmedRsvp = previousCanceled.confirmedRsvp;
+            if (previousCanceled.paperworkSent) autoAssignData.paperworkSent = previousCanceled.paperworkSent;
+            if (previousCanceled.paperworkSentBy) autoAssignData.paperworkSentBy = previousCanceled.paperworkSentBy;
+            if (previousCanceled.paperworkReceived) autoAssignData.paperworkReceived = previousCanceled.paperworkReceived;
+            if (previousCanceled.paperworkReceivedBy) autoAssignData.paperworkReceivedBy = previousCanceled.paperworkReceivedBy;
+            if (previousCanceled.paperworkOnDay) autoAssignData.paperworkOnDay = previousCanceled.paperworkOnDay;
+            if (previousCanceled.signedIn) autoAssignData.signedIn = previousCanceled.signedIn;
+            if (previousCanceled.attendingWithOverride) autoAssignData.attendingWithOverride = previousCanceled.attendingWithOverride;
+            if (previousCanceled.mobilityNotesOverride) autoAssignData.mobilityNotesOverride = previousCanceled.mobilityNotesOverride;
+            if (previousCanceled.emailsCopiedAt) autoAssignData.emailsCopiedAt = previousCanceled.emailsCopiedAt;
+            if (previousCanceled.ticketEmailSent) autoAssignData.ticketEmailSent = previousCanceled.ticketEmailSent;
+          }
+          
+          const assignment = await storage.createSeatAssignment(autoAssignData);
           createdAssignments.push(assignment);
           contestantUpdates.push(item.contestant.id);
           
@@ -7699,7 +7739,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (currentAssignment.castingCategory) workflowData.castingCategory = currentAssignment.castingCategory;
         if (currentAssignment.notes) workflowData.notes = currentAssignment.notes;
         if (currentAssignment.otdNotes) workflowData.otdNotes = currentAssignment.otdNotes;
-        // Note: Don't copy bookingEmailSent or confirmedRsvp since they were for the old date
+        if (currentAssignment.bookingEmailSent) workflowData.bookingEmailSent = currentAssignment.bookingEmailSent;
+        if (currentAssignment.confirmedRsvp) workflowData.confirmedRsvp = currentAssignment.confirmedRsvp;
+        if (currentAssignment.paperworkSent) workflowData.paperworkSent = currentAssignment.paperworkSent;
+        if (currentAssignment.paperworkSentBy) workflowData.paperworkSentBy = currentAssignment.paperworkSentBy;
+        if (currentAssignment.paperworkReceived) workflowData.paperworkReceived = currentAssignment.paperworkReceived;
+        if (currentAssignment.paperworkReceivedBy) workflowData.paperworkReceivedBy = currentAssignment.paperworkReceivedBy;
+        if (currentAssignment.paperworkOnDay) workflowData.paperworkOnDay = currentAssignment.paperworkOnDay;
+        if (currentAssignment.signedIn) workflowData.signedIn = currentAssignment.signedIn;
+        if (currentAssignment.attendingWithOverride) workflowData.attendingWithOverride = currentAssignment.attendingWithOverride;
+        if (currentAssignment.mobilityNotesOverride) workflowData.mobilityNotesOverride = currentAssignment.mobilityNotesOverride;
+        if (currentAssignment.emailsCopiedAt) workflowData.emailsCopiedAt = currentAssignment.emailsCopiedAt;
+        if (currentAssignment.ticketEmailSent) workflowData.ticketEmailSent = currentAssignment.ticketEmailSent;
         
         if (Object.keys(workflowData).length > 0) {
           await storage.updateSeatAssignmentWorkflow(newAssignment.id, workflowData);
@@ -7764,7 +7815,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Use createOrUpdateCanceledAssignment which handles duplicates internally
       // If contestant already in reschedule, updates their record and increments count
-      const canceledAssignment = await storage.createOrUpdateCanceledAssignment({
+      const directCanceledData: any = {
         contestantId,
         recordDayId,
         blockNumber: blockNumber || null,
@@ -7773,7 +7824,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         movedBy: movedBy || 'SYSTEM',
         isFromStandby: isFromStandby || false,
         originalAttendanceDate: originalAttendanceDate ? new Date(originalAttendanceDate) : null,
-      });
+      };
+      
+      // If this is from a standby, look up the standby to carry over workflow fields
+      if (isFromStandby && contestantId && recordDayId) {
+        const allStandbys = await storage.getStandbyAssignments();
+        const sourceStandby = allStandbys.find((s: any) => s.contestantId === contestantId && s.recordDayId === recordDayId);
+        if (sourceStandby) {
+          if (sourceStandby.bookingEmailSent) directCanceledData.bookingEmailSent = sourceStandby.bookingEmailSent;
+          if (sourceStandby.confirmedRsvp) directCanceledData.confirmedRsvp = sourceStandby.confirmedRsvp;
+          if (sourceStandby.paperworkSent) directCanceledData.paperworkSent = sourceStandby.paperworkSent;
+          if (sourceStandby.paperworkSentBy) directCanceledData.paperworkSentBy = sourceStandby.paperworkSentBy;
+          if (sourceStandby.paperworkReceived) directCanceledData.paperworkReceived = sourceStandby.paperworkReceived;
+          if (sourceStandby.paperworkReceivedBy) directCanceledData.paperworkReceivedBy = sourceStandby.paperworkReceivedBy;
+          if (sourceStandby.paperworkOnDay) directCanceledData.paperworkOnDay = sourceStandby.paperworkOnDay;
+          if (sourceStandby.signedIn) directCanceledData.signedIn = sourceStandby.signedIn;
+          if (sourceStandby.attendingWithOverride) directCanceledData.attendingWithOverride = sourceStandby.attendingWithOverride;
+          if (sourceStandby.emailsCopiedAt) directCanceledData.emailsCopiedAt = sourceStandby.emailsCopiedAt;
+          if (sourceStandby.ticketEmailSent) directCanceledData.ticketEmailSent = sourceStandby.ticketEmailSent;
+        }
+      }
+      
+      const canceledAssignment = await storage.createOrUpdateCanceledAssignment(directCanceledData);
       
       // Update contestant status to 'rescheduled'
       await storage.updateContestantAvailability(contestantId, 'rescheduled');
@@ -10921,18 +10993,32 @@ Thank you.`;
         
         // Use createOrUpdateCanceledAssignment to handle duplicates automatically
         // If contestant already in reschedule, updates their record and increments count
-        await storage.createOrUpdateCanceledAssignment({
+        const canceledData: any = {
           contestantId: standby.contestantId,
           recordDayId: standby.recordDayId,
-          blockNumber: null, // Standbys don't have a block number
+          blockNumber: null,
           seatLabel: standby.assignedToSeat || null,
           reason: filteredUpdateData.notes || 'DECLINED STANDBY INVITATION',
           movedBy,
-          isFromStandby: false, // Show "Canceled" tag, not "Standby"
+          isFromStandby: false,
           wasDeclined: true,
           declinedAt: new Date(),
           originalAttendanceDate: standby.recordDayId ? (await storage.getRecordDayById(standby.recordDayId))?.date : null,
-        });
+        };
+        // Carry over workflow fields from standby
+        if (standby.bookingEmailSent) canceledData.bookingEmailSent = standby.bookingEmailSent;
+        if (standby.confirmedRsvp) canceledData.confirmedRsvp = standby.confirmedRsvp;
+        if (standby.paperworkSent) canceledData.paperworkSent = standby.paperworkSent;
+        if (standby.paperworkSentBy) canceledData.paperworkSentBy = standby.paperworkSentBy;
+        if (standby.paperworkReceived) canceledData.paperworkReceived = standby.paperworkReceived;
+        if (standby.paperworkReceivedBy) canceledData.paperworkReceivedBy = standby.paperworkReceivedBy;
+        if (standby.paperworkOnDay) canceledData.paperworkOnDay = standby.paperworkOnDay;
+        if (standby.signedIn) canceledData.signedIn = standby.signedIn;
+        if (standby.attendingWithOverride) canceledData.attendingWithOverride = standby.attendingWithOverride;
+        if (standby.emailsCopiedAt) canceledData.emailsCopiedAt = standby.emailsCopiedAt;
+        if (standby.ticketEmailSent) canceledData.ticketEmailSent = standby.ticketEmailSent;
+        
+        await storage.createOrUpdateCanceledAssignment(canceledData);
 
         // Log the standby decline/reschedule to movement history
         await storage.logMovement({
@@ -11056,7 +11142,7 @@ Thank you.`;
 
       // Use createOrUpdateCanceledAssignment to handle duplicates automatically
       // If contestant already in reschedule, updates their record and increments count
-      const canceledAssignment = await storage.createOrUpdateCanceledAssignment({
+      const standbyRescheduleData: any = {
         contestantId: standby.contestantId,
         recordDayId: standby.recordDayId,
         blockNumber: null,
@@ -11064,7 +11150,21 @@ Thank you.`;
         reason: 'Standby - eligible for reschedule',
         isFromStandby: true,
         originalAttendanceDate: new Date(standby.recordDay.date),
-      });
+      };
+      // Carry over workflow fields from standby
+      if (standby.bookingEmailSent) standbyRescheduleData.bookingEmailSent = standby.bookingEmailSent;
+      if (standby.confirmedRsvp) standbyRescheduleData.confirmedRsvp = standby.confirmedRsvp;
+      if (standby.paperworkSent) standbyRescheduleData.paperworkSent = standby.paperworkSent;
+      if (standby.paperworkSentBy) standbyRescheduleData.paperworkSentBy = standby.paperworkSentBy;
+      if (standby.paperworkReceived) standbyRescheduleData.paperworkReceived = standby.paperworkReceived;
+      if (standby.paperworkReceivedBy) standbyRescheduleData.paperworkReceivedBy = standby.paperworkReceivedBy;
+      if (standby.paperworkOnDay) standbyRescheduleData.paperworkOnDay = standby.paperworkOnDay;
+      if (standby.signedIn) standbyRescheduleData.signedIn = standby.signedIn;
+      if (standby.attendingWithOverride) standbyRescheduleData.attendingWithOverride = standby.attendingWithOverride;
+      if (standby.emailsCopiedAt) standbyRescheduleData.emailsCopiedAt = standby.emailsCopiedAt;
+      if (standby.ticketEmailSent) standbyRescheduleData.ticketEmailSent = standby.ticketEmailSent;
+      
+      const canceledAssignment = await storage.createOrUpdateCanceledAssignment(standbyRescheduleData);
 
       // Update the standby to mark it as moved to reschedule
       const updatedStandby = await storage.updateStandbyAssignment(id, {
