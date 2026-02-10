@@ -413,11 +413,12 @@ export default function ReschedulePage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="reschedule">Reschedule</SelectItem>
+                  <SelectItem value="rescheduled">Rescheduled</SelectItem>
                   <SelectItem value="assigned">Assigned</SelectItem>
                   <SelectItem value="invited">Invited</SelectItem>
                   <SelectItem value="confirmed">Confirmed</SelectItem>
                   <SelectItem value="available">Available</SelectItem>
+                  <SelectItem value="returning_standby">Returning Standby</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -468,6 +469,7 @@ export default function ReschedulePage() {
                   <TableHead className="w-12">Photo</TableHead>
                   <TableHead className="min-w-[120px]">Name</TableHead>
                   <TableHead className="w-20">Type</TableHead>
+                  <TableHead className="w-24">Status</TableHead>
                   <TableHead className="w-14">Rating</TableHead>
                   <TableHead className="w-12">Age</TableHead>
                   <TableHead className="w-14">Gender</TableHead>
@@ -493,9 +495,8 @@ export default function ReschedulePage() {
                     const matchesType = filterType === "all" || 
                       (filterType === "standby" && cancellation.isFromStandby) || 
                       (filterType === "canceled" && !cancellation.isFromStandby);
-                    // Filter by contestant's actual state
-                    const contestantState = cancellation.contestant?.state?.toLowerCase() || '';
-                    const matchesStatus = filterStatus === "all" || contestantState === filterStatus;
+                    const contestantStatus = cancellation.contestant?.availabilityStatus?.toLowerCase() || '';
+                    const matchesStatus = filterStatus === "all" || contestantStatus === filterStatus;
                     return matchesDate && matchesSearch && matchesType && matchesStatus;
                   })
                   .map((cancellation: any) => (
@@ -581,6 +582,18 @@ export default function ReschedulePage() {
                           </Badge>
                         )}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const status = cancellation.contestant?.availabilityStatus;
+                        if (status === 'assigned') return <Badge className="bg-blue-500/15 text-blue-700 border-blue-300 dark:text-blue-400 dark:border-blue-700">Assigned</Badge>;
+                        if (status === 'rescheduled') return <Badge className="bg-orange-500/15 text-orange-700 border-orange-300 dark:text-orange-400 dark:border-orange-700">Rescheduled</Badge>;
+                        if (status === 'invited') return <Badge className="bg-purple-500/15 text-purple-700 border-purple-300 dark:text-purple-400 dark:border-purple-700">Invited</Badge>;
+                        if (status === 'confirmed') return <Badge className="bg-green-500/15 text-green-700 border-green-300 dark:text-green-400 dark:border-green-700">Confirmed</Badge>;
+                        if (status === 'available') return <Badge className="bg-gray-500/15 text-gray-700 border-gray-300 dark:text-gray-400 dark:border-gray-600">Available</Badge>;
+                        if (status === 'returning_standby') return <Badge className="bg-yellow-500/15 text-yellow-700 border-yellow-300 dark:text-yellow-400 dark:border-yellow-700">Ret. Standby</Badge>;
+                        return <Badge variant="outline">{status || '—'}</Badge>;
+                      })()}
                     </TableCell>
                     <TableCell>
                       {cancellation.contestant.auditionRating ? (
