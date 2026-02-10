@@ -3358,13 +3358,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fixedRecords: Array<{ standbyId: string; contestantId: string; contestantName: string }> = [];
       
       for (const standby of standbysNeedingFix) {
+        const wasConfirmedOrCheckedIn = standby.confirmedAt || standby.signedIn || standby.status === 'confirmed';
         const retroFixData: any = {
           contestantId: standby.contestantId,
           recordDayId: standby.recordDayId,
           blockNumber: null,
           seatLabel: standby.assignedToSeat || null,
           reason: standby.notes || 'STANDBY - Moved to reschedule (retroactive fix)',
-          isFromStandby: true,
+          isFromStandby: wasConfirmedOrCheckedIn ? true : false,
           originalAttendanceDate: standby.recordDay?.date ? new Date(standby.recordDay.date) : new Date(),
         };
         // Carry over workflow fields from standby
@@ -11120,13 +11121,16 @@ Thank you.`;
 
       // Use createOrUpdateCanceledAssignment to handle duplicates automatically
       // If contestant already in reschedule, updates their record and increments count
+      // Standbys who were never confirmed and never checked in get "Canceled" type,
+      // only standbys who were confirmed or checked in get "Standby" type
+      const wasConfirmedOrCheckedIn = standby.confirmedAt || standby.signedIn || standby.status === 'confirmed';
       const standbyRescheduleData: any = {
         contestantId: standby.contestantId,
         recordDayId: standby.recordDayId,
         blockNumber: null,
         seatLabel: standby.assignedToSeat || null,
-        reason: 'Standby - eligible for reschedule',
-        isFromStandby: true,
+        reason: wasConfirmedOrCheckedIn ? 'Standby - eligible for reschedule' : 'Standby declined before confirmation',
+        isFromStandby: wasConfirmedOrCheckedIn ? true : false,
         originalAttendanceDate: new Date(standby.recordDay.date),
       };
       // Carry over workflow fields from standby
