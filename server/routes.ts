@@ -7194,7 +7194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if the record day is locked - prevent removal on locked days
       const recordDay = await storage.getRecordDay(assignment.recordDayId);
-      if (recordDay?.isLocked) {
+      if (recordDay?.lockedAt) {
         return res.status(403).json({ 
           error: "Cannot remove seat assignment on a locked record day. Unlock the day first or use the seating chart to make changes." 
         });
@@ -9075,12 +9075,12 @@ ${finalEmailFooter}`;
       const notes = notesParts.join('\n\n');
       
       // Update the booking confirmation status
-      await storage.updateBookingConfirmation(tokenRecord.id, {
+      await storage.updateBookingConfirmationResponse(
+        tokenRecord.id,
         confirmationStatus,
-        attendingWith: responseData.attendingWith || null,
-        notes,
-        confirmedAt: new Date(),
-      });
+        responseData.attendingWith || undefined,
+        notes
+      );
       
       console.log("[Forms Webhook] Updated booking confirmation:", {
         tokenId: tokenRecord.id,

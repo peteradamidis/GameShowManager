@@ -258,7 +258,6 @@ export interface IStorage {
     blockB: number
   ): Promise<{ swappedCount: number; blockAAssignments: SeatAssignment[]; blockBAssignments: SeatAssignment[] }>;
   cancelSeatAssignment(id: string, reason?: string, movedBy?: string, isDecline?: boolean): Promise<CanceledAssignment>;
-  updateCanceledAssignment(id: string, data: Partial<CanceledAssignment>): Promise<CanceledAssignment | undefined>;
   
   // Canceled Assignments
   getCanceledAssignments(): Promise<Array<CanceledAssignment & { contestant: Contestant; recordDay: RecordDay }>>;
@@ -1301,15 +1300,6 @@ export class DbStorage implements IStorage {
       .update(canceledAssignments)
       .set({ blockNumber, seatLabel })
       .where(eq(canceledAssignments.id, id));
-  }
-
-  async updateCanceledAssignment(id: string, data: Partial<CanceledAssignment>): Promise<CanceledAssignment | undefined> {
-    const [updated] = await db
-      .update(canceledAssignments)
-      .set(data)
-      .where(eq(canceledAssignments.id, id))
-      .returning();
-    return updated;
   }
 
   async createCanceledAssignment(data: Partial<InsertCanceledAssignment> & { contestantId: string; recordDayId: string }): Promise<CanceledAssignment> {
