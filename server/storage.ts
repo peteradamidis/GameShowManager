@@ -83,6 +83,9 @@ import {
   type InsertBirthdayEntry,
   type BlockNote,
   type InsertBlockNote,
+  rxPlanningEntries,
+  type RxPlanningEntry,
+  type InsertRxPlanningEntry,
 } from "@shared/schema";
 import { eq, and, sql, inArray, desc } from "drizzle-orm";
 
@@ -416,6 +419,13 @@ export interface IStorage {
   upsertBlockNote(recordDayId: string, blockNumber: number, notes: string): Promise<BlockNote>;
   getSystemSetting(key: string): Promise<SystemSetting | undefined>;
   setSystemSetting(key: string, value: string): Promise<SystemSetting>;
+
+  // RX Planning
+  getRxPlanningData(recordDayId: string): Promise<RxPlanningEntry[]>;
+  getAllRxPlanningData(): Promise<RxPlanningEntry[]>;
+  saveRxPlanningBlock(recordDayId: string, blockNumber: number, contestantData: string): Promise<RxPlanningEntry>;
+  deleteRxPlanningBlock(recordDayId: string, blockNumber: number): Promise<void>;
+  clearRxPlanningDay(recordDayId: string): Promise<void>;
 }
 
 export interface SystemSetting {
@@ -3429,6 +3439,45 @@ export class DbStorage implements IStorage {
         .returning();
       return created;
     }
+  }
+
+  async getRxPlanningData(recordDayId: string): Promise<RxPlanningEntry[]> {
+    const db = getDb();
+    return await db.select().from(rxPlanningEntries).where(eq(rxPlanningEntries.recordDayId, recordDayId));
+  }
+
+  async getAllRxPlanningData(): Promise<RxPlanningEntry[]> {
+    const db = getDb();
+    return await db.select().from(rxPlanningEntries);
+  }
+
+  async saveRxPlanningBlock(recordDayId: string, blockNumber: number, contestantData: string): Promise<RxPlanningEntry> {
+    const db = getDb();
+    const existing = await db.select().from(rxPlanningEntries)
+      .where(and(eq(rxPlanningEntries.recordDayId, recordDayId), eq(rxPlanningEntries.blockNumber, blockNumber)));
+    if (existing.length > 0) {
+      const [updated] = await db.update(rxPlanningEntries)
+        .set({ contestantData, updatedAt: new Date() })
+        .where(eq(rxPlanningEntries.id, existing[0].id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(rxPlanningEntries)
+        .values({ recordDayId, blockNumber, contestantData })
+        .returning();
+      return created;
+    }
+  }
+
+  async deleteRxPlanningBlock(recordDayId: string, blockNumber: number): Promise<void> {
+    const db = getDb();
+    await db.delete(rxPlanningEntries)
+      .where(and(eq(rxPlanningEntries.recordDayId, recordDayId), eq(rxPlanningEntries.blockNumber, blockNumber)));
+  }
+
+  async clearRxPlanningDay(recordDayId: string): Promise<void> {
+    const db = getDb();
+    await db.delete(rxPlanningEntries).where(eq(rxPlanningEntries.recordDayId, recordDayId));
   }
 }
 
