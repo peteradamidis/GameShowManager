@@ -1596,7 +1596,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         /* Casting card specific colors - must override inherit with higher specificity */
         #casting-card-preview .casting-card-header { background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important; border: 2px solid #000000 !important; }
         #casting-card-preview .casting-card-name { color: #fcd34d !important; }
-        #casting-card-preview .casting-card-sponsor { color: #16a34a !important; }
         #casting-card-preview .casting-card-tagline { color: #dc2626 !important; }
         #casting-card-preview .casting-card-producer-label { background-color: #e5e7eb !important; border: 1px solid #d1d5db !important; color: #000000 !important; }
         #casting-card-preview .casting-card-producer-name-print { background-color: #facc15 !important; color: #000000 !important; }
@@ -1657,9 +1656,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             .casting-card-name {
               color: #fcd34d !important;
             }
-            .casting-card-sponsor {
-              color: #16a34a !important;
-            }
             .casting-card-tagline {
               color: #dc2626 !important;
             }
@@ -1686,9 +1682,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.margin = '0';
             (el as HTMLElement).style.marginTop = '-24px';
             (el as HTMLElement).style.paddingLeft = '16px';
-          });
-          clonedDoc.querySelectorAll('.casting-card-sponsor').forEach((el: Element) => {
-            (el as HTMLElement).style.color = '#16a34a';
           });
           clonedDoc.querySelectorAll('.casting-card-tagline').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#dc2626';
@@ -2011,7 +2004,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         /* Casting card specific colors - must override inherit with higher specificity */
         #casting-card-preview .casting-card-header { background: linear-gradient(to right, #b45309, #d97706, #f59e0b) !important; border: 2px solid #000000 !important; }
         #casting-card-preview .casting-card-name { color: #fcd34d !important; }
-        #casting-card-preview .casting-card-sponsor { color: #16a34a !important; }
         #casting-card-preview .casting-card-tagline { color: #dc2626 !important; }
         #casting-card-preview .casting-card-producer-label { background-color: #e5e7eb !important; border: 1px solid #d1d5db !important; color: #000000 !important; }
         #casting-card-preview .casting-card-producer-name-print { background-color: #facc15 !important; color: #000000 !important; }
@@ -2071,9 +2063,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             .casting-card-name {
               color: #fcd34d !important;
             }
-            .casting-card-sponsor {
-              color: #16a34a !important;
-            }
             .casting-card-tagline {
               color: #dc2626 !important;
             }
@@ -2100,9 +2089,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
             (el as HTMLElement).style.margin = '0';
             (el as HTMLElement).style.marginTop = '-24px';
             (el as HTMLElement).style.paddingLeft = '16px';
-          });
-          clonedDoc.querySelectorAll('.casting-card-sponsor').forEach((el: Element) => {
-            (el as HTMLElement).style.color = '#16a34a';
           });
           clonedDoc.querySelectorAll('.casting-card-tagline').forEach((el: Element) => {
             (el as HTMLElement).style.color = '#dc2626';
@@ -4169,40 +4155,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       </button>
                     </div>
                   </div>
-                  {/* Sponsor Category - with remove button */}
-                  {cardData.showSponsorCategory !== false ? (
-                    <div className="relative group flex items-center gap-1 overflow-visible" style={{ minHeight: '28px' }}>
-                      <div
-                        contentEditable
-                        suppressContentEditableWarning
-                        data-field="sponsorCategory"
-                        className="text-lg font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text casting-card-sponsor"
-                        style={{ color: '#16a34a' }}
-                        onInput={(e) => { pendingTextRefs.current.sponsorCategory = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
-                        onBlur={(e) => { pendingTextRefs.current.sponsorCategory = null; updateField('sponsorCategory', e.currentTarget.textContent || ''); }}
-                        dangerouslySetInnerHTML={{ __html: cardData.sponsorCategory || 'SPONSOR CATEGORY: X' }}
-                      />
-                      <button
-                        onClick={() => updateField('showSponsorCategory', false)}
-                        className="bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity ignore-print"
-                        title="Remove sponsor category"
-                      >
-                        <X className="w-2.5 h-2.5" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div style={{ minHeight: '28px' }} className="flex items-center ignore-print">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updateField('showSponsorCategory', true)}
-                        className="text-xs print:hidden"
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        Add Sponsor Category
-                      </Button>
-                    </div>
-                  )}
                 </div>
 
                 {/* Tagline - with position controls */}
@@ -5108,43 +5060,6 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                           </button>
                         </div>
                       </div>
-                      {/* Sponsor Category - with remove button */}
-                      {cardData.showSponsorCategory !== false ? (
-                        <div className="relative group flex items-center gap-1 overflow-visible" style={{ minHeight: '28px' }}>
-                          <div
-                            contentEditable
-                            suppressContentEditableWarning
-                            data-field="sponsorCategory"
-                            className="text-lg font-semibold outline-none hover:bg-yellow-50 focus:bg-yellow-100 px-1 -mx-1 rounded cursor-text casting-card-sponsor"
-                            style={{ color: '#16a34a' }}
-                            onInput={(e) => { pendingTextRefs.current.sponsorCategory = e.currentTarget.textContent || ''; hasUnsavedChanges.current = true; }}
-                            onBlur={(e) => { pendingTextRefs.current.sponsorCategory = null; updateField('sponsorCategory', e.currentTarget.textContent || ''); }}
-                            data-testid="edit-sponsor"
-                            dangerouslySetInnerHTML={{ __html: cardData.sponsorCategory || 'SPONSOR CATEGORY: X' }}
-                          />
-                          <button
-                            onClick={() => updateField('showSponsorCategory', false)}
-                            className="bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity ignore-print"
-                            title="Remove sponsor category"
-                            data-testid="btn-remove-sponsor"
-                          >
-                            <X className="w-2.5 h-2.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div style={{ minHeight: '28px' }} className="flex items-center ignore-print">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateField('showSponsorCategory', true)}
-                            className="text-xs print:hidden"
-                            data-testid="btn-add-sponsor"
-                          >
-                            <Plus className="w-3 h-3 mr-1" />
-                            Add Sponsor Category
-                          </Button>
-                        </div>
-                      )}
                     </div>
 
                     {/* Tagline - with position controls */}
