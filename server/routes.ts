@@ -4392,31 +4392,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ error: "This seat is already occupied" });
       }
 
-      // Check for previous canceled assignments to carry over paperwork status
+      // Check for previous canceled assignments to carry over workflow status
       const canceledAssignments = await storage.getCanceledAssignments();
-      // Find any reschedule entry for this contestant (for paperwork carryover)
-      const previousCanceledWithPaperwork = canceledAssignments.find(
-        (c: any) => c.contestantId === contestantId && (c.paperworkSent || c.paperworkReceived)
+      // Find any reschedule entry for this contestant (for workflow field carryover)
+      const previousCanceledWithWorkflow = canceledAssignments.find(
+        (c: any) => c.contestantId === contestantId && (c.paperworkSent || c.paperworkReceived || c.bookingEmailSent || c.confirmedRsvp || c.paperworkOnDay)
       );
       // Find any reschedule entry for this contestant (to remove them from reschedule)
       const anyPreviousCanceled = canceledAssignments.find(
         (c: any) => c.contestantId === contestantId
       );
 
-      const assignment = await storage.createSeatAssignment({
+      // Build the assignment data
+      const assignmentData: any = {
         recordDayId,
         contestantId,
         blockNumber: parseInt(blockNumber),
         seatLabel,
         playerType,
-        // Carry over paperwork status from previous bookings
-        paperworkSent: previousCanceledWithPaperwork?.paperworkSent || undefined,
-        paperworkReceived: previousCanceledWithPaperwork?.paperworkReceived || undefined,
-        // Standby block type tracking - when standby is seated
         seatedAsBlockType: seatedAsBlockType || undefined,
         seatedFromStandby: seatedFromStandby === true,
         standbyMovementNotes: standbyMovementNotes || undefined,
-      });
+      };
+
+      // When seating from standby, carry over all workflow fields from the standby assignment
+      if (standbyAssignment && seatedFromStandby) {
+        if (standbyAssignment.bookingEmailSent) assignmentData.bookingEmailSent = standbyAssignment.bookingEmailSent;
+        if (standbyAssignment.confirmedRsvp) assignmentData.confirmedRsvp = standbyAssignment.confirmedRsvp;
+        if (standbyAssignment.paperworkSent) assignmentData.paperworkSent = standbyAssignment.paperworkSent;
+        if (standbyAssignment.paperworkReceived) assignmentData.paperworkReceived = standbyAssignment.paperworkReceived;
+        if (standbyAssignment.paperworkOnDay) assignmentData.paperworkOnDay = standbyAssignment.paperworkOnDay;
+        if (standbyAssignment.signedIn) assignmentData.signedIn = standbyAssignment.signedIn;
+        if (standbyAssignment.otdNotes) assignmentData.otdNotes = standbyAssignment.otdNotes;
+        if (standbyAssignment.attendingWithOverride) assignmentData.attendingWithOverride = standbyAssignment.attendingWithOverride;
+        if (standbyAssignment.mobilityNotesOverride) assignmentData.mobilityNotesOverride = standbyAssignment.mobilityNotesOverride;
+      }
+      // When rebooking from reschedule, carry over all workflow fields from the canceled assignment
+      else if (previousCanceledWithWorkflow) {
+        if (previousCanceledWithWorkflow.bookingEmailSent) assignmentData.bookingEmailSent = previousCanceledWithWorkflow.bookingEmailSent;
+        if (previousCanceledWithWorkflow.confirmedRsvp) assignmentData.confirmedRsvp = previousCanceledWithWorkflow.confirmedRsvp;
+        if (previousCanceledWithWorkflow.paperworkSent) assignmentData.paperworkSent = previousCanceledWithWorkflow.paperworkSent;
+        if (previousCanceledWithWorkflow.paperworkSentBy) assignmentData.paperworkSentBy = previousCanceledWithWorkflow.paperworkSentBy;
+        if (previousCanceledWithWorkflow.paperworkReceived) assignmentData.paperworkReceived = previousCanceledWithWorkflow.paperworkReceived;
+        if (previousCanceledWithWorkflow.paperworkReceivedBy) assignmentData.paperworkReceivedBy = previousCanceledWithWorkflow.paperworkReceivedBy;
+        if (previousCanceledWithWorkflow.paperworkOnDay) assignmentData.paperworkOnDay = previousCanceledWithWorkflow.paperworkOnDay;
+      }
+
+      const assignment = await storage.createSeatAssignment(assignmentData);
 
       // Update contestant status to assigned
       await storage.updateContestantAvailability(contestantId, 'assigned');
@@ -7951,16 +7973,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ error: `${contestant?.name || 'Contestant'} is already a standby for ${dayName}. Remove them from standbys first.` });
       }
 
-      // Create new seat assignment with paperwork status carried over
-      const newAssignment = await storage.createSeatAssignment({
+      // Create new seat assignment with all workflow status carried over
+      const rebookData: any = {
         recordDayId,
         contestantId: canceled.contestantId,
         blockNumber,
         seatLabel,
-        // Carry over paperwork status from canceled assignment
-        paperworkSent: canceled.paperworkSent || undefined,
-        paperworkReceived: canceled.paperworkReceived || undefined,
-      });
+      };
+      if (canceled.bookingEmailSent) rebookData.bookingEmailSent = canceled.bookingEmailSent;
+      if (canceled.confirmedRsvp) rebookData.confirmedRsvp = canceled.confirmedRsvp;
+      if (canceled.paperworkSent) rebookData.paperworkSent = canceled.paperworkSent;
+      if (canceled.paperworkSentBy) rebookData.paperworkSentBy = canceled.paperworkSentBy;
+      if (canceled.paperworkReceived) rebookData.paperworkReceived = canceled.paperworkReceived;
+      if (canceled.paperworkReceivedBy) rebookData.paperworkReceivedBy = canceled.paperworkReceivedBy;
+      if (canceled.paperworkOnDay) rebookData.paperworkOnDay = canceled.paperworkOnDay;
+
+      const newAssignment = await storage.createSeatAssignment(rebookData);
 
       // Log movement from reschedule to seat
       const movedBy = (req as any).session?.username || 'system';
