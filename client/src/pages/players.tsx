@@ -129,8 +129,6 @@ interface BlockTypeData {
   blockType: 'PB' | 'NPB';
 }
 
-const PLANNING_STORAGE_KEY = 'rx-planning-data-v2';
-
 // Helper function to check if a field has meaningful content (not NA/N/A/No/empty)
 const hasMeaningfulValue = (value: string | undefined | null): boolean => {
   if (!value) return false;
@@ -5661,17 +5659,41 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   );
 }
 
-function loadPlanningData(): RXPlanningData {
+async function savePlanningBlock(recordDayId: string, blockNumber: string, contestants: PlannedContestant[]) {
   try {
-    const stored = localStorage.getItem(PLANNING_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : {};
-  } catch {
-    return {};
+    await apiRequest('PUT', `/api/rx-planning/${recordDayId}/${blockNumber}`, { contestants });
+    queryClient.invalidateQueries({ queryKey: ['/api/rx-planning'] });
+  } catch (error) {
+    console.error('Error saving planning block:', error);
+    queryClient.invalidateQueries({ queryKey: ['/api/rx-planning'] });
   }
 }
 
-function savePlanningData(data: RXPlanningData) {
-  localStorage.setItem(PLANNING_STORAGE_KEY, JSON.stringify(data));
+async function migrateLocalStorageToDb() {
+  const OLD_KEY = 'rx-planning-data-v2';
+  try {
+    const stored = localStorage.getItem(OLD_KEY);
+    if (!stored) return;
+    const data: RXPlanningData = JSON.parse(stored);
+    const promises: Promise<any>[] = [];
+    for (const [recordDayId, dayData] of Object.entries(data)) {
+      if (!dayData?.blocks) continue;
+      for (const [blockNumber, contestants] of Object.entries(dayData.blocks)) {
+        if (contestants && contestants.length > 0) {
+          promises.push(
+            apiRequest('PUT', `/api/rx-planning/${recordDayId}/${blockNumber}`, { contestants })
+          );
+        }
+      }
+    }
+    if (promises.length > 0) {
+      await Promise.all(promises);
+      console.log('[RX Planning] Migrated localStorage data to database');
+    }
+    localStorage.removeItem(OLD_KEY);
+  } catch (error) {
+    console.error('[RX Planning] Migration from localStorage failed:', error);
+  }
 }
 
 // Helper to get ISO week number
@@ -5693,7 +5715,27 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
   const [genderFilter, setGenderFilter] = useState<string>('all');
   const [ageFilter, setAgeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [planningData, setPlanningData] = useState<RXPlanningData>(loadPlanningData);
+  const { data: planningDataFromApi = {}, isSuccess: planningDataLoaded } = useQuery<RXPlanningData>({
+    queryKey: ['/api/rx-planning'],
+    staleTime: 5000,
+    refetchInterval: 15000,
+  });
+  const [planningData, setPlanningData] = useState<RXPlanningData>({});
+  const [migrationDone, setMigrationDone] = useState(false);
+  useEffect(() => {
+    if (planningDataLoaded && !migrationDone) {
+      setMigrationDone(true);
+      const hasLocalData = !!localStorage.getItem('rx-planning-data-v2');
+      if (hasLocalData) {
+        migrateLocalStorageToDb().then(() => {
+          queryClient.invalidateQueries({ queryKey: ['/api/rx-planning'] });
+        });
+      }
+    }
+  }, [planningDataLoaded, migrationDone]);
+  useEffect(() => {
+    setPlanningData(planningDataFromApi);
+  }, [planningDataFromApi]);
   const [draggedContestant, setDraggedContestant] = useState<PlannedContestant | null>(null);
   const [dragSource, setDragSource] = useState<{ type: 'pool' | 'block'; block?: string; dayId?: string } | null>(null);
   const [viewingPhoto, setViewingPhoto] = useState<{ url: string; name: string } | null>(null);
@@ -6088,6 +6130,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
         if (sourceDayId && updated[sourceDayId]?.blocks[dragSource.block]) {
           updated[sourceDayId].blocks[dragSource.block] = 
             updated[sourceDayId].blocks[dragSource.block].filter(c => c.id !== draggedContestant.id);
+          savePlanningBlock(sourceDayId, dragSource.block, updated[sourceDayId].blocks[dragSource.block]);
         }
       }
 
@@ -6100,7 +6143,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
         updated[dropDayId].blocks[targetBlock].push(draggedContestant);
       }
 
-      savePlanningData(updated);
+      savePlanningBlock(dropDayId, targetBlock, updated[dropDayId].blocks[targetBlock]);
       return updated;
     });
 
@@ -6116,8 +6159,8 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
       if (updated[removeDayId]?.blocks[blockNumber]) {
         updated[removeDayId].blocks[blockNumber] = 
           updated[removeDayId].blocks[blockNumber].filter(c => c.id !== contestantId);
+        savePlanningBlock(removeDayId, blockNumber, updated[removeDayId].blocks[blockNumber]);
       }
-      savePlanningData(updated);
       return updated;
     });
   };
@@ -6132,8 +6175,8 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
         updated[updateDayId].blocks[blockNumber] = updated[updateDayId].blocks[blockNumber].map(c =>
           c.id === contestantId ? { ...c, note: note.trim() || undefined } : c
         );
+        savePlanningBlock(updateDayId, blockNumber, updated[updateDayId].blocks[blockNumber]);
       }
-      savePlanningData(updated);
       return updated;
     });
   };
@@ -6179,7 +6222,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
         updated[addDayId].blocks[blockNumber] = [];
       }
       updated[addDayId].blocks[blockNumber].push(customContestant);
-      savePlanningData(updated);
+      savePlanningBlock(addDayId, blockNumber, updated[addDayId].blocks[blockNumber]);
       return updated;
     });
   };
@@ -6335,14 +6378,19 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
       .sort((a, b) => parseInt(a) - parseInt(b));
   };
 
-  const clearDayPlan = () => {
+  const clearDayPlan = async () => {
     if (!selectedDayId) return;
     setPlanningData(prev => {
       const updated = { ...prev };
       delete updated[selectedDayId];
-      savePlanningData(updated);
       return updated;
     });
+    try {
+      await apiRequest('DELETE', `/api/rx-planning/${selectedDayId}`);
+      queryClient.invalidateQueries({ queryKey: ['/api/rx-planning'] });
+    } catch (error) {
+      console.error('Error clearing day plan:', error);
+    }
     toast({ title: "Plan cleared", description: "All contestants removed from this day's plan" });
   };
 

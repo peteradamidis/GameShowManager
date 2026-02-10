@@ -41,7 +41,7 @@ Do not make changes to the file `Y`.
 - **48-Hour Reminder Email System:** Dashboard widget for sending timed reminder emails to contestants and standbys.
 - **Enhanced Reschedule Tab:** Includes email column, search, duplicate prevention, reschedule count, decline history, and rebooked status tracking.
 - **History Page:** Consolidated audit trail for rebookings, attendance issues, and standby attendance.
-- **RX Planning Tab:** Visual drag-and-drop tool for pre-planning episode lineups (localStorage only).
+- **RX Planning Tab:** Visual drag-and-drop tool for pre-planning episode lineups (database-backed, shared across all users with auto-refresh).
 - **Noticeboard Video Support:** Supports video uploads for crew noticeboard.
 - **Multi-User Management:** User account creation, viewing, and deletion with full system access.
 - **Block Notes:** Editable text fields for producer annotations per seating block, per record day.
