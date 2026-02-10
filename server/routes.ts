@@ -4858,6 +4858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           confirmedRsvp: assignment.confirmedRsvp,
           paperworkSent: assignment.paperworkSent,
           paperworkReceived: assignment.paperworkReceived,
+          paperworkOnDay: assignment.paperworkOnDay,
           signedIn: assignment.signedIn,
           otdNotes: assignment.otdNotes,
           standbyReplacementSwaps: assignment.standbyReplacementSwaps,
