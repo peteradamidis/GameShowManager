@@ -4056,7 +4056,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                 </div>
 
                 {/* Age and details - all editable */}
-                <div className="mb-6">
+                <div style={{ marginBottom: `${Math.max(0, 24 + (cardData.taglineOffsetY || 0))}px` }}>
                   {/* Age/State - with position controls */}
                       <div 
                         className="relative group flex items-center gap-1"
@@ -4179,29 +4179,25 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   )}
                 </div>
 
-                {/* Tagline - with position controls */}
+                {/* Tagline - with position controls (offset controls gap above, not margins) */}
                 {cardData.showTagline !== false ? (
                   <div 
                     className="relative group"
-                    style={{ 
-                      marginTop: `${(cardData.taglineOffsetY || 0)}px`,
-                      paddingTop: '4px'
-                    }}
                   >
                     <div className="flex items-center gap-2">
-                      {/* Position controls */}
+                      {/* Position controls - adjusts gap between content above and tagline */}
                       <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden">
                         <button 
-                          onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) - 10)}
+                          onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) - 5)}
                           className="text-gray-400 hover:text-gray-600 p-0.5"
-                          title="Move up"
+                          title="Move up (reduce gap)"
                         >
                           <ChevronUp className="w-4 h-4" />
                         </button>
                         <button 
-                          onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) + 10)}
+                          onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) + 5)}
                           className="text-gray-400 hover:text-gray-600 p-0.5"
-                          title="Move down"
+                          title="Move down (increase gap)"
                         >
                           <ChevronDown className="w-4 h-4" />
                         </button>
@@ -4991,7 +4987,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     </div>
 
                     {/* Age and details - all editable */}
-                    <div className="mb-6">
+                    <div style={{ marginBottom: `${Math.max(0, 24 + (cardData.taglineOffsetY || 0))}px` }}>
                       {/* Age/State - with position controls */}
                       <div 
                         className="relative group flex items-center gap-1"
@@ -5121,29 +5117,25 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       )}
                     </div>
 
-                    {/* Tagline - with position controls */}
+                    {/* Tagline - with position controls (offset controls gap above, not margins) */}
                     {cardData.showTagline !== false ? (
                       <div 
                         className="relative group"
-                        style={{ 
-                          marginTop: `${(cardData.taglineOffsetY || 0)}px`,
-                          paddingTop: '4px'
-                        }}
                       >
                         <div className="flex items-center gap-2">
-                          {/* Position controls */}
+                          {/* Position controls - adjusts gap between content above and tagline */}
                           <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity print-hidden">
                             <button 
-                              onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) - 10)}
+                              onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) - 5)}
                               className="text-gray-400 hover:text-gray-600 p-0.5"
-                              title="Move up"
+                              title="Move up (reduce gap)"
                             >
                               <ChevronUp className="w-4 h-4" />
                             </button>
                             <button 
-                              onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) + 10)}
+                              onClick={() => updateField('taglineOffsetY', (cardData.taglineOffsetY || 0) + 5)}
                               className="text-gray-400 hover:text-gray-600 p-0.5"
-                              title="Move down"
+                              title="Move down (increase gap)"
                             >
                               <ChevronDown className="w-4 h-4" />
                             </button>
