@@ -118,12 +118,12 @@ export const seatAssignments = pgTable("seat_assignments", {
   rxEpNumber: text("rx_ep_number"), // RX Episode number for this seat
   caseNumber: text("case_number"), // Case number for this seat
   winningMoneyRole: text("winning_money_role"), // 'player' or 'case_holder'
-  winningMoneyAmount: integer("winning_money_amount"), // Amount in dollars
+  winningMoneyAmount: real("winning_money_amount"), // Amount in dollars (supports decimals like $0.50)
   winningMoneyText: text("winning_money_text"), // Text description for case holders (e.g. "Car", "Trip")
   
   // Player-specific winning fields
-  caseAmount: integer("case_amount"), // Amount in case for player
-  quickCash: integer("quick_cash"), // Quick cash amount offered
+  caseAmount: real("case_amount"), // Amount in case for player
+  quickCash: real("quick_cash"), // Quick cash amount offered
   bankOfferTaken: boolean("bank_offer_taken"), // Whether bank offer was taken
   spinTheWheel: boolean("spin_the_wheel"), // Whether they spun the wheel
   prize: text("prize"), // Prize won from spinning the wheel
@@ -574,10 +574,10 @@ export const attendanceIssues = pgTable("attendance_issues", {
   rxEpNumber: text("rx_ep_number"),
   caseNumber: text("case_number"),
   winningMoneyRole: text("winning_money_role"),
-  winningMoneyAmount: integer("winning_money_amount"),
+  winningMoneyAmount: real("winning_money_amount"),
   winningMoneyText: text("winning_money_text"),
-  caseAmount: integer("case_amount"),
-  quickCash: integer("quick_cash"),
+  caseAmount: real("case_amount"),
+  quickCash: real("quick_cash"),
   bankOfferTaken: boolean("bank_offer_taken"),
   spinTheWheel: boolean("spin_the_wheel"),
   prize: text("prize"),

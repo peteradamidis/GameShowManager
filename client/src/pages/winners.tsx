@@ -103,7 +103,7 @@ export default function WinnersPage() {
   // Get all winners with winning money and sort by RX day order
   const allWinners = useMemo(() => {
     let winners = allAssignments
-      .filter((a) => a.winningMoneyAmount)
+      .filter((a) => a.winningMoneyAmount !== null && a.winningMoneyAmount !== undefined)
       .sort((a, b) => new Date(a.recordDayDate).getTime() - new Date(b.recordDayDate).getTime());
     
     if (filterType !== 'all') {
@@ -389,7 +389,7 @@ export default function WinnersPage() {
                       ) : '-'}
                     </TableCell>
                     <TableCell className={`text-right font-semibold text-xs ${winner.spinTheWheel ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
-                      ${winner.winningMoneyAmount?.toLocaleString()}
+                      ${winner.winningMoneyAmount != null ? winner.winningMoneyAmount.toLocaleString(undefined, { minimumFractionDigits: winner.winningMoneyAmount % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 }) : '0'}
                     </TableCell>
                   </TableRow>
                 ))}

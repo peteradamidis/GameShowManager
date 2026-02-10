@@ -116,10 +116,10 @@ export function WinningMoneyModal({
       if (currentRole === "case_holder" && currentAmountText) {
         setAmount(currentAmountText);
       } else {
-        setAmount(currentAmount ? currentAmount.toString() : "");
+        setAmount(currentAmount != null && currentAmount !== 0 ? currentAmount.toString() : "");
       }
-      setCaseAmount(currentCaseAmount ? currentCaseAmount.toString() : "");
-      setQuickCash(currentQuickCash ? currentQuickCash.toString() : "");
+      setCaseAmount(currentCaseAmount != null && currentCaseAmount !== 0 ? currentCaseAmount.toString() : "");
+      setQuickCash(currentQuickCash != null && currentQuickCash !== 0 ? currentQuickCash.toString() : "");
       setBankOfferTaken(currentBankOfferTaken ?? false);
       setSpinTheWheel(currentSpinTheWheel ?? false);
       setPrize(currentPrize || "");
@@ -148,7 +148,7 @@ export function WinningMoneyModal({
     
     // For case holders, allow text input (e.g., "Car", "Trip", or a number)
     // For players, require a valid number
-    const amountNum = parseInt(amount, 10);
+    const amountNum = parseFloat(amount);
     const isValidNumber = !isNaN(amountNum) && amountNum >= 0;
     
     if (role === "player" && !isValidNumber) {
@@ -161,8 +161,8 @@ export function WinningMoneyModal({
     
     // Build player fields object only if role is player
     const playerFields: PlayerFields | undefined = role === "player" ? {
-      caseAmount: caseAmount ? parseInt(caseAmount, 10) : undefined,
-      quickCash: quickCash ? parseInt(quickCash, 10) : undefined,
+      caseAmount: caseAmount ? parseFloat(caseAmount) : undefined,
+      quickCash: quickCash ? parseFloat(quickCash) : undefined,
       bankOfferTaken,
       spinTheWheel,
       prize: spinTheWheel ? prize : undefined,
@@ -187,7 +187,7 @@ export function WinningMoneyModal({
     onOpenChange(false);
   };
 
-  const hasExistingData = (currentAmount ?? 0) > 0 || !!currentAmountText;
+  const hasExistingData = (currentAmount != null && currentAmount > 0) || !!currentAmountText;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

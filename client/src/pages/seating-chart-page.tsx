@@ -1777,14 +1777,15 @@ export default function SeatingChartPage() {
 
   // Find current winning money data for the selected assignment
   const currentAssignment = assignments?.find((a: any) => a.id === selectedAssignmentId);
+  const hasExistingWinningMoney = !!currentAssignment?.winningMoneyRole;
   const currentWinningMoneyData = {
-    // Prefill RX Day from record day if no existing value
-    rxNumber: currentAssignment?.rxNumber || currentRecordDay?.rxNumber || "",
-    // Prefill RX Ep No with "30XX" if no existing value
-    rxEpNumber: currentAssignment?.rxEpNumber || "30XX",
+    // Only use record day's rxNumber as default when creating NEW winning money, not when editing existing
+    rxNumber: currentAssignment?.rxNumber || (hasExistingWinningMoney ? "" : (currentRecordDay?.rxNumber || "")),
+    // Prefill RX Ep No with "30XX" only for new entries
+    rxEpNumber: currentAssignment?.rxEpNumber || (hasExistingWinningMoney ? "" : "30XX"),
     caseNumber: currentAssignment?.caseNumber || "",
     role: currentAssignment?.winningMoneyRole || "player",
-    amount: currentAssignment?.winningMoneyAmount || 0,
+    amount: currentAssignment?.winningMoneyAmount ?? 0,
     amountText: currentAssignment?.winningMoneyText || "",
     caseAmount: currentAssignment?.caseAmount,
     quickCash: currentAssignment?.quickCash,
