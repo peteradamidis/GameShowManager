@@ -3375,10 +3375,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (standby.paperworkReceived) retroFixData.paperworkReceived = standby.paperworkReceived;
         if (standby.paperworkReceivedBy) retroFixData.paperworkReceivedBy = standby.paperworkReceivedBy;
         if (standby.paperworkOnDay) retroFixData.paperworkOnDay = standby.paperworkOnDay;
-        if (standby.signedIn) retroFixData.signedIn = standby.signedIn;
-        if (standby.attendingWithOverride) retroFixData.attendingWithOverride = standby.attendingWithOverride;
-        if (standby.emailsCopiedAt) retroFixData.emailsCopiedAt = standby.emailsCopiedAt;
-        if (standby.ticketEmailSent) retroFixData.ticketEmailSent = standby.ticketEmailSent;
         
         await storage.createOrUpdateCanceledAssignment(retroFixData);
         
@@ -4639,11 +4635,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (previousCanceled.paperworkReceived) bulkAssignData.paperworkReceived = previousCanceled.paperworkReceived;
           if (previousCanceled.paperworkReceivedBy) bulkAssignData.paperworkReceivedBy = previousCanceled.paperworkReceivedBy;
           if (previousCanceled.paperworkOnDay) bulkAssignData.paperworkOnDay = previousCanceled.paperworkOnDay;
-          if (previousCanceled.signedIn) bulkAssignData.signedIn = previousCanceled.signedIn;
-          if (previousCanceled.attendingWithOverride) bulkAssignData.attendingWithOverride = previousCanceled.attendingWithOverride;
-          if (previousCanceled.mobilityNotesOverride) bulkAssignData.mobilityNotesOverride = previousCanceled.mobilityNotesOverride;
-          if (previousCanceled.emailsCopiedAt) bulkAssignData.emailsCopiedAt = previousCanceled.emailsCopiedAt;
-          if (previousCanceled.ticketEmailSent) bulkAssignData.ticketEmailSent = previousCanceled.ticketEmailSent;
         }
         
         const assignment = await storage.createSeatAssignment(bulkAssignData);
@@ -6550,11 +6541,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (previousCanceled.paperworkReceived) autoAssignData.paperworkReceived = previousCanceled.paperworkReceived;
             if (previousCanceled.paperworkReceivedBy) autoAssignData.paperworkReceivedBy = previousCanceled.paperworkReceivedBy;
             if (previousCanceled.paperworkOnDay) autoAssignData.paperworkOnDay = previousCanceled.paperworkOnDay;
-            if (previousCanceled.signedIn) autoAssignData.signedIn = previousCanceled.signedIn;
-            if (previousCanceled.attendingWithOverride) autoAssignData.attendingWithOverride = previousCanceled.attendingWithOverride;
-            if (previousCanceled.mobilityNotesOverride) autoAssignData.mobilityNotesOverride = previousCanceled.mobilityNotesOverride;
-            if (previousCanceled.emailsCopiedAt) autoAssignData.emailsCopiedAt = previousCanceled.emailsCopiedAt;
-            if (previousCanceled.ticketEmailSent) autoAssignData.ticketEmailSent = previousCanceled.ticketEmailSent;
           }
           
           const assignment = await storage.createSeatAssignment(autoAssignData);
@@ -7838,10 +7824,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (sourceStandby.paperworkReceived) directCanceledData.paperworkReceived = sourceStandby.paperworkReceived;
           if (sourceStandby.paperworkReceivedBy) directCanceledData.paperworkReceivedBy = sourceStandby.paperworkReceivedBy;
           if (sourceStandby.paperworkOnDay) directCanceledData.paperworkOnDay = sourceStandby.paperworkOnDay;
-          if (sourceStandby.signedIn) directCanceledData.signedIn = sourceStandby.signedIn;
-          if (sourceStandby.attendingWithOverride) directCanceledData.attendingWithOverride = sourceStandby.attendingWithOverride;
-          if (sourceStandby.emailsCopiedAt) directCanceledData.emailsCopiedAt = sourceStandby.emailsCopiedAt;
-          if (sourceStandby.ticketEmailSent) directCanceledData.ticketEmailSent = sourceStandby.ticketEmailSent;
         }
       }
       
@@ -11013,10 +10995,6 @@ Thank you.`;
         if (standby.paperworkReceived) canceledData.paperworkReceived = standby.paperworkReceived;
         if (standby.paperworkReceivedBy) canceledData.paperworkReceivedBy = standby.paperworkReceivedBy;
         if (standby.paperworkOnDay) canceledData.paperworkOnDay = standby.paperworkOnDay;
-        if (standby.signedIn) canceledData.signedIn = standby.signedIn;
-        if (standby.attendingWithOverride) canceledData.attendingWithOverride = standby.attendingWithOverride;
-        if (standby.emailsCopiedAt) canceledData.emailsCopiedAt = standby.emailsCopiedAt;
-        if (standby.ticketEmailSent) canceledData.ticketEmailSent = standby.ticketEmailSent;
         
         await storage.createOrUpdateCanceledAssignment(canceledData);
 
@@ -11159,10 +11137,6 @@ Thank you.`;
       if (standby.paperworkReceived) standbyRescheduleData.paperworkReceived = standby.paperworkReceived;
       if (standby.paperworkReceivedBy) standbyRescheduleData.paperworkReceivedBy = standby.paperworkReceivedBy;
       if (standby.paperworkOnDay) standbyRescheduleData.paperworkOnDay = standby.paperworkOnDay;
-      if (standby.signedIn) standbyRescheduleData.signedIn = standby.signedIn;
-      if (standby.attendingWithOverride) standbyRescheduleData.attendingWithOverride = standby.attendingWithOverride;
-      if (standby.emailsCopiedAt) standbyRescheduleData.emailsCopiedAt = standby.emailsCopiedAt;
-      if (standby.ticketEmailSent) standbyRescheduleData.ticketEmailSent = standby.ticketEmailSent;
       
       const canceledAssignment = await storage.createOrUpdateCanceledAssignment(standbyRescheduleData);
 
