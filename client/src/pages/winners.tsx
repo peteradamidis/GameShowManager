@@ -75,7 +75,10 @@ export default function WinnersPage() {
     gcTime: 0,
   });
 
-  const sortByDate = (a: any, b: any) => {
+  const sortByRxEpNo = (a: any, b: any) => {
+    const epA = parseFloat(a.rxEpNumber) || 0;
+    const epB = parseFloat(b.rxEpNumber) || 0;
+    if (epA !== epB) return epA - epB;
     const dateA = a.recordDayDateISO || a.recordDayDate || '';
     const dateB = b.recordDayDateISO || b.recordDayDate || '';
     return dateA.localeCompare(dateB);
@@ -84,7 +87,7 @@ export default function WinnersPage() {
   const availableRxDays = useMemo(() => {
     const rxDaySet = new Map<string, { rxNumber: string; recordDayDate: string; recordDayId: string }>();
     allAssignments
-      .sort(sortByDate)
+      .sort(sortByRxEpNo)
       .forEach((a) => {
         const key = a.recordDayId;
         if (!rxDaySet.has(key)) {
@@ -100,7 +103,7 @@ export default function WinnersPage() {
 
   const allWinners = useMemo(() => {
     let winners = allAssignments
-      .sort(sortByDate);
+      .sort(sortByRxEpNo);
 
     if (selectedRxDay !== 'all') {
       winners = winners.filter((w) => w.recordDayId === selectedRxDay);
