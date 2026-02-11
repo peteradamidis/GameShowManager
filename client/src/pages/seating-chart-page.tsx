@@ -2934,7 +2934,7 @@ export default function SeatingChartPage() {
                 
                 setIsUpdatingTempContestant(true);
                 try {
-                  await apiRequest("PUT", `/api/contestants/${editingContestantId}`, {
+                  await apiRequest("PATCH", `/api/contestants/${editingContestantId}`, {
                     name: editTempName.trim(),
                     gender: editTempGender,
                     age: editTempAge ? parseInt(editTempAge) : null,
