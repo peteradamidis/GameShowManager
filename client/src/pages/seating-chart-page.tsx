@@ -2119,7 +2119,8 @@ export default function SeatingChartPage() {
               const psContestants = blockAssignments
                 .filter((a: any) => a.podiumStory === true)
                 .map((a: any) => {
-                  const contestant = availableContestants.find((c: any) => c.id === a.contestantId);
+                  const allContestantsArray = allContestants as any[];
+                  const contestant = allContestantsArray.find((c: any) => c.id === a.contestantId);
                   return {
                     id: a.contestantId,
                     name: a.contestantName || contestant?.name || 'Unknown',
