@@ -4322,6 +4322,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return detectInterstateFromLocation(contestant.location);
   };
 
+  const DOCKLANDS_COORDS = { lat: -37.8150, lng: 144.9460 };
+
+  const POSTCODE_COORDINATES: Record<string, { lat: number; lng: number }> = {
+    "3000": { lat: -37.8128, lng: 144.9633 }, "3001": { lat: -37.8308, lng: 144.9692 },
+    "3002": { lat: -37.8397, lng: 144.9557 }, "3003": { lat: -37.8235, lng: 144.9872 },
+    "3004": { lat: -37.8435, lng: 144.9892 }, "3006": { lat: -37.8000, lng: 144.9500 },
+    "3011": { lat: -37.7800, lng: 144.8500 }, "3008": { lat: -37.7867, lng: 144.8633 },
+    "3181": { lat: -37.8600, lng: 145.0067 }, "3182": { lat: -37.8750, lng: 145.0233 },
+    "3183": { lat: -37.8933, lng: 145.0400 }, "3142": { lat: -37.8533, lng: 145.0100 },
+    "3141": { lat: -37.8667, lng: 145.0167 }, "3144": { lat: -37.8600, lng: 145.0500 },
+    "3187": { lat: -37.8867, lng: 144.9467 }, "3205": { lat: -37.8533, lng: 144.9200 },
+    "3207": { lat: -37.8000, lng: 144.8800 }, "3012": { lat: -37.8267, lng: 144.8600 },
+    "3014": { lat: -37.8667, lng: 144.7867 }, "3013": { lat: -37.8433, lng: 144.8067 },
+    "3051": { lat: -37.7667, lng: 144.9667 }, "3053": { lat: -37.7533, lng: 145.0167 },
+    "3054": { lat: -37.7667, lng: 145.0533 }, "3068": { lat: -37.7333, lng: 145.0500 },
+    "3031": { lat: -37.7300, lng: 144.9200 }, "3056": { lat: -37.7067, lng: 144.9833 },
+    "3070": { lat: -37.6867, lng: 145.0333 }, "3165": { lat: -37.9200, lng: 145.2300 },
+    "3174": { lat: -37.9500, lng: 145.3800 }, "3168": { lat: -38.0200, lng: 145.0800 },
+    "3175": { lat: -38.1200, lng: 145.2700 }, "3170": { lat: -38.1500, lng: 145.3500 },
+    "3806": { lat: -38.0167, lng: 145.3833 }, "3805": { lat: -38.0333, lng: 145.3000 },
+    "3804": { lat: -38.0500, lng: 145.2500 }, "3910": { lat: -38.3000, lng: 145.1500 },
+    "3912": { lat: -38.3500, lng: 145.1800 }, "3915": { lat: -38.3800, lng: 145.2000 },
+    "3783": { lat: -37.8700, lng: 145.5500 }, "3810": { lat: -38.0200, lng: 145.4200 },
+    "3978": { lat: -37.9000, lng: 145.5200 }, "3821": { lat: -38.1000, lng: 145.6000 },
+    "3981": { lat: -38.2500, lng: 145.6500 }, "3813": { lat: -37.9800, lng: 145.5500 },
+    "3754": { lat: -38.1500, lng: 145.1200 }, "3803": { lat: -38.3000, lng: 145.0500 },
+    "3015": { lat: -37.9000, lng: 144.6600 }, "3030": { lat: -37.9200, lng: 144.7500 },
+    "3026": { lat: -37.8700, lng: 144.6300 }, "3032": { lat: -37.7800, lng: 144.6500 },
+    "3064": { lat: -37.6800, lng: 144.5800 }, "3038": { lat: -37.7300, lng: 144.3300 },
+    "3342": { lat: -37.8200, lng: 144.1500 }, "3370": { lat: -37.7800, lng: 143.9500 },
+    "3097": { lat: -37.6500, lng: 144.4000 }, "3350": { lat: -37.5500, lng: 143.8000 },
+    "3341": { lat: -37.4800, lng: 144.8000 }, "3024": { lat: -37.6000, lng: 144.9000 },
+    "3022": { lat: -37.5800, lng: 144.8500 }, "3040": { lat: -37.6700, lng: 145.3500 },
+    "3037": { lat: -37.6200, lng: 145.2000 }, "3134": { lat: -37.7500, lng: 145.4800 },
+    "3161": { lat: -37.9200, lng: 145.0900 }, "3077": { lat: -37.7000, lng: 145.2500 },
+    "3088": { lat: -37.6500, lng: 145.3000 }, "3149": { lat: -37.7800, lng: 145.2000 },
+    "3124": { lat: -37.8100, lng: 145.3200 }, "3135": { lat: -37.8000, lng: 145.4000 },
+    "3957": { lat: -37.6000, lng: 144.3000 },
+  };
+
+  const MELBOURNE_METRO_POSTCODES = new Set([
+    ...Array.from({ length: 11 }, (_, i) => String(3000 + i)),
+    ...Array.from({ length: 90 }, (_, i) => String(3011 + i)),
+    ...Array.from({ length: 100 }, (_, i) => String(3100 + i)),
+    ...Array.from({ length: 15 }, (_, i) => String(3800 + i)),
+  ]);
+
+  const calculateDistanceKm = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const isContestantOver60km = (contestant: { postcode?: string | null; location?: string | null }): boolean => {
+    const location = contestant.location;
+    const postcode = contestant.postcode;
+    
+    const checkPostcode = (pc: string): boolean | null => {
+      const coords = POSTCODE_COORDINATES[pc];
+      if (coords) {
+        return calculateDistanceKm(DOCKLANDS_COORDS.lat, DOCKLANDS_COORDS.lng, coords.lat, coords.lng) > 60;
+      }
+      const code = parseInt(pc, 10);
+      if (code >= 3000 && code <= 3999) {
+        return !MELBOURNE_METRO_POSTCODES.has(pc);
+      }
+      return null;
+    };
+
+    if (postcode) {
+      const result = checkPostcode(postcode.trim());
+      if (result !== null) return result;
+    }
+
+    if (location) {
+      const postcodeMatch = location.match(/\b(\d{4})\b/);
+      if (postcodeMatch) {
+        const result = checkPostcode(postcodeMatch[1]);
+        if (result !== null) return result;
+      }
+    }
+
+    return false;
+  };
+
   // Create a seat assignment
   app.post("/api/seat-assignments", async (req, res) => {
     try {
@@ -5150,6 +5240,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // These contestants should only be manually assigned as standbys, not auto-assigned to seats
       availableAll = availableAll.filter(c => !c.availableForStandby);
       
+      // Exclude temporary contestants - they should only be manually assigned
+      const tempContestantsBefore = availableAll.filter(c => c.isTemporary === true);
+      availableAll = availableAll.filter(c => c.isTemporary !== true);
+      if (tempContestantsBefore.length > 0) {
+        console.log(`[Auto-assign] Excluded ${tempContestantsBefore.length} temporary contestants`);
+      }
+      
       // If onlyConfirmedAvailability is true, filter to only contestants who confirmed for this record day
       if (onlyConfirmedAvailability) {
         const availabilityResponses = await storage.getAvailabilityByRecordDay(recordDayId);
@@ -5699,6 +5796,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (block.blockType === 'NPB') {
             const hasAOrBPlus = bundle.ratingCounts['A'] > 0 || bundle.ratingCounts['B+'] > 0;
             if (hasAOrBPlus) return false;
+            
+            // CONSTRAINT: NPB blocks cannot have contestants over 60km from Docklands
+            const hasOver60km = bundle.contestants.some(c => isContestantOver60km({ postcode: c.postcode, location: c.location }));
+            if (hasOver60km) return false;
           }
           
           return true;
@@ -5852,6 +5953,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (block.blockType === 'NPB') {
             const hasAOrBPlus = solo.ratingCounts['A'] > 0 || solo.ratingCounts['B+'] > 0;
             if (hasAOrBPlus) return false;
+            
+            // CONSTRAINT: NPB blocks cannot have contestants over 60km from Docklands
+            const hasOver60km = solo.contestants.some(c => isContestantOver60km({ postcode: c.postcode, location: c.location }));
+            if (hasOver60km) return false;
           }
           
           if (solo.hasCRating) {
@@ -6340,6 +6445,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // NPB blocks can ONLY have B and C ratings
           if (block.blockType === 'NPB' && isAOrBPlus) return false;
           
+          // NPB blocks cannot have contestants over 60km from Docklands
+          if (block.blockType === 'NPB' && isContestantOver60km({ postcode: c.postcode, location: c.location })) return false;
+          
           // C-rated can ONLY go to NPB blocks
           if (isCRated && block.blockType !== 'NPB') return false;
           
@@ -6537,6 +6645,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               // NPB blocks can ONLY have B and C ratings
               if (block.blockType === 'NPB' && isAOrBPlus) return false;
+              
+              // NPB blocks cannot have contestants over 60km from Docklands
+              if (block.blockType === 'NPB' && isContestantOver60km({ postcode: c.postcode, location: c.location })) return false;
               
               // C-rated can ONLY go to NPB blocks
               if (isCRated && block.blockType !== 'NPB') return false;
