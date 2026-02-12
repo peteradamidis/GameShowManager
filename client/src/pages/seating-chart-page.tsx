@@ -368,7 +368,7 @@ export default function SeatingChartPage() {
   // Cancel dialog state
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelAssignmentId, setCancelAssignmentId] = useState<string>("");
-  const [cancelReason, setCancelReason] = useState<string>("");
+  const cancelReasonRef = useRef<HTMLTextAreaElement>(null);
   
   // Return to standby loading state (prevents double-clicks)
   const [returningToStandbyId, setReturningToStandbyId] = useState<string | null>(null);
@@ -1891,11 +1891,11 @@ export default function SeatingChartPage() {
     if (!cancelAssignmentId) return;
     
     try {
+      const reason = cancelReasonRef.current?.value || "No reason provided";
       await apiRequest('POST', `/api/seat-assignments/${cancelAssignmentId}/cancel`, {
-        reason: cancelReason || "No reason provided",
+        reason,
         movedBy: authData?.user?.username || 'system',
       });
-      // Invalidate essential queries - cancel affects seat assignments, contestants, standbys, and canceled list
       queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
@@ -1903,7 +1903,7 @@ export default function SeatingChartPage() {
       broadcastSeatingChange(recordDayId);
       setCancelDialogOpen(false);
       setCancelAssignmentId("");
-      setCancelReason("");
+      if (cancelReasonRef.current) cancelReasonRef.current.value = "";
       toast({
         title: "Contestant canceled",
         description: "Contestant has been moved to the reschedule list.",
@@ -3247,9 +3247,9 @@ export default function SeatingChartPage() {
               <Label htmlFor="cancel-reason">Reason for cancellation</Label>
               <Textarea
                 id="cancel-reason"
+                ref={cancelReasonRef}
                 placeholder="Enter reason for cancellation..."
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
+                defaultValue=""
                 className="min-h-[100px]"
                 data-testid="textarea-cancel-reason"
               />
@@ -3262,7 +3262,7 @@ export default function SeatingChartPage() {
               onClick={() => {
                 setCancelDialogOpen(false);
                 setCancelAssignmentId("");
-                setCancelReason("");
+                if (cancelReasonRef.current) cancelReasonRef.current.value = "";
               }}
               data-testid="button-cancel-dialog-close"
             >
