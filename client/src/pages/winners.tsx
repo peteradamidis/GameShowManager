@@ -13,15 +13,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Trophy, Users, Check, X, Download } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Trophy, Users, Check, X, Download, ChevronDown } from "lucide-react";
 import * as XLSX from "xlsx";
 
 export default function WinnersPage() {
@@ -31,7 +26,7 @@ export default function WinnersPage() {
   const [showTX, setShowTX] = useState(false);
   const [editingTX, setEditingTX] = useState<{ id: string; field: string; value: any } | null>(null);
   const [searchRxDayOrDate, setSearchRxDayOrDate] = useState('');
-  const [selectedRxDay, setSelectedRxDay] = useState<string>('all');
+  const [selectedRxDays, setSelectedRxDays] = useState<Set<string>>(new Set());
 
   const updateTXMutation = useMutation({
     mutationFn: async ({ id, txNumber, txDate, notifiedOfTx, photosSent }: any) => {
@@ -105,8 +100,8 @@ export default function WinnersPage() {
     let winners = allAssignments
       .sort(sortByRxEpNo);
 
-    if (selectedRxDay !== 'all') {
-      winners = winners.filter((w) => w.recordDayId === selectedRxDay);
+    if (selectedRxDays.size > 0) {
+      winners = winners.filter((w) => selectedRxDays.has(w.recordDayId));
     }
 
     if (filterType !== 'all') {
@@ -122,7 +117,7 @@ export default function WinnersPage() {
     }
 
     return winners;
-  }, [allAssignments, filterType, searchRxDayOrDate, selectedRxDay]);
+  }, [allAssignments, filterType, searchRxDayOrDate, selectedRxDays]);
 
   const handleDownloadExcel = () => {
     try {
@@ -162,8 +157,8 @@ export default function WinnersPage() {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Winners');
 
-      const fileName = selectedRxDay !== 'all'
-        ? `winners-${availableRxDays.find(d => d.recordDayId === selectedRxDay)?.rxNumber || 'filtered'}-${new Date().toISOString().split('T')[0]}.xlsx`
+      const fileName = selectedRxDays.size > 0
+        ? `winners-filtered-${new Date().toISOString().split('T')[0]}.xlsx`
         : `winners-${new Date().toISOString().split('T')[0]}.xlsx`;
 
       XLSX.writeFile(wb, fileName);
@@ -213,7 +208,7 @@ export default function WinnersPage() {
           data-testid="button-download-winners-excel"
         >
           <Download className="h-4 w-4 mr-2" />
-          {isDownloading ? 'Downloading...' : `Export${selectedRxDay !== 'all' ? ' Filtered' : ''} to Excel`}
+          {isDownloading ? 'Downloading...' : `Export${selectedRxDays.size > 0 ? ' Filtered' : ''} to Excel`}
         </Button>
       </div>
 
@@ -226,19 +221,56 @@ export default function WinnersPage() {
           </div>
 
           <div className="flex gap-2 items-center flex-wrap">
-            <Select value={selectedRxDay} onValueChange={setSelectedRxDay}>
-              <SelectTrigger className="w-[220px]" data-testid="select-rx-day-filter">
-                <SelectValue placeholder="Filter by RX Day" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" data-testid="select-rx-day-all">All RX Days</SelectItem>
-                {availableRxDays.map((rd) => (
-                  <SelectItem key={rd.recordDayId} value={rd.recordDayId} data-testid={`select-rx-day-${rd.recordDayId}`}>
-                    {rd.rxNumber ? `${rd.rxNumber}` : rd.recordDayDate || 'Unknown'}{rd.rxNumber && rd.recordDayDate ? ` (${rd.recordDayDate})` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[220px] justify-between" data-testid="select-rx-day-filter">
+                  <span className="truncate">
+                    {selectedRxDays.size === 0
+                      ? 'All RX Days'
+                      : selectedRxDays.size === 1
+                        ? availableRxDays.find(d => selectedRxDays.has(d.recordDayId))?.rxNumber || '1 selected'
+                        : `${selectedRxDays.size} days selected`}
+                  </span>
+                  <ChevronDown className="h-4 w-4 ml-2 flex-shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[260px] p-2 max-h-[300px] overflow-y-auto" align="start">
+                <div className="space-y-1">
+                  <button
+                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover-elevate"
+                    onClick={() => setSelectedRxDays(new Set())}
+                    data-testid="select-rx-day-all"
+                  >
+                    <Checkbox checked={selectedRxDays.size === 0} />
+                    <span>All RX Days</span>
+                  </button>
+                  <div className="border-t my-1" />
+                  {availableRxDays.map((rd) => (
+                    <button
+                      key={rd.recordDayId}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover-elevate"
+                      data-testid={`select-rx-day-${rd.recordDayId}`}
+                      onClick={() => {
+                        setSelectedRxDays(prev => {
+                          const next = new Set(prev);
+                          if (next.has(rd.recordDayId)) {
+                            next.delete(rd.recordDayId);
+                          } else {
+                            next.add(rd.recordDayId);
+                          }
+                          return next;
+                        });
+                      }}
+                    >
+                      <Checkbox checked={selectedRxDays.has(rd.recordDayId)} />
+                      <span className="truncate">
+                        {rd.rxNumber ? `${rd.rxNumber}` : rd.recordDayDate || 'Unknown'}{rd.rxNumber && rd.recordDayDate ? ` (${rd.recordDayDate})` : ''}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
             <Button
               variant={filterType === 'all' ? 'default' : 'outline'}
               onClick={() => setFilterType('all')}
