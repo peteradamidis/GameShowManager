@@ -10928,13 +10928,14 @@ Thank you.`;
 
       // Get ALL standbys across ALL record days to prevent duplicate bookings
       const allStandbys = await storage.getStandbyAssignments();
-      const allStandbyContestantIds = new Map(allStandbys.map(s => [s.contestantId, s]));
+      const activeStandbys = allStandbys.filter(s => !s.movedToReschedule && s.status !== 'rescheduled' && s.status !== 'seated');
+      const allStandbyContestantIds = new Map(activeStandbys.map(s => [s.contestantId, s]));
       
       // Get ALL seat assignments across ALL record days
       const allSeatAssignments = await storage.getAllSeatAssignments();
       const allSeatedContestantIds = new Map(allSeatAssignments.map((a: any) => [a.contestantId, a]));
       
-      // Check if any contestant is already a standby for ANY record day
+      // Check if any contestant is already an active standby for ANY record day
       const alreadyStandbyIds = contestantIds.filter((id: string) => allStandbyContestantIds.has(id));
       if (alreadyStandbyIds.length > 0) {
         const standbyContestants = await Promise.all(
