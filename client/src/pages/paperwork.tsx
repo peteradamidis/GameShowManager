@@ -1185,9 +1185,15 @@ Deal or No Deal Production Team`);
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700">
-                            Block {item.blockNumber} - {item.seatLabel}
-                          </Badge>
+                          {item.blockNumber === 0 ? (
+                            <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700">
+                              To Seat - {item.seatLabel}
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700">
+                              Block {item.blockNumber} - {item.seatLabel}
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell 
                           className="text-sm select-all cursor-text"
@@ -1295,9 +1301,13 @@ Deal or No Deal Production Team`);
                           </div>
                         </TableCell>
                         <TableCell>
-                          {item.blockNumber ? (
+                          {item.blockNumber != null && item.blockNumber > 0 ? (
                             <Badge className="bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700">
                               Block {item.blockNumber} - {item.seatLabel}
+                            </Badge>
+                          ) : item.blockNumber === 0 ? (
+                            <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700">
+                              To Seat - {item.seatLabel}
                             </Badge>
                           ) : (
                             <span className="text-xs text-muted-foreground">-</span>

@@ -554,6 +554,24 @@ export default function SeatingChartPage() {
     enabled: !!recordDayId,
   });
 
+  const { data: allSeatAssignments = [] } = useQuery({
+    queryKey: ['/api/seat-assignments'],
+    queryFn: async () => {
+      const response = await fetch('/api/seat-assignments');
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
+
+  const { data: allStandbys = [] } = useQuery({
+    queryKey: ['/api/standbys'],
+    queryFn: async () => {
+      const response = await fetch('/api/standbys');
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
+
   // Fetch block notes for this record day
   const { data: blockNotesData = [] } = useQuery({
     queryKey: ['/api/block-notes', recordDayId],
@@ -660,6 +678,21 @@ export default function SeatingChartPage() {
       c.auditionRating?.toUpperCase().trim() !== 'DNU' // Exclude DNU-rated contestants
     );
   }, [assignments, allContestants]);
+
+  const overflowAvailableContestants = useMemo(() => {
+    if (!allContestants || !Array.isArray(allContestants)) return [];
+    const allSeatedIds = new Set((allSeatAssignments as any[]).map((a: any) => a.contestantId));
+    const activeStandbyIds = new Set(
+      (allStandbys as any[])
+        .filter((s: any) => !s.movedToReschedule && s.status !== 'rescheduled' && s.status !== 'seated')
+        .map((s: any) => s.contestantId)
+    );
+    return allContestants.filter((c: any) =>
+      !allSeatedIds.has(c.id) &&
+      !activeStandbyIds.has(c.id) &&
+      c.auditionRating?.toUpperCase().trim() !== 'DNU'
+    );
+  }, [allContestants, allSeatAssignments, allStandbys]);
 
   // Helper to calculate group size from attendingWith field
   // Uses shared parser for consistent behavior across the system
@@ -2877,7 +2910,7 @@ export default function SeatingChartPage() {
 
           <div className="flex-1 overflow-y-auto min-h-0 border rounded-md">
             {(() => {
-              const filtered = availableContestants.filter((c: any) => {
+              const filtered = overflowAvailableContestants.filter((c: any) => {
                 if (debouncedOverflowSearch && !c.name?.toLowerCase().includes(debouncedOverflowSearch.toLowerCase())) return false;
                 if (overflowFilterGender !== "all" && c.gender !== overflowFilterGender) return false;
                 if (overflowFilterRating !== "all" && c.auditionRating?.toUpperCase() !== overflowFilterRating) return false;
@@ -2907,6 +2940,7 @@ export default function SeatingChartPage() {
                           });
                           refetch();
                           queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+                          queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
                           toast({
                             title: "Added to seat on day",
                             description: `${c.name} added to overflow seating`,
@@ -2927,6 +2961,7 @@ export default function SeatingChartPage() {
                                   });
                                   refetch();
                                   queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+                                  queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
                                   toast({
                                     title: "Added to seat on day",
                                     description: `${c.name} added to overflow seating`,
@@ -3044,6 +3079,7 @@ export default function SeatingChartPage() {
               });
               
               queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+              queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
               queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
               broadcastSeatingChange();
               
