@@ -206,10 +206,29 @@ interface StandbyData {
   };
 }
 
+export interface OverflowAssignment {
+  id: string;
+  contestantId: string;
+  contestantName: string;
+  gender?: string;
+  age?: number;
+  auditionRating?: string;
+  groupId?: string;
+  attendingWith?: string;
+  photoUrl?: string;
+  seatLabel?: string;
+  bookingEmailSent?: boolean;
+  confirmedRsvp?: boolean;
+  availabilityStatus?: string;
+  mobilityNotes?: string;
+  isTemporary?: boolean;
+  isTestSubject?: boolean;
+}
+
 interface SeatingChartProps {
   recordDayId: string;
   initialSeats?: SeatData[][];
-  onRefreshNeeded?: () => void; // Callback to trigger data refetch from parent
+  onRefreshNeeded?: () => void;
   onEmptySeatClick?: (blockNumber: number, seatLabel: string) => void;
   onRemove?: (assignmentId: string) => void;
   onCancel?: (assignmentId: string) => void;
@@ -221,15 +240,18 @@ interface SeatingChartProps {
   onPrizeWinner?: (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => void;
   onEditTempContestant?: (contestantId: string) => void;
   onDeleteTestSubject?: (contestantId: string) => void;
-  isLocked?: boolean; // RX Day Mode - when true, use tracked swap endpoint
-  standbys?: StandbyData[]; // Standbys for this record day
-  onStandbySeated?: () => void; // Callback when standby is seated
-  isPodiumVisualizerMode?: boolean; // Show only contestant photos
-  searchQuery?: string; // Search for contestant by name
-  blockNotes?: Record<number, string>; // Block notes by block number (1-7)
+  isLocked?: boolean;
+  standbys?: StandbyData[];
+  onStandbySeated?: () => void;
+  isPodiumVisualizerMode?: boolean;
+  searchQuery?: string;
+  blockNotes?: Record<number, string>;
   onBlockNoteChange?: (blockNumber: number, notes: string) => void;
-  showBookingStatus?: boolean; // Show CONF/PENDING indicators on seat cards
-  onRatingChange?: (contestantId: string, newRating: string) => void; // Change contestant rating
+  showBookingStatus?: boolean;
+  onRatingChange?: (contestantId: string, newRating: string) => void;
+  overflowAssignments?: OverflowAssignment[];
+  onAddOverflow?: (contestantId: string) => void;
+  onRemoveOverflow?: (assignmentId: string) => void;
 }
 
 function DraggableDroppableSeat({
@@ -1139,7 +1161,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "", blockNotes = {}, onBlockNoteChange, showBookingStatus = false, onRatingChange }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "", blockNotes = {}, onBlockNoteChange, showBookingStatus = false, onRatingChange, overflowAssignments = [], onAddOverflow, onRemoveOverflow }: SeatingChartProps) {
   // Use initialSeats as source of truth - derive blocks from props, not state
   // Only use local state for temporary overrides during active drag operations
   const defaultBlocks = useMemo(() => 
@@ -2484,6 +2506,98 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
               )}
             </div>
           </div>
+
+          {/* To Seat on Day - Overflow Section */}
+          {!isPodiumVisualizerMode && (
+            <div className="border-t pt-6" data-testid="overflow-section">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-sm">To Seat on Day</Badge>
+                  {overflowAssignments.length > 0 && (
+                    <Badge variant="secondary" className="text-[10px] px-1">
+                      {overflowAssignments.length}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Contestants assigned to this record day but not yet placed in a physical seat. They can be dragged into empty seats or managed from here.
+              </p>
+              {overflowAssignments.length === 0 ? (
+                <div className="text-center py-4 text-sm text-muted-foreground border border-dashed rounded-md">
+                  No overflow contestants
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {overflowAssignments.map((oa) => (
+                    <Card key={oa.id} className="relative" data-testid={`overflow-card-${oa.id}`}>
+                      <CardContent className="p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              {oa.photoUrl ? (
+                                <img src={oa.photoUrl} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                  <User className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="font-medium text-sm truncate" data-testid={`overflow-name-${oa.id}`}>{oa.contestantName}</p>
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  {oa.gender && (
+                                    <Badge variant="secondary" className="text-[10px] px-1">
+                                      {oa.gender === 'Female' ? 'F' : oa.gender === 'Male' ? 'M' : 'O'}
+                                    </Badge>
+                                  )}
+                                  {oa.age && (
+                                    <span className="text-[10px] text-muted-foreground">{oa.age}y</span>
+                                  )}
+                                  {oa.auditionRating && (
+                                    <Badge variant="outline" className="text-[10px] px-1">{oa.auditionRating}</Badge>
+                                  )}
+                                  {oa.seatLabel && (
+                                    <span className="text-[10px] text-muted-foreground">({oa.seatLabel})</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            {oa.attendingWith && (
+                              <p className="text-[10px] text-muted-foreground mt-1 truncate">
+                                <Users className="inline h-3 w-3 mr-0.5" />{oa.attendingWith}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex flex-col gap-1 flex-shrink-0">
+                            {showBookingStatus && (
+                              <Badge 
+                                variant={oa.confirmedRsvp ? "default" : "secondary"} 
+                                className={`text-[9px] px-1 ${oa.confirmedRsvp ? 'bg-green-600 text-white' : ''}`}
+                              >
+                                {oa.confirmedRsvp ? 'CONF' : 'PENDING'}
+                              </Badge>
+                            )}
+                            {onRemoveOverflow && !isLocked && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 text-muted-foreground"
+                                onClick={() => onRemoveOverflow(oa.id)}
+                                data-testid={`button-remove-overflow-${oa.id}`}
+                                title="Remove from record day"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
         
         <DragOverlay dropAnimation={null}>

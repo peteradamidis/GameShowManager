@@ -726,8 +726,26 @@ export default function BookingMaster() {
       }
     }
     
+    // Add overflow entries (block 0 = "To Seat on Day")
+    const overflowEntries = assignments.filter((a) => a.blockNumber === 0);
+    for (const assignment of overflowEntries) {
+      const contestant = contestants.find(c => c.id === assignment.contestantId);
+      rows.push({
+        seatId: `00-${assignment.seatLabel}`,
+        blockNumber: 0,
+        seatLabel: assignment.seatLabel,
+        assignment,
+        contestant,
+      });
+    }
+
     rows.sort((a, b) => {
       if (a.blockNumber !== b.blockNumber) return a.blockNumber - b.blockNumber;
+      if (a.blockNumber === 0) {
+        const aNum = parseInt(a.seatLabel.replace(/\D/g, '') || '0');
+        const bNum = parseInt(b.seatLabel.replace(/\D/g, '') || '0');
+        return aNum - bNum;
+      }
       const rowOrder = ['A', 'B', 'C', 'D', 'E'];
       const aRow = a.seatLabel[0];
       const bRow = b.seatLabel[0];
@@ -968,9 +986,10 @@ export default function BookingMaster() {
         const femalePercent = blockTotal > 0 ? Math.round((blockFemaleCount / blockTotal) * 100) : 0;
         
         exportRows.push([]);
+        const blockLabel = currentBlock === 0 ? 'TO SEAT ON DAY' : `BLOCK ${currentBlock}`;
         const blockHeader = blockTotal > 0 
-          ? `BLOCK ${currentBlock} - ${blockTotal} assigned | ${blockFemaleCount}F / ${blockMaleCount}M (${femalePercent}% female)`
-          : `BLOCK ${currentBlock}`;
+          ? `${blockLabel} - ${blockTotal} assigned | ${blockFemaleCount}F / ${blockMaleCount}M (${femalePercent}% female)`
+          : blockLabel;
         exportRows.push([blockHeader]);
       }
       
@@ -1628,7 +1647,7 @@ export default function BookingMaster() {
                           <TableCell colSpan={20} className="py-1 h-8">
                             <div className="flex items-center justify-between">
                               <span className="font-bold text-sm text-white" data-testid={`block-header-${row.blockNumber}`}>
-                                BLOCK {row.blockNumber}
+                                {row.blockNumber === 0 ? 'TO SEAT ON DAY' : `BLOCK ${row.blockNumber}`}
                               </span>
                               {blockTotal > 0 && (
                                 <span className="text-xs text-white/80">

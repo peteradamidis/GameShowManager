@@ -48,6 +48,7 @@ Do not make changes to the file `Y`.
 - **Producer & AP Assignment:** Assign Producer and Assistant Producer per record day.
 - **Casting Card Version History:** Time-throttled backup/recovery system for casting cards.
 - **Animated Welcome Message:** Configurable full-screen animated message per login session.
+- **Overflow Seating ("To Seat on Day"):** Contestants assigned to a record day without a physical seat, using blockNumber=0 with auto-generated OS# labels. Shown in dedicated section below Block 7 on seating chart and in Booking Master with "TO SEAT ON DAY" header.
 
 ### Feature Specifications
 - **Contestant Management:** Profiles, search, filtering by status, gender, rating, etc.

@@ -4483,6 +4483,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create overflow seat assignment ("To Seat on Day" - not assigned to a physical seat)
+  app.post("/api/seat-assignments/overflow", async (req, res) => {
+    try {
+      const { recordDayId, contestantId, skipPostcodeWarning } = req.body;
+
+      if (!recordDayId || !contestantId) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Check if contestant is DNU-rated
+      const contestant = await storage.getContestantById(contestantId);
+      if (contestant?.auditionRating?.toUpperCase().trim() === 'DNU') {
+        return res.status(400).json({ error: "Cannot add a DNU-rated contestant (Do Not Use)" });
+      }
+
+      // Interstate check
+      if (contestant && !skipPostcodeWarning) {
+        const interstateCheck = isContestantInterstate({ postcode: contestant.postcode, location: contestant.location });
+        if (interstateCheck.isInterstate) {
+          return res.status(422).json({ 
+            error: `${contestant.name} is from ${interstateCheck.state || 'outside Victoria'}. Interstate contestants require confirmation.`,
+            code: "OUTSIDE_VICTORIA",
+            requiresConfirmation: true,
+            contestantName: contestant.name,
+            postcode: contestant.postcode,
+            state: interstateCheck.state
+          });
+        }
+      }
+
+      // Check for duplicate assignments - contestant should not be seated in ANY record day
+      const allAssignments = await storage.getAllSeatAssignments();
+      const existingAssignment = allAssignments.find((a: any) => a.contestantId === contestantId);
+      if (existingAssignment) {
+        const existingRecordDay = await storage.getRecordDayById(existingAssignment.recordDayId);
+        const dayName = existingRecordDay?.date 
+          ? new Date(existingRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
+          : 'another day';
+        return res.status(409).json({ error: `Contestant is already seated/assigned in ${dayName}` });
+      }
+      
+      // Check if contestant is a standby for ANY record day
+      const allStandbys = await storage.getStandbyAssignments();
+      const standbyAssignment = allStandbys.find((s: any) => s.contestantId === contestantId);
+      if (standbyAssignment && !standbyAssignment.movedToReschedule && standbyAssignment.status !== 'seated') {
+        const standbyRecordDay = await storage.getRecordDayById(standbyAssignment.recordDayId);
+        const dayName = standbyRecordDay?.date 
+          ? new Date(standbyRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
+          : 'another day';
+        return res.status(409).json({ error: `Contestant is already a standby for ${dayName}. Remove them from standbys first.` });
+      }
+
+      // Generate the next OS# seat label for this record day
+      const existingAssignmentsForDay = await storage.getSeatAssignmentsByRecordDay(recordDayId);
+      const overflowAssignments = existingAssignmentsForDay.filter((a: any) => a.blockNumber === 0);
+      let maxOsNum = 0;
+      overflowAssignments.forEach((a: any) => {
+        const match = a.seatLabel?.match(/^OS(\d+)$/);
+        if (match) {
+          maxOsNum = Math.max(maxOsNum, parseInt(match[1]));
+        }
+      });
+      const seatLabel = `OS${maxOsNum + 1}`;
+
+      // Check for previous canceled assignments to carry over workflow status
+      const canceledAssignments = await storage.getCanceledAssignments();
+      const previousCanceledWithWorkflow = canceledAssignments.find(
+        (c: any) => c.contestantId === contestantId && (c.paperworkSent || c.paperworkReceived || c.bookingEmailSent || c.confirmedRsvp || c.paperworkOnDay)
+      );
+      const anyPreviousCanceled = canceledAssignments.find(
+        (c: any) => c.contestantId === contestantId
+      );
+
+      const assignmentData: any = {
+        recordDayId,
+        contestantId,
+        blockNumber: 0,
+        seatLabel,
+      };
+
+      // Carry over workflow fields from reschedule
+      if (previousCanceledWithWorkflow) {
+        if (previousCanceledWithWorkflow.bookingEmailSent) assignmentData.bookingEmailSent = previousCanceledWithWorkflow.bookingEmailSent;
+        if (previousCanceledWithWorkflow.confirmedRsvp) assignmentData.confirmedRsvp = previousCanceledWithWorkflow.confirmedRsvp;
+        if (previousCanceledWithWorkflow.paperworkSent) assignmentData.paperworkSent = previousCanceledWithWorkflow.paperworkSent;
+        if (previousCanceledWithWorkflow.paperworkSentBy) assignmentData.paperworkSentBy = previousCanceledWithWorkflow.paperworkSentBy;
+        if (previousCanceledWithWorkflow.paperworkReceived) assignmentData.paperworkReceived = previousCanceledWithWorkflow.paperworkReceived;
+        if (previousCanceledWithWorkflow.paperworkReceivedBy) assignmentData.paperworkReceivedBy = previousCanceledWithWorkflow.paperworkReceivedBy;
+        if (previousCanceledWithWorkflow.paperworkOnDay) assignmentData.paperworkOnDay = previousCanceledWithWorkflow.paperworkOnDay;
+      }
+
+      const assignment = await storage.createSeatAssignment(assignmentData);
+
+      // Update contestant status to assigned
+      await storage.updateContestantAvailability(contestantId, 'assigned');
+
+      // Update reschedule entry if contestant was on reschedule list
+      if (anyPreviousCanceled) {
+        const rebookedBy = (req as any).session?.username || 'system';
+        await storage.updateCanceledAssignment(anyPreviousCanceled.id, {
+          rebookedToRecordDayId: recordDayId,
+          rebookedAt: new Date(),
+          rebookedBy: rebookedBy,
+        });
+      }
+
+      res.json(assignment);
+    } catch (error: any) {
+      if (error.message?.startsWith('CONTESTANT_CONFLICT:')) {
+        return res.status(409).json({ error: 'This contestant was just assigned by another user. Please refresh.' });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Create group seat assignments (2-4 contestants to consecutive seats)
   app.post("/api/seat-assignments/group", async (req, res) => {
     try {

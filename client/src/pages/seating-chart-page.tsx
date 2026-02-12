@@ -1141,6 +1141,31 @@ export default function SeatingChartPage() {
     return emptyBlocks;
   }, [recordDayId, assignments, canceledByPosition]);
 
+  // Extract overflow assignments (block 0 = "To Seat on Day" contestants without physical seats)
+  const overflowAssignments = useMemo(() => {
+    if (!assignments || !Array.isArray(assignments)) return [];
+    return assignments
+      .filter((a: any) => a.blockNumber === 0)
+      .map((a: any) => ({
+        id: a.id,
+        contestantId: a.contestantId,
+        contestantName: a.contestantName || 'Unknown',
+        gender: a.gender,
+        age: a.age,
+        auditionRating: a.auditionRating,
+        groupId: a.groupId,
+        attendingWith: a.attendingWith,
+        photoUrl: a.photoUrl,
+        seatLabel: a.seatLabel,
+        bookingEmailSent: a.bookingEmailSent,
+        confirmedRsvp: a.confirmedRsvp,
+        availabilityStatus: a.availabilityStatus,
+        mobilityNotes: a.mobilityNotes,
+        isTemporary: a.isTemporary,
+        isTestSubject: a.isTestSubject,
+      }));
+  }, [assignments]);
+
   // Show loading state if record days are still loading
   if (recordDaysLoading) {
     return (
@@ -2345,6 +2370,26 @@ export default function SeatingChartPage() {
             onBlockNoteChange={handleBlockNoteChange}
             showBookingStatus={showBookingStatus}
             onRatingChange={handleRatingChange}
+            overflowAssignments={overflowAssignments}
+            onAddOverflow={(contestantId: string) => {
+              apiRequest("POST", "/api/seat-assignments/overflow", {
+                recordDayId,
+                contestantId,
+              }).then(() => {
+                refetch();
+                queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+              }).catch((err: any) => {
+                toast({ title: "Error", description: err.message || "Failed to add to overflow", variant: "destructive" });
+              });
+            }}
+            onRemoveOverflow={(assignmentId: string) => {
+              apiRequest("DELETE", `/api/seat-assignments/${assignmentId}`).then(() => {
+                refetch();
+                queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+              }).catch((err: any) => {
+                toast({ title: "Error", description: err.message || "Failed to remove from overflow", variant: "destructive" });
+              });
+            }}
           />
         )
       )}
