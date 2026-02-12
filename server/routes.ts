@@ -11097,6 +11097,7 @@ Thank you.`;
         
         // Use createOrUpdateCanceledAssignment to handle duplicates automatically
         // If contestant already in reschedule, updates their record and increments count
+        const recordDayForDate = standby.recordDayId ? await storage.getRecordDayById(standby.recordDayId) : null;
         const canceledData: any = {
           contestantId: standby.contestantId,
           recordDayId: standby.recordDayId,
@@ -11107,7 +11108,7 @@ Thank you.`;
           isFromStandby: false,
           wasDeclined: true,
           declinedAt: new Date(),
-          originalAttendanceDate: standby.recordDayId ? (await storage.getRecordDayById(standby.recordDayId))?.date : null,
+          originalAttendanceDate: recordDayForDate?.date ? new Date(recordDayForDate.date) : null,
         };
         // Carry over workflow fields from standby
         if (standby.bookingEmailSent) canceledData.bookingEmailSent = standby.bookingEmailSent;
@@ -11252,7 +11253,7 @@ Thank you.`;
         seatLabel: standby.assignedToSeat || null,
         reason: wasConfirmedOrCheckedIn ? 'Standby - eligible for reschedule' : 'Standby declined before confirmation',
         isFromStandby: wasConfirmedOrCheckedIn ? true : false,
-        originalAttendanceDate: new Date(standby.recordDay.date),
+        originalAttendanceDate: standby.recordDay?.date ? new Date(standby.recordDay.date) : null,
       };
       // Carry over workflow fields from standby
       if (standby.bookingEmailSent) standbyRescheduleData.bookingEmailSent = standby.bookingEmailSent;
