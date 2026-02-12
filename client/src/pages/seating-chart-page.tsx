@@ -1696,7 +1696,7 @@ export default function SeatingChartPage() {
 
   const handleCancel = (assignmentId: string) => {
     setCancelAssignmentId(assignmentId);
-    setCancelReason("");
+    if (cancelReasonRef.current) cancelReasonRef.current.value = "";
     setCancelDialogOpen(true);
   };
 
