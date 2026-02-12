@@ -1245,27 +1245,39 @@ export default function SeatingChartPage() {
   // Extract overflow assignments (block 0 = "To Seat on Day" contestants without physical seats)
   const overflowAssignments = useMemo(() => {
     if (!assignments || !Array.isArray(assignments)) return [];
+    const contestantsMap = new Map((allContestants as any[]).map((c: any) => [c.id, c]));
     return assignments
       .filter((a: any) => a.blockNumber === 0)
-      .map((a: any) => ({
-        id: a.id,
-        contestantId: a.contestantId,
-        contestantName: a.contestantName || 'Unknown',
-        gender: a.gender,
-        age: a.age,
-        auditionRating: a.auditionRating,
-        groupId: a.groupId,
-        attendingWith: a.attendingWith,
-        photoUrl: a.photoUrl,
-        seatLabel: a.seatLabel,
-        bookingEmailSent: a.bookingEmailSent,
-        confirmedRsvp: a.confirmedRsvp,
-        availabilityStatus: a.availabilityStatus,
-        mobilityNotes: a.mobilityNotes,
-        isTemporary: a.isTemporary,
-        isTestSubject: a.isTestSubject,
-      }));
-  }, [assignments]);
+      .map((a: any) => {
+        const c = contestantsMap.get(a.contestantId);
+        return {
+          id: a.id,
+          contestantId: a.contestantId,
+          contestantName: a.contestantName || 'Unknown',
+          gender: a.gender,
+          age: a.age,
+          auditionRating: a.auditionRating,
+          groupId: a.groupId,
+          attendingWith: a.attendingWith,
+          photoUrl: a.photoUrl,
+          seatLabel: a.seatLabel,
+          bookingEmailSent: a.bookingEmailSent,
+          confirmedRsvp: a.confirmedRsvp,
+          availabilityStatus: a.availabilityStatus,
+          mobilityNotes: a.mobilityNotes,
+          isTemporary: a.isTemporary,
+          isTestSubject: a.isTestSubject,
+          phone: c?.phone,
+          email: c?.email,
+          contestantLocation: c?.location,
+          medicalInfo: a.medicalInfo || c?.medicalInfo,
+          criminalRecord: a.criminalRecord || c?.criminalRecord,
+          availabilityNotes: c?.availabilityNotes,
+          podiumStory: c?.podiumStory || a.podiumStory,
+          attendingWithRaw: c?.attendingWith,
+        };
+      });
+  }, [assignments, allContestants]);
 
   // Show loading state if record days are still loading
   if (recordDaysLoading) {

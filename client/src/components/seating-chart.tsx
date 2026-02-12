@@ -223,6 +223,14 @@ export interface OverflowAssignment {
   mobilityNotes?: string;
   isTemporary?: boolean;
   isTestSubject?: boolean;
+  phone?: string;
+  email?: string;
+  contestantLocation?: string;
+  medicalInfo?: string;
+  criminalRecord?: string;
+  availabilityNotes?: string;
+  podiumStory?: boolean;
+  attendingWithRaw?: string;
 }
 
 interface SeatingChartProps {
@@ -2538,69 +2546,178 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {overflowAssignments.map((oa) => (
-                    <Card key={oa.id} className="relative" data-testid={`overflow-card-${oa.id}`}>
-                      <CardContent className="p-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 mb-1">
-                              {oa.photoUrl ? (
-                                <img src={oa.photoUrl} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
-                              ) : (
-                                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                                  <User className="h-4 w-4 text-muted-foreground" />
+                    <HoverCard key={oa.id} openDelay={300} closeDelay={50}>
+                      <HoverCardTrigger asChild>
+                        <Card className="relative cursor-pointer" data-testid={`overflow-card-${oa.id}`}>
+                          <CardContent className="p-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  {oa.photoUrl ? (
+                                    <img src={oa.photoUrl} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                                  ) : (
+                                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                      <User className="h-4 w-4 text-muted-foreground" />
+                                    </div>
+                                  )}
+                                  <div className="min-w-0">
+                                    <p className="font-medium text-sm truncate" data-testid={`overflow-name-${oa.id}`}>{oa.contestantName}</p>
+                                    <div className="flex items-center gap-1 flex-wrap">
+                                      {oa.gender && (
+                                        <Badge variant="secondary" className="text-[10px] px-1">
+                                          {oa.gender === 'Female' ? 'F' : oa.gender === 'Male' ? 'M' : 'O'}
+                                        </Badge>
+                                      )}
+                                      {oa.age && (
+                                        <span className="text-[10px] text-muted-foreground">{oa.age}y</span>
+                                      )}
+                                      {oa.auditionRating && (
+                                        <Badge variant="outline" className="text-[10px] px-1">{oa.auditionRating}</Badge>
+                                      )}
+                                      {oa.seatLabel && (
+                                        <span className="text-[10px] text-muted-foreground">({oa.seatLabel})</span>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
-                              )}
-                              <div className="min-w-0">
-                                <p className="font-medium text-sm truncate" data-testid={`overflow-name-${oa.id}`}>{oa.contestantName}</p>
-                                <div className="flex items-center gap-1 flex-wrap">
-                                  {oa.gender && (
-                                    <Badge variant="secondary" className="text-[10px] px-1">
-                                      {oa.gender === 'Female' ? 'F' : oa.gender === 'Male' ? 'M' : 'O'}
-                                    </Badge>
-                                  )}
-                                  {oa.age && (
-                                    <span className="text-[10px] text-muted-foreground">{oa.age}y</span>
-                                  )}
-                                  {oa.auditionRating && (
-                                    <Badge variant="outline" className="text-[10px] px-1">{oa.auditionRating}</Badge>
-                                  )}
-                                  {oa.seatLabel && (
-                                    <span className="text-[10px] text-muted-foreground">({oa.seatLabel})</span>
-                                  )}
-                                </div>
+                                {oa.attendingWith && (
+                                  <p className="text-[10px] text-muted-foreground mt-1 truncate">
+                                    <Users className="inline h-3 w-3 mr-0.5" />{oa.attendingWith}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex flex-col gap-1 flex-shrink-0">
+                                {showBookingStatus && (
+                                  <Badge 
+                                    variant={oa.confirmedRsvp ? "default" : "secondary"} 
+                                    className={`text-[9px] px-1 ${oa.confirmedRsvp ? 'bg-green-600 text-white' : ''}`}
+                                  >
+                                    {oa.confirmedRsvp ? 'CONF' : 'PENDING'}
+                                  </Badge>
+                                )}
+                                {onRemoveOverflow && !isLocked && (
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={(e) => { e.stopPropagation(); onRemoveOverflow(oa.id); }}
+                                    data-testid={`button-remove-overflow-${oa.id}`}
+                                    title="Remove from record day"
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
                               </div>
                             </div>
-                            {oa.attendingWith && (
-                              <p className="text-[10px] text-muted-foreground mt-1 truncate">
-                                <Users className="inline h-3 w-3 mr-0.5" />{oa.attendingWith}
+                          </CardContent>
+                        </Card>
+                      </HoverCardTrigger>
+                      <HoverCardContent className="w-80" side="top" align="start">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-12 w-12">
+                              {oa.photoUrl ? (
+                                <AvatarImage src={oa.photoUrl} alt={oa.contestantName} className="object-cover" />
+                              ) : null}
+                              <AvatarFallback>
+                                {oa.contestantName?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-sm font-semibold">{oa.contestantName}</h4>
+                                {oa.auditionRating && (
+                                  <span className={`text-sm font-bold ${
+                                    oa.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
+                                    oa.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
+                                    oa.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
+                                    oa.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
+                                    oa.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' : ''
+                                  }`}>
+                                    {oa.auditionRating}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {oa.age ? `${oa.age} years old` : ''}{oa.age && oa.gender ? ' \u2022 ' : ''}{oa.gender || ''}
                               </p>
-                            )}
+                              {oa.contestantLocation && (
+                                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <MapPin className="h-3 w-3" />{oa.contestantLocation}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex flex-col gap-1 flex-shrink-0">
-                            {showBookingStatus && (
-                              <Badge 
-                                variant={oa.confirmedRsvp ? "default" : "secondary"} 
-                                className={`text-[9px] px-1 ${oa.confirmedRsvp ? 'bg-green-600 text-white' : ''}`}
-                              >
-                                {oa.confirmedRsvp ? 'CONF' : 'PENDING'}
-                              </Badge>
-                            )}
-                            {onRemoveOverflow && !isLocked && (
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-6 w-6 text-muted-foreground"
-                                onClick={() => onRemoveOverflow(oa.id)}
-                                data-testid={`button-remove-overflow-${oa.id}`}
-                                title="Remove from record day"
-                              >
-                                <X className="h-3.5 w-3.5" />
-                              </Button>
-                            )}
+
+                          {oa.phone && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <Phone className="h-3 w-3 text-muted-foreground" />
+                              <span>{oa.phone}</span>
+                            </div>
+                          )}
+
+                          {oa.email && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <Mail className="h-3 w-3 text-muted-foreground" />
+                              <span className="truncate">{oa.email}</span>
+                            </div>
+                          )}
+
+                          {oa.attendingWithRaw && (
+                            <div className="text-sm">
+                              <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                                <Users className="h-3 w-3" />
+                                Attending With
+                              </label>
+                              <p className="text-xs mt-0.5">{oa.attendingWithRaw}</p>
+                            </div>
+                          )}
+
+                          {oa.availabilityNotes && (
+                            <div className="text-sm">
+                              <label className="text-xs font-medium text-muted-foreground">Availability Notes</label>
+                              <p className="text-xs">{oa.availabilityNotes}</p>
+                            </div>
+                          )}
+
+                          {hasMeaningfulMedicalNote(oa.medicalInfo) && (
+                            <div className="text-sm">
+                              <label className="text-xs font-medium text-muted-foreground">Medical Info</label>
+                              <p className="text-xs">{oa.medicalInfo}</p>
+                            </div>
+                          )}
+
+                          {hasMeaningfulMedicalNote(oa.mobilityNotes) && (
+                            <div className="text-sm p-2 bg-amber-50 dark:bg-amber-950/50 rounded-md border border-amber-200 dark:border-amber-800">
+                              <label className="text-xs font-medium text-amber-700 dark:text-amber-300 flex items-center gap-1">
+                                <ShieldAlert className="h-3 w-3" />
+                                Mobility/Access Notes
+                              </label>
+                              <p className="text-xs mt-0.5">{oa.mobilityNotes}</p>
+                            </div>
+                          )}
+
+                          {oa.criminalRecord && (
+                            <div className="text-sm">
+                              <label className="text-xs font-medium text-muted-foreground">Criminal Record</label>
+                              <p className="text-xs">{oa.criminalRecord}</p>
+                            </div>
+                          )}
+
+                          <div className="text-sm">
+                            <label className="text-xs font-medium text-muted-foreground">Status</label>
+                            <div className="mt-1 flex items-center gap-1 flex-wrap">
+                              <Badge variant="secondary">To Seat on Day</Badge>
+                              {oa.podiumStory && (
+                                <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 bg-pink-50 dark:bg-pink-950 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800">
+                                  <Heart className="h-2.5 w-2.5 mr-0.5" />
+                                  Story
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </HoverCardContent>
+                    </HoverCard>
                   ))}
                 </div>
               )}
