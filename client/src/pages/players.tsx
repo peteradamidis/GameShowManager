@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown, AlertTriangle, RefreshCw, Undo2, Redo2, History, Eye, EyeOff, PanelTop, MessageSquare, Check, Camera } from "lucide-react";
+import { User, Users, Play, Phone, PhoneCall, PhoneOff, Mail, MapPin, Upload, FileText, X, GripVertical, Calendar, Search, Filter, Star, Trash2, CheckCircle2, Clock, Send, Plus, Download, CreditCard, Circle, ArrowDown, Maximize2, Minimize2, Bold, Italic, Underline, Printer, ZoomIn, ZoomOut, RotateCcw, ChevronUp, ChevronDown, AlertTriangle, RefreshCw, Undo2, Redo2, History, Eye, EyeOff, PanelTop, MessageSquare, Check, Camera, ClipboardPaste } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -415,6 +415,38 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       toast({ title: "Upload failed", description: "Could not read the image file", variant: "destructive" });
     };
     reader.readAsDataURL(file);
+  };
+
+  const handlePasteMainPhoto = (e: React.ClipboardEvent) => {
+    if (!cardData || !selectedContestant) return;
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        e.preventDefault();
+        const file = items[i].getAsFile();
+        if (file) {
+          handlePhotoUpload(selectedContestant.id, file);
+        }
+        return;
+      }
+    }
+  };
+
+  const handlePasteCompanionPhoto = (companionId: string, e: React.ClipboardEvent) => {
+    if (!cardData) return;
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        e.preventDefault();
+        const file = items[i].getAsFile();
+        if (file) {
+          handleCompanionPhotoUpload(companionId, file);
+        }
+        return;
+      }
+    }
   };
 
   // Add a manual companion
@@ -3705,6 +3737,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   className="casting-card-photo-border rounded-lg overflow-hidden relative group"
                   style={{ border: '4px solid #f59e0b', backgroundColor: '#f3f4f6' }}
                   data-testid="main-photo-container"
+                  tabIndex={0}
+                  onPaste={handlePasteMainPhoto}
                 >
                   {/* Photo with zoom/pan applied */}
                   <div 
@@ -3738,17 +3772,46 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                   
                   {/* Photo controls overlay - visible on hover */}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none print-hidden">
-                    {/* Upload button - top right */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        mainPhotoInputRef.current?.click();
-                      }}
-                      className="absolute top-2 right-2 bg-black/70 text-white p-2 rounded-lg hover:bg-black/90 pointer-events-auto"
-                      title="Upload new photo"
-                    >
-                      <Upload className="w-4 h-4" />
-                    </button>
+                    {/* Upload & Paste buttons - top right */}
+                    <div className="absolute top-2 right-2 flex items-center gap-1 pointer-events-auto">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const container = e.currentTarget.closest('[data-testid="main-photo-container"]');
+                          if (container instanceof HTMLElement) container.focus();
+                          navigator.clipboard.read().then(items => {
+                            for (const item of items) {
+                              const imageType = item.types.find(t => t.startsWith('image/'));
+                              if (imageType) {
+                                item.getType(imageType).then(blob => {
+                                  const file = new File([blob], 'pasted-image.png', { type: imageType });
+                                  if (selectedContestant) handlePhotoUpload(selectedContestant.id, file);
+                                });
+                                return;
+                              }
+                            }
+                            toast({ title: "No image found", description: "Copy an image first, then paste", variant: "destructive" });
+                          }).catch(() => {
+                            toast({ title: "Paste via keyboard", description: "Click the photo area, then press Ctrl+V / Cmd+V to paste" });
+                          });
+                        }}
+                        className="bg-black/70 text-white p-2 rounded-lg hover:bg-black/90"
+                        title="Paste image from clipboard"
+                        data-testid="btn-paste-main-photo"
+                      >
+                        <ClipboardPaste className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          mainPhotoInputRef.current?.click();
+                        }}
+                        className="bg-black/70 text-white p-2 rounded-lg hover:bg-black/90"
+                        title="Upload new photo"
+                      >
+                        <Upload className="w-4 h-4" />
+                      </button>
+                    </div>
                     
                     {/* Zoom controls - bottom left */}
                     <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/70 rounded-lg p-1 pointer-events-auto">
@@ -3888,6 +3951,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                             <div 
                               className={`casting-card-photo-border rounded-lg overflow-hidden ${sizeClass} mx-auto relative group cursor-pointer`}
                               style={{ border: '4px solid #f59e0b', backgroundColor: '#f3f4f6' }}
+                              tabIndex={0}
+                              onPaste={(e) => handlePasteCompanionPhoto(companion.id, e)}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 companionPhotoRefs.current[companion.id]?.click();
@@ -3907,14 +3972,51 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                   </Avatar>
                                 )}
                               </div>
-                              {/* Upload overlay */}
+                              {/* Upload/Paste overlay */}
                               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                                 {uploadingPhotoFor === companion.id ? (
                                   <div className="text-white text-xs">Uploading...</div>
                                 ) : (
-                                  <div className="text-center text-white">
-                                    <Upload className="w-4 h-4 mx-auto" />
-                                    <span className="text-xs">Upload</span>
+                                  <div className="text-center text-white pointer-events-auto flex items-center gap-2">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        companionPhotoRefs.current[companion.id]?.click();
+                                      }}
+                                      className="flex flex-col items-center"
+                                      title="Upload photo"
+                                    >
+                                      <Upload className="w-4 h-4" />
+                                      <span className="text-xs">Upload</span>
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const container = e.currentTarget.closest('.casting-card-photo-border');
+                                        if (container instanceof HTMLElement) container.focus();
+                                        navigator.clipboard.read().then(items => {
+                                          for (const item of items) {
+                                            const imageType = item.types.find(t => t.startsWith('image/'));
+                                            if (imageType) {
+                                              item.getType(imageType).then(blob => {
+                                                const file = new File([blob], 'pasted-image.png', { type: imageType });
+                                                handleCompanionPhotoUpload(companion.id, file);
+                                              });
+                                              return;
+                                            }
+                                          }
+                                          toast({ title: "No image found", description: "Copy an image first, then paste", variant: "destructive" });
+                                        }).catch(() => {
+                                          toast({ title: "Paste via keyboard", description: "Click the photo area, then press Ctrl+V / Cmd+V to paste" });
+                                        });
+                                      }}
+                                      className="flex flex-col items-center"
+                                      title="Paste image from clipboard"
+                                      data-testid={`btn-paste-companion-photo-${companion.id}`}
+                                    >
+                                      <ClipboardPaste className="w-4 h-4" />
+                                      <span className="text-xs">Paste</span>
+                                    </button>
                                   </div>
                                 )}
                               </div>
@@ -4623,6 +4725,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       className="casting-card-photo-border rounded-lg overflow-hidden relative group"
                       style={{ border: '4px solid #f59e0b', backgroundColor: '#f3f4f6' }}
                       data-testid="upload-main-photo-preview"
+                      tabIndex={0}
+                      onPaste={handlePasteMainPhoto}
                     >
                       {/* Photo with zoom/pan applied */}
                       <div 
@@ -4656,17 +4760,46 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                       
                       {/* Photo controls overlay - visible on hover */}
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none print-hidden">
-                        {/* Upload button - top right */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            mainPhotoInputRef.current?.click();
-                          }}
-                          className="absolute top-2 right-2 bg-black/70 text-white p-2 rounded-lg hover:bg-black/90 pointer-events-auto"
-                          title="Upload new photo"
-                        >
-                          <Upload className="w-4 h-4" />
-                        </button>
+                        {/* Upload & Paste buttons - top right */}
+                        <div className="absolute top-2 right-2 flex items-center gap-1 pointer-events-auto">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const container = e.currentTarget.closest('[data-testid="upload-main-photo-preview"]');
+                              if (container instanceof HTMLElement) container.focus();
+                              navigator.clipboard.read().then(items => {
+                                for (const item of items) {
+                                  const imageType = item.types.find(t => t.startsWith('image/'));
+                                  if (imageType) {
+                                    item.getType(imageType).then(blob => {
+                                      const file = new File([blob], 'pasted-image.png', { type: imageType });
+                                      if (selectedContestant) handlePhotoUpload(selectedContestant.id, file);
+                                    });
+                                    return;
+                                  }
+                                }
+                                toast({ title: "No image found", description: "Copy an image first, then paste", variant: "destructive" });
+                              }).catch(() => {
+                                toast({ title: "Paste via keyboard", description: "Click the photo area, then press Ctrl+V / Cmd+V to paste" });
+                              });
+                            }}
+                            className="bg-black/70 text-white p-2 rounded-lg hover:bg-black/90"
+                            title="Paste image from clipboard"
+                            data-testid="btn-paste-main-photo-preview"
+                          >
+                            <ClipboardPaste className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              mainPhotoInputRef.current?.click();
+                            }}
+                            className="bg-black/70 text-white p-2 rounded-lg hover:bg-black/90"
+                            title="Upload new photo"
+                          >
+                            <Upload className="w-4 h-4" />
+                          </button>
+                        </div>
                         
                         {/* Zoom controls - bottom left */}
                         <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/70 rounded-lg p-1 pointer-events-auto">
@@ -4789,6 +4922,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                               <div key={companion.id} className="relative">
                                 <div 
                                   className={`border-4 border-amber-500 rounded-lg overflow-hidden ${sizeClass} mx-auto bg-gray-100 relative group cursor-pointer`}
+                                  tabIndex={0}
+                                  onPaste={(e) => handlePasteCompanionPhoto(companion.id, e)}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     companionPhotoRefs.current[companion.id]?.click();
@@ -4808,14 +4943,50 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                                       </Avatar>
                                     )}
                                   </div>
-                                  {/* Upload overlay */}
+                                  {/* Upload/Paste overlay */}
                                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                                     {uploadingPhotoFor === companion.id ? (
                                       <div className="text-white text-xs">Uploading...</div>
                                     ) : (
-                                      <div className="text-center text-white">
-                                        <Upload className="w-4 h-4 mx-auto" />
-                                        <span className="text-xs">Upload</span>
+                                      <div className="text-center text-white pointer-events-auto flex items-center gap-2">
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            companionPhotoRefs.current[companion.id]?.click();
+                                          }}
+                                          className="flex flex-col items-center"
+                                          title="Upload photo"
+                                        >
+                                          <Upload className="w-4 h-4" />
+                                          <span className="text-xs">Upload</span>
+                                        </button>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const container = e.currentTarget.closest('.border-4');
+                                            if (container instanceof HTMLElement) container.focus();
+                                            navigator.clipboard.read().then(items => {
+                                              for (const item of items) {
+                                                const imageType = item.types.find(t => t.startsWith('image/'));
+                                                if (imageType) {
+                                                  item.getType(imageType).then(blob => {
+                                                    const file = new File([blob], 'pasted-image.png', { type: imageType });
+                                                    handleCompanionPhotoUpload(companion.id, file);
+                                                  });
+                                                  return;
+                                                }
+                                              }
+                                              toast({ title: "No image found", description: "Copy an image first, then paste", variant: "destructive" });
+                                            }).catch(() => {
+                                              toast({ title: "Paste via keyboard", description: "Click the photo area, then press Ctrl+V / Cmd+V to paste" });
+                                            });
+                                          }}
+                                          className="flex flex-col items-center"
+                                          title="Paste image from clipboard"
+                                        >
+                                          <ClipboardPaste className="w-4 h-4" />
+                                          <span className="text-xs">Paste</span>
+                                        </button>
                                       </div>
                                     )}
                                   </div>
