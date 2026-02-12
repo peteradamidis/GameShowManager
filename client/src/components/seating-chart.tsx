@@ -47,7 +47,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
-import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical, Briefcase, MapPin, ShieldAlert, Heart, StickyNote, MousePointerClick } from "lucide-react";
+import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical, Briefcase, MapPin, ShieldAlert, Heart, StickyNote, MousePointerClick, Plus } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -250,7 +250,7 @@ interface SeatingChartProps {
   showBookingStatus?: boolean;
   onRatingChange?: (contestantId: string, newRating: string) => void;
   overflowAssignments?: OverflowAssignment[];
-  onAddOverflow?: (contestantId: string) => void;
+  onAddOverflow?: () => void;
   onRemoveOverflow?: (assignmentId: string) => void;
 }
 
@@ -2519,10 +2519,18 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     </Badge>
                   )}
                 </div>
+                {onAddOverflow && !isLocked && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onAddOverflow()}
+                    data-testid="button-add-overflow"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add
+                  </Button>
+                )}
               </div>
-              <p className="text-xs text-muted-foreground mb-3">
-                Contestants assigned to this record day but not yet placed in a physical seat. They can be dragged into empty seats or managed from here.
-              </p>
               {overflowAssignments.length === 0 ? (
                 <div className="text-center py-4 text-sm text-muted-foreground border border-dashed rounded-md">
                   No overflow contestants
