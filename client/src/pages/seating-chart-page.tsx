@@ -2119,19 +2119,17 @@ export default function SeatingChartPage() {
               const psContestants = blockAssignments
                 .filter((a: any) => a.podiumStory === true)
                 .map((a: any) => {
-                  const allContestantsArray = allContestants as any[];
-                  const contestant = allContestantsArray.find((c: any) => c.id === a.contestantId);
                   return {
                     id: a.contestantId,
-                    name: a.contestantName || contestant?.name || 'Unknown',
+                    name: a.contestantName || 'Unknown',
                     seatNumber: a.seatNumber,
                     seatLabel: a.seatLabel,
                     podiumStory: a.podiumStory,
-                    podiumStoryNote: contestant?.podiumStoryNote || '',
-                    caseNumber: contestant?.podiumStoryCaseNumber?.toString() || '',
-                    gender: contestant?.gender,
-                    age: contestant?.age,
-                    location: contestant?.location || a.contestantLocation,
+                    podiumStoryNote: a.podiumStoryNote || '',
+                    caseNumber: a.podiumStoryCaseNumber?.toString() || '',
+                    gender: a.gender,
+                    age: a.age,
+                    location: a.contestantLocation,
                   };
                 });
               

@@ -4937,6 +4937,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isTemporary: contestant?.isTemporary || false,
           isTestSubject: contestant?.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(contestant?.name || ''),
           podiumStory: contestant?.podiumStory,
+          podiumStoryNote: contestant?.podiumStoryNote,
+          podiumStoryCaseNumber: contestant?.podiumStoryCaseNumber,
           attendingWithOverride: assignment.attendingWithOverride,
           mobilityNotesOverride: assignment.mobilityNotesOverride,
         };
