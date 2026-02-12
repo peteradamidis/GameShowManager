@@ -341,6 +341,14 @@ export default function SeatingChartPage() {
   const [debouncedOverflowSearch, setDebouncedOverflowSearch] = useState("");
   const [overflowFilterRating, setOverflowFilterRating] = useState("all");
   const [overflowFilterGender, setOverflowFilterGender] = useState("all");
+  const [overflowFilterGroupSize, setOverflowFilterGroupSize] = useState("all");
+  const [overflowFilterAge, setOverflowFilterAge] = useState("all");
+  const [overflowFilterStatus, setOverflowFilterStatus] = useState("all");
+  const [overflowFilterStandby, setOverflowFilterStandby] = useState("all");
+  const [overflowFilterWithin20km, setOverflowFilterWithin20km] = useState(false);
+  const [overflowFilterWithin60km, setOverflowFilterWithin60km] = useState(false);
+  const [selectedOverflowContestant, setSelectedOverflowContestant] = useState<string | null>(null);
+  const [overflowPage, setOverflowPage] = useState(1);
   const [selectedBlock, setSelectedBlock] = useState<number>(0);
   const [selectedSeat, setSelectedSeat] = useState<string>("");
   const [selectedContestant, setSelectedContestant] = useState<string>("");
@@ -377,6 +385,10 @@ export default function SeatingChartPage() {
   useEffect(() => {
     setContestantPage(1);
   }, [debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km]);
+
+  useEffect(() => {
+    setOverflowPage(1);
+  }, [debouncedOverflowSearch, overflowFilterRating, overflowFilterGender, overflowFilterGroupSize, overflowFilterAge, overflowFilterStatus, overflowFilterStandby, overflowFilterWithin20km, overflowFilterWithin60km]);
   
   // Cancel dialog state
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -693,6 +705,48 @@ export default function SeatingChartPage() {
       c.auditionRating?.toUpperCase().trim() !== 'DNU'
     );
   }, [allContestants, allSeatAssignments, allStandbys]);
+
+  const filteredOverflowContestants = useMemo(() => {
+    return overflowAvailableContestants.filter((c: any) => {
+      if (debouncedOverflowSearch.trim()) {
+        const searchLower = debouncedOverflowSearch.toLowerCase();
+        const matchesSearch = c.name?.toLowerCase().includes(searchLower) || c.attendingWith?.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
+      if (overflowFilterRating !== "all" && c.auditionRating !== overflowFilterRating) return false;
+      if (overflowFilterGender !== "all" && c.gender !== overflowFilterGender) return false;
+      if (overflowFilterGroupSize !== "all") {
+        const groupSize = getGroupSizeFromAttendingWith(c.attendingWith);
+        if (overflowFilterGroupSize === "1" && groupSize !== 1) return false;
+        if (overflowFilterGroupSize === "2" && groupSize !== 2) return false;
+        if (overflowFilterGroupSize === "3+" && groupSize < 3) return false;
+      }
+      if (overflowFilterAge !== "all" && c.age) {
+        const age = parseInt(c.age);
+        if (!isNaN(age)) {
+          if (overflowFilterAge === "18-29" && (age < 18 || age > 29)) return false;
+          if (overflowFilterAge === "30-39" && (age < 30 || age > 39)) return false;
+          if (overflowFilterAge === "40-49" && (age < 40 || age > 49)) return false;
+          if (overflowFilterAge === "50-59" && (age < 50 || age > 59)) return false;
+          if (overflowFilterAge === "60+" && age < 60) return false;
+        }
+      }
+      if (overflowFilterStatus !== "all" && c.availabilityStatus !== overflowFilterStatus) return false;
+      if (overflowFilterStandby !== "all") {
+        if (overflowFilterStandby === "available" && !c.availableForStandby) return false;
+        if (overflowFilterStandby === "not_available" && c.availableForStandby) return false;
+      }
+      if (overflowFilterWithin20km) {
+        const distanceInfo = getDistanceFromDocklands(c.location);
+        if (!distanceInfo || distanceInfo.distance > 20) return false;
+      }
+      if (overflowFilterWithin60km) {
+        const distanceInfo = getDistanceFromDocklands(c.location);
+        if (!distanceInfo || distanceInfo.isOver60km) return false;
+      }
+      return true;
+    });
+  }, [overflowAvailableContestants, debouncedOverflowSearch, overflowFilterRating, overflowFilterGender, overflowFilterGroupSize, overflowFilterAge, overflowFilterStatus, overflowFilterStandby, overflowFilterWithin20km, overflowFilterWithin60km]);
 
   // Helper to calculate group size from attendingWith field
   // Uses shared parser for consistent behavior across the system
@@ -2862,165 +2916,336 @@ export default function SeatingChartPage() {
 
       {/* Add to "To Seat on Day" Overflow Dialog */}
       <Dialog open={overflowDialogOpen} onOpenChange={setOverflowDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-3xl max-h-[80vh] flex flex-col gap-4 overflow-hidden" data-testid="dialog-add-overflow">
+        <DialogContent className="w-[95vw] max-w-5xl max-h-[90vh] flex flex-col gap-4 overflow-hidden" data-testid="dialog-add-overflow">
           <DialogHeader className="pb-2">
             <DialogTitle className="flex items-center gap-2">
               Add to "To Seat on Day"
             </DialogTitle>
             <DialogDescription>
-              Select a contestant to assign to this record day without a physical seat
+              Choose a contestant from the list below
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name..."
-                value={overflowSearch}
-                onChange={(e) => setOverflowSearch(e.target.value)}
-                className="pl-9"
-                data-testid="input-overflow-search"
-              />
+          {overflowAvailableContestants.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Users className="h-10 w-10 mx-auto mb-2 opacity-50" />
+              <p className="font-medium">No available contestants</p>
+              <p className="text-sm">All contestants are already seated.</p>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Select value={overflowFilterGender} onValueChange={setOverflowFilterGender}>
-                <SelectTrigger className="w-[120px]" data-testid="select-overflow-gender">
-                  <SelectValue placeholder="Gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Genders</SelectItem>
-                  <SelectItem value="Female">Female</SelectItem>
-                  <SelectItem value="Male">Male</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={overflowFilterRating} onValueChange={setOverflowFilterRating}>
-                <SelectTrigger className="w-[120px]" data-testid="select-overflow-rating">
-                  <SelectValue placeholder="Rating" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Ratings</SelectItem>
-                  <SelectItem value="A">A</SelectItem>
-                  <SelectItem value="B">B</SelectItem>
-                  <SelectItem value="C">C</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto min-h-0 border rounded-md">
-            {(() => {
-              const filtered = overflowAvailableContestants.filter((c: any) => {
-                if (debouncedOverflowSearch && !c.name?.toLowerCase().includes(debouncedOverflowSearch.toLowerCase())) return false;
-                if (overflowFilterGender !== "all" && c.gender !== overflowFilterGender) return false;
-                if (overflowFilterRating !== "all" && c.auditionRating?.toUpperCase() !== overflowFilterRating) return false;
-                return true;
-              });
-              if (filtered.length === 0) {
-                return (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Users className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                    <p className="font-medium">No available contestants</p>
-                    <p className="text-sm">Try adjusting your search or filters.</p>
-                  </div>
-                );
-              }
-              return (
-                <div className="divide-y">
-                  {filtered.slice(0, 50).map((c: any) => (
-                    <button
-                      key={c.id}
-                      className="w-full flex items-center gap-3 p-3 text-left hover-elevate"
-                      data-testid={`overflow-contestant-${c.id}`}
-                      onClick={async () => {
-                        try {
-                          await apiRequest("POST", "/api/seat-assignments/overflow", {
-                            recordDayId,
-                            contestantId: c.id,
-                          });
-                          refetch();
-                          queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
-                          queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
-                          toast({
-                            title: "Added to seat on day",
-                            description: `${c.name} added to overflow seating`,
-                          });
-                          setOverflowDialogOpen(false);
-                        } catch (error: any) {
-                          let errorMsg = error.message || "Failed to add";
-                          try {
-                            const jsonMatch = errorMsg.match(/^\d+:\s*(.+)$/);
-                            if (jsonMatch) {
-                              const parsed = JSON.parse(jsonMatch[1]);
-                              if (parsed.code === "OUTSIDE_VICTORIA" && parsed.requiresConfirmation) {
-                                if (confirm(`${parsed.error}\n\nProceed anyway?`)) {
-                                  await apiRequest("POST", "/api/seat-assignments/overflow", {
-                                    recordDayId,
-                                    contestantId: c.id,
-                                    skipPostcodeWarning: true,
-                                  });
-                                  refetch();
-                                  queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
-                                  queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
-                                  toast({
-                                    title: "Added to seat on day",
-                                    description: `${c.name} added to overflow seating`,
-                                  });
-                                  setOverflowDialogOpen(false);
-                                }
-                                return;
-                              }
-                              errorMsg = parsed.error || errorMsg;
-                            }
-                          } catch {}
-                          toast({ title: "Error", description: errorMsg, variant: "destructive" });
-                        }
-                      }}
-                    >
-                      {c.photoUrl ? (
-                        <Avatar className="h-8 w-8 flex-shrink-0">
-                          <AvatarImage src={c.photoUrl} alt={c.name} />
-                          <AvatarFallback>{c.name?.[0]}</AvatarFallback>
-                        </Avatar>
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{c.name}</p>
-                        <div className="flex items-center gap-1 flex-wrap">
-                          {c.gender && (
-                            <Badge variant="secondary" className="text-[10px] px-1">
-                              {c.gender === 'Female' ? 'F' : c.gender === 'Male' ? 'M' : 'O'}
-                            </Badge>
-                          )}
-                          {c.age && <span className="text-[10px] text-muted-foreground">{c.age}y</span>}
-                          {c.auditionRating && (
-                            <Badge variant="outline" className="text-[10px] px-1">{c.auditionRating}</Badge>
-                          )}
-                          {c.attendingWith && (
-                            <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">
-                              <Users className="inline h-3 w-3 mr-0.5" />{c.attendingWith}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                  {filtered.length > 50 && (
-                    <div className="text-center py-2 text-xs text-muted-foreground">
-                      Showing 50 of {filtered.length} results. Refine your search.
-                    </div>
-                  )}
+          ) : (
+            <>
+              <div className="space-y-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name..."
+                    value={overflowSearch}
+                    onChange={(e) => setOverflowSearch(e.target.value)}
+                    className="pl-9"
+                    data-testid="input-overflow-search"
+                  />
                 </div>
-              );
-            })()}
-          </div>
+
+                <div className="flex flex-wrap items-end gap-2 text-xs">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground text-[10px] font-medium">Rating</span>
+                    <Select value={overflowFilterRating} onValueChange={setOverflowFilterRating}>
+                      <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-overflow-rating">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="A+">A+</SelectItem>
+                        <SelectItem value="A">A</SelectItem>
+                        <SelectItem value="B+">B+</SelectItem>
+                        <SelectItem value="B">B</SelectItem>
+                        <SelectItem value="C">C</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground text-[10px] font-medium">Gender</span>
+                    <Select value={overflowFilterGender} onValueChange={setOverflowFilterGender}>
+                      <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-overflow-gender">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="Male">Male</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground text-[10px] font-medium">Group Size</span>
+                    <Select value={overflowFilterGroupSize} onValueChange={setOverflowFilterGroupSize}>
+                      <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-overflow-group-size">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="1">Solo</SelectItem>
+                        <SelectItem value="2">Pair</SelectItem>
+                        <SelectItem value="3+">3+</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground text-[10px] font-medium">Age</span>
+                    <Select value={overflowFilterAge} onValueChange={setOverflowFilterAge}>
+                      <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-overflow-age">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="18-29">18-29</SelectItem>
+                        <SelectItem value="30-39">30-39</SelectItem>
+                        <SelectItem value="40-49">40-49</SelectItem>
+                        <SelectItem value="50-59">50-59</SelectItem>
+                        <SelectItem value="60+">60+</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground text-[10px] font-medium">Status</span>
+                    <Select value={overflowFilterStatus} onValueChange={setOverflowFilterStatus}>
+                      <SelectTrigger className="h-7 w-[90px] text-xs" data-testid="select-overflow-status">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="available">Available</SelectItem>
+                        <SelectItem value="assigned">Assigned</SelectItem>
+                        <SelectItem value="invited">Invited</SelectItem>
+                        <SelectItem value="confirmed">Confirmed</SelectItem>
+                        <SelectItem value="rescheduled">Reschedule</SelectItem>
+                        <SelectItem value="returning_standby">Returning Standby</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground text-[10px] font-medium">Standby</span>
+                    <Select value={overflowFilterStandby} onValueChange={setOverflowFilterStandby}>
+                      <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-overflow-standby">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="available">Yes</SelectItem>
+                        <SelectItem value="not_available">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-3 ml-2 self-end pb-1">
+                    <div className="flex items-center gap-1.5">
+                      <Checkbox
+                        id="overflow-filter-within-20km"
+                        checked={overflowFilterWithin20km}
+                        onCheckedChange={(checked) => setOverflowFilterWithin20km(checked as boolean)}
+                        data-testid="checkbox-overflow-within-20km"
+                      />
+                      <label htmlFor="overflow-filter-within-20km" className="text-xs cursor-pointer whitespace-nowrap">
+                        Within 20km
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Checkbox
+                        id="overflow-filter-within-60km"
+                        checked={overflowFilterWithin60km}
+                        onCheckedChange={(checked) => setOverflowFilterWithin60km(checked as boolean)}
+                        data-testid="checkbox-overflow-within-60km"
+                      />
+                      <label htmlFor="overflow-filter-within-60km" className="text-xs cursor-pointer whitespace-nowrap">
+                        Within 60km
+                      </label>
+                    </div>
+                  </div>
+                  <span className="ml-auto text-muted-foreground self-end pb-1" data-testid="text-overflow-count">
+                    {filteredOverflowContestants.length > CONTESTANTS_PER_PAGE
+                      ? `${(overflowPage - 1) * CONTESTANTS_PER_PAGE + 1}-${Math.min(overflowPage * CONTESTANTS_PER_PAGE, filteredOverflowContestants.length)} of ${filteredOverflowContestants.length}`
+                      : `${filteredOverflowContestants.length} found`}
+                  </span>
+                </div>
+              </div>
+
+              <ScrollArea className="h-[400px] border rounded-md bg-muted/20">
+                <div className="p-2 space-y-1">
+                  {filteredOverflowContestants.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-6">
+                      No contestants match your filters.
+                    </p>
+                  ) : (() => {
+                    const ratingColors: Record<string, string> = {
+                      'A+': 'bg-emerald-500 text-white',
+                      'A': 'bg-green-500 text-white',
+                      'B+': 'bg-amber-500 text-white',
+                      'B': 'bg-orange-500 text-white',
+                      'C': 'bg-red-500 text-white',
+                      'P': 'bg-cyan-500 text-white',
+                    };
+                    const statusColors: Record<string, string> = {
+                      'available': 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+                      'assigned': 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
+                      'invited': 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+                      'confirmed': 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
+                      'rescheduled': 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300',
+                      'returning_standby': 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
+                    };
+                    const statusLabels: Record<string, string> = {
+                      'available': 'Avail',
+                      'assigned': 'Asgnd',
+                      'invited': 'Invited',
+                      'confirmed': 'Conf',
+                      'rescheduled': 'Resc',
+                      'returning_standby': 'RetSB',
+                    };
+                    const totalPages = Math.ceil(filteredOverflowContestants.length / CONTESTANTS_PER_PAGE);
+                    const startIdx = (overflowPage - 1) * CONTESTANTS_PER_PAGE;
+                    const paginatedContestants = filteredOverflowContestants.slice(startIdx, startIdx + CONTESTANTS_PER_PAGE);
+
+                    return paginatedContestants.map((contestant: any) => {
+                      const isSelected = selectedOverflowContestant === contestant.id;
+                      const hasGroup = !!contestant.attendingWith;
+                      const isAvailableForStandby = !!contestant.availableForStandby;
+                      const hasPodiumStory = !!contestant.podiumStory;
+
+                      return (
+                        <div
+                          key={contestant.id}
+                          onClick={() => setSelectedOverflowContestant(contestant.id)}
+                          className={`grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-2 p-2 rounded-md cursor-pointer transition-all ${
+                            isSelected
+                              ? 'bg-primary text-primary-foreground shadow-sm'
+                              : 'hover:bg-muted'
+                          }`}
+                          data-testid={`overflow-contestant-${contestant.id}`}
+                        >
+                          <Avatar className="h-9 w-9 border border-border">
+                            {contestant.photoUrl ? (
+                              <AvatarImage src={contestant.photoUrl} alt={contestant.name} className="object-cover" />
+                            ) : null}
+                            <AvatarFallback className="text-xs bg-muted">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                            </AvatarFallback>
+                          </Avatar>
+
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-medium text-sm truncate">
+                                {contestant.name}
+                              </span>
+                              {isAvailableForStandby && (
+                                <span className={`px-1 py-0.5 rounded text-[9px] font-bold flex-shrink-0 ${
+                                  isSelected
+                                    ? 'bg-primary-foreground/20 text-primary-foreground'
+                                    : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
+                                }`}>
+                                  S
+                                </span>
+                              )}
+                              {hasPodiumStory && (
+                                <span className={`px-1 py-0.5 rounded text-[9px] font-bold flex-shrink-0 ${
+                                  isSelected
+                                    ? 'bg-primary-foreground/30 text-primary-foreground ring-1 ring-primary-foreground/50'
+                                    : 'bg-pink-500 text-white'
+                                }`}>
+                                  PS
+                                </span>
+                              )}
+                              {hasGroup && (
+                                <Users className={`h-3.5 w-3.5 flex-shrink-0 ${isSelected ? 'text-primary-foreground/70' : 'text-blue-500'}`} />
+                              )}
+                              {isSelected && (
+                                <Check className="h-4 w-4 flex-shrink-0" />
+                              )}
+                            </div>
+                            <div className={`text-xs truncate ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                              {contestant.gender === "Female" ? "F" : "M"}
+                              {contestant.age && ` | ${contestant.age}yo`}
+                              {hasGroup && ` | ${contestant.attendingWith}`}
+                            </div>
+                          </div>
+
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                            isSelected
+                              ? 'bg-primary-foreground/20 text-primary-foreground'
+                              : statusColors[contestant.availabilityStatus] || 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {statusLabels[contestant.availabilityStatus] || contestant.availabilityStatus || '?'}
+                          </span>
+
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                            contestant.auditionRating
+                              ? ratingColors[contestant.auditionRating] || 'bg-gray-500 text-white'
+                              : 'bg-muted text-muted-foreground'
+                          }`}>
+                            {contestant.auditionRating || '?'}
+                          </div>
+
+                          <Button
+                            size="icon"
+                            variant={isSelected ? "secondary" : "outline"}
+                            className="h-7 w-7"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setViewContestantId(contestant.id);
+                            }}
+                            data-testid={`button-view-overflow-contestant-${contestant.id}`}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </ScrollArea>
+
+              {filteredOverflowContestants.length > CONTESTANTS_PER_PAGE && (
+                <div className="flex items-center justify-between gap-2 pt-2 border-t">
+                  <span className="text-xs text-muted-foreground" data-testid="text-overflow-pagination">
+                    Page {overflowPage} of {Math.ceil(filteredOverflowContestants.length / CONTESTANTS_PER_PAGE)}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setOverflowPage(p => Math.max(1, p - 1))}
+                      disabled={overflowPage <= 1}
+                      data-testid="button-overflow-prev-page"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setOverflowPage(p => Math.min(Math.ceil(filteredOverflowContestants.length / CONTESTANTS_PER_PAGE), p + 1))}
+                      disabled={overflowPage >= Math.ceil(filteredOverflowContestants.length / CONTESTANTS_PER_PAGE)}
+                      data-testid="button-overflow-next-page"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {selectedOverflowContestant && (() => {
+                const sc = overflowAvailableContestants.find((c: any) => c.id === selectedOverflowContestant);
+                return sc ? (
+                  <div className="border rounded-md p-3 bg-card">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Selected:</span>
+                      <span className="text-sm">{sc.name}</span>
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+            </>
+          )}
 
           <DialogFooter className="flex flex-row justify-between w-full gap-2 sm:gap-0">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => { setTempContestantSource("overflow"); setTempContestantDialogOpen(true); }}
               className="mr-auto border-dashed border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20"
               data-testid="button-new-temp-contestant-overflow"
@@ -3028,9 +3253,65 @@ export default function SeatingChartPage() {
               <User className="h-4 w-4 mr-1" />
               New Contestant
             </Button>
-            <Button variant="outline" onClick={() => setOverflowDialogOpen(false)} data-testid="button-overflow-cancel">
-              Cancel
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setOverflowDialogOpen(false)} data-testid="button-overflow-cancel">
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  if (!selectedOverflowContestant) return;
+                  const contestant = overflowAvailableContestants.find((c: any) => c.id === selectedOverflowContestant);
+                  try {
+                    await apiRequest("POST", "/api/seat-assignments/overflow", {
+                      recordDayId,
+                      contestantId: selectedOverflowContestant,
+                    });
+                    refetch();
+                    queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+                    queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+                    toast({
+                      title: "Added to seat on day",
+                      description: `${contestant?.name || 'Contestant'} added to overflow seating`,
+                    });
+                    setSelectedOverflowContestant(null);
+                    setOverflowDialogOpen(false);
+                  } catch (error: any) {
+                    let errorMsg = error.message || "Failed to add";
+                    try {
+                      const jsonMatch = errorMsg.match(/^\d+:\s*(.+)$/);
+                      if (jsonMatch) {
+                        const parsed = JSON.parse(jsonMatch[1]);
+                        if (parsed.code === "OUTSIDE_VICTORIA" && parsed.requiresConfirmation) {
+                          if (confirm(`${parsed.error}\n\nProceed anyway?`)) {
+                            await apiRequest("POST", "/api/seat-assignments/overflow", {
+                              recordDayId,
+                              contestantId: selectedOverflowContestant,
+                              skipPostcodeWarning: true,
+                            });
+                            refetch();
+                            queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+                            queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+                            toast({
+                              title: "Added to seat on day",
+                              description: `${contestant?.name || 'Contestant'} added to overflow seating`,
+                            });
+                            setSelectedOverflowContestant(null);
+                            setOverflowDialogOpen(false);
+                          }
+                          return;
+                        }
+                        errorMsg = parsed.error || errorMsg;
+                      }
+                    } catch {}
+                    toast({ title: "Error", description: errorMsg, variant: "destructive" });
+                  }
+                }}
+                disabled={!selectedOverflowContestant}
+                data-testid="button-confirm-overflow-assign"
+              >
+                Add to Seat on Day
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
