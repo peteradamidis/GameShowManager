@@ -260,6 +260,7 @@ interface SeatingChartProps {
   overflowAssignments?: OverflowAssignment[];
   onAddOverflow?: () => void;
   onRemoveOverflow?: (assignmentId: string) => void;
+  onMoveOverflowToSeat?: (overflowAssignment: OverflowAssignment) => void;
 }
 
 function DraggableDroppableSeat({
@@ -1169,7 +1170,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "", blockNotes = {}, onBlockNoteChange, showBookingStatus = false, onRatingChange, overflowAssignments = [], onAddOverflow, onRemoveOverflow }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "", blockNotes = {}, onBlockNoteChange, showBookingStatus = false, onRatingChange, overflowAssignments = [], onAddOverflow, onRemoveOverflow, onMoveOverflowToSeat }: SeatingChartProps) {
   // Use initialSeats as source of truth - derive blocks from props, not state
   // Only use local state for temporary overrides during active drag operations
   const defaultBlocks = useMemo(() => 
@@ -2548,7 +2549,11 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   {overflowAssignments.map((oa) => (
                     <HoverCard key={oa.id} openDelay={300} closeDelay={50}>
                       <HoverCardTrigger asChild>
-                        <Card className="relative cursor-pointer" data-testid={`overflow-card-${oa.id}`}>
+                        <Card 
+                          className="relative cursor-pointer hover-elevate" 
+                          data-testid={`overflow-card-${oa.id}`}
+                          onClick={() => onMoveOverflowToSeat?.(oa)}
+                        >
                           <CardContent className="p-3">
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">

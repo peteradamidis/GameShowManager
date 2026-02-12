@@ -349,6 +349,9 @@ export default function SeatingChartPage() {
   const [overflowFilterWithin60km, setOverflowFilterWithin60km] = useState(false);
   const [selectedOverflowContestant, setSelectedOverflowContestant] = useState<string | null>(null);
   const [overflowPage, setOverflowPage] = useState(1);
+  const [moveOverflowDialogOpen, setMoveOverflowDialogOpen] = useState(false);
+  const [moveOverflowTarget, setMoveOverflowTarget] = useState<any>(null);
+  const [moveOverflowLoading, setMoveOverflowLoading] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<number>(0);
   const [selectedSeat, setSelectedSeat] = useState<string>("");
   const [selectedContestant, setSelectedContestant] = useState<string>("");
@@ -2499,6 +2502,10 @@ export default function SeatingChartPage() {
                 toast({ title: "Error", description: err.message || "Failed to remove from overflow", variant: "destructive" });
               });
             }}
+            onMoveOverflowToSeat={(oa) => {
+              setMoveOverflowTarget(oa);
+              setMoveOverflowDialogOpen(true);
+            }}
           />
         )
       )}
@@ -3324,6 +3331,91 @@ export default function SeatingChartPage() {
                 Add to Seat on Day
               </Button>
             </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Move Overflow Contestant to Seat Dialog */}
+      <Dialog open={moveOverflowDialogOpen} onOpenChange={(open) => { setMoveOverflowDialogOpen(open); if (!open) setMoveOverflowTarget(null); }}>
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[80vh] flex flex-col gap-4 overflow-hidden" data-testid="dialog-move-overflow-to-seat">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowLeftRight className="h-5 w-5" />
+              Move to Seat
+            </DialogTitle>
+            {moveOverflowTarget && (
+              <p className="text-sm text-muted-foreground">
+                Select an empty seat for <span className="font-medium">{moveOverflowTarget.contestantName}</span>
+              </p>
+            )}
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+            {seats.map((block, blockIdx) => {
+              const blockNumber = blockIdx + 1;
+              const emptySeatsInBlock = block.filter(s => !s.contestantName);
+              if (emptySeatsInBlock.length === 0) return null;
+              const blockLabel = blockNumber <= 3 ? `Block ${blockNumber} (Top)` :
+                blockNumber <= 6 ? `Block ${blockNumber} (Bottom)` : 'Block 7 (Standing)';
+              return (
+                <div key={blockIdx} data-testid={`move-overflow-block-${blockNumber}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm font-medium">{blockLabel}</span>
+                    <Badge variant="secondary" className="text-[10px]">{emptySeatsInBlock.length} empty</Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {emptySeatsInBlock.map(seat => {
+                      const seatLabel = seat.id.split('-').pop() || '';
+                      return (
+                        <Button
+                          key={seat.id}
+                          size="sm"
+                          variant="outline"
+                          disabled={moveOverflowLoading}
+                          data-testid={`move-overflow-seat-${blockNumber}-${seatLabel}`}
+                          onClick={async () => {
+                            if (!moveOverflowTarget) return;
+                            setMoveOverflowLoading(true);
+                            try {
+                              await apiRequest('POST', '/api/seat-assignments/swap', {
+                                sourceAssignmentId: moveOverflowTarget.id,
+                                blockNumber: blockNumber,
+                                seatLabel: seatLabel,
+                              });
+                              refetch();
+                              queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+                              queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+                              broadcastSeatingChange(recordDayId);
+                              toast({
+                                title: "Moved to seat",
+                                description: `${moveOverflowTarget.contestantName} moved to Block ${blockNumber}, Seat ${seatLabel}`,
+                              });
+                              setMoveOverflowDialogOpen(false);
+                              setMoveOverflowTarget(null);
+                            } catch (error: any) {
+                              toast({ title: "Error", description: error.message || "Failed to move to seat", variant: "destructive" });
+                            } finally {
+                              setMoveOverflowLoading(false);
+                            }
+                          }}
+                        >
+                          {seatLabel}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+            {seats.every(block => block.every(s => s.contestantName)) && (
+              <div className="text-center py-8 text-muted-foreground">
+                No empty seats available
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setMoveOverflowDialogOpen(false); setMoveOverflowTarget(null); }}>
+              Cancel
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
