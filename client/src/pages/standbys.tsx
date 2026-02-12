@@ -159,6 +159,20 @@ export default function StandbysPage() {
     queryKey: ['/api/standbys'],
   });
 
+  // Fetch block types for selected record day (PB/NPB per block)
+  const { data: blockTypesData = [] } = useQuery<{ blockNumber: number; blockType: string }[]>({
+    queryKey: ['/api/record-days', selectedRecordDayId, 'block-types'],
+    enabled: !!selectedRecordDayId,
+  });
+
+  const blockTypeMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    blockTypesData.forEach((bt) => {
+      map[bt.blockNumber] = bt.blockType;
+    });
+    return map;
+  }, [blockTypesData]);
+
   // Global search - searches all record days
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return null;
@@ -1194,9 +1208,23 @@ export default function StandbysPage() {
                         {/* Assigned Seat */}
                         <TableCell className="text-center py-1 px-2">
                           {standby.assignedToSeat ? (
-                            <Badge variant="outline" className="text-[10px] bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900 dark:text-purple-300 dark:border-purple-700">
-                              Block {standby.assignedToSeat.charAt(0)}, {standby.assignedToSeat.substring(1)}
-                            </Badge>
+                            <div className="flex flex-col items-center gap-0.5">
+                              <Badge variant="outline" className="text-[10px] bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900 dark:text-purple-300 dark:border-purple-700">
+                                Block {standby.assignedToSeat.charAt(0)}, {standby.assignedToSeat.substring(1)}
+                              </Badge>
+                              {(() => {
+                                const blockNum = parseInt(standby.assignedToSeat.charAt(0));
+                                const bt = blockTypeMap[blockNum];
+                                if (bt) {
+                                  return (
+                                    <Badge variant="secondary" className={`text-[9px] px-1 ${bt === 'PB' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'}`}>
+                                      {bt}
+                                    </Badge>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
                           ) : (
                             <span className="text-muted-foreground text-xs">-</span>
                           )}
