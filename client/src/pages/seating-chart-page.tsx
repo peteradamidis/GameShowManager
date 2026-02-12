@@ -997,6 +997,7 @@ export default function SeatingChartPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
     },
     onError: (error: any) => {
       toast({
@@ -2155,6 +2156,7 @@ export default function SeatingChartPage() {
                             apiRequest('PATCH', `/api/contestants/${contestant.id}`, { podiumStoryNote: note })
                               .then(() => {
                                 queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+                                queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
                                 toast({ title: "Note saved", description: "Podium story note updated" });
                               })
                               .catch(() => {
@@ -2165,6 +2167,7 @@ export default function SeatingChartPage() {
                             apiRequest('PATCH', `/api/contestants/${contestant.id}`, { podiumStoryCaseNumber: caseNumber === 'none' ? null : parseInt(caseNumber, 10) })
                               .then(() => {
                                 queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+                                queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
                                 toast({ title: "Case updated", description: caseNumber && caseNumber !== 'none' ? `Assigned to Case ${caseNumber}` : "Case number removed" });
                               })
                               .catch(() => {
