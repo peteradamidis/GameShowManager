@@ -445,6 +445,7 @@ export default function SeatingChartPage() {
   // Temporary contestant dialog state
   const [tempContestantDialogOpen, setTempContestantDialogOpen] = useState(false);
   const [isCreatingTempContestant, setIsCreatingTempContestant] = useState(false);
+  const [tempContestantSource, setTempContestantSource] = useState<"seat" | "overflow">("seat");
   
   // Edit temporary contestant dialog state
   const [editTempContestantDialogOpen, setEditTempContestantDialogOpen] = useState(false);
@@ -2801,7 +2802,7 @@ export default function SeatingChartPage() {
           <DialogFooter className="flex flex-row justify-between w-full gap-2 sm:gap-0">
             <Button 
               variant="outline" 
-              onClick={() => setTempContestantDialogOpen(true)}
+              onClick={() => { setTempContestantSource("seat"); setTempContestantDialogOpen(true); }}
               className="mr-auto border-dashed border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20"
               data-testid="button-new-temp-contestant"
             >
@@ -2982,7 +2983,16 @@ export default function SeatingChartPage() {
             })()}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex flex-row justify-between w-full gap-2 sm:gap-0">
+            <Button 
+              variant="outline" 
+              onClick={() => { setTempContestantSource("overflow"); setTempContestantDialogOpen(true); }}
+              className="mr-auto border-dashed border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20"
+              data-testid="button-new-temp-contestant-overflow"
+            >
+              <User className="h-4 w-4 mr-1" />
+              New Contestant
+            </Button>
             <Button variant="outline" onClick={() => setOverflowDialogOpen(false)} data-testid="button-overflow-cancel">
               Cancel
             </Button>
@@ -3022,26 +3032,41 @@ export default function SeatingChartPage() {
             // Close temp dialog
             setTempContestantDialogOpen(false);
             
-            // Assign to seat
-            await apiRequest("POST", "/api/seat-assignments", {
-              recordDayId,
-              contestantId: newContestant.id,
-              blockNumber: selectedBlock,
-              seatLabel: selectedSeat,
-            });
-            
-            toast({
-              title: "Temporary contestant added",
-              description: `${newContestant.name} has been created and assigned to Block ${selectedBlock}, Seat ${selectedSeat}.`,
-            });
-            
-            // Refresh data
-            queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
-            queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
-            broadcastSeatingChange();
-            
-            // Close assign dialog
-            setAssignDialogOpen(false);
+            if (tempContestantSource === "overflow") {
+              await apiRequest("POST", "/api/seat-assignments/overflow", {
+                recordDayId,
+                contestantId: newContestant.id,
+              });
+              
+              toast({
+                title: "Temporary contestant added",
+                description: `${newContestant.name} has been created and added to "To Seat on Day".`,
+              });
+              
+              queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+              queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+              broadcastSeatingChange();
+              
+              setOverflowDialogOpen(false);
+            } else {
+              await apiRequest("POST", "/api/seat-assignments", {
+                recordDayId,
+                contestantId: newContestant.id,
+                blockNumber: selectedBlock,
+                seatLabel: selectedSeat,
+              });
+              
+              toast({
+                title: "Temporary contestant added",
+                description: `${newContestant.name} has been created and assigned to Block ${selectedBlock}, Seat ${selectedSeat}.`,
+              });
+              
+              queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+              queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+              broadcastSeatingChange();
+              
+              setAssignDialogOpen(false);
+            }
           } catch (error: any) {
             toast({
               variant: "destructive",
