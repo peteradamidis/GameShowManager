@@ -311,10 +311,18 @@ export default function StandbysPage() {
     return grouped;
   }, [allStandbys]);
 
-  // Auto-select first record day
+  // Auto-select first upcoming record day (or first overall if all past)
   useEffect(() => {
     if (recordDays.length > 0 && !selectedRecordDayId) {
-      setSelectedRecordDayId(recordDays[0].id);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const sorted = [...recordDays].sort((a, b) => +new Date(a.date) - +new Date(b.date));
+      const firstUpcoming = sorted.find(rd => {
+        const rdDate = new Date(rd.date);
+        rdDate.setHours(0, 0, 0, 0);
+        return rdDate >= today;
+      });
+      setSelectedRecordDayId(firstUpcoming ? firstUpcoming.id : sorted[0].id);
     }
   }, [recordDays, selectedRecordDayId]);
 
@@ -751,42 +759,80 @@ export default function StandbysPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {recordDays.map(rd => {
-                  const standbys = standbysByRecordDay[rd.id] || [];
-                  const confirmed = standbys.filter(s => s.status === 'confirmed').length;
-                  const pending = standbys.filter(s => s.status === 'pending' || s.status === 'email_sent').length;
-                  
-                  return (
-                    <button
-                      key={rd.id}
-                      onClick={() => {
-                        setSelectedRecordDayId(rd.id);
-                        setSelectedStandbys([]);
-                      }}
-                      className={`w-full text-left p-3 rounded-md border transition-colors hover-elevate ${
-                        selectedRecordDayId === rd.id 
-                          ? 'border-primary bg-primary/5' 
-                          : 'border-border'
-                      }`}
-                      data-testid={`button-record-day-${rd.id}`}
-                    >
-                      <div className="font-medium">{formatDate(rd.date)}</div>
-                      {rd.rxNumber && (
-                        <div className="text-xs text-muted-foreground">{rd.rxNumber}</div>
-                      )}
-                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          {standbys.length} standby{standbys.length !== 1 ? 's' : ''}
-                        </Badge>
-                        {confirmed > 0 && (
-                          <Badge variant="outline" className="text-xs text-green-600 dark:text-green-400">
-                            {confirmed} confirmed
-                          </Badge>
+                {(() => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const byDate = [...recordDays].sort((a, b) => +new Date(a.date) - +new Date(b.date));
+                  const upcoming = byDate.filter(rd => {
+                    const rdDate = new Date(rd.date);
+                    rdDate.setHours(0, 0, 0, 0);
+                    return rdDate >= today;
+                  });
+                  const past = byDate.filter(rd => {
+                    const rdDate = new Date(rd.date);
+                    rdDate.setHours(0, 0, 0, 0);
+                    return rdDate < today;
+                  });
+                  const sorted = [...upcoming, ...past];
+                  const hasPast = past.length > 0 && upcoming.length > 0;
+
+                  return sorted.map((rd, idx) => {
+                    const rdDate = new Date(rd.date);
+                    rdDate.setHours(0, 0, 0, 0);
+                    const isPast = rdDate < today;
+                    const isFirstPast = hasPast && isPast && (idx === 0 || (() => {
+                      const prevDate = new Date(sorted[idx - 1].date);
+                      prevDate.setHours(0, 0, 0, 0);
+                      return prevDate >= today;
+                    })());
+                    const standbys = standbysByRecordDay[rd.id] || [];
+                    const confirmed = standbys.filter(s => s.status === 'confirmed').length;
+
+                    return (
+                      <div key={rd.id}>
+                        {isFirstPast && (
+                          <div className="flex items-center gap-2 my-2 px-1">
+                            <div className="flex-1 border-t border-muted-foreground/30" />
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Past</span>
+                            <div className="flex-1 border-t border-muted-foreground/30" />
+                          </div>
                         )}
+                        <button
+                          onClick={() => {
+                            setSelectedRecordDayId(rd.id);
+                            setSelectedStandbys([]);
+                          }}
+                          className={`w-full text-left p-3 rounded-md border transition-colors hover-elevate ${
+                            selectedRecordDayId === rd.id 
+                              ? 'border-primary bg-primary/5' 
+                              : 'border-border'
+                          } ${isPast ? 'opacity-60' : ''}`}
+                          data-testid={`button-record-day-${rd.id}`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={`font-medium ${isPast ? 'text-muted-foreground' : ''}`}>{formatDate(rd.date)}</span>
+                            {isPast && (
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Past</Badge>
+                            )}
+                          </div>
+                          {rd.rxNumber && (
+                            <div className="text-xs text-muted-foreground">{rd.rxNumber}</div>
+                          )}
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              {standbys.length} standby{standbys.length !== 1 ? 's' : ''}
+                            </Badge>
+                            {confirmed > 0 && (
+                              <Badge variant="outline" className="text-xs text-green-600 dark:text-green-400">
+                                {confirmed} confirmed
+                              </Badge>
+                            )}
+                          </div>
+                        </button>
                       </div>
-                    </button>
-                  );
-                })}
+                    );
+                  });
+                })()}
               </div>
             </CardContent>
           </Card>
