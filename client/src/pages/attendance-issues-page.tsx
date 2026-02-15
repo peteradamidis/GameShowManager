@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { AlertTriangle, Clock, CalendarPlus, Check, Trash2 } from "lucide-react";
+import { AlertTriangle, Clock, CalendarPlus, Check, Trash2, XCircle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
