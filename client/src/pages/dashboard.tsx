@@ -502,7 +502,8 @@ export default function Dashboard() {
         />
       )}
 
-      {/* 48-Hour Reminder Alert */}
+      {/* 48-Hour Reminder Alert (HIDDEN FOR NOW AS PER USER REQUEST) */}
+      {/*
       {upcomingReminders.length > 0 && (
         <Card className="border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30" data-testid="card-reminder-alert">
           <CardHeader className="pb-3">
@@ -592,6 +593,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+      */}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatsCard
