@@ -245,7 +245,7 @@ export default function Dashboard() {
   // Mutation for sending contestant reminders
   const sendContestantReminderMutation = useMutation({
     mutationFn: async (recordDayId: string) => {
-      setPendingContestantReminders(prev => new Set([...prev, recordDayId]));
+      setPendingContestantReminders(prev => new Set(Array.from(prev).concat(recordDayId)));
       const res = await apiRequest('POST', `/api/record-days/${recordDayId}/send-contestant-reminder`);
       return res.json();
     },
@@ -276,7 +276,7 @@ export default function Dashboard() {
   // Mutation for sending standby reminders
   const sendStandbyReminderMutation = useMutation({
     mutationFn: async (recordDayId: string) => {
-      setPendingStandbyReminders(prev => new Set([...prev, recordDayId]));
+      setPendingStandbyReminders(prev => new Set(Array.from(prev).concat(recordDayId)));
       const res = await apiRequest('POST', `/api/record-days/${recordDayId}/send-standby-reminder`);
       return res.json();
     },
@@ -337,7 +337,8 @@ export default function Dashboard() {
     let highestDay = { amount: 0, date: '', rxNumber: '' };
     let lowestDay = { amount: Infinity, date: '', rxNumber: '' };
 
-    Object.entries(winningsByDay).forEach(([dayId, amount]) => {
+    Object.entries(winningsByDay).forEach(([dayId, amountValue]) => {
+      const amount = amountValue as number;
       const day = recordDaysData.find(rd => rd.id === dayId);
       if (!day) return;
 
