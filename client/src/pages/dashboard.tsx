@@ -307,6 +307,10 @@ export default function Dashboard() {
   // Calculate new posts since last visit
   const newPostsCount = recentPosts.filter(p => isPostNew(p.createdAt)).length;
 
+  // Today's date - normalize to start of day for accurate day comparisons
+  const today = startOfDay(new Date());
+  const formattedToday = format(today, "EEEE, d MMMM yyyy");
+
   // Calculate real statistics
   const totalApplicants = contestants.length;
   const availableContestants = contestants.filter(c => c.availabilityStatus === 'available').length;
@@ -395,10 +399,6 @@ export default function Dashboard() {
     const bIndex = order.indexOf(b[0]) === -1 ? 999 : order.indexOf(b[0]);
     return aIndex - bIndex;
   });
-
-  // Today's date - normalize to start of day for accurate day comparisons
-  const today = startOfDay(new Date());
-  const formattedToday = format(today, "EEEE, d MMMM yyyy");
 
   // Calculate deadlines
   const SENDING_EMAIL_LEAD_DAYS = 14; // 2 weeks before record day (Sending Email Deadline)
