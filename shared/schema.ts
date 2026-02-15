@@ -20,7 +20,7 @@ export const blockTypeEnum = pgEnum('block_type', ['PB', 'NPB']);
 export const standbyStatusEnum = pgEnum('standby_status', ['pending', 'email_sent', 'confirmed', 'declined', 'seated', 'rescheduled']);
 export const messageDirectionEnum = pgEnum('message_direction', ['outbound', 'inbound']); // outbound = system to contestant, inbound = contestant to system
 export const playerTypeEnum = pgEnum('player_type', ['player', 'backup', 'player_partner']);
-export const attendanceIssueTypeEnum = pgEnum('attendance_issue_type', ['no_show', 'early_leaver']);
+export const attendanceIssueTypeEnum = pgEnum('attendance_issue_type', ['no_show', 'early_leaver', 'no_longer_want_to_attend']);
 
 // Groups table
 export const groups = pgTable("groups", {

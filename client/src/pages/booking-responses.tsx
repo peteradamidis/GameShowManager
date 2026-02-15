@@ -212,7 +212,7 @@ export default function BookingResponses() {
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [declineAssignment, setDeclineAssignment] = useState<BookingAssignment | null>(null);
   const [declineReason, setDeclineReason] = useState("");
-  const [declineAction, setDeclineAction] = useState<"reschedule" | "return_pool">("reschedule");
+  const [declineAction, setDeclineAction] = useState<"reschedule" | "return_pool" | "attendance_issue">("reschedule");
   const [declineMovedBy, setDeclineMovedBy] = useState("");
   const [rebookRecordDayId, setRebookRecordDayId] = useState<string>("");
   const [rebookBlock, setRebookBlock] = useState<string>("");
@@ -493,20 +493,27 @@ export default function BookingResponses() {
 
   // Mutation for declining a booking (moves to reschedule)
   const declineMutation = useMutation({
-    mutationFn: async ({ assignmentId, reason, movedBy }: { assignmentId: string; reason: string; movedBy?: string }) => {
+    mutationFn: async ({ assignmentId, reason, movedBy, moveToAttendanceIssues }: { assignmentId: string; reason: string; movedBy?: string; moveToAttendanceIssues?: boolean }) => {
       return apiRequest("POST", `/api/seat-assignments/${assignmentId}/decline`, {
         reason,
         movedBy,
+        moveToAttendanceIssues
       });
     },
-    onSuccess: () => {
-      toast({ title: "Booking declined", description: "Contestant moved to reschedule list" });
+    onSuccess: (data: any) => {
+      if (data.attendanceIssue) {
+        toast({ title: "Booking declined", description: "Contestant moved to attendance issues" });
+      } else {
+        toast({ title: "Booking declined", description: "Contestant moved to reschedule list" });
+      }
       setDeclineDialogOpen(false);
       setDeclineAssignment(null);
       setDeclineReason("");
       setDeclineMovedBy("");
+      setDeclineAction("reschedule");
       invalidateBookingQueries();
       queryClient.invalidateQueries({ queryKey: ["/api/canceled-assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance-issues"] });
     },
     onError: (error: any) => {
       toast({ 

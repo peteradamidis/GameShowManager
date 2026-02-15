@@ -7772,28 +7772,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Decline booking - mark as declined and optionally move to reschedule
   app.post("/api/seat-assignments/:id/decline", async (req, res) => {
     try {
-      const { reason, moveToReschedule = true, movedBy } = req.body;
+      const { reason, moveToReschedule = true, movedBy, moveToAttendanceIssues = false } = req.body;
       const declineReason = reason ? `[DECLINED] ${reason}` : "[DECLINED] No reason provided";
       
       // Get the assignment details before canceling for movement logging
       const assignment = await storage.getSeatAssignmentById(req.params.id);
       
+      if (!assignment) {
+        return res.status(404).json({ error: "Seat assignment not found" });
+      }
+
+      if (moveToAttendanceIssues) {
+        // Log as attendance issue: 'no_longer_want_to_attend'
+        await storage.logAttendanceIssue({
+          contestantId: assignment.contestantId,
+          recordDayId: assignment.recordDayId,
+          blockNumber: assignment.blockNumber,
+          seatLabel: assignment.seatLabel,
+          issueType: 'no_longer_want_to_attend',
+          notes: reason || 'Declined and marked as no longer wanting to attend',
+          loggedBy: movedBy || 'system'
+        });
+
+        // Still need to remove the assignment
+        await storage.cancelSeatAssignment(req.params.id, declineReason, movedBy, true);
+        
+        return res.json({ moved: true, attendanceIssue: true });
+      }
+
       if (moveToReschedule) {
         // Move to reschedule list (canceled assignments) with isDecline=true
         const canceled = await storage.cancelSeatAssignment(req.params.id, declineReason, movedBy, true);
         
         // Log the decline/reschedule to movement history
-        if (assignment) {
-          await storage.logMovement({
-            contestantId: assignment.contestantId,
-            movementType: 'added_to_reschedule',
-            recordDayId: assignment.recordDayId,
-            fromBlockNumber: assignment.blockNumber,
-            fromSeatLabel: assignment.seatLabel,
-            notes: `Contestant declined and moved to reschedule`,
-            movedBy: movedBy || 'system',
-          });
-        }
+        await storage.logMovement({
+          contestantId: assignment.contestantId,
+          movementType: 'added_to_reschedule',
+          recordDayId: assignment.recordDayId,
+          fromBlockNumber: assignment.blockNumber,
+          fromSeatLabel: assignment.seatLabel,
+          notes: `Contestant declined and moved to reschedule`,
+          movedBy: movedBy || 'system',
+        });
         
         res.json({ moved: true, canceled });
       } else {

@@ -55,6 +55,7 @@ export default function AttendanceIssuesPage() {
 
   const noShowCount = issues?.filter(i => i.issueType === 'no_show').length || 0;
   const earlyLeaverCount = issues?.filter(i => i.issueType === 'early_leaver').length || 0;
+  const noLongerAttendCount = issues?.filter(i => i.issueType === 'no_longer_want_to_attend').length || 0;
 
   const moveToRescheduleMutation = useMutation({
     mutationFn: async ({ issueId, reason, movedBy }: { issueId: string; reason: string; movedBy: string }) => {
@@ -193,6 +194,17 @@ export default function AttendanceIssuesPage() {
             <p className="text-xs text-muted-foreground">Total early leaver incidents</p>
           </CardContent>
         </Card>
+
+        <Card data-testid="no-longer-attend-count-card">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">No Longer Want to Attend</CardTitle>
+            <XCircle className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold" data-testid="no-longer-attend-count">{noLongerAttendCount}</div>
+            <p className="text-xs text-muted-foreground">Contestants who declined to attend</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -210,6 +222,7 @@ export default function AttendanceIssuesPage() {
                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="no_show">No-Shows</SelectItem>
                   <SelectItem value="early_leaver">Early Leavers</SelectItem>
+                  <SelectItem value="no_longer_want_to_attend">No Longer Want to Attend</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -283,8 +296,10 @@ export default function AttendanceIssuesPage() {
                       <TableCell>
                         {issue.issueType === 'no_show' ? (
                           <Badge variant="destructive" data-testid={`type-badge-${issue.id}`}>No-Show</Badge>
-                        ) : (
+                        ) : issue.issueType === 'early_leaver' ? (
                           <Badge className="bg-amber-500" data-testid={`type-badge-${issue.id}`}>Early Leaver</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-red-500 border-red-500" data-testid={`type-badge-${issue.id}`}>No Longer Wants to Attend</Badge>
                         )}
                       </TableCell>
                       <TableCell>
