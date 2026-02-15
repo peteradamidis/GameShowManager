@@ -357,12 +357,21 @@ export default function Dashboard() {
       return sum + 1;
     }, 0);
 
+    const TOTAL_EPS_TARGET = 195;
+    const epsRemaining = Math.max(0, TOTAL_EPS_TARGET - totalEpisodes);
+    
+    // Calculate average eps per day from filmed days to estimate remaining days
+    const avgEpsPerDay = filmedRecordDays.length > 0 ? totalEpisodes / filmedRecordDays.length : 5;
+    const daysRemaining = Math.ceil(epsRemaining / avgEpsPerDay);
+
     return {
       filmedCount: filmedRecordDays.length,
       totalEpisodes,
       totalPrizeMoney,
       highestDay,
-      lowestDay
+      lowestDay,
+      epsRemaining,
+      daysRemaining
     };
   }, [recordDaysData, winningAssignments]);
 
@@ -613,14 +622,12 @@ export default function Dashboard() {
             <Card className="bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 lg:col-span-1">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
-                  <Users className="h-5 w-5" />
+                  <Clock className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase">Avg. Payout / Ep</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase">Remaining to Film</p>
                   <p className="text-xl font-bold">
-                    ${funStats.totalEpisodes > 0 
-                      ? Math.round(funStats.totalPrizeMoney / funStats.totalEpisodes).toLocaleString() 
-                      : 0}
+                    {funStats.epsRemaining} Eps / ~{funStats.daysRemaining} Days
                   </p>
                 </div>
               </CardContent>
