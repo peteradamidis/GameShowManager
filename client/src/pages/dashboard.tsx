@@ -319,7 +319,12 @@ export default function Dashboard() {
   });
 
   const funStats = useMemo(() => {
-    const filmedRecordDays = recordDaysData.filter(rd => rd.status === 'completed');
+    // A record day is "filmed" if its date is in the past, regardless of status string
+    const filmedRecordDays = recordDaysData.filter(rd => {
+      const recordDate = startOfDay(new Date(rd.date));
+      return recordDate <= today;
+    });
+
     const totalPrizeMoney = winningAssignments.reduce((sum, a) => sum + (Number(a.winningMoneyAmount) || 0), 0);
     
     // Calculate per-day winnings
