@@ -558,69 +558,51 @@ export default function Dashboard() {
       {/* Next Record Day Banner */}
       {firstRecordDate && (
         <div className="space-y-4">
-          <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white" data-testid="banner-next-rx">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row items-center gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-full bg-blue-500/20 text-blue-400">
-                    <Calendar className="h-8 w-8" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Next Record Day</h3>
-                    <p className="text-2xl font-bold text-white">
-                      {futureRecordDays[0]?.rxNumber && <span className="text-blue-400 mr-2">{futureRecordDays[0].rxNumber}</span>}
-                      {format(new Date(firstRecordDate), "EEEE, d MMMM yyyy")}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex-1 lg:ml-auto">
-                  <RxDayCountdown 
-                    targetDate={firstRecordDate} 
-                    rxNumber={futureRecordDays[0]?.rxNumber}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <RxDayCountdown 
+            targetDate={firstRecordDate} 
+            rxNumber={futureRecordDays[0]?.rxNumber}
+          />
 
-          {/* Fun Stats Row - Positioned UNDERNEATH */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="bg-slate-900 border-slate-800 text-white p-4 hover:bg-slate-800 transition-colors shadow-md">
-              <div className="flex items-center gap-2 mb-2 text-slate-400">
-                <Clapperboard className="h-4 w-4" />
-                <span className="text-[10px] font-bold uppercase tracking-wider">Filmed</span>
+          {/* Fun Stats Row - Highest/Lowest Paid Day and Other Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="bg-slate-50 dark:bg-slate-900 border shadow-sm p-4 hover-elevate transition-all">
+              <div className="flex items-center gap-2 mb-2 text-orange-600 dark:text-orange-400">
+                <Sparkles className="h-5 w-5" />
+                <span className="text-xs font-bold uppercase tracking-wider">Highest Paid Day</span>
               </div>
-              <p className="text-xl font-bold">{funStats.filmedCount} Days</p>
-              <p className="text-xs text-slate-500">{funStats.totalEpisodes} Episodes</p>
-            </Card>
-
-            <Card className="bg-slate-900 border-slate-800 text-white p-4 hover:bg-slate-800 transition-colors shadow-md">
-              <div className="flex items-center gap-2 mb-2 text-slate-400">
-                <Trophy className="h-4 w-4 text-amber-400" />
-                <span className="text-[10px] font-bold uppercase tracking-wider">Prize Money</span>
-              </div>
-              <p className="text-xl font-bold">${funStats.totalPrizeMoney.toLocaleString()}</p>
-              <p className="text-xs text-slate-500">Awarded so far</p>
-            </Card>
-
-            <Card className="bg-slate-900 border-slate-800 text-white p-4 hover:bg-slate-800 transition-colors shadow-md">
-              <div className="flex items-center gap-2 mb-2 text-slate-400">
-                <Sparkles className="h-4 w-4 text-orange-400" />
-                <span className="text-[10px] font-bold uppercase tracking-wider">Best Day</span>
-              </div>
-              <p className="text-xl font-bold">${funStats.highestDay.amount.toLocaleString()}</p>
-              <p className="text-xs text-slate-500 truncate" title={funStats.highestDay.rxNumber}>
+              <p className="text-2xl font-black text-slate-900 dark:text-white">${funStats.highestDay.amount.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground font-medium truncate" title={funStats.highestDay.rxNumber}>
                 {funStats.highestDay.rxNumber || funStats.highestDay.date}
               </p>
             </Card>
 
-            <Card className="bg-slate-900 border-slate-800 text-white p-4 hover:bg-slate-800 transition-colors shadow-md">
-              <div className="flex items-center gap-2 mb-2 text-slate-400">
-                <Clock className="h-4 w-4 text-purple-400" />
-                <span className="text-[10px] font-bold uppercase tracking-wider">Remaining</span>
+            <Card className="bg-slate-50 dark:bg-slate-900 border shadow-sm p-4 hover-elevate transition-all">
+              <div className="flex items-center gap-2 mb-2 text-slate-600 dark:text-slate-400">
+                <AlertCircle className="h-5 w-5" />
+                <span className="text-xs font-bold uppercase tracking-wider">Lowest Paid Day</span>
               </div>
-              <p className="text-xl font-bold">{funStats.epsRemaining} Eps</p>
-              <p className="text-xs text-slate-500">~{funStats.daysRemaining} Days left</p>
+              <p className="text-2xl font-black text-slate-900 dark:text-white">${funStats.lowestDay.amount.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground font-medium truncate" title={funStats.lowestDay.rxNumber}>
+                {funStats.lowestDay.rxNumber || funStats.lowestDay.date}
+              </p>
+            </Card>
+
+            <Card className="bg-slate-50 dark:bg-slate-900 border shadow-sm p-4 hover-elevate transition-all">
+              <div className="flex items-center gap-2 mb-2 text-blue-600 dark:text-blue-400">
+                <Clapperboard className="h-5 w-5" />
+                <span className="text-xs font-bold uppercase tracking-wider">Filming Progress</span>
+              </div>
+              <p className="text-2xl font-black text-slate-900 dark:text-white">{funStats.filmedCount} Days</p>
+              <p className="text-xs text-muted-foreground font-medium">{funStats.totalEpisodes} Episodes Filmed</p>
+            </Card>
+
+            <Card className="bg-slate-50 dark:bg-slate-900 border shadow-sm p-4 hover-elevate transition-all">
+              <div className="flex items-center gap-2 mb-2 text-purple-600 dark:text-purple-400">
+                <Clock className="h-5 w-5" />
+                <span className="text-xs font-bold uppercase tracking-wider">Target: 195 Eps</span>
+              </div>
+              <p className="text-2xl font-black text-slate-900 dark:text-white">{funStats.epsRemaining} Left</p>
+              <p className="text-xs text-muted-foreground font-medium">~{funStats.daysRemaining} Days remaining</p>
             </Card>
           </div>
         </div>
