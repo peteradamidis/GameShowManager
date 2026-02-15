@@ -568,7 +568,7 @@ export default function Dashboard() {
             <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 hover:bg-slate-800 transition-colors">
               <div className="flex items-center gap-2 mb-2 text-slate-400">
                 <Trophy className="h-5 w-5 text-amber-400" />
-                <span className="text-xs font-bold uppercase tracking-wider">Total Money Paid</span>
+                <span className="text-xs font-bold uppercase tracking-wider">Total Winnings</span>
               </div>
               <p className="text-2xl font-black text-white">${funStats.totalPrizeMoney.toLocaleString()}</p>
               <p className="text-xs text-slate-500 font-medium">Awarded so far</p>
@@ -577,7 +577,7 @@ export default function Dashboard() {
             <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 hover:bg-slate-800 transition-colors">
               <div className="flex items-center gap-2 mb-2 text-slate-400">
                 <Sparkles className="h-5 w-5 text-orange-400" />
-                <span className="text-xs font-bold uppercase tracking-wider">Highest Paid Day</span>
+                <span className="text-xs font-bold uppercase tracking-wider">Highest Winnings Day</span>
               </div>
               <p className="text-2xl font-black text-white">${funStats.highestDay.amount.toLocaleString()}</p>
               <p className="text-xs text-slate-500 font-medium truncate" title={funStats.highestDay.rxNumber}>
@@ -588,7 +588,7 @@ export default function Dashboard() {
             <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 hover:bg-slate-800 transition-colors">
               <div className="flex items-center gap-2 mb-2 text-slate-400">
                 <AlertCircle className="h-5 w-5 text-slate-400" />
-                <span className="text-xs font-bold uppercase tracking-wider">Lowest Paid Day</span>
+                <span className="text-xs font-bold uppercase tracking-wider">Lowest Winnings Day</span>
               </div>
               <p className="text-2xl font-black text-white">${funStats.lowestDay.amount.toLocaleString()}</p>
               <p className="text-xs text-slate-500 font-medium truncate" title={funStats.lowestDay.rxNumber}>
