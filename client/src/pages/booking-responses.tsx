@@ -2359,7 +2359,7 @@ export default function BookingResponses() {
           <div className="space-y-4 py-4">
             <RadioGroup 
               value={declineAction} 
-              onValueChange={(v) => setDeclineAction(v as "reschedule" | "return_pool")}
+              onValueChange={(v) => setDeclineAction(v as "reschedule" | "return_pool" | "attendance_issue")}
               className="space-y-3"
             >
               <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50">
@@ -2385,16 +2385,30 @@ export default function BookingResponses() {
                   </span>
                 </div>
               </div>
+
+              <div className="flex items-start space-x-3 p-3 border rounded-md hover:bg-muted/50 border-red-200 bg-red-50/10 dark:bg-red-900/10">
+                <RadioGroupItem value="attendance_issue" id="action-attendance-issue" data-testid="radio-attendance-issue" />
+                <div className="flex flex-col">
+                  <Label htmlFor="action-attendance-issue" className="font-medium cursor-pointer text-red-600 dark:text-red-400">
+                    No Longer Want to Attend
+                  </Label>
+                  <span className="text-sm text-muted-foreground">
+                    Move to Attendance Issues tab (permanent record)
+                  </span>
+                </div>
+              </div>
             </RadioGroup>
 
-            {/* Reschedule: Show reason textarea and producer initials */}
-            {declineAction === "reschedule" && (
+            {/* Reschedule or Attendance Issue: Show reason textarea and producer initials */}
+            {(declineAction === "reschedule" || declineAction === "attendance_issue") && (
               <div className="space-y-4 pt-2 border-t">
                 <div className="space-y-2">
-                  <Label htmlFor="decline-reason">Reason for decline</Label>
+                  <Label htmlFor="decline-reason">
+                    {declineAction === "attendance_issue" ? "Reason for not attending" : "Reason for decline"}
+                  </Label>
                   <Textarea
                     id="decline-reason"
-                    placeholder="e.g., No longer available, scheduling conflict, etc."
+                    placeholder={declineAction === "attendance_issue" ? "e.g., Decided not to participate, health reasons, etc." : "e.g., No longer available, scheduling conflict, etc."}
                     value={declineReason}
                     onChange={(e) => setDeclineReason(e.target.value)}
                     data-testid="input-decline-reason"
@@ -2421,16 +2435,30 @@ export default function BookingResponses() {
               Cancel
             </Button>
             <Button
-              variant={declineAction === "reschedule" ? "destructive" : "default"}
-              onClick={handleDeclineSubmit}
+              variant={declineAction === "return_pool" ? "default" : "destructive"}
+              onClick={() => {
+                if (declineAction === "return_pool") {
+                  returnToPoolMutation.mutate(declineAssignment!.id);
+                } else {
+                  declineMutation.mutate({ 
+                    assignmentId: declineAssignment!.id, 
+                    reason: declineReason,
+                    movedBy: declineMovedBy,
+                    moveToAttendanceIssues: declineAction === "attendance_issue"
+                  });
+                }
+              }}
               disabled={
-                (declineAction === "reschedule" && !declineMovedBy.trim()) || 
+                ((declineAction === "reschedule" || declineAction === "attendance_issue") && !declineMovedBy.trim()) || 
                 declineMutation.isPending || 
                 returnToPoolMutation.isPending
               }
               data-testid="button-submit-decline"
             >
-              {declineMutation.isPending || returnToPoolMutation.isPending ? "Processing..." : (declineAction === "reschedule" ? "Move to Reschedule" : "Return to Pool")}
+              {declineMutation.isPending || returnToPoolMutation.isPending ? "Processing..." : 
+               declineAction === "reschedule" ? "Move to Reschedule" : 
+               declineAction === "attendance_issue" ? "Move to Attendance Issues" :
+               "Return to Pool"}
             </Button>
           </DialogFooter>
         </DialogContent>
