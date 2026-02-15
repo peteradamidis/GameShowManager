@@ -565,53 +565,53 @@ export default function Dashboard() {
 
           {/* Fun Stats Row - Highest/Lowest Paid Day and Other Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 hover:bg-slate-800 transition-colors">
-              <div className="flex items-center gap-2 mb-2 text-slate-400">
+            <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 text-white p-4 hover:bg-slate-800/50 transition-colors">
+              <div className="flex items-center gap-2 mb-2 text-slate-300">
                 <Trophy className="h-5 w-5 text-amber-400" />
                 <span className="text-xs font-bold uppercase tracking-wider">Total Winnings</span>
               </div>
               <p className="text-2xl font-black text-white">${funStats.totalPrizeMoney.toLocaleString()}</p>
-              <p className="text-xs text-slate-500 font-medium">Awarded so far</p>
+              <p className="text-xs text-slate-400 font-medium">Awarded so far</p>
             </Card>
 
-            <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 hover:bg-slate-800 transition-colors">
-              <div className="flex items-center gap-2 mb-2 text-slate-400">
+            <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 text-white p-4 hover:bg-slate-800/50 transition-colors">
+              <div className="flex items-center gap-2 mb-2 text-slate-300">
                 <Sparkles className="h-5 w-5 text-orange-400" />
                 <span className="text-xs font-bold uppercase tracking-wider">Highest Winnings Day</span>
               </div>
               <p className="text-2xl font-black text-white">${funStats.highestDay.amount.toLocaleString()}</p>
-              <p className="text-xs text-slate-500 font-medium truncate" title={funStats.highestDay.rxNumber}>
+              <p className="text-xs text-slate-400 font-medium truncate" title={funStats.highestDay.rxNumber}>
                 {funStats.highestDay.rxNumber || funStats.highestDay.date}
               </p>
             </Card>
 
-            <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 hover:bg-slate-800 transition-colors">
-              <div className="flex items-center gap-2 mb-2 text-slate-400">
-                <AlertCircle className="h-5 w-5 text-slate-400" />
+            <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 text-white p-4 hover:bg-slate-800/50 transition-colors">
+              <div className="flex items-center gap-2 mb-2 text-slate-300">
+                <AlertCircle className="h-5 w-5 text-slate-300" />
                 <span className="text-xs font-bold uppercase tracking-wider">Lowest Winnings Day</span>
               </div>
               <p className="text-2xl font-black text-white">${funStats.lowestDay.amount.toLocaleString()}</p>
-              <p className="text-xs text-slate-500 font-medium truncate" title={funStats.lowestDay.rxNumber}>
+              <p className="text-xs text-slate-400 font-medium truncate" title={funStats.lowestDay.rxNumber}>
                 {funStats.lowestDay.rxNumber || funStats.lowestDay.date}
               </p>
             </Card>
 
-            <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 hover:bg-slate-800 transition-colors">
-              <div className="flex items-center gap-2 mb-2 text-slate-400">
+            <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 text-white p-4 hover:bg-slate-800/50 transition-colors">
+              <div className="flex items-center gap-2 mb-2 text-slate-300">
                 <Clapperboard className="h-5 w-5 text-blue-400" />
                 <span className="text-xs font-bold uppercase tracking-wider">Filming Progress</span>
               </div>
               <p className="text-2xl font-black text-white">{funStats.filmedCount} Days</p>
-              <p className="text-xs text-slate-500 font-medium">{funStats.totalEpisodes} Episodes Filmed</p>
+              <p className="text-xs text-slate-400 font-medium">{funStats.totalEpisodes} Episodes Filmed</p>
             </Card>
 
-            <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 hover:bg-slate-800 transition-colors">
-              <div className="flex items-center gap-2 mb-2 text-slate-400">
+            <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 text-white p-4 hover:bg-slate-800/50 transition-colors">
+              <div className="flex items-center gap-2 mb-2 text-slate-300">
                 <Clock className="h-5 w-5 text-purple-400" />
                 <span className="text-xs font-bold uppercase tracking-wider">Target: 195 Eps</span>
               </div>
               <p className="text-2xl font-black text-white">{funStats.epsRemaining} Left</p>
-              <p className="text-xs text-slate-500 font-medium">~{funStats.daysRemaining} Days remaining</p>
+              <p className="text-xs text-slate-400 font-medium">~{funStats.daysRemaining} Days remaining</p>
             </Card>
           </div>
         </div>
