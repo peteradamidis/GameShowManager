@@ -15430,8 +15430,8 @@ Thank you.`;
         return res.status(400).json({ error: "Missing required fields: contestantId, recordDayId, blockNumber, seatLabel, issueType" });
       }
       
-      if (!['no_show', 'early_leaver'].includes(issueType)) {
-        return res.status(400).json({ error: "issueType must be 'no_show' or 'early_leaver'" });
+      if (!['no_show', 'early_leaver', 'no_longer_want_to_attend'].includes(issueType)) {
+        return res.status(400).json({ error: "issueType must be 'no_show', 'early_leaver', or 'no_longer_want_to_attend'" });
       }
       
       const issue = await storage.createAttendanceIssue({

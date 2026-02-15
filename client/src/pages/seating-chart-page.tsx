@@ -475,7 +475,7 @@ export default function SeatingChartPage() {
   
   // Attendance issue dialog state (No-Show / Early Leaver)
   const [attendanceIssueDialogOpen, setAttendanceIssueDialogOpen] = useState(false);
-  const [attendanceIssueType, setAttendanceIssueType] = useState<'no_show' | 'early_leaver'>('no_show');
+  const [attendanceIssueType, setAttendanceIssueType] = useState<'no_show' | 'early_leaver' | 'no_longer_want_to_attend'>('no_show');
   const [attendanceIssueInitials, setAttendanceIssueInitials] = useState("");
   const [attendanceIssuePending, setAttendanceIssuePending] = useState<{
     assignmentId: string;
@@ -1810,6 +1810,17 @@ export default function SeatingChartPage() {
     setAttendanceIssueDialogOpen(true);
   };
 
+  // Handle marking a contestant as No Longer Wants to Attend - opens dialog for producer initials
+  const handleNoLongerWantToAttend = (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => {
+    const assignment = (assignments as any[])?.find((a: any) => a.id === assignmentId);
+    const contestantName = assignment?.contestant?.name || 'Unknown';
+    
+    setAttendanceIssuePending({ assignmentId, contestantId, blockNumber, seatLabel, contestantName });
+    setAttendanceIssueType('no_longer_want_to_attend');
+    setAttendanceIssueInitials("");
+    setAttendanceIssueDialogOpen(true);
+  };
+
   // Handle adding a contestant to the prize draw - contestant stays in seat
   const handlePrizeWinner = async (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => {
     try {
@@ -1857,9 +1868,14 @@ export default function SeatingChartPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/attendance-issues'] });
       broadcastSeatingChange(recordDayId);
       
+      const issueLabels: Record<string, string> = {
+        'no_show': 'No-Show',
+        'early_leaver': 'Early leaver',
+        'no_longer_want_to_attend': 'No longer wants to attend',
+      };
       toast({
-        title: attendanceIssueType === 'no_show' ? "No-Show recorded" : "Early leaver recorded",
-        description: `Contestant has been marked as ${attendanceIssueType === 'no_show' ? 'a no-show' : 'an early leaver'} and removed from the seat.`,
+        title: `${issueLabels[attendanceIssueType] || 'Issue'} recorded`,
+        description: `Contestant has been marked as "${issueLabels[attendanceIssueType]?.toLowerCase()}" and removed from the seat.`,
       });
       
       // Close dialog and reset state
@@ -1868,7 +1884,7 @@ export default function SeatingChartPage() {
       setAttendanceIssueInitials("");
     } catch (error: any) {
       toast({
-        title: `Failed to record ${attendanceIssueType === 'no_show' ? 'no-show' : 'early leaver'}`,
+        title: `Failed to record attendance issue`,
         description: error?.message || "Could not record attendance issue.",
         variant: "destructive",
       });
@@ -2471,6 +2487,7 @@ export default function SeatingChartPage() {
             onReturnToStandby={handleReturnToStandby}
             onNoShow={isLocked ? handleNoShow : undefined}
             onEarlyLeaver={isLocked ? handleEarlyLeaver : undefined}
+            onNoLongerWantToAttend={isLocked ? handleNoLongerWantToAttend : undefined}
             onPrizeWinner={isLocked ? handlePrizeWinner : undefined}
             onEditTempContestant={handleEditTempContestant}
             onDeleteTestSubject={handleDeleteTestSubject}
@@ -3658,10 +3675,15 @@ export default function SeatingChartPage() {
                   <XCircle className="h-5 w-5 text-red-600" />
                   Record No-Show
                 </>
-              ) : (
+              ) : attendanceIssueType === 'early_leaver' ? (
                 <>
                   <AlertCircle className="h-5 w-5 text-amber-600" />
                   Record Early Leaver
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-5 w-5 text-rose-600" />
+                  No Longer Wants to Attend
                 </>
               )}
             </DialogTitle>
@@ -3715,10 +3737,10 @@ export default function SeatingChartPage() {
               onClick={confirmAttendanceIssue}
               disabled={isRecordingAttendanceIssue || !attendanceIssueInitials.trim()}
               variant={attendanceIssueType === 'no_show' ? 'destructive' : 'default'}
-              className={attendanceIssueType === 'early_leaver' ? 'bg-amber-600 hover:bg-amber-700' : ''}
+              className={attendanceIssueType === 'early_leaver' ? 'bg-amber-600 hover:bg-amber-700' : attendanceIssueType === 'no_longer_want_to_attend' ? 'bg-rose-600 hover:bg-rose-700' : ''}
               data-testid="button-confirm-attendance-issue"
             >
-              {isRecordingAttendanceIssue ? "Recording..." : `Confirm ${attendanceIssueType === 'no_show' ? 'No-Show' : 'Early Leaver'}`}
+              {isRecordingAttendanceIssue ? "Recording..." : `Confirm ${attendanceIssueType === 'no_show' ? 'No-Show' : attendanceIssueType === 'early_leaver' ? 'Early Leaver' : 'No Longer Wants to Attend'}`}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -112,7 +112,9 @@ export default function AttendanceIssuesPage() {
     // Pre-fill reason based on issue type
     const defaultReason = issue.issueType === 'no_show' 
       ? 'No-show - eligible for reschedule' 
-      : 'Early leaver - eligible for reschedule';
+      : issue.issueType === 'early_leaver'
+      ? 'Early leaver - eligible for reschedule'
+      : 'No longer wants to attend - eligible for reschedule';
     setRescheduleReason(defaultReason);
     setProducerInitials("");
     setRescheduleDialogOpen(true);
@@ -335,7 +337,7 @@ export default function AttendanceIssuesPage() {
                                   <AlertDialogTitle>Restore to Original Seat?</AlertDialogTitle>
                                   <AlertDialogDescription>
                                     This will return <strong>{contestant?.name}</strong> to Block {issue.blockNumber}, Seat {issue.seatLabel} on {recordDay ? format(new Date(recordDay.date), 'd MMM') : 'the original day'}.
-                                    The no-show/early leaver record will be removed and their counter decremented.
+                                    The attendance issue record will be removed{issue.issueType !== 'no_longer_want_to_attend' ? ' and their counter decremented' : ''}.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
@@ -383,8 +385,8 @@ export default function AttendanceIssuesPage() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Remove Attendance Issue?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  This will remove the {issue.issueType === 'no_show' ? 'no-show' : 'early leaver'} record for{' '}
-                                  <strong>{contestant?.name || 'this contestant'}</strong> and decrement their count.
+                                  This will remove the {issue.issueType === 'no_show' ? 'no-show' : issue.issueType === 'early_leaver' ? 'early leaver' : 'no longer wants to attend'} record for{' '}
+                                  <strong>{contestant?.name || 'this contestant'}</strong>{issue.issueType !== 'no_longer_want_to_attend' ? ' and decrement their count' : ''}.
                                   This action cannot be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>

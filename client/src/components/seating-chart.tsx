@@ -245,6 +245,7 @@ interface SeatingChartProps {
   onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
   onNoShow?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
+  onNoLongerWantToAttend?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onPrizeWinner?: (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => void;
   onEditTempContestant?: (contestantId: string) => void;
   onDeleteTestSubject?: (contestantId: string) => void;
@@ -279,6 +280,7 @@ function DraggableDroppableSeat({
   onReturnToStandby,
   onNoShow,
   onEarlyLeaver,
+  onNoLongerWantToAttend,
   onPrizeWinner,
   onEditTempContestant,
   onDeleteTestSubject,
@@ -305,6 +307,7 @@ function DraggableDroppableSeat({
   onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
   onNoShow?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
+  onNoLongerWantToAttend?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onPrizeWinner?: (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => void;
   onEditTempContestant?: (contestantId: string) => void;
   onDeleteTestSubject?: (contestantId: string) => void;
@@ -375,6 +378,7 @@ function DraggableDroppableSeat({
         onReturnToStandby={onReturnToStandby}
         onNoShow={onNoShow}
         onEarlyLeaver={onEarlyLeaver}
+        onNoLongerWantToAttend={onNoLongerWantToAttend}
         onPrizeWinner={onPrizeWinner}
         onEditTempContestant={onEditTempContestant}
         onDeleteTestSubject={onDeleteTestSubject}
@@ -770,6 +774,7 @@ function SeatingBlock({
   onReturnToStandby,
   onNoShow,
   onEarlyLeaver,
+  onNoLongerWantToAttend,
   onPrizeWinner,
   onEditTempContestant,
   onDeleteTestSubject,
@@ -802,6 +807,7 @@ function SeatingBlock({
   onReturnToStandby?: (assignmentId: string, contestantId: string) => void;
   onNoShow?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onEarlyLeaver?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
+  onNoLongerWantToAttend?: (assignmentId: string, contestantId: string, blockNumber: number, seatLabel: string) => void;
   onPrizeWinner?: (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => void;
   onEditTempContestant?: (contestantId: string) => void;
   onDeleteTestSubject?: (contestantId: string) => void;
@@ -1066,6 +1072,7 @@ function SeatingBlock({
                           onReturnToStandby={onReturnToStandby}
                           onNoShow={onNoShow}
                           onEarlyLeaver={onEarlyLeaver}
+                          onNoLongerWantToAttend={onNoLongerWantToAttend}
                           onPrizeWinner={onPrizeWinner}
                           onEditTempContestant={onEditTempContestant}
                           onDeleteTestSubject={onDeleteTestSubject}
@@ -1170,7 +1177,7 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "", blockNotes = {}, onBlockNoteChange, showBookingStatus = false, onRatingChange, overflowAssignments = [], onAddOverflow, onRemoveOverflow, onMoveOverflowToSeat }: SeatingChartProps) {
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onNoLongerWantToAttend, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "", blockNotes = {}, onBlockNoteChange, showBookingStatus = false, onRatingChange, overflowAssignments = [], onAddOverflow, onRemoveOverflow, onMoveOverflowToSeat }: SeatingChartProps) {
   // Use initialSeats as source of truth - derive blocks from props, not state
   // Only use local state for temporary overrides during active drag operations
   const defaultBlocks = useMemo(() => 
@@ -2132,6 +2139,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onReturnToStandby={onReturnToStandby}
                   onNoShow={onNoShow}
                   onEarlyLeaver={onEarlyLeaver}
+                  onNoLongerWantToAttend={onNoLongerWantToAttend}
                   onPrizeWinner={onPrizeWinner}
                   onEditTempContestant={onEditTempContestant}
                   onDeleteTestSubject={onDeleteTestSubject}
@@ -2207,6 +2215,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     onReturnToStandby={onReturnToStandby}
                     onNoShow={onNoShow}
                     onEarlyLeaver={onEarlyLeaver}
+                    onNoLongerWantToAttend={onNoLongerWantToAttend}
                     onPrizeWinner={onPrizeWinner}
                     onEditTempContestant={onEditTempContestant}
                     onDeleteTestSubject={onDeleteTestSubject}
@@ -2254,6 +2263,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onReturnToStandby={onReturnToStandby}
                   onNoShow={onNoShow}
                   onEarlyLeaver={onEarlyLeaver}
+                  onNoLongerWantToAttend={onNoLongerWantToAttend}
                   onPrizeWinner={onPrizeWinner}
                   onEditTempContestant={onEditTempContestant}
                   onDeleteTestSubject={onDeleteTestSubject}

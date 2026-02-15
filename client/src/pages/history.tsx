@@ -96,7 +96,7 @@ export default function HistoryPage() {
     historyData.attendanceIssues?.forEach((a: any) => {
       // Use embedded contestant data from API, fallback to lookup
       const contestant = a.contestant || contestantMap.get(a.contestantId);
-      const issueLabel = a.issueType === 'no_show' ? 'No-Show' : 'Early Leaver';
+      const issueLabel = a.issueType === 'no_show' ? 'No-Show' : a.issueType === 'early_leaver' ? 'Early Leaver' : 'No Longer Wants to Attend';
       events.push({
         id: a.id,
         type: 'attendance_issue',
@@ -267,6 +267,9 @@ export default function HistoryPage() {
       case 'attendance_issue':
         if (details?.issueType === 'no_show') {
           return <Badge variant="destructive">No-Show</Badge>;
+        }
+        if (details?.issueType === 'no_longer_want_to_attend') {
+          return <Badge variant="outline" className="text-rose-600 border-rose-500">No Longer Wants to Attend</Badge>;
         }
         return <Badge className="bg-amber-500 hover:bg-amber-600">Early Leaver</Badge>;
       case 'standby_attendance':
