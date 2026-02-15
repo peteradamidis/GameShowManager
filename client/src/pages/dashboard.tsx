@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight, Clapperboard, Bell, Send, Loader2, Eye, Download, FileText } from "lucide-react";
+import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight, Clapperboard, Bell, Send, Loader2, Eye, Download, FileText, Trophy, Sparkles } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -314,6 +314,58 @@ export default function Dashboard() {
     c.availableForStandby && c.availabilityStatus === 'available'
   ).length;
 
+  const { data: winningAssignments = [] } = useQuery<any[]>({
+    queryKey: ['/api/seat-assignments/with-winning-money'],
+  });
+
+  const funStats = useMemo(() => {
+    const filmedRecordDays = recordDaysData.filter(rd => rd.status === 'completed');
+    const totalPrizeMoney = winningAssignments.reduce((sum, a) => sum + (Number(a.winningMoneyAmount) || 0), 0);
+    
+    // Calculate per-day winnings
+    const winningsByDay = winningAssignments.reduce((acc, a) => {
+      const dayId = a.recordDayId;
+      acc[dayId] = (acc[dayId] || 0) + (Number(a.winningMoneyAmount) || 0);
+      return acc;
+    }, {} as Record<string, number>);
+
+    let highestDay = { amount: 0, date: '', rxNumber: '' };
+    let lowestDay = { amount: Infinity, date: '', rxNumber: '' };
+
+    Object.entries(winningsByDay).forEach(([dayId, amount]) => {
+      const day = recordDaysData.find(rd => rd.id === dayId);
+      if (!day) return;
+
+      if (amount > highestDay.amount) {
+        highestDay = { amount, date: format(new Date(day.date), "d MMM yyyy"), rxNumber: day.rxNumber || '' };
+      }
+      if (amount < lowestDay.amount) {
+        lowestDay = { amount, date: format(new Date(day.date), "d MMM yyyy"), rxNumber: day.rxNumber || '' };
+      }
+    });
+
+    // Handle empty state for lowest
+    if (lowestDay.amount === Infinity) lowestDay.amount = 0;
+
+    // Total episodes (sum of EP counts from RX numbers like "RX EP 6 - 10" = 5 eps)
+    const totalEpisodes = filmedRecordDays.reduce((sum, rd) => {
+      if (!rd.rxNumber) return sum + 1;
+      const match = rd.rxNumber.match(/(\d+)\s*-\s*(\d+)/);
+      if (match) {
+        return sum + (parseInt(match[2]) - parseInt(match[1]) + 1);
+      }
+      return sum + 1;
+    }, 0);
+
+    return {
+      filmedCount: filmedRecordDays.length,
+      totalEpisodes,
+      totalPrizeMoney,
+      highestDay,
+      lowestDay
+    };
+  }, [recordDaysData, winningAssignments]);
+
   // Rating counts
   const ratingCounts = contestants.reduce((acc, c) => {
     if (c.auditionRating) {
@@ -496,10 +548,85 @@ export default function Dashboard() {
 
       {/* Countdown to First RX Day */}
       {firstRecordDate && (
-        <RxDayCountdown 
-          targetDate={firstRecordDate} 
-          rxNumber={futureRecordDays[0]?.rxNumber}
-        />
+        <div className="space-y-4">
+          <RxDayCountdown 
+            targetDate={firstRecordDate} 
+            rxNumber={futureRecordDays[0]?.rxNumber}
+          />
+          
+          {/* Fun Stats Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <Card className="bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+                  <Clapperboard className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase">Filmed</p>
+                  <p className="text-xl font-bold">{funStats.filmedCount} Days / {funStats.totalEpisodes} Eps</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-green-500/10 text-green-500">
+                  <Trophy className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase">Total Prize Money</p>
+                  <p className="text-xl font-bold">${funStats.totalPrizeMoney.toLocaleString()}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase">Highest Payout Day</p>
+                  <p className="text-lg font-bold">${funStats.highestDay.amount.toLocaleString()}</p>
+                  <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                    {funStats.highestDay.rxNumber} ({funStats.highestDay.date})
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-slate-500/10 text-slate-500">
+                  <AlertCircle className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase">Lowest Payout Day</p>
+                  <p className="text-lg font-bold">${funStats.lowestDay.amount.toLocaleString()}</p>
+                  <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                    {funStats.lowestDay.rxNumber} ({funStats.lowestDay.date})
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 lg:col-span-1">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase">Avg. Payout / Ep</p>
+                  <p className="text-xl font-bold">
+                    ${funStats.totalEpisodes > 0 
+                      ? Math.round(funStats.totalPrizeMoney / funStats.totalEpisodes).toLocaleString() 
+                      : 0}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       )}
 
       {/* 48-Hour Reminder Alert (HIDDEN FOR NOW AS PER USER REQUEST) */}
