@@ -601,8 +601,8 @@ export default function Dashboard() {
                 <Clapperboard className="h-5 w-5 text-blue-400" />
                 <span className="text-xs font-bold uppercase tracking-wider">Filming Progress</span>
               </div>
-              <p className="text-2xl font-black text-white">{funStats.filmedCount} Days</p>
-              <p className="text-xs text-slate-400 font-medium">{funStats.totalEpisodes} Episodes Filmed</p>
+              <p className="text-2xl font-black text-white">{funStats.totalEpisodes} Episodes</p>
+              <p className="text-xs text-slate-400 font-medium">{funStats.filmedCount} Days Filmed</p>
             </Card>
 
             <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 text-white p-4 hover:bg-slate-800/50 transition-colors">
