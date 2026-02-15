@@ -739,6 +739,20 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Ratings Breakdown */}
+      <div className="flex flex-wrap gap-3">
+        {sortedRatings.map(([rating, count]) => (
+          <Card key={rating} className="bg-muted/30 flex-1 min-w-[90px]">
+            <CardContent className="py-2 px-3">
+              <div className="text-center">
+                <p className="text-xs font-medium text-muted-foreground">Rating {rating}</p>
+                <div className="text-xl font-bold">{count}</div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       {/* System Guide Download */}
       <Card className="border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20" data-testid="card-system-guide">
         <CardContent className="py-3 px-4">
@@ -764,20 +778,6 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Ratings Breakdown */}
-      <div className="flex flex-wrap gap-3">
-        {sortedRatings.map(([rating, count]) => (
-          <Card key={rating} className="bg-muted/30 flex-1 min-w-[90px]">
-            <CardContent className="py-2 px-3">
-              <div className="text-center">
-                <p className="text-xs font-medium text-muted-foreground">Rating {rating}</p>
-                <div className="text-xl font-bold">{count}</div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
       {/* Crew Noticeboard Updates */}
       {recentPosts.length > 0 && (
