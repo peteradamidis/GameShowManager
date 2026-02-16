@@ -1208,7 +1208,7 @@ export default function SeatingChartPage() {
               availabilityStatus: assignment.availabilityStatus,
               signedIn: assignment.signedIn,
               bookingEmailSent: assignment.bookingEmailSent,
-              confirmedRsvp: assignment.confirmedRsvp,
+              confirmedRsvp: assignment.confirmedRsvp || assignment.status === 'confirmed',
             };
           }
         }
@@ -1265,7 +1265,7 @@ export default function SeatingChartPage() {
           photoUrl: a.photoUrl,
           seatLabel: a.seatLabel,
           bookingEmailSent: a.bookingEmailSent,
-          confirmedRsvp: a.confirmedRsvp,
+          confirmedRsvp: a.confirmedRsvp || a.status === 'confirmed',
           availabilityStatus: a.availabilityStatus,
           mobilityNotes: a.mobilityNotes,
           isTemporary: a.isTemporary,
