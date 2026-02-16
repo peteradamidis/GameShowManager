@@ -4808,7 +4808,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const dayName = existingRecordDay?.date 
               ? new Date(existingRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
               : 'another day';
-            const label = existingRecordDay?.label || existingRecordDay?.rxEpNo || dayName;
+            const label = existingRecordDay?.rxNumber || dayName;
             return res.status(409).json({ 
               error: `${contestant?.name || 'Contestant'} previously appeared on ${label} (${dayName}). Rebook as returning contestant?`,
               isReturning: true,
@@ -8307,7 +8307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (isOnLockedDay && allowReturning) {
           // Allowed - returning contestant
         } else if (isOnLockedDay && !allowReturning) {
-          const label = existingRecordDay?.label || existingRecordDay?.rxEpNo || dayName;
+          const label = existingRecordDay?.rxNumber || dayName;
           return res.status(409).json({ 
             error: `${contestant?.name || 'Contestant'} previously appeared on ${label} (${dayName}). Rebook as returning contestant?`,
             isReturning: true,
@@ -11183,7 +11183,7 @@ Thank you.`;
           const firstAssignment = allSeatedContestantIds.get(seatedOnLockedOnly[0]);
           const firstRd = firstAssignment ? await storage.getRecordDayById(firstAssignment.recordDayId) : null;
           const dayName = firstRd?.date ? new Date(firstRd.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }) : 'a previous day';
-          const label = firstRd?.label || firstRd?.rxEpNo || dayName;
+          const label = firstRd?.rxNumber || dayName;
           return res.status(409).json({ 
             error: `${firstContestant?.name || 'Contestant'} previously appeared on ${label} (${dayName}). Add as returning standby?`,
             isReturning: true,
@@ -12040,17 +12040,15 @@ Thank you.`;
       const canceledAssignments = await storage.getCanceledAssignments();
       const allStandbys = await storage.getStandbyAssignments();
       
-      // Build map of record days by ID for quick lookup
-      const recordDayMap = new Map<string, RecordDay>();
+      // Build map of locked record days only - RTN status requires a completed (locked) episode
       const lockedRecordDays = new Map<string, RecordDay>();
       for (const rd of recordDays) {
-        recordDayMap.set(rd.id, rd);
         if (rd.lockedAt) {
           lockedRecordDays.set(rd.id, rd);
         }
       }
       
-      // Build returning contestants map: contestantId -> array of previous appearances
+      // Build returning contestants map: contestantId -> array of previous appearances on LOCKED days only
       const returningMap: Record<string, Array<{ recordDayId: string; date: string; label: string; type: string }>> = {};
       
       // Helper to add an entry to the returning map without duplicates
@@ -12060,12 +12058,12 @@ Thank you.`;
         }
         if (!returningMap[contestantId].some(a => a.recordDayId === recordDayId)) {
           const dateStr = rd.date ? new Date(rd.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : 'Unknown';
-          const label = rd.label || rd.rxEpNo || dateStr;
+          const label = rd.rxNumber || dateStr;
           returningMap[contestantId].push({ recordDayId, date: dateStr, label, type });
         }
       };
       
-      // 1. Check seat assignments on locked record days
+      // 1. Seat assignments on locked record days
       for (const assignment of allAssignments) {
         const lockedRd = lockedRecordDays.get(assignment.recordDayId);
         if (lockedRd) {
@@ -12073,32 +12071,30 @@ Thank you.`;
         }
       }
       
-      // 2. Check standby attendance history (from formal "Mark Attended" flow)
+      // 2. Standby attendance history - only on locked record days
       for (const record of standbyAttendanceRecords) {
-        const rd = recordDayMap.get(record.recordDayId);
-        if (rd) {
-          addReturningEntry(record.contestantId, record.recordDayId, rd, 'standby');
+        const lockedRd = lockedRecordDays.get(record.recordDayId);
+        if (lockedRd) {
+          addReturningEntry(record.contestantId, record.recordDayId, lockedRd, 'standby');
         }
       }
       
-      // 3. Check canceled assignments from standbys (moved to reschedule after being checked in)
+      // 3. Canceled assignments from checked-in standbys - only on locked record days
       for (const ca of canceledAssignments) {
         if (ca.isFromStandby) {
-          const rd = recordDayMap.get(ca.recordDayId);
-          if (rd) {
-            addReturningEntry(ca.contestantId, ca.recordDayId, rd, 'standby');
+          const lockedRd = lockedRecordDays.get(ca.recordDayId);
+          if (lockedRd) {
+            addReturningEntry(ca.contestantId, ca.recordDayId, lockedRd, 'standby');
           }
         }
       }
       
-      // 4. Check standbys who have been checked in (signedIn timestamp set) on locked record days
-      //    These are automatically considered as having attended - no separate "Mark Attended" step needed
-      //    Only counts for locked (completed) days - a checked-in standby on today's unlocked day isn't a "returner" yet
+      // 4. Active standbys who were checked in (signedIn set) on locked record days
       for (const standby of allStandbys) {
         if (standby.signedIn) {
-          const rd = lockedRecordDays.get(standby.recordDayId);
-          if (rd) {
-            addReturningEntry(standby.contestantId, standby.recordDayId, rd, 'standby');
+          const lockedRd = lockedRecordDays.get(standby.recordDayId);
+          if (lockedRd) {
+            addReturningEntry(standby.contestantId, standby.recordDayId, lockedRd, 'standby');
           }
         }
       }
