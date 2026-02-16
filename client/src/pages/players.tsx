@@ -480,7 +480,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     autoSaveTimeoutRef.current = setTimeout(() => {
       if (hasUnsavedChanges.current) {
         setAutoSaveStatus('saving');
-        saveMutation.mutate(updatedData, {
+        saveMutation.mutate({ ...updatedData, skipInvalidate: true } as any, {
           onSuccess: () => {
             hasUnsavedChanges.current = false;
             setAutoSaveStatus('saved');
@@ -598,7 +598,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     autoSaveTimeoutRef.current = setTimeout(() => {
       if (hasUnsavedChanges.current) {
         setAutoSaveStatus('saving');
-        saveMutation.mutate(updatedData, {
+        saveMutation.mutate({ ...updatedData, skipInvalidate: true } as any, {
           onSuccess: () => {
             hasUnsavedChanges.current = false;
             setAutoSaveStatus('saved');
@@ -636,7 +636,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     autoSaveTimeoutRef.current = setTimeout(() => {
       if (hasUnsavedChanges.current) {
         setAutoSaveStatus('saving');
-        saveMutation.mutate(updatedData, {
+        saveMutation.mutate({ ...updatedData, skipInvalidate: true } as any, {
           onSuccess: () => {
             hasUnsavedChanges.current = false;
             setAutoSaveStatus('saved');
@@ -2879,7 +2879,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         setCardData(dataToSave);
         
         setAutoSaveStatus('saving');
-        saveMutation.mutate(dataToSave, {
+        saveMutation.mutate({ ...dataToSave, skipInvalidate: true } as any, {
           onSuccess: () => {
             hasUnsavedChanges.current = false;
             setAutoSaveStatus('saved');

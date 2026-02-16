@@ -16477,8 +16477,8 @@ Thank you.`;
         if (existingCard && existingCard.updatedAt) {
           const serverTime = new Date(existingCard.updatedAt).getTime();
           const clientTime = new Date(lastKnownUpdatedAt).getTime();
-          // Allow 2 second buffer for timing differences
-          if (serverTime > clientTime + 2000) {
+          // Allow 5 second buffer to account for auto-save timing and network latency
+          if (serverTime > clientTime + 5000) {
             return res.status(409).json({ 
               error: "Conflict detected",
               message: "This card was modified by another user since you opened it",
