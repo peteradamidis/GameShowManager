@@ -494,11 +494,12 @@ export default function BookingResponses() {
   // Mutation for declining a booking (moves to reschedule)
   const declineMutation = useMutation({
     mutationFn: async ({ assignmentId, reason, movedBy, moveToAttendanceIssues }: { assignmentId: string; reason: string; movedBy?: string; moveToAttendanceIssues?: boolean }) => {
-      return apiRequest("POST", `/api/seat-assignments/${assignmentId}/decline`, {
+      const res = await apiRequest("POST", `/api/seat-assignments/${assignmentId}/decline`, {
         reason,
         movedBy,
         moveToAttendanceIssues
       });
+      return await res.json();
     },
     onSuccess: (data: any) => {
       if (data.attendanceIssue) {
