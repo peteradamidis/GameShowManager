@@ -1839,25 +1839,33 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           });
           
           // Fix main photo - html2canvas doesn't handle object-fit:cover properly
-          // Convert img to background-image on parent container which works better
+          // Convert img to background-image on parent container, translating zoom/pan into backgroundPosition
           clonedDoc.querySelectorAll('.casting-card-photo-border').forEach((container: Element) => {
             const img = container.querySelector('img') as HTMLImageElement;
             if (img && img.src) {
-              // Find the inner wrapper div that contains the image
               const wrapper = img.parentElement;
               if (wrapper) {
-                // Apply the image as background on the wrapper
                 wrapper.style.backgroundImage = `url("${img.src}")`;
-                wrapper.style.backgroundSize = 'cover';
-                wrapper.style.backgroundPosition = 'center top';
                 wrapper.style.backgroundRepeat = 'no-repeat';
-                wrapper.style.imageRendering = 'auto'; // Sharpness hint
-                // Preserve the transform (zoom/pan) if any
-                const imgTransform = img.style.transform;
-                if (imgTransform && imgTransform !== 'none') {
-                  wrapper.style.transform = imgTransform;
-                }
-                // Hide the original img element
+                wrapper.style.imageRendering = 'auto';
+                
+                const imgTransform = img.style.transform || '';
+                const scaleMatch = imgTransform.match(/scale\(([\d.]+)\)/);
+                const translateMatch = imgTransform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+                const zoom = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
+                const offsetX = translateMatch ? parseFloat(translateMatch[1]) : 0;
+                const offsetY = translateMatch ? parseFloat(translateMatch[2]) : 0;
+                
+                const sizePercent = 100 * zoom;
+                wrapper.style.backgroundSize = `${sizePercent}%`;
+                
+                const wrapperW = 256;
+                const wrapperH = 288;
+                const posX = 50 - (offsetX / wrapperW) * 100;
+                const posY = 50 - (offsetY / wrapperH) * 100;
+                wrapper.style.backgroundPosition = `${posX}% ${posY}%`;
+                
+                wrapper.style.transform = 'none';
                 img.style.opacity = '0';
                 img.style.visibility = 'hidden';
               }
@@ -2246,25 +2254,33 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           });
           
           // Fix main photo - html2canvas doesn't handle object-fit:cover properly
-          // Convert img to background-image on parent container which works better
+          // Convert img to background-image on parent container, translating zoom/pan into backgroundPosition
           clonedDoc.querySelectorAll('.casting-card-photo-border').forEach((container: Element) => {
             const img = container.querySelector('img') as HTMLImageElement;
             if (img && img.src) {
-              // Find the inner wrapper div that contains the image
               const wrapper = img.parentElement;
               if (wrapper) {
-                // Apply the image as background on the wrapper
                 wrapper.style.backgroundImage = `url("${img.src}")`;
-                wrapper.style.backgroundSize = 'cover';
-                wrapper.style.backgroundPosition = 'center top';
                 wrapper.style.backgroundRepeat = 'no-repeat';
-                wrapper.style.imageRendering = 'auto'; // Sharpness hint
-                // Preserve the transform (zoom/pan) if any
-                const imgTransform = img.style.transform;
-                if (imgTransform && imgTransform !== 'none') {
-                  wrapper.style.transform = imgTransform;
-                }
-                // Hide the original img element
+                wrapper.style.imageRendering = 'auto';
+                
+                const imgTransform = img.style.transform || '';
+                const scaleMatch = imgTransform.match(/scale\(([\d.]+)\)/);
+                const translateMatch = imgTransform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+                const zoom = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
+                const offsetX = translateMatch ? parseFloat(translateMatch[1]) : 0;
+                const offsetY = translateMatch ? parseFloat(translateMatch[2]) : 0;
+                
+                const sizePercent = 100 * zoom;
+                wrapper.style.backgroundSize = `${sizePercent}%`;
+                
+                const wrapperW = 256;
+                const wrapperH = 288;
+                const posX = 50 - (offsetX / wrapperW) * 100;
+                const posY = 50 - (offsetY / wrapperH) * 100;
+                wrapper.style.backgroundPosition = `${posX}% ${posY}%`;
+                
+                wrapper.style.transform = 'none';
                 img.style.opacity = '0';
                 img.style.visibility = 'hidden';
               }
