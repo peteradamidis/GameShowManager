@@ -13302,7 +13302,7 @@ Thank you.`;
       // Also include temporary contestants who were added directly to the seating chart
       let filteredAssignments = assignments.filter((a: SeatAssignment) => {
         if (a.bookingEmailSent) return true;
-        // Include temporary contestants even if they haven't been sent booking email
+        if (a.confirmedRsvp || a.status === 'confirmed') return true;
         const contestant = contestants.find(c => c.id === a.contestantId);
         return contestant?.isTemporary === true;
       });
