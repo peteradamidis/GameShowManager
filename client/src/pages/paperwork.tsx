@@ -944,10 +944,20 @@ Deal or No Deal Production Team`);
                     <CardTitle className="flex items-center gap-2">
                       <Users className="h-5 w-5 text-amber-600" />
                       Standbys ({standbyData.filter(s => {
-                        if (!searchName) return true;
-                        const searchLower = searchName.toLowerCase();
-                        return s.contestant?.name?.toLowerCase().includes(searchLower) || 
-                               s.contestant?.email?.toLowerCase().includes(searchLower);
+                        if (searchName) {
+                          const searchLower = searchName.toLowerCase();
+                          if (!s.contestant?.name?.toLowerCase().includes(searchLower) && 
+                              !s.contestant?.email?.toLowerCase().includes(searchLower)) {
+                            return false;
+                          }
+                        }
+                        if (paperworkStatusFilter !== "all") {
+                          if (paperworkStatusFilter === "ready_to_send" && s.paperworkSent) return false;
+                          if (paperworkStatusFilter === "awaiting_return" && (!s.paperworkSent || s.paperworkReceived)) return false;
+                          if (paperworkStatusFilter === "complete" && (!s.paperworkSent || !s.paperworkReceived)) return false;
+                          if (paperworkStatusFilter === "new_only" && (s.paperworkSent)) return false;
+                        }
+                        return true;
                       }).length})
                     </CardTitle>
                     <CardDescription>
@@ -983,10 +993,20 @@ Deal or No Deal Production Team`);
                     <TableBody>
                       {standbyData
                         .filter(s => {
-                          if (!searchName) return true;
-                          const searchLower = searchName.toLowerCase();
-                          return s.contestant?.name?.toLowerCase().includes(searchLower) || 
-                                 s.contestant?.email?.toLowerCase().includes(searchLower);
+                          if (searchName) {
+                            const searchLower = searchName.toLowerCase();
+                            if (!s.contestant?.name?.toLowerCase().includes(searchLower) && 
+                                !s.contestant?.email?.toLowerCase().includes(searchLower)) {
+                              return false;
+                            }
+                          }
+                          if (paperworkStatusFilter !== "all") {
+                            if (paperworkStatusFilter === "ready_to_send" && s.paperworkSent) return false;
+                            if (paperworkStatusFilter === "awaiting_return" && (!s.paperworkSent || s.paperworkReceived)) return false;
+                            if (paperworkStatusFilter === "complete" && (!s.paperworkSent || !s.paperworkReceived)) return false;
+                            if (paperworkStatusFilter === "new_only" && (s.paperworkSent)) return false;
+                          }
+                          return true;
                         })
                         .sort((a, b) => (a.priority || 999) - (b.priority || 999))
                         .map((standby) => (
@@ -1388,10 +1408,20 @@ Deal or No Deal Production Team`);
                     {/* Standbys - only show in "all" view mode */}
                     {viewMode === "all" && standbyData
                       .filter(s => {
-                        if (!searchName) return true;
-                        const searchLower = searchName.toLowerCase();
-                        return s.contestant?.name?.toLowerCase().includes(searchLower) || 
-                               s.contestant?.email?.toLowerCase().includes(searchLower);
+                        if (searchName) {
+                          const searchLower = searchName.toLowerCase();
+                          if (!s.contestant?.name?.toLowerCase().includes(searchLower) && 
+                              !s.contestant?.email?.toLowerCase().includes(searchLower)) {
+                            return false;
+                          }
+                        }
+                        if (paperworkStatusFilter !== "all") {
+                          if (paperworkStatusFilter === "ready_to_send" && s.paperworkSent) return false;
+                          if (paperworkStatusFilter === "awaiting_return" && (!s.paperworkSent || s.paperworkReceived)) return false;
+                          if (paperworkStatusFilter === "complete" && (!s.paperworkSent || !s.paperworkReceived)) return false;
+                          if (paperworkStatusFilter === "new_only" && (s.paperworkSent)) return false;
+                        }
+                        return true;
                       })
                       .sort((a, b) => {
                         // Sort by confirmation status first (confirmed at top)
