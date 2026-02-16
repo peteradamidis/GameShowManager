@@ -12091,11 +12091,12 @@ Thank you.`;
         }
       }
       
-      // 4. Check active standbys who have been checked in (signedIn timestamp set)
+      // 4. Check standbys who have been checked in (signedIn timestamp set) on locked record days
       //    These are automatically considered as having attended - no separate "Mark Attended" step needed
+      //    Only counts for locked (completed) days - a checked-in standby on today's unlocked day isn't a "returner" yet
       for (const standby of allStandbys) {
         if (standby.signedIn) {
-          const rd = recordDayMap.get(standby.recordDayId);
+          const rd = lockedRecordDays.get(standby.recordDayId);
           if (rd) {
             addReturningEntry(standby.contestantId, standby.recordDayId, rd, 'standby');
           }
