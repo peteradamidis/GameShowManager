@@ -7896,19 +7896,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (moveToAttendanceIssues) {
-        // Log as attendance issue: 'no_longer_want_to_attend'
-        await storage.logAttendanceIssue({
+        await storage.createAttendanceIssue({
           contestantId: assignment.contestantId,
           recordDayId: assignment.recordDayId,
           blockNumber: assignment.blockNumber,
           seatLabel: assignment.seatLabel,
           issueType: 'no_longer_want_to_attend',
           notes: reason || 'Declined and marked as no longer wanting to attend',
-          loggedBy: movedBy || 'system'
+          markedBy: movedBy || 'system'
         });
-
-        // Still need to remove the assignment
-        await storage.cancelSeatAssignment(req.params.id, declineReason, movedBy, true);
         
         return res.json({ moved: true, attendanceIssue: true });
       }
