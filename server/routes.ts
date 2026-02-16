@@ -11316,6 +11316,8 @@ Thank you.`;
         // Use createOrUpdateCanceledAssignment to handle duplicates automatically
         // If contestant already in reschedule, updates their record and increments count
         const recordDayForDate = standby.recordDayId ? await storage.getRecordDayById(standby.recordDayId) : null;
+        // If standby was checked in (signedIn) or confirmed, they physically attended - mark as from standby
+        const wasCheckedIn = standby.signedIn || standby.confirmedAt || standby.status === 'confirmed';
         const canceledData: any = {
           contestantId: standby.contestantId,
           recordDayId: standby.recordDayId,
@@ -11323,7 +11325,7 @@ Thank you.`;
           seatLabel: standby.assignedToSeat || null,
           reason: filteredUpdateData.notes || 'DECLINED STANDBY INVITATION',
           movedBy,
-          isFromStandby: false,
+          isFromStandby: wasCheckedIn ? true : false,
           wasDeclined: true,
           declinedAt: new Date(),
           originalAttendanceDate: recordDayForDate?.date ? new Date(recordDayForDate.date) : null,
@@ -12036,6 +12038,7 @@ Thank you.`;
       const recordDays = await storage.getRecordDays();
       const standbyAttendanceRecords = await storage.getStandbyAttendanceHistory();
       const canceledAssignments = await storage.getCanceledAssignments();
+      const allStandbys = await storage.getStandbyAssignments();
       
       // Build map of record days by ID for quick lookup
       const recordDayMap = new Map<string, RecordDay>();
@@ -12070,7 +12073,7 @@ Thank you.`;
         }
       }
       
-      // 2. Check standby attendance history (from "Mark Attended" flow)
+      // 2. Check standby attendance history (from formal "Mark Attended" flow)
       for (const record of standbyAttendanceRecords) {
         const rd = recordDayMap.get(record.recordDayId);
         if (rd) {
@@ -12084,6 +12087,17 @@ Thank you.`;
           const rd = recordDayMap.get(ca.recordDayId);
           if (rd) {
             addReturningEntry(ca.contestantId, ca.recordDayId, rd, 'standby');
+          }
+        }
+      }
+      
+      // 4. Check active standbys who have been checked in (signedIn timestamp set)
+      //    These are automatically considered as having attended - no separate "Mark Attended" step needed
+      for (const standby of allStandbys) {
+        if (standby.signedIn) {
+          const rd = recordDayMap.get(standby.recordDayId);
+          if (rd) {
+            addReturningEntry(standby.contestantId, standby.recordDayId, rd, 'standby');
           }
         }
       }
