@@ -409,6 +409,7 @@ function SortableStandbyItem({
   groupMemberNames,
   onSeatSelect,
   onUnseat,
+  returningInfo,
 }: {
   standby: StandbyData;
   isLocked?: boolean;
@@ -418,6 +419,7 @@ function SortableStandbyItem({
   groupMemberNames?: string[];
   onSeatSelect?: (standby: StandbyData) => void;
   onUnseat?: (standby: StandbyData) => void;
+  returningInfo?: Array<{ recordDayId: string; date: string; label: string; type: string }>;
 }) {
   const {
     attributes,
@@ -486,6 +488,23 @@ function SortableStandbyItem({
                 <p className="font-medium text-sm truncate">{standby.contestant.name}</p>
                 {isInGroup && isFirstInGroup && (
                   <span title="Group"><Users className="h-3 w-3 text-purple-500 flex-shrink-0" /></span>
+                )}
+                {returningInfo && returningInfo.length > 0 && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className="text-[8px] px-0.5 py-0 h-3.5 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help flex-shrink-0" data-testid={`badge-returning-standby-${standby.id}`}>
+                        RTN
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs max-w-[200px]">
+                      <p className="font-medium mb-1">Returning Contestant</p>
+                      {returningInfo.map((info, idx) => (
+                        <p key={idx} className="text-muted-foreground">
+                          {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
+                        </p>
+                      ))}
+                    </TooltipContent>
+                  </Tooltip>
                 )}
                 {standby.signedIn && isLocked && (
                   <Tooltip>
@@ -703,9 +722,11 @@ function SortableStandbyItem({
 function DraggableStandby({
   standby,
   isLocked,
+  returningInfo,
 }: {
   standby: StandbyData;
   isLocked?: boolean;
+  returningInfo?: Array<{ recordDayId: string; date: string; label: string; type: string }>;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `standby-${standby.id}`,
@@ -733,7 +754,26 @@ function DraggableStandby({
       }`}
       data-testid={`draggable-standby-${standby.id}`}
     >
-      <p className="font-medium text-sm truncate">{standby.contestant.name}</p>
+      <div className="flex items-center gap-1.5">
+        <p className="font-medium text-sm truncate">{standby.contestant.name}</p>
+        {returningInfo && returningInfo.length > 0 && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline" className="text-[8px] px-0.5 py-0 h-3.5 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help flex-shrink-0">
+                RTN
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs max-w-[200px]">
+              <p className="font-medium mb-1">Returning Contestant</p>
+              {returningInfo.map((info, idx) => (
+                <p key={idx} className="text-muted-foreground">
+                  {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
+                </p>
+              ))}
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
       <div className="flex items-center gap-1 mt-0.5">
         <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
           {standby.contestant.gender === "Female" ? "F" : "M"}
@@ -1178,6 +1218,17 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
 }
 
 export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onNoLongerWantToAttend, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "", blockNotes = {}, onBlockNoteChange, showBookingStatus = false, onRatingChange, overflowAssignments = [], onAddOverflow, onRemoveOverflow, onMoveOverflowToSeat }: SeatingChartProps) {
+  // Fetch returning contestants data for standby badges
+  const { data: returningContestantsMap = {} } = useQuery<Record<string, Array<{ recordDayId: string; date: string; label: string; type: string }>>>({
+    queryKey: ['/api/returning-contestants'],
+    queryFn: async () => {
+      const response = await fetch('/api/returning-contestants', { credentials: 'include' });
+      if (!response.ok) return {};
+      return response.json();
+    },
+    staleTime: 30 * 1000,
+  });
+
   // Use initialSeats as source of truth - derive blocks from props, not state
   // Only use local state for temporary overrides during active drag operations
   const defaultBlocks = useMemo(() => 
@@ -2419,6 +2470,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                       groupMemberNames={item.groupMemberNames}
                                       onSeatSelect={setSeatSelectionStandby}
                                       onUnseat={handleUnseatStandby}
+                                      returningInfo={(returningContestantsMap[item.standby.contestantId] || []).filter(r => r.recordDayId !== recordDayId)}
                                     />
                                   </div>
                                 </div>
@@ -2588,6 +2640,26 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                       )}
                                       {oa.auditionRating && (
                                         <Badge variant="outline" className="text-[10px] px-1">{oa.auditionRating}</Badge>
+                                      )}
+                                      {oa.contestantId && returningContestantsMap[oa.contestantId] && 
+                                        returningContestantsMap[oa.contestantId].some(r => r.recordDayId !== recordDayId) && (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help" data-testid={`badge-returning-overflow-${oa.contestantId}`}>
+                                              RTN
+                                            </Badge>
+                                          </TooltipTrigger>
+                                          <TooltipContent side="top" className="text-xs max-w-[200px]">
+                                            <p className="font-medium mb-1">Returning Contestant</p>
+                                            {returningContestantsMap[oa.contestantId]
+                                              .filter(r => r.recordDayId !== recordDayId)
+                                              .map((info, idx) => (
+                                                <p key={idx} className="text-muted-foreground">
+                                                  {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
+                                                </p>
+                                              ))}
+                                          </TooltipContent>
+                                        </Tooltip>
                                       )}
                                       {oa.seatLabel && (
                                         <span className="text-[10px] text-muted-foreground">({oa.seatLabel})</span>

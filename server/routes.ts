@@ -7,6 +7,7 @@ import {
   insertSeatAssignmentSchema, 
   seatAssignments, 
   SeatAssignment,
+  RecordDay,
   contestants,
   groups,
   standbyAssignments,
@@ -4780,15 +4781,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allStandbys = await storage.getStandbyAssignments();
       
       // Check if any contestant is already seated in ANY record day or a standby in ANY record day
+      // Allow returning contestants (those only assigned on locked/completed record days)
+      const allowReturning = req.body.allowReturning === true;
+      const recordDaysCache = new Map<string, RecordDay>();
+      
       for (const contestantId of contestantIds) {
         const existingAssignment = allAssignments.find((a: any) => a.contestantId === contestantId);
         if (existingAssignment) {
-          const contestant = await storage.getContestantById(contestantId);
-          const existingRecordDay = await storage.getRecordDayById(existingAssignment.recordDayId);
-          const dayName = existingRecordDay?.date 
-            ? new Date(existingRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
-            : 'another day';
-          return res.status(409).json({ error: `${contestant?.name || 'Contestant'} is already seated in ${dayName} (Block ${existingAssignment.blockNumber}, Seat ${existingAssignment.seatLabel})` });
+          // Check if existing assignment is on a locked (completed) record day
+          let existingRecordDay = recordDaysCache.get(existingAssignment.recordDayId);
+          if (!existingRecordDay) {
+            const rd = await storage.getRecordDayById(existingAssignment.recordDayId);
+            if (rd) {
+              existingRecordDay = rd;
+              recordDaysCache.set(rd.id, rd);
+            }
+          }
+          
+          const isOnLockedDay = existingRecordDay?.lockedAt != null;
+          
+          if (isOnLockedDay && allowReturning) {
+            // Allowed - this is a returning contestant being rebooked
+          } else if (isOnLockedDay && !allowReturning) {
+            // On a locked day but not explicitly allowed - return special status so frontend can show confirmation
+            const contestant = await storage.getContestantById(contestantId);
+            const dayName = existingRecordDay?.date 
+              ? new Date(existingRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
+              : 'another day';
+            const label = existingRecordDay?.label || existingRecordDay?.rxEpNo || dayName;
+            return res.status(409).json({ 
+              error: `${contestant?.name || 'Contestant'} previously appeared on ${label} (${dayName}). Rebook as returning contestant?`,
+              isReturning: true,
+              contestantName: contestant?.name,
+              previousDay: dayName,
+              previousLabel: label,
+            });
+          } else {
+            // On an unlocked day - regular block
+            const contestant = await storage.getContestantById(contestantId);
+            const dayName = existingRecordDay?.date 
+              ? new Date(existingRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
+              : 'another day';
+            return res.status(409).json({ error: `${contestant?.name || 'Contestant'} is already seated in ${dayName} (Block ${existingAssignment.blockNumber}, Seat ${existingAssignment.seatLabel})` });
+          }
         }
         
         const standbyAssignment = allStandbys.find((s: any) => s.contestantId === contestantId);
@@ -8258,14 +8293,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if contestant is already seated in ANY record day
+      // Allow returning contestants (those only assigned on locked/completed record days)
+      const allowReturning = req.body.allowReturning === true;
       const allSeatAssignments = await storage.getAllSeatAssignments();
       const existingSeat = allSeatAssignments.find((a: any) => a.contestantId === canceled.contestantId);
       if (existingSeat) {
         const existingRecordDay = await storage.getRecordDayById(existingSeat.recordDayId);
+        const isOnLockedDay = existingRecordDay?.lockedAt != null;
         const dayName = existingRecordDay?.date 
           ? new Date(existingRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
           : 'another day';
-        return res.status(409).json({ error: `${contestant?.name || 'Contestant'} is already seated in ${dayName} (Block ${existingSeat.blockNumber}, Seat ${existingSeat.seatLabel})` });
+        
+        if (isOnLockedDay && allowReturning) {
+          // Allowed - returning contestant
+        } else if (isOnLockedDay && !allowReturning) {
+          const label = existingRecordDay?.label || existingRecordDay?.rxEpNo || dayName;
+          return res.status(409).json({ 
+            error: `${contestant?.name || 'Contestant'} previously appeared on ${label} (${dayName}). Rebook as returning contestant?`,
+            isReturning: true,
+            contestantName: contestant?.name,
+            previousDay: dayName,
+            previousLabel: label,
+          });
+        } else {
+          return res.status(409).json({ error: `${contestant?.name || 'Contestant'} is already seated in ${dayName} (Block ${existingSeat.blockNumber}, Seat ${existingSeat.seatLabel})` });
+        }
       }
 
       // Check if contestant is already a standby in ANY record day
@@ -11088,24 +11140,59 @@ Thank you.`;
       }
       
       // Check if any contestant is already seated for ANY record day
+      // Allow returning contestants (those only seated on locked/completed record days)
+      const allowReturning = req.body.allowReturning === true;
       const alreadySeatedIds = contestantIds.filter((id: string) => allSeatedContestantIds.has(id));
       if (alreadySeatedIds.length > 0) {
-        const seatedContestants = await Promise.all(
-          alreadySeatedIds.slice(0, 3).map(async (id: string) => {
-            const contestant = await storage.getContestantById(id);
-            const assignment = allSeatedContestantIds.get(id);
-            const seatRecordDay = assignment ? await storage.getRecordDayById(assignment.recordDayId) : null;
-            return { name: contestant?.name, date: seatRecordDay?.date };
-          })
-        );
-        const details = seatedContestants.map(c => {
-          const dateStr = c.date ? new Date(c.date).toLocaleDateString('en-AU') : 'unknown';
-          return `${c.name} (${dateStr})`;
-        }).filter(Boolean).join(', ');
-        const moreCount = alreadySeatedIds.length > 3 ? ` and ${alreadySeatedIds.length - 3} more` : '';
-        return res.status(409).json({ 
-          error: `Cannot add as standby - already seated: ${details}${moreCount}` 
-        });
+        // Check if all seated contestants are only on locked days
+        const seatedOnLockedOnly: string[] = [];
+        const seatedOnUnlocked: string[] = [];
+        for (const id of alreadySeatedIds) {
+          const assignment = allSeatedContestantIds.get(id);
+          if (assignment) {
+            const seatRecordDay = await storage.getRecordDayById(assignment.recordDayId);
+            if (seatRecordDay?.lockedAt != null) {
+              seatedOnLockedOnly.push(id);
+            } else {
+              seatedOnUnlocked.push(id);
+            }
+          }
+        }
+        
+        if (seatedOnUnlocked.length > 0) {
+          // Regular block - some contestants are on unlocked days
+          const seatedContestants = await Promise.all(
+            seatedOnUnlocked.slice(0, 3).map(async (id: string) => {
+              const contestant = await storage.getContestantById(id);
+              const assignment = allSeatedContestantIds.get(id);
+              const seatRecordDay = assignment ? await storage.getRecordDayById(assignment.recordDayId) : null;
+              return { name: contestant?.name, date: seatRecordDay?.date };
+            })
+          );
+          const details = seatedContestants.map(c => {
+            const dateStr = c.date ? new Date(c.date).toLocaleDateString('en-AU') : 'unknown';
+            return `${c.name} (${dateStr})`;
+          }).filter(Boolean).join(', ');
+          const moreCount = seatedOnUnlocked.length > 3 ? ` and ${seatedOnUnlocked.length - 3} more` : '';
+          return res.status(409).json({ 
+            error: `Cannot add as standby - already seated: ${details}${moreCount}` 
+          });
+        } else if (seatedOnLockedOnly.length > 0 && !allowReturning) {
+          // All seated on locked days - returning contestant prompt
+          const firstContestant = await storage.getContestantById(seatedOnLockedOnly[0]);
+          const firstAssignment = allSeatedContestantIds.get(seatedOnLockedOnly[0]);
+          const firstRd = firstAssignment ? await storage.getRecordDayById(firstAssignment.recordDayId) : null;
+          const dayName = firstRd?.date ? new Date(firstRd.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }) : 'a previous day';
+          const label = firstRd?.label || firstRd?.rxEpNo || dayName;
+          return res.status(409).json({ 
+            error: `${firstContestant?.name || 'Contestant'} previously appeared on ${label} (${dayName}). Add as returning standby?`,
+            isReturning: true,
+            contestantName: firstContestant?.name,
+            previousDay: dayName,
+            previousLabel: label,
+          });
+        }
+        // If allowReturning is true and all are on locked days, proceed
       }
       
       // Check if any contestant is DNU-rated (Do Not Use) - block them from being added as standby
@@ -11937,6 +12024,73 @@ Thank you.`;
       res.send(xlsx.write(wb, { bookType: 'xlsx', type: 'buffer' }));
     } catch (error: any) {
       console.error("Error exporting standbys data:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Returning Contestants - Get map of contestant IDs to their previous episode appearances
+  // A contestant is "returning" if they had an assignment on a locked record day or have standby attendance history
+  app.get("/api/returning-contestants", requireAuth, async (req, res) => {
+    try {
+      const allAssignments = await storage.getAllSeatAssignments();
+      const recordDays = await storage.getRecordDays();
+      const standbyAttendanceRecords = await storage.getStandbyAttendanceHistory();
+      
+      // Build map of locked record day IDs
+      const lockedRecordDays = new Map<string, RecordDay>();
+      for (const rd of recordDays) {
+        if (rd.lockedAt) {
+          lockedRecordDays.set(rd.id, rd);
+        }
+      }
+      
+      // Build returning contestants map: contestantId -> array of previous appearances
+      const returningMap: Record<string, Array<{ recordDayId: string; date: string; label: string; type: string }>> = {};
+      
+      // Check seat assignments on locked record days
+      for (const assignment of allAssignments) {
+        const lockedRd = lockedRecordDays.get(assignment.recordDayId);
+        if (lockedRd) {
+          if (!returningMap[assignment.contestantId]) {
+            returningMap[assignment.contestantId] = [];
+          }
+          const dateStr = lockedRd.date ? new Date(lockedRd.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : 'Unknown';
+          const label = lockedRd.label || lockedRd.rxEpNo || dateStr;
+          // Avoid duplicates
+          if (!returningMap[assignment.contestantId].some(a => a.recordDayId === assignment.recordDayId)) {
+            returningMap[assignment.contestantId].push({
+              recordDayId: assignment.recordDayId,
+              date: dateStr,
+              label,
+              type: 'seated',
+            });
+          }
+        }
+      }
+      
+      // Check standby attendance history
+      for (const record of standbyAttendanceRecords) {
+        const rd = recordDays.find(r => r.id === record.recordDayId);
+        if (rd) {
+          if (!returningMap[record.contestantId]) {
+            returningMap[record.contestantId] = [];
+          }
+          const dateStr = rd.date ? new Date(rd.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : 'Unknown';
+          const label = rd.label || rd.rxEpNo || dateStr;
+          if (!returningMap[record.contestantId].some(a => a.recordDayId === record.recordDayId)) {
+            returningMap[record.contestantId].push({
+              recordDayId: record.recordDayId,
+              date: dateStr,
+              label,
+              type: 'standby',
+            });
+          }
+        }
+      }
+      
+      res.json(returningMap);
+    } catch (error: any) {
+      console.error("Error fetching returning contestants:", error);
       res.status(500).json({ error: error.message });
     }
   });

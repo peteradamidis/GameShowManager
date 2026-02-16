@@ -66,6 +66,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Download, Calendar, Mail, Maximize2, Minimize2, CheckCircle, XCircle, Columns, ChevronDown, MessageCircle, FileText, Sparkles, Users, AlertTriangle, Copy, Pencil, Trash2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -480,6 +481,16 @@ export default function BookingMaster() {
   }
   const { data: emailAssets = [] } = useQuery<EmailAsset[]>({
     queryKey: ["/api/email-assets"],
+  });
+
+  const { data: returningContestantsMap = {} } = useQuery<Record<string, Array<{ recordDayId: string; date: string; label: string; type: string }>>>({
+    queryKey: ['/api/returning-contestants'],
+    queryFn: async () => {
+      const response = await fetch('/api/returning-contestants', { credentials: 'include' });
+      if (!response.ok) return {};
+      return response.json();
+    },
+    staleTime: 30 * 1000,
   });
   
   // Filter to only PDF assets for attachments
@@ -1402,6 +1413,26 @@ export default function BookingMaster() {
                                   TEMP
                                 </Badge>
                               )}
+                              {standby.contestantId && returningContestantsMap[standby.contestantId] && 
+                                returningContestantsMap[standby.contestantId].some(r => r.recordDayId !== selectedRecordDay) && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help" data-testid={`badge-returning-standby-bm-${standby.contestantId}`}>
+                                      RTN
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="text-xs max-w-[200px]">
+                                    <p className="font-medium mb-1">Returning Contestant</p>
+                                    {returningContestantsMap[standby.contestantId]
+                                      .filter(r => r.recordDayId !== selectedRecordDay)
+                                      .map((info, idx) => (
+                                        <p key={idx} className="text-muted-foreground">
+                                          {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
+                                        </p>
+                                      ))}
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
                               {(standby.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name)) && (
                                 <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700">
                                   TEST
@@ -1695,6 +1726,26 @@ export default function BookingMaster() {
                                   <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-purple-400 bg-purple-100 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300" title="Originally booked as standby">
                                     STBY
                                   </Badge>
+                                )}
+                                {row.contestant?.id && returningContestantsMap[row.contestant.id] && 
+                                  returningContestantsMap[row.contestant.id].some(r => r.recordDayId !== selectedRecordDay) && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help" data-testid={`badge-returning-bm-${row.contestant.id}`}>
+                                        RTN
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="text-xs max-w-[200px]">
+                                      <p className="font-medium mb-1">Returning Contestant</p>
+                                      {returningContestantsMap[row.contestant.id]
+                                        .filter(r => r.recordDayId !== selectedRecordDay)
+                                        .map((info, idx) => (
+                                          <p key={idx} className="text-muted-foreground">
+                                            {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
+                                          </p>
+                                        ))}
+                                    </TooltipContent>
+                                  </Tooltip>
                                 )}
                                 {row.contestant?.id && (row.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(row.contestant.name)) && (
                                   <Button

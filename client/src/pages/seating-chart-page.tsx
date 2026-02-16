@@ -599,6 +599,17 @@ export default function SeatingChartPage() {
     enabled: !!recordDayId,
   });
 
+  // Fetch returning contestants data
+  const { data: returningContestantsMap = {} } = useQuery<Record<string, Array<{ recordDayId: string; date: string; label: string; type: string }>>>({
+    queryKey: ['/api/returning-contestants'],
+    queryFn: async () => {
+      const response = await fetch('/api/returning-contestants', { credentials: 'include' });
+      if (!response.ok) return {};
+      return response.json();
+    },
+    staleTime: 30 * 1000,
+  });
+
   // Fetch current logged-in user
   const { data: authData } = useQuery<{ authenticated: boolean; user?: { id: string; username: string } }>({
     queryKey: ['/api/auth/check'],
@@ -1209,6 +1220,10 @@ export default function SeatingChartPage() {
               signedIn: assignment.signedIn,
               bookingEmailSent: assignment.bookingEmailSent,
               confirmedRsvp: assignment.confirmedRsvp || assignment.status === 'confirmed',
+              isReturning: !!assignment.contestantId && !!returningContestantsMap[assignment.contestantId] && 
+                returningContestantsMap[assignment.contestantId].some(r => r.recordDayId !== recordDayId),
+              returningInfo: assignment.contestantId ? 
+                (returningContestantsMap[assignment.contestantId] || []).filter(r => r.recordDayId !== recordDayId) : undefined,
             };
           }
         }
@@ -1580,6 +1595,54 @@ export default function SeatingChartPage() {
     : [];
   const canSeatGroupTogether = adjacentSeats.length >= groupMembersToSeat.length;
 
+  const handleAssignContestantWithReturning = async (skipPostcodeWarning = false) => {
+    if (!selectedContestant || !selectedBlock || !selectedSeat) return;
+
+    try {
+      if (seatGroupTogether && canSeatGroupTogether && groupMembersToSeat.length > 1) {
+        const seatsToUse = adjacentSeats.slice(0, groupMembersToSeat.length);
+        for (let i = 0; i < groupMembersToSeat.length; i++) {
+          await apiRequest('POST', '/api/seat-assignments', {
+            recordDayId,
+            contestantId: groupMembersToSeat[i].id,
+            blockNumber: selectedBlock,
+            seatLabel: seatsToUse[i],
+            skipPostcodeWarning,
+            allowReturning: true,
+          });
+        }
+      } else {
+        await apiRequest('POST', '/api/seat-assignments', {
+          recordDayId,
+          contestantId: selectedContestant,
+          blockNumber: selectedBlock,
+          seatLabel: selectedSeat,
+          skipPostcodeWarning,
+          allowReturning: true,
+        });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] });
+      broadcastSeatingChange(recordDayId);
+      toast({
+        title: "Returning contestant assigned",
+        description: `Successfully rebooked as a returning contestant`,
+      });
+      setAssignDialogOpen(false);
+      setSelectedContestant("");
+      setSeatGroupTogether(false);
+    } catch (error: any) {
+      toast({
+        title: "Assignment failed",
+        description: error?.message || "Could not assign returning contestant.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleAssignContestant = async (skipPostcodeWarning = false) => {
     if (!selectedContestant || !selectedBlock || !selectedSeat) return;
 
@@ -1656,6 +1719,18 @@ export default function SeatingChartPage() {
         if (confirmed) {
           // Retry with skip flag
           handleAssignContestant(true);
+        }
+        return;
+      }
+      
+      // Check if this is a returning contestant that needs confirmation
+      if (parsedError?.isReturning) {
+        const confirmed = window.confirm(
+          `RETURNING CONTESTANT\n\n${parsedError.contestantName || 'This contestant'} previously appeared on ${parsedError.previousLabel || parsedError.previousDay || 'a completed episode'}.\n\nDo you want to rebook them as a returning contestant?`
+        );
+        if (confirmed) {
+          // Retry with allowReturning flag
+          handleAssignContestantWithReturning(skipPostcodeWarning);
         }
         return;
       }

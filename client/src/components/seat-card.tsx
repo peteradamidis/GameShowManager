@@ -91,6 +91,8 @@ export interface SeatData {
     reason?: string;
     wasDeclined?: boolean;
   };
+  isReturning?: boolean; // True if contestant previously appeared on a completed episode
+  returningInfo?: Array<{ recordDayId: string; date: string; label: string; type: string }>; // Previous appearance details
 }
 
 // Neighbor seat data for linking
@@ -529,6 +531,23 @@ export function SeatCard({
               <Badge variant="outline" className="text-[7px] px-0.5 py-0 h-3 border-purple-400 bg-purple-100 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300" title="Originally booked as standby">
                 STBY
               </Badge>
+            )}
+            {seat.isReturning && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="text-[7px] px-0.5 py-0 h-3 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help" data-testid={`badge-returning-${seat.assignmentId}`}>
+                    RTN
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs max-w-[200px]">
+                  <p className="font-medium mb-1">Returning Contestant</p>
+                  {seat.returningInfo?.map((info, idx) => (
+                    <p key={idx} className="text-muted-foreground">
+                      {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
+                    </p>
+                  ))}
+                </TooltipContent>
+              </Tooltip>
             )}
                         {seat.signedIn && isRXDayLocked && (
               <Tooltip>
