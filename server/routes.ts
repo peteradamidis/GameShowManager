@@ -12035,10 +12035,13 @@ Thank you.`;
       const allAssignments = await storage.getAllSeatAssignments();
       const recordDays = await storage.getRecordDays();
       const standbyAttendanceRecords = await storage.getStandbyAttendanceHistory();
+      const canceledAssignments = await storage.getCanceledAssignments();
       
-      // Build map of locked record day IDs
+      // Build map of record days by ID for quick lookup
+      const recordDayMap = new Map<string, RecordDay>();
       const lockedRecordDays = new Map<string, RecordDay>();
       for (const rd of recordDays) {
+        recordDayMap.set(rd.id, rd);
         if (rd.lockedAt) {
           lockedRecordDays.set(rd.id, rd);
         }
@@ -12047,43 +12050,40 @@ Thank you.`;
       // Build returning contestants map: contestantId -> array of previous appearances
       const returningMap: Record<string, Array<{ recordDayId: string; date: string; label: string; type: string }>> = {};
       
-      // Check seat assignments on locked record days
+      // Helper to add an entry to the returning map without duplicates
+      const addReturningEntry = (contestantId: string, recordDayId: string, rd: RecordDay, type: string) => {
+        if (!returningMap[contestantId]) {
+          returningMap[contestantId] = [];
+        }
+        if (!returningMap[contestantId].some(a => a.recordDayId === recordDayId)) {
+          const dateStr = rd.date ? new Date(rd.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : 'Unknown';
+          const label = rd.label || rd.rxEpNo || dateStr;
+          returningMap[contestantId].push({ recordDayId, date: dateStr, label, type });
+        }
+      };
+      
+      // 1. Check seat assignments on locked record days
       for (const assignment of allAssignments) {
         const lockedRd = lockedRecordDays.get(assignment.recordDayId);
         if (lockedRd) {
-          if (!returningMap[assignment.contestantId]) {
-            returningMap[assignment.contestantId] = [];
-          }
-          const dateStr = lockedRd.date ? new Date(lockedRd.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : 'Unknown';
-          const label = lockedRd.label || lockedRd.rxEpNo || dateStr;
-          // Avoid duplicates
-          if (!returningMap[assignment.contestantId].some(a => a.recordDayId === assignment.recordDayId)) {
-            returningMap[assignment.contestantId].push({
-              recordDayId: assignment.recordDayId,
-              date: dateStr,
-              label,
-              type: 'seated',
-            });
-          }
+          addReturningEntry(assignment.contestantId, assignment.recordDayId, lockedRd, 'seated');
         }
       }
       
-      // Check standby attendance history
+      // 2. Check standby attendance history (from "Mark Attended" flow)
       for (const record of standbyAttendanceRecords) {
-        const rd = recordDays.find(r => r.id === record.recordDayId);
+        const rd = recordDayMap.get(record.recordDayId);
         if (rd) {
-          if (!returningMap[record.contestantId]) {
-            returningMap[record.contestantId] = [];
-          }
-          const dateStr = rd.date ? new Date(rd.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : 'Unknown';
-          const label = rd.label || rd.rxEpNo || dateStr;
-          if (!returningMap[record.contestantId].some(a => a.recordDayId === record.recordDayId)) {
-            returningMap[record.contestantId].push({
-              recordDayId: record.recordDayId,
-              date: dateStr,
-              label,
-              type: 'standby',
-            });
+          addReturningEntry(record.contestantId, record.recordDayId, rd, 'standby');
+        }
+      }
+      
+      // 3. Check canceled assignments from standbys (moved to reschedule after being checked in)
+      for (const ca of canceledAssignments) {
+        if (ca.isFromStandby) {
+          const rd = recordDayMap.get(ca.recordDayId);
+          if (rd) {
+            addReturningEntry(ca.contestantId, ca.recordDayId, rd, 'standby');
           }
         }
       }
