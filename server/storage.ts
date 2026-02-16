@@ -3004,6 +3004,7 @@ export class DbStorage implements IStorage {
 
   // Noticeboard Posts
   async createNoticeboardPost(post: InsertNoticeboardPost): Promise<NoticeboardPost> {
+    const db = getDb();
     const [created] = await db
       .insert(noticeboardPosts)
       .values(post)
@@ -3012,6 +3013,7 @@ export class DbStorage implements IStorage {
   }
 
   async getNoticeboardPosts(): Promise<Array<NoticeboardPost & { likeCount: number; commentCount: number }>> {
+    const db = getDb();
     const posts = await db
       .select()
       .from(noticeboardPosts)
@@ -3046,6 +3048,7 @@ export class DbStorage implements IStorage {
   }
 
   async getNoticeboardPostById(id: string): Promise<NoticeboardPost | undefined> {
+    const db = getDb();
     const [post] = await db
       .select()
       .from(noticeboardPosts)
@@ -3054,6 +3057,7 @@ export class DbStorage implements IStorage {
   }
 
   async updateNoticeboardPost(id: string, data: Partial<NoticeboardPost>): Promise<NoticeboardPost | undefined> {
+    const db = getDb();
     const [updated] = await db
       .update(noticeboardPosts)
       .set({ ...data, updatedAt: new Date() })
@@ -3063,10 +3067,12 @@ export class DbStorage implements IStorage {
   }
 
   async deleteNoticeboardPost(id: string): Promise<void> {
+    const db = getDb();
     await db.delete(noticeboardPosts).where(eq(noticeboardPosts.id, id));
   }
 
   async togglePinPost(id: string): Promise<NoticeboardPost | undefined> {
+    const db = getDb();
     const post = await this.getNoticeboardPostById(id);
     if (!post) return undefined;
     
@@ -3080,6 +3086,7 @@ export class DbStorage implements IStorage {
 
   // Noticeboard Comments
   async createNoticeboardComment(comment: InsertNoticeboardComment): Promise<NoticeboardComment> {
+    const db = getDb();
     const [created] = await db
       .insert(noticeboardComments)
       .values(comment)
@@ -3088,6 +3095,7 @@ export class DbStorage implements IStorage {
   }
 
   async getCommentsByPost(postId: string): Promise<NoticeboardComment[]> {
+    const db = getDb();
     return db
       .select()
       .from(noticeboardComments)
@@ -3096,11 +3104,13 @@ export class DbStorage implements IStorage {
   }
 
   async deleteNoticeboardComment(id: string): Promise<void> {
+    const db = getDb();
     await db.delete(noticeboardComments).where(eq(noticeboardComments.id, id));
   }
 
   // Noticeboard Likes
   async toggleLike(postId: string, browserId: string): Promise<{ liked: boolean; likeCount: number }> {
+    const db = getDb();
     // Check if already liked by this browser
     const [existing] = await db
       .select()
@@ -3131,6 +3141,7 @@ export class DbStorage implements IStorage {
   }
 
   async getLikesByPost(postId: string): Promise<NoticeboardLike[]> {
+    const db = getDb();
     return db
       .select()
       .from(noticeboardLikes)
@@ -3138,6 +3149,7 @@ export class DbStorage implements IStorage {
   }
 
   async hasBrowserLikedPost(postId: string, browserId: string): Promise<boolean> {
+    const db = getDb();
     const [existing] = await db
       .select()
       .from(noticeboardLikes)
@@ -3175,21 +3187,21 @@ export class DbStorage implements IStorage {
     if (entries.length === 0) return [];
     
     // Batch fetch contestants
-    const contestantIds = [...new Set(entries.map(e => e.contestantId).filter(Boolean))];
+    const contestantIds = Array.from(new Set(entries.map(e => e.contestantId).filter(Boolean)));
     const contestantsData = contestantIds.length > 0 
       ? await db.select().from(contestants).where(inArray(contestants.id, contestantIds))
       : [];
     const contestantMap = new Map(contestantsData.map(c => [c.id, c]));
     
     // Batch fetch record days
-    const recordDayIds = [...new Set(entries.map(e => e.recordDayId).filter((id): id is string => !!id))];
+    const recordDayIds = Array.from(new Set(entries.map(e => e.recordDayId).filter((id): id is string => !!id)));
     const recordDaysData = recordDayIds.length > 0 
       ? await db.select().from(recordDays).where(inArray(recordDays.id, recordDayIds))
       : [];
     const recordDayMap = new Map(recordDaysData.map(rd => [rd.id, rd]));
     
     // Batch fetch seat assignments
-    const seatAssignmentIds = [...new Set(entries.map(e => e.seatAssignmentId).filter((id): id is string => !!id))];
+    const seatAssignmentIds = Array.from(new Set(entries.map(e => e.seatAssignmentId).filter((id): id is string => !!id)));
     const seatAssignmentsData = seatAssignmentIds.length > 0 
       ? await db.select().from(seatAssignments).where(inArray(seatAssignments.id, seatAssignmentIds))
       : [];
