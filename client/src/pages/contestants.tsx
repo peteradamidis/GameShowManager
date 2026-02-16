@@ -691,10 +691,43 @@ export default function Contestants() {
         variant: data.count === 0 ? "default" : undefined,
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, variables: { contestantIds: string[]; recordDayId: string }) => {
+      let parsedError: any = null;
+      try {
+        const errorMsg = error?.message || '';
+        const jsonMatch = errorMsg.match(/^\d+:\s*(.+)$/);
+        if (jsonMatch) {
+          parsedError = JSON.parse(jsonMatch[1]);
+        }
+      } catch {}
+      
+      if (parsedError?.isReturning) {
+        const confirmed = window.confirm(
+          `RETURNING CONTESTANT\n\n${parsedError.contestantName || 'This contestant'} previously appeared on ${parsedError.previousLabel || parsedError.previousDay || 'a completed episode'}.\n\nDo you want to add them as a returning standby?`
+        );
+        if (confirmed) {
+          apiRequest('POST', '/api/standbys', { contestantIds: variables.contestantIds, recordDayId: variables.recordDayId, allowReturning: true })
+            .then((data: any) => {
+              queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+              queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+              queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
+              queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] });
+              broadcastSeatingChange();
+              setStandbyDialogOpen(false);
+              setSelectedContestants([]);
+              setSelectedRecordDay("");
+              toast({ title: "Returning standby added", description: `Successfully added as returning standby` });
+            })
+            .catch((retryError: any) => {
+              toast({ title: "Failed to add standby", description: retryError.message, variant: "destructive" });
+            });
+        }
+        return;
+      }
+      
       toast({
         title: "Failed to add standbys",
-        description: error.message,
+        description: parsedError?.error || error.message,
         variant: "destructive",
       });
     },

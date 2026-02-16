@@ -1039,6 +1039,7 @@ export default function SeatingChartPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/record-days'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] });
       setLockConfirmDialogOpen(false);
       toast({
         title: "RX Day Mode Enabled",
@@ -1060,6 +1061,7 @@ export default function SeatingChartPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/record-days'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] });
       setUnlockConfirmDialogOpen(false);
       toast({
         title: "RX Day Mode Disabled",
@@ -1666,6 +1668,7 @@ export default function SeatingChartPage() {
         queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
         queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
         queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] });
         broadcastSeatingChange(recordDayId);
         
         const names = groupMembersToSeat.map((m: any) => m.name).join(', ');
@@ -1687,6 +1690,7 @@ export default function SeatingChartPage() {
         queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
         queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
         queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] });
         broadcastSeatingChange(recordDayId);
         
         toast({
@@ -1755,6 +1759,7 @@ export default function SeatingChartPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] });
       broadcastSeatingChange(recordDayId);
       toast({
         title: "Contestant removed",
@@ -3402,9 +3407,30 @@ export default function SeatingChartPage() {
                             refetch();
                             queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
                             queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+                            queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] });
                             toast({
                               title: "Added to seat on day",
                               description: `${contestant?.name || 'Contestant'} added to overflow seating`,
+                            });
+                            setSelectedOverflowContestant(null);
+                            setOverflowDialogOpen(false);
+                          }
+                          return;
+                        }
+                        if (parsed.isReturning) {
+                          if (confirm(`RETURNING CONTESTANT\n\n${parsed.contestantName || 'This contestant'} previously appeared on ${parsed.previousLabel || parsed.previousDay || 'a completed episode'}.\n\nDo you want to add them as returning overflow?`)) {
+                            await apiRequest("POST", "/api/seat-assignments/overflow", {
+                              recordDayId,
+                              contestantId: selectedOverflowContestant,
+                              allowReturning: true,
+                            });
+                            refetch();
+                            queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+                            queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+                            queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] });
+                            toast({
+                              title: "Returning contestant added",
+                              description: `${contestant?.name || 'Contestant'} added to overflow seating as returning contestant`,
                             });
                             setSelectedOverflowContestant(null);
                             setOverflowDialogOpen(false);

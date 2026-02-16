@@ -4416,7 +4416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a seat assignment
   app.post("/api/seat-assignments", async (req, res) => {
     try {
-      const { recordDayId, contestantId, blockNumber, seatLabel, playerType, seatedAsBlockType, seatedFromStandby, standbyMovementNotes, skipPostcodeWarning } = req.body;
+      const { recordDayId, contestantId, blockNumber, seatLabel, playerType, seatedAsBlockType, seatedFromStandby, standbyMovementNotes, skipPostcodeWarning, allowReturning } = req.body;
 
       if (!recordDayId || !contestantId || !blockNumber || !seatLabel) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -4460,15 +4460,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check for duplicate assignments - contestant should not be seated in ANY record day
+      // Allow returning contestants (those only assigned on locked/completed record days)
       const allAssignments = await storage.getAllSeatAssignments();
       const existingAssignment = allAssignments.find((a: any) => a.contestantId === contestantId);
       if (existingAssignment) {
-        // Get the record day name for better error message
         const existingRecordDay = await storage.getRecordDayById(existingAssignment.recordDayId);
+        const isOnLockedDay = existingRecordDay?.lockedAt != null;
         const dayName = existingRecordDay?.date 
           ? new Date(existingRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
           : 'another day';
-        return res.status(409).json({ error: `Contestant is already seated in ${dayName} (Block ${existingAssignment.blockNumber}, Seat ${existingAssignment.seatLabel})` });
+        
+        if (isOnLockedDay && allowReturning) {
+          // Allowed - returning contestant
+        } else if (isOnLockedDay && !allowReturning) {
+          const label = existingRecordDay?.rxNumber || dayName;
+          return res.status(409).json({ 
+            error: `${contestant?.name || 'Contestant'} previously appeared on ${label} (${dayName}). Rebook as returning contestant?`,
+            isReturning: true,
+            contestantName: contestant?.name,
+            previousDay: dayName,
+            previousLabel: label,
+          });
+        } else {
+          return res.status(409).json({ error: `Contestant is already seated in ${dayName} (Block ${existingAssignment.blockNumber}, Seat ${existingAssignment.seatLabel})` });
+        }
       }
       
       // Also get assignments for this record day to check seat occupancy
@@ -4481,12 +4496,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Allow seating if they're being seated from standby (status 'seated') or moved to reschedule
       // Otherwise, block if they have an active standby assignment anywhere
       if (standbyAssignment && !standbyAssignment.movedToReschedule && standbyAssignment.status !== 'seated') {
-        // Get the record day name for better error message
         const standbyRecordDay = await storage.getRecordDayById(standbyAssignment.recordDayId);
+        const isStandbyOnLockedDay = standbyRecordDay?.lockedAt != null;
         const dayName = standbyRecordDay?.date 
           ? new Date(standbyRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
           : 'another day';
-        return res.status(409).json({ error: `Contestant is already a standby for ${dayName}. Remove them from standbys first.` });
+        
+        if (isStandbyOnLockedDay && allowReturning) {
+          // Allowed - returning contestant who was a standby on a completed episode
+        } else if (isStandbyOnLockedDay && !allowReturning) {
+          const label = standbyRecordDay?.rxNumber || dayName;
+          return res.status(409).json({ 
+            error: `${contestant?.name || 'Contestant'} previously attended ${label} (${dayName}) as standby. Rebook as returning contestant?`,
+            isReturning: true,
+            contestantName: contestant?.name,
+            previousDay: dayName,
+            previousLabel: label,
+          });
+        } else {
+          return res.status(409).json({ error: `Contestant is already a standby for ${dayName}. Remove them from standbys first.` });
+        }
       }
       
       // Check if seat is already occupied
@@ -4577,7 +4606,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create overflow seat assignment ("To Seat on Day" - not assigned to a physical seat)
   app.post("/api/seat-assignments/overflow", async (req, res) => {
     try {
-      const { recordDayId, contestantId, skipPostcodeWarning } = req.body;
+      const { recordDayId, contestantId, skipPostcodeWarning, allowReturning } = req.body;
 
       if (!recordDayId || !contestantId) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -4605,14 +4634,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check for duplicate assignments - contestant should not be seated in ANY record day
+      // Allow returning contestants (those only assigned on locked/completed record days)
       const allAssignments = await storage.getAllSeatAssignments();
       const existingAssignment = allAssignments.find((a: any) => a.contestantId === contestantId);
       if (existingAssignment) {
         const existingRecordDay = await storage.getRecordDayById(existingAssignment.recordDayId);
+        const isOnLockedDay = existingRecordDay?.lockedAt != null;
         const dayName = existingRecordDay?.date 
           ? new Date(existingRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
           : 'another day';
-        return res.status(409).json({ error: `Contestant is already seated/assigned in ${dayName}` });
+        
+        if (isOnLockedDay && allowReturning) {
+          // Allowed - returning contestant
+        } else if (isOnLockedDay && !allowReturning) {
+          const label = existingRecordDay?.rxNumber || dayName;
+          return res.status(409).json({ 
+            error: `${contestant?.name || 'Contestant'} previously appeared on ${label} (${dayName}). Add as returning overflow?`,
+            isReturning: true,
+            contestantName: contestant?.name,
+            previousDay: dayName,
+            previousLabel: label,
+          });
+        } else {
+          return res.status(409).json({ error: `Contestant is already seated/assigned in ${dayName}` });
+        }
       }
       
       // Check if contestant is a standby for ANY record day
@@ -4620,10 +4665,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const standbyAssignment = allStandbys.find((s: any) => s.contestantId === contestantId);
       if (standbyAssignment && !standbyAssignment.movedToReschedule && standbyAssignment.status !== 'seated') {
         const standbyRecordDay = await storage.getRecordDayById(standbyAssignment.recordDayId);
+        const isStandbyOnLockedDay = standbyRecordDay?.lockedAt != null;
         const dayName = standbyRecordDay?.date 
           ? new Date(standbyRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
           : 'another day';
-        return res.status(409).json({ error: `Contestant is already a standby for ${dayName}. Remove them from standbys first.` });
+        
+        if (isStandbyOnLockedDay && allowReturning) {
+          // Allowed - returning contestant who was a standby on a completed episode
+        } else if (isStandbyOnLockedDay && !allowReturning) {
+          const label = standbyRecordDay?.rxNumber || dayName;
+          return res.status(409).json({ 
+            error: `${contestant?.name || 'Contestant'} previously attended ${label} (${dayName}) as standby. Add as returning overflow?`,
+            isReturning: true,
+            contestantName: contestant?.name,
+            previousDay: dayName,
+            previousLabel: label,
+          });
+        } else {
+          return res.status(409).json({ error: `Contestant is already a standby for ${dayName}. Remove them from standbys first.` });
+        }
       }
 
       // Generate the next OS# seat label for this record day
@@ -4827,14 +4887,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         const standbyAssignment = allStandbys.find((s: any) => s.contestantId === contestantId);
-        // Allow rebooking if they've been moved to reschedule OR status is 'seated', otherwise block if still active standby
         if (standbyAssignment && !standbyAssignment.movedToReschedule && standbyAssignment.status !== 'seated') {
-          const contestant = await storage.getContestantById(contestantId);
           const standbyRecordDay = await storage.getRecordDayById(standbyAssignment.recordDayId);
-          const dayName = standbyRecordDay?.date 
-            ? new Date(standbyRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
-            : 'another day';
-          return res.status(409).json({ error: `${contestant?.name || 'A contestant'} is already a standby for ${dayName}. Remove them from standbys first.` });
+          const isStandbyOnLockedDay = standbyRecordDay?.lockedAt != null;
+          
+          if (isStandbyOnLockedDay && allowReturning) {
+            // Allowed - returning contestant who was a standby on a completed episode
+          } else if (isStandbyOnLockedDay && !allowReturning) {
+            const contestant = await storage.getContestantById(contestantId);
+            const dayName = standbyRecordDay?.date 
+              ? new Date(standbyRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
+              : 'another day';
+            const label = standbyRecordDay?.rxNumber || dayName;
+            return res.status(409).json({ 
+              error: `${contestant?.name || 'Contestant'} previously attended ${label} (${dayName}) as standby. Rebook as returning contestant?`,
+              isReturning: true,
+              contestantName: contestant?.name,
+              previousDay: dayName,
+              previousLabel: label,
+            });
+          } else {
+            const contestant = await storage.getContestantById(contestantId);
+            const dayName = standbyRecordDay?.date 
+              ? new Date(standbyRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
+              : 'another day';
+            return res.status(409).json({ error: `${contestant?.name || 'A contestant'} is already a standby for ${dayName}. Remove them from standbys first.` });
+          }
         }
       }
       
@@ -8325,10 +8403,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingStandby = allStandbys.find((s: any) => s.contestantId === canceled.contestantId && !s.movedToReschedule && s.status !== 'seated');
       if (existingStandby) {
         const standbyRecordDay = await storage.getRecordDayById(existingStandby.recordDayId);
+        const isStandbyOnLockedDay = standbyRecordDay?.lockedAt != null;
         const dayName = standbyRecordDay?.date 
           ? new Date(standbyRecordDay.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
           : 'another day';
-        return res.status(409).json({ error: `${contestant?.name || 'Contestant'} is already a standby for ${dayName}. Remove them from standbys first.` });
+        
+        if (isStandbyOnLockedDay && allowReturning) {
+          // Allowed - returning contestant who was a standby on a completed episode
+        } else if (isStandbyOnLockedDay && !allowReturning) {
+          const label = standbyRecordDay?.rxNumber || dayName;
+          return res.status(409).json({ 
+            error: `${contestant?.name || 'Contestant'} previously attended ${label} (${dayName}) as standby. Rebook as returning contestant?`,
+            isReturning: true,
+            contestantName: contestant?.name,
+            previousDay: dayName,
+            previousLabel: label,
+          });
+        } else {
+          return res.status(409).json({ error: `${contestant?.name || 'Contestant'} is already a standby for ${dayName}. Remove them from standbys first.` });
+        }
       }
 
       // Create new seat assignment with all workflow status carried over
@@ -11093,7 +11186,8 @@ Thank you.`;
   // Create standby assignments (bulk)
   app.post("/api/standbys", async (req, res) => {
     try {
-      const { contestantIds, recordDayId } = req.body;
+      const { contestantIds, recordDayId, allowReturning: allowReturningParam } = req.body;
+      const allowReturning = allowReturningParam === true;
 
       if (!contestantIds || !Array.isArray(contestantIds) || contestantIds.length === 0) {
         return res.status(400).json({ error: "contestantIds array is required" });
@@ -11121,27 +11215,57 @@ Thank you.`;
       // Check if any contestant is already an active standby for ANY record day
       const alreadyStandbyIds = contestantIds.filter((id: string) => allStandbyContestantIds.has(id));
       if (alreadyStandbyIds.length > 0) {
-        const standbyContestants = await Promise.all(
-          alreadyStandbyIds.slice(0, 3).map(async (id: string) => {
-            const contestant = await storage.getContestantById(id);
-            const standby = allStandbyContestantIds.get(id);
-            const standbyRecordDay = standby ? await storage.getRecordDayById(standby.recordDayId) : null;
-            return { name: contestant?.name, date: standbyRecordDay?.date };
-          })
-        );
-        const details = standbyContestants.map(c => {
-          const dateStr = c.date ? new Date(c.date).toLocaleDateString('en-AU') : 'unknown';
-          return `${c.name} (${dateStr})`;
-        }).filter(Boolean).join(', ');
-        const moreCount = alreadyStandbyIds.length > 3 ? ` and ${alreadyStandbyIds.length - 3} more` : '';
-        return res.status(409).json({ 
-          error: `Cannot add as standby - already on standby list: ${details}${moreCount}` 
-        });
+        // Check if all existing standby assignments are on locked (completed) days
+        const standbyOnLocked: string[] = [];
+        const standbyOnUnlocked: string[] = [];
+        for (const id of alreadyStandbyIds) {
+          const standby = allStandbyContestantIds.get(id);
+          if (standby) {
+            const standbyRd = await storage.getRecordDayById(standby.recordDayId);
+            if (standbyRd?.lockedAt != null) {
+              standbyOnLocked.push(id);
+            } else {
+              standbyOnUnlocked.push(id);
+            }
+          }
+        }
+        
+        if (standbyOnUnlocked.length > 0) {
+          const standbyContestants = await Promise.all(
+            standbyOnUnlocked.slice(0, 3).map(async (id: string) => {
+              const contestant = await storage.getContestantById(id);
+              const standby = allStandbyContestantIds.get(id);
+              const standbyRecordDay = standby ? await storage.getRecordDayById(standby.recordDayId) : null;
+              return { name: contestant?.name, date: standbyRecordDay?.date };
+            })
+          );
+          const details = standbyContestants.map(c => {
+            const dateStr = c.date ? new Date(c.date).toLocaleDateString('en-AU') : 'unknown';
+            return `${c.name} (${dateStr})`;
+          }).filter(Boolean).join(', ');
+          const moreCount = standbyOnUnlocked.length > 3 ? ` and ${standbyOnUnlocked.length - 3} more` : '';
+          return res.status(409).json({ 
+            error: `Cannot add as standby - already on standby list: ${details}${moreCount}` 
+          });
+        } else if (standbyOnLocked.length > 0 && !allowReturning) {
+          const firstContestant = await storage.getContestantById(standbyOnLocked[0]);
+          const firstStandby = allStandbyContestantIds.get(standbyOnLocked[0]);
+          const firstRd = firstStandby ? await storage.getRecordDayById(firstStandby.recordDayId) : null;
+          const dayName = firstRd?.date ? new Date(firstRd.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }) : 'a previous day';
+          const label = firstRd?.rxNumber || dayName;
+          return res.status(409).json({ 
+            error: `${firstContestant?.name || 'Contestant'} previously attended ${label} (${dayName}) as standby. Add as returning standby?`,
+            isReturning: true,
+            contestantName: firstContestant?.name,
+            previousDay: dayName,
+            previousLabel: label,
+          });
+        }
+        // If allowReturning is true and all are on locked days, proceed
       }
       
       // Check if any contestant is already seated for ANY record day
       // Allow returning contestants (those only seated on locked/completed record days)
-      const allowReturning = req.body.allowReturning === true;
       const alreadySeatedIds = contestantIds.filter((id: string) => allSeatedContestantIds.has(id));
       if (alreadySeatedIds.length > 0) {
         // Check if all seated contestants are only on locked days

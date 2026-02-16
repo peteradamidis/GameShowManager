@@ -296,6 +296,7 @@ export default function ReschedulePage() {
         queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
         queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
         queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] }),
       ]);
       await refetch();
 
@@ -307,9 +308,55 @@ export default function ReschedulePage() {
       setRebookDialogOpen(false);
       setSelectedCancellation(null);
     } catch (error: any) {
+      let parsedError: any = null;
+      try {
+        const errorMsg = error?.message || '';
+        const jsonMatch = errorMsg.match(/^\d+:\s*(.+)$/);
+        if (jsonMatch) {
+          parsedError = JSON.parse(jsonMatch[1]);
+        }
+      } catch {}
+      
+      if (parsedError?.isReturning) {
+        const confirmed = window.confirm(
+          `RETURNING CONTESTANT\n\n${parsedError.contestantName || 'This contestant'} previously appeared on ${parsedError.previousLabel || parsedError.previousDay || 'a completed episode'}.\n\nDo you want to rebook them as a returning contestant?`
+        );
+        if (confirmed) {
+          try {
+            await apiRequest('POST', `/api/canceled-assignments/${selectedCancellation.id}/rebook`, {
+              recordDayId: selectedRecordDayId,
+              blockNumber: parseInt(selectedBlock),
+              seatLabel: selectedSeat,
+              allowReturning: true,
+            });
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false }),
+              queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false }),
+              queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false }),
+              queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false }),
+              queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] }),
+            ]);
+            await refetch();
+            toast({
+              title: "Returning contestant rebooked",
+              description: `${selectedCancellation.contestant.name} has been rebooked as a returning contestant.`,
+            });
+            setRebookDialogOpen(false);
+            setSelectedCancellation(null);
+          } catch (retryError: any) {
+            toast({
+              title: "Rebooking failed",
+              description: retryError?.message || "Could not rebook returning contestant.",
+              variant: "destructive",
+            });
+          }
+        }
+        return;
+      }
+      
       toast({
         title: "Rebooking failed",
-        description: error?.message || "Could not rebook contestant.",
+        description: parsedError?.error || error?.message || "Could not rebook contestant.",
         variant: "destructive",
       });
     }
