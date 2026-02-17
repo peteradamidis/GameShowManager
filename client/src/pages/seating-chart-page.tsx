@@ -540,7 +540,7 @@ export default function SeatingChartPage() {
     queryKey: ['/api/seat-assignments', recordDayId],
     queryFn: async () => {
       if (!recordDayId) return [];
-      const response = await fetch(`/api/seat-assignments/${recordDayId}`);
+      const response = await fetch(`/api/seat-assignments/${recordDayId}`, { credentials: 'include' });
       if (!response.ok) {
         if (response.status === 404) {
           return []; // No assignments yet
@@ -562,7 +562,7 @@ export default function SeatingChartPage() {
     queryKey: ['/api/standbys/record-day', recordDayId],
     queryFn: async () => {
       if (!recordDayId) return [];
-      const response = await fetch(`/api/standbys/record-day/${recordDayId}`);
+      const response = await fetch(`/api/standbys/record-day/${recordDayId}`, { credentials: 'include' });
       if (!response.ok) return [];
       return response.json();
     },
@@ -572,7 +572,7 @@ export default function SeatingChartPage() {
   const { data: allSeatAssignments = [] } = useQuery({
     queryKey: ['/api/seat-assignments'],
     queryFn: async () => {
-      const response = await fetch('/api/seat-assignments');
+      const response = await fetch('/api/seat-assignments', { credentials: 'include' });
       if (!response.ok) return [];
       return response.json();
     },
@@ -581,7 +581,7 @@ export default function SeatingChartPage() {
   const { data: allStandbys = [] } = useQuery({
     queryKey: ['/api/standbys'],
     queryFn: async () => {
-      const response = await fetch('/api/standbys');
+      const response = await fetch('/api/standbys', { credentials: 'include' });
       if (!response.ok) return [];
       return response.json();
     },
@@ -1877,11 +1877,20 @@ export default function SeatingChartPage() {
     
     try {
       // Fetch ALL standbys for this day (including seated ones) to find the record
-      const allStandbysResponse = await fetch(`/api/standbys/record-day/${recordDayId}?all=true`);
+      const allStandbysResponse = await fetch(`/api/standbys/record-day/${recordDayId}?all=true`, {
+        credentials: 'include',
+      });
+      
+      if (!allStandbysResponse.ok) {
+        throw new Error(`Failed to fetch standbys: ${allStandbysResponse.status}`);
+      }
+      
       const allStandbys = await allStandbysResponse.json();
       
       // Find the standby record for this contestant (could be 'seated' status)
-      const standbyRecord = allStandbys?.find((s: any) => s.contestantId === contestantId);
+      const standbyRecord = Array.isArray(allStandbys) 
+        ? allStandbys.find((s: any) => s.contestantId === contestantId)
+        : null;
       
       if (!standbyRecord) {
         toast({
