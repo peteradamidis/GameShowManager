@@ -1333,53 +1333,109 @@ export default function SeatingChartPage() {
   }
   
   // Detect separated groups - mark contestants whose partners are not in adjacent seats
-  // Build a map of all assigned contestants for quick lookup
-  const assignedContestants = new Map<string, { blockIdx: number; seatIdx: number; seatLabel: string }>();
+  // Build maps by contestantId AND by groupId for comprehensive lookup
+  const contestantLocationMap = new Map<string, { blockIdx: number; seatIdx: number; seatLabel: string }>();
+  const groupMemberLocations = new Map<string, Array<{ contestantId: string; blockIdx: number; seatIdx: number; seatLabel: string }>>();
+  
   seats.forEach((block, blockIdx) => {
     block.forEach((seat, seatIdx) => {
-      if (seat.contestantName) {
-        // Extract seat label from id (format: recordDayId-blockX-seatLabel)
+      if (seat.contestantId) {
         const seatLabel = seat.id.split('-').pop() || '';
-        assignedContestants.set(seat.contestantName.toLowerCase().trim(), { blockIdx, seatIdx, seatLabel });
+        contestantLocationMap.set(seat.contestantId, { blockIdx, seatIdx, seatLabel });
+        if (seat.groupId) {
+          const members = groupMemberLocations.get(seat.groupId) || [];
+          members.push({ contestantId: seat.contestantId, blockIdx, seatIdx, seatLabel });
+          groupMemberLocations.set(seat.groupId, members);
+        }
       }
     });
   });
   
-  // Helper to check if two seats are adjacent (same block, same row, consecutive numbers)
+  // Build bidirectional partner map: contestantId -> Set of partner contestantIds
+  const partnerMap = new Map<string, Set<string>>();
+  seats.forEach((block) => {
+    block.forEach((seat) => {
+      if (!seat.contestantId) return;
+      // attendingWith contains comma-separated contestant IDs (resolved by server)
+      if (seat.attendingWith) {
+        const partnerIds = seat.attendingWith.split(',').map(id => id.trim()).filter(Boolean);
+        for (const partnerId of partnerIds) {
+          // Add both directions
+          if (!partnerMap.has(seat.contestantId)) partnerMap.set(seat.contestantId, new Set());
+          partnerMap.get(seat.contestantId)!.add(partnerId);
+          if (!partnerMap.has(partnerId)) partnerMap.set(partnerId, new Set());
+          partnerMap.get(partnerId)!.add(seat.contestantId);
+        }
+      }
+      // Also link via groupId
+      if (seat.groupId) {
+        const members = groupMemberLocations.get(seat.groupId) || [];
+        for (const member of members) {
+          if (member.contestantId !== seat.contestantId) {
+            if (!partnerMap.has(seat.contestantId)) partnerMap.set(seat.contestantId, new Set());
+            partnerMap.get(seat.contestantId)!.add(member.contestantId);
+            if (!partnerMap.has(member.contestantId)) partnerMap.set(member.contestantId, new Set());
+            partnerMap.get(member.contestantId)!.add(seat.contestantId);
+          }
+        }
+      }
+    });
+  });
+  
+  // Helper to check if two seats are adjacent (same block, same row or ±1 row, consecutive columns)
   const areSeatsAdjacent = (
-    block1: number, label1: string, 
-    block2: number, label2: string
+    block1: number, seatIdx1: number, 
+    block2: number, seatIdx2: number
   ): boolean => {
     if (block1 !== block2) return false;
-    // Extract row letter and seat number
-    const row1 = label1.charAt(0);
-    const num1 = parseInt(label1.substring(1));
-    const row2 = label2.charAt(0);
-    const num2 = parseInt(label2.substring(1));
-    // Adjacent if same row and consecutive numbers
-    return row1 === row2 && Math.abs(num1 - num2) === 1;
+    // Row layout: A(0-4), B(5-9), C(10-13), D(14-17), E(18-21)
+    const rowBoundaries = [
+      { start: 0, end: 4 },
+      { start: 5, end: 9 },
+      { start: 10, end: 13 },
+      { start: 14, end: 17 },
+      { start: 18, end: 21 },
+    ];
+    const getRowCol = (idx: number) => {
+      for (let r = 0; r < rowBoundaries.length; r++) {
+        if (idx >= rowBoundaries[r].start && idx <= rowBoundaries[r].end) {
+          return { row: r, col: idx - rowBoundaries[r].start };
+        }
+      }
+      return null;
+    };
+    const pos1 = getRowCol(seatIdx1);
+    const pos2 = getRowCol(seatIdx2);
+    if (!pos1 || !pos2) return false;
+    // Same row, adjacent columns
+    if (pos1.row === pos2.row && Math.abs(pos1.col - pos2.col) === 1) return true;
+    // Adjacent rows, same or ±1 column
+    if (Math.abs(pos1.row - pos2.row) === 1 && Math.abs(pos1.col - pos2.col) <= 1) return true;
+    return false;
   };
   
-  // Mark separated contestants
+  // Mark separated contestants using bidirectional partner map
   seats.forEach((block, blockIdx) => {
     block.forEach((seat, seatIdx) => {
-      if (!seat.contestantName || !seat.attendingWith) return;
+      if (!seat.contestantId) return;
+      const partners = partnerMap.get(seat.contestantId);
+      if (!partners || partners.size === 0) return;
       
-      const partnerName = seat.attendingWith.toLowerCase().trim();
-      const partnerLocation = assignedContestants.get(partnerName);
+      // Check if ANY partner is on the chart and adjacent
+      let hasPartnerOnChart = false;
+      let hasAdjacentPartner = false;
       
-      if (!partnerLocation) {
-        // Partner not assigned at all - not separated (they're just not here)
-        return;
+      for (const partnerId of partners) {
+        const partnerLoc = contestantLocationMap.get(partnerId);
+        if (!partnerLoc) continue;
+        hasPartnerOnChart = true;
+        if (areSeatsAdjacent(blockIdx, seatIdx, partnerLoc.blockIdx, partnerLoc.seatIdx)) {
+          hasAdjacentPartner = true;
+          break;
+        }
       }
       
-      const seatLabel = seat.id.split('-').pop() || '';
-      const isAdjacent = areSeatsAdjacent(
-        blockIdx, seatLabel,
-        partnerLocation.blockIdx, partnerLocation.seatLabel
-      );
-      
-      if (!isAdjacent) {
+      if (hasPartnerOnChart && !hasAdjacentPartner) {
         seat.isGroupSeparated = true;
       }
     });
