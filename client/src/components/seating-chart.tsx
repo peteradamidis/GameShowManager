@@ -1222,23 +1222,14 @@ function OverflowDropZone({
   children, 
   isOver, 
   isGlobalDragging,
-  quickMoveEnabled,
-  quickMoveSelectedSeatId,
-  onQuickMoveToOverflow,
-  findSeat,
 }: { 
   children: React.ReactNode; 
   isOver: boolean; 
   isGlobalDragging: boolean;
-  quickMoveEnabled: boolean;
-  quickMoveSelectedSeatId: string | null;
-  onQuickMoveToOverflow: () => void;
-  findSeat: (id: string) => any;
 }) {
   const { setNodeRef } = useDroppable({ id: 'overflow-drop-zone' });
 
   const showDropIndicator = isGlobalDragging;
-  const hasQuickMoveSelection = quickMoveEnabled && quickMoveSelectedSeatId && findSeat(quickMoveSelectedSeatId)?.seat?.contestantName;
 
   return (
     <div 
@@ -2634,18 +2625,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
             <OverflowDropZone 
               isOver={overId === 'overflow-drop-zone'} 
               isGlobalDragging={!!activeId && !activeId.toString().startsWith('standby-') && !activeId.toString().startsWith('sortable-standby-')}
-              quickMoveEnabled={quickMoveEnabled}
-              quickMoveSelectedSeatId={quickMoveSelectedSeatId}
-              onQuickMoveToOverflow={() => {
-                if (quickMoveSelectedSeatId && onMoveToOverflow) {
-                  const sourceSeat = findSeat(quickMoveSelectedSeatId);
-                  if (sourceSeat?.seat.assignmentId) {
-                    onMoveToOverflow(sourceSeat.seat.assignmentId);
-                    setQuickMoveSelectedSeatId(null);
-                  }
-                }
-              }}
-              findSeat={findSeat}
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
