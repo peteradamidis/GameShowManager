@@ -7773,10 +7773,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid role" });
       }
       
+      // Read current assignment to preserve episode number set by Players tab
+      const currentAssignment = await storage.getSeatAssignmentById(req.params.id);
+      
       // Build update object with base fields
+      // IMPORTANT: Preserve existing rxEpNumber if the incoming value is empty/null
+      // This prevents the winning money modal from overwriting episode assignments
+      // made in the Players tab (which uses values like "1"-"5")
       const updateData: any = { 
-        rxNumber: rxNumber || null,
-        rxEpNumber: rxEpNumber || null,
+        rxNumber: rxNumber || currentAssignment?.rxNumber || null,
+        rxEpNumber: rxEpNumber || currentAssignment?.rxEpNumber || null,
         caseNumber: caseNumber || null,
         winningMoneyRole, 
         winningMoneyAmount 
