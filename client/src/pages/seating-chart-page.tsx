@@ -2603,6 +2603,16 @@ export default function SeatingChartPage() {
               setMoveOverflowTarget(oa);
               setMoveOverflowDialogOpen(true);
             }}
+            onMoveToOverflow={async (assignmentId: string) => {
+              try {
+                await apiRequest("POST", `/api/seat-assignments/${assignmentId}/move-to-overflow`);
+                refetch();
+                queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+                toast({ title: "Moved to overflow", description: "Contestant moved to 'To Seat on Day'" });
+              } catch (err: any) {
+                toast({ title: "Error", description: err.message || "Failed to move to overflow", variant: "destructive" });
+              }
+            }}
           />
         )
       )}

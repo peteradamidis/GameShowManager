@@ -7389,6 +7389,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Move seat assignment to overflow ("To Seat on Day" - block 0 with OS# label)
+  app.post("/api/seat-assignments/:id/move-to-overflow", async (req, res) => {
+    try {
+      const assignment = await storage.getSeatAssignmentById(req.params.id);
+      if (!assignment) {
+        return res.status(404).json({ error: "Assignment not found" });
+      }
+
+      if (assignment.blockNumber === 0) {
+        return res.status(400).json({ error: "Assignment is already in overflow" });
+      }
+
+      const allAssignments = await storage.getSeatAssignmentsByRecordDay(assignment.recordDayId);
+      const overflowAssignments = allAssignments.filter((a: any) => a.blockNumber === 0);
+      let maxOsNum = 0;
+      overflowAssignments.forEach((a: any) => {
+        const match = a.seatLabel?.match(/^OS(\d+)$/);
+        if (match) {
+          maxOsNum = Math.max(maxOsNum, parseInt(match[1]));
+        }
+      });
+      const newSeatLabel = `OS${maxOsNum + 1}`;
+
+      const updated = await storage.moveSeatAssignmentWithTracking(
+        req.params.id,
+        0,
+        newSeatLabel
+      );
+
+      const movedBy = (req as any).session?.username || 'system';
+      await storage.logMovement({
+        contestantId: assignment.contestantId,
+        movementType: 'seat_change',
+        recordDayId: assignment.recordDayId,
+        fromBlockNumber: assignment.blockNumber,
+        fromSeatLabel: assignment.seatLabel,
+        toBlockNumber: 0,
+        toSeatLabel: newSeatLabel,
+        notes: `Moved to overflow (To Seat on Day)`,
+        movedBy,
+      });
+
+      res.json({ message: "Moved to overflow", assignment: updated, seatLabel: newSeatLabel });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Update seat assignment (for drag-and-drop) with collision detection
   app.put("/api/seat-assignments/:id", async (req, res) => {
     try {

@@ -47,7 +47,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
-import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical, Briefcase, MapPin, ShieldAlert, Heart, StickyNote, MousePointerClick, Plus } from "lucide-react";
+import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical, Briefcase, MapPin, ShieldAlert, Heart, StickyNote, MousePointerClick, Plus, ArrowDown } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -262,6 +262,7 @@ interface SeatingChartProps {
   onAddOverflow?: () => void;
   onRemoveOverflow?: (assignmentId: string) => void;
   onMoveOverflowToSeat?: (overflowAssignment: OverflowAssignment) => void;
+  onMoveToOverflow?: (assignmentId: string) => void;
 }
 
 function DraggableDroppableSeat({
@@ -1217,7 +1218,48 @@ function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
   return seats;
 }
 
-export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onNoLongerWantToAttend, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "", blockNotes = {}, onBlockNoteChange, showBookingStatus = false, onRatingChange, overflowAssignments = [], onAddOverflow, onRemoveOverflow, onMoveOverflowToSeat }: SeatingChartProps) {
+function OverflowDropZone({ 
+  children, 
+  isOver, 
+  isGlobalDragging,
+  quickMoveEnabled,
+  quickMoveSelectedSeatId,
+  onQuickMoveToOverflow,
+  findSeat,
+}: { 
+  children: React.ReactNode; 
+  isOver: boolean; 
+  isGlobalDragging: boolean;
+  quickMoveEnabled: boolean;
+  quickMoveSelectedSeatId: string | null;
+  onQuickMoveToOverflow: () => void;
+  findSeat: (id: string) => any;
+}) {
+  const { setNodeRef } = useDroppable({ id: 'overflow-drop-zone' });
+
+  const showDropIndicator = isGlobalDragging;
+  const hasQuickMoveSelection = quickMoveEnabled && quickMoveSelectedSeatId && findSeat(quickMoveSelectedSeatId)?.seat?.contestantName;
+
+  return (
+    <div 
+      ref={setNodeRef}
+      className={`border-t pt-6 transition-all ${
+        isOver ? 'ring-2 ring-primary rounded-lg bg-primary/5' : ''
+      } ${showDropIndicator ? 'ring-1 ring-dashed ring-muted-foreground/30 rounded-lg' : ''}`}
+      data-testid="overflow-section"
+    >
+      {showDropIndicator && !isOver && (
+        <div className="text-center text-xs text-muted-foreground mb-2 flex items-center justify-center gap-1">
+          <ArrowDown className="h-3 w-3" />
+          Drop here to move to overflow
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
+export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onNoLongerWantToAttend, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "", blockNotes = {}, onBlockNoteChange, showBookingStatus = false, onRatingChange, overflowAssignments = [], onAddOverflow, onRemoveOverflow, onMoveOverflowToSeat, onMoveToOverflow }: SeatingChartProps) {
   // Fetch returning contestants data for standby badges
   const { data: returningContestantsMap = {} } = useQuery<Record<string, Array<{ recordDayId: string; date: string; label: string; type: string }>>>({
     queryKey: ['/api/returning-contestants'],
@@ -1952,6 +1994,15 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
       return;
     }
 
+    // Check if dropped onto the overflow zone ("To Seat on Day")
+    if (over.id === 'overflow-drop-zone') {
+      const sourceSeat = findSeat(active.id as string);
+      if (sourceSeat && sourceSeat.seat.assignmentId && sourceSeat.seat.contestantName && onMoveToOverflow) {
+        onMoveToOverflow(sourceSeat.seat.assignmentId);
+      }
+      return;
+    }
+
     const sourceSeat = findSeat(active.id as string);
     const targetSeat = findSeat(over.id as string);
 
@@ -2580,7 +2631,22 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
 
           {/* To Seat on Day - Overflow Section */}
           {!isPodiumVisualizerMode && (
-            <div className="border-t pt-6" data-testid="overflow-section">
+            <OverflowDropZone 
+              isOver={overId === 'overflow-drop-zone'} 
+              isGlobalDragging={!!activeId && !activeId.toString().startsWith('standby-') && !activeId.toString().startsWith('sortable-standby-')}
+              quickMoveEnabled={quickMoveEnabled}
+              quickMoveSelectedSeatId={quickMoveSelectedSeatId}
+              onQuickMoveToOverflow={() => {
+                if (quickMoveSelectedSeatId && onMoveToOverflow) {
+                  const sourceSeat = findSeat(quickMoveSelectedSeatId);
+                  if (sourceSeat?.seat.assignmentId) {
+                    onMoveToOverflow(sourceSeat.seat.assignmentId);
+                    setQuickMoveSelectedSeatId(null);
+                  }
+                }
+              }}
+              findSeat={findSeat}
+            >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-sm">To Seat on Day</Badge>
@@ -2590,21 +2656,46 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     </Badge>
                   )}
                 </div>
-                {onAddOverflow && !isLocked && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onAddOverflow()}
-                    data-testid="button-add-overflow"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  {quickMoveEnabled && quickMoveSelectedSeatId && onMoveToOverflow && (() => {
+                    const sourceSeat = findSeat(quickMoveSelectedSeatId);
+                    if (!sourceSeat?.seat.contestantName) return null;
+                    return (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-cyan-500 text-cyan-600 dark:text-cyan-400"
+                        onClick={() => {
+                          if (sourceSeat.seat.assignmentId) {
+                            onMoveToOverflow(sourceSeat.seat.assignmentId);
+                            setQuickMoveSelectedSeatId(null);
+                          }
+                        }}
+                        data-testid="button-quick-move-to-overflow"
+                      >
+                        <ArrowDown className="h-4 w-4 mr-1" />
+                        Move {sourceSeat.seat.contestantName} Here
+                      </Button>
+                    );
+                  })()}
+                  {onAddOverflow && !isLocked && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onAddOverflow()}
+                      data-testid="button-add-overflow"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add
+                    </Button>
+                  )}
+                </div>
               </div>
               {overflowAssignments.length === 0 ? (
-                <div className="text-center py-4 text-sm text-muted-foreground border border-dashed rounded-md">
-                  No overflow contestants
+                <div className={`text-center py-4 text-sm text-muted-foreground border border-dashed rounded-md transition-colors ${
+                  overId === 'overflow-drop-zone' ? 'border-primary bg-primary/5' : ''
+                }`}>
+                  {overId === 'overflow-drop-zone' ? 'Drop here to move to overflow' : 'No overflow contestants'}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -2808,7 +2899,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   ))}
                 </div>
               )}
-            </div>
+            </OverflowDropZone>
           )}
         </div>
         
