@@ -1037,9 +1037,10 @@ export default function SeatingChartPage() {
     mutationFn: async () => {
       return await apiRequest('POST', `/api/record-days/${recordDayId}/lock`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/record-days'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/record-days'] });
       queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/record-days', recordDayId, 'prize-winners'] });
       setLockConfirmDialogOpen(false);
       toast({
         title: "RX Day Mode Enabled",
@@ -1059,8 +1060,8 @@ export default function SeatingChartPage() {
     mutationFn: async () => {
       return await apiRequest('POST', `/api/record-days/${recordDayId}/unlock`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/record-days'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/record-days'] });
       queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] });
       setUnlockConfirmDialogOpen(false);
       toast({
@@ -1960,20 +1961,26 @@ export default function SeatingChartPage() {
   // Handle adding a contestant to the prize draw - contestant stays in seat
   const handlePrizeWinner = async (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => {
     try {
-      await apiRequest('POST', `/api/record-days/${recordDayId}/prize-winners`, {
+      const response = await apiRequest('POST', `/api/record-days/${recordDayId}/prize-winners`, {
         contestantId,
         contestantName,
         blockNumber,
         seatLabel,
       });
+      const savedWinner = await response.json();
       
-      queryClient.invalidateQueries({ queryKey: ['/api/record-days', recordDayId, 'prize-winners'] });
+      if (!savedWinner?.id) {
+        throw new Error("Prize draw entry was not saved properly");
+      }
+      
+      await queryClient.refetchQueries({ queryKey: ['/api/record-days', recordDayId, 'prize-winners'] });
       
       toast({
         title: "Added to Prize Draw",
         description: `${contestantName} has been added to the prize draw list.`,
       });
     } catch (error: any) {
+      console.error("[Prize Draw] Failed to add:", error);
       toast({
         title: "Failed to add to prize draw",
         description: error?.message || "Could not add contestant to prize draw.",

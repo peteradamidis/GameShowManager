@@ -15910,7 +15910,10 @@ Thank you.`;
       const { recordDayId } = req.params;
       const { contestantId, contestantName, blockNumber, seatLabel } = req.body;
       
-      if (!contestantId || !contestantName || !blockNumber || !seatLabel) {
+      console.log("[Prize Draw] Adding prize winner:", { recordDayId, contestantId, contestantName, blockNumber, seatLabel });
+      
+      if (!contestantId || !contestantName || blockNumber == null || !seatLabel) {
+        console.log("[Prize Draw] Validation failed - missing fields");
         return res.status(400).json({ error: "Missing required fields" });
       }
       
@@ -15922,6 +15925,8 @@ Thank you.`;
         seatLabel,
       });
       
+      console.log("[Prize Draw] Prize winner saved:", winner?.id);
+      
       // Broadcast update
       wsManager.broadcastBookingUpdate({
         type: 'prize-winner-added',
@@ -15931,7 +15936,7 @@ Thank you.`;
       
       res.json(winner);
     } catch (error: any) {
-      console.error("Error adding prize winner:", error);
+      console.error("[Prize Draw] Error adding prize winner:", error);
       res.status(500).json({ error: error.message });
     }
   });

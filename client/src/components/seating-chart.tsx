@@ -1262,10 +1262,10 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     queryKey: ['/api/record-days', recordDayId, 'block-config-status'],
   });
 
-  // Fetch prize winners for this record day (only when in RX mode)
-  const { data: prizeWinners = [] } = useQuery<{id: string; contestantId: string; contestantName: string; blockNumber: number; seatLabel: string; hasPresent: boolean; hasBriefcase: boolean; createdAt: string}[]>({
+  // Fetch prize winners for this record day (always fetch so cache is populated)
+  const { data: prizeWinners = [] } = useQuery<{id: string; contestantId: string; contestantName: string; blockNumber: number; seatLabel: string; hasPresent: boolean; hasBriefcase: boolean; addedAt: string}[]>({
     queryKey: ['/api/record-days', recordDayId, 'prize-winners'],
-    enabled: isLocked,
+    staleTime: 5000,
   });
 
   // Mutation to update prize winner toggle states
