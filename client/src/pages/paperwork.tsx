@@ -28,7 +28,8 @@ import {
   FileCheck, 
   Calendar,
   Mail,
-  RefreshCw
+  RefreshCw,
+  Copy
 } from "lucide-react";
 import { format } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -38,8 +39,7 @@ import {
   SeatAssignment, 
   Contestant,
   StandbyAssignment,
-  CanceledAssignment,
-  AdobeSignConfig
+  CanceledAssignment
 } from "@shared/schema";
 import {
   Dialog,
@@ -84,7 +84,7 @@ export default function PaperworkTracker() {
   const [searchName, setSearchName] = useState("");
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>("all");
   const [paperworkStatusFilter, setPaperworkStatusFilter] = useState<string>("all");
-  const [selectedAssignments, setSelectedAssignments] = useState<Set<number>>(new Set());
+  const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
   const [sendEmailDialogOpen, setSendEmailDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"all" | "declined" | "standby">("all");
 
@@ -222,34 +222,51 @@ export default function PaperworkTracker() {
     });
   }, [canceledAssignments, searchName]);
 
-  const toggleSelectAll = () => {
-    if (selectedAssignments.size > 0) {
+  const toggleSelectAll = (checked: boolean) => {
+    if (!checked) {
       setSelectedAssignments(new Set());
     } else {
-      const allIds = new Set<number>();
+      const allKeys = new Set<string>();
       if (viewMode === "all" || viewMode === "declined") {
-        filteredAssignments.forEach(a => allIds.add(a.id));
-        filteredCanceledAssignments.forEach(a => allIds.add(a.id));
+        filteredAssignments.forEach(a => allKeys.add(`assignment-${a.id}`));
+        filteredCanceledAssignments.forEach(a => allKeys.add(`canceled-${a.id}`));
       }
       if (viewMode === "all" || viewMode === "standby") {
-        filteredStandbys.forEach(s => allIds.add(s.id));
+        filteredStandbys.forEach(s => allKeys.add(`standby-${s.id}`));
       }
-      setSelectedAssignments(allIds);
+      setSelectedAssignments(allKeys);
     }
   };
 
-  const selectedWithEmail = useMemo(() => {
+  const selectedList = useMemo(() => {
     const list: any[] = [];
-    selectedAssignments.forEach(id => {
-      const a = assignments.find(item => item.id === id);
-      if (a?.contestant?.email) list.push(a);
-      const s = standbyData.find(item => item.id === id);
-      if (s?.contestant?.email) list.push(s);
-      const c = canceledAssignments.find(item => item.id === id);
-      if (c?.contestant?.email) list.push(c);
+    selectedAssignments.forEach(key => {
+      const [type, idStr] = key.split("-");
+      const id = parseInt(idStr);
+      if (type === "assignment") {
+        const item = assignments.find(a => a.id === id);
+        if (item) list.push({ ...item, type: "assignment" });
+      } else if (type === "standby") {
+        const item = standbyData.find(s => s.id === id);
+        if (item) list.push({ ...item, type: "standby" });
+      } else if (type === "canceled") {
+        const item = canceledAssignments.find(c => c.id === id);
+        if (item) list.push({ ...item, type: "canceled" });
+      }
     });
     return list;
   }, [selectedAssignments, assignments, standbyData, canceledAssignments]);
+
+  const selectedWithEmail = useMemo(() => {
+    return selectedList.filter(item => item.contestant?.email);
+  }, [selectedList]);
+
+  const handleSelection = (key: string, checked: boolean) => {
+    const next = new Set(selectedAssignments);
+    if (checked) next.add(key);
+    else next.delete(key);
+    setSelectedAssignments(next);
+  };
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -322,20 +339,27 @@ export default function PaperworkTracker() {
         </div>
       </div>
 
-      <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v)} className="w-full">
+      <Tabs value={viewMode} onValueChange={(v: any) => { setViewMode(v); setSelectedAssignments(new Set()); }} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="all">All Active</TabsTrigger>
           <TabsTrigger value="declined">Declined / Canceled</TabsTrigger>
-          <TabsTrigger value="standby">Standbys</TabsTrigger>
+          <TabsTrigger value="standby">Standbys Only</TabsTrigger>
         </TabsList>
 
         <TabsContent value={viewMode} className="mt-6">
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
-                <CardTitle>
-                  {viewMode === "all" ? "Active Assignments" : viewMode === "declined" ? "Declined Assignments" : "Standby List"}
-                </CardTitle>
+                <div>
+                  <CardTitle>
+                    {viewMode === "all" ? "Active Assignments & Standbys" : 
+                     viewMode === "declined" ? "Declined Assignments" : 
+                     "Standby List"}
+                  </CardTitle>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {selectedAssignments.size} selected
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -355,17 +379,13 @@ export default function PaperworkTracker() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  {/* Assignments */}
                   {(viewMode === "all" || viewMode === "declined") && filteredAssignments.map((assignment) => (
                     <TableRow key={`assignment-${assignment.id}`} className={assignment.paperworkReceived ? 'bg-teal-50 dark:bg-teal-900/20' : ''}>
                       <TableCell className="px-2 text-center">
                         <Checkbox 
-                          checked={selectedAssignments.has(assignment.id)}
-                          onCheckedChange={(checked) => {
-                            const newSelected = new Set(selectedAssignments);
-                            if (checked) newSelected.add(assignment.id);
-                            else newSelected.delete(assignment.id);
-                            setSelectedAssignments(newSelected);
-                          }}
+                          checked={selectedAssignments.has(`assignment-${assignment.id}`)}
+                          onCheckedChange={(v) => handleSelection(`assignment-${assignment.id}`, v === true)}
                         />
                       </TableCell>
                       <TableCell>
@@ -401,17 +421,47 @@ export default function PaperworkTracker() {
                     </TableRow>
                   ))}
 
+                  {/* Canceled */}
+                  {viewMode === "declined" && filteredCanceledAssignments.map((item) => (
+                    <TableRow key={`canceled-${item.id}`} className="bg-red-50 dark:bg-red-950/20">
+                      <TableCell className="px-2 text-center">
+                        <Checkbox 
+                          checked={selectedAssignments.has(`canceled-${item.id}`)}
+                          onCheckedChange={(v) => handleSelection(`canceled-${item.id}`, v === true)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-muted-foreground line-through">{item.contestant?.name}</span>
+                          <Badge variant="outline" className="w-fit text-[9px] border-red-300 text-red-600 mt-1">CANCELED</Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs opacity-70">
+                        {item.recordDay ? format(new Date(item.recordDay.date), "d MMM") : "-"}
+                      </TableCell>
+                      <TableCell><Badge variant="outline" className="opacity-50">Was B{item.blockNumber}</Badge></TableCell>
+                      <TableCell className="text-xs opacity-50">{item.contestant?.email}</TableCell>
+                      <TableCell className="text-center">
+                        <Checkbox checked={!!item.paperworkSent} onCheckedChange={(v) => updateCanceledPaperworkMutation.mutate({ id: item.id, field: "paperworkSent", value: v === true })} />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Checkbox 
+                          checked={!!item.paperworkReceived} 
+                          onCheckedChange={(v) => updateCanceledPaperworkMutation.mutate({ id: item.id, field: "paperworkReceived", value: v === true })}
+                          disabled={!item.paperworkSent}
+                        />
+                      </TableCell>
+                      <TableCell><Badge variant="destructive">Declined</Badge></TableCell>
+                    </TableRow>
+                  ))}
+
+                  {/* Standbys */}
                   {(viewMode === "all" || viewMode === "standby") && filteredStandbys.map((standby) => (
                     <TableRow key={`standby-${standby.id}`} className="bg-purple-50/20">
                       <TableCell className="px-2 text-center">
                         <Checkbox 
-                          checked={selectedAssignments.has(standby.id)}
-                          onCheckedChange={(checked) => {
-                            const newSelected = new Set(selectedAssignments);
-                            if (checked) newSelected.add(standby.id);
-                            else newSelected.delete(standby.id);
-                            setSelectedAssignments(newSelected);
-                          }}
+                          checked={selectedAssignments.has(`standby-${standby.id}`)}
+                          onCheckedChange={(v) => handleSelection(`standby-${standby.id}`, v === true)}
                         />
                       </TableCell>
                       <TableCell>
@@ -456,10 +506,28 @@ export default function PaperworkTracker() {
             <DialogTitle>Send Paperwork</DialogTitle>
             <DialogDescription>Mark {selectedWithEmail.length} contestants as having paperwork sent.</DialogDescription>
           </DialogHeader>
+          <div className="max-h-48 overflow-y-auto border rounded p-2 text-sm">
+            {selectedWithEmail.map((item, i) => (
+              <div key={i} className="flex justify-between py-1 border-b last:border-0">
+                <span>{item.contestant?.name}</span>
+                <span className="text-muted-foreground">{item.contestant?.email}</span>
+              </div>
+            ))}
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSendEmailDialogOpen(false)}>Cancel</Button>
             <Button onClick={() => {
-              markSentMutation.mutate(selectedWithEmail.map(i => i.id));
+              const ids = selectedWithEmail.filter(i => i.type === "assignment").map(i => i.id);
+              if (ids.length > 0) markSentMutation.mutate(ids);
+              
+              selectedWithEmail.filter(i => i.type === "standby").forEach(i => {
+                standbyPaperworkMutation.mutate({ id: i.id, field: "paperworkSent", value: true });
+              });
+              
+              selectedWithEmail.filter(i => i.type === "canceled").forEach(i => {
+                updateCanceledPaperworkMutation.mutate({ id: i.id, field: "paperworkSent", value: true });
+              });
+
               setSendEmailDialogOpen(false);
               setSelectedAssignments(new Set());
             }}>Confirm</Button>
