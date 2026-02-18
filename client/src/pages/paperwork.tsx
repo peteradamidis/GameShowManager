@@ -1200,24 +1200,41 @@ Deal or No Deal Production Team`);
                             {returningContestantsMap[item.contestantId] && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help">
+                                  <Badge 
+                                    variant="outline" 
+                                    className="h-4 px-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 text-[9px] font-bold cursor-help"
+                                  >
                                     RTN
                                   </Badge>
                                 </TooltipTrigger>
                                 <TooltipContent side="top" className="text-xs max-w-[200px]">
-                                  <p className="font-medium mb-1">Returning Contestant</p>
-                                  {returningContestantsMap[item.contestantId].map((info: any, idx: number) => (
-                                    <p key={idx} className="text-muted-foreground">
-                                      {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
-                                    </p>
-                                  ))}
+                                  <p className="font-bold mb-1">Returning Contestant</p>
+                                  <ul className="space-y-1">
+                                    {returningContestantsMap[item.contestantId].map((h: any, i: number) => (
+                                      <li key={i} className="flex gap-2 justify-between">
+                                        <span>{h.date}:</span>
+                                        <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby' : 'Seated'})</span>
+                                      </li>
+                                    ))}
+                                  </ul>
                                 </TooltipContent>
                               </Tooltip>
                             )}
                             {item.isFromReschedule && (
-                              <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-red-400 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300" title="Rebooked from reschedule list">
-                                RSCH
-                              </Badge>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge 
+                                    variant="outline" 
+                                    className="h-4 px-1 bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800 text-[9px] font-bold cursor-help"
+                                    title="Rebooked from reschedule list"
+                                  >
+                                    RESCH
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <p className="text-xs font-medium">Rebooked from Reschedule list</p>
+                                </TooltipContent>
+                              </Tooltip>
                             )}
                             {item.wasStandby && (
                               <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-purple-400 bg-purple-100 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300" title="Originally booked as standby">
@@ -1341,17 +1358,23 @@ Deal or No Deal Production Team`);
                               {returningContestantsMap[item.contestantId] && (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help">
+                                    <Badge 
+                                      variant="outline" 
+                                      className="h-4 px-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 text-[9px] font-bold cursor-help"
+                                    >
                                       RTN
                                     </Badge>
                                   </TooltipTrigger>
                                   <TooltipContent side="top" className="text-xs max-w-[200px]">
-                                    <p className="font-medium mb-1">Returning Contestant</p>
-                                    {returningContestantsMap[item.contestantId].map((info: any, idx: number) => (
-                                      <p key={idx} className="text-muted-foreground">
-                                        {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
-                                      </p>
-                                    ))}
+                                    <p className="font-bold mb-1">Returning Contestant</p>
+                                    <ul className="space-y-1">
+                                      {returningContestantsMap[item.contestantId].map((h: any, i: number) => (
+                                        <li key={i} className="flex gap-2 justify-between">
+                                          <span>{h.date}:</span>
+                                          <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby' : 'Seated'})</span>
+                                        </li>
+                                      ))}
+                                    </ul>
                                   </TooltipContent>
                                 </Tooltip>
                               )}

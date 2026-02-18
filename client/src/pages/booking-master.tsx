@@ -1417,19 +1417,26 @@ export default function BookingMaster() {
                                 returningContestantsMap[standby.contestantId].some(r => r.recordDayId !== selectedRecordDay) && (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help" data-testid={`badge-returning-standby-bm-${standby.contestantId}`}>
+                                    <Badge 
+                                      variant="outline" 
+                                      className="h-4 px-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 text-[9px] font-bold cursor-help"
+                                      data-testid={`badge-returning-standby-bm-${standby.contestantId}`}
+                                    >
                                       RTN
                                     </Badge>
                                   </TooltipTrigger>
-                                  <TooltipContent side="top" className="text-xs max-w-[200px]">
-                                    <p className="font-medium mb-1">Returning Contestant</p>
-                                    {returningContestantsMap[standby.contestantId]
-                                      .filter(r => r.recordDayId !== selectedRecordDay)
-                                      .map((info, idx) => (
-                                        <p key={idx} className="text-muted-foreground">
-                                          {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
-                                        </p>
-                                      ))}
+                                  <TooltipContent side="top" className="text-xs max-w-[200px] z-[60]">
+                                    <p className="font-bold mb-1">Returning Contestant</p>
+                                    <ul className="space-y-1">
+                                      {returningContestantsMap[standby.contestantId]
+                                        .filter(r => r.recordDayId !== selectedRecordDay)
+                                        .map((h, i) => (
+                                          <li key={i} className="flex gap-2 justify-between">
+                                            <span>{h.date}:</span>
+                                            <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby' : 'Seated'})</span>
+                                          </li>
+                                        ))}
+                                    </ul>
                                   </TooltipContent>
                                 </Tooltip>
                               )}
