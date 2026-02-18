@@ -832,6 +832,9 @@ export function SeatCard({
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">{contestantDetails.age} years old • {contestantDetails.gender}</p>
+                    {contestantDetails.phone && (
+                      <p className="text-xs font-medium text-blue-600 dark:text-blue-400">{contestantDetails.phone}</p>
+                    )}
                     {contestantDetails.location && (
                       <p className="text-xs text-muted-foreground">{contestantDetails.location}</p>
                     )}
