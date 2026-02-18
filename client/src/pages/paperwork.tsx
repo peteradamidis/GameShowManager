@@ -40,6 +40,7 @@ import {
   AlertTriangle,
   Copy
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { RecordDay, Contestant, SeatAssignment, StandbyAssignment, CanceledAssignment } from "@shared/schema";
 
 interface PaperworkAssignment extends SeatAssignment {
@@ -233,6 +234,16 @@ Deal or No Deal Production Team`);
 
   const { data: adobeConfig } = useQuery<AdobeSignConfig>({
     queryKey: ["/api/adobe-sign-smtp/config"],
+  });
+
+  const { data: returningContestantsMap = {} } = useQuery<Record<string, Array<{ recordDayId: string; date: string; label: string; type: string }>>>({
+    queryKey: ['/api/returning-contestants'],
+    queryFn: async () => {
+      const response = await fetch('/api/returning-contestants', { credentials: 'include' });
+      if (!response.ok) return {};
+      return response.json();
+    },
+    staleTime: 30 * 1000,
   });
 
   // Query for standbys when in standby view mode
@@ -1186,6 +1197,23 @@ Deal or No Deal Production Team`);
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-1 flex-wrap">
                             <span>{item.contestant?.name || "Unknown"}</span>
+                            {returningContestantsMap[item.contestantId] && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help">
+                                    RTN
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="text-xs max-w-[200px]">
+                                  <p className="font-medium mb-1">Returning Contestant</p>
+                                  {returningContestantsMap[item.contestantId].map((info: any, idx: number) => (
+                                    <p key={idx} className="text-muted-foreground">
+                                      {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
+                                    </p>
+                                  ))}
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
                             {item.isFromReschedule && (
                               <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-red-400 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300" title="Rebooked from reschedule list">
                                 RSCH
@@ -1308,7 +1336,26 @@ Deal or No Deal Production Team`);
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
-                            <span className="font-medium">{item.contestant?.name || "Unknown"}</span>
+                            <div className="flex items-center gap-1">
+                              <span className="font-medium">{item.contestant?.name || "Unknown"}</span>
+                              {returningContestantsMap[item.contestantId] && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help">
+                                      RTN
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="text-xs max-w-[200px]">
+                                    <p className="font-medium mb-1">Returning Contestant</p>
+                                    {returningContestantsMap[item.contestantId].map((info: any, idx: number) => (
+                                      <p key={idx} className="text-muted-foreground">
+                                        {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
+                                      </p>
+                                    ))}
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
+                            </div>
                             <Badge variant="outline" className="w-fit text-[10px] px-1 py-0 border-amber-500 text-amber-600 mt-1">
                               Reschedule
                             </Badge>
@@ -1446,7 +1493,26 @@ Deal or No Deal Production Team`);
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col">
-                              <span className="font-medium">{standby.contestant?.name || "Unknown"}</span>
+                              <div className="flex items-center gap-1">
+                                <span className="font-medium">{standby.contestant?.name || "Unknown"}</span>
+                                {returningContestantsMap[standby.contestantId] && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help">
+                                        RTN
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="text-xs max-w-[200px]">
+                                      <p className="font-medium mb-1">Returning Contestant</p>
+                                      {returningContestantsMap[standby.contestantId].map((info: any, idx: number) => (
+                                        <p key={idx} className="text-muted-foreground">
+                                          {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
+                                        </p>
+                                      ))}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+                              </div>
                               <Badge className="w-fit text-[10px] px-1 py-0 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 mt-1">
                                 Standby #{standby.priority || '-'}
                               </Badge>

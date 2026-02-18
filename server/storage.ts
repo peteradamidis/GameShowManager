@@ -641,6 +641,24 @@ export class DbStorage implements IStorage {
     // Use transaction to atomically create assignment and update contestant status
     try {
       return await db.transaction(async (tx) => {
+        // Check if contestant is returning to auto-fill paperwork
+        const seatHistory = await tx
+          .select({
+            recordDayId: seatAssignments.recordDayId,
+          })
+          .from(seatAssignments)
+          .innerJoin(recordDays, eq(seatAssignments.recordDayId, recordDays.id))
+          .where(and(eq(seatAssignments.contestantId, assignment.contestantId), sql`${recordDays.lockedAt} IS NOT NULL`))
+          .limit(1);
+
+        if (seatHistory.length > 0) {
+          // Auto-fill paperwork status in assignment
+          (assignment as any).paperworkSent = new Date();
+          (assignment as any).paperworkReceived = new Date();
+          (assignment as any).paperworkSentBy = "SYSTEM (RTN)";
+          (assignment as any).paperworkReceivedBy = "SYSTEM (RTN)";
+        }
+
         // Create the seat assignment
         const [created] = await tx.insert(seatAssignments).values(assignment).returning();
         
