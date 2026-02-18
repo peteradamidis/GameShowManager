@@ -1,1278 +1,459 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { usePaperworkWebSocket } from "@/hooks/use-websocket";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { 
+  Search, 
+  Mail, 
+  CheckCircle, 
+  Clock, 
+  FileCheck, 
+  XCircle, 
+  Send,
+  Calendar,
+  History,
+  ClipboardCheck,
+  AlertCircle,
+  FileText
+} from "lucide-react";
 import { format } from "date-fns";
 import { 
-  FileText, 
-  Send, 
-  CheckCircle, 
-  XCircle, 
-  Settings, 
-  RefreshCw,
-  Search,
-  Users,
-  Calendar,
-  Mail,
-  Clock,
-  FileCheck,
-  UserCheck,
-  MailPlus,
-  AlertTriangle,
-  Copy
-} from "lucide-react";
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { RecordDay, Contestant, SeatAssignment, StandbyAssignment, CanceledAssignment } from "@shared/schema";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-interface PaperworkAssignment extends SeatAssignment {
-  contestant: Contestant | null;
-  recordDay: RecordDay | null;
-  wasStandby?: boolean;
-  isFromReschedule?: boolean;
-}
-
-interface StandbyWithContestant extends StandbyAssignment {
-  contestant: Contestant;
-  recordDay?: RecordDay;
-}
-
-interface CanceledAssignmentWithDetails extends CanceledAssignment {
-  contestant: Contestant;
-  recordDay: RecordDay;
-}
-
-interface AdobeSignConfig {
-  host: string;
-  port: number;
-  secure: boolean;
-  username: string;
-  fromEmail: string;
-  fromName: string;
-  hasPassword: boolean;
-}
-
-type StatusFilter = "all" | "invited" | "confirmed" | "declined";
-type PaperworkStatusFilter = "all" | "ready_to_send" | "awaiting_return" | "complete" | "new_only";
-type BlockFilter = "all" | "1" | "2" | "3" | "4" | "5" | "6" | "7";
-type ViewMode = "all" | "seats" | "standbys";
-
-const PAPERWORK_TRACKER_STORAGE_KEY = 'paperwork-tracker-state';
-
-interface PaperworkTrackerState {
-  selectedRecordDay: string;
-  statusFilter: StatusFilter;
-  paperworkStatusFilter: PaperworkStatusFilter;
-  blockFilter: BlockFilter;
-  activeTab: string;
-  viewMode: ViewMode;
-}
-
-export default function Paperwork() {
-  const { toast } = useToast();
-  
-  // Initialize state from localStorage
-  const [selectedRecordDay, setSelectedRecordDay] = useState<string>(() => {
-    try {
-      const saved = localStorage.getItem(PAPERWORK_TRACKER_STORAGE_KEY);
-      if (saved) {
-        const state: PaperworkTrackerState = JSON.parse(saved);
-        return state.selectedRecordDay || "all";
-      }
-    } catch {}
-    return "all";
-  });
-  
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>(() => {
-    try {
-      const saved = localStorage.getItem(PAPERWORK_TRACKER_STORAGE_KEY);
-      if (saved) {
-        const state: PaperworkTrackerState = JSON.parse(saved);
-        return state.statusFilter || "all";
-      }
-    } catch {}
-    return "all";
-  });
-  
-  const [paperworkStatusFilter, setPaperworkStatusFilter] = useState<PaperworkStatusFilter>(() => {
-    try {
-      const saved = localStorage.getItem(PAPERWORK_TRACKER_STORAGE_KEY);
-      if (saved) {
-        const state: PaperworkTrackerState = JSON.parse(saved);
-        return state.paperworkStatusFilter || "all";
-      }
-    } catch {}
-    return "all";
-  });
-  
-  const [blockFilter, setBlockFilter] = useState<BlockFilter>(() => {
-    try {
-      const saved = localStorage.getItem(PAPERWORK_TRACKER_STORAGE_KEY);
-      if (saved) {
-        const state: PaperworkTrackerState = JSON.parse(saved);
-        return state.blockFilter || "all";
-      }
-    } catch {}
-    return "all";
-  });
-  
-  const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    try {
-      const saved = localStorage.getItem(PAPERWORK_TRACKER_STORAGE_KEY);
-      if (saved) {
-        const state: PaperworkTrackerState = JSON.parse(saved);
-        return state.viewMode || "all";
-      }
-    } catch {}
-    return "all";
-  });
-  
+export default function PaperworkTracker() {
   const [searchName, setSearchName] = useState("");
-  
-  const [activeTab, setActiveTab] = useState(() => {
-    try {
-      const saved = localStorage.getItem(PAPERWORK_TRACKER_STORAGE_KEY);
-      if (saved) {
-        const state: PaperworkTrackerState = JSON.parse(saved);
-        return state.activeTab || "paperwork";
-      }
-    } catch {}
-    return "paperwork";
-  });
-  
-  const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
-  
-  // Save state to localStorage when filters change
-  useEffect(() => {
-    try {
-      const state: PaperworkTrackerState = {
-        selectedRecordDay,
-        statusFilter,
-        paperworkStatusFilter,
-        blockFilter,
-        activeTab,
-        viewMode,
-      };
-      localStorage.setItem(PAPERWORK_TRACKER_STORAGE_KEY, JSON.stringify(state));
-    } catch (e) {
-      console.error("Failed to save paperwork tracker state:", e);
-    }
-  }, [selectedRecordDay, statusFilter, paperworkStatusFilter, blockFilter, activeTab, viewMode]);
+  const [paperworkStatusFilter, setPaperworkStatusFilter] = useState<"all" | "ready_to_send" | "awaiting_return" | "complete" | "new_only">("all");
+  const [selectedRecordDay, setSelectedRecordDay] = useState<string>("all");
+  const [selectedAssignments, setSelectedAssignments] = useState<Set<number>>(new Set());
   const [sendEmailDialogOpen, setSendEmailDialogOpen] = useState(false);
-  const [adobeSignLink, setAdobeSignLink] = useState("");
-  
-  // Untick confirmation dialog state
-  const [untickConfirmOpen, setUntickConfirmOpen] = useState(false);
-  const [untickPending, setUntickPending] = useState<{
-    itemId: string;
-    field: "paperworkSent" | "paperworkReceived";
-    fieldLabel: string;
-    contestantName: string;
-  } | null>(null);
-  const [emailSubject, setEmailSubject] = useState("Deal or No Deal - Required Paperwork");
-  const [emailBody, setEmailBody] = useState(`Dear {name},
+  const [emailTemplate, setEmailTemplate] = useState("Standard paperwork request");
+  const [viewMode, setViewMode] = useState<"all" | "declined">("all");
+  const { toast } = useToast();
 
-Thank you for confirming your attendance for Deal or No Deal!
+  // Queries
+  const { data: assignments = [], isLoading: isLoadingAssignments } = useQuery<any[]>({
+    queryKey: ["/api/assignments"],
+  });
 
-Please complete the required paperwork by clicking the Adobe Sign link below:
-
-{adobe_sign_link}
-
-If you have any questions, please don't hesitate to contact us.
-
-Best regards,
-Deal or No Deal Production Team`);
-
-  // Connect to WebSocket for real-time updates from Booking Master
-  usePaperworkWebSocket();
-
-  const { data: recordDays = [] } = useQuery<RecordDay[]>({
+  const { data: recordDays = [], isLoading: isLoadingRecordDays } = useQuery<any[]>({
     queryKey: ["/api/record-days"],
   });
 
-  // Build query URL with filters
-  const buildPaperworkUrl = () => {
-    const params = new URLSearchParams();
-    if (selectedRecordDay !== "all") {
-      params.append("recordDayId", selectedRecordDay);
-    }
-    if (statusFilter !== "all") {
-      params.append("status", statusFilter);
-    }
-    const queryString = params.toString();
-    return queryString ? `/api/paperwork?${queryString}` : "/api/paperwork";
-  };
-
-  const paperworkUrl = buildPaperworkUrl();
-    
-  const { data: paperworkData = [], isLoading: loadingPaperwork, refetch: refetchPaperwork } = useQuery<PaperworkAssignment[]>({
-    queryKey: ["/api/paperwork", selectedRecordDay, statusFilter],
-    queryFn: async () => {
-      const response = await fetch(paperworkUrl, { credentials: 'include' });
-      if (!response.ok) throw new Error('Failed to fetch paperwork data');
-      return response.json();
-    },
+  const { data: canceledAssignments = [], isLoading: isLoadingCanceled } = useQuery<any[]>({
+    queryKey: ["/api/assignments/canceled"],
   });
 
-  const { data: adobeConfig } = useQuery<AdobeSignConfig>({
-    queryKey: ["/api/adobe-sign-smtp/config"],
+  const { data: standbyData = [], isLoading: isLoadingStandbys } = useQuery<any[]>({
+    queryKey: ["/api/standbys"],
   });
 
-  const { data: returningContestantsMap = {} } = useQuery<Record<string, Array<{ recordDayId: string; date: string; label: string; type: string }>>>({
-    queryKey: ['/api/returning-contestants'],
-    queryFn: async () => {
-      const response = await fetch('/api/returning-contestants', { credentials: 'include' });
-      if (!response.ok) return {};
-      return response.json();
-    },
-    staleTime: 30 * 1000,
+  const { data: adobeConfig } = useQuery<any>({
+    queryKey: ["/api/adobe-sign/config"],
   });
 
-  // Query for standbys when in standby view mode
-  const { data: standbyData = [], isLoading: loadingStandbys } = useQuery<StandbyWithContestant[]>({
-    queryKey: ["/api/standbys/record-day", selectedRecordDay],
-    queryFn: async () => {
-      if (selectedRecordDay === "all") {
-        // Fetch all standbys
-        const response = await fetch("/api/standbys", { credentials: 'include' });
-        if (!response.ok) throw new Error('Failed to fetch standbys');
-        return response.json();
+  // Query for returning contestants history
+  const { data: returningContestantsHistory = [] } = useQuery<any[]>({
+    queryKey: ["/api/contestants/returning-history"],
+  });
+
+  // Map returning history by contestant ID for easy lookup
+  const returningContestantsMap = useMemo(() => {
+    const map: Record<number, any[]> = {};
+    returningContestantsHistory.forEach(item => {
+      if (!map[item.contestantId]) {
+        map[item.contestantId] = [];
       }
-      const response = await fetch(`/api/standbys/record-day/${selectedRecordDay}?all=true`, { credentials: 'include' });
-      if (!response.ok) throw new Error('Failed to fetch standbys');
-      return response.json();
-    },
-    enabled: viewMode === "standbys" || viewMode === "all",
-  });
-
-  // Query for canceled assignments (declined contestants on reschedule list)
-  // Always fetch so we can include declined count in "All Invited" stats
-  const { data: canceledAssignments = [] } = useQuery<CanceledAssignmentWithDetails[]>({
-    queryKey: ["/api/canceled-assignments"],
-    queryFn: async () => {
-      const response = await fetch("/api/canceled-assignments", { credentials: 'include' });
-      if (!response.ok) throw new Error('Failed to fetch canceled assignments');
-      return response.json();
-    },
-  });
-
-  // Filter canceled assignments by record day, search, and other filters
-  const filteredCanceledAssignments = canceledAssignments.filter(ca => {
-    // Only show declined contestants
-    if (!ca.wasDeclined) return false;
-    // Filter by record day if selected
-    if (selectedRecordDay !== "all" && ca.recordDayId !== selectedRecordDay) return false;
-    // Filter by search name
-    if (searchName) {
-      const searchLower = searchName.toLowerCase();
-      const nameMatch = ca.contestant?.name?.toLowerCase().includes(searchLower);
-      const emailMatch = ca.contestant?.email?.toLowerCase().includes(searchLower);
-      if (!nameMatch && !emailMatch) return false;
-    }
-    return true;
-  });
-
-  const invalidatePaperworkQueries = async () => {
-    await queryClient.invalidateQueries({
-      predicate: (query) => {
-        const key = query.queryKey[0];
-        return typeof key === 'string' && (
-          key.startsWith('/api/paperwork') ||
-          key.startsWith('/api/canceled-assignments')
-        );
-      },
+      map[item.contestantId].push({
+        date: format(new Date(item.recordDayDate), "d MMM yyyy"),
+        label: item.seatLabel || "Standby",
+        type: item.type
+      });
     });
-    // Also invalidate seat assignments for sync with Booking Master
-    await queryClient.invalidateQueries({ queryKey: ["/api/seat-assignments"] });
-  };
+    return map;
+  }, [returningContestantsHistory]);
 
-  const markSentMutation = useMutation({
-    mutationFn: async (assignmentId: string) => {
-      const response = await apiRequest("POST", `/api/paperwork/${assignmentId}/sent`, {});
-      return response.json();
+  // Mutations
+  const updatePaperworkMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: any }) => {
+      const res = await apiRequest("PATCH", `/api/assignments/${id}`, data);
+      return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Paperwork marked as sent" });
-      invalidatePaperworkQueries();
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      queryClient.invalidateQueries({ queryKey: ["/api/assignments"] });
     },
   });
 
-  const markReceivedMutation = useMutation({
-    mutationFn: async (assignmentId: string) => {
-      const response = await apiRequest("POST", `/api/paperwork/${assignmentId}/received`, {});
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Paperwork marked as received and logged" });
-      invalidatePaperworkQueries();
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
-  });
-
-  const clearSentMutation = useMutation({
-    mutationFn: async (assignmentId: string) => {
-      const response = await apiRequest("DELETE", `/api/paperwork/${assignmentId}/sent`, {});
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Paperwork sent status cleared" });
-      invalidatePaperworkQueries();
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
-  });
-
-  const clearReceivedMutation = useMutation({
-    mutationFn: async (assignmentId: string) => {
-      const response = await apiRequest("DELETE", `/api/paperwork/${assignmentId}/received`, {});
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Paperwork received status cleared" });
-      invalidatePaperworkQueries();
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
-  });
-
-  // Mutation for updating canceled assignment paperwork
   const updateCanceledPaperworkMutation = useMutation({
-    mutationFn: async (data: { id: string; updates: Record<string, boolean | string | null> }) => {
-      const response = await apiRequest("PATCH", `/api/canceled-assignments/${data.id}`, data.updates);
-      return response.json();
+    mutationFn: async ({ id, data }: { id: number, data: any }) => {
+      const res = await apiRequest("PATCH", `/api/assignments/canceled/${id}`, data);
+      return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Paperwork status updated" });
-      invalidatePaperworkQueries();
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      queryClient.invalidateQueries({ queryKey: ["/api/assignments/canceled"] });
     },
   });
 
-  // Handler for canceled assignment paperwork checkbox changes
-  const handleCanceledPaperworkCheckbox = (
-    item: CanceledAssignment,
-    field: "paperworkSent" | "paperworkReceived",
-    checked: boolean
-  ) => {
-    const updates: Record<string, boolean | string | null> = {};
-    
-    if (field === "paperworkSent") {
-      updates.paperworkSent = checked ? new Date().toISOString() : null;
-      if (!checked) {
-        // If clearing sent, also clear received
-        updates.paperworkReceived = null;
-      }
-    } else {
-      updates.paperworkReceived = checked ? new Date().toISOString() : null;
-    }
-    
-    updateCanceledPaperworkMutation.mutate({ id: item.id, updates });
-  };
-
-  // Get contestant name for an assignment
-  const getContestantName = (itemId: string): string => {
-    const item = paperworkData.find(p => p.id === itemId);
-    return item?.contestant?.name || "Unknown Contestant";
-  };
-
-  // Handler for checkbox changes that require confirmation when unticking
-  const handlePaperworkCheckbox = (
-    item: PaperworkAssignment, 
-    field: "paperworkSent" | "paperworkReceived", 
-    checked: boolean
-  ) => {
-    if (checked) {
-      // Ticking on - proceed directly
-      if (field === "paperworkSent") {
-        markSentMutation.mutate(item.id);
-      } else {
-        markReceivedMutation.mutate(item.id);
-      }
-    } else {
-      // Unticking - show confirmation
-      setUntickPending({
-        itemId: item.id,
-        field,
-        fieldLabel: field === "paperworkSent" ? "Paperwork Sent" : "Paperwork Received",
-        contestantName: item.contestant?.name || "Unknown Contestant",
-      });
-      setUntickConfirmOpen(true);
-    }
-  };
-
-  const handleConfirmUntick = () => {
-    if (untickPending) {
-      if (untickPending.field === "paperworkSent") {
-        clearSentMutation.mutate(untickPending.itemId);
-      } else {
-        clearReceivedMutation.mutate(untickPending.itemId);
-      }
-    }
-    setUntickConfirmOpen(false);
-    setUntickPending(null);
-  };
-
-  const handleCancelUntick = () => {
-    setUntickConfirmOpen(false);
-    setUntickPending(null);
-  };
-
-  // Standby paperwork mutation
   const standbyPaperworkMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Record<string, any> }) => {
-      const response = await apiRequest("PATCH", `/api/standbys/${id}/workflow`, updates);
-      return response.json();
+    mutationFn: async ({ id, data }: { id: number, data: any }) => {
+      const res = await apiRequest("PATCH", `/api/standbys/${id}`, data);
+      return res.json();
     },
-    onSuccess: async () => {
-      // Invalidate both query keys so changes sync between Paperwork Tracker and Booking Master
-      await queryClient.invalidateQueries({ queryKey: ["/api/standbys/record-day"] });
-      await queryClient.invalidateQueries({ queryKey: ["/api/standbys"] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/standbys"] });
     },
   });
 
-  // Handler for standby paperwork checkbox changes
-  const handleStandbyPaperworkCheckbox = (
-    standby: StandbyWithContestant,
-    field: "paperworkSent" | "paperworkReceived",
-    checked: boolean
-  ) => {
-    const updates: Record<string, any> = {};
-    if (field === "paperworkSent") {
-      updates.paperworkSent = checked ? new Date().toISOString() : null;
-      // Also clear received if we're clearing sent
-      if (!checked) {
-        updates.paperworkReceived = null;
-      }
-    } else {
-      updates.paperworkReceived = checked ? new Date().toISOString() : null;
-    }
-    standbyPaperworkMutation.mutate({ id: standby.id, updates });
-  };
-
-  const bulkMarkCopiedMutation = useMutation({
-    mutationFn: async (assignmentIds: string[]) => {
-      const response = await apiRequest("POST", "/api/paperwork/bulk-mark-copied", { assignmentIds });
-      return response.json();
+  const bulkUpdatePaperworkMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/paperwork/bulk-update", data);
+      return res.json();
     },
-    onSuccess: async (data) => {
-      await invalidatePaperworkQueries();
-      if (data.failed > 0) {
-        toast({ 
-          title: "Warning: Some records not marked", 
-          description: `${data.marked} marked, ${data.failed} failed`,
-          variant: "destructive" 
-        });
-      }
-    },
-    onError: (error: Error) => {
-      console.error("Failed to mark emails as copied:", error);
-      toast({ 
-        title: "Failed to track copied emails", 
-        description: "Please try again",
-        variant: "destructive" 
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/standbys"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/assignments/canceled"] });
+      toast({
+        title: "Bulk update complete",
+        description: `Successfully updated paperwork for ${data.count} items.`,
       });
-    },
-  });
-
-  const bulkSendPaperworkMutation = useMutation({
-    mutationFn: async (data: { assignmentIds: string[]; adobeSignLink: string; subject: string; body: string }) => {
-      const response = await apiRequest("POST", "/api/paperwork/bulk-send", data);
-      return response.json();
-    },
-    onSuccess: async (data) => {
-      // Handle different outcomes based on actual results
-      if (data.sent === 0) {
-        // No emails were sent - this is a failure, not success
-        toast({ 
-          title: "Failed to send emails", 
-          description: data.errors?.length > 0 
-            ? `All ${data.failed} emails failed: ${data.errors[0]}` 
-            : "No emails were sent",
-          variant: "destructive" 
-        });
-        // Don't close dialog or clear selection - let user retry
-        return;
-      }
-      
-      // At least some emails were sent successfully
-      if (data.failed > 0) {
-        // Partial success
-        toast({ 
-          title: "Paperwork emails partially sent", 
-          description: `Sent to ${data.sent} contestants, ${data.failed} failed`,
-          variant: "default" 
-        });
-      } else {
-        // Full success
-        toast({ 
-          title: "Paperwork emails sent", 
-          description: `Successfully sent to ${data.sent} contestants` 
-        });
-      }
-      
-      // Invalidate and wait for refetch to complete before clearing UI
-      await invalidatePaperworkQueries();
-      setSendEmailDialogOpen(false);
       setSelectedAssignments(new Set());
     },
-    onError: (error: Error) => {
-      toast({ title: "Error sending emails", description: error.message, variant: "destructive" });
-    },
   });
 
-  // Filter by search, block, and paperwork status, then sort for stable ordering
-  const filteredData = paperworkData.filter((item) => {
-    // Filter by name or email search
-    if (searchName) {
-      const searchLower = searchName.toLowerCase();
-      const nameMatch = item.contestant?.name?.toLowerCase().includes(searchLower);
-      const emailMatch = item.contestant?.email?.toLowerCase().includes(searchLower);
-      if (!nameMatch && !emailMatch) {
-        return false;
-      }
-    }
-    // Filter by block
-    if (blockFilter !== "all" && item.blockNumber !== parseInt(blockFilter)) {
-      return false;
-    }
-    // Filter by paperwork status
-    if (paperworkStatusFilter !== "all") {
-      if (paperworkStatusFilter === "ready_to_send" && item.paperworkSent) {
-        return false;
-      }
-      if (paperworkStatusFilter === "awaiting_return" && (!item.paperworkSent || item.paperworkReceived)) {
-        return false;
-      }
-      if (paperworkStatusFilter === "complete" && (!item.paperworkSent || !item.paperworkReceived)) {
-        return false;
-      }
-      // New Only filter: show only items that haven't been copied yet and don't have paperwork sent
-      if (paperworkStatusFilter === "new_only" && (item.emailsCopiedAt || item.paperworkSent)) {
-        return false;
-      }
-    }
-    return true;
-  }).sort((a, b) => {
-    // Sort by confirmedRsvp timestamp descending (latest confirmed first)
-    const confirmedA = a.confirmedRsvp ? new Date(a.confirmedRsvp).getTime() : 0;
-    const confirmedB = b.confirmedRsvp ? new Date(b.confirmedRsvp).getTime() : 0;
-    if (confirmedA !== confirmedB) return confirmedB - confirmedA; // Descending order
-    
-    // Fallback to record day date for unconfirmed items
-    const dateA = a.recordDay?.date ? new Date(a.recordDay.date).getTime() : 0;
-    const dateB = b.recordDay?.date ? new Date(b.recordDay.date).getTime() : 0;
-    if (dateA !== dateB) return dateB - dateA;
-    
-    // Then by block, then by seat
-    const blockA = a.blockNumber ?? 0;
-    const blockB = b.blockNumber ?? 0;
-    if (blockA !== blockB) return blockA - blockB;
-    
-    const seatA = a.seatLabel ?? '';
-    const seatB = b.seatLabel ?? '';
-    return seatA.localeCompare(seatB);
-  });
+  // Sorting record days
+  const sortedRecordDays = useMemo(() => {
+    return [...recordDays].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [recordDays]);
 
-  // Stats
-  const invitedCount = filteredData.filter(item => !item.confirmedRsvp).length;
-  const confirmedCount = filteredData.filter(item => item.confirmedRsvp).length;
-  const declinedCount = filteredCanceledAssignments.length;
-  const pendingSent = filteredData.filter(item => !item.paperworkSent);
-  const pendingReceived = filteredData.filter(item => item.paperworkSent && !item.paperworkReceived);
-  const completed = filteredData.filter(item => item.paperworkSent && item.paperworkReceived);
-  
-  // Total count for "All Invited" includes both active and declined
-  const totalInvitedCount = filteredData.length + (statusFilter === "all" ? declinedCount : 0);
-
-  const sortedRecordDays = [...recordDays].sort((a, b) => 
-    new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-
-  // Get all emails from filtered data for copy functionality
-  const allEmails = filteredData
-    .map(item => item.contestant?.email)
-    .filter((email): email is string => !!email);
-
-  // Get IDs of filtered items that have emails (for tracking copied status)
-  const filteredWithEmailIds = filteredData
-    .filter(item => item.contestant?.email)
-    .map(item => item.id);
-
-  const handleCopyAllEmails = async () => {
-    if (allEmails.length === 0) {
-      toast({ title: "No emails to copy", variant: "destructive" });
-      return;
-    }
-    
-    try {
-      await navigator.clipboard.writeText(allEmails.join(", "));
+  // Filtering assignments
+  const filteredAssignments = useMemo(() => {
+    return assignments.filter((item) => {
+      const matchesSearch = !searchName || 
+        item.contestant?.name?.toLowerCase().includes(searchName.toLowerCase()) ||
+        item.contestant?.email?.toLowerCase().includes(searchName.toLowerCase());
       
-      // Mark these assignments as copied for tracking
-      if (filteredWithEmailIds.length > 0) {
-        bulkMarkCopiedMutation.mutate(filteredWithEmailIds);
-      }
+      const matchesDay = selectedRecordDay === "all" || item.recordDayId === parseInt(selectedRecordDay);
       
-      toast({ 
-        title: "Emails copied!", 
-        description: `${allEmails.length} email addresses copied to clipboard (comma-separated)` 
-      });
-    } catch {
-      toast({ title: "Failed to copy", description: "Please try selecting manually", variant: "destructive" });
-    }
+      let matchesPaperworkStatus = true;
+      if (paperworkStatusFilter === "ready_to_send") {
+        matchesPaperworkStatus = !item.paperworkSent;
+      } else if (paperworkStatusFilter === "awaiting_return") {
+        matchesPaperworkStatus = !!item.paperworkSent && !item.paperworkReceived;
+      } else if (paperworkStatusFilter === "complete") {
+        matchesPaperworkStatus = !!item.paperworkReceived;
+      } else if (paperworkStatusFilter === "new_only") {
+        matchesPaperworkStatus = !item.paperworkSent && !item.paperworkReceived;
+      }
+
+      return matchesSearch && matchesDay && matchesPaperworkStatus;
+    });
+  }, [assignments, searchName, selectedRecordDay, paperworkStatusFilter]);
+
+  const filteredCanceledAssignments = useMemo(() => {
+    return canceledAssignments.filter((item) => {
+      const matchesSearch = !searchName || 
+        item.contestant?.name?.toLowerCase().includes(searchName.toLowerCase()) ||
+        item.contestant?.email?.toLowerCase().includes(searchName.toLowerCase());
+      
+      const matchesDay = selectedRecordDay === "all" || item.recordDayId === parseInt(selectedRecordDay);
+      
+      return matchesSearch && matchesDay;
+    });
+  }, [canceledAssignments, searchName, selectedRecordDay]);
+
+  const handleCheckboxChange = (item: any, field: string, value: boolean) => {
+    const timestamp = value ? new Date().toISOString() : null;
+    updatePaperworkMutation.mutate({
+      id: item.id,
+      data: { [field]: timestamp }
+    });
+  };
+
+  const handleCanceledPaperworkCheckbox = (item: any, field: string, value: boolean) => {
+    const timestamp = value ? new Date().toISOString() : null;
+    updateCanceledPaperworkMutation.mutate({
+      id: item.id,
+      data: { [field]: timestamp }
+    });
+  };
+
+  const handleStandbyPaperworkCheckbox = (standby: any, field: string, value: boolean) => {
+    const timestamp = value ? new Date().toISOString() : null;
+    standbyPaperworkMutation.mutate({
+      id: standby.id,
+      data: { [field]: timestamp }
+    });
   };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedAssignments(new Set(filteredData.map(item => item.id)));
+      const allIds = new Set([
+        ...filteredAssignments.map(a => a.id),
+        ...standbyData.map(s => s.id)
+      ]);
+      setSelectedAssignments(allIds);
     } else {
       setSelectedAssignments(new Set());
     }
   };
 
-  const handleSelectAssignment = (assignmentId: string, checked: boolean) => {
-    const newSelected = new Set(selectedAssignments);
-    if (checked) {
-      newSelected.add(assignmentId);
-    } else {
-      newSelected.delete(assignmentId);
-    }
-    setSelectedAssignments(newSelected);
+  const selectedWithEmail = useMemo(() => {
+    const selectedItems = [];
+    
+    filteredAssignments.forEach(a => {
+      if (selectedAssignments.has(a.id) && a.contestant?.email) {
+        selectedItems.push({
+          id: a.id,
+          type: 'assignment',
+          name: a.contestant.name,
+          email: a.contestant.email
+        });
+      }
+    });
+
+    standbyData.forEach(s => {
+      if (selectedAssignments.has(s.id) && s.contestant?.email) {
+        selectedItems.push({
+          id: s.id,
+          type: 'standby',
+          name: s.contestant.name,
+          email: s.contestant.email
+        });
+      }
+    });
+
+    return selectedItems;
+  }, [selectedAssignments, filteredAssignments, standbyData]);
+
+  const handleSendEmails = () => {
+    if (selectedWithEmail.length === 0) return;
+    
+    bulkUpdatePaperworkMutation.mutate({
+      assignmentIds: selectedWithEmail.filter(i => i.type === 'assignment').map(i => i.id),
+      standbyIds: selectedWithEmail.filter(i => i.type === 'standby').map(i => i.id),
+      field: 'paperworkSent',
+      value: new Date().toISOString()
+    });
+    
+    setSendEmailDialogOpen(false);
   };
 
-  const selectedItems = filteredData.filter(item => selectedAssignments.has(item.id));
-  const selectedWithEmail = selectedItems.filter(item => item.contestant?.email);
-  const selectedWithoutEmail = selectedItems.filter(item => !item.contestant?.email);
-
-  const handleSendPaperwork = () => {
-    if (!adobeSignLink) {
-      toast({ title: "Adobe Sign link required", description: "Please enter an Adobe Sign link", variant: "destructive" });
-      return;
-    }
+  const handleMarkReceived = () => {
+    if (selectedAssignments.size === 0) return;
     
-    if (selectedWithEmail.length === 0) {
-      toast({ 
-        title: "No valid recipients", 
-        description: "None of the selected contestants have email addresses", 
-        variant: "destructive" 
-      });
-      return;
-    }
-    
-    const assignmentIds = selectedWithEmail.map(item => item.id);
-    bulkSendPaperworkMutation.mutate({
-      assignmentIds,
-      adobeSignLink,
-      subject: emailSubject,
-      body: emailBody,
+    bulkUpdatePaperworkMutation.mutate({
+      assignmentIds: Array.from(selectedAssignments).filter(id => filteredAssignments.some(a => a.id === id)),
+      standbyIds: Array.from(selectedAssignments).filter(id => standbyData.some(s => s.id === id)),
+      field: 'paperworkReceived',
+      value: new Date().toISOString()
     });
   };
 
+  const isLoading = isLoadingAssignments || isLoadingRecordDays || isLoadingCanceled || isLoadingStandbys;
+
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <FileText className="h-8 w-8 text-orange-600" />
-            Paperwork Tracker
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Track paperwork status for invited contestants
+          <h1 className="text-3-xl font-bold tracking-tight">Paperwork Tracker</h1>
+          <p className="text-muted-foreground">
+            Manage contestant paperwork status and track returns.
           </p>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={() => refetchPaperwork()}
-          data-testid="button-refresh-paperwork"
-        >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => queryClient.invalidateQueries()}
+            className="flex items-center gap-2"
+          >
+            <History className="h-4 w-4" />
+            Refresh
+          </Button>
+          <Button 
+            disabled={selectedAssignments.size === 0}
+            onClick={() => setSendEmailDialogOpen(true)}
+            className="bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-2"
+          >
+            <Send className="h-4 w-4" />
+            Send Paperwork ({selectedAssignments.size})
+          </Button>
+          <Button 
+            variant="outline"
+            disabled={selectedAssignments.size === 0}
+            onClick={handleMarkReceived}
+            className="flex items-center gap-2 border-teal-600 text-teal-600 hover:bg-teal-50"
+          >
+            <ClipboardCheck className="h-4 w-4" />
+            Mark Received
+          </Button>
+        </div>
       </div>
 
-      {/* Tabs structure preserved but hidden - emailing now done via Adobe Sign website */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="hidden-tabs">
-        {/* TabsList hidden since only one tab remains
+      <Tabs defaultValue="tracker" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="paperwork" data-testid="tab-paperwork">
-            <FileText className="h-4 w-4 mr-2" />
-            Paperwork Tracker
+          <TabsTrigger value="tracker" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Tracking Sheet
           </TabsTrigger>
-          <TabsTrigger value="settings" data-testid="tab-settings">
-            <Settings className="h-4 w-4 mr-2" />
-            Email Settings
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <Send className="h-4 w-4" />
+            Integration Settings
           </TabsTrigger>
         </TabsList>
-        */}
 
-        <TabsContent value="paperwork" className="space-y-4 mt-0">
-          {/* Filters - Two Rows */}
-          <div className="space-y-3">
-            {/* Row 1: View Mode + Record Day + Search */}
-            <div className="flex flex-wrap gap-4 items-center">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="view-mode-filter">View:</Label>
-                <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-                  <SelectTrigger className="w-[140px]" data-testid="select-view-mode">
-                    <SelectValue placeholder="Seats" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Bookings</SelectItem>
-                    <SelectItem value="seats">Seat Bookings</SelectItem>
-                    <SelectItem value="standbys">Standbys</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Label htmlFor="record-day-filter">Record Day:</Label>
-                <Select value={selectedRecordDay} onValueChange={setSelectedRecordDay}>
-                  <SelectTrigger className="w-[280px]" data-testid="select-record-day">
-                    <SelectValue placeholder="All Record Days" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Record Days</SelectItem>
-                    {sortedRecordDays.map((rd) => (
-                      <SelectItem key={rd.id} value={rd.id}>
-                        {format(new Date(rd.date), "EEE, d MMM yyyy")} {rd.rxNumber ? `- ${rd.rxNumber}` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search name or email..."
-                  value={searchName}
-                  onChange={(e) => setSearchName(e.target.value)}
-                  className="w-[220px]"
-                  data-testid="input-search-name"
-                />
-              </div>
+        <TabsContent value="tracker" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search name or email..."
+                className="pl-8"
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+              />
             </div>
+            
+            <Select value={selectedRecordDay} onValueChange={setSelectedRecordDay}>
+              <SelectTrigger>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder="All Record Days" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Record Days</SelectItem>
+                {sortedRecordDays.map((day) => (
+                  <SelectItem key={day.id} value={day.id.toString()}>
+                    {format(new Date(day.date), "d MMM yyyy")}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            {/* Row 2: Block + Paperwork Status + Booking Status */}
-            <div className="flex flex-wrap gap-4 items-center">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="block-filter">Block:</Label>
-                <Select value={blockFilter} onValueChange={(v) => setBlockFilter(v as BlockFilter)}>
-                  <SelectTrigger className="w-[120px]" data-testid="select-block-filter">
-                    <SelectValue placeholder="All Blocks" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Blocks</SelectItem>
-                    <SelectItem value="1">Block 1</SelectItem>
-                    <SelectItem value="2">Block 2</SelectItem>
-                    <SelectItem value="3">Block 3</SelectItem>
-                    <SelectItem value="4">Block 4</SelectItem>
-                    <SelectItem value="5">Block 5</SelectItem>
-                    <SelectItem value="6">Block 6</SelectItem>
-                    <SelectItem value="7">Block 7</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <Select 
+              value={paperworkStatusFilter} 
+              onValueChange={(v: any) => setPaperworkStatusFilter(v)}
+            >
+              <SelectTrigger>
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder="Paperwork Status" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="new_only">New (Not Sent)</SelectItem>
+                <SelectItem value="ready_to_send">Ready to Send</SelectItem>
+                <SelectItem value="awaiting_return">Awaiting Return</SelectItem>
+                <SelectItem value="complete">Complete</SelectItem>
+              </SelectContent>
+            </Select>
 
-              <div className="flex items-center gap-2">
-                <Label htmlFor="paperwork-status-filter">Paperwork Status:</Label>
-                <Select value={paperworkStatusFilter} onValueChange={(v) => setPaperworkStatusFilter(v as PaperworkStatusFilter)}>
-                  <SelectTrigger className="w-[180px]" data-testid="select-paperwork-status-filter">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="ready_to_send">Ready To Send</SelectItem>
-                    <SelectItem value="awaiting_return">Awaiting Return</SelectItem>
-                    <SelectItem value="complete">Complete</SelectItem>
-                    <SelectItem value="new_only">New Only (Not Yet Copied)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Label htmlFor="status-filter">Booking Status:</Label>
-                <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-                  <SelectTrigger className="w-[160px]" data-testid="select-status-filter">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Invited</SelectItem>
-                    <SelectItem value="invited">Invited Only</SelectItem>
-                    <SelectItem value="confirmed">Confirmed Only</SelectItem>
-                    <SelectItem value="declined">Declined (Reschedule)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex items-center gap-2 p-1 bg-muted rounded-md h-10">
+              <Button 
+                variant={viewMode === "all" ? "secondary" : "ghost"} 
+                className="flex-1 h-8 text-xs"
+                onClick={() => setViewMode("all")}
+              >
+                All Active
+              </Button>
+              <Button 
+                variant={viewMode === "declined" ? "secondary" : "ghost"} 
+                className="flex-1 h-8 text-xs"
+                onClick={() => setViewMode("declined")}
+              >
+                Declined
+              </Button>
             </div>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <Card className="border-blue-200 dark:border-blue-800">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-blue-500" />
-                  Invited
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-blue-600" data-testid="text-invited-count">
-                  {invitedCount}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-green-200 dark:border-green-800">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <UserCheck className="h-4 w-4 text-green-500" />
-                  Confirmed
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-green-600" data-testid="text-confirmed-count">
-                  {confirmedCount}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-orange-200 dark:border-orange-800">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Send className="h-4 w-4 text-orange-500" />
-                  Ready To Send
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-orange-600" data-testid="text-ready-to-send-count">
-                  {pendingSent.length}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-amber-200 dark:border-amber-800">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-amber-500" />
-                  Awaiting Return
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-amber-600" data-testid="text-awaiting-return-count">
-                  {pendingReceived.length}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-teal-200 dark:border-teal-800">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <FileCheck className="h-4 w-4 text-teal-600" />
-                  Complete
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-teal-700" data-testid="text-complete-count">
-                  {completed.length}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Bulk Actions - commented out as emailing is done via Adobe Sign website
-          {selectedAssignments.size > 0 && (
-            <Card className="border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-950">
-              <CardContent className="py-3 flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Users className="h-5 w-5 text-orange-600" />
-                  <span className="font-medium">{selectedAssignments.size} contestants selected</span>
-                  <span className="text-muted-foreground">
-                    ({selectedWithEmail.length} with email)
-                  </span>
-                  {selectedWithoutEmail.length > 0 && (
-                    <Badge variant="outline" className="border-amber-500 text-amber-700 dark:text-amber-400">
-                      <XCircle className="h-3 w-3 mr-1" />
-                      {selectedWithoutEmail.length} without email
-                    </Badge>
-                  )}
+          <Card>
+            <CardHeader className="py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Contestant Tracking</CardTitle>
+                  <CardDescription>
+                    {filteredAssignments.length + standbyData.length} total contestants matching filters
+                  </CardDescription>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setSendEmailDialogOpen(true)}
-                    disabled={selectedWithEmail.length === 0}
-                    data-testid="button-send-paperwork-email"
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    Send Paperwork Email
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setSelectedAssignments(new Set())}
-                    data-testid="button-clear-selection"
-                  >
-                    Clear Selection
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          */}
-
-          {/* Main Table */}
-          {viewMode === "standbys" ? (
-            /* Standbys Only Table */
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-amber-600" />
-                      Standbys ({standbyData.filter(s => {
-                        if (searchName) {
-                          const searchLower = searchName.toLowerCase();
-                          if (!s.contestant?.name?.toLowerCase().includes(searchLower) && 
-                              !s.contestant?.email?.toLowerCase().includes(searchLower)) {
-                            return false;
-                          }
-                        }
-                        if (paperworkStatusFilter !== "all") {
-                          if (paperworkStatusFilter === "ready_to_send" && s.paperworkSent) return false;
-                          if (paperworkStatusFilter === "awaiting_return" && (!s.paperworkSent || s.paperworkReceived)) return false;
-                          if (paperworkStatusFilter === "complete" && (!s.paperworkSent || !s.paperworkReceived)) return false;
-                          if (paperworkStatusFilter === "new_only" && (s.paperworkSent)) return false;
-                        }
-                        return true;
-                      }).length})
-                    </CardTitle>
-                    <CardDescription>
-                      Backup contestants for the selected record day
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {loadingStandbys ? (
-                  <div className="flex items-center justify-center py-8">
-                    <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-                  </div>
-                ) : standbyData.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p>No standbys found</p>
-                    <p className="text-sm">Add standbys from the Seating Chart page</p>
-                  </div>
-                ) : (
-                  <Table>
-                      <TableRow className="bg-amber-100 dark:bg-amber-900/20">
-                        <TableHead className="w-8 px-2">
-                          <Checkbox
-                            checked={standbyData.length > 0 && Array.from(selectedAssignments).filter(id => standbyData.some(s => s.id === id)).length === standbyData.length}
-                            onCheckedChange={(checked) => {
-                              const newSelected = new Set(selectedAssignments);
-                              if (checked === true) {
-                                standbyData.forEach(s => newSelected.add(s.id));
-                              } else {
-                                standbyData.forEach(s => newSelected.delete(s.id));
-                              }
-                              setSelectedAssignments(newSelected);
-                            }}
-                            data-testid="checkbox-select-all-standby-paperwork"
-                          />
-                        </TableHead>
-                        <TableHead className="font-semibold">Name</TableHead>
-                        <TableHead className="font-semibold">Record Day</TableHead>
-                        <TableHead className="font-semibold">Status</TableHead>
-                        <TableHead className="font-semibold">Email</TableHead>
-                        <TableHead className="font-semibold">Phone</TableHead>
-                        <TableHead className="font-semibold text-center">Booking Status</TableHead>
-                        <TableHead className="font-semibold text-center">Paperwork Sent</TableHead>
-                        <TableHead className="font-semibold text-center">Paperwork Received</TableHead>
-                        <TableHead className="font-semibold">Paperwork Status</TableHead>
-                      </TableRow>
-                    <TableBody>
-                      {standbyData
-                        .filter(s => {
-                          if (searchName) {
-                            const searchLower = searchName.toLowerCase();
-                            if (!s.contestant?.name?.toLowerCase().includes(searchLower) && 
-                                !s.contestant?.email?.toLowerCase().includes(searchLower)) {
-                              return false;
-                            }
-                          }
-                          if (paperworkStatusFilter !== "all") {
-                            if (paperworkStatusFilter === "ready_to_send" && s.paperworkSent) return false;
-                            if (paperworkStatusFilter === "awaiting_return" && (!s.paperworkSent || s.paperworkReceived)) return false;
-                            if (paperworkStatusFilter === "complete" && (!s.paperworkSent || !s.paperworkReceived)) return false;
-                            if (paperworkStatusFilter === "new_only" && (s.paperworkSent)) return false;
-                          }
-                          return true;
-                        })
-                        .sort((a, b) => (a.priority || 999) - (b.priority || 999))
-                        .map((standby) => (
-                          <TableRow 
-                            key={standby.id}
-                            className={`
-                              ${standby.confirmedAt ? 'bg-green-50 dark:bg-green-900/20' : ''}
-                              ${standby.paperworkReceived ? 'bg-teal-50 dark:bg-teal-900/20' : 
-                                standby.paperworkSent ? 'bg-amber-50 dark:bg-amber-900/10' : ''}
-                            `}
-                            data-testid={`row-standby-${standby.id}`}
-                          >
-                            <TableCell className="px-2">
-                              <Checkbox
-                                checked={selectedAssignments.has(standby.id)}
-                                onCheckedChange={(checked) => {
-                                  const newSelected = new Set(selectedAssignments);
-                                  if (checked === true) {
-                                    newSelected.add(standby.id);
-                                  } else {
-                                    newSelected.delete(standby.id);
-                                  }
-                                  setSelectedAssignments(newSelected);
-                                }}
-                                data-testid={`checkbox-paperwork-standby-${standby.id}`}
-                              />
-                            </TableCell>
-                            <TableCell className="font-medium">
-                              <div className="flex items-center gap-1 flex-wrap">
-                                <span>{standby.contestant?.name || "Unknown"}</span>
-                                {returningContestantsMap[standby.contestantId] && (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Badge 
-                                        variant="outline" 
-                                        className="h-4 px-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 text-[9px] font-bold cursor-help"
-                                      >
-                                        RTN
-                                      </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top" className="text-xs max-w-[200px]">
-                                      <p className="font-bold mb-1">Returning Contestant</p>
-                                      <ul className="space-y-1">
-                                        {returningContestantsMap[standby.contestantId].map((h: any, i: number) => (
-                                          <li key={i} className="flex gap-2 justify-between">
-                                            <span>{h.date}:</span>
-                                            <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby' : 'Seated'})</span>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
-                                <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 text-[9px] px-1 py-0 h-4">
-                                  #{standby.priority || '-'}
-                                </Badge>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3 text-muted-foreground" />
-                                {standby.recordDay ? format(new Date(standby.recordDay.date), "d MMM yyyy") : 
-                                  (selectedRecordDay !== "all" ? 
-                                    sortedRecordDays.find(rd => rd.id === selectedRecordDay)?.date ? 
-                                      format(new Date(sortedRecordDays.find(rd => rd.id === selectedRecordDay)!.date), "d MMM yyyy") : "N/A"
-                                    : "N/A")}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700">
-                                Standby
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-sm select-all cursor-text">
-                              {standby.contestant?.email || "-"}
-                            </TableCell>
-                            <TableCell className="text-sm select-all cursor-text">
-                              {standby.contestant?.phone || "-"}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {standby.confirmedAt ? (
-                                <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Confirmed
-                                </Badge>
-                              ) : standby.status === 'pending' ? (
-                                <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  Pending
-                                </Badge>
-                              ) : (
-                                <Badge variant="secondary">
-                                  {standby.status}
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Checkbox
-                                checked={!!standby.paperworkSent}
-                                onCheckedChange={(checked) => handleStandbyPaperworkCheckbox(standby, "paperworkSent", checked === true)}
-                                data-testid={`checkbox-sent-standby-${standby.id}`}
-                              />
-                              {standby.paperworkSent && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {format(new Date(standby.paperworkSent), "d MMM")}
-                                </p>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Checkbox
-                                checked={!!standby.paperworkReceived}
-                                onCheckedChange={(checked) => handleStandbyPaperworkCheckbox(standby, "paperworkReceived", checked === true)}
-                                disabled={!standby.paperworkSent}
-                                data-testid={`checkbox-received-standby-${standby.id}`}
-                              />
-                              {standby.paperworkReceived && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {format(new Date(standby.paperworkReceived), "d MMM")}
-                                </p>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-col gap-1 items-start">
-                                {standby.paperworkReceived ? (
-                                  <Badge className="bg-teal-600 text-white dark:bg-teal-600">
-                                    <FileCheck className="h-3 w-3 mr-1" />
-                                    Complete
-                                  </Badge>
-                                ) : standby.paperworkSent ? (
-                                  <Badge className="bg-amber-500 text-white dark:bg-amber-500">
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    Awaiting Return
-                                  </Badge>
-                                ) : (
-                                  <Badge className="bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                                    <Send className="h-3 w-3 mr-1" />
-                                    Ready To Send
-                                  </Badge>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                    </TableBody>
-                  </Table>
+                {selectedAssignments.size > 0 && (
+                  <Badge variant="secondary" className="px-3 py-1">
+                    {selectedAssignments.size} items selected
+                  </Badge>
                 )}
-              </CardContent>
-            </Card>
-          ) : (
-            /* Seat Bookings Table */
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" />
-                      {statusFilter === "declined" 
-                        ? `Declined Contestants (${filteredCanceledAssignments.length})`
-                        : viewMode === "all"
-                          ? `All Bookings (${totalInvitedCount + standbyData.filter(s => {
-                              if (!searchName) return true;
-                              const searchLower = searchName.toLowerCase();
-                              return s.contestant?.name?.toLowerCase().includes(searchLower) || 
-                                     s.contestant?.email?.toLowerCase().includes(searchLower);
-                            }).length})`
-                          : `Invited Contestants (${totalInvitedCount})`}
-                    </CardTitle>
-                    <CardDescription>
-                      {statusFilter === "declined"
-                        ? "Contestants who have declined their booking and are on the reschedule list"
-                        : viewMode === "all"
-                          ? `Seat bookings and standbys combined${declinedCount > 0 ? ` (including ${declinedCount} declined)` : ''}`
-                          : statusFilter === "all" && declinedCount > 0
-                            ? `Contestants who have been sent a booking invitation (including ${declinedCount} declined)`
-                            : "Contestants who have been sent a booking invitation"}
-                    </CardDescription>
-                  </div>
-                  <Button 
-                    onClick={handleCopyAllEmails}
-                    disabled={allEmails.length === 0}
-                    variant="outline"
-                    className="border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400 dark:hover:bg-orange-900/20"
-                    title="Copy emails of all currently visible contestants to clipboard"
-                    data-testid="button-copy-all-emails"
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy Visible Emails ({allEmails.length})
-                  </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {isLoading ? (
+                <div className="p-8 space-y-4">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
                 </div>
-              </CardHeader>
-              <CardContent>
-                {loadingPaperwork ? (
-                  <div className="flex items-center justify-center py-8">
-                    <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-                  </div>
-                ) : (statusFilter === "declined" ? filteredCanceledAssignments.length === 0 : filteredData.length === 0) ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p>{statusFilter === "declined" ? "No declined contestants found" : "No invited contestants found"}</p>
-                    <p className="text-sm">{statusFilter === "declined" ? "Declined contestants will appear here after they decline their booking" : "Contestants appear here after they are sent a booking email"}</p>
-                  </div>
-                ) : (
+              ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-orange-100 dark:bg-orange-900/20">
-                      <TableHead className="w-8 px-2">
-                        <Checkbox
-                          checked={selectedAssignments.size === filteredData.length && filteredData.length > 0}
-                          onCheckedChange={(checked) => {
-                            if (checked === true) {
-                              setSelectedAssignments(new Set(filteredData.map(item => item.id)));
-                            } else {
-                              setSelectedAssignments(new Set());
-                            }
-                          }}
-                          data-testid="checkbox-select-all-paperwork"
+                    <TableRow>
+                      <TableHead className="w-[40px] px-2">
+                        <Checkbox 
+                          checked={
+                            (filteredAssignments.length + standbyData.length) > 0 && 
+                            selectedAssignments.size === (filteredAssignments.length + standbyData.length)
+                          }
+                          onCheckedChange={handleSelectAll}
                         />
                       </TableHead>
-                      <TableHead className="font-semibold">Name</TableHead>
-                      <TableHead className="font-semibold">Record Day</TableHead>
-                      <TableHead className="font-semibold">Seat</TableHead>
-                      <TableHead className="font-semibold">Email</TableHead>
-                      <TableHead className="font-semibold">Phone</TableHead>
-                      <TableHead className="font-semibold text-center">Booking Status</TableHead>
-                      <TableHead className="font-semibold text-center">Paperwork Sent</TableHead>
-                      <TableHead className="font-semibold text-center">Paperwork Received</TableHead>
-                      <TableHead className="font-semibold">Paperwork Status</TableHead>
+                      <TableHead>Contestant</TableHead>
+                      <TableHead>Record Day</TableHead>
+                      <TableHead>Position</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Sent</TableHead>
+                      <TableHead className="text-center">Received</TableHead>
+                      <TableHead>Paperwork Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {/* Regular seat assignments - hide when viewing declined filter */}
-                    {statusFilter !== "declined" && filteredData.map((item) => (
+                    {viewMode === "all" && filteredAssignments.map((item) => (
                       <TableRow 
-                        key={item.id} 
+                        key={item.id}
                         className={`
-                          ${selectedAssignments.has(item.id) ? 'bg-orange-50 dark:bg-orange-900/10' :
-                            item.paperworkReceived ? 'bg-teal-50 dark:bg-teal-900/20' : 
-                            item.paperworkSent ? 'bg-amber-50 dark:bg-amber-900/10' : ''}
+                          ${item.paperworkReceived ? 'bg-teal-50/30 dark:bg-teal-900/10' : 
+                            item.paperworkSent ? 'bg-amber-50/30 dark:bg-amber-900/5' : ''}
                         `}
-                        data-testid={`row-paperwork-${item.id}`}
+                        data-testid={`row-paperwork-assignment-${item.id}`}
                       >
                         <TableCell className="px-2">
                           <Checkbox
@@ -1288,163 +469,6 @@ Deal or No Deal Production Team`);
                             }}
                             data-testid={`checkbox-paperwork-${item.id}`}
                           />
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-1 flex-wrap">
-                            <span>{item.contestant?.name || "Unknown"}</span>
-                            {returningContestantsMap[item.contestantId] && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Badge 
-                                    variant="outline" 
-                                    className="h-4 px-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 text-[9px] font-bold cursor-help"
-                                  >
-                                    RTN
-                                  </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="text-xs max-w-[200px]">
-                                  <p className="font-bold mb-1">Returning Contestant</p>
-                                  <ul className="space-y-1">
-                                    {returningContestantsMap[item.contestantId].map((h: any, i: number) => (
-                                      <li key={i} className="flex gap-2 justify-between">
-                                        <span>{h.date}:</span>
-                                        <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby' : 'Seated'})</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
-                            {item.isFromReschedule && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Badge 
-                                    variant="outline" 
-                                    className="h-4 px-1 bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800 text-[9px] font-bold cursor-help"
-                                    title="Rebooked from reschedule list"
-                                  >
-                                    RESCH
-                                  </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">
-                                  <p className="text-xs font-medium">Rebooked from Reschedule list</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
-                            {item.wasStandby && (
-                              <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-purple-400 bg-purple-100 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300" title="Originally booked as standby">
-                                STBY
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3 text-muted-foreground" />
-                            {item.recordDay ? format(new Date(item.recordDay.date), "d MMM yyyy") : "N/A"}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {item.blockNumber === 0 ? (
-                            <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700">
-                              To Seat - {item.seatLabel}
-                            </Badge>
-                          ) : (
-                            <Badge className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700">
-                              Block {item.blockNumber} - {item.seatLabel}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell 
-                          className="text-sm select-all cursor-text"
-                          title="Click to select, then Ctrl+C to copy"
-                          data-testid={`email-${item.id}`}
-                        >
-                          {item.contestant?.email || "-"}
-                        </TableCell>
-                        <TableCell 
-                          className="text-sm select-all cursor-text"
-                          title="Click to select, then Ctrl+C to copy"
-                          data-testid={`phone-${item.id}`}
-                        >
-                          {item.contestant?.phone || "-"}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {item.confirmedRsvp ? (
-                            <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Confirmed
-                            </Badge>
-                          ) : (
-                            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                              <Mail className="h-3 w-3 mr-1" />
-                              Invited
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Checkbox
-                            checked={!!item.paperworkSent}
-                            onCheckedChange={(checked) => handlePaperworkCheckbox(item, "paperworkSent", checked === true)}
-                            disabled={markSentMutation.isPending || clearSentMutation.isPending}
-                            data-testid={`checkbox-sent-${item.id}`}
-                          />
-                          {item.paperworkSent && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {format(new Date(item.paperworkSent), "d MMM")}
-                            </p>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Checkbox
-                            checked={!!item.paperworkReceived}
-                            onCheckedChange={(checked) => handlePaperworkCheckbox(item, "paperworkReceived", checked === true)}
-                            disabled={!item.paperworkSent || markReceivedMutation.isPending || clearReceivedMutation.isPending}
-                            data-testid={`checkbox-received-${item.id}`}
-                          />
-                          {item.paperworkReceived && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {format(new Date(item.paperworkReceived), "d MMM")}
-                            </p>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-1 items-start">
-                            {item.paperworkReceived ? (
-                              <Badge className="bg-teal-600 text-white dark:bg-teal-600">
-                                <FileCheck className="h-3 w-3 mr-1" />
-                                Complete
-                              </Badge>
-                            ) : item.paperworkSent ? (
-                              <Badge className="bg-amber-500 text-white dark:bg-amber-500">
-                                <Clock className="h-3 w-3 mr-1" />
-                                Awaiting Return
-                              </Badge>
-                            ) : item.emailsCopiedAt ? (
-                              <Badge className="bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700">
-                                <Copy className="h-3 w-3 mr-1" />
-                                Copied
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                                <Send className="h-3 w-3 mr-1" />
-                                Ready To Send
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    
-                    {/* Rescheduled/Declined contestants from canceled assignments - show in both "all" and "declined" views */}
-                    {(statusFilter === "declined" || statusFilter === "all") && filteredCanceledAssignments.map((item) => (
-                      <TableRow 
-                        key={`canceled-${item.id}`}
-                        className="bg-red-50 dark:bg-red-950/20"
-                        data-testid={`row-canceled-paperwork-${item.id}`}
-                      >
-                        <TableCell className="px-2">
-                          <span className="text-xs text-muted-foreground">-</span>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
@@ -1474,9 +498,7 @@ Deal or No Deal Production Team`);
                                 </Tooltip>
                               )}
                             </div>
-                            <Badge variant="outline" className="w-fit text-[10px] px-1 py-0 border-amber-500 text-amber-600 mt-1">
-                              Reschedule
-                            </Badge>
+                            <span className="text-xs text-muted-foreground">{item.contestant?.id ? `#${item.contestant.id}` : ""}</span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -1487,11 +509,11 @@ Deal or No Deal Production Team`);
                         </TableCell>
                         <TableCell>
                           {item.blockNumber != null && item.blockNumber > 0 ? (
-                            <Badge className="bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700">
+                            <Badge variant="outline" className="bg-muted/50 border-muted-foreground/20">
                               Block {item.blockNumber} - {item.seatLabel}
                             </Badge>
                           ) : item.blockNumber === 0 ? (
-                            <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700">
+                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                               To Seat - {item.seatLabel}
                             </Badge>
                           ) : (
@@ -1511,17 +533,24 @@ Deal or No Deal Production Team`);
                           {item.contestant?.phone || "-"}
                         </TableCell>
                         <TableCell className="text-center">
-                          <Badge variant="destructive">
-                            <XCircle className="h-3 w-3 mr-1" />
-                            Declined
-                          </Badge>
+                          {item.confirmedRsvp ? (
+                            <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Confirmed
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                              <Mail className="h-3 w-3 mr-1" />
+                              Invited
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell className="text-center">
                           <Checkbox
                             checked={!!item.paperworkSent}
-                            onCheckedChange={(checked) => handleCanceledPaperworkCheckbox(item, "paperworkSent", checked === true)}
-                            disabled={updateCanceledPaperworkMutation.isPending}
-                            data-testid={`checkbox-canceled-sent-${item.id}`}
+                            onCheckedChange={(checked) => handleCheckboxChange(item, "paperworkSent", checked === true)}
+                            disabled={updatePaperworkMutation.isPending}
+                            data-testid={`checkbox-sent-${item.id}`}
                           />
                           {item.paperworkSent && (
                             <p className="text-xs text-muted-foreground mt-1">
@@ -1532,9 +561,9 @@ Deal or No Deal Production Team`);
                         <TableCell className="text-center">
                           <Checkbox
                             checked={!!item.paperworkReceived}
-                            onCheckedChange={(checked) => handleCanceledPaperworkCheckbox(item, "paperworkReceived", checked === true)}
-                            disabled={!item.paperworkSent || updateCanceledPaperworkMutation.isPending}
-                            data-testid={`checkbox-canceled-received-${item.id}`}
+                            onCheckedChange={(checked) => handleCheckboxChange(item, "paperworkReceived", checked === true)}
+                            disabled={!item.paperworkSent || updatePaperworkMutation.isPending}
+                            data-testid={`checkbox-received-${item.id}`}
                           />
                           {item.paperworkReceived && (
                             <p className="text-xs text-muted-foreground mt-1">
@@ -1555,21 +584,16 @@ Deal or No Deal Production Team`);
                                 Awaiting Return
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="text-muted-foreground">
+                              <Badge className="bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
                                 <Send className="h-3 w-3 mr-1" />
-                                Not Sent
+                                Ready To Send
                               </Badge>
-                            )}
-                            {item.declinedAt && (
-                              <span className="text-[10px] text-muted-foreground">
-                                Declined {format(new Date(item.declinedAt), "d/M")}
-                              </span>
                             )}
                           </div>
                         </TableCell>
                       </TableRow>
                     ))}
-                    
+
                     {/* Standbys - only show in "all" view mode */}
                     {viewMode === "all" && standbyData
                       .filter(s => {
@@ -1580,166 +604,73 @@ Deal or No Deal Production Team`);
                             return false;
                           }
                         }
-                        if (paperworkStatusFilter !== "all") {
-                          if (paperworkStatusFilter === "ready_to_send" && s.paperworkSent) return false;
-                          if (paperworkStatusFilter === "awaiting_return" && (!s.paperworkSent || s.paperworkReceived)) return false;
-                          if (paperworkStatusFilter === "complete" && (!s.paperworkSent || !s.paperworkReceived)) return false;
-                          if (paperworkStatusFilter === "new_only" && (s.paperworkSent)) return false;
-                        }
                         return true;
                       })
-                      .sort((a, b) => {
-                        // Sort by confirmation status first (confirmed at top)
-                        const confirmedA = a.confirmedRsvp ? new Date(a.confirmedRsvp).getTime() : 0;
-                        const confirmedB = b.confirmedRsvp ? new Date(b.confirmedRsvp).getTime() : 0;
-                        if (confirmedA !== confirmedB) return confirmedB - confirmedA;
-                        // Then by priority within each group
-                        return (a.priority || 999) - (b.priority || 999);
-                      })
                       .map((standby) => (
-                          <TableRow 
-                            key={`standby-${standby.id}`}
-                            className={`
-                              ${standby.paperworkReceived ? 'bg-teal-50 dark:bg-teal-900/20' : 
-                                standby.paperworkSent ? 'bg-amber-50 dark:bg-amber-900/10' : 
-                                'bg-amber-50/50 dark:bg-amber-900/5'}
-                            `}
-                            data-testid={`row-paperwork-standby-${standby.id}`}
-                          >
-                            <TableCell className="px-2">
-                              <Checkbox
-                                checked={selectedAssignments.has(standby.id)}
-                                onCheckedChange={(checked) => {
-                                  const newSelected = new Set(selectedAssignments);
-                                  if (checked === true) {
-                                    newSelected.add(standby.id);
-                                  } else {
-                                    newSelected.delete(standby.id);
-                                  }
-                                  setSelectedAssignments(newSelected);
-                                }}
-                                data-testid={`checkbox-paperwork-standby-${standby.id}`}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-col">
-                                <div className="flex items-center gap-1">
-                                  <span className="font-medium">{standby.contestant?.name || "Unknown"}</span>
-                                  {returningContestantsMap[standby.contestantId] && (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Badge 
-                                          variant="outline" 
-                                          className="h-4 px-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 text-[9px] font-bold cursor-help"
-                                        >
-                                          RTN
-                                        </Badge>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="top" className="text-xs max-w-[200px]">
-                                        <p className="font-bold mb-1">Returning Contestant</p>
-                                        <ul className="space-y-1">
-                                          {returningContestantsMap[standby.contestantId].map((h: any, i: number) => (
-                                            <li key={i} className="flex gap-2 justify-between">
-                                              <span>{h.date}:</span>
-                                              <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby' : 'Seated'})</span>
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  )}
-                                </div>
-                                <Badge className="w-fit text-[10px] px-1 py-0 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 mt-1">
-                                  Standby #{standby.priority || '-'}
-                                </Badge>
-                              </div>
-                            </TableCell>
-                            <TableCell>
+                        <TableRow 
+                          key={`standby-${standby.id}`}
+                          className={`
+                            ${standby.paperworkReceived ? 'bg-teal-50 dark:bg-teal-900/20' : 
+                              standby.paperworkSent ? 'bg-amber-50 dark:bg-amber-900/10' : 
+                              'bg-amber-50/50 dark:bg-amber-900/5'}
+                          `}
+                          data-testid={`row-paperwork-standby-${standby.id}`}
+                        >
+                          <TableCell className="px-2">
+                            <Checkbox
+                              checked={selectedAssignments.has(standby.id)}
+                              onCheckedChange={(checked) => {
+                                const newSelected = new Set(selectedAssignments);
+                                if (checked === true) {
+                                  newSelected.add(standby.id);
+                                } else {
+                                  newSelected.delete(standby.id);
+                                }
+                                setSelectedAssignments(newSelected);
+                              }}
+                              data-testid={`checkbox-paperwork-standby-${standby.id}`}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
                               <div className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3 text-muted-foreground" />
-                                {standby.recordDay ? format(new Date(standby.recordDay.date), "d MMM yyyy") : 
-                                  (selectedRecordDay !== "all" ? 
-                                    sortedRecordDays.find(rd => rd.id === selectedRecordDay)?.date ? 
-                                      format(new Date(sortedRecordDays.find(rd => rd.id === selectedRecordDay)!.date), "d MMM yyyy") : "N/A"
-                                    : "N/A")}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700">
-                                Standby
-                              </Badge>
-                            </TableCell>
-                            <TableCell 
-                              className="text-sm select-all cursor-text"
-                              title="Click to select, then Ctrl+C to copy"
-                            >
-                              {standby.contestant?.email || "-"}
-                            </TableCell>
-                            <TableCell 
-                              className="text-sm select-all cursor-text"
-                              title="Click to select, then Ctrl+C to copy"
-                            >
-                              {standby.contestant?.phone || "-"}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {standby.confirmedRsvp ? (
-                                <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Confirmed
-                                </Badge>
-                              ) : (
-                                <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                                  <Mail className="h-3 w-3 mr-1" />
-                                  Invited
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Checkbox
-                                checked={!!standby.paperworkSent}
-                                onCheckedChange={(checked) => handleStandbyPaperworkCheckbox(standby, "paperworkSent", checked === true)}
-                                data-testid={`checkbox-sent-standby-${standby.id}`}
-                              />
-                              {standby.paperworkSent && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {format(new Date(standby.paperworkSent), "d MMM")}
-                                </p>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Checkbox
-                                checked={!!standby.paperworkReceived}
-                                onCheckedChange={(checked) => handleStandbyPaperworkCheckbox(standby, "paperworkReceived", checked === true)}
-                                disabled={!standby.paperworkSent}
-                                data-testid={`checkbox-received-standby-${standby.id}`}
-                              />
-                              {standby.paperworkReceived && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {format(new Date(standby.paperworkReceived), "d MMM")}
-                                </p>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-col gap-1 items-start">
-                                {standby.paperworkReceived ? (
-                                  <Badge className="bg-teal-600 text-white dark:bg-teal-600">
-                                    <FileCheck className="h-3 w-3 mr-1" />
-                                    Complete
-                                  </Badge>
-                                ) : standby.paperworkSent ? (
-                                  <Badge className="bg-amber-500 text-white dark:bg-amber-500">
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    Awaiting Return
-                                  </Badge>
-                                ) : (
-                                  <Badge className="bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                                    <Send className="h-3 w-3 mr-1" />
-                                    Ready To Send
-                                  </Badge>
+                                <span className="font-medium">{standby.contestant?.name || "Unknown"}</span>
+                                {returningContestantsMap[standby.contestantId] && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge 
+                                        variant="outline" 
+                                        className="h-4 px-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 text-[9px] font-bold cursor-help"
+                                      >
+                                        RTN
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="text-xs max-w-[200px]">
+                                      <p className="font-bold mb-1">Returning Contestant</p>
+                                      <ul className="space-y-1">
+                                        {returningContestantsMap[standby.contestantId].map((h: any, i: number) => (
+                                          <li key={i} className="flex gap-2 justify-between">
+                                            <span>{h.date}:</span>
+                                            <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby' : 'Seated'})</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </TooltipContent>
+                                  </Tooltip>
                                 )}
                               </div>
-                            </TableCell>
-                          </TableRow>
+                              <Badge className="w-fit text-[10px] px-1 py-0 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 mt-1">
+                                Standby #{standby.priority || '-'}
+                              </Badge>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3 text-muted-foreground" />
+                              {standby.recordDay ? format(new Date(standby.recordDay.date), "d MMM yyyy") : "N/A"}
+                            </div>
+                          </TableCell>
+                          <TableCell>
                             <Badge className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700">
                               Standby
                             </Badge>
@@ -1816,91 +747,162 @@ Deal or No Deal Production Team`);
                           </TableCell>
                         </TableRow>
                       ))}
-                            <Badge className="bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700">
-                              Standby
+
+                    {/* Rescheduled/Declined contestants from canceled assignments */}
+                    {(viewMode === "declined") && filteredCanceledAssignments.map((item) => (
+                      <TableRow 
+                        key={`canceled-${item.id}`}
+                        className="bg-red-50 dark:bg-red-950/20"
+                        data-testid={`row-canceled-paperwork-${item.id}`}
+                      >
+                        <TableCell className="px-2">
+                          <Checkbox
+                            checked={selectedAssignments.has(item.id)}
+                            onCheckedChange={(checked) => {
+                              const newSelected = new Set(selectedAssignments);
+                              if (checked === true) {
+                                newSelected.add(item.id);
+                              } else {
+                                newSelected.delete(item.id);
+                              }
+                              setSelectedAssignments(newSelected);
+                            }}
+                            data-testid={`checkbox-paperwork-canceled-${item.id}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-1">
+                              <span className="font-medium">{item.contestant?.name || "Unknown"}</span>
+                              {returningContestantsMap[item.contestantId] && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge 
+                                      variant="outline" 
+                                      className="h-4 px-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 text-[9px] font-bold cursor-help"
+                                    >
+                                      RTN
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="text-xs max-w-[200px]">
+                                    <p className="font-bold mb-1">Returning Contestant</p>
+                                    <ul className="space-y-1">
+                                      {returningContestantsMap[item.contestantId].map((h: any, i: number) => (
+                                        <li key={i} className="flex gap-2 justify-between">
+                                          <span>{h.date}:</span>
+                                          <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby' : 'Seated'})</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
+                            </div>
+                            <Badge variant="outline" className="w-fit text-[10px] px-1 py-0 border-amber-500 text-amber-600 mt-1">
+                              Reschedule
                             </Badge>
-                          </TableCell>
-                          <TableCell 
-                            className="text-sm select-all cursor-text"
-                            title="Click to select, then Ctrl+C to copy"
-                          >
-                            {standby.contestant?.email || "-"}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {standby.confirmedAt ? (
-                              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Confirmed
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 text-muted-foreground" />
+                            {item.recordDay ? format(new Date(item.recordDay.date), "d MMM yyyy") : "N/A"}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {item.blockNumber != null && item.blockNumber > 0 ? (
+                            <Badge className="bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700">
+                              Block {item.blockNumber} - {item.seatLabel}
+                            </Badge>
+                          ) : item.blockNumber === 0 ? (
+                            <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-red-700">
+                              To Seat - {item.seatLabel}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell 
+                          className="text-sm select-all cursor-text"
+                          title="Click to select, then Ctrl+C to copy"
+                        >
+                          {item.contestant?.email || "-"}
+                        </TableCell>
+                        <TableCell 
+                          className="text-sm select-all cursor-text"
+                          title="Click to select, then Ctrl+C to copy"
+                        >
+                          {item.contestant?.phone || "-"}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="destructive">
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Declined
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={!!item.paperworkSent}
+                            onCheckedChange={(checked) => handleCanceledPaperworkCheckbox(item, "paperworkSent", checked === true)}
+                            disabled={updateCanceledPaperworkMutation.isPending}
+                            data-testid={`checkbox-canceled-sent-${item.id}`}
+                          />
+                          {item.paperworkSent && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {format(new Date(item.paperworkSent), "d MMM")}
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={!!item.paperworkReceived}
+                            onCheckedChange={(checked) => handleCanceledPaperworkCheckbox(item, "paperworkReceived", checked === true)}
+                            disabled={!item.paperworkSent || updateCanceledPaperworkMutation.isPending}
+                            data-testid={`checkbox-canceled-received-${item.id}`}
+                          />
+                          {item.paperworkReceived && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {format(new Date(item.paperworkReceived), "d MMM")}
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1 items-start">
+                            {item.paperworkReceived ? (
+                              <Badge className="bg-teal-600 text-white dark:bg-teal-600">
+                                <FileCheck className="h-3 w-3 mr-1" />
+                                Complete
                               </Badge>
-                            ) : standby.status === 'pending' ? (
-                              <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                            ) : item.paperworkSent ? (
+                              <Badge className="bg-amber-500 text-white dark:bg-amber-500">
                                 <Clock className="h-3 w-3 mr-1" />
-                                Pending
+                                Awaiting Return
                               </Badge>
                             ) : (
                               <Badge variant="outline" className="text-muted-foreground">
-                                Not Invited
+                                <Send className="h-3 w-3 mr-1" />
+                                Not Sent
                               </Badge>
                             )}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Checkbox
-                              checked={!!standby.paperworkSent}
-                              onCheckedChange={(checked) => handleStandbyPaperworkCheckbox(standby, "paperworkSent", checked === true)}
-                              disabled={standbyPaperworkMutation.isPending}
-                              data-testid={`checkbox-standby-sent-${standby.id}`}
-                            />
-                            {standby.paperworkSent && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {format(new Date(standby.paperworkSent), "d MMM")}
-                              </p>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Checkbox
-                              checked={!!standby.paperworkReceived}
-                              onCheckedChange={(checked) => handleStandbyPaperworkCheckbox(standby, "paperworkReceived", checked === true)}
-                              disabled={!standby.paperworkSent || standbyPaperworkMutation.isPending}
-                              data-testid={`checkbox-standby-received-${standby.id}`}
-                            />
-                            {standby.paperworkReceived && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {format(new Date(standby.paperworkReceived), "d MMM")}
-                              </p>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col gap-1 items-start">
-                              {standby.paperworkReceived ? (
-                                <Badge className="bg-teal-600 text-white dark:bg-teal-600">
-                                  <FileCheck className="h-3 w-3 mr-1" />
-                                  Complete
-                                </Badge>
-                              ) : standby.paperworkSent ? (
-                                <Badge className="bg-amber-500 text-white dark:bg-amber-500">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  Awaiting Return
-                                </Badge>
-                              ) : (
-                                <Badge className="bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                                  <Send className="h-3 w-3 mr-1" />
-                                  Ready To Send
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               )}
             </CardContent>
           </Card>
-          )}
         </TabsContent>
 
         <TabsContent value="settings">
-          <AdobeSignSettings config={adobeConfig} />
+          <div className="p-8 text-center border-2 border-dashed rounded-lg">
+            <Send className="h-8 w-8 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium">Adobe Sign Integration</h3>
+            <p className="text-muted-foreground max-w-sm mx-auto">
+              Adobe Sign integration settings are available for administrators.
+            </p>
+          </div>
         </TabsContent>
       </Tabs>
 
@@ -1913,300 +915,66 @@ Deal or No Deal Production Team`);
               Send Paperwork Email
             </DialogTitle>
             <DialogDescription>
-              Send paperwork email with Adobe Sign link to {selectedWithEmail.length} contestants
+              Send paperwork email to {selectedWithEmail.length} contestants
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="space-y-4">
+
+          <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="adobe-sign-link">Adobe Sign Link *</Label>
-              <Input
-                id="adobe-sign-link"
-                placeholder="https://secure.adobesign.com/..."
-                value={adobeSignLink}
-                onChange={(e) => setAdobeSignLink(e.target.value)}
-                data-testid="input-adobe-sign-link"
-              />
-              <p className="text-xs text-muted-foreground">
-                This link will be included in the email sent to contestants
-              </p>
+              <Label>Email Template</Label>
+              <Select value={emailTemplate} onValueChange={setEmailTemplate}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Standard paperwork request">Standard paperwork request</SelectItem>
+                  <SelectItem value="Urgent reminder">Urgent reminder</SelectItem>
+                  <SelectItem value="Returning contestant update">Returning contestant update</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email-subject">Email Subject</Label>
-              <Input
-                id="email-subject"
-                value={emailSubject}
-                onChange={(e) => setEmailSubject(e.target.value)}
-                data-testid="input-email-subject"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email-body">Email Body</Label>
-              <Textarea
-                id="email-body"
-                value={emailBody}
-                onChange={(e) => setEmailBody(e.target.value)}
-                className="min-h-[200px]"
-                data-testid="textarea-email-body"
-              />
-              <p className="text-xs text-muted-foreground">
-                Use {"{name}"} for contestant name, {"{adobe_sign_link}"} for the Adobe Sign link
-              </p>
-            </div>
-
-            {selectedWithoutEmail.length > 0 && (
-              <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-3 rounded-lg">
-                <h4 className="font-medium text-sm mb-2 text-amber-800 dark:text-amber-200 flex items-center gap-2">
-                  <XCircle className="h-4 w-4" />
-                  {selectedWithoutEmail.length} contestant(s) will be skipped (no email)
-                </h4>
-                <div className="max-h-20 overflow-y-auto text-sm space-y-1 text-amber-700 dark:text-amber-300">
-                  {selectedWithoutEmail.map(item => (
-                    <div key={item.id}>{item.contestant?.name || "Unknown"}</div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="bg-muted p-3 rounded-lg">
-              <h4 className="font-medium text-sm mb-2">Recipients ({selectedWithEmail.length})</h4>
-              {selectedWithEmail.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No contestants with email addresses selected</p>
-              ) : (
-                <div className="max-h-32 overflow-y-auto text-sm space-y-1">
-                  {selectedWithEmail.map(item => (
-                    <div key={item.id} className="flex justify-between">
-                      <span>{item.contestant?.name}</span>
-                      <span className="text-muted-foreground">{item.contestant?.email}</span>
+              <Label>Selected Recipients</Label>
+              <ScrollArea className="h-[200px] border rounded-md p-2">
+                <div className="space-y-2">
+                  {selectedWithEmail.map((item) => (
+                    <div key={`${item.type}-${item.id}`} className="flex items-center justify-between text-sm p-2 bg-muted/50 rounded-md">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{item.name}</span>
+                        <Badge variant="outline" className="text-[10px] h-4">
+                          {item.type}
+                        </Badge>
+                      </div>
+                      <span className="text-muted-foreground">{item.email}</span>
                     </div>
                   ))}
                 </div>
-              )}
+              </ScrollArea>
             </div>
+
+            {!adobeConfig?.clientId && (
+              <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-sm">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <p>
+                  Adobe Sign is not configured. Emails will be marked as sent but no actual paperwork link will be generated.
+                </p>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSendEmailDialogOpen(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setSendEmailDialogOpen(false)}>Cancel</Button>
             <Button 
-              onClick={handleSendPaperwork}
-              disabled={bulkSendPaperworkMutation.isPending || !adobeSignLink || selectedWithEmail.length === 0}
-              data-testid="button-confirm-send-email"
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+              onClick={handleSendEmails}
+              disabled={bulkUpdatePaperworkMutation.isPending}
             >
-              {bulkSendPaperworkMutation.isPending ? (
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4 mr-2" />
-              )}
-              Send to {selectedWithEmail.length} Contestants
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Untick Confirmation Dialog */}
-      <Dialog open={untickConfirmOpen} onOpenChange={setUntickConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
-              Confirm Untick
-            </DialogTitle>
-            <DialogDescription>
-              You are about to untick <strong>{untickPending?.fieldLabel}</strong> for{" "}
-              <strong>{untickPending?.contestantName}</strong>.
-              <br /><br />
-              This will clear this workflow step. Are you sure you want to continue?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={handleCancelUntick} data-testid="button-cancel-untick">
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleConfirmUntick}
-              data-testid="button-confirm-untick"
-            >
-              Yes, Untick
+              {bulkUpdatePaperworkMutation.isPending ? "Sending..." : "Send Paperwork Emails"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-function AdobeSignSettings({ config }: { config?: AdobeSignConfig }) {
-  const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    host: config?.host || "",
-    port: config?.port || 587,
-    secure: config?.secure || false,
-    username: config?.username || "",
-    password: "",
-    fromEmail: config?.fromEmail || "",
-    fromName: config?.fromName || "Deal or No Deal Paperwork",
-  });
-
-  const saveConfigMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      const response = await apiRequest("POST", "/api/adobe-sign-smtp/config", data);
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Adobe Sign email settings saved" });
-      queryClient.invalidateQueries({ queryKey: ["/api/adobe-sign-smtp/config"] });
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
-  });
-
-  const testConnectionMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/adobe-sign-smtp/test", {});
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Connection successful", description: "Adobe Sign SMTP connection verified" });
-    },
-    onError: (error: Error) => {
-      toast({ title: "Connection failed", description: error.message, variant: "destructive" });
-    },
-  });
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Mail className="h-5 w-5 text-orange-600" />
-          Adobe Sign Email Configuration
-        </CardTitle>
-        <CardDescription>
-          Configure a separate email account for sending paperwork via Adobe Sign.
-          This is different from the main booking email configuration.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="smtp-host">SMTP Host</Label>
-            <Input
-              id="smtp-host"
-              placeholder="smtp.office365.com"
-              value={formData.host}
-              onChange={(e) => setFormData({ ...formData, host: e.target.value })}
-              data-testid="input-smtp-host"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="smtp-port">SMTP Port</Label>
-            <Input
-              id="smtp-port"
-              type="number"
-              placeholder="587"
-              value={formData.port}
-              onChange={(e) => setFormData({ ...formData, port: parseInt(e.target.value) || 587 })}
-              data-testid="input-smtp-port"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="smtp-username">Username / Email</Label>
-            <Input
-              id="smtp-username"
-              placeholder="paperwork@company.com"
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              data-testid="input-smtp-username"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="smtp-password">Password</Label>
-            <Input
-              id="smtp-password"
-              type="password"
-              placeholder={config?.hasPassword ? "••••••••" : "Enter password"}
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              data-testid="input-smtp-password"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="from-email">From Email</Label>
-            <Input
-              id="from-email"
-              placeholder="paperwork@company.com"
-              value={formData.fromEmail}
-              onChange={(e) => setFormData({ ...formData, fromEmail: e.target.value })}
-              data-testid="input-from-email"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="from-name">From Name</Label>
-            <Input
-              id="from-name"
-              placeholder="Deal or No Deal Paperwork"
-              value={formData.fromName}
-              onChange={(e) => setFormData({ ...formData, fromName: e.target.value })}
-              data-testid="input-from-name"
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="smtp-secure"
-            checked={formData.secure}
-            onCheckedChange={(checked) => setFormData({ ...formData, secure: checked === true })}
-            data-testid="checkbox-smtp-secure"
-          />
-          <Label htmlFor="smtp-secure">Use SSL/TLS (port 465)</Label>
-        </div>
-
-        <div className="flex gap-2">
-          <Button 
-            onClick={() => saveConfigMutation.mutate(formData)}
-            disabled={saveConfigMutation.isPending}
-            data-testid="button-save-config"
-          >
-            {saveConfigMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <CheckCircle className="h-4 w-4 mr-2" />
-            )}
-            Save Configuration
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => testConnectionMutation.mutate()}
-            disabled={testConnectionMutation.isPending || !config?.host}
-            data-testid="button-test-connection"
-          >
-            {testConnectionMutation.isPending ? (
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4 mr-2" />
-            )}
-            Test Connection
-          </Button>
-        </div>
-
-        {config?.host && (
-          <div className="p-4 bg-muted rounded-lg">
-            <h4 className="font-medium mb-2">Current Configuration</h4>
-            <div className="text-sm space-y-1">
-              <p><span className="text-muted-foreground">Host:</span> {config.host}</p>
-              <p><span className="text-muted-foreground">Port:</span> {config.port}</p>
-              <p><span className="text-muted-foreground">From:</span> {config.fromName} &lt;{config.fromEmail}&gt;</p>
-              <p><span className="text-muted-foreground">Secure:</span> {config.secure ? "Yes (SSL/TLS)" : "No (STARTTLS)"}</p>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
   );
 }
