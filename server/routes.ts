@@ -5508,6 +5508,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Block interstate contestants using the shared helper (checks both postcode and location)
         const interstateCheck = isContestantInterstate({ postcode: c.postcode, location: c.location });
         if (interstateCheck.isInterstate) {
+          console.log(`[Auto-assign] Blocking interstate contestant: ${c.name} (Postcode: ${c.postcode}, Location: ${c.location}, State: ${interstateCheck.state})`);
           return { blocked: true, reason: `interstate (${interstateCheck.state || 'outside Victoria'})` };
         }
         return { blocked: false, reason: '' };

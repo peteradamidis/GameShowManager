@@ -3803,10 +3803,10 @@ export default function SeatingChartPage() {
                   await apiRequest("PATCH", `/api/contestants/${editingContestantId}`, {
                     name: editTempName.trim(),
                     gender: editTempGender,
-                    age: editTempAge ? parseInt(editTempAge) : null,
-                    phone: editTempPhone || null,
-                    email: editTempEmail || null,
-                    notes: editTempNotes || null,
+                    age: editTempAge ? parseInt(editTempAge) : undefined,
+                    phone: editTempPhone || undefined,
+                    email: editTempEmail || undefined,
+                    notes: editTempNotes || undefined,
                   });
                   
                   toast({
