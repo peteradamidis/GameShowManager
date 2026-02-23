@@ -980,7 +980,7 @@ function SeatingBlock({
           return (
             <div key={row.label} className={isPodiumVisualizerMode ? "" : "space-y-1"}>
               {!isPodiumVisualizerMode && (
-                <div className="text-xs font-medium text-muted-foreground px-1">
+                <div className="text-xs font-medium text-amber-600 dark:text-amber-400 px-1 font-bold">
                   Row {row.label}
                 </div>
               )}
