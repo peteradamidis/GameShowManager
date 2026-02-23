@@ -21,7 +21,7 @@ import * as XLSX from "xlsx";
 
 export default function WinnersPage() {
   const { toast } = useToast();
-  const [filterType, setFilterType] = useState<'all' | 'player' | 'case_holder'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'player' | 'case_holder' | 'hn_giftcard'>('all');
   const [isDownloading, setIsDownloading] = useState(false);
   const [showTX, setShowTX] = useState(false);
   const [editingTX, setEditingTX] = useState<{ id: string; field: string; value: any } | null>(null);
@@ -105,7 +105,11 @@ export default function WinnersPage() {
     }
 
     if (filterType !== 'all') {
-      winners = winners.filter((w) => w.winningMoneyRole === filterType);
+      if (filterType === 'hn_giftcard') {
+        winners = winners.filter((w) => w.hnGiftcard === true);
+      } else {
+        winners = winners.filter((w) => w.winningMoneyRole === filterType);
+      }
     }
 
     if (searchRxDayOrDate.trim()) {
@@ -291,6 +295,13 @@ export default function WinnersPage() {
               data-testid="button-filter-case-holder"
             >
               Case Holders
+            </Button>
+            <Button
+              variant={filterType === 'hn_giftcard' ? 'default' : 'outline'}
+              onClick={() => setFilterType('hn_giftcard')}
+              data-testid="button-filter-hn-giftcard"
+            >
+              HN Giftcards
             </Button>
             <Button
               variant={showTX ? "default" : "outline"}
