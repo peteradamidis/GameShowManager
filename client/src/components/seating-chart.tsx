@@ -493,13 +493,13 @@ function SortableStandbyItem({
                 {returningInfo && returningInfo.length > 0 && (() => {
                   const wasStandbyOnly = returningInfo.every((h: any) => h.type === 'standby');
                   return (
-                  <Tooltip>
+                  <Tooltip delayDuration={0}>
                     <TooltipTrigger asChild>
                       <Badge variant="outline" className={`text-[8px] px-0.5 py-0 h-3.5 cursor-help flex-shrink-0 ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`} data-testid={`badge-returning-standby-${standby.id}`}>
                         {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                       </Badge>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs max-w-[200px]">
+                    <TooltipContent side="top" className="text-xs max-w-[200px] z-[9999]">
                       <p className="font-medium mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                       {returningInfo.map((info, idx) => (
                         <p key={idx} className="text-muted-foreground">
@@ -763,13 +763,13 @@ function DraggableStandby({
         {returningInfo && returningInfo.length > 0 && (() => {
           const wasStandbyOnly = returningInfo.every((h: any) => h.type === 'standby');
           return (
-          <Tooltip>
+          <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <Badge variant="outline" className={`text-[8px] px-0.5 py-0 h-3.5 cursor-help flex-shrink-0 ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}>
                 {wasStandbyOnly ? 'RTN-S' : 'RTN'}
               </Badge>
             </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs max-w-[200px]">
+            <TooltipContent side="top" className="text-xs max-w-[200px] z-[9999]">
               <p className="font-medium mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
               {returningInfo.map((info, idx) => (
                 <p key={idx} className="text-muted-foreground">
@@ -2646,13 +2646,13 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                         const prevApps = returningContestantsMap[oa.contestantId].filter(r => r.recordDayId !== recordDayId);
                                         const wasStandbyOnly = prevApps.length > 0 && prevApps.every((h: any) => h.type === 'standby');
                                         return (
-                                        <Tooltip>
+                                        <Tooltip delayDuration={0}>
                                           <TooltipTrigger asChild>
                                             <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 cursor-help ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`} data-testid={`badge-returning-overflow-${oa.contestantId}`}>
                                               {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                             </Badge>
                                           </TooltipTrigger>
-                                          <TooltipContent side="top" className="text-xs max-w-[200px]">
+                                          <TooltipContent side="top" className="text-xs max-w-[200px] z-[9999]">
                                             <p className="font-medium mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                             {prevApps
                                               .map((info, idx) => (

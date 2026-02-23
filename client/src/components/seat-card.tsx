@@ -525,17 +525,18 @@ export function SeatCard({
             {seat.isReturning && (() => {
               const wasStandbyOnly = seat.returningInfo?.length > 0 && seat.returningInfo.every((h: any) => h.type === 'standby');
               return (
-              <Tooltip>
+              <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
                   <Badge 
                     variant="outline" 
-                    className={`h-4 px-1 text-[9px] font-bold cursor-help ${wasStandbyOnly ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}
+                    className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] ${wasStandbyOnly ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}
                     data-testid={`badge-returning-${seat.assignmentId}`}
+                    onPointerDown={(e) => e.stopPropagation()}
                   >
                     {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                   </Badge>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs max-w-[250px]">
+                <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999]">
                   <p className="font-bold mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                   <ul className="space-y-1">
                     {seat.returningInfo?.map((h: any, i: number) => (

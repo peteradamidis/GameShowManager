@@ -1458,7 +1458,7 @@ export default function BookingMaster() {
                                 const prevApps = returningContestantsMap[standby.contestantId].filter(r => r.recordDayId !== selectedRecordDay);
                                 const wasStandbyOnly = prevApps.length > 0 && prevApps.every((h: any) => h.type === 'standby');
                                 return (
-                                <Tooltip>
+                                <Tooltip delayDuration={0}>
                                   <TooltipTrigger asChild>
                                     <Badge 
                                       variant="outline" 
@@ -1468,7 +1468,7 @@ export default function BookingMaster() {
                                       {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                     </Badge>
                                   </TooltipTrigger>
-                                  <TooltipContent side="top" className="text-xs max-w-[250px] z-[60]">
+                                  <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999]">
                                     <p className="font-bold mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                     <ul className="space-y-1">
                                       {returningContestantsMap[standby.contestantId]
@@ -1783,13 +1783,13 @@ export default function BookingMaster() {
                                   const prevApps = returningContestantsMap[row.contestant!.id].filter(r => r.recordDayId !== selectedRecordDay);
                                   const wasStandbyOnly = prevApps.length > 0 && prevApps.every((h: any) => h.type === 'standby');
                                   return (
-                                  <Tooltip>
+                                  <Tooltip delayDuration={0}>
                                     <TooltipTrigger asChild>
                                       <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 cursor-help ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`} data-testid={`badge-returning-bm-${row.contestant!.id}`}>
                                         {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                       </Badge>
                                     </TooltipTrigger>
-                                    <TooltipContent side="top" className="text-xs max-w-[250px]">
+                                    <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999]">
                                       <p className="font-bold mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                       <ul className="space-y-1">
                                         {prevApps
