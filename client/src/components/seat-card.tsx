@@ -531,7 +531,7 @@ export function SeatCard({
                       data-testid={`badge-returning-${seat.assignmentId}`}
                       onPointerDown={(e) => e.stopPropagation()}
                     >
-                      {wasStandbyOnly ? 'RTN-S' : 'RTN'}
+                      RTN
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent 

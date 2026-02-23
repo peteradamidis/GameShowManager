@@ -1215,7 +1215,7 @@ Deal or No Deal Production Team`);
                                     className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
                                     onPointerDown={(e) => e.stopPropagation()}
                                   >
-                                    {wasStandbyOnly ? 'RTN-S' : 'RTN'}
+                                    RTN
                                   </Badge>
                                 </TooltipTrigger>
                                 <TooltipContent 
@@ -1386,7 +1386,7 @@ Deal or No Deal Production Team`);
                                       className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
                                       onPointerDown={(e) => e.stopPropagation()}
                                     >
-                                      {wasStandbyOnly ? 'RTN-S' : 'RTN'}
+                                      RTN
                                     </Badge>
                                   </TooltipTrigger>
                                   <TooltipContent 

@@ -1793,7 +1793,7 @@ export default function BookingMaster() {
                                         data-testid={`badge-returning-bm-${row.contestant!.id}`}
                                         onPointerDown={(e) => e.stopPropagation()}
                                       >
-                                        {wasStandbyOnly ? 'RTN-S' : 'RTN'}
+                                        RTN
                                       </Badge>
                                     </TooltipTrigger>
                                   <TooltipContent 
