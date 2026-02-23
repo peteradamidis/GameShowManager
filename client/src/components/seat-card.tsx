@@ -533,13 +533,13 @@ export function SeatCard({
                     RTN
                   </Badge>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs max-w-[200px]">
+                <TooltipContent side="top" className="text-xs max-w-[250px]">
                   <p className="font-bold mb-1">Returning Contestant</p>
                   <ul className="space-y-1">
                     {seat.returningInfo?.map((h: any, i: number) => (
                       <li key={i} className="flex gap-2 justify-between">
                         <span>{h.date}:</span>
-                        <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby' : 'Seated'})</span>
+                        <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby' : `Seated${h.blockType ? ` - ${h.blockType}` : ''}`})</span>
                       </li>
                     ))}
                   </ul>

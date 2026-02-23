@@ -12223,18 +12223,31 @@ Thank you.`;
         }
       }
       
+      // Build block type map for all locked record days: recordDayId -> { blockNumber -> 'PB'|'NPB' }
+      const blockTypesByDay = new Map<string, Record<number, string>>();
+      for (const [rdId] of lockedRecordDays) {
+        const bts = await storage.getBlockTypesByRecordDay(rdId);
+        const btMap: Record<number, string> = {};
+        for (const bt of bts) {
+          btMap[bt.blockNumber] = bt.blockType;
+        }
+        blockTypesByDay.set(rdId, btMap);
+      }
+      
       // Build returning contestants map: contestantId -> array of previous appearances on LOCKED days only
-      const returningMap: Record<string, Array<{ recordDayId: string; date: string; label: string; type: string }>> = {};
+      const returningMap: Record<string, Array<{ recordDayId: string; date: string; label: string; type: string; blockType?: string }>> = {};
       
       // Helper to add an entry to the returning map without duplicates
-      const addReturningEntry = (contestantId: string, recordDayId: string, rd: RecordDay, type: string) => {
+      const addReturningEntry = (contestantId: string, recordDayId: string, rd: RecordDay, type: string, blockNumber?: number) => {
         if (!returningMap[contestantId]) {
           returningMap[contestantId] = [];
         }
         if (!returningMap[contestantId].some(a => a.recordDayId === recordDayId)) {
           const dateStr = rd.date ? new Date(rd.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : 'Unknown';
           const label = rd.rxNumber || dateStr;
-          returningMap[contestantId].push({ recordDayId, date: dateStr, label, type });
+          const dayBlockTypes = blockTypesByDay.get(recordDayId);
+          const blockType = blockNumber && dayBlockTypes ? dayBlockTypes[blockNumber] : undefined;
+          returningMap[contestantId].push({ recordDayId, date: dateStr, label, type, blockType });
         }
       };
       
@@ -12242,7 +12255,7 @@ Thank you.`;
       for (const assignment of allAssignments) {
         const lockedRd = lockedRecordDays.get(assignment.recordDayId);
         if (lockedRd) {
-          addReturningEntry(assignment.contestantId, assignment.recordDayId, lockedRd, 'seated');
+          addReturningEntry(assignment.contestantId, assignment.recordDayId, lockedRd, 'seated', assignment.blockNumber);
         }
       }
       
