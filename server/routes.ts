@@ -12246,7 +12246,7 @@ Thank you.`;
           const dateStr = rd.date ? new Date(rd.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : 'Unknown';
           const label = rd.rxNumber || dateStr;
           const dayBlockTypes = blockTypesByDay.get(recordDayId);
-          const blockType = blockNumber && dayBlockTypes ? dayBlockTypes[blockNumber] : undefined;
+          const blockType = (blockNumber !== undefined && blockNumber !== null && dayBlockTypes) ? dayBlockTypes[blockNumber] : undefined;
           returningMap[contestantId].push({ recordDayId, date: dateStr, label, type, blockType });
         }
       };

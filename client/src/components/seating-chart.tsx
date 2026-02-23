@@ -2652,15 +2652,19 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                               {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                             </Badge>
                                           </TooltipTrigger>
-                                          <TooltipContent side="top" className="text-xs max-w-[200px] z-[9999]">
-                                            <p className="font-medium mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
-                                            {prevApps
-                                              .map((info, idx) => (
-                                                <p key={idx} className="text-muted-foreground">
-                                                  {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`}
-                                                </p>
-                                              ))}
-                                          </TooltipContent>
+                                        <TooltipContent side="top" className="text-xs max-w-[200px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
+                                          <div className="space-y-1">
+                                            <p className="font-bold border-b pb-1 mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
+                                            {prevApps.map((info, idx) => (
+                                              <div key={idx} className="flex flex-col text-[11px] leading-tight">
+                                                <span className="font-medium">{info.label} ({info.date})</span>
+                                                <span className="text-muted-foreground">
+                                                  {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`}
+                                                </span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </TooltipContent>
                                         </Tooltip>
                                         );
                                       })()}

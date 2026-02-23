@@ -1789,18 +1789,19 @@ export default function BookingMaster() {
                                         {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                       </Badge>
                                     </TooltipTrigger>
-                                    <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999]">
-                                      <p className="font-bold mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
-                                      <ul className="space-y-1">
-                                        {prevApps
-                                          .map((info: any, idx: number) => (
-                                            <li key={idx} className="flex gap-2 justify-between">
-                                              <span>{info.date}:</span>
-                                              <span className="font-medium">{info.label} ({info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`})</span>
-                                            </li>
-                                          ))}
-                                      </ul>
-                                    </TooltipContent>
+                                  <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
+                                    <div className="space-y-1">
+                                      <p className="font-bold border-b pb-1 mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
+                                      {prevApps.map((info: any, idx: number) => (
+                                        <div key={idx} className="flex flex-col text-[11px] leading-tight">
+                                          <span className="font-medium">{info.label} ({info.date})</span>
+                                          <span className="text-muted-foreground">
+                                            {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </TooltipContent>
                                   </Tooltip>
                                   );
                                 })()}

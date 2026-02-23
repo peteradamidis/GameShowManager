@@ -1215,16 +1215,18 @@ Deal or No Deal Production Team`);
                                     {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                   </Badge>
                                 </TooltipTrigger>
-                                <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999]">
-                                  <p className="font-bold mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
-                                  <ul className="space-y-1">
+                                <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
+                                  <div className="space-y-1">
+                                    <p className="font-bold border-b pb-1 mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                     {returningContestantsMap[item.contestantId].map((h: any, i: number) => (
-                                      <li key={i} className="flex gap-2 justify-between">
-                                        <span>{h.date}:</span>
-                                        <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby (Not Seated)' : `Seated${h.blockType ? ` - ${h.blockType}` : ''}`})</span>
-                                      </li>
+                                      <div key={i} className="flex flex-col text-[11px] leading-tight">
+                                        <span className="font-medium">{h.label} ({h.date})</span>
+                                        <span className="text-muted-foreground">
+                                          {h.type === 'standby' ? 'Standby (Not Seated)' : `Seated${h.blockType ? ` - ${h.blockType}` : ''}`}
+                                        </span>
+                                      </div>
                                     ))}
-                                  </ul>
+                                  </div>
                                 </TooltipContent>
                               </Tooltip>
                               );
