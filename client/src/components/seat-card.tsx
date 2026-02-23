@@ -542,13 +542,16 @@ export function SeatCard({
                   <div className="space-y-1">
                     <p className="font-bold border-b pb-1 mb-1">{tooltipTitle}</p>
                     {seat.returningInfo?.map((h: any, i: number) => (
-                                      <div key={i} className="flex flex-col text-[11px] leading-tight">
-                                        <span className="font-medium">{h.label} ({h.date})</span>
-                                        <span className="text-muted-foreground">
-                                          {h.type === 'standby' ? 'Standby (Not Seated)' : `Seated${h.blockType ? ` - ${h.blockType}` : ''}`}
-                                        </span>
-                                      </div>
-                                    ))}
+                      <div key={i} className="flex flex-col text-[11px] leading-tight border-b last:border-0 pb-1 mb-1">
+                        <div className="flex justify-between items-start gap-2">
+                          <span className="font-medium">{h.date || h.attendedAt || 'Unknown Date'}</span>
+                          <span className="text-[10px] bg-muted px-1 rounded">{h.label || h.recordDayId || 'No Label'}</span>
+                        </div>
+                        <span className="text-muted-foreground mt-0.5">
+                          {h.type === 'standby' ? 'Standby (Not Seated)' : `Seated${h.blockType ? ` - ${h.blockType}` : ''}`}
+                        </span>
+                      </div>
+                    ))}
                                   </div>
                                 </TooltipContent>
               </Tooltip>
@@ -707,8 +710,8 @@ export function SeatCard({
                 {seat.playerType === 'player' ? 'P' : seat.playerType === 'backup' ? 'B' : 'PP'}
               </Badge>
             )}
-            {isRXDayLocked && seat.winningMoneyAmount != null && seat.winningMoneyAmount > 0 && seat.winningMoneyRole && (
-              <div title={`$${seat.winningMoneyAmount}`}>
+            {isRXDayLocked && seat.winningMoneyAmount != null && Number(seat.winningMoneyAmount) > 0 && seat.winningMoneyRole && (
+              <div title={`$${Number(seat.winningMoneyAmount).toLocaleString()}`}>
                 <DollarSign className="h-3 w-3 text-green-600 dark:text-green-400 flex-shrink-0" />
               </div>
             )}
