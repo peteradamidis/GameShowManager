@@ -1478,7 +1478,7 @@ Deal or No Deal Production Team`);
                       </TableRow>
                     ))}
                     
-                    {/* Standbys - show in both "all" and "standbys" views */}
+                        {/* Standbys - show in both "all" and "standbys" views */}
                     {statusFilter !== "declined" && (viewMode === "all" || viewMode === "standbys") && standbyData
                       .filter(s => {
                         // Filter by record day if selected
@@ -1500,10 +1500,15 @@ Deal or No Deal Production Team`);
                         return true;
                       })
                       .sort((a, b) => {
-                        // Sort by confirmation status first (confirmed at top)
+                        // Sort by paperwork status first - "Ready To Send" (no paperworkSent) at top
+                        if (!a.paperworkSent && b.paperworkSent) return -1;
+                        if (a.paperworkSent && !b.paperworkSent) return 1;
+
+                        // Then by confirmation status (confirmed at top)
                         const confirmedA = a.confirmedRsvp ? new Date(a.confirmedRsvp).getTime() : 0;
                         const confirmedB = b.confirmedRsvp ? new Date(b.confirmedRsvp).getTime() : 0;
                         if (confirmedA !== confirmedB) return confirmedB - confirmedA;
+                        
                         // Then by priority within each group
                         return (a.priority || 999) - (b.priority || 999);
                       })
@@ -1567,6 +1572,12 @@ Deal or No Deal Production Team`);
                             title="Click to select, then Ctrl+C to copy"
                           >
                             {standby.contestant?.email || "-"}
+                          </TableCell>
+                          <TableCell 
+                            className="text-sm select-all cursor-text"
+                            title="Click to select, then Ctrl+C to copy"
+                          >
+                            {standby.contestant?.phone || "-"}
                           </TableCell>
                           <TableCell className="text-center">
                             {standby.confirmedAt ? (
