@@ -673,7 +673,7 @@ export function SeatCard({
                 data-testid={`winning-money-badge-${seat.assignmentId}`}
               >
                 <DollarSign className="h-2.5 w-2.5" />
-                <span>{seat.winningMoneyAmount.toLocaleString()}</span>
+                <span>{(seat.winningMoneyAmount ?? 0).toLocaleString()}</span>
               </div>
             )}
           </div>

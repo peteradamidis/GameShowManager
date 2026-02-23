@@ -4513,3 +4513,11 @@ function SeatingChartPageInner() {
     </div>
   );
 }
+
+export default function SeatingChartPage() {
+  return (
+    <SeatingChartErrorBoundary>
+      <SeatingChartPageInner />
+    </SeatingChartErrorBoundary>
+  );
+}

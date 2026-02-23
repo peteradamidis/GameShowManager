@@ -576,7 +576,7 @@ export default function Dashboard() {
                 <Sparkles className="h-5 w-5 text-orange-400" />
                 <span className="text-xs font-bold uppercase tracking-wider">Highest Winnings Day</span>
               </div>
-              <p className="text-2xl font-black text-white">${funStats.highestDay.amount.toLocaleString()}</p>
+              <p className="text-2xl font-black text-white">${(funStats.highestDay.amount ?? 0).toLocaleString()}</p>
               <p className="text-xs text-slate-400 font-medium truncate" title={funStats.highestDay.rxNumber}>
                 {funStats.highestDay.rxNumber || funStats.highestDay.date}
               </p>
@@ -587,7 +587,7 @@ export default function Dashboard() {
                 <AlertCircle className="h-5 w-5 text-slate-300" />
                 <span className="text-xs font-bold uppercase tracking-wider">Lowest Winnings Day</span>
               </div>
-              <p className="text-2xl font-black text-white">${funStats.lowestDay.amount.toLocaleString()}</p>
+              <p className="text-2xl font-black text-white">${(funStats.lowestDay.amount ?? 0).toLocaleString()}</p>
               <p className="text-xs text-slate-400 font-medium truncate" title={funStats.lowestDay.rxNumber}>
                 {funStats.lowestDay.rxNumber || funStats.lowestDay.date}
               </p>
