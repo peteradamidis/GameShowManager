@@ -495,11 +495,21 @@ function SortableStandbyItem({
                   return (
                   <Tooltip delayDuration={0}>
                     <TooltipTrigger asChild>
-                      <Badge variant="outline" className={`text-[8px] px-0.5 py-0 h-3.5 cursor-help flex-shrink-0 ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`} data-testid={`badge-returning-standby-${standby.id}`}>
+                      <Badge 
+                        variant="outline" 
+                        className={`text-[8px] px-0.5 py-0 h-3.5 cursor-help flex-shrink-0 relative z-[5] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`} 
+                        data-testid={`badge-returning-standby-${standby.id}`}
+                        onPointerDown={(e) => e.stopPropagation()}
+                      >
                         {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                       </Badge>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs max-w-[200px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
+                    <TooltipContent 
+                      side="top" 
+                      className="text-xs max-w-[200px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2" 
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onMouseEnter={(e) => e.stopPropagation()}
+                    >
                       <div className="space-y-1">
                         <p className="font-bold border-b pb-1 mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                         {returningInfo.map((info, idx) => (
@@ -2657,7 +2667,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                               {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                             </Badge>
                                           </TooltipTrigger>
-                                          <TooltipContent side="top" className="text-xs max-w-[200px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
+                                          <TooltipContent side="top" className="text-xs max-w-[200px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2" onPointerDown={(e) => e.stopPropagation()}>
                                             <div className="space-y-1">
                                               <p className="font-bold border-b pb-1 mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                               {prevApps.map((info, idx) => (

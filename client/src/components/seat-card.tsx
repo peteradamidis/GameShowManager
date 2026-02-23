@@ -75,9 +75,7 @@ export interface SeatData {
   isGroupSeparated?: boolean; // True if contestant has a partner/group member not sitting adjacent
   photoUrl?: string; // Contestant photo URL for podium visualiser
   contestantLocation?: string; // Contestant's location for 60km distance check
-  criminalRecord?: string; // Criminal record notes
-  isTemporary?: boolean; // True if contestant was created as temporary (not from Cast It Reach)
-  isTestSubject?: boolean; // True if contestant is a test subject that can be deleted from any page
+  customerNotes?: string; // General notes for the contestant
   notes?: string; // Notes (syncs with Booking Master NOTES column)
   attendingWithOverride?: string; // Override for attending with when it changes after invitation
   mobilityNotesOverride?: string; // Override for mobility/medical notes when they change after invitation
@@ -523,33 +521,40 @@ export function SeatCard({
               {seat.contestantName}
             </p>
             {seat.isReturning && (() => {
-              const wasStandbyOnly = seat.returningInfo?.length > 0 && seat.returningInfo.every((h: any) => h.type === 'standby');
+              const wasStandbyOnly = seat.returningInfo && seat.returningInfo.length > 0 && seat.returningInfo.every((h: any) => h.type === 'standby');
               return (
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <Badge 
-                    variant="outline" 
-                    className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
-                    data-testid={`badge-returning-${seat.assignmentId}`}
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Badge 
+                      variant="outline" 
+                      className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
+                      data-testid={`badge-returning-${seat.assignmentId}`}
+                      onPointerDown={(e) => e.stopPropagation()}
+                    >
+                      {wasStandbyOnly ? 'RTN-S' : 'RTN'}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent 
+                    side="top" 
+                    className="text-xs max-w-[200px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2"
                     onPointerDown={(e) => e.stopPropagation()}
+                    onMouseEnter={(e) => e.stopPropagation()}
                   >
-                    {wasStandbyOnly ? 'RTN-S' : 'RTN'}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
-                  <div className="space-y-1">
-                    <p className="font-bold border-b pb-1 mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
-                    {seat.returningInfo?.map((h: any, i: number) => (
-                      <div key={i} className="flex flex-col text-[11px] leading-tight">
-                        <span className="font-medium">{h.label} ({h.date})</span>
-                        <span className="text-muted-foreground">
-                          {h.type === 'standby' ? 'Standby (Not Seated)' : `Seated${h.blockType ? ` - ${h.blockType}` : ''}`}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
+                    <div className="space-y-1">
+                      <p className="font-bold border-b pb-1 mb-1">
+                        {wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}
+                      </p>
+                      {seat.returningInfo?.map((info: any, idx: number) => (
+                        <div key={idx} className="flex flex-col text-[11px] leading-tight">
+                          <span className="font-medium">{info.label} ({info.date})</span>
+                          <span className="text-muted-foreground">
+                            {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
               );
             })()}
             {seat.isFromReschedule && (
@@ -568,7 +573,7 @@ export function SeatCard({
                 </TooltipContent>
               </Tooltip>
             )}
-                        {seat.signedIn && isRXDayLocked && (
+            {seat.signedIn && isRXDayLocked && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div data-testid={`signed-in-icon-${seat.assignmentId}`} className="flex items-center justify-center w-3 h-3 rounded-full bg-green-500 dark:bg-green-600">
@@ -646,780 +651,362 @@ export function SeatCard({
                       </span>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="text-xs">
-                      <p>{distanceInfo.distance}km from Docklands (over 60km)</p>
+                      <p>Distance: {distanceInfo.distance?.toFixed(0)}km from Docklands</p>
                     </TooltipContent>
                   </Tooltip>
                 );
               }
               return null;
             })()}
-            {hasMeaningfulMedicalNote(seat.criminalRecord) && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div data-testid={`criminal-icon-${seat.assignmentId}`}>
-                    <ShieldAlert className="h-3 w-3 text-orange-600 dark:text-orange-400 flex-shrink-0" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  <p>Has criminal record notes</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-            {seat.podiumStory && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span 
-                    className="inline-flex items-center justify-center px-1 h-3.5 rounded bg-purple-200/70 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400 text-[9px] font-bold flex-shrink-0" 
-                    data-testid={`podium-story-icon-${seat.assignmentId}`}
-                  >
-                    PS
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  <p>Has podium story</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-            {seat.availabilityStatus === 'rescheduled' && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div data-testid={`rescheduled-icon-${seat.assignmentId}`}>
-                    <Clock className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400 flex-shrink-0" style={{ strokeWidth: 2.5 }} />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  <p>Reschedule contestant</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-          <div className="flex items-center gap-1">
-            {seat.playerType && (
-              <Badge 
-                variant="outline"
-                className={`h-5 px-1.5 text-[9px] font-semibold ${
-                  seat.playerType === 'player' ? 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700' :
-                  seat.playerType === 'backup' ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700' :
-                  'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-500 border-emerald-200 dark:border-emerald-800'
-                }`}>
-                {seat.playerType === 'player' ? 'P' : seat.playerType === 'backup' ? 'B' : 'PP'}
-              </Badge>
-            )}
-            {isRXDayLocked && seat.winningMoneyAmount != null && seat.winningMoneyRole && (
-              <div title={`$${seat.winningMoneyAmount}`}>
-                <DollarSign className="h-3 w-3 text-green-600 dark:text-green-400 flex-shrink-0" />
+            {seat.winningMoneyAmount !== undefined && (
+              <div 
+                className={`flex items-center gap-0.5 px-1 rounded-sm text-[10px] font-bold bg-green-600 text-white shadow-sm flex-shrink-0 cursor-pointer hover:bg-green-700 transition-colors h-4`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onWinningMoneyClick && seat.assignmentId) {
+                    onWinningMoneyClick(seat.assignmentId);
+                  }
+                }}
+                data-testid={`winning-money-badge-${seat.assignmentId}`}
+              >
+                <DollarSign className="h-2.5 w-2.5" />
+                <span>{seat.winningMoneyAmount.toLocaleString()}</span>
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2 opacity-70 text-[10px]">
-            <span>{seat.age}</span>
-            <span>•</span>
-            <span>{seat.gender?.[0]}</span>
+          <div className="flex items-center justify-between text-[10px] opacity-70">
+            <span>{seat.gender === 'Male' ? 'M' : 'F'} / {seat.age || '?'}</span>
+            {seat.auditionRating && (
+              <Badge 
+                variant="outline" 
+                className="h-3 px-1 text-[8px] font-bold bg-white/20"
+                data-testid={`badge-rating-${seat.assignmentId}`}
+              >
+                {seat.auditionRating}
+              </Badge>
+            )}
           </div>
         </div>
       )}
     </Card>
   );
 
-  // Filter neighbors that can be linked (not already in the same group)
-  const linkableNeighbors = neighbors.filter(n => {
-    // Can't link with self
-    if (n.contestantId === seat.contestantId) return false;
-    // If both already in the same group, can't link
-    if (seat.groupId && n.groupId && seat.groupId === n.groupId) return false;
-    return true;
-  });
-  
-  // Wrap occupied seats with HoverCard for details (disabled during drag)
-  if (!isEmpty && !isGlobalDragging) {
-    return (
-      <>
-      <ContextMenu>
-        <ContextMenuTrigger asChild>
-          <div>
-            <HoverCard openDelay={200} closeDelay={100}>
-              <HoverCardTrigger asChild>
-                {seatContent}
-              </HoverCardTrigger>
-        <HoverCardContent 
-          className="w-80 z-[100] max-h-[80vh] overflow-y-auto" 
-          side="bottom" 
-          align="center"
-          sideOffset={8}
-          avoidCollisions={true}
-          collisionPadding={{ top: 150, bottom: 50, left: 20, right: 20 }}
-          sticky="partial"
-          data-testid="hovercard-contestant-details"
-        >
-          <div className="space-y-3">
-            {contestantDetails ? (
-              <>
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
-                    {contestantDetails.photoUrl ? (
-                      <AvatarImage 
-                        src={contestantDetails.photoUrl} 
-                        alt={contestantDetails.name}
-                        className="object-cover"
-                      />
-                    ) : null}
-                    <AvatarFallback>
-                      {contestantDetails.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1">
-                        <h4 className="text-sm font-semibold">{contestantDetails.name}</h4>
-                        {contestantDetails.isTemporary && (
-                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700">
-                            TEMP
-                          </Badge>
-                        )}
-                        {contestantDetails.isTestSubject && (
-                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700">
-                            TEST
-                          </Badge>
-                        )}
-                      </div>
-                      {contestantDetails.auditionRating && (
-                        <div className="flex flex-col items-center">
-                          <span className={`text-sm font-bold ${
-                            contestantDetails.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
-                            contestantDetails.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
-                            contestantDetails.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
-                            contestantDetails.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
-                            contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' :
-                            contestantDetails.auditionRating === 'P' ? 'text-purple-600 dark:text-purple-400' : ''
-                          }`}>
-                            {contestantDetails.auditionRating}
-                          </span>
-                          {onRatingChange && seat.contestantId && (
-                            <DropdownMenu modal={false}>
-                              <DropdownMenuTrigger asChild>
-                                <button
-                                  className="p-0.5 rounded hover:bg-muted/50 transition-colors opacity-40 hover:opacity-100"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                  }}
-                                  data-testid={`button-edit-rating-${seat.contestantId}`}
-                                >
-                                  <Edit2 className="w-2.5 h-2.5 text-muted-foreground" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent 
-                                align="end" 
-                                className="min-w-0 z-[11000]"
-                                onPointerDownOutside={(e) => e.preventDefault()}
-                                onCloseAutoFocus={(e) => e.preventDefault()}
-                              >
-                                <div className="flex flex-wrap gap-1 p-1">
-                                  {['A+', 'A', 'P', 'B+', 'B', 'C'].map((rating) => {
-                                    const isSelected = contestantDetails?.auditionRating === rating;
-                                    const colors = isDarkMode ? ratingColorsDark[rating] : ratingColorsLight[rating];
-                                    return (
-                                      <button
-                                        key={rating}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          if (!isSelected) {
-                                            onRatingChange(seat.contestantId!, rating);
-                                          }
-                                        }}
-                                        className={`px-2 py-0.5 text-xs font-bold rounded border transition-colors ${
-                                          isSelected 
-                                            ? '' 
-                                            : 'opacity-50 hover:opacity-100'
-                                        }`}
-                                        style={{
-                                          backgroundColor: colors?.bg || 'transparent',
-                                          borderColor: colors?.border || 'currentColor',
-                                          color: colors?.text || 'inherit',
-                                        }}
-                                        data-testid={`button-rating-${rating}-${seat.contestantId}`}
-                                      >
-                                        {rating}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">{contestantDetails.age} years old • {contestantDetails.gender}</p>
-                    {contestantDetails.phone && (
-                      <p className="text-xs font-medium text-blue-600 dark:text-blue-400">{contestantDetails.phone}</p>
-                    )}
-                    {contestantDetails.location && (
-                      <p className="text-xs text-muted-foreground">{contestantDetails.location}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Player Type - clickable badges (only for A+, A, and P rated contestants) */}
-                {(seat.auditionRating === 'A+' || seat.auditionRating === 'A' || seat.auditionRating === 'P') && (
-                  <div className="text-sm">
-                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Player Type</label>
-                    <div className="flex flex-wrap gap-1.5">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePlayerTypeChange(localPlayerType === 'player' ? 'none' : 'player');
-                        }}
-                        disabled={updatePlayerTypeMutation.isPending}
-                        className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${
-                          localPlayerType === 'player' 
-                            ? 'bg-blue-500 text-white border-blue-600 dark:bg-blue-600 dark:border-blue-500' 
-                            : 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700 hover:bg-blue-500/20'
-                        } disabled:opacity-50`}
-                        data-testid={`button-player-type-player-${seat.assignmentId}`}
-                      >
-                        Player
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePlayerTypeChange(localPlayerType === 'backup' ? 'none' : 'backup');
-                        }}
-                        disabled={updatePlayerTypeMutation.isPending}
-                        className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${
-                          localPlayerType === 'backup' 
-                            ? 'bg-amber-500 text-white border-amber-600 dark:bg-amber-600 dark:border-amber-500' 
-                            : 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 hover:bg-amber-500/20'
-                        } disabled:opacity-50`}
-                        data-testid={`button-player-type-backup-${seat.assignmentId}`}
-                      >
-                        Backup
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePlayerTypeChange(localPlayerType === 'player_partner' ? 'none' : 'player_partner');
-                        }}
-                        disabled={updatePlayerTypeMutation.isPending}
-                        className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${
-                          localPlayerType === 'player_partner' 
-                            ? 'bg-emerald-500 text-white border-emerald-600 dark:bg-emerald-600 dark:border-emerald-500' 
-                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-500/20'
-                        } disabled:opacity-50`}
-                        data-testid={`button-player-type-partner-${seat.assignmentId}`}
-                      >
-                        Partner
-                      </button>
-                      {localPlayerType && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handlePlayerTypeChange('none');
-                          }}
-                          disabled={updatePlayerTypeMutation.isPending}
-                          className="px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-                          data-testid={`button-player-type-clear-${seat.assignmentId}`}
-                        >
-                          Clear
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Podium Story Toggle - compact inline */}
-                {seat.contestantId && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePodiumStoryToggle();
-                    }}
-                    disabled={togglePodiumStoryMutation.isPending}
-                    className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
-                      localPodiumStory 
-                        ? 'bg-pink-500 text-white' 
-                        : 'text-pink-400 hover:text-pink-600 hover:bg-pink-500/10'
-                    } disabled:opacity-50`}
-                    data-testid={`button-podium-story-toggle-${seat.contestantId}`}
-                  >
-                    {localPodiumStory ? 'PS' : '+PS'}
-                  </button>
-                )}
-
-                {/* Attending With - shows original and allows override editing */}
-                <div className="text-sm">
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                      <UserCheck className="h-3 w-3" />
-                      Attending With
-                    </label>
-                    {!isRXDayLocked && seat.assignmentId && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-5 w-5"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsEditingAttendingWith(!isEditingAttendingWith);
-                        }}
-                        data-testid={`button-edit-attending-with-${seat.assignmentId}`}
-                      >
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </div>
-                  
-                  {isEditingAttendingWith ? (
-                    <div className="space-y-2">
-                      <Input
-                        value={localAttendingWith}
-                        onChange={(e) => setLocalAttendingWith(e.target.value)}
-                        placeholder="Override attending with..."
-                        className="h-8 text-xs"
-                        data-testid={`input-attending-with-${seat.assignmentId}`}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleAttendingWithSave();
-                          if (e.key === 'Escape') {
-                            setLocalAttendingWith(seat.attendingWithOverride || '');
-                            setIsEditingAttendingWith(false);
-                          }
-                        }}
-                      />
-                      <div className="flex gap-1">
-                        <Button size="sm" className="h-6 text-xs" onClick={handleAttendingWithSave}>
-                          Save
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="h-6 text-xs"
-                          onClick={() => {
-                            setLocalAttendingWith(seat.attendingWithOverride || '');
-                            setIsEditingAttendingWith(false);
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                      {contestantDetails?.attendingWith && (
-                        <p className="text-[10px] text-muted-foreground">
-                          Original: {contestantDetails.attendingWith}
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <div>
-                      {/* Show effective attending with (override takes precedence) */}
-                      {seat.attendingWithOverride ? (
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1">
-                            <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800">
-                              UPDATED
-                            </Badge>
-                            <span className="text-sm">{seat.attendingWithOverride}</span>
-                          </div>
-                          {contestantDetails?.attendingWith && contestantDetails.attendingWith !== seat.attendingWithOverride && (
-                            <p className="text-[10px] text-muted-foreground line-through">
-                              Original: {contestantDetails.attendingWith}
-                            </p>
-                          )}
-                        </div>
-                      ) : contestantDetails?.attendingWith ? (
-                        <p>{contestantDetails.attendingWith}</p>
-                      ) : (
-                        <p className="text-muted-foreground italic text-xs">Not specified</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {contestantDetails.availabilityNotes && (
-                  <div className="text-sm">
-                    <label className="text-xs font-medium text-muted-foreground">Availability Notes</label>
-                    <p className="text-xs">{contestantDetails.availabilityNotes}</p>
-                  </div>
-                )}
-
-                {hasMeaningfulMedicalNote(contestantDetails.medicalInfo) && (
-                  <div className="text-sm">
-                    <label className="text-xs font-medium text-muted-foreground">Medical Info</label>
-                    <p className="text-xs">{contestantDetails.medicalInfo}</p>
-                  </div>
-                )}
-
-                {(hasMeaningfulMedicalNote(contestantDetails.mobilityNotes) || hasMeaningfulMedicalNote(seat.mobilityNotesOverride)) && (
-                  <div className="text-sm">
-                    <label className="text-xs font-medium text-muted-foreground">Mobility/Access Notes</label>
-                    {seat.mobilityNotesOverride ? (
-                      <div>
-                        <div className="flex items-center gap-1">
-                          <Badge className="text-[9px] px-1 py-0 h-4 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
-                            UPDATED
-                          </Badge>
-                          <span className="text-xs">{seat.mobilityNotesOverride}</span>
-                        </div>
-                        {contestantDetails.mobilityNotes && contestantDetails.mobilityNotes !== seat.mobilityNotesOverride && (
-                          <p className="text-[10px] text-muted-foreground line-through">
-                            Original: {contestantDetails.mobilityNotes}
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-xs">{contestantDetails.mobilityNotes}</p>
-                    )}
-                  </div>
-                )}
-
-                {contestantDetails.criminalRecord && (
-                  <div className="text-sm">
-                    <label className="text-xs font-medium text-muted-foreground">Criminal Record</label>
-                    <p className="text-xs">{contestantDetails.criminalRecord}</p>
-                  </div>
-                )}
-
-                <div className="text-sm">
-                  <label className="text-xs font-medium text-muted-foreground">Status</label>
-                  <div className="mt-1">
-                    <Badge variant="secondary">
-                      {contestantDetails.availabilityStatus}
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Notes - editable notes that sync with Booking Master NOTES column */}
-                {seat.assignmentId && (
-                  <div className="text-sm p-2 bg-muted/30 rounded-md border">
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                        <MessageSquare className="h-3 w-3" />
-                        Notes
-                      </label>
-                      {!isEditingNotes && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsEditingNotes(true);
-                          }}
-                          data-testid={`button-edit-notes-${seat.assignmentId}`}
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                    {isEditingNotes ? (
-                      <>
-                        <Textarea
-                          value={localNotes}
-                          onChange={(e) => handleNotesChange(e.target.value)}
-                          placeholder="Add notes (syncs with Booking Master)..."
-                          className="min-h-[60px] text-xs resize-none"
-                          data-testid={`textarea-notes-${seat.assignmentId}`}
-                          onClick={(e) => e.stopPropagation()}
-                          onBlur={() => setIsEditingNotes(false)}
-                          autoFocus
-                        />
-                        {updateSeatDetailsMutation.isPending && (
-                          <p className="text-[10px] text-muted-foreground mt-1">Saving...</p>
-                        )}
-                      </>
-                    ) : (
-                      <p 
-                        className="text-xs text-muted-foreground min-h-[20px] cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsEditingNotes(true);
-                        }}
-                      >
-                        {localNotes || <span className="italic">No notes</span>}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {wasSwapped && originalPosition && (
-                  <div className="text-sm p-2 bg-amber-50 dark:bg-amber-950/50 rounded-md border border-amber-200 dark:border-amber-800">
-                    <div className="flex items-center gap-2">
-                      <ArrowLeftRight className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                      <div>
-                        <label className="text-xs font-medium text-amber-700 dark:text-amber-300">Moved During RX Day</label>
-                        <p className="text-xs text-amber-600 dark:text-amber-400">
-                          Originally at seat <strong>{originalPosition}</strong>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        {seatContent}
+      </ContextMenuTrigger>
+      {!isEmpty && (
+        <ContextMenuContent className="w-56" data-testid={`context-menu-${seat.assignmentId}`}>
+          <div className="px-2 py-1.5 flex flex-col gap-1 border-b mb-1">
+            <div className="flex items-center gap-2">
+              <Avatar className="h-8 w-8">
+                {seat.photoUrl ? (
+                  <AvatarImage 
+                    src={seat.photoUrl} 
+                    alt={seat.contestantName}
+                    className="object-cover"
+                    data-testid={`avatar-image-${seat.contestantId}`}
+                  />
+                ) : null}
+                <AvatarFallback>{seat.contestantName?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="text-sm font-bold truncate leading-tight">{seat.contestantName}</p>
+                <p className="text-[10px] text-muted-foreground">{seat.gender} | Age {seat.age || '?'}</p>
+              </div>
+            </div>
+            {seat.auditionRating && (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <Badge className={`h-4 px-1 text-[9px] ${ratingColors[seat.auditionRating].bg} ${ratingColors[seat.auditionRating].text} border-${ratingColors[seat.auditionRating].border}`}>
+                  {seat.auditionRating}
+                </Badge>
                 {seat.playerType && (
-                  <div className="text-sm">
-                    <label className="text-xs font-medium text-muted-foreground">Player Type</label>
-                    <div className="mt-1">
-                      <Badge className={`${
-                        seat.playerType === 'player' ? 'bg-blue-500/20 text-blue-700 border-blue-300 dark:border-blue-700 dark:text-blue-400' :
-                        seat.playerType === 'backup' ? 'bg-amber-500/20 text-amber-700 border-amber-300 dark:border-amber-700 dark:text-amber-400' :
-                        'bg-purple-500/20 text-purple-700 border-purple-300 dark:border-purple-700 dark:text-purple-400'
-                      } border`}>
-                        {seat.playerType === 'player' ? 'Player' : seat.playerType === 'backup' ? 'Backup' : 'Player Partner'}
-                      </Badge>
-                    </div>
-                  </div>
+                  <Badge variant="outline" className="h-4 px-1 text-[9px] bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                    {seat.playerType.replace('_', ' ').toUpperCase()}
+                  </Badge>
                 )}
-
-                {isRXDayLocked && seat.winningMoneyAmount != null && seat.winningMoneyRole && (
-                  <div className="text-sm p-2 bg-green-50 dark:bg-green-950/50 rounded-md border border-green-200 dark:border-green-800">
-                    <label className="text-xs font-medium text-green-700 dark:text-green-300 block mb-2">Winning Money</label>
-                    <div className="space-y-1 text-xs text-green-600 dark:text-green-400">
-                      <p><strong>Role:</strong> {seat.winningMoneyRole === 'player' ? 'Player' : 'Case Holder'}</p>
-                      <p><strong>Amount:</strong> ${seat.winningMoneyAmount}</p>
-                      {seat.rxNumber && <p><strong>RX:</strong> {seat.rxNumber}</p>}
-                      {seat.caseNumber && <p><strong>Case:</strong> {seat.caseNumber}</p>}
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-sm text-muted-foreground text-center py-2">
-                Loading contestant details...
-              </div>
-            )}
-
-            {seat.assignmentId && (
-              <div className="space-y-3 pt-3 border-t">
-                {/* Edit button for temporary contestants */}
-                {contestantDetails?.isTemporary && seat.contestantId && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEditTempContestant?.(seat.contestantId!);
-                    }}
-                    data-testid={`button-edit-temp-${seat.contestantId}`}
-                  >
-                    <Pencil className="h-3 w-3 mr-1" />
-                    Edit Temporary Contestant
-                  </Button>
-                )}
-                {/* Test subject delete button */}
-                {seat.contestantId && (seat.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(seat.contestantName || '')) && onDeleteTestSubject && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full text-destructive border-destructive/50 hover:bg-destructive/10"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (confirm(`Remove test subject ${seat.contestantName}?`)) {
-                        onDeleteTestSubject(seat.contestantId!);
-                      }
-                    }}
-                    data-testid={`button-delete-test-subject-${seat.contestantId}`}
-                  >
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    Remove Test Subject
-                  </Button>
-                )}
-                {isRXDayLocked && seat.winningMoneyAmount != null && seat.winningMoneyRole && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onWinningMoneyClick?.(seat.assignmentId!);
-                    }}
-                    data-testid={`button-edit-winning-money-${seat.assignmentId}`}
-                  >
-                    Edit Winning Money
-                  </Button>
-                )}
-                {seat.wasStandby && seat.contestantId && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onReturnToStandby?.(seat.assignmentId!, seat.contestantId!);
-                    }}
-                    data-testid={`button-return-standby-${seat.assignmentId}`}
-                  >
-                    <Undo2 className="h-3 w-3 mr-1" />
-                    Return to Standby
-                  </Button>
-                )}
-                {isRXDayLocked && seat.contestantId && (
-                  <>
-                    <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1 px-2 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-400 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const seatLabel = seat.id.split('-').pop() || '';
-                          onNoShow?.(seat.assignmentId!, seat.contestantId!, blockIndex + 1, seatLabel);
-                        }}
-                        data-testid={`button-no-show-${seat.assignmentId}`}
-                      >
-                        <UserX className="h-3 w-3 mr-0.5" />
-                        <span className="text-[10px]">No Show</span>
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1 px-2 bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-400 border-orange-300 dark:border-orange-700 hover:bg-orange-100 dark:hover:bg-orange-900"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const seatLabel = seat.id.split('-').pop() || '';
-                          onEarlyLeaver?.(seat.assignmentId!, seat.contestantId!, blockIndex + 1, seatLabel);
-                        }}
-                        data-testid={`button-early-leaver-${seat.assignmentId}`}
-                      >
-                        <Clock className="h-3 w-3 mr-0.5" />
-                        <span className="text-[10px]">Early</span>
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1 px-2 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const seatLabel = seat.id.split('-').pop() || '';
-                          onPrizeWinner?.(seat.contestantId!, seat.contestantName || '', blockIndex + 1, seatLabel);
-                        }}
-                        data-testid={`button-prize-winner-${seat.assignmentId}`}
-                      >
-                        <Gift className="h-3 w-3 mr-0.5" />
-                        <span className="text-[10px]">Prize</span>
-                      </Button>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full px-2 bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-400 border-rose-300 dark:border-rose-700 hover:bg-rose-100 dark:hover:bg-rose-900"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const seatLabel = seat.id.split('-').pop() || '';
-                        onNoLongerWantToAttend?.(seat.assignmentId!, seat.contestantId!, blockIndex + 1, seatLabel);
-                      }}
-                      data-testid={`button-no-longer-attend-${seat.assignmentId}`}
-                    >
-                      <XCircle className="h-3 w-3 mr-0.5" />
-                      <span className="text-[10px]">No Longer Wants to Attend</span>
-                    </Button>
-                  </>
-                )}
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowRemoveConfirm(true);
-                    }}
-                    data-testid={`button-remove-${seat.assignmentId}`}
-                  >
-                    <X className="h-3 w-3 mr-1" />
-                    Remove
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onCancel?.(seat.assignmentId!);
-                    }}
-                    data-testid={`button-cancel-${seat.assignmentId}`}
-                  >
-                    <Ban className="h-3 w-3 mr-1" />
-                    Cancel
-                  </Button>
-                </div>
               </div>
             )}
           </div>
-        </HoverCardContent>
-            </HoverCard>
+
+          <ContextMenuItem 
+            className="flex items-center gap-2 text-xs py-1.5"
+            onClick={() => {
+              if (seat.assignmentId) {
+                onWinningMoneyClick?.(seat.assignmentId);
+              }
+            }}
+            data-testid={`menu-item-winning-money-${seat.assignmentId}`}
+          >
+            <DollarSign className="h-3.5 w-3.5" />
+            Winning Money / Role
+          </ContextMenuItem>
+
+          <ContextMenuSub>
+            <ContextMenuSubTrigger className="flex items-center gap-2 text-xs py-1.5" data-testid={`menu-sub-player-type-${seat.assignmentId}`}>
+              <Users className="h-3.5 w-3.5" />
+              Change Role (Casting)
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent className="w-48">
+              <ContextMenuItem 
+                className={`flex items-center justify-between text-xs ${localPlayerType === 'player' ? 'bg-accent' : ''}`}
+                onClick={() => handlePlayerTypeChange('player')}
+                data-testid={`menu-item-role-player-${seat.assignmentId}`}
+              >
+                <span>PLAYER</span>
+                {localPlayerType === 'player' && <Check className="h-3.5 w-3.5 ml-auto" />}
+              </ContextMenuItem>
+              <ContextMenuItem 
+                className={`flex items-center justify-between text-xs ${localPlayerType === 'backup' ? 'bg-accent' : ''}`}
+                onClick={() => handlePlayerTypeChange('backup')}
+                data-testid={`menu-item-role-backup-${seat.assignmentId}`}
+              >
+                <span>BACKUP</span>
+                {localPlayerType === 'backup' && <Check className="h-3.5 w-3.5 ml-auto" />}
+              </ContextMenuItem>
+              <ContextMenuItem 
+                className={`flex items-center justify-between text-xs ${localPlayerType === 'player_partner' ? 'bg-accent' : ''}`}
+                onClick={() => handlePlayerTypeChange('player_partner')}
+                data-testid={`menu-item-role-partner-${seat.assignmentId}`}
+              >
+                <span>PARTNER</span>
+                {localPlayerType === 'player_partner' && <Check className="h-3.5 w-3.5 ml-auto" />}
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+              <ContextMenuItem 
+                className={`flex items-center justify-between text-xs ${!localPlayerType ? 'bg-accent' : ''}`}
+                onClick={() => handlePlayerTypeChange('none')}
+                data-testid={`menu-item-role-none-${seat.assignmentId}`}
+              >
+                <span>None (Default)</span>
+                {!localPlayerType && <Check className="h-3.5 w-3.5 ml-auto" />}
+              </ContextMenuItem>
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+
+          <ContextMenuSub>
+            <ContextMenuSubTrigger className="flex items-center gap-2 text-xs py-1.5" data-testid={`menu-sub-rating-${seat.assignmentId}`}>
+              <ShieldAlert className="h-3.5 w-3.5" />
+              Update Audition Rating
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent className="w-48">
+              {['A+', 'A', 'B+', 'B', 'C'].map((rating) => (
+                <ContextMenuItem 
+                  key={rating}
+                  className={`flex items-center justify-between text-xs ${seat.auditionRating === rating ? 'bg-accent' : ''}`}
+                  onClick={() => onRatingChange?.(seat.contestantId!, rating)}
+                  data-testid={`menu-item-rating-${rating}-${seat.assignmentId}`}
+                >
+                  <span>{rating}</span>
+                  {seat.auditionRating === rating && <Check className="h-3.5 w-3.5 ml-auto" />}
+                </ContextMenuItem>
+              ))}
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+
+          <ContextMenuItem 
+            className="flex items-center gap-2 text-xs py-1.5"
+            onClick={handlePodiumStoryToggle}
+            data-testid={`menu-item-podium-story-${seat.assignmentId}`}
+          >
+            {localPodiumStory ? <XCircle className="h-3.5 w-3.5 text-red-500" /> : <Plus className="h-3.5 w-3.5 text-green-500" />}
+            {localPodiumStory ? "Remove Podium Story" : "Add Podium Story"}
+          </ContextMenuItem>
+
+          <ContextMenuSeparator />
+
+          <div className="px-2 py-1.5 space-y-2 border-b">
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 mb-1">
+                <MessageSquare className="h-3 w-3 text-muted-foreground" />
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Seating/OTD Notes</span>
+              </div>
+              <Textarea 
+                value={localNotes}
+                onChange={(e) => handleNotesChange(e.target.value)}
+                placeholder="Add private producer notes for this record day..."
+                className="text-[11px] min-h-[60px] p-1.5 leading-tight resize-none border-muted focus-visible:ring-primary/20"
+                data-testid={`context-textarea-notes-${seat.assignmentId}`}
+              />
+            </div>
+            
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 mb-1">
+                <UserCheck className="h-3 w-3 text-muted-foreground" />
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Attending With Override</span>
+              </div>
+              <div className="flex gap-1">
+                <Input 
+                  value={localAttendingWith}
+                  onChange={(e) => setLocalAttendingWith(e.target.value)}
+                  onBlur={handleAttendingWithSave}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAttendingWithSave()}
+                  placeholder={seat.attendingWith || "Override partner name..."}
+                  className="h-7 text-[11px] px-1.5"
+                  data-testid={`context-input-attending-with-${seat.assignmentId}`}
+                />
+              </div>
+            </div>
           </div>
-        </ContextMenuTrigger>
-        <ContextMenuContent className="w-56">
-          {linkableNeighbors.length > 0 && onLinkWithNeighbor && seat.contestantId && (
+
+          <ContextMenuSeparator />
+          
+          <ContextMenuItem 
+            className="flex items-center gap-2 text-xs py-1.5 text-red-600 dark:text-red-400"
+            onClick={() => seat.assignmentId && onNoShow?.(seat.assignmentId, seat.contestantId!, blockIndex + 1, seatLabel)}
+            data-testid={`menu-item-no-show-${seat.assignmentId}`}
+          >
+            <UserX className="h-3.5 w-3.5" />
+            Mark as No Show
+          </ContextMenuItem>
+
+          <ContextMenuItem 
+            className="flex items-center gap-2 text-xs py-1.5 text-orange-600 dark:text-orange-400"
+            onClick={() => seat.assignmentId && onEarlyLeaver?.(seat.assignmentId, seat.contestantId!, blockIndex + 1, seatLabel)}
+            data-testid={`menu-item-early-leaver-${seat.assignmentId}`}
+          >
+            <Clock className="h-3.5 w-3.5" />
+            Mark as Early Leaver
+          </ContextMenuItem>
+
+          <ContextMenuItem 
+            className="flex items-center gap-2 text-xs py-1.5 text-red-600 dark:text-red-400"
+            onClick={() => seat.assignmentId && onNoLongerWantToAttend?.(seat.assignmentId, seat.contestantId!, blockIndex + 1, seatLabel)}
+            data-testid={`menu-item-cancel-booking-${seat.assignmentId}`}
+          >
+            <XCircle className="h-3.5 w-3.5" />
+            Cancel Booking (Will not attend)
+          </ContextMenuItem>
+
+          <ContextMenuSeparator />
+
+          {seat.wasStandby && (
+            <ContextMenuItem 
+              className="flex items-center gap-2 text-xs py-1.5"
+              onClick={() => seat.assignmentId && onReturnToStandby?.(seat.assignmentId, seat.contestantId!)}
+              data-testid={`menu-item-return-to-standby-${seat.assignmentId}`}
+            >
+              <Undo2 className="h-3.5 w-3.5" />
+              Unseat & Return to Standby List
+            </ContextMenuItem>
+          )}
+
+          <ContextMenuItem 
+            className="flex items-center gap-2 text-xs py-1.5"
+            onClick={() => {
+              if (seat.assignmentId) {
+                onCancel?.(seat.assignmentId);
+              }
+            }}
+            data-testid={`menu-item-cancel-${seat.assignmentId}`}
+          >
+            <X className="h-3.5 w-3.5" />
+            Cancel Assignment (Not attending)
+          </ContextMenuItem>
+
+          <ContextMenuItem 
+            className="flex items-center gap-2 text-xs py-1.5 text-destructive"
+            onClick={() => setShowRemoveConfirm(true)}
+            data-testid={`menu-item-remove-${seat.assignmentId}`}
+          >
+            <Ban className="h-3.5 w-3.5" />
+            Remove from Seating Chart
+          </ContextMenuItem>
+
+          <ContextMenuSeparator />
+
+          <ContextMenuItem 
+            className="flex items-center gap-2 text-xs py-1.5"
+            onClick={() => seat.contestantId && onPrizeWinner?.(seat.contestantId, seat.contestantName!, blockIndex + 1, seatLabel)}
+            data-testid={`menu-item-prize-winner-${seat.assignmentId}`}
+          >
+            <Gift className="h-3.5 w-3.5 text-amber-500" />
+            Prize Winner
+          </ContextMenuItem>
+
+          {seat.isTemporary && (
+            <ContextMenuItem 
+              className="flex items-center gap-2 text-xs py-1.5 text-blue-600 dark:text-blue-400"
+              onClick={() => seat.contestantId && onEditTempContestant?.(seat.contestantId)}
+              data-testid={`menu-item-edit-temp-${seat.assignmentId}`}
+            >
+              <Edit2 className="h-3.5 w-3.5" />
+              Edit Temp Contestant
+            </ContextMenuItem>
+          )}
+
+          {(seat.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(seat.contestantName!)) && (
+            <ContextMenuItem 
+              className="flex items-center gap-2 text-xs py-1.5 text-destructive"
+              onClick={() => seat.contestantId && onDeleteTestSubject?.(seat.contestantId)}
+              data-testid={`menu-item-delete-test-${seat.assignmentId}`}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete Test Subject
+            </ContextMenuItem>
+          )}
+
+          {neighbors.length > 0 && (
             <>
+              <ContextMenuSeparator />
               <ContextMenuSub>
-                <ContextMenuSubTrigger>
-                  <Link2 className="mr-2 h-4 w-4" />
-                  <span>Link with Neighbor</span>
+                <ContextMenuSubTrigger className="flex items-center gap-2 text-xs py-1.5">
+                  <Link2 className="h-3.5 w-3.5" />
+                  Link With Neighbor
                 </ContextMenuSubTrigger>
                 <ContextMenuSubContent className="w-56">
-                  {linkableNeighbors.map((neighbor) => (
-                    <ContextMenuItem
+                  {neighbors.map((neighbor) => (
+                    <ContextMenuItem 
                       key={neighbor.contestantId}
-                      onClick={() => onLinkWithNeighbor(seat.contestantId!, neighbor.contestantId)}
-                      data-testid={`context-link-neighbor-${neighbor.contestantId}`}
+                      className="text-xs py-1.5 flex items-center justify-between"
+                      onClick={() => onLinkWithNeighbor?.(seat.contestantId!, neighbor.contestantId)}
+                      data-testid={`menu-item-link-neighbor-${neighbor.seatLabel}-${seat.assignmentId}`}
                     >
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Avatar className="h-5 w-5 flex-shrink-0">
                           {neighbor.photoUrl ? (
-                            <AvatarImage src={neighbor.photoUrl} className="object-cover" />
+                            <AvatarImage src={neighbor.photoUrl} alt={neighbor.contestantName} className="object-cover" />
                           ) : null}
-                          <AvatarFallback className="text-[10px]">
-                            {neighbor.contestantName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
+                          <AvatarFallback className="text-[8px]">{neighbor.contestantName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm truncate">{neighbor.contestantName}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Block {neighbor.blockNumber} Seat {neighbor.seatLabel}
-                            {neighbor.groupId && ' (in group)'}
-                          </p>
-                        </div>
+                        <span className="truncate">{neighbor.contestantName}</span>
                       </div>
+                      <Badge variant="outline" className="text-[8px] h-3 px-1 ml-1 flex-shrink-0">{neighbor.seatLabel}</Badge>
                     </ContextMenuItem>
                   ))}
                 </ContextMenuSubContent>
               </ContextMenuSub>
-              <ContextMenuSeparator />
             </>
           )}
-          {linkableNeighbors.length === 0 && (
-            <ContextMenuItem disabled>
-              <span className="text-muted-foreground text-xs">No neighbors to link with</span>
-            </ContextMenuItem>
-          )}
+          
+          <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remove Contestant?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will remove <strong>{seat.contestantName}</strong> from block {blockIndex + 1}, seat {seatLabel}. 
+                  The contestant will remain in the system.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={() => {
+                    if (seat.assignmentId) {
+                      onRemove?.(seat.assignmentId);
+                    }
+                  }}
+                  data-testid="button-confirm-remove"
+                >
+                  Remove
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </ContextMenuContent>
-      </ContextMenu>
-      <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Contestant from Seat?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to remove <strong>{seat.contestantName}</strong> from this seat? 
-              They will be returned to the unassigned pool.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                onRemove?.(seat.assignmentId!);
-                setShowRemoveConfirm(false);
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-    );
-  }
-
-  return seatContent;
+      )}
+    </ContextMenu>
+  );
 }

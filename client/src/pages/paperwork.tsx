@@ -1204,18 +1204,26 @@ Deal or No Deal Production Team`);
                           <div className="flex items-center gap-1 flex-wrap">
                             <span>{item.contestant?.name || "Unknown"}</span>
                             {returningContestantsMap[item.contestantId] && (() => {
-                              const wasStandbyOnly = returningContestantsMap[item.contestantId].length > 0 && returningContestantsMap[item.contestantId].every((h: any) => h.type === 'standby');
+                              const prevApps = returningContestantsMap[item.contestantId].filter(r => r.recordDayId !== selectedRecordDay);
+                              if (prevApps.length === 0) return null;
+                              const wasStandbyOnly = prevApps.every((h: any) => h.type === 'standby');
                               return (
                               <Tooltip delayDuration={0}>
                                 <TooltipTrigger asChild>
                                   <Badge 
                                     variant="outline" 
-                                    className={`h-4 px-1 text-[9px] font-bold cursor-help ${wasStandbyOnly ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}
+                                    className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
+                                    onPointerDown={(e) => e.stopPropagation()}
                                   >
                                     {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                   </Badge>
                                 </TooltipTrigger>
-                                <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
+                                <TooltipContent 
+                                  side="top" 
+                                  className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2"
+                                  onPointerDown={(e) => e.stopPropagation()}
+                                  onMouseEnter={(e) => e.stopPropagation()}
+                                >
                                   <div className="space-y-1">
                                     <p className="font-bold border-b pb-1 mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                     {prevApps.map((h: any, i: number) => (
@@ -1367,27 +1375,37 @@ Deal or No Deal Production Team`);
                             <div className="flex items-center gap-1">
                               <span className="font-medium">{item.contestant?.name || "Unknown"}</span>
                               {returningContestantsMap[item.contestantId] && (() => {
-                                const wasStandbyOnly = returningContestantsMap[item.contestantId].length > 0 && returningContestantsMap[item.contestantId].every((h: any) => h.type === 'standby');
+                                const prevApps = returningContestantsMap[item.contestantId].filter(r => r.recordDayId !== selectedRecordDay);
+                                if (prevApps.length === 0) return null;
+                                const wasStandbyOnly = prevApps.every((h: any) => h.type === 'standby');
                                 return (
                                 <Tooltip delayDuration={0}>
                                   <TooltipTrigger asChild>
                                     <Badge 
                                       variant="outline" 
-                                      className={`h-4 px-1 text-[9px] font-bold cursor-help ${ 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}
+                                      className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
+                                      onPointerDown={(e) => e.stopPropagation()}
                                     >
-                                      'RTN'
+                                      {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                     </Badge>
                                   </TooltipTrigger>
-                                  <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999]">
-                                    <p className="font-bold mb-1">'Returning Contestant'</p>
-                                    <ul className="space-y-1">
-                                      {returningContestantsMap[item.contestantId].map((h: any, i: number) => (
-                                        <li key={i} className="flex gap-2 justify-between">
-                                          <span>{h.date}:</span>
-                                          <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby (Not Seated)' : `Seated${h.blockType ? ` - ${h.blockType}` : ''}`})</span>
-                                        </li>
+                                  <TooltipContent 
+                                    side="top" 
+                                    className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2"
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                    onMouseEnter={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="space-y-1">
+                                      <p className="font-bold border-b pb-1 mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
+                                      {prevApps.map((h: any, i: number) => (
+                                        <div key={i} className="flex flex-col text-[11px] leading-tight">
+                                          <span className="font-medium">{h.label} ({h.date})</span>
+                                          <span className="text-muted-foreground">
+                                            {h.type === 'standby' ? 'Standby (Not Seated)' : `Seated${h.blockType ? ` - ${h.blockType}` : ''}`}
+                                          </span>
+                                        </div>
                                       ))}
-                                    </ul>
+                                    </div>
                                   </TooltipContent>
                                 </Tooltip>
                                 );
