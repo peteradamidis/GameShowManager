@@ -990,32 +990,17 @@ Deal or No Deal Production Team`);
                   </div>
                 ) : (
                   <Table>
+                    <TableHeader>
                       <TableRow className="bg-amber-100 dark:bg-amber-900/20">
-                        <TableHead className="w-8 px-2">
-                          <Checkbox
-                            checked={standbyData.length > 0 && Array.from(selectedAssignments).filter(id => standbyData.some(s => s.id === id)).length === standbyData.length}
-                            onCheckedChange={(checked) => {
-                              const newSelected = new Set(selectedAssignments);
-                              if (checked === true) {
-                                standbyData.forEach(s => newSelected.add(s.id));
-                              } else {
-                                standbyData.forEach(s => newSelected.delete(s.id));
-                              }
-                              setSelectedAssignments(newSelected);
-                            }}
-                            data-testid="checkbox-select-all-standby-paperwork"
-                          />
-                        </TableHead>
+                        <TableHead className="font-semibold">Priority</TableHead>
                         <TableHead className="font-semibold">Name</TableHead>
                         <TableHead className="font-semibold">Record Day</TableHead>
-                        <TableHead className="font-semibold">Status</TableHead>
                         <TableHead className="font-semibold">Email</TableHead>
                         <TableHead className="font-semibold">Phone</TableHead>
-                        <TableHead className="font-semibold text-center">Booking Status</TableHead>
-                        <TableHead className="font-semibold text-center">Paperwork Sent</TableHead>
-                        <TableHead className="font-semibold text-center">Paperwork Received</TableHead>
-                        <TableHead className="font-semibold">Paperwork Status</TableHead>
+                        <TableHead className="font-semibold text-center">Standby Status</TableHead>
+                        <TableHead className="font-semibold text-center">Email Sent</TableHead>
                       </TableRow>
+                    </TableHeader>
                     <TableBody>
                       {standbyData
                         .filter(s => {
@@ -1038,58 +1023,16 @@ Deal or No Deal Production Team`);
                         .map((standby) => (
                           <TableRow 
                             key={standby.id}
-                            className={`
-                              ${standby.confirmedAt ? 'bg-green-50 dark:bg-green-900/20' : ''}
-                              ${standby.paperworkReceived ? 'bg-teal-50 dark:bg-teal-900/20' : 
-                                standby.paperworkSent ? 'bg-amber-50 dark:bg-amber-900/10' : ''}
-                            `}
+                            className={standby.confirmedAt ? 'bg-green-50 dark:bg-green-900/20' : ''}
                             data-testid={`row-standby-${standby.id}`}
                           >
-                            <TableCell className="px-2">
-                              <Checkbox
-                                checked={selectedAssignments.has(standby.id)}
-                                onCheckedChange={(checked) => {
-                                  const newSelected = new Set(selectedAssignments);
-                                  if (checked === true) {
-                                    newSelected.add(standby.id);
-                                  } else {
-                                    newSelected.delete(standby.id);
-                                  }
-                                  setSelectedAssignments(newSelected);
-                                }}
-                                data-testid={`checkbox-paperwork-standby-${standby.id}`}
-                              />
+                            <TableCell>
+                              <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                                #{standby.priority || '-'}
+                              </Badge>
                             </TableCell>
                             <TableCell className="font-medium">
-                              <div className="flex items-center gap-1 flex-wrap">
-                                <span>{standby.contestant?.name || "Unknown"}</span>
-                                {returningContestantsMap[standby.contestantId] && (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Badge 
-                                        variant="outline" 
-                                        className="h-4 px-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 text-[9px] font-bold cursor-help"
-                                      >
-                                        RTN
-                                      </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top" className="text-xs max-w-[200px]">
-                                      <p className="font-bold mb-1">Returning Contestant</p>
-                                      <ul className="space-y-1">
-                                        {returningContestantsMap[standby.contestantId].map((h: any, i: number) => (
-                                          <li key={i} className="flex gap-2 justify-between">
-                                            <span>{h.date}:</span>
-                                            <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby' : 'Seated'})</span>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
-                                <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 text-[9px] px-1 py-0 h-4">
-                                  #{standby.priority || '-'}
-                                </Badge>
-                              </div>
+                              {standby.contestant?.name || "Unknown"}
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
@@ -1101,15 +1044,10 @@ Deal or No Deal Production Team`);
                                     : "N/A")}
                               </div>
                             </TableCell>
-                            <TableCell>
-                              <Badge className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700">
-                                Standby
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-sm select-all cursor-text">
+                            <TableCell className="text-sm">
                               {standby.contestant?.email || "-"}
                             </TableCell>
-                            <TableCell className="text-sm select-all cursor-text">
+                            <TableCell className="text-sm">
                               {standby.contestant?.phone || "-"}
                             </TableCell>
                             <TableCell className="text-center">
@@ -1130,49 +1068,16 @@ Deal or No Deal Production Team`);
                               )}
                             </TableCell>
                             <TableCell className="text-center">
-                              <Checkbox
-                                checked={!!standby.paperworkSent}
-                                onCheckedChange={(checked) => handleStandbyPaperworkCheckbox(standby, "paperworkSent", checked === true)}
-                                data-testid={`checkbox-sent-standby-${standby.id}`}
-                              />
-                              {standby.paperworkSent && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {format(new Date(standby.paperworkSent), "d MMM")}
-                                </p>
+                              {standby.standbyEmailSent ? (
+                                <div className="flex flex-col items-center">
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(new Date(standby.standbyEmailSent), "d MMM")}
+                                  </span>
+                                </div>
+                              ) : (
+                                <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
                               )}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Checkbox
-                                checked={!!standby.paperworkReceived}
-                                onCheckedChange={(checked) => handleStandbyPaperworkCheckbox(standby, "paperworkReceived", checked === true)}
-                                disabled={!standby.paperworkSent}
-                                data-testid={`checkbox-received-standby-${standby.id}`}
-                              />
-                              {standby.paperworkReceived && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {format(new Date(standby.paperworkReceived), "d MMM")}
-                                </p>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-col gap-1 items-start">
-                                {standby.paperworkReceived ? (
-                                  <Badge className="bg-teal-600 text-white dark:bg-teal-600">
-                                    <FileCheck className="h-3 w-3 mr-1" />
-                                    Complete
-                                  </Badge>
-                                ) : standby.paperworkSent ? (
-                                  <Badge className="bg-amber-500 text-white dark:bg-amber-500">
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    Awaiting Return
-                                  </Badge>
-                                ) : (
-                                  <Badge className="bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                                    <Send className="h-3 w-3 mr-1" />
-                                    Ready To Send
-                                  </Badge>
-                                )}
-                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -1597,225 +1502,56 @@ Deal or No Deal Production Team`);
                         return (a.priority || 999) - (b.priority || 999);
                       })
                       .map((standby) => (
-                          <TableRow 
-                            key={`standby-${standby.id}`}
-                            className={`
-                              ${standby.paperworkReceived ? 'bg-teal-50 dark:bg-teal-900/20' : 
-                                standby.paperworkSent ? 'bg-amber-50 dark:bg-amber-900/10' : 
-                                'bg-amber-50/50 dark:bg-amber-900/5'}
-                            `}
-                            data-testid={`row-paperwork-standby-${standby.id}`}
-                          >
-                            <TableCell className="px-2">
-                              <Checkbox
-                                checked={selectedAssignments.has(standby.id)}
-                                onCheckedChange={(checked) => {
-                                  const newSelected = new Set(selectedAssignments);
-                                  if (checked === true) {
-                                    newSelected.add(standby.id);
-                                  } else {
-                                    newSelected.delete(standby.id);
-                                  }
-                                  setSelectedAssignments(newSelected);
-                                }}
-                                data-testid={`checkbox-paperwork-standby-${standby.id}`}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-col">
-                                <div className="flex items-center gap-1">
-                                  <span className="font-medium">{standby.contestant?.name || "Unknown"}</span>
-                                  {returningContestantsMap[standby.contestantId] && (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Badge 
-                                          variant="outline" 
-                                          className="h-4 px-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 text-[9px] font-bold cursor-help"
-                                        >
-                                          RTN
-                                        </Badge>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="top" className="text-xs max-w-[200px]">
-                                        <p className="font-bold mb-1">Returning Contestant</p>
-                                        <ul className="space-y-1">
-                                          {returningContestantsMap[standby.contestantId].map((h: any, i: number) => (
-                                            <li key={i} className="flex gap-2 justify-between">
-                                              <span>{h.date}:</span>
-                                              <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby' : 'Seated'})</span>
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  )}
-                                </div>
-                                <Badge className="w-fit text-[10px] px-1 py-0 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 mt-1">
-                                  Standby #{standby.priority || '-'}
-                                </Badge>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3 text-muted-foreground" />
-                                {standby.recordDay ? format(new Date(standby.recordDay.date), "d MMM yyyy") : 
-                                  (selectedRecordDay !== "all" ? 
-                                    sortedRecordDays.find(rd => rd.id === selectedRecordDay)?.date ? 
-                                      format(new Date(sortedRecordDays.find(rd => rd.id === selectedRecordDay)!.date), "d MMM yyyy") : "N/A"
-                                    : "N/A")}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700">
-                                Standby
-                              </Badge>
-                            </TableCell>
-                            <TableCell 
-                              className="text-sm select-all cursor-text"
-                              title="Click to select, then Ctrl+C to copy"
-                            >
-                              {standby.contestant?.email || "-"}
-                            </TableCell>
-                            <TableCell 
-                              className="text-sm select-all cursor-text"
-                              title="Click to select, then Ctrl+C to copy"
-                            >
-                              {standby.contestant?.phone || "-"}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {standby.confirmedRsvp ? (
-                                <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Confirmed
-                                </Badge>
-                              ) : (
-                                <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                                  <Mail className="h-3 w-3 mr-1" />
-                                  Invited
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Checkbox
-                                checked={!!standby.paperworkSent}
-                                onCheckedChange={(checked) => handleStandbyPaperworkCheckbox(standby, "paperworkSent", checked === true)}
-                                data-testid={`checkbox-sent-standby-${standby.id}`}
-                              />
-                              {standby.paperworkSent && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {format(new Date(standby.paperworkSent), "d MMM")}
-                                </p>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Checkbox
-                                checked={!!standby.paperworkReceived}
-                                onCheckedChange={(checked) => handleStandbyPaperworkCheckbox(standby, "paperworkReceived", checked === true)}
-                                disabled={!standby.paperworkSent}
-                                data-testid={`checkbox-received-standby-${standby.id}`}
-                              />
-                              {standby.paperworkReceived && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {format(new Date(standby.paperworkReceived), "d MMM")}
-                                </p>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-col gap-1 items-start">
-                                {standby.paperworkReceived ? (
-                                  <Badge className="bg-teal-600 text-white dark:bg-teal-600">
-                                    <FileCheck className="h-3 w-3 mr-1" />
-                                    Complete
-                                  </Badge>
-                                ) : standby.paperworkSent ? (
-                                  <Badge className="bg-amber-500 text-white dark:bg-amber-500">
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    Awaiting Return
-                                  </Badge>
-                                ) : (
-                                  <Badge className="bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                                    <Send className="h-3 w-3 mr-1" />
-                                    Ready To Send
-                                  </Badge>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                            <Badge className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700">
-                              Standby
-                            </Badge>
-                          </TableCell>
-                          <TableCell 
-                            className="text-sm select-all cursor-text"
-                            title="Click to select, then Ctrl+C to copy"
-                          >
-                            {standby.contestant?.email || "-"}
-                          </TableCell>
-                          <TableCell 
-                            className="text-sm select-all cursor-text"
-                            title="Click to select, then Ctrl+C to copy"
-                          >
-                            {standby.contestant?.phone || "-"}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {standby.confirmedRsvp ? (
-                              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Confirmed
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                                <Mail className="h-3 w-3 mr-1" />
-                                Invited
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Checkbox
-                              checked={!!standby.paperworkSent}
-                              onCheckedChange={(checked) => handleStandbyPaperworkCheckbox(standby, "paperworkSent", checked === true)}
-                              data-testid={`checkbox-sent-standby-${standby.id}`}
-                            />
-                            {standby.paperworkSent && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {format(new Date(standby.paperworkSent), "d MMM")}
-                              </p>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Checkbox
-                              checked={!!standby.paperworkReceived}
-                              onCheckedChange={(checked) => handleStandbyPaperworkCheckbox(standby, "paperworkReceived", checked === true)}
-                              disabled={!standby.paperworkSent}
-                              data-testid={`checkbox-received-standby-${standby.id}`}
-                            />
-                            {standby.paperworkReceived && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {format(new Date(standby.paperworkReceived), "d MMM")}
-                              </p>
-                            )}
+                        <TableRow 
+                          key={`standby-${standby.id}`}
+                          className={`
+                            ${standby.paperworkReceived ? 'bg-teal-50 dark:bg-teal-900/20' : 
+                              standby.paperworkSent ? 'bg-amber-50 dark:bg-amber-900/10' : 
+                              'bg-amber-50/50 dark:bg-amber-900/5'}
+                          `}
+                          data-testid={`row-paperwork-standby-${standby.id}`}
+                        >
+                          <TableCell className="px-2">
+                            <span className="text-xs text-muted-foreground">-</span>
                           </TableCell>
                           <TableCell>
-                            <div className="flex flex-col gap-1 items-start">
-                              {standby.paperworkReceived ? (
-                                <Badge className="bg-teal-600 text-white dark:bg-teal-600">
-                                  <FileCheck className="h-3 w-3 mr-1" />
-                                  Complete
-                                </Badge>
-                              ) : standby.paperworkSent ? (
-                                <Badge className="bg-amber-500 text-white dark:bg-amber-500">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  Awaiting Return
-                                </Badge>
-                              ) : (
-                                <Badge className="bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                                  <Send className="h-3 w-3 mr-1" />
-                                  Ready To Send
-                                </Badge>
-                              )}
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-1">
+                                <span className="font-medium">{standby.contestant?.name || "Unknown"}</span>
+                                {returningContestantsMap[standby.contestantId] && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help">
+                                        RTN
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="text-xs max-w-[200px]">
+                                      <p className="font-medium mb-1">Returning Contestant</p>
+                                      {returningContestantsMap[standby.contestantId].map((info: any, idx: number) => (
+                                        <p key={idx} className="text-muted-foreground">
+                                          {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
+                                        </p>
+                                      ))}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+                              </div>
+                              <Badge className="w-fit text-[10px] px-1 py-0 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 mt-1">
+                                Standby #{standby.priority || '-'}
+                              </Badge>
                             </div>
                           </TableCell>
-                        </TableRow>
-                      ))}
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3 text-muted-foreground" />
+                              {standby.recordDay ? format(new Date(standby.recordDay.date), "d MMM yyyy") : 
+                                (selectedRecordDay !== "all" ? 
+                                  sortedRecordDays.find(rd => rd.id === selectedRecordDay)?.date ? 
+                                    format(new Date(sortedRecordDays.find(rd => rd.id === selectedRecordDay)!.date), "d MMM yyyy") : "N/A"
+                                  : "N/A")}
+                            </div>
+                          </TableCell>
+                          <TableCell>
                             <Badge className="bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700">
                               Standby
                             </Badge>
