@@ -2098,7 +2098,7 @@ export default function SeatingChartPage() {
     amount: currentAssignment?.winningMoneyAmount ?? 0,
     amountText: currentAssignment?.winningMoneyText || "",
     caseAmount: currentAssignment?.caseAmount,
-    quickCash: currentAssignment?.quickCash,
+    hnGiftcard: currentAssignment?.hnGiftcard || false,
     bankOfferTaken: currentAssignment?.bankOfferTaken || false,
     spinTheWheel: currentAssignment?.spinTheWheel || false,
     prize: currentAssignment?.prize || "",
@@ -2106,7 +2106,7 @@ export default function SeatingChartPage() {
 
   interface PlayerFields {
     caseAmount?: number;
-    quickCash?: number;
+    hnGiftcard?: boolean;
     bankOfferTaken?: boolean;
     spinTheWheel?: boolean;
     prize?: string;
@@ -2126,13 +2126,13 @@ export default function SeatingChartPage() {
         winningMoneyText: role === 'case_holder' ? amountText : null,
         ...(role === 'player' && playerFields ? {
           caseAmount: playerFields.caseAmount,
-          quickCash: playerFields.quickCash,
+          hnGiftcard: playerFields.hnGiftcard,
           bankOfferTaken: playerFields.bankOfferTaken,
           spinTheWheel: playerFields.spinTheWheel,
           prize: playerFields.prize,
         } : {
           caseAmount: null,
-          quickCash: null,
+          hnGiftcard: false,
           bankOfferTaken: null,
           spinTheWheel: null,
           prize: null,
@@ -2171,7 +2171,7 @@ export default function SeatingChartPage() {
         winningMoneyRole: "",
         winningMoneyAmount: 0,
         caseAmount: null,
-        quickCash: null,
+        hnGiftcard: false,
         bankOfferTaken: null,
         spinTheWheel: null,
         prize: null,

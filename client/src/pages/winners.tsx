@@ -146,7 +146,7 @@ export default function WinnersPage() {
         'Email': w.email || '',
         'Case Number': w.caseNumber || '',
         'Case Amount': w.caseAmount || '',
-        'Quick Cash': w.quickCash || '',
+        'HN Giftcard': w.hnGiftcard ? 'Yes' : 'No',
         'Bank Offer Taken': w.bankOfferTaken ? 'Yes' : 'No',
         'Spin the Wheel': w.spinTheWheel ? 'Yes' : 'No',
         'Wheel Prize': w.prize || '',
@@ -349,7 +349,7 @@ export default function WinnersPage() {
                   <TableHead className="bg-yellow-50 dark:bg-yellow-950 border-r">EMAIL</TableHead>
                   <TableHead className="bg-green-50 dark:bg-green-950">CASE NUMBER</TableHead>
                   <TableHead className="bg-green-50 dark:bg-green-950">CASE AMOUNT</TableHead>
-                  <TableHead className="bg-green-50 dark:bg-green-950">QUICK CASH</TableHead>
+                  <TableHead className="bg-green-50 dark:bg-green-950 text-center">HN GIFTCARD</TableHead>
                   <TableHead className="bg-green-50 dark:bg-green-950 text-center">BANK OFFER</TableHead>
                   <TableHead className="bg-green-50 dark:bg-green-950 text-center">SPIN WHEEL</TableHead>
                   <TableHead className="bg-green-50 dark:bg-green-950">WHEEL PRIZE</TableHead>
@@ -470,8 +470,12 @@ export default function WinnersPage() {
                     <TableCell className="text-xs font-mono max-w-24">
                       {winner.caseAmount ? `$${winner.caseAmount.toLocaleString()}` : '-'}
                     </TableCell>
-                    <TableCell className="text-xs font-mono max-w-24">
-                      {winner.quickCash ? `$${winner.quickCash.toLocaleString()}` : '-'}
+                    <TableCell className="text-center">
+                      {winner.hnGiftcard ? (
+                        <Check className="h-4 w-4 text-green-600 dark:text-green-400 mx-auto" />
+                      ) : (
+                        <X className="h-4 w-4 text-muted-foreground mx-auto" />
+                      )}
                     </TableCell>
                     <TableCell className="text-center">
                       {winner.bankOfferTaken !== null && winner.bankOfferTaken !== undefined ? (

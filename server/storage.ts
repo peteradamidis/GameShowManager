@@ -824,7 +824,7 @@ export class DbStorage implements IStorage {
       winningMoneyRole: workflowFields.winningMoneyRole,
       winningMoneyAmount: workflowFields.winningMoneyAmount,
       caseAmount: workflowFields.caseAmount,
-      quickCash: workflowFields.quickCash,
+      hnGiftcard: workflowFields.hnGiftcard,
       bankOfferTaken: workflowFields.bankOfferTaken,
       spinTheWheel: workflowFields.spinTheWheel,
       prize: workflowFields.prize,
@@ -2404,7 +2404,7 @@ export class DbStorage implements IStorage {
           winningMoneyRole: newAssignment.winning_money_role,
           winningMoneyAmount: newAssignment.winning_money_amount,
           caseAmount: newAssignment.case_amount,
-          quickCash: newAssignment.quick_cash,
+          hnGiftcard: newAssignment.hn_giftcard,
           bankOfferTaken: newAssignment.bank_offer_taken,
           spinTheWheel: newAssignment.spin_the_wheel,
           prize: newAssignment.prize,
@@ -2485,7 +2485,7 @@ export class DbStorage implements IStorage {
         issueData.winningMoneyAmount = seatAssignment.winningMoneyAmount;
         issueData.winningMoneyText = seatAssignment.winningMoneyText;
         issueData.caseAmount = seatAssignment.caseAmount;
-        issueData.quickCash = seatAssignment.quickCash;
+        issueData.hnGiftcard = seatAssignment.hnGiftcard;
         issueData.bankOfferTaken = seatAssignment.bankOfferTaken;
         issueData.spinTheWheel = seatAssignment.spinTheWheel;
         issueData.prize = seatAssignment.prize;
@@ -2725,7 +2725,7 @@ export class DbStorage implements IStorage {
           winningMoneyAmount: issue.winningMoneyAmount,
           winningMoneyText: issue.winningMoneyText,
           caseAmount: issue.caseAmount,
-          quickCash: issue.quickCash,
+          hnGiftcard: issue.hnGiftcard,
           bankOfferTaken: issue.bankOfferTaken,
           spinTheWheel: issue.spinTheWheel,
           prize: issue.prize,

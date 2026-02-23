@@ -22,7 +22,7 @@ import { Switch } from "@/components/ui/switch";
 
 interface PlayerFields {
   caseAmount?: number;
-  quickCash?: number;
+  hnGiftcard?: boolean;
   bankOfferTaken?: boolean;
   spinTheWheel?: boolean;
   prize?: string;
@@ -41,7 +41,7 @@ interface WinningMoneyModalProps {
   currentRxEpNumber?: string;
   currentCaseNumber?: string;
   currentCaseAmount?: number;
-  currentQuickCash?: number;
+  currentHnGiftcard?: boolean;
   currentBankOfferTaken?: boolean;
   currentSpinTheWheel?: boolean;
   currentPrize?: string;
@@ -64,7 +64,7 @@ export function WinningMoneyModal({
   currentRxEpNumber,
   currentCaseNumber,
   currentCaseAmount,
-  currentQuickCash,
+  currentHnGiftcard,
   currentBankOfferTaken,
   currentSpinTheWheel,
   currentPrize,
@@ -82,7 +82,7 @@ export function WinningMoneyModal({
   
   // Player-specific fields
   const [caseAmount, setCaseAmount] = useState<string>(currentCaseAmount?.toString() || "");
-  const [quickCash, setQuickCash] = useState<string>(currentQuickCash?.toString() || "");
+  const [hnGiftcard, setHnGiftcard] = useState<boolean>(currentHnGiftcard ?? false);
   const [bankOfferTaken, setBankOfferTaken] = useState<boolean>(currentBankOfferTaken ?? false);
   const [spinTheWheel, setSpinTheWheel] = useState<boolean>(currentSpinTheWheel ?? false);
   const [prize, setPrize] = useState<string>(currentPrize || "");
@@ -118,20 +118,20 @@ export function WinningMoneyModal({
         setAmount(currentAmount != null ? currentAmount.toString() : "");
       }
       setCaseAmount(currentCaseAmount != null ? currentCaseAmount.toString() : "");
-      setQuickCash(currentQuickCash != null ? currentQuickCash.toString() : "");
+      setHnGiftcard(currentHnGiftcard ?? false);
       setBankOfferTaken(currentBankOfferTaken ?? false);
       setSpinTheWheel(currentSpinTheWheel ?? false);
       setPrize(currentPrize || "");
       setIsEditing(false);
     }
-  }, [open, currentRxNumber, currentRxEpNumber, currentCaseNumber, currentRole, currentAmount, currentAmountText, currentCaseAmount, currentQuickCash, currentBankOfferTaken, currentSpinTheWheel, currentPrize]);
+  }, [open, currentRxNumber, currentRxEpNumber, currentCaseNumber, currentRole, currentAmount, currentAmountText, currentCaseAmount, currentHnGiftcard, currentBankOfferTaken, currentSpinTheWheel, currentPrize]);
 
   useEffect(() => {
     if (role === "case_holder") {
       setAmount("250");
       // Reset player-specific fields when switching to case holder
       setCaseAmount("");
-      setQuickCash("");
+      setHnGiftcard(false);
       setBankOfferTaken(false);
       setSpinTheWheel(false);
       setPrize("");
@@ -161,7 +161,7 @@ export function WinningMoneyModal({
     // Build player fields object only if role is player
     const playerFields: PlayerFields | undefined = role === "player" ? {
       caseAmount: caseAmount ? parseFloat(caseAmount) : undefined,
-      quickCash: quickCash ? parseFloat(quickCash) : undefined,
+      hnGiftcard,
       bankOfferTaken,
       spinTheWheel,
       prize: spinTheWheel ? prize : undefined,
@@ -179,7 +179,7 @@ export function WinningMoneyModal({
     setRole("player");
     setAmount("");
     setCaseAmount("");
-    setQuickCash("");
+    setHnGiftcard(false);
     setBankOfferTaken(false);
     setSpinTheWheel(false);
     setPrize("");
@@ -270,17 +270,14 @@ export function WinningMoneyModal({
           {/* Player-specific fields before Amount Won */}
           {role === "player" && (
             <>
-              <div className="space-y-2">
-                <Label htmlFor="quick-cash-input">Quick Cash ($)</Label>
-                <Input
-                  id="quick-cash-input"
-                  type="number"
-                  min="0"
-                  value={quickCash}
-                  onChange={(e) => setQuickCash(e.target.value)}
+              <div className="flex items-center justify-between">
+                <Label htmlFor="hn-giftcard-switch">HN Giftcard</Label>
+                <Switch
+                  id="hn-giftcard-switch"
+                  checked={hnGiftcard}
+                  onCheckedChange={setHnGiftcard}
                   disabled={hasExistingData && !isEditing}
-                  placeholder="Enter quick cash amount"
-                  data-testid="input-quick-cash"
+                  data-testid="switch-hn-giftcard"
                 />
               </div>
 
@@ -408,7 +405,7 @@ export function WinningMoneyModal({
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={isLoading || !role || !amount}
+                disabled={isLoading || !role || (!amount && role === "player" && !hnGiftcard)}
                 data-testid="button-winning-save"
               >
                 Save

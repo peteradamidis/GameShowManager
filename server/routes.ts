@@ -7711,7 +7711,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         winningMoneyRole, 
         winningMoneyAmount,
         caseAmount,
-        quickCash,
+        hnGiftcard,
         bankOfferTaken,
         spinTheWheel,
         prize
@@ -7725,7 +7725,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         winningMoneyRole, 
         winningMoneyAmount,
         caseAmount,
-        quickCash,
+        hnGiftcard,
         bankOfferTaken,
         spinTheWheel,
         prize,
@@ -7747,7 +7747,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           winningMoneyRole: null, 
           winningMoneyAmount: 0,
           caseAmount: null,
-          quickCash: null,
+          hnGiftcard: false,
           bankOfferTaken: null,
           spinTheWheel: null,
           prize: null
@@ -7792,14 +7792,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add player-specific fields if role is player
       if (winningMoneyRole === 'player') {
         updateData.caseAmount = caseAmount ?? null;
-        updateData.quickCash = quickCash ?? null;
+        updateData.hnGiftcard = hnGiftcard ?? false;
         updateData.bankOfferTaken = bankOfferTaken ?? null;
         updateData.spinTheWheel = spinTheWheel ?? null;
         updateData.prize = spinTheWheel ? (prize || null) : null;
       } else {
         // Clear player-specific fields if role is case_holder
         updateData.caseAmount = null;
-        updateData.quickCash = null;
+        updateData.hnGiftcard = false;
         updateData.bankOfferTaken = null;
         updateData.spinTheWheel = null;
         updateData.prize = null;

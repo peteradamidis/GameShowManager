@@ -123,7 +123,7 @@ export const seatAssignments = pgTable("seat_assignments", {
   
   // Player-specific winning fields
   caseAmount: real("case_amount"), // Amount in case for player
-  quickCash: real("quick_cash"), // Quick cash amount offered
+  hnGiftcard: boolean("hn_giftcard").default(sql`false`), // HN Giftcard checkbox
   bankOfferTaken: boolean("bank_offer_taken"), // Whether bank offer was taken
   spinTheWheel: boolean("spin_the_wheel"), // Whether they spun the wheel
   prize: text("prize"), // Prize won from spinning the wheel
@@ -192,6 +192,7 @@ export const canceledAssignments = pgTable("canceled_assignments", {
   paperworkReceived: timestamp("paperwork_received"),
   paperworkReceivedBy: text("paperwork_received_by"),
   paperworkOnDay: timestamp("paperwork_on_day"), // Paperwork completed on the day
+  hnGiftcard: boolean("hn_giftcard").default(sql`false`),
   
   // Standby block type tracking - when standby was originally seated
   seatedAsBlockType: blockTypeEnum("seated_as_block_type"), // PB (Case Holder) or NPB (Non Playing Block)
