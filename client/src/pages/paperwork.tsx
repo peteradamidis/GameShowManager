@@ -1212,17 +1212,14 @@ Deal or No Deal Production Team`);
                                 <TooltipTrigger asChild>
                                   <Badge 
                                     variant="outline" 
-                                    className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
-                                    onPointerDown={(e) => e.stopPropagation()}
+                                    className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[10] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
                                   >
                                     RTN
                                   </Badge>
                                 </TooltipTrigger>
                                 <TooltipContent 
                                   side="top" 
-                                  className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2"
-                                  onPointerDown={(e) => e.stopPropagation()}
-                                  onMouseEnter={(e) => e.stopPropagation()}
+                                  className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2 pointer-events-none"
                                 >
                                   <div className="space-y-1">
                                     <p className="font-bold border-b pb-1 mb-1 text-xs">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
@@ -1386,17 +1383,14 @@ Deal or No Deal Production Team`);
                                   <TooltipTrigger asChild>
                                     <Badge 
                                       variant="outline" 
-                                      className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
-                                      onPointerDown={(e) => e.stopPropagation()}
+                                      className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[10] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
                                     >
                                       RTN
                                     </Badge>
                                   </TooltipTrigger>
                                   <TooltipContent 
                                     side="top" 
-                                    className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2"
-                                    onPointerDown={(e) => e.stopPropagation()}
-                                    onMouseEnter={(e) => e.stopPropagation()}
+                                    className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2 pointer-events-none"
                                   >
                                     <div className="space-y-1">
                                       <p className="font-bold border-b pb-1 mb-1 text-xs">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
@@ -1569,11 +1563,11 @@ Deal or No Deal Production Team`);
                                   return (
                                   <Tooltip delayDuration={0}>
                                     <TooltipTrigger asChild>
-                                      <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 cursor-help ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}>
+                                      <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 cursor-help relative z-[10] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}>
                                         {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                       </Badge>
                                     </TooltipTrigger>
-                                  <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
+                                  <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2 pointer-events-none">
                                     <div className="space-y-1">
                                       <p className="font-bold border-b pb-1 mb-1 text-xs">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                       {returningContestantsMap[standby.contestantId].map((info: any, idx: number) => (

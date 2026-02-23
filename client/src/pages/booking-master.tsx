@@ -1462,13 +1462,13 @@ export default function BookingMaster() {
                                   <TooltipTrigger asChild>
                                     <Badge 
                                       variant="outline" 
-                                      className={`h-4 px-1 text-[9px] font-bold cursor-help ${wasStandbyOnly ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}
+                                      className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[10] ${wasStandbyOnly ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}
                                       data-testid={`badge-returning-standby-bm-${standby.contestantId}`}
                                     >
                                       {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                     </Badge>
                                   </TooltipTrigger>
-                                  <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2" onPointerDown={(e) => e.stopPropagation()}>
+                                  <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2 pointer-events-none">
                                     <div className="space-y-1">
                                       <p className="font-bold border-b pb-1 mb-1 text-xs">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                       {returningContestantsMap[standby.contestantId]
@@ -1792,18 +1792,15 @@ export default function BookingMaster() {
                                     <TooltipTrigger asChild>
                                       <Badge 
                                         variant="outline" 
-                                        className={`text-[9px] px-1 py-0 h-4 cursor-help relative z-[5] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`} 
+                                        className={`text-[9px] px-1 py-0 h-4 cursor-help relative z-[10] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`} 
                                         data-testid={`badge-returning-bm-${row.contestant!.id}`}
-                                        onPointerDown={(e) => e.stopPropagation()}
                                       >
                                         RTN
                                       </Badge>
                                     </TooltipTrigger>
                                   <TooltipContent 
                                     side="top" 
-                                    className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2" 
-                                    onPointerDown={(e) => e.stopPropagation()}
-                                    onMouseEnter={(e) => e.stopPropagation()}
+                                    className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2 pointer-events-none" 
                                   >
                                     <div className="space-y-1">
                                       <p className="font-bold border-b pb-1 mb-1 text-xs">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
