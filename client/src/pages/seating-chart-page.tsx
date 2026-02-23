@@ -1389,13 +1389,13 @@ export default function SeatingChartPage() {
     block2: number, seatIdx2: number
   ): boolean => {
     if (block1 !== block2) return false;
-    // Row layout: A(0-4), B(5-9), C(10-13), D(14-17), E(18-21)
+    // Row layout: E(0-3), D(4-7), C(8-11), B(12-16), A(17-21)
     const rowBoundaries = [
-      { start: 0, end: 4 },
-      { start: 5, end: 9 },
-      { start: 10, end: 13 },
-      { start: 14, end: 17 },
-      { start: 18, end: 21 },
+      { start: 0, end: 3 },
+      { start: 4, end: 7 },
+      { start: 8, end: 11 },
+      { start: 12, end: 16 },
+      { start: 17, end: 21 },
     ];
     const getRowCol = (idx: number) => {
       for (let r = 0; r < rowBoundaries.length; r++) {

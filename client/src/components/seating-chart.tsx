@@ -791,11 +791,11 @@ function DraggableStandby({
 
 // Define the row structure: [rowLabel, numSeats]
 const SEAT_ROWS = [
-  { label: 'A', count: 5 },
-  { label: 'B', count: 5 },
-  { label: 'C', count: 4 },
-  { label: 'D', count: 4 },
   { label: 'E', count: 4 },
+  { label: 'D', count: 4 },
+  { label: 'C', count: 4 },
+  { label: 'B', count: 5 },
+  { label: 'A', count: 5 },
 ];
 
 function SeatingBlock({ 
@@ -879,8 +879,9 @@ function SeatingBlock({
     return { ...row, seats: rowSeats };
   });
 
-  // Reverse rows if needed (for top blocks, A should be at bottom)
-  const displayRows = reverseRows ? [...seatsByRow].reverse() : seatsByRow;
+  // SEAT_ROWS is already in E,D,C,B,A order (top to bottom visual order)
+  // No reversal needed for display - all blocks show E at top, A at bottom
+  const displayRows = seatsByRow;
 
   const handleBlockTypeToggle = () => {
     if (onBlockTypeChange) {
@@ -1417,13 +1418,13 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     if (!block) return [];
     
     // Calculate row boundaries based on SEAT_ROWS structure
-    // A: 5 seats (0-4), B: 5 seats (5-9), C: 4 seats (10-13), D: 4 seats (14-17), E: 4 seats (18-21)
+    // E: 4 seats (0-3), D: 4 seats (4-7), C: 4 seats (8-11), B: 5 seats (12-16), A: 5 seats (17-21)
     const rowBoundaries = [
-      { start: 0, end: 4 },   // Row A (5 seats)
-      { start: 5, end: 9 },   // Row B (5 seats)
-      { start: 10, end: 13 }, // Row C (4 seats)
-      { start: 14, end: 17 }, // Row D (4 seats)
-      { start: 18, end: 21 }, // Row E (4 seats)
+      { start: 0, end: 3 },   // Row E (4 seats)
+      { start: 4, end: 7 },   // Row D (4 seats)
+      { start: 8, end: 11 },  // Row C (4 seats)
+      { start: 12, end: 16 }, // Row B (5 seats)
+      { start: 17, end: 21 }, // Row A (5 seats)
     ];
     
     // Find which row this seat is in
