@@ -306,6 +306,7 @@ export default function BookingMaster() {
   const [filterMedicalNotes, setFilterMedicalNotes] = useState(false);
   const [filterConfirmedOnly, setFilterConfirmedOnly] = useState(false);
   const [filterPaperworkNotSent, setFilterPaperworkNotSent] = useState(false);
+  const [filterPaperworkReceived, setFilterPaperworkReceived] = useState<'all' | 'received' | 'not_received'>('all');
   const [isStandbyMode, setIsStandbyMode] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isCheckInMode, setIsCheckInMode] = useState(false);
@@ -796,7 +797,14 @@ export default function BookingMaster() {
     if (filterConfirmedOnly && !row.assignment?.confirmedRsvp) {
       return false;
     }
-    // Filter to only show those with paperwork NOT sent (when confirmed filter is active)
+    // Filter by paperwork received
+    if (filterPaperworkReceived === 'received' && !row.assignment?.paperworkReceived) {
+      return false;
+    }
+    if (filterPaperworkReceived === 'not_received' && row.assignment?.paperworkReceived) {
+      return false;
+    }
+    // Filter by paperwork not yet sent
     if (filterConfirmedOnly && filterPaperworkNotSent && row.assignment?.paperworkSent) {
       return false;
     }
@@ -1301,6 +1309,38 @@ export default function BookingMaster() {
               onCheckedChange={setIsStandbyMode}
               data-testid="toggle-standby-mode"
             />
+          </div>
+        )}
+        {selectedRecordDay && (
+          <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-md border h-9">
+            <span className="text-[10px] font-bold px-2 uppercase text-muted-foreground border-r mr-1">Paperwork</span>
+            <Button
+              variant={filterPaperworkReceived === 'all' ? "default" : "ghost"}
+              onClick={() => setFilterPaperworkReceived('all')}
+              size="sm"
+              className="h-7 px-3 text-xs font-semibold"
+              data-testid="button-filter-paperwork-all"
+            >
+              All
+            </Button>
+            <Button
+              variant={filterPaperworkReceived === 'received' ? "default" : "ghost"}
+              onClick={() => setFilterPaperworkReceived('received')}
+              size="sm"
+              className="h-7 px-3 text-xs font-semibold"
+              data-testid="button-filter-paperwork-received"
+            >
+              Rec'd
+            </Button>
+            <Button
+              variant={filterPaperworkReceived === 'not_received' ? "default" : "ghost"}
+              onClick={() => setFilterPaperworkReceived('not_received')}
+              size="sm"
+              className="h-7 px-3 text-xs font-semibold"
+              data-testid="button-filter-paperwork-not-received"
+            >
+              Pending
+            </Button>
           </div>
         )}
         {selectedRecordDay && (
