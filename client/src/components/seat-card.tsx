@@ -531,18 +531,21 @@ export function SeatCard({
                 <TooltipTrigger asChild>
                   <Badge 
                     variant="outline" 
-                    className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
+                    className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[50] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
                     data-testid={`badge-returning-${seat.assignmentId}`}
-                    onPointerDown={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
                   >
                     {label}
                   </Badge>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
+                <TooltipContent side="top" className="text-[11px] max-w-[250px] z-[10000] bg-popover text-popover-foreground border shadow-md p-2">
                   <div className="space-y-1">
-                    <p className="font-bold border-b pb-1 mb-1">{tooltipTitle}</p>
+                    <p className="font-bold border-b pb-1 mb-1 text-xs">{tooltipTitle}</p>
                     {seat.returningInfo?.map((h: any, i: number) => (
-                      <div key={i} className="flex flex-col text-[11px] leading-tight border-b last:border-0 pb-1 mb-1">
+                      <div key={i} className="flex flex-col leading-tight border-b last:border-0 pb-1 mb-1">
                         <div className="flex justify-between items-start gap-2">
                           <span className="font-medium">{h.date || h.attendedAt || 'Unknown Date'}</span>
                           <span className="text-[10px] bg-muted px-1 rounded">{h.label || h.recordDayId || 'No Label'}</span>
@@ -552,8 +555,8 @@ export function SeatCard({
                         </span>
                       </div>
                     ))}
-                                  </div>
-                                </TooltipContent>
+                  </div>
+                </TooltipContent>
               </Tooltip>
               );
             })()}
@@ -744,7 +747,18 @@ export function SeatCard({
           <div>
             <HoverCard openDelay={200} closeDelay={100}>
               <HoverCardTrigger asChild>
-                {seatContent}
+                <div 
+                  className="relative"
+                  onPointerDown={(e) => {
+                    // If clicking/touching the RTN badge (which has z-50), don't trigger hover card
+                    const target = e.target as HTMLElement;
+                    if (target.closest('[data-testid^="badge-returning-"]')) {
+                      e.stopPropagation();
+                    }
+                  }}
+                >
+                  {seatContent}
+                </div>
               </HoverCardTrigger>
         <HoverCardContent 
           className="w-80 z-[100] max-h-[80vh] overflow-y-auto" 
