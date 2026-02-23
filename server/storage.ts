@@ -1165,19 +1165,30 @@ export class DbStorage implements IStorage {
         )
         .for('update');
 
-      // Move block A assignments to block B
+      // Use a temporary block number (e.g., -1) to avoid unique constraint violations
+      // during the swap process. The constraint is on (recordDayId, blockNumber, seatLabel).
+      
+      // Phase 1: Move block A to temp
       for (const assignment of blockAAssignments) {
         await tx
           .update(seatAssignments)
-          .set({ blockNumber: blockB })
+          .set({ blockNumber: -1 })
           .where(eq(seatAssignments.id, assignment.id));
       }
 
-      // Move block B assignments to block A
+      // Phase 2: Move block B to block A
       for (const assignment of blockBAssignments) {
         await tx
           .update(seatAssignments)
           .set({ blockNumber: blockA })
+          .where(eq(seatAssignments.id, assignment.id));
+      }
+
+      // Phase 3: Move temp (original block A) to block B
+      for (const assignment of blockAAssignments) {
+        await tx
+          .update(seatAssignments)
+          .set({ blockNumber: blockB })
           .where(eq(seatAssignments.id, assignment.id));
       }
 
