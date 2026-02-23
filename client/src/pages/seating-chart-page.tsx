@@ -4162,7 +4162,7 @@ export default function SeatingChartPage() {
         currentAmount={currentWinningMoneyData.amount}
         currentAmountText={currentWinningMoneyData.amountText}
         currentCaseAmount={currentWinningMoneyData.caseAmount}
-        currentQuickCash={currentWinningMoneyData.quickCash}
+        currentHnGiftcard={currentWinningMoneyData.hnGiftcard}
         currentBankOfferTaken={currentWinningMoneyData.bankOfferTaken}
         currentSpinTheWheel={currentWinningMoneyData.spinTheWheel}
         currentPrize={currentWinningMoneyData.prize}

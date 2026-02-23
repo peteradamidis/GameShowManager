@@ -91,6 +91,7 @@ export interface SeatData {
   };
   isReturning?: boolean; // True if contestant previously appeared on a completed episode
   returningInfo?: Array<{ recordDayId: string; date: string; label: string; type: string; blockType?: string }>; // Previous appearance details
+  criminalRecord?: string; // Criminal record info
   isTemporary?: boolean; // True if contestant is a temporary placeholder
   isTestSubject?: boolean; // True if contestant is a test subject
 }
