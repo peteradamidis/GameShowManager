@@ -7778,28 +7778,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentAssignment = await storage.getSeatAssignmentById(req.params.id);
       
       // Build update object with base fields
-      // IMPORTANT: Preserve existing rxEpNumber if the incoming value is empty/null
-      // This prevents the winning money modal from overwriting episode assignments
-      // made in the Players tab (which uses values like "1"-"5")
       const updateData: any = { 
         rxNumber: rxNumber || currentAssignment?.rxNumber || null,
         rxEpNumber: rxEpNumber || currentAssignment?.rxEpNumber || null,
         caseNumber: caseNumber || null,
         winningMoneyRole, 
-        winningMoneyAmount 
+        winningMoneyAmount,
+        hnGiftcard: hnGiftcard ?? false,
       };
       
       // Add player-specific fields if role is player
       if (winningMoneyRole === 'player') {
         updateData.caseAmount = caseAmount ?? null;
-        updateData.hnGiftcard = hnGiftcard ?? false;
         updateData.bankOfferTaken = bankOfferTaken ?? null;
         updateData.spinTheWheel = spinTheWheel ?? null;
         updateData.prize = spinTheWheel ? (prize || null) : null;
       } else {
         // Clear player-specific fields if role is case_holder
         updateData.caseAmount = null;
-        updateData.hnGiftcard = false;
         updateData.bankOfferTaken = null;
         updateData.spinTheWheel = null;
         updateData.prize = null;
