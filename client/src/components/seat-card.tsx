@@ -483,7 +483,10 @@ export function SeatCard({
           {seat.previouslyCanceled && (
             <HoverCard openDelay={100} closeDelay={100}>
               <HoverCardTrigger asChild>
-                <div className="flex items-center gap-0.5 text-[8px] text-orange-600 dark:text-orange-400 cursor-pointer">
+                <div 
+                  className="flex items-center gap-0.5 text-[8px] text-orange-600 dark:text-orange-400 cursor-pointer"
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
                   <Ban className="h-2 w-2" />
                   <span className="truncate max-w-[60px]">
                     {seat.previouslyCanceled.wasDeclined ? 'Declined' : 'Cancelled'}
@@ -497,6 +500,7 @@ export function SeatCard({
                 className="text-xs max-w-[220px] z-[9999] p-3"
                 avoidCollisions={true}
                 collisionPadding={{ top: 50, bottom: 50, left: 20, right: 20 }}
+                onPointerDown={(e) => e.stopPropagation()}
               >
                 <p className="font-medium">{seat.previouslyCanceled.contestantName}</p>
                 <p className="text-muted-foreground">
@@ -515,181 +519,243 @@ export function SeatCard({
           )}
         </div>
       ) : (
-        <div className="space-y-1 overflow-hidden">
-          <div className="flex items-center gap-1 text-[10px] font-mono opacity-70">
-            <span>{seatLabel}</span>
-          </div>
-          <div className="flex items-center gap-1 min-w-0 flex-wrap">
-            <p className="font-medium text-xs truncate min-w-0 max-w-[80px]" title={seat.contestantName}>
-              {seat.contestantName}
-            </p>
-            {seat.isReturning && (() => {
-              const wasStandbyOnly = seat.returningInfo && seat.returningInfo.length > 0 && seat.returningInfo.every((h: any) => h.type === 'standby');
-              return (
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <Badge 
-                      variant="outline" 
-                      className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
-                      data-testid={`badge-returning-${seat.assignmentId}`}
-                      onPointerDown={(e) => e.stopPropagation()}
-                    >
-                      RTN
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent 
-                    side="top" 
-                    className="text-xs max-w-[200px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2"
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onMouseEnter={(e) => e.stopPropagation()}
-                  >
-                    <div className="space-y-1">
-                      <p className="font-bold border-b pb-1 mb-1">
-                        {wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}
-                      </p>
-                      {seat.returningInfo?.map((info: any, idx: number) => (
-                        <div key={idx} className="flex flex-col text-[11px] leading-tight">
-                          <span className="font-medium">{info.label} ({info.date})</span>
-                          <span className="text-muted-foreground">
-                            {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`}
-                          </span>
+        <HoverCard openDelay={50} closeDelay={50}>
+          <HoverCardTrigger asChild>
+            <div className="space-y-1 overflow-hidden h-full w-full" onPointerDown={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-1 text-[10px] font-mono opacity-70">
+                <span>{seatLabel}</span>
+              </div>
+              <div className="flex items-center gap-1 min-w-0 flex-wrap">
+                <p className="font-medium text-xs truncate min-w-0 max-w-[80px]" title={seat.contestantName}>
+                  {seat.contestantName}
+                </p>
+                {seat.isReturning && (() => {
+                  const wasStandbyOnly = seat.returningInfo && seat.returningInfo.length > 0 && seat.returningInfo.every((h: any) => h.type === 'standby');
+                  return (
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <Badge 
+                          variant="outline" 
+                          className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
+                          data-testid={`badge-returning-${seat.assignmentId}`}
+                          onPointerDown={(e) => e.stopPropagation()}
+                        >
+                          RTN
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent 
+                        side="top" 
+                        className="text-xs max-w-[200px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2"
+                        onPointerDown={(e) => e.stopPropagation()}
+                      >
+                        <p className="font-bold mb-1">Returning Contestant</p>
+                        <div className="space-y-1">
+                          {seat.returningInfo?.map((h: any, i: number) => (
+                            <div key={i} className="text-[10px] border-b pb-1 last:border-0">
+                              <span className="font-medium">{h.date}</span>: {h.label} ({h.type === 'standby' ? 'Standby' : 'Seated'}{h.blockType ? ` - ${h.blockType}` : ''})
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              );
-            })()}
-            {seat.isFromReschedule && (
-              <Tooltip>
-                <TooltipTrigger asChild>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })()}
+                {seat.isFromReschedule && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge 
+                        variant="outline" 
+                        className="h-4 px-1 bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800 text-[9px] font-bold cursor-help"
+                        data-testid={`badge-reschedule-${seat.assignmentId}`}
+                      >
+                        RESCH
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p className="text-xs font-medium">Rebooked from Reschedule list</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                {seat.signedIn && isRXDayLocked && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div data-testid={`signed-in-icon-${seat.assignmentId}`} className="flex items-center justify-center w-3 h-3 rounded-full bg-green-500 dark:bg-green-600">
+                        <Check className="h-2.5 w-2.5 text-white" style={{ strokeWidth: 3 }} />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      <p>Signed in</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                {seat.isGroupSeparated && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div data-testid={`separated-icon-${seat.assignmentId}`}>
+                        <Users className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" style={{ strokeWidth: 2.5 }} />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      <p>Group member not adjacent</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                {(hasMeaningfulMedicalNote(seat.mobilityNotes) || hasMeaningfulMedicalNote(seat.medicalInfo) || hasMeaningfulMedicalNote(seat.mobilityNotesOverride)) && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div data-testid={`mobility-icon-${seat.assignmentId}`}>
+                        <Plus className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" style={{ strokeWidth: 3 }} />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      <p>Has mobility/medical notes{seat.mobilityNotesOverride ? ' (updated)' : ''}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                {seat.age && seat.age >= 70 && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div data-testid={`senior-icon-${seat.assignmentId}`}>
+                        <Plus className="h-3 w-3 text-blue-600 dark:text-blue-400 flex-shrink-0" style={{ strokeWidth: 3 }} />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      <p>Age 70+</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                {(() => {
+                  const distanceInfo = getDistanceFromDocklands(seat.contestantLocation);
+                  if (distanceInfo?.isInterstate) {
+                    return (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span 
+                            className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-red-200/70 text-red-700 dark:bg-red-900/50 dark:text-red-400 text-[8px] font-bold flex-shrink-0" 
+                            data-testid={`distance-icon-${seat.assignmentId}`}
+                          >
+                            !!
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs">
+                          <p>Interstate: {distanceInfo.state || 'Not Victoria'}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  } else if (distanceInfo?.isOver60km) {
+                    return (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span 
+                            className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-yellow-200/70 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400 text-[9px] font-bold flex-shrink-0" 
+                            data-testid={`distance-icon-${seat.assignmentId}`}
+                          >
+                            !
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs">
+                          <p>Distance: {distanceInfo.distance?.toFixed(0)}km from Docklands</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  }
+                  return null;
+                })()}
+                {(seat.winningMoneyAmount !== undefined && seat.winningMoneyAmount !== null && seat.winningMoneyAmount > 0) && (
+                  <div 
+                    className={`flex items-center gap-0.5 px-1 rounded-sm text-[10px] font-bold bg-green-600 text-white shadow-sm flex-shrink-0 cursor-pointer hover:bg-green-700 transition-colors h-4`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onWinningMoneyClick && seat.assignmentId) {
+                        onWinningMoneyClick(seat.assignmentId);
+                      }
+                    }}
+                    data-testid={`winning-money-badge-${seat.assignmentId}`}
+                  >
+                    <DollarSign className="h-2.5 w-2.5" />
+                    <span>{(seat.winningMoneyAmount ?? 0).toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center justify-between text-[10px] opacity-70">
+                <span>{seat.gender === 'Male' ? 'M' : 'F'} / {seat.age || '?'}</span>
+                {seat.auditionRating && (
                   <Badge 
                     variant="outline" 
-                    className="h-4 px-1 bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800 text-[9px] font-bold cursor-help"
-                    data-testid={`badge-reschedule-${seat.assignmentId}`}
+                    className="h-3 px-1 text-[8px] font-bold bg-white/20"
+                    data-testid={`badge-rating-${seat.assignmentId}`}
                   >
-                    RESCH
+                    {seat.auditionRating}
                   </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  <p className="text-xs font-medium">Rebooked from Reschedule list</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-            {seat.signedIn && isRXDayLocked && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div data-testid={`signed-in-icon-${seat.assignmentId}`} className="flex items-center justify-center w-3 h-3 rounded-full bg-green-500 dark:bg-green-600">
-                    <Check className="h-2.5 w-2.5 text-white" style={{ strokeWidth: 3 }} />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  <p>Signed in</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-            {seat.isGroupSeparated && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div data-testid={`separated-icon-${seat.assignmentId}`}>
-                    <Users className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" style={{ strokeWidth: 2.5 }} />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  <p>Group member not adjacent</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-            {(hasMeaningfulMedicalNote(seat.mobilityNotes) || hasMeaningfulMedicalNote(seat.medicalInfo) || hasMeaningfulMedicalNote(seat.mobilityNotesOverride)) && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div data-testid={`mobility-icon-${seat.assignmentId}`}>
-                    <Plus className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" style={{ strokeWidth: 3 }} />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  <p>Has mobility/medical notes{seat.mobilityNotesOverride ? ' (updated)' : ''}</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-            {seat.age && seat.age >= 70 && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div data-testid={`senior-icon-${seat.assignmentId}`}>
-                    <Plus className="h-3 w-3 text-blue-600 dark:text-blue-400 flex-shrink-0" style={{ strokeWidth: 3 }} />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  <p>Age 70+</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-            {(() => {
-              const distanceInfo = getDistanceFromDocklands(seat.contestantLocation);
-              if (distanceInfo?.isInterstate) {
-                return (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span 
-                        className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-red-200/70 text-red-700 dark:bg-red-900/50 dark:text-red-400 text-[8px] font-bold flex-shrink-0" 
-                        data-testid={`distance-icon-${seat.assignmentId}`}
-                      >
-                        !!
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">
-                      <p>Interstate: {distanceInfo.state || 'Not Victoria'}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              } else if (distanceInfo?.isOver60km) {
-                return (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span 
-                        className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-yellow-200/70 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400 text-[9px] font-bold flex-shrink-0" 
-                        data-testid={`distance-icon-${seat.assignmentId}`}
-                      >
-                        !
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">
-                      <p>Distance: {distanceInfo.distance?.toFixed(0)}km from Docklands</p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              }
-              return null;
-            })()}
-            {seat.winningMoneyAmount !== undefined && (
-              <div 
-                className={`flex items-center gap-0.5 px-1 rounded-sm text-[10px] font-bold bg-green-600 text-white shadow-sm flex-shrink-0 cursor-pointer hover:bg-green-700 transition-colors h-4`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onWinningMoneyClick && seat.assignmentId) {
-                    onWinningMoneyClick(seat.assignmentId);
-                  }
-                }}
-                data-testid={`winning-money-badge-${seat.assignmentId}`}
-              >
-                <DollarSign className="h-2.5 w-2.5" />
-                <span>{(seat.winningMoneyAmount ?? 0).toLocaleString()}</span>
+                )}
               </div>
-            )}
-          </div>
-          <div className="flex items-center justify-between text-[10px] opacity-70">
-            <span>{seat.gender === 'Male' ? 'M' : 'F'} / {seat.age || '?'}</span>
-            {seat.auditionRating && (
-              <Badge 
-                variant="outline" 
-                className="h-3 px-1 text-[8px] font-bold bg-white/20"
-                data-testid={`badge-rating-${seat.assignmentId}`}
-              >
-                {seat.auditionRating}
-              </Badge>
-            )}
-          </div>
-        </div>
+            </div>
+          </HoverCardTrigger>
+          <HoverCardContent 
+            side="top" 
+            align="center"
+            sideOffset={8}
+            className="w-80 z-[9999] p-0 overflow-hidden shadow-2xl border-primary/20"
+            avoidCollisions={true}
+            collisionPadding={{ top: 50, bottom: 50, left: 20, right: 20 }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 p-4">
+              <div className="flex items-start gap-4">
+                <Avatar className="h-16 w-16 border-2 border-white shadow-md">
+                  <AvatarImage src={seat.photoUrl || contestantDetails?.photoUrl} alt={seat.contestantName} className="object-cover" />
+                  <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                    {seat.contestantName?.split(' ').map(n => n[0]).join('')}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-base font-bold truncate leading-tight">{seat.contestantName}</h4>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <Badge variant="secondary" className="text-[10px] h-4">{seat.gender} / {seat.age || '?'}</Badge>
+                    {seat.auditionRating && <Badge className="text-[10px] h-4 bg-primary/20 text-primary border-primary/30">{seat.auditionRating}</Badge>}
+                    {seat.wasStandby && <Badge className="text-[10px] h-4 bg-purple-500/20 text-purple-600 border-purple-500/30">Standby</Badge>}
+                  </div>
+                  {seat.contestantLocation && (
+                    <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground">
+                      <MapPin className="h-3 w-3" />
+                      <span className="truncate">{seat.contestantLocation}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mt-4">
+                <div className="bg-white/50 dark:bg-black/20 p-2 rounded-md border border-white/20">
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Group Info</p>
+                  <p className="text-xs font-medium truncate">{seat.attendingWithOverride || seat.attendingWith || 'Solo'}</p>
+                </div>
+                <div className="bg-white/50 dark:bg-black/20 p-2 rounded-md border border-white/20">
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Rating</p>
+                  <p className="text-xs font-medium">{seat.auditionRating || 'None'}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mt-3">
+                {hasMeaningfulMedicalNote(seat.mobilityNotesOverride || seat.mobilityNotes || seat.medicalInfo) && (
+                  <Badge variant="destructive" className="text-[10px] gap-1 animate-pulse">
+                    <ShieldAlert className="h-3 w-3" /> Medical/Access
+                  </Badge>
+                )}
+                {seat.podiumStory && (
+                  <Badge className="text-[10px] bg-amber-500 hover:bg-amber-600 gap-1">
+                    <MessageSquare className="h-3 w-3" /> Podium Story
+                  </Badge>
+                )}
+              </div>
+
+              {(seat.notes || seat.customerNotes) && (
+                <div className="mt-3 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 rounded text-xs text-amber-800 dark:text-amber-200 italic">
+                  <p className="line-clamp-2">{seat.notes || seat.customerNotes}</p>
+                </div>
+              )}
+            </div>
+          </HoverCardContent>
+        </HoverCard>
       )}
     </Card>
   );
