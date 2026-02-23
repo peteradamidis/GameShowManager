@@ -879,9 +879,9 @@ function SeatingBlock({
     return { ...row, seats: rowSeats };
   });
 
-  // SEAT_ROWS is already in E,D,C,B,A order (top to bottom visual order)
-  // No reversal needed for display - all blocks show E at top, A at bottom
-  const displayRows = seatsByRow;
+  // SEAT_ROWS is in E,D,C,B,A order (top to bottom for blocks 1-3)
+  // For blocks 4-7 (reverseRows=true), flip to A,B,C,D,E (A at top, E at bottom)
+  const displayRows = reverseRows ? [...seatsByRow].reverse() : seatsByRow;
 
   const handleBlockTypeToggle = () => {
     if (onBlockTypeChange) {
@@ -2135,7 +2135,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
           {/* Circular Seating Area */}
           <div>
             <div className="space-y-6">
-            {/* Top Row - 3 Blocks (rows reversed: A at bottom, E at top) */}
+            {/* Top Row - 3 Blocks (E at top, A at bottom - facing stage) */}
             <div className="grid grid-cols-3 gap-4">
               {topBlocks.map((block, idx) => (
                 <SeatingBlock
@@ -2143,7 +2143,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   block={block}
                   blockIndex={idx}
                   blockLabel={`Block ${idx + 1} (Top)`}
-                  reverseRows={true}
+                  reverseRows={false}
                   overId={overId}
                   isGlobalDragging={!!activeId}
                   isRXDayLocked={isLocked}
@@ -2209,7 +2209,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
               </div>
             </div>
 
-            {/* Bottom Row - 3 Blocks (reordered: 6, 5, 4) */}
+            {/* Bottom Row - 3 Blocks (reordered: 6, 5, 4) - A at top, E at bottom */}
             <div className="grid grid-cols-3 gap-4">
               {reorderedBottomBlocks.map((block, idx) => {
                 const originalIdx = 5 - idx; // Maps to 5, 4, 3 (blocks 6, 5, 4 for display)
@@ -2219,7 +2219,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     block={block}
                     blockIndex={originalIdx}
                     blockLabel={`Block ${originalIdx + 1} (Bottom)`}
-                    reverseRows={false}
+                    reverseRows={true}
                     overId={overId}
                     isGlobalDragging={!!activeId}
                     isRXDayLocked={isLocked}
