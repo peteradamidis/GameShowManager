@@ -609,7 +609,13 @@ Deal or No Deal Production Team`);
   const completed = filteredData.filter(item => item.paperworkSent && item.paperworkReceived);
   
   // Total count for "All Invited" includes both active and declined
-  const totalInvitedCount = filteredData.length + (statusFilter === "all" ? declinedCount : 0);
+  const totalInvitedCount = filteredData.length;
+  const totalStandbyCount = standbyData.filter(s => {
+    if (!searchName) return true;
+    const searchLower = searchName.toLowerCase();
+    return s.contestant?.name?.toLowerCase().includes(searchLower) || 
+           s.contestant?.email?.toLowerCase().includes(searchLower);
+  }).length;
 
   const sortedRecordDays = [...recordDays].sort((a, b) => 
     new Date(a.date).getTime() - new Date(b.date).getTime()
@@ -1097,13 +1103,10 @@ Deal or No Deal Production Team`);
                       {statusFilter === "declined" 
                         ? `Declined Contestants (${filteredCanceledAssignments.length})`
                         : viewMode === "all"
-                          ? `All Bookings (${totalInvitedCount + standbyData.filter(s => {
-                              if (!searchName) return true;
-                              const searchLower = searchName.toLowerCase();
-                              return s.contestant?.name?.toLowerCase().includes(searchLower) || 
-                                     s.contestant?.email?.toLowerCase().includes(searchLower);
-                            }).length})`
-                          : `Invited Contestants (${totalInvitedCount})`}
+                          ? `All Bookings (${totalInvitedCount + totalStandbyCount})`
+                          : viewMode === "standbys"
+                            ? `Standby Contestants (${totalStandbyCount})`
+                            : `Invited Contestants (${totalInvitedCount})`}
                     </CardTitle>
                     <CardDescription>
                       {statusFilter === "declined"
@@ -1478,6 +1481,9 @@ Deal or No Deal Production Team`);
                     {/* Standbys - show in both "all" and "standbys" views */}
                     {statusFilter !== "declined" && (viewMode === "all" || viewMode === "standbys") && standbyData
                       .filter(s => {
+                        // Filter by record day if selected
+                        if (selectedRecordDay !== "all" && s.recordDayId !== selectedRecordDay) return false;
+                        
                         if (searchName) {
                           const searchLower = searchName.toLowerCase();
                           if (!s.contestant?.name?.toLowerCase().includes(searchLower) && 
