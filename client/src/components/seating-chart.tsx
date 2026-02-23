@@ -490,15 +490,17 @@ function SortableStandbyItem({
                 {isInGroup && isFirstInGroup && (
                   <span title="Group"><Users className="h-3 w-3 text-purple-500 flex-shrink-0" /></span>
                 )}
-                {returningInfo && returningInfo.length > 0 && (
+                {returningInfo && returningInfo.length > 0 && (() => {
+                  const wasStandbyOnly = returningInfo.every((h: any) => h.type === 'standby');
+                  return (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Badge variant="outline" className="text-[8px] px-0.5 py-0 h-3.5 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help flex-shrink-0" data-testid={`badge-returning-standby-${standby.id}`}>
-                        RTN
+                      <Badge variant="outline" className={`text-[8px] px-0.5 py-0 h-3.5 cursor-help flex-shrink-0 ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`} data-testid={`badge-returning-standby-${standby.id}`}>
+                        {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="text-xs max-w-[200px]">
-                      <p className="font-medium mb-1">Returning Contestant</p>
+                      <p className="font-medium mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                       {returningInfo.map((info, idx) => (
                         <p key={idx} className="text-muted-foreground">
                           {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
@@ -506,7 +508,8 @@ function SortableStandbyItem({
                       ))}
                     </TooltipContent>
                   </Tooltip>
-                )}
+                  );
+                })()}
                 {standby.signedIn && isLocked && (
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -757,15 +760,17 @@ function DraggableStandby({
     >
       <div className="flex items-center gap-1.5">
         <p className="font-medium text-sm truncate">{standby.contestant.name}</p>
-        {returningInfo && returningInfo.length > 0 && (
+        {returningInfo && returningInfo.length > 0 && (() => {
+          const wasStandbyOnly = returningInfo.every((h: any) => h.type === 'standby');
+          return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Badge variant="outline" className="text-[8px] px-0.5 py-0 h-3.5 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help flex-shrink-0">
-                RTN
+              <Badge variant="outline" className={`text-[8px] px-0.5 py-0 h-3.5 cursor-help flex-shrink-0 ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}>
+                {wasStandbyOnly ? 'RTN-S' : 'RTN'}
               </Badge>
             </TooltipTrigger>
             <TooltipContent side="top" className="text-xs max-w-[200px]">
-              <p className="font-medium mb-1">Returning Contestant</p>
+              <p className="font-medium mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
               {returningInfo.map((info, idx) => (
                 <p key={idx} className="text-muted-foreground">
                   {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
@@ -773,7 +778,8 @@ function DraggableStandby({
               ))}
             </TooltipContent>
           </Tooltip>
-        )}
+          );
+        })()}
       </div>
       <div className="flex items-center gap-1 mt-0.5">
         <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
@@ -2636,17 +2642,19 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                         <Badge variant="outline" className="text-[10px] px-1">{oa.auditionRating}</Badge>
                                       )}
                                       {oa.contestantId && returningContestantsMap[oa.contestantId] && 
-                                        returningContestantsMap[oa.contestantId].some(r => r.recordDayId !== recordDayId) && (
+                                        returningContestantsMap[oa.contestantId].some(r => r.recordDayId !== recordDayId) && (() => {
+                                        const prevApps = returningContestantsMap[oa.contestantId].filter(r => r.recordDayId !== recordDayId);
+                                        const wasStandbyOnly = prevApps.length > 0 && prevApps.every((h: any) => h.type === 'standby');
+                                        return (
                                         <Tooltip>
                                           <TooltipTrigger asChild>
-                                            <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help" data-testid={`badge-returning-overflow-${oa.contestantId}`}>
-                                              RTN
+                                            <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 cursor-help ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`} data-testid={`badge-returning-overflow-${oa.contestantId}`}>
+                                              {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                             </Badge>
                                           </TooltipTrigger>
                                           <TooltipContent side="top" className="text-xs max-w-[200px]">
-                                            <p className="font-medium mb-1">Returning Contestant</p>
-                                            {returningContestantsMap[oa.contestantId]
-                                              .filter(r => r.recordDayId !== recordDayId)
+                                            <p className="font-medium mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
+                                            {prevApps
                                               .map((info, idx) => (
                                                 <p key={idx} className="text-muted-foreground">
                                                   {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
@@ -2654,7 +2662,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                               ))}
                                           </TooltipContent>
                                         </Tooltip>
-                                      )}
+                                        );
+                                      })()}
                                       {oa.seatLabel && (
                                         <span className="text-[10px] text-muted-foreground">({oa.seatLabel})</span>
                                       )}

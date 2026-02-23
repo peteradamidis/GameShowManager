@@ -522,19 +522,21 @@ export function SeatCard({
             <p className="font-medium text-xs truncate min-w-0 max-w-[80px]" title={seat.contestantName}>
               {seat.contestantName}
             </p>
-            {seat.isReturning && (
+            {seat.isReturning && (() => {
+              const wasStandbyOnly = seat.returningInfo?.length > 0 && seat.returningInfo.every((h: any) => h.type === 'standby');
+              return (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Badge 
                     variant="outline" 
-                    className="h-4 px-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 text-[9px] font-bold cursor-help"
+                    className={`h-4 px-1 text-[9px] font-bold cursor-help ${wasStandbyOnly ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}
                     data-testid={`badge-returning-${seat.assignmentId}`}
                   >
-                    RTN
+                    {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs max-w-[250px]">
-                  <p className="font-bold mb-1">Returning Contestant</p>
+                  <p className="font-bold mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                   <ul className="space-y-1">
                     {seat.returningInfo?.map((h: any, i: number) => (
                       <li key={i} className="flex gap-2 justify-between">
@@ -545,7 +547,8 @@ export function SeatCard({
                   </ul>
                 </TooltipContent>
               </Tooltip>
-            )}
+              );
+            })()}
             {seat.isFromReschedule && (
               <Tooltip>
                 <TooltipTrigger asChild>

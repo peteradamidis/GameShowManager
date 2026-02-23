@@ -1203,18 +1203,20 @@ Deal or No Deal Production Team`);
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-1 flex-wrap">
                             <span>{item.contestant?.name || "Unknown"}</span>
-                            {returningContestantsMap[item.contestantId] && (
+                            {returningContestantsMap[item.contestantId] && (() => {
+                              const wasStandbyOnly = returningContestantsMap[item.contestantId].length > 0 && returningContestantsMap[item.contestantId].every((h: any) => h.type === 'standby');
+                              return (
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Badge 
                                     variant="outline" 
-                                    className="h-4 px-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 text-[9px] font-bold cursor-help"
+                                    className={`h-4 px-1 text-[9px] font-bold cursor-help ${wasStandbyOnly ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}
                                   >
-                                    RTN
+                                    {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                   </Badge>
                                 </TooltipTrigger>
                                 <TooltipContent side="top" className="text-xs max-w-[250px]">
-                                  <p className="font-bold mb-1">Returning Contestant</p>
+                                  <p className="font-bold mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                   <ul className="space-y-1">
                                     {returningContestantsMap[item.contestantId].map((h: any, i: number) => (
                                       <li key={i} className="flex gap-2 justify-between">
@@ -1225,7 +1227,8 @@ Deal or No Deal Production Team`);
                                   </ul>
                                 </TooltipContent>
                               </Tooltip>
-                            )}
+                              );
+                            })()}
                             {item.isFromReschedule && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -1361,18 +1364,20 @@ Deal or No Deal Production Team`);
                           <div className="flex flex-col">
                             <div className="flex items-center gap-1">
                               <span className="font-medium">{item.contestant?.name || "Unknown"}</span>
-                              {returningContestantsMap[item.contestantId] && (
+                              {returningContestantsMap[item.contestantId] && (() => {
+                                const wasStandbyOnly = returningContestantsMap[item.contestantId].length > 0 && returningContestantsMap[item.contestantId].every((h: any) => h.type === 'standby');
+                                return (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Badge 
                                       variant="outline" 
-                                      className="h-4 px-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 text-[9px] font-bold cursor-help"
+                                      className={`h-4 px-1 text-[9px] font-bold cursor-help ${wasStandbyOnly ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}
                                     >
-                                      RTN
+                                      {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                     </Badge>
                                   </TooltipTrigger>
                                   <TooltipContent side="top" className="text-xs max-w-[250px]">
-                                    <p className="font-bold mb-1">Returning Contestant</p>
+                                    <p className="font-bold mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                     <ul className="space-y-1">
                                       {returningContestantsMap[item.contestantId].map((h: any, i: number) => (
                                         <li key={i} className="flex gap-2 justify-between">
@@ -1383,7 +1388,8 @@ Deal or No Deal Production Team`);
                                     </ul>
                                   </TooltipContent>
                                 </Tooltip>
-                              )}
+                                );
+                              })()}
                             </div>
                             <Badge variant="outline" className="w-fit text-[10px] px-1 py-0 border-amber-500 text-amber-600 mt-1">
                               Reschedule
@@ -1532,15 +1538,17 @@ Deal or No Deal Production Team`);
                             <div className="flex flex-col">
                               <div className="flex items-center gap-1">
                                 <span className="font-medium">{standby.contestant?.name || "Unknown"}</span>
-                                {returningContestantsMap[standby.contestantId] && (
+                                {returningContestantsMap[standby.contestantId] && (() => {
+                                  const wasStandbyOnly = returningContestantsMap[standby.contestantId].length > 0 && returningContestantsMap[standby.contestantId].every((h: any) => h.type === 'standby');
+                                  return (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help">
-                                        RTN
+                                      <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 cursor-help ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}>
+                                        {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                       </Badge>
                                     </TooltipTrigger>
                                     <TooltipContent side="top" className="text-xs max-w-[250px]">
-                                      <p className="font-bold mb-1">Returning Contestant</p>
+                                      <p className="font-bold mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                       <ul className="space-y-1">
                                         {returningContestantsMap[standby.contestantId].map((info: any, idx: number) => (
                                           <li key={idx} className="flex gap-2 justify-between">
@@ -1551,7 +1559,8 @@ Deal or No Deal Production Team`);
                                       </ul>
                                     </TooltipContent>
                                   </Tooltip>
-                                )}
+                                  );
+                                })()}
                               </div>
                               <Badge className="w-fit text-[10px] px-1 py-0 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 mt-1">
                                 Standby #{standby.priority || '-'}

@@ -1454,19 +1454,22 @@ export default function BookingMaster() {
                                 </Badge>
                               )}
                               {standby.contestantId && returningContestantsMap[standby.contestantId] && 
-                                returningContestantsMap[standby.contestantId].some(r => r.recordDayId !== selectedRecordDay) && (
+                                returningContestantsMap[standby.contestantId].some(r => r.recordDayId !== selectedRecordDay) && (() => {
+                                const prevApps = returningContestantsMap[standby.contestantId].filter(r => r.recordDayId !== selectedRecordDay);
+                                const wasStandbyOnly = prevApps.length > 0 && prevApps.every((h: any) => h.type === 'standby');
+                                return (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Badge 
                                       variant="outline" 
-                                      className="h-4 px-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 text-[9px] font-bold cursor-help"
+                                      className={`h-4 px-1 text-[9px] font-bold cursor-help ${wasStandbyOnly ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}
                                       data-testid={`badge-returning-standby-bm-${standby.contestantId}`}
                                     >
-                                      RTN
+                                      {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                     </Badge>
                                   </TooltipTrigger>
                                   <TooltipContent side="top" className="text-xs max-w-[250px] z-[60]">
-                                    <p className="font-bold mb-1">Returning Contestant</p>
+                                    <p className="font-bold mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                     <ul className="space-y-1">
                                       {returningContestantsMap[standby.contestantId]
                                         .filter(r => r.recordDayId !== selectedRecordDay)
@@ -1479,7 +1482,8 @@ export default function BookingMaster() {
                                     </ul>
                                   </TooltipContent>
                                 </Tooltip>
-                              )}
+                                );
+                              })()}
                               {(standby.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(standby.contestant.name)) && (
                                 <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700">
                                   TEST
@@ -1775,18 +1779,20 @@ export default function BookingMaster() {
                                   </Badge>
                                 )}
                                 {row.contestant?.id && returningContestantsMap[row.contestant.id] && 
-                                  returningContestantsMap[row.contestant.id].some(r => r.recordDayId !== selectedRecordDay) && (
+                                  returningContestantsMap[row.contestant.id].some(r => r.recordDayId !== selectedRecordDay) && (() => {
+                                  const prevApps = returningContestantsMap[row.contestant!.id].filter(r => r.recordDayId !== selectedRecordDay);
+                                  const wasStandbyOnly = prevApps.length > 0 && prevApps.every((h: any) => h.type === 'standby');
+                                  return (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300 cursor-help" data-testid={`badge-returning-bm-${row.contestant.id}`}>
-                                        RTN
+                                      <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 cursor-help ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`} data-testid={`badge-returning-bm-${row.contestant!.id}`}>
+                                        {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                       </Badge>
                                     </TooltipTrigger>
                                     <TooltipContent side="top" className="text-xs max-w-[250px]">
-                                      <p className="font-bold mb-1">Returning Contestant</p>
+                                      <p className="font-bold mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                       <ul className="space-y-1">
-                                        {returningContestantsMap[row.contestant.id]
-                                          .filter(r => r.recordDayId !== selectedRecordDay)
+                                        {prevApps
                                           .map((info: any, idx: number) => (
                                             <li key={idx} className="flex gap-2 justify-between">
                                               <span>{info.date}:</span>
@@ -1796,7 +1802,8 @@ export default function BookingMaster() {
                                       </ul>
                                     </TooltipContent>
                                   </Tooltip>
-                                )}
+                                  );
+                                })()}
                                 {row.contestant?.id && (row.contestant.isTestSubject || ['Peter Adamidis', 'Kathleen Reynolds'].includes(row.contestant.name)) && (
                                   <Button
                                     variant="ghost"
