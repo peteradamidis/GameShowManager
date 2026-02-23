@@ -495,17 +495,22 @@ function SortableStandbyItem({
                   return (
                   <Tooltip delayDuration={0}>
                     <TooltipTrigger asChild>
-                      <Badge variant="outline" className={`text-[8px] px-0.5 py-0 h-3.5 cursor-help flex-shrink-0 ${ 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`} data-testid={`badge-returning-standby-${standby.id}`}>
-                        'RTN'
+                      <Badge variant="outline" className={`text-[8px] px-0.5 py-0 h-3.5 cursor-help flex-shrink-0 ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`} data-testid={`badge-returning-standby-${standby.id}`}>
+                        {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                       </Badge>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs max-w-[200px] z-[9999]">
-                      <p className="font-medium mb-1">'Returning Contestant'</p>
-                      {returningInfo.map((info, idx) => (
-                        <p key={idx} className="text-muted-foreground">
-                          {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`}
-                        </p>
-                      ))}
+                    <TooltipContent side="top" className="text-xs max-w-[200px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
+                      <div className="space-y-1">
+                        <p className="font-bold border-b pb-1 mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
+                        {returningInfo.map((info, idx) => (
+                          <div key={idx} className="flex flex-col text-[11px] leading-tight">
+                            <span className="font-medium">{info.label} ({info.date})</span>
+                            <span className="text-muted-foreground">
+                              {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </TooltipContent>
                   </Tooltip>
                   );
@@ -2649,12 +2654,12 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                         <Tooltip delayDuration={0}>
                                           <TooltipTrigger asChild>
                                             <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 cursor-help border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300`} data-testid={`badge-returning-overflow-${oa.contestantId}`}>
-                                              RTN
+                                              {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                             </Badge>
                                           </TooltipTrigger>
                                           <TooltipContent side="top" className="text-xs max-w-[200px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
                                             <div className="space-y-1">
-                                              <p className="font-bold border-b pb-1 mb-1">Returning Contestant</p>
+                                              <p className="font-bold border-b pb-1 mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                               {prevApps.map((info, idx) => (
                                                 <div key={idx} className="flex flex-col text-[11px] leading-tight">
                                                   <span className="font-medium">{info.label} ({info.date})</span>
