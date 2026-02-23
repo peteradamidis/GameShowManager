@@ -7784,8 +7784,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         caseNumber: caseNumber || null,
         winningMoneyRole, 
         winningMoneyAmount,
-        // HN Giftcard is only allowed for case holders as per latest requirement
-        hnGiftcard: winningMoneyRole === 'case_holder' ? (hnGiftcard ?? false) : false,
+        hnGiftcard: hnGiftcard ?? false,
       };
       
       // Add player-specific fields if role is player

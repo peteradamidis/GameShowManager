@@ -166,9 +166,8 @@ export function WinningMoneyModal({
       prize: spinTheWheel ? prize : undefined,
     } : undefined;
     
-    // For case holders, we now include the HN Giftcard
-    // For players, we reset it to false as requested (NOT for the player category)
-    const finalHnGiftcard = role === "case_holder" ? hnGiftcard : false;
+    // HN Giftcard is now available for both roles
+    const finalHnGiftcard = hnGiftcard;
     
     // For case holders with text, pass null for amount and include amountText
     // For case holders with valid number, pass the number
@@ -270,6 +269,17 @@ export function WinningMoneyModal({
             </Select>
           </div>
 
+          <div className="flex items-center justify-between">
+            <Label htmlFor="hn-giftcard-switch">HN Giftcard</Label>
+            <Switch
+              id="hn-giftcard-switch"
+              checked={hnGiftcard}
+              onCheckedChange={setHnGiftcard}
+              disabled={hasExistingData && !isEditing}
+              data-testid="switch-hn-giftcard"
+            />
+          </div>
+
           {/* Player-specific fields before Amount Won */}
           {role === "player" && (
             <>
@@ -298,19 +308,6 @@ export function WinningMoneyModal({
                 />
               </div>
             </>
-          )}
-
-          {role === "case_holder" && (
-            <div className="flex items-center justify-between">
-              <Label htmlFor="hn-giftcard-switch">HN Giftcard</Label>
-              <Switch
-                id="hn-giftcard-switch"
-                checked={hnGiftcard}
-                onCheckedChange={setHnGiftcard}
-                disabled={hasExistingData && !isEditing}
-                data-testid="switch-hn-giftcard"
-              />
-            </div>
           )}
 
           <div className="space-y-2">
