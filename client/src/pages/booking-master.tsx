@@ -1470,13 +1470,16 @@ export default function BookingMaster() {
                                   </TooltipTrigger>
                                   <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2" onPointerDown={(e) => e.stopPropagation()}>
                                     <div className="space-y-1">
-                                      <p className="font-bold border-b pb-1 mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
+                                      <p className="font-bold border-b pb-1 mb-1 text-xs">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                       {returningContestantsMap[standby.contestantId]
                                         .filter(r => r.recordDayId !== selectedRecordDay)
                                         .map((h: any, i: number) => (
-                                          <div key={i} className="flex flex-col text-[11px] leading-tight">
-                                            <span className="font-medium">{h.label} ({h.date})</span>
-                                            <span className="text-muted-foreground">
+                                          <div key={i} className="flex flex-col leading-tight border-b last:border-0 pb-1 mb-1">
+                                            <div className="flex justify-between items-start gap-2">
+                                              <span className="font-medium">{h.date || h.attendedAt || 'Unknown Date'}</span>
+                                              <span className="text-[10px] bg-muted px-1 rounded">{h.label || h.recordDayId || 'No Label'}</span>
+                                            </div>
+                                            <span className="text-muted-foreground mt-0.5 text-[11px]">
                                               {h.type === 'standby' ? 'Standby (Not Seated)' : `Seated${h.blockType ? ` - ${h.blockType}` : ''}`}
                                             </span>
                                           </div>
@@ -1803,11 +1806,14 @@ export default function BookingMaster() {
                                     onMouseEnter={(e) => e.stopPropagation()}
                                   >
                                     <div className="space-y-1">
-                                      <p className="font-bold border-b pb-1 mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
+                                      <p className="font-bold border-b pb-1 mb-1 text-xs">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                       {prevApps.map((info: any, idx: number) => (
-                                        <div key={idx} className="flex flex-col text-[11px] leading-tight">
-                                          <span className="font-medium">{info.label} ({info.date})</span>
-                                          <span className="text-muted-foreground">
+                                        <div key={idx} className="flex flex-col leading-tight border-b last:border-0 pb-1 mb-1">
+                                          <div className="flex justify-between items-start gap-2">
+                                            <span className="font-medium">{info.date || info.attendedAt || 'Unknown Date'}</span>
+                                            <span className="text-[10px] bg-muted px-1 rounded">{info.label || info.recordDayId || 'No Label'}</span>
+                                          </div>
+                                          <span className="text-muted-foreground mt-0.5 text-[11px]">
                                             {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`}
                                           </span>
                                         </div>
