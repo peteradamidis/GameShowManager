@@ -1167,18 +1167,18 @@ Deal or No Deal Production Team`);
                       <TableHead className="font-semibold">Paperwork Status</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
-                    {/* Regular seat assignments - hide when viewing declined filter */}
-                    {statusFilter !== "declined" && filteredData.map((item) => (
-                      <TableRow 
-                        key={item.id} 
-                        className={`
-                          ${selectedAssignments.has(item.id) ? 'bg-orange-50 dark:bg-orange-900/10' :
-                            item.paperworkReceived ? 'bg-teal-50 dark:bg-teal-900/20' : 
-                            item.paperworkSent ? 'bg-amber-50 dark:bg-amber-900/10' : ''}
-                        `}
-                        data-testid={`row-paperwork-${item.id}`}
-                      >
+                          <TableBody>
+                            {/* Regular seat assignments - hide when viewing declined filter */}
+                            {statusFilter !== "declined" && (viewMode === "all" || viewMode === "seats") && filteredData.map((item) => (
+                              <TableRow 
+                                key={item.id} 
+                                className={`
+                                  ${selectedAssignments.has(item.id) ? 'bg-orange-50 dark:bg-orange-900/10' :
+                                    item.paperworkReceived ? 'bg-teal-50 dark:bg-teal-900/20' : 
+                                    item.paperworkSent ? 'bg-amber-50 dark:bg-amber-900/10' : ''}
+                                `}
+                                data-testid={`row-paperwork-${item.id}`}
+                              >
                         <TableCell className="px-2">
                           <Checkbox
                             checked={selectedAssignments.has(item.id)}
@@ -1475,8 +1475,8 @@ Deal or No Deal Production Team`);
                       </TableRow>
                     ))}
                     
-                    {/* Standbys - only show in "all" view mode */}
-                    {viewMode === "all" && standbyData
+                    {/* Standbys - show in both "all" and "standbys" views */}
+                    {statusFilter !== "declined" && (viewMode === "all" || viewMode === "standbys") && standbyData
                       .filter(s => {
                         if (searchName) {
                           const searchLower = searchName.toLowerCase();
