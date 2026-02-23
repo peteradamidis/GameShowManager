@@ -541,7 +541,7 @@ export function SeatCard({
                     {seat.returningInfo?.map((h: any, i: number) => (
                       <li key={i} className="flex gap-2 justify-between">
                         <span>{h.date}:</span>
-                        <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby' : `Seated${h.blockType ? ` - ${h.blockType}` : ''}`})</span>
+                        <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby (Not Seated)' : `Seated${h.blockType ? ` - ${h.blockType}` : ''}`})</span>
                       </li>
                     ))}
                   </ul>

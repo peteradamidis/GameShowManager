@@ -1476,7 +1476,7 @@ export default function BookingMaster() {
                                         .map((h: any, i: number) => (
                                           <li key={i} className="flex gap-2 justify-between">
                                             <span>{h.date}:</span>
-                                            <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby' : `Seated${h.blockType ? ` - ${h.blockType}` : ''}`})</span>
+                                            <span className="font-medium">{h.label} ({h.type === 'standby' ? 'Standby (Not Seated)' : `Seated${h.blockType ? ` - ${h.blockType}` : ''}`})</span>
                                           </li>
                                         ))}
                                     </ul>
@@ -1796,7 +1796,7 @@ export default function BookingMaster() {
                                           .map((info: any, idx: number) => (
                                             <li key={idx} className="flex gap-2 justify-between">
                                               <span>{info.date}:</span>
-                                              <span className="font-medium">{info.label} ({info.type === 'standby' ? 'Standby' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`})</span>
+                                              <span className="font-medium">{info.label} ({info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`})</span>
                                             </li>
                                           ))}
                                       </ul>

@@ -503,7 +503,7 @@ function SortableStandbyItem({
                       <p className="font-medium mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                       {returningInfo.map((info, idx) => (
                         <p key={idx} className="text-muted-foreground">
-                          {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
+                          {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${(info as any).blockType ? ` - ${(info as any).blockType}` : ''}`}
                         </p>
                       ))}
                     </TooltipContent>
@@ -773,7 +773,7 @@ function DraggableStandby({
               <p className="font-medium mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
               {returningInfo.map((info, idx) => (
                 <p key={idx} className="text-muted-foreground">
-                  {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
+                  {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${(info as any).blockType ? ` - ${(info as any).blockType}` : ''}`}
                 </p>
               ))}
             </TooltipContent>
@@ -2657,7 +2657,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                             {prevApps
                                               .map((info, idx) => (
                                                 <p key={idx} className="text-muted-foreground">
-                                                  {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby' : 'Seated'}
+                                                  {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${(info as any).blockType ? ` - ${(info as any).blockType}` : ''}`}
                                                 </p>
                                               ))}
                                           </TooltipContent>
