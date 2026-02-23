@@ -523,23 +523,25 @@ export function SeatCard({
               {seat.contestantName}
             </p>
             {seat.isReturning && (() => {
-              const wasStandbyOnly = seat.returningInfo?.length > 0 && seat.returningInfo.every((h: any) => h.type === 'standby');
+              const wasStandbyOnly = seat.returningInfo && seat.returningInfo.length > 0 && seat.returningInfo.every((h: any) => h.type === 'standby');
+              const label = wasStandbyOnly ? "RTN-S" : "RTN";
+              const tooltipTitle = wasStandbyOnly ? "Returning Standby" : "Returning Contestant";
               return (
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
                   <Badge 
                     variant="outline" 
-                    className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300`}
+                    className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
                     data-testid={`badge-returning-${seat.assignmentId}`}
                     onPointerDown={(e) => e.stopPropagation()}
                   >
-                    RTN
+                    {label}
                   </Badge>
                 </TooltipTrigger>
-                                <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
-                                  <div className="space-y-1">
-                                    <p className="font-bold border-b pb-1 mb-1">Returning Contestant</p>
-                                    {seat.returningInfo?.map((h: any, i: number) => (
+                <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
+                  <div className="space-y-1">
+                    <p className="font-bold border-b pb-1 mb-1">{tooltipTitle}</p>
+                    {seat.returningInfo?.map((h: any, i: number) => (
                                       <div key={i} className="flex flex-col text-[11px] leading-tight">
                                         <span className="font-medium">{h.label} ({h.date})</span>
                                         <span className="text-muted-foreground">
