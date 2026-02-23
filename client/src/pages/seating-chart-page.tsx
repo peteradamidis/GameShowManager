@@ -192,11 +192,11 @@ const TempContestantDialog = React.memo(function TempContestantDialog({
 
 // Generate seats with the proper row structure
 const SEAT_ROWS = [
-  { label: 'A', count: 5 },
-  { label: 'B', count: 5 },
-  { label: 'C', count: 4 },
-  { label: 'D', count: 4 },
   { label: 'E', count: 4 },
+  { label: 'D', count: 4 },
+  { label: 'C', count: 4 },
+  { label: 'B', count: 5 },
+  { label: 'A', count: 5 },
 ];
 
 function generateEmptyBlocks(recordDayId: string): SeatData[][] {
