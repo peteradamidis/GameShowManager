@@ -333,37 +333,7 @@ function PodiumStoryCard({
   );
 }
 
-class SeatingChartErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean; error: Error | null }
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="p-8 text-center" data-testid="seating-chart-error">
-          <h2 className="text-xl font-bold text-destructive mb-4">Seating Chart Error</h2>
-          <p className="text-muted-foreground mb-2">Something went wrong loading this page.</p>
-          <pre className="bg-muted p-4 rounded text-left text-sm overflow-auto max-h-64 mb-4">
-            {this.state.error?.message}
-            {"\n\n"}
-            {this.state.error?.stack}
-          </pre>
-          <Button onClick={() => window.location.reload()}>Reload Page</Button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-function SeatingChartPageInner() {
+export default function SeatingChartPage() {
   const { toast } = useToast();
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [overflowDialogOpen, setOverflowDialogOpen] = useState(false);
@@ -4511,13 +4481,5 @@ function SeatingChartPageInner() {
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-export default function SeatingChartPage() {
-  return (
-    <SeatingChartErrorBoundary>
-      <SeatingChartPageInner />
-    </SeatingChartErrorBoundary>
   );
 }
