@@ -611,6 +611,9 @@ Deal or No Deal Production Team`);
   // Total count for "All Invited" includes both active and declined
   const totalInvitedCount = filteredData.length;
   const totalStandbyCount = standbyData.filter(s => {
+    // Filter by record day if selected
+    if (selectedRecordDay !== "all" && s.recordDayId !== selectedRecordDay) return false;
+
     if (!searchName) return true;
     const searchLower = searchName.toLowerCase();
     return s.contestant?.name?.toLowerCase().includes(searchLower) || 
