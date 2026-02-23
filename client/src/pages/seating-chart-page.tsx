@@ -600,7 +600,7 @@ export default function SeatingChartPage() {
   });
 
   // Fetch returning contestants data
-  const { data: returningContestantsMap = {} } = useQuery<Record<string, Array<{ recordDayId: string; date: string; label: string; type: string }>>>({
+  const { data: returningContestantsMap = {} } = useQuery<Record<string, Array<{ recordDayId: string; date: string; label: string; type: string; blockType?: string }>>>({
     queryKey: ['/api/returning-contestants'],
     queryFn: async () => {
       const response = await fetch('/api/returning-contestants', { credentials: 'include' });

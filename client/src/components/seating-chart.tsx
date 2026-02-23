@@ -420,7 +420,7 @@ function SortableStandbyItem({
   groupMemberNames?: string[];
   onSeatSelect?: (standby: StandbyData) => void;
   onUnseat?: (standby: StandbyData) => void;
-  returningInfo?: Array<{ recordDayId: string; date: string; label: string; type: string }>;
+  returningInfo?: Array<{ recordDayId: string; date: string; label: string; type: string; blockType?: string }>;
 }) {
   const {
     attributes,
@@ -503,7 +503,7 @@ function SortableStandbyItem({
                       <p className="font-medium mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                       {returningInfo.map((info, idx) => (
                         <p key={idx} className="text-muted-foreground">
-                          {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${(info as any).blockType ? ` - ${(info as any).blockType}` : ''}`}
+                          {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`}
                         </p>
                       ))}
                     </TooltipContent>
@@ -730,7 +730,7 @@ function DraggableStandby({
 }: {
   standby: StandbyData;
   isLocked?: boolean;
-  returningInfo?: Array<{ recordDayId: string; date: string; label: string; type: string }>;
+  returningInfo?: Array<{ recordDayId: string; date: string; label: string; type: string; blockType?: string }>;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `standby-${standby.id}`,
@@ -773,7 +773,7 @@ function DraggableStandby({
               <p className="font-medium mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
               {returningInfo.map((info, idx) => (
                 <p key={idx} className="text-muted-foreground">
-                  {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${(info as any).blockType ? ` - ${(info as any).blockType}` : ''}`}
+                  {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`}
                 </p>
               ))}
             </TooltipContent>
@@ -1182,7 +1182,7 @@ function OverflowDropZone({
 
 export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmptySeatClick, onRemove, onCancel, onWinningMoneyClick, onRemoveWinningMoney, onReturnToStandby, onNoShow, onEarlyLeaver, onNoLongerWantToAttend, onPrizeWinner, onEditTempContestant, onDeleteTestSubject, isLocked = false, standbys = [], onStandbySeated, isPodiumVisualizerMode = false, searchQuery = "", blockNotes = {}, onBlockNoteChange, showBookingStatus = false, onRatingChange, overflowAssignments = [], onAddOverflow, onRemoveOverflow, onMoveOverflowToSeat, onMoveToOverflow }: SeatingChartProps) {
   // Fetch returning contestants data for standby badges
-  const { data: returningContestantsMap = {} } = useQuery<Record<string, Array<{ recordDayId: string; date: string; label: string; type: string }>>>({
+  const { data: returningContestantsMap = {} } = useQuery<Record<string, Array<{ recordDayId: string; date: string; label: string; type: string; blockType?: string }>>>({
     queryKey: ['/api/returning-contestants'],
     queryFn: async () => {
       const response = await fetch('/api/returning-contestants', { credentials: 'include' });
@@ -2657,7 +2657,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                                             {prevApps
                                               .map((info, idx) => (
                                                 <p key={idx} className="text-muted-foreground">
-                                                  {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${(info as any).blockType ? ` - ${(info as any).blockType}` : ''}`}
+                                                  {info.label} ({info.date}) - {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`}
                                                 </p>
                                               ))}
                                           </TooltipContent>

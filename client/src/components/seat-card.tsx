@@ -92,7 +92,7 @@ export interface SeatData {
     wasDeclined?: boolean;
   };
   isReturning?: boolean; // True if contestant previously appeared on a completed episode
-  returningInfo?: Array<{ recordDayId: string; date: string; label: string; type: string }>; // Previous appearance details
+  returningInfo?: Array<{ recordDayId: string; date: string; label: string; type: string; blockType?: string }>; // Previous appearance details
 }
 
 // Neighbor seat data for linking
