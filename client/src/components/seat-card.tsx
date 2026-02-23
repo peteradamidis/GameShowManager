@@ -529,26 +529,26 @@ export function SeatCard({
                 <TooltipTrigger asChild>
                   <Badge 
                     variant="outline" 
-                    className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] ${wasStandbyOnly ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}
+                    className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[5] border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300`}
                     data-testid={`badge-returning-${seat.assignmentId}`}
                     onPointerDown={(e) => e.stopPropagation()}
                   >
-                    {wasStandbyOnly ? 'RTN-S' : 'RTN'}
+                    RTN
                   </Badge>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
-                  <div className="space-y-1">
-                    <p className="font-bold border-b pb-1 mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
-                    {seat.returningInfo?.map((h: any, i: number) => (
-                      <div key={i} className="flex flex-col text-[11px] leading-tight">
-                        <span className="font-medium">{h.label} ({h.date})</span>
-                        <span className="text-muted-foreground">
-                          {h.type === 'standby' ? 'Standby (Not Seated)' : `Seated${h.blockType ? ` - ${h.blockType}` : ''}`}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </TooltipContent>
+                                <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
+                                  <div className="space-y-1">
+                                    <p className="font-bold border-b pb-1 mb-1">Returning Contestant</p>
+                                    {seat.returningInfo?.map((h: any, i: number) => (
+                                      <div key={i} className="flex flex-col text-[11px] leading-tight">
+                                        <span className="font-medium">{h.label} ({h.date})</span>
+                                        <span className="text-muted-foreground">
+                                          {h.type === 'standby' ? 'Standby (Not Seated)' : `Seated${h.blockType ? ` - ${h.blockType}` : ''}`}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </TooltipContent>
               </Tooltip>
               );
             })()}

@@ -1210,14 +1210,14 @@ Deal or No Deal Production Team`);
                                 <TooltipTrigger asChild>
                                   <Badge 
                                     variant="outline" 
-                                    className={`h-4 px-1 text-[9px] font-bold cursor-help ${wasStandbyOnly ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}
+                                    className={`h-4 px-1 text-[9px] font-bold cursor-help bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800`}
                                   >
-                                    {wasStandbyOnly ? 'RTN-S' : 'RTN'}
+                                    RTN
                                   </Badge>
                                 </TooltipTrigger>
                                 <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
                                   <div className="space-y-1">
-                                    <p className="font-bold border-b pb-1 mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
+                                    <p className="font-bold border-b pb-1 mb-1">Returning Contestant</p>
                                     {returningContestantsMap[item.contestantId].map((h: any, i: number) => (
                                       <div key={i} className="flex flex-col text-[11px] leading-tight">
                                         <span className="font-medium">{h.label} ({h.date})</span>
@@ -1373,13 +1373,13 @@ Deal or No Deal Production Team`);
                                   <TooltipTrigger asChild>
                                     <Badge 
                                       variant="outline" 
-                                      className={`h-4 px-1 text-[9px] font-bold cursor-help ${wasStandbyOnly ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}
+                                      className={`h-4 px-1 text-[9px] font-bold cursor-help ${ 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}
                                     >
-                                      {wasStandbyOnly ? 'RTN-S' : 'RTN'}
+                                      'RTN'
                                     </Badge>
                                   </TooltipTrigger>
                                   <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999]">
-                                    <p className="font-bold mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
+                                    <p className="font-bold mb-1">'Returning Contestant'</p>
                                     <ul className="space-y-1">
                                       {returningContestantsMap[item.contestantId].map((h: any, i: number) => (
                                         <li key={i} className="flex gap-2 justify-between">
@@ -1545,20 +1545,22 @@ Deal or No Deal Production Team`);
                                   return (
                                   <Tooltip delayDuration={0}>
                                     <TooltipTrigger asChild>
-                                      <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 cursor-help ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}>
-                                        {wasStandbyOnly ? 'RTN-S' : 'RTN'}
+                                      <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 cursor-help border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300`}>
+                                        RTN
                                       </Badge>
                                     </TooltipTrigger>
-                                    <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999]">
-                                      <p className="font-bold mb-1">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
-                                      <ul className="space-y-1">
+                                    <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2">
+                                      <div className="space-y-1">
+                                        <p className="font-bold border-b pb-1 mb-1">Returning Contestant</p>
                                         {returningContestantsMap[standby.contestantId].map((info: any, idx: number) => (
-                                          <li key={idx} className="flex gap-2 justify-between">
-                                            <span>{info.date}:</span>
-                                            <span className="font-medium">{info.label} ({info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`})</span>
-                                          </li>
+                                          <div key={idx} className="flex flex-col text-[11px] leading-tight">
+                                            <span className="font-medium">{info.label} ({info.date})</span>
+                                            <span className="text-muted-foreground">
+                                              {info.type === 'standby' ? 'Standby (Not Seated)' : `Seated${info.blockType ? ` - ${info.blockType}` : ''}`}
+                                            </span>
+                                          </div>
                                         ))}
-                                      </ul>
+                                      </div>
                                     </TooltipContent>
                                   </Tooltip>
                                   );
