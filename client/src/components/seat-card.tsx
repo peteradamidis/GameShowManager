@@ -35,7 +35,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert, Pencil, MessageSquare, UserCheck, Gift, Trash2, Check, Link2, Edit2, XCircle } from "lucide-react";
+import { User, X, Ban, Plus, ArrowLeftRight, DollarSign, Undo2, Users, UserX, Clock, ShieldAlert, Pencil, MessageSquare, UserCheck, Gift, Trash2, Check, Link2, Edit2, XCircle, MapPin } from "lucide-react";
 import { getDistanceFromDocklands } from "@/components/contestant-table";
 
 // Helper function to check if a medical field has meaningful content (not NA/N/A/No/None/empty)
