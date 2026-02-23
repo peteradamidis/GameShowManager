@@ -1209,17 +1209,17 @@ Deal or No Deal Production Team`);
                               const wasStandbyOnly = prevApps.every((h: any) => h.type === 'standby');
                               return (
                               <Tooltip delayDuration={0}>
-                                <TooltipTrigger asChild>
+                                <TooltipTrigger>
                                   <Badge 
                                     variant="outline" 
-                                    className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[10] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
+                                    className={`h-4 px-1 text-[9px] font-bold cursor-help overflow-visible ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
                                   >
-                                    RTN
+                                    {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                   </Badge>
                                 </TooltipTrigger>
                                 <TooltipContent 
                                   side="top" 
-                                  className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2 pointer-events-none"
+                                  className="text-xs max-w-[250px] z-[9999]"
                                 >
                                   <div className="space-y-1">
                                     <p className="font-bold border-b pb-1 mb-1 text-xs">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
@@ -1380,17 +1380,17 @@ Deal or No Deal Production Team`);
                                 const wasStandbyOnly = prevApps.every((h: any) => h.type === 'standby');
                                 return (
                                 <Tooltip delayDuration={0}>
-                                  <TooltipTrigger asChild>
+                                  <TooltipTrigger>
                                     <Badge 
                                       variant="outline" 
-                                      className={`h-4 px-1 text-[9px] font-bold cursor-help relative z-[10] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
+                                      className={`h-4 px-1 text-[9px] font-bold cursor-help overflow-visible ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}
                                     >
-                                      RTN
+                                      {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                     </Badge>
                                   </TooltipTrigger>
                                   <TooltipContent 
                                     side="top" 
-                                    className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2 pointer-events-none"
+                                    className="text-xs max-w-[250px] z-[9999]"
                                   >
                                     <div className="space-y-1">
                                       <p className="font-bold border-b pb-1 mb-1 text-xs">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
@@ -1562,12 +1562,12 @@ Deal or No Deal Production Team`);
                                   const wasStandbyOnly = returningContestantsMap[standby.contestantId].length > 0 && returningContestantsMap[standby.contestantId].every((h: any) => h.type === 'standby');
                                   return (
                                   <Tooltip delayDuration={0}>
-                                    <TooltipTrigger asChild>
-                                      <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 cursor-help relative z-[10] ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}>
+                                    <TooltipTrigger>
+                                      <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 cursor-help overflow-visible ${wasStandbyOnly ? 'border-purple-500 bg-purple-100 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300' : 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'}`}>
                                         {wasStandbyOnly ? 'RTN-S' : 'RTN'}
                                       </Badge>
                                     </TooltipTrigger>
-                                  <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999] bg-popover text-popover-foreground border shadow-md p-2 pointer-events-none">
+                                  <TooltipContent side="top" className="text-xs max-w-[250px] z-[9999]">
                                     <div className="space-y-1">
                                       <p className="font-bold border-b pb-1 mb-1 text-xs">{wasStandbyOnly ? 'Returning Standby' : 'Returning Contestant'}</p>
                                       {returningContestantsMap[standby.contestantId].map((info: any, idx: number) => (
