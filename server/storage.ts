@@ -843,6 +843,25 @@ export class DbStorage implements IStorage {
       Object.entries(allowedFields).filter(([_, value]) => value !== undefined)
     );
 
+    // Type safety: ensure real/numeric columns never receive boolean or non-numeric values
+    const realColumns = ['caseAmount', 'quickCash', 'winningMoneyAmount'];
+    const booleanColumns = ['bankOfferTaken', 'spinTheWheel', 'hnGiftcard', 'called', 'firstNations'];
+    for (const key of Object.keys(fieldsToUpdate)) {
+      if (realColumns.includes(key) && fieldsToUpdate[key] !== null) {
+        const val = fieldsToUpdate[key];
+        if (typeof val === 'boolean' || (typeof val === 'string' && (val === 'true' || val === 'false'))) {
+          fieldsToUpdate[key] = null; // Don't store booleans in real columns
+        } else {
+          const num = Number(val);
+          fieldsToUpdate[key] = isNaN(num) ? null : num;
+        }
+      }
+      if (booleanColumns.includes(key) && fieldsToUpdate[key] !== null) {
+        const val = fieldsToUpdate[key];
+        fieldsToUpdate[key] = val === true || val === 'true';
+      }
+    }
+
     if (Object.keys(fieldsToUpdate).length === 0) {
       const [existing] = await db.select().from(seatAssignments).where(eq(seatAssignments.id, id));
       return existing;
