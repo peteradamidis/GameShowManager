@@ -7538,6 +7538,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Handle empty strings as null for all other fields
             if (value === '' || value === null || value === undefined) {
               workflowFields[key] = null;
+            } else if (['caseAmount', 'quickCash', 'winningMoneyAmount'].includes(key)) {
+              // Ensure real/numeric columns get proper number values
+              const numVal = Number(value);
+              workflowFields[key] = (!isNaN(numVal) && typeof value !== 'boolean') ? numVal : null;
+            } else if (['bankOfferTaken', 'spinTheWheel', 'hnGiftcard', 'called'].includes(key)) {
+              // Ensure boolean columns get proper boolean values
+              workflowFields[key] = value === true || value === 'true';
             } else {
               workflowFields[key] = value;
             }
@@ -7801,6 +7808,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.spinTheWheel = null;
         updateData.prize = null;
       }
+      
+      console.log("PATCH winning-money updateData to DB:", JSON.stringify(updateData));
       
       const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, updateData);
       
