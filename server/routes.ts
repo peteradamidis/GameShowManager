@@ -7790,10 +7790,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Add player-specific fields if role is player
       if (winningMoneyRole === 'player') {
-        updateData.caseAmount = caseAmount ?? null;
-        updateData.bankOfferTaken = bankOfferTaken ?? null;
-        updateData.spinTheWheel = spinTheWheel ?? null;
-        updateData.prize = spinTheWheel ? (prize || null) : null;
+        updateData.caseAmount = (caseAmount !== null && caseAmount !== undefined && caseAmount !== '' && !isNaN(Number(caseAmount))) ? Number(caseAmount) : null;
+        updateData.bankOfferTaken = bankOfferTaken === true || bankOfferTaken === 'true' ? true : false;
+        updateData.spinTheWheel = spinTheWheel === true || spinTheWheel === 'true' ? true : false;
+        updateData.prize = (spinTheWheel === true || spinTheWheel === 'true') ? (prize || null) : null;
       } else {
         // Clear player-specific fields if role is case_holder
         updateData.caseAmount = null;
