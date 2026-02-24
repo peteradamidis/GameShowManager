@@ -7783,7 +7783,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rxEpNumber: rxEpNumber || currentAssignment?.rxEpNumber || null,
         caseNumber: caseNumber || null,
         winningMoneyRole, 
-        winningMoneyAmount: winningMoneyAmount != null ? Number(winningMoneyAmount) : 0,
+        winningMoneyAmount: (winningMoneyAmount !== null && !isNaN(Number(winningMoneyAmount))) ? Number(winningMoneyAmount) : 0,
         winningMoneyText: winningMoneyRole === 'case_holder' ? (req.body.winningMoneyText || null) : null,
         hnGiftcard: hnGiftcard === true || hnGiftcard === "true",
       };

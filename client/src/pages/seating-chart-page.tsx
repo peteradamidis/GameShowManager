@@ -2134,13 +2134,16 @@ export default function SeatingChartPage() {
     
     setWinningMoneyLoading(true);
     try {
+      // Ensure amount is a number for the API, defaulting to 0 if null
+      const numericAmount = (amount !== null && !isNaN(Number(amount))) ? Number(amount) : 0;
+      
       await apiRequest('PATCH', `/api/seat-assignments/${selectedAssignmentId}/winning-money`, {
-        rxNumber,
-        rxEpNumber,
-        caseNumber,
+        rxNumber: rxNumber || "",
+        rxEpNumber: rxEpNumber || "",
+        caseNumber: caseNumber || "",
         winningMoneyRole: role,
-        winningMoneyAmount: amount ?? 0,
-        winningMoneyText: amountText,
+        winningMoneyAmount: numericAmount,
+        winningMoneyText: amountText || "",
         hnGiftcard: playerFields?.hnGiftcard || false,
         ...(role === 'player' && playerFields ? {
           caseAmount: playerFields.caseAmount,
@@ -2488,15 +2491,17 @@ export default function SeatingChartPage() {
                               });
                           }}
                           onCaseNumberUpdate={(caseNumber) => {
-                            apiRequest('PATCH', `/api/contestants/${contestant.id}`, { podiumStoryCaseNumber: caseNumber === 'none' ? null : parseInt(caseNumber, 10) })
+                            const numericCaseNumber = caseNumber === 'none' || !caseNumber ? null : parseInt(caseNumber, 10);
+                            apiRequest('PATCH', `/api/contestants/${contestant.id}`, { podiumStoryCaseNumber: numericCaseNumber })
                               .then(() => {
                                 queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
                                 queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments', recordDayId] });
-                                toast({ title: "Case updated", description: caseNumber && caseNumber !== 'none' ? `Assigned to Case ${caseNumber}` : "Case number removed" });
+                                toast({ title: "Case updated", description: numericCaseNumber ? `Assigned to Case ${numericCaseNumber}` : "Case number removed" });
                               })
                               .catch(() => {
                                 toast({ title: "Error", description: "Failed to update case number", variant: "destructive" });
                               });
+                          }}
                           }}
                         />
                       ))
