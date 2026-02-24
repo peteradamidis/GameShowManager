@@ -823,6 +823,7 @@ export class DbStorage implements IStorage {
       caseNumber: workflowFields.caseNumber,
       winningMoneyRole: workflowFields.winningMoneyRole,
       winningMoneyAmount: workflowFields.winningMoneyAmount,
+      winningMoneyText: workflowFields.winningMoneyText,
       caseAmount: workflowFields.caseAmount,
       hnGiftcard: workflowFields.hnGiftcard,
       bankOfferTaken: workflowFields.bankOfferTaken,
@@ -843,22 +844,38 @@ export class DbStorage implements IStorage {
       Object.entries(allowedFields).filter(([_, value]) => value !== undefined)
     );
 
-    // Type safety: ensure real/numeric columns never receive boolean or non-numeric values
     const realColumns = ['caseAmount', 'quickCash', 'winningMoneyAmount'];
     const booleanColumns = ['bankOfferTaken', 'spinTheWheel', 'hnGiftcard', 'called', 'firstNations'];
+
     for (const key of Object.keys(fieldsToUpdate)) {
-      if (realColumns.includes(key) && fieldsToUpdate[key] !== null) {
-        const val = fieldsToUpdate[key];
-        if (typeof val === 'boolean' || (typeof val === 'string' && (val === 'true' || val === 'false'))) {
-          fieldsToUpdate[key] = null; // Don't store booleans in real columns
+      const val = fieldsToUpdate[key];
+      if (realColumns.includes(key)) {
+        if (val === null || val === undefined) {
+          fieldsToUpdate[key] = null;
+        } else if (typeof val === 'boolean') {
+          fieldsToUpdate[key] = null;
         } else {
           const num = Number(val);
           fieldsToUpdate[key] = isNaN(num) ? null : num;
         }
+      } else if (booleanColumns.includes(key)) {
+        if (val === null || val === undefined) {
+          fieldsToUpdate[key] = null;
+        } else {
+          fieldsToUpdate[key] = val === true || val === 'true';
+        }
       }
-      if (booleanColumns.includes(key) && fieldsToUpdate[key] !== null) {
-        const val = fieldsToUpdate[key];
-        fieldsToUpdate[key] = val === true || val === 'true';
+    }
+
+    for (const key of Object.keys(fieldsToUpdate)) {
+      const val = fieldsToUpdate[key];
+      if (realColumns.includes(key) && val !== null && typeof val !== 'number') {
+        console.error(`[TYPE SAFETY] Field "${key}" has invalid value for real column:`, val, typeof val);
+        fieldsToUpdate[key] = null;
+      }
+      if (booleanColumns.includes(key) && val !== null && typeof val !== 'boolean') {
+        console.error(`[TYPE SAFETY] Field "${key}" has invalid value for boolean column:`, val, typeof val);
+        fieldsToUpdate[key] = val === true || val === 'true' || val === 1;
       }
     }
 
@@ -866,6 +883,8 @@ export class DbStorage implements IStorage {
       const [existing] = await db.select().from(seatAssignments).where(eq(seatAssignments.id, id));
       return existing;
     }
+
+    console.log("[DB UPDATE] seatAssignment", id, "fieldsToUpdate:", JSON.stringify(fieldsToUpdate, (k, v) => v === undefined ? '__undefined__' : v));
 
     const [updated] = await db
       .update(seatAssignments)
