@@ -2111,14 +2111,14 @@ export default function SeatingChartPage() {
     // Prefill RX Ep No with "30XX" only for new entries
     rxEpNumber: currentAssignment?.rxEpNumber || (hasExistingWinningMoney ? "" : "30XX"),
     caseNumber: currentAssignment?.caseNumber || "",
-    role: currentAssignment?.winningMoneyRole || "player",
-    amount: currentAssignment?.winningMoneyAmount ?? 0,
-    amountText: currentAssignment?.winningMoneyText || "",
-    caseAmount: currentAssignment?.caseAmount,
-    hnGiftcard: currentAssignment?.hnGiftcard || false,
-    bankOfferTaken: currentAssignment?.bankOfferTaken || false,
-    spinTheWheel: currentAssignment?.spinTheWheel || false,
-    prize: currentAssignment?.prize || "",
+    currentRole: currentAssignment?.winningMoneyRole || "player",
+    currentAmount: currentAssignment?.winningMoneyAmount ?? 0,
+    currentAmountText: currentAssignment?.winningMoneyText || "",
+    currentCaseAmount: currentAssignment?.caseAmount,
+    currentHnGiftcard: currentAssignment?.hnGiftcard || false,
+    currentBankOfferTaken: currentAssignment?.bankOfferTaken || false,
+    currentSpinTheWheel: currentAssignment?.spinTheWheel || false,
+    currentPrize: currentAssignment?.prize || "",
   };
 
   interface PlayerFields {
@@ -4178,14 +4178,7 @@ export default function SeatingChartPage() {
         currentRxNumber={currentWinningMoneyData.rxNumber}
         currentRxEpNumber={currentWinningMoneyData.rxEpNumber}
         currentCaseNumber={currentWinningMoneyData.caseNumber}
-        currentRole={currentWinningMoneyData.role}
-        currentAmount={currentWinningMoneyData.amount}
-        currentAmountText={currentWinningMoneyData.amountText}
-        currentCaseAmount={currentWinningMoneyData.caseAmount}
-        currentHnGiftcard={currentWinningMoneyData.hnGiftcard}
-        currentBankOfferTaken={currentWinningMoneyData.bankOfferTaken}
-        currentSpinTheWheel={currentWinningMoneyData.spinTheWheel}
-        currentPrize={currentWinningMoneyData.prize}
+        {...currentWinningMoneyData}
         contestantName={currentAssignment?.contestantName}
         blockNumber={currentAssignment?.blockNumber}
         assignments={assignments}
