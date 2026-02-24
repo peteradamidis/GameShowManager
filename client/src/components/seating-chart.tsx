@@ -485,6 +485,20 @@ function SortableStandbyItem({
             
             {/* Content */}
             <div className="flex-1 min-w-0">
+              {returningInfo && returningInfo.length > 0 && (() => {
+                const uniquePrevDays = new Set(returningInfo.map((h: any) => h.recordDayId));
+                const hasMultiple = uniquePrevDays.size >= 1; // already filtered current
+                if (!hasMultiple) return null;
+                
+                const rxDaysList = Array.from(new Map(returningInfo.map((h: any) => [h.recordDayId, h.label])).values()).join(", ");
+                
+                return (
+                  <div className="flex items-center gap-1 mb-1 px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-800 text-[9px] text-red-700 dark:text-red-300 font-bold animate-pulse">
+                    <ShieldAlert className="h-3 w-3" />
+                    MULTIPLE EPISODES ({rxDaysList})
+                  </div>
+                );
+              })()}
               <div className="flex items-center gap-1.5">
                 <p className="font-medium text-sm truncate">{standby.contestant.name}</p>
                 {isInGroup && isFirstInGroup && (

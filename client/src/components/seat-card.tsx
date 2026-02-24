@@ -420,6 +420,27 @@ export function SeatCard({
     }
   };
 
+  // Check for multiple appearances (2 or more distinct record days)
+  const previousRecordDays = useMemo(() => {
+    if (!seat.returningInfo) return [];
+    // Get unique record day IDs from returning info
+    const uniqueDays = new Set(seat.returningInfo.map(info => info.recordDayId));
+    return Array.from(uniqueDays);
+  }, [seat.returningInfo]);
+
+  const hasMultipleEpisodes = previousRecordDays.length >= 1; // returningInfo already filters out current day, so 1+ means 2+ total
+
+  const rxDaysList = useMemo(() => {
+    if (!seat.returningInfo) return "";
+    const uniqueDays = new Map<string, string>();
+    seat.returningInfo.forEach(info => {
+      if (info.label) {
+        uniqueDays.set(info.recordDayId, info.label);
+      }
+    });
+    return Array.from(uniqueDays.values()).join(", ");
+  }, [seat.returningInfo]);
+
   const seatContent = (
     <Card
       className={`p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity border-2 relative ${
@@ -430,7 +451,7 @@ export function SeatCard({
           : isRXDayLocked && !isEmpty
             ? `${groupColorClass} cursor-pointer hover-elevate`  // Locked: occupied seats are clickable
             : `${groupColorClass} hover-elevate`  // Unlocked: occupied seats not directly clickable
-      } ${isDragging ? "opacity-50" : ""} ${wasSwapped ? "ring-2 ring-amber-400 ring-offset-1" : ""}`}
+      } ${isDragging ? "opacity-50" : ""} ${wasSwapped ? "ring-2 ring-amber-400 ring-offset-1" : ""} ${hasMultipleEpisodes ? "ring-2 ring-red-500 ring-offset-2 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]" : ""}`}
       style={colorInfo ? {
         backgroundColor: colorInfo.bg,
         borderColor: colorInfo.border,
@@ -439,6 +460,30 @@ export function SeatCard({
       data-testid={`seat-${blockIndex}-${seatIndex}`}
       onClick={handleClick}
     >
+      {/* Multiple Episodes Alert */}
+      {hasMultipleEpisodes && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div 
+              className="absolute -top-2 -right-2 z-[60] flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white shadow-lg cursor-help animate-bounce border-2 border-white dark:border-slate-900"
+              data-testid={`alert-multiple-episodes-${seat.assignmentId}`}
+            >
+              <ShieldAlert className="h-4 w-4" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-red-600 text-white border-red-700 p-3 max-w-[250px]">
+            <div className="space-y-1">
+              <p className="font-bold flex items-center gap-1">
+                <ShieldAlert className="h-3 w-3" />
+                MULTIPLE EPISODES
+              </p>
+              <p className="text-[11px]">This contestant has been in 2 or more episodes.</p>
+              <p className="text-[11px] font-semibold mt-1">Previous RX Days:</p>
+              <p className="text-[11px] opacity-90">{rxDaysList}</p>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      )}
       {/* MOVED indicator - positioned in top-right corner of the card */}
       {wasSwapped && (
         <Tooltip>
