@@ -420,7 +420,7 @@ export function SeatCard({
     }
   };
 
-  // Check for multiple appearances (2 or more distinct record days)
+  // Check for multiple appearances (3 or more distinct record days including current)
   const previousRecordDays = useMemo(() => {
     if (!seat.returningInfo) return [];
     // Get unique record day IDs from returning info
@@ -428,7 +428,7 @@ export function SeatCard({
     return Array.from(uniqueDays);
   }, [seat.returningInfo]);
 
-  const hasMultipleEpisodes = previousRecordDays.length >= 1; // returningInfo already filters out current day, so 1+ means 2+ total
+  const hasMultipleEpisodes = previousRecordDays.length >= 2; // returningInfo already filters out current day, so 2+ means 3+ total
 
   const rxDaysList = useMemo(() => {
     if (!seat.returningInfo) return "";
@@ -477,7 +477,7 @@ export function SeatCard({
                 <ShieldAlert className="h-3 w-3" />
                 MULTIPLE EPISODES
               </p>
-              <p className="text-[11px]">This contestant has been in 2 or more episodes.</p>
+              <p className="text-[11px]">This contestant has been in 3 or more episodes.</p>
               <p className="text-[11px] font-semibold mt-1">Previous RX Days:</p>
               <p className="text-[11px] opacity-90">{rxDaysList}</p>
             </div>
