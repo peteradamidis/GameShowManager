@@ -825,6 +825,7 @@ export class DbStorage implements IStorage {
       winningMoneyAmount: workflowFields.winningMoneyAmount,
       winningMoneyText: workflowFields.winningMoneyText,
       caseAmount: workflowFields.caseAmount,
+      quickCash: workflowFields.quickCash,
       hnGiftcard: workflowFields.hnGiftcard,
       bankOfferTaken: workflowFields.bankOfferTaken,
       spinTheWheel: workflowFields.spinTheWheel,
@@ -844,54 +845,120 @@ export class DbStorage implements IStorage {
       Object.entries(allowedFields).filter(([_, value]) => value !== undefined)
     );
 
-    const realColumns = ['caseAmount', 'quickCash', 'winningMoneyAmount'];
-    const booleanColumns = ['bankOfferTaken', 'spinTheWheel', 'hnGiftcard', 'called', 'firstNations'];
-
-    for (const key of Object.keys(fieldsToUpdate)) {
-      const val = fieldsToUpdate[key];
-      if (realColumns.includes(key)) {
-        if (val === null || val === undefined) {
-          fieldsToUpdate[key] = null;
-        } else if (typeof val === 'boolean') {
-          fieldsToUpdate[key] = null;
-        } else {
-          const num = Number(val);
-          fieldsToUpdate[key] = isNaN(num) ? null : num;
-        }
-      } else if (booleanColumns.includes(key)) {
-        if (val === null || val === undefined) {
-          fieldsToUpdate[key] = null;
-        } else {
-          fieldsToUpdate[key] = val === true || val === 'true';
-        }
-      }
-    }
-
-    for (const key of Object.keys(fieldsToUpdate)) {
-      const val = fieldsToUpdate[key];
-      if (realColumns.includes(key) && val !== null && typeof val !== 'number') {
-        console.error(`[TYPE SAFETY] Field "${key}" has invalid value for real column:`, val, typeof val);
-        fieldsToUpdate[key] = null;
-      }
-      if (booleanColumns.includes(key) && val !== null && typeof val !== 'boolean') {
-        console.error(`[TYPE SAFETY] Field "${key}" has invalid value for boolean column:`, val, typeof val);
-        fieldsToUpdate[key] = val === true || val === 'true' || val === 1;
-      }
-    }
-
     if (Object.keys(fieldsToUpdate).length === 0) {
       const [existing] = await db.select().from(seatAssignments).where(eq(seatAssignments.id, id));
       return existing;
     }
 
-    console.log("[DB UPDATE] seatAssignment", id, "fieldsToUpdate:", JSON.stringify(fieldsToUpdate, (k, v) => v === undefined ? '__undefined__' : v));
+    const fieldToColumn: Record<string, string> = {
+      firstNations: 'first_nations', rating: 'rating', location: 'location',
+      medicalQuestion: 'medical_question', criminalBankruptcy: 'criminal_bankruptcy',
+      castingCategory: 'casting_category', notes: 'notes', playerType: 'player_type',
+      bookingEmailSent: 'booking_email_sent', confirmedRsvp: 'confirmed_rsvp',
+      ticketEmailSent: 'ticket_email_sent', paperworkSent: 'paperwork_sent',
+      paperworkReceived: 'paperwork_received', paperworkOnDay: 'paperwork_on_day',
+      signedIn: 'signed_in', otdNotes: 'otd_notes',
+      standbyReplacementSwaps: 'standby_replacement_swaps',
+      rxNumber: 'rx_number', rxEpNumber: 'rx_ep_number', caseNumber: 'case_number',
+      winningMoneyRole: 'winning_money_role', winningMoneyAmount: 'winning_money_amount',
+      winningMoneyText: 'winning_money_text', caseAmount: 'case_amount',
+      hnGiftcard: 'hn_giftcard', bankOfferTaken: 'bank_offer_taken',
+      spinTheWheel: 'spin_the_wheel', prize: 'prize',
+      txNumber: 'tx_number', txDate: 'tx_date',
+      notifiedOfTx: 'notified_of_tx', photosSent: 'photos_sent',
+      attendingWithOverride: 'attending_with_override',
+      mobilityNotesOverride: 'mobility_notes_override',
+      emailsCopiedAt: 'emails_copied_at', called: 'called', calledAt: 'called_at',
+      quickCash: 'quick_cash',
+    };
 
-    const [updated] = await db
-      .update(seatAssignments)
-      .set(fieldsToUpdate)
-      .where(eq(seatAssignments.id, id))
-      .returning();
-    return updated;
+    const realColumns = new Set(['caseAmount', 'quickCash', 'winningMoneyAmount']);
+    const booleanColumns = new Set(['bankOfferTaken', 'spinTheWheel', 'hnGiftcard', 'called', 'notifiedOfTx', 'photosSent']);
+    const timestampColumns = new Set(['bookingEmailSent', 'confirmedRsvp', 'ticketEmailSent', 'paperworkSent', 'paperworkReceived', 'paperworkOnDay', 'signedIn', 'emailsCopiedAt', 'calledAt']);
+
+    const setClauses: string[] = [];
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    for (const [jsField, value] of Object.entries(fieldsToUpdate)) {
+      const col = fieldToColumn[jsField];
+      if (!col) continue;
+
+      let safeValue = value;
+      let castSuffix = '';
+
+      if (realColumns.has(jsField)) {
+        if (safeValue === null || safeValue === undefined || typeof safeValue === 'boolean') {
+          safeValue = null;
+        } else {
+          const num = Number(safeValue);
+          safeValue = isNaN(num) ? null : num;
+        }
+        castSuffix = '::real';
+      } else if (booleanColumns.has(jsField)) {
+        if (safeValue === null || safeValue === undefined) {
+          safeValue = null;
+        } else {
+          safeValue = safeValue === true || safeValue === 'true';
+        }
+        castSuffix = '::boolean';
+      } else if (timestampColumns.has(jsField)) {
+        if (safeValue instanceof Date) {
+          safeValue = safeValue.toISOString();
+        }
+        castSuffix = '::timestamp';
+      }
+
+      setClauses.push(`"${col}" = $${paramIndex}${castSuffix}`);
+      params.push(safeValue);
+      paramIndex++;
+    }
+
+    if (setClauses.length === 0) {
+      const [existing] = await db.select().from(seatAssignments).where(eq(seatAssignments.id, id));
+      return existing;
+    }
+
+    params.push(id);
+    const query = `UPDATE seat_assignments SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
+
+    console.log("[RAW SQL UPDATE]", query, "params:", JSON.stringify(params));
+
+    const result = await pool!.query(query, params);
+    if (result.rows.length === 0) return undefined;
+
+    const row = result.rows[0];
+    const mapped: any = {};
+    for (const [jsField, colName] of Object.entries(fieldToColumn)) {
+      if (colName in row) {
+        mapped[jsField] = row[colName];
+      }
+    }
+    mapped.id = row.id;
+    mapped.contestantId = row.contestant_id;
+    mapped.recordDayId = row.record_day_id;
+    mapped.blockNumber = row.block_number;
+    mapped.seatLabel = row.seat_label;
+    mapped.contestantName = row.contestant_name;
+    mapped.contestantGender = row.contestant_gender;
+    mapped.contestantAge = row.contestant_age;
+    mapped.groupId = row.group_id;
+    mapped.groupName = row.group_name;
+    mapped.createdAt = row.created_at;
+    mapped.bookingEmailError = row.booking_email_error;
+    mapped.paperworkSentBy = row.paperwork_sent_by;
+    mapped.paperworkReceivedBy = row.paperwork_received_by;
+    mapped.seatNotes = row.seat_notes;
+    mapped.castingCardUrl = row.casting_card_url;
+    mapped.seatedAsBlockType = row.seated_as_block_type;
+    mapped.seatedFromStandby = row.seated_from_standby;
+    mapped.standbyMovementNotes = row.standby_movement_notes;
+    mapped.originalBlockNumber = row.original_block_number;
+    mapped.originalSeatLabel = row.original_seat_label;
+    mapped.swappedAt = row.swapped_at;
+    mapped.quickCash = row.quick_cash;
+    mapped.txDate = row.tx_date;
+    return mapped as SeatAssignment;
   }
 
   async updateSeatAssignmentCastingCard(
