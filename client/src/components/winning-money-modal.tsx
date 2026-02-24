@@ -367,8 +367,11 @@ export function WinningMoneyModal({
               <Button
                 variant="destructive"
                 onClick={() => {
-                  onRemove?.();
-                  onOpenChange(false);
+                  if (onRemove) {
+                    onRemove();
+                  } else {
+                    onOpenChange(false);
+                  }
                   setIsEditing(false);
                 }}
                 disabled={isLoading}

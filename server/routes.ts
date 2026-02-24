@@ -7737,9 +7737,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid amount" });
       }
       
-      // If removing (amount is 0), clear winning money fields but PRESERVE RX identifiers
-      // rxNumber and rxEpNumber are set independently and should not be cleared with winning money
-      if (winningMoneyAmount === 0) {
+      // If removing (amount is 0 AND no giftcard), clear winning money fields
+      // NOTE: If hnGiftcard is true, we keep the record even if amount is 0
+      if (winningMoneyAmount === 0 && !hnGiftcard) {
         const updated = await storage.updateSeatAssignmentWorkflow(req.params.id, { 
           // NOTE: rxNumber is NOT cleared - it may have been set independently and clearing causes revert issues
           // NOTE: rxEpNumber is NOT cleared - it's set independently in Players tab

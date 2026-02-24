@@ -2164,13 +2164,13 @@ export default function SeatingChartPage() {
     setWinningMoneyLoading(true);
     try {
       await apiRequest('PATCH', `/api/seat-assignments/${selectedAssignmentId}/winning-money`, {
-        rxNumber: "",
-        rxEpNumber: "",
+        rxNumber: currentAssignment?.rxNumber || "",
+        rxEpNumber: currentAssignment?.rxEpNumber || "",
         caseNumber: "",
         winningMoneyRole: "",
         winningMoneyAmount: 0,
-        caseAmount: null,
         hnGiftcard: false,
+        caseAmount: null,
         bankOfferTaken: null,
         spinTheWheel: null,
         prize: null,
