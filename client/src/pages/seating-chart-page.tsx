@@ -2139,8 +2139,8 @@ export default function SeatingChartPage() {
         rxEpNumber,
         caseNumber,
         winningMoneyRole: role,
-        winningMoneyAmount: amount,
-        winningMoneyText: role === 'case_holder' ? amountText : null,
+        winningMoneyAmount: amount ?? 0,
+        winningMoneyText: amountText,
         hnGiftcard: playerFields?.hnGiftcard || false,
         ...(role === 'player' && playerFields ? {
           caseAmount: playerFields.caseAmount,

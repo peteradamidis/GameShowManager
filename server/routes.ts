@@ -7783,8 +7783,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rxEpNumber: rxEpNumber || currentAssignment?.rxEpNumber || null,
         caseNumber: caseNumber || null,
         winningMoneyRole, 
-        winningMoneyAmount,
-        hnGiftcard: hnGiftcard ?? false,
+        winningMoneyAmount: winningMoneyAmount != null ? Number(winningMoneyAmount) : 0,
+        winningMoneyText: winningMoneyRole === 'case_holder' ? (req.body.winningMoneyText || null) : null,
+        hnGiftcard: hnGiftcard === true || hnGiftcard === "true",
       };
       
       // Add player-specific fields if role is player
