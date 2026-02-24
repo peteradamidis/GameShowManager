@@ -2502,7 +2502,6 @@ export default function SeatingChartPage() {
                                 toast({ title: "Error", description: "Failed to update case number", variant: "destructive" });
                               });
                           }}
-                          }}
                         />
                       ))
                     )}
