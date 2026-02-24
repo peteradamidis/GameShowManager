@@ -1702,8 +1702,23 @@ export default function SeatingChartPage() {
     }
   };
 
-  const handleAssignContestant = async (skipPostcodeWarning = false) => {
+  const handleAssignContestant = async (skipPostcodeWarning = false, allowThirdBooking = false) => {
     if (!selectedContestant || !selectedBlock || !selectedSeat) return;
+
+    // Check for 3rd or more booking attempt
+    const prevApps = returningContestantsMap[selectedContestant] || [];
+    const uniquePrevDays = new Set(prevApps.map(app => app.recordDayId));
+    
+    // If they have 2 or more previous distinct days, they are about to be booked for a 3rd (or more) time
+    if (uniquePrevDays.size >= 2 && !allowThirdBooking) {
+      const rxDaysList = Array.from(new Map(prevApps.map(app => [app.recordDayId, app.label])).values()).join(", ");
+      const confirmed = window.confirm(
+        `⚠️ MULTIPLE APPEARANCES (3rd+ Booking)\n\n${selectedContestantData?.name} has already been in 2 or more episodes:\n${rxDaysList}\n\nAre you sure you want to book them for a THIRD (or more) time?`
+      );
+      if (!confirmed) return;
+      // If confirmed, proceed with the extra flag
+      return handleAssignContestant(skipPostcodeWarning, true);
+    }
 
     try {
       // Determine if we're booking a group or individual
@@ -1718,6 +1733,7 @@ export default function SeatingChartPage() {
             blockNumber: selectedBlock,
             seatLabel: seatsToUse[i],
             skipPostcodeWarning,
+            allowReturning: true, // Auto-allow since we already confirmed the 3rd+ booking
           });
         }
         
@@ -1741,6 +1757,7 @@ export default function SeatingChartPage() {
           blockNumber: selectedBlock,
           seatLabel: selectedSeat,
           skipPostcodeWarning,
+          allowReturning: true, // Auto-allow since we already confirmed the 3rd+ booking
         });
         
         // Invalidate essential queries
@@ -1779,13 +1796,13 @@ export default function SeatingChartPage() {
         );
         if (confirmed) {
           // Retry with skip flag
-          handleAssignContestant(true);
+          handleAssignContestant(true, allowThirdBooking);
         }
         return;
       }
       
-      // Check if this is a returning contestant that needs confirmation
-      if (parsedError?.isReturning) {
+      // Check if this is a returning contestant that needs confirmation (only if we haven't already confirmed the 3rd+ booking)
+      if (parsedError?.isReturning && !allowThirdBooking) {
         const confirmed = window.confirm(
           `RETURNING CONTESTANT\n\n${parsedError.contestantName || 'This contestant'} previously appeared on ${parsedError.previousLabel || parsedError.previousDay || 'a completed episode'}.\n\nDo you want to rebook them as a returning contestant?`
         );
