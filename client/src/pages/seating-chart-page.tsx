@@ -4178,7 +4178,14 @@ export default function SeatingChartPage() {
         currentRxNumber={currentWinningMoneyData.rxNumber}
         currentRxEpNumber={currentWinningMoneyData.rxEpNumber}
         currentCaseNumber={currentWinningMoneyData.caseNumber}
-        {...currentWinningMoneyData}
+        currentRole={currentWinningMoneyData.currentRole}
+        currentAmount={currentWinningMoneyData.currentAmount}
+        currentAmountText={currentWinningMoneyData.currentAmountText}
+        currentCaseAmount={currentWinningMoneyData.currentCaseAmount}
+        currentHnGiftcard={currentWinningMoneyData.currentHnGiftcard}
+        currentBankOfferTaken={currentWinningMoneyData.currentBankOfferTaken}
+        currentSpinTheWheel={currentWinningMoneyData.currentSpinTheWheel}
+        currentPrize={currentWinningMoneyData.currentPrize}
         contestantName={currentAssignment?.contestantName}
         blockNumber={currentAssignment?.blockNumber}
         assignments={assignments}
