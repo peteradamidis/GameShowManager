@@ -2221,44 +2221,55 @@ export function ContestantTable({
                   </div>
                 </div>
 
-                {/* Seat Assignment - Compact inline */}
-                {selectedContestantSeatAssignment && (
-                  <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2">
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
-                        <Calendar className="h-4 w-4" />
-                        <span className="text-xs font-semibold uppercase">Seat Assignment</span>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm">
-                        <span><span className="text-xs text-muted-foreground mr-1">Day:</span><span className="font-medium">{seatAssignmentRecordDay ? new Date(seatAssignmentRecordDay.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : 'Unknown'}</span></span>
-                        <span className="flex items-center gap-1.5">
-                          <span className="text-xs text-muted-foreground">Block:</span>
-                          <span className="font-medium">{selectedContestantSeatAssignment.blockNumber}</span>
-                          {(() => {
-                            const blockType = blockTypes.find(bt => bt.blockNumber === selectedContestantSeatAssignment.blockNumber);
-                            if (blockType) {
-                              return (
-                                <Badge 
-                                  variant="outline" 
-                                  className={`text-xs py-0 px-1.5 ${
-                                    blockType.blockType === 'PB' 
-                                      ? 'border-emerald-300 bg-emerald-500/20 text-emerald-700 dark:border-emerald-700 dark:text-emerald-400' 
-                                      : 'border-slate-300 bg-slate-500/20 text-slate-700 dark:border-slate-600 dark:text-slate-400'
-                                  }`}
-                                  data-testid={`badge-block-type-${blockType.blockType}`}
-                                >
-                                  {blockType.blockType}
-                                </Badge>
-                              );
-                            }
-                            return null;
-                          })()}
-                        </span>
-                        <span><span className="text-xs text-muted-foreground mr-1">Seat:</span><span className="font-mono font-medium text-green-600 dark:text-green-400">{String(selectedContestantSeatAssignment.blockNumber).padStart(2, '0')}-{selectedContestantSeatAssignment.seatLabel}</span></span>
-                      </div>
+                {/* Seat Assignments - List all appearances */}
+                {(() => {
+                  // Find all assignments for this contestant across all record days
+                  const allAssignments = Array.from(seatAssignmentMap.values()).filter(
+                    (a: any) => a.contestantId === selectedContestantId
+                  );
+                  
+                  if (allAssignments.length === 0) return null;
+
+                  return (
+                    <div className="space-y-2">
+                      {allAssignments.map((assignment: any) => {
+                        const rd = recordDays.find(rd => rd.id === assignment.recordDayId);
+                        const blockType = blockTypes.find(bt => bt.recordDayId === assignment.recordDayId && bt.blockNumber === assignment.blockNumber);
+                        
+                        return (
+                          <div key={assignment.id} className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2">
+                            <div className="flex items-center gap-6">
+                              <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+                                <Calendar className="h-4 w-4" />
+                                <span className="text-xs font-semibold uppercase">Seat Assignment</span>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm">
+                                <span><span className="text-xs text-muted-foreground mr-1">Day:</span><span className="font-medium">{rd ? new Date(rd.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : 'Unknown'}</span></span>
+                                <span className="flex items-center gap-1.5">
+                                  <span className="text-xs text-muted-foreground">Block:</span>
+                                  <span className="font-medium">{assignment.blockNumber}</span>
+                                  {blockType && (
+                                    <Badge 
+                                      variant="outline" 
+                                      className={`text-xs py-0 px-1.5 ${
+                                        blockType.blockType === 'PB' 
+                                          ? 'border-emerald-300 bg-emerald-500/20 text-emerald-700 dark:border-emerald-700 dark:text-emerald-400' 
+                                          : 'border-slate-300 bg-slate-500/20 text-slate-700 dark:border-slate-600 dark:text-slate-400'
+                                      }`}
+                                    >
+                                      {blockType.blockType}
+                                    </Badge>
+                                  )}
+                                </span>
+                                <span><span className="text-xs text-muted-foreground mr-1">Seat:</span><span className="font-mono font-medium text-green-600 dark:text-green-400">{String(assignment.blockNumber).padStart(2, '0')}-{assignment.seatLabel}</span></span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* Paperwork Status */}
                 {contestantDetails && paperworkStatusMap.get(contestantDetails.id) && (
