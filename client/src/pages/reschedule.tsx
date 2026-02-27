@@ -316,6 +316,7 @@ export default function ReschedulePage() {
     setSelectedRecordDayId("");
     setSelectedBlock("");
     setSelectedSeat("");
+    setSeatGroupTogether(false);
     setRebookDialogOpen(true);
   };
 
@@ -357,9 +358,11 @@ export default function ReschedulePage() {
       const selectedContestantId = selectedCancellation.contestantId;
 
       // Find partners in the reschedule list when group booking is enabled
+      // Exclude already-rebooked entries so we don't try to rebook them again
       const partners = seatGroupTogether
         ? canceledAssignments.filter((c: any) =>
             c.contestantId !== selectedContestantId &&
+            !c.rebookedToRecordDayId &&
             (
               (c.contestant?.groupId && c.contestant.groupId === selectedCancellation.contestant?.groupId) ||
               (selectedCancellation.contestant?.attendingWith && c.contestant?.name &&
@@ -946,7 +949,7 @@ export default function ReschedulePage() {
               )}
             </div>
 
-            {selectedCancellation?.contestant?.attendingWith && (
+            {(selectedCancellation?.contestant?.attendingWith || selectedCancellation?.contestant?.groupId) && (
               <div className="flex items-center space-x-2 p-2 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50">
                 <Checkbox 
                   id="seat-group-together" 
@@ -958,7 +961,9 @@ export default function ReschedulePage() {
                   className="text-sm font-medium leading-none cursor-pointer flex items-center gap-1"
                 >
                   <Users className="h-4 w-4 text-amber-600" />
-                  Seat with partner(s)? (Currently attending with: {selectedCancellation.contestant.attendingWith})
+                  {selectedCancellation?.contestant?.attendingWith
+                    ? `Seat with partner(s)? (Currently attending with: ${selectedCancellation.contestant.attendingWith})`
+                    : "Seat with group?"}
                 </Label>
               </div>
             )}
@@ -1014,6 +1019,7 @@ export default function ReschedulePage() {
             {seatGroupTogether && selectedSeat && selectedBlock && (() => {
               const partnerCount = canceledAssignments.filter((c: any) =>
                 c.contestantId !== selectedCancellation?.contestantId &&
+                !c.rebookedToRecordDayId &&
                 (
                   (c.contestant?.groupId && c.contestant.groupId === selectedCancellation?.contestant?.groupId) ||
                   (selectedCancellation?.contestant?.attendingWith && c.contestant?.name &&
