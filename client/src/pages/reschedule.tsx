@@ -318,55 +318,79 @@ export default function ReschedulePage() {
     setRebookDialogOpen(true);
   };
 
+  // Helper: find consecutive available seats starting from a selected seat
+  const getConsecutiveSeatsFrom = (startSeat: string, count: number): string[] => {
+    if (count <= 1) return [startSeat];
+    const row = startSeat.charAt(0);
+    const startNum = parseInt(startSeat.substring(1));
+    const rowConfig = SEAT_ROWS.find(r => r.label === row);
+    if (!rowConfig) return [startSeat];
+    const maxNum = rowConfig.count;
+
+    const occupiedSet = new Set(
+      (occupiedSeats as any[])
+        .filter((a: any) => a.blockNumber === parseInt(selectedBlock))
+        .map((a: any) => a.seatLabel)
+    );
+
+    const seats: string[] = [startSeat];
+    // Extend right
+    for (let i = startNum + 1; seats.length < count && i <= maxNum; i++) {
+      const label = `${row}${i}`;
+      if (!occupiedSet.has(label)) seats.push(label);
+      else break;
+    }
+    // If not enough, extend left from start
+    for (let i = startNum - 1; seats.length < count && i >= 1; i--) {
+      const label = `${row}${i}`;
+      if (!occupiedSet.has(label)) seats.unshift(label);
+      else break;
+    }
+    return seats;
+  };
+
   const handleConfirmRebook = async () => {
     if (!selectedCancellation || !selectedRecordDayId || !selectedBlock || !selectedSeat) return;
 
     try {
       const selectedContestantId = selectedCancellation.contestantId;
-      
-      // Determine members to seat
-      let membersToSeat = [selectedContestantId];
-      if (seatGroupTogether) {
-        // Find partners in the reschedule list
-        const partners = canceledAssignments.filter((c: any) => 
-          c.contestantId !== selectedContestantId && 
-          (
-            (c.contestant?.groupId && c.contestant.groupId === selectedCancellation.contestant?.groupId) ||
-            (selectedCancellation.contestant?.attendingWith && c.contestant?.name && 
-             selectedCancellation.contestant.attendingWith.toLowerCase().includes(c.contestant.name.toLowerCase())) ||
-            (c.contestant?.attendingWith && selectedCancellation.contestant?.name && 
-             c.contestant.attendingWith.toLowerCase().includes(selectedCancellation.contestant.name.toLowerCase()))
-          )
-        );
-        membersToSeat = [selectedContestantId, ...partners.map(p => p.contestantId)];
-      }
 
-      // Check if we have enough seats for the group
-      if (membersToSeat.length > availableSeats.length) {
+      // Find partners in the reschedule list when group booking is enabled
+      const partners = seatGroupTogether
+        ? canceledAssignments.filter((c: any) =>
+            c.contestantId !== selectedContestantId &&
+            (
+              (c.contestant?.groupId && c.contestant.groupId === selectedCancellation.contestant?.groupId) ||
+              (selectedCancellation.contestant?.attendingWith && c.contestant?.name &&
+               selectedCancellation.contestant.attendingWith.toLowerCase().includes(c.contestant.name.toLowerCase())) ||
+              (c.contestant?.attendingWith && selectedCancellation.contestant?.name &&
+               c.contestant.attendingWith.toLowerCase().includes(selectedCancellation.contestant.name.toLowerCase()))
+            )
+          )
+        : [];
+
+      const membersToSeat = [selectedCancellation, ...partners];
+
+      // For groups: find consecutive seats from the selected seat
+      const seatsToUse = membersToSeat.length > 1
+        ? getConsecutiveSeatsFrom(selectedSeat, membersToSeat.length)
+        : [selectedSeat];
+
+      if (seatsToUse.length < membersToSeat.length) {
         toast({
-          title: "Not enough seats",
-          description: `You need ${membersToSeat.length} seats, but only ${availableSeats.length} are available in this row.`,
+          title: "Not enough consecutive seats",
+          description: `Cannot find ${membersToSeat.length} consecutive empty seats in the same row starting from ${selectedSeat}. Try a different starting seat.`,
           variant: "destructive",
         });
         return;
       }
 
-      // Assign seats to each member
-      const assignments = membersToSeat.map((contestantId, index) => {
-        const cancellation = canceledAssignments.find(c => c.contestantId === contestantId);
-        return {
-          cancellationId: cancellation?.id,
-          contestantId,
-          seatLabel: availableSeats[index]
-        };
-      });
-
       // Use dedicated rebook endpoint that preserves paperwork status
-      await Promise.all(assignments.map(a => 
-        apiRequest('POST', `/api/canceled-assignments/${a.cancellationId}/rebook`, {
+      await Promise.all(membersToSeat.map((member, index) =>
+        apiRequest('POST', `/api/canceled-assignments/${member.id}/rebook`, {
           recordDayId: selectedRecordDayId,
           blockNumber: parseInt(selectedBlock),
-          seatLabel: a.seatLabel,
+          seatLabel: seatsToUse[index],
         })
       ));
 
@@ -380,9 +404,12 @@ export default function ReschedulePage() {
       ]);
       await refetch();
 
+      const seatedNames = membersToSeat.map(m => m.contestant.name).join(', ');
       toast({
-        title: "Contestant rebooked",
-        description: `${selectedCancellation.contestant.name} has been assigned to Block ${selectedBlock}, Seat ${selectedSeat}.`,
+        title: membersToSeat.length > 1 ? "Group rebooked" : "Contestant rebooked",
+        description: membersToSeat.length > 1
+          ? `${seatedNames} have been assigned to Block ${selectedBlock}, Seats ${seatsToUse.join(', ')}.`
+          : `${selectedCancellation.contestant.name} has been assigned to Block ${selectedBlock}, Seat ${selectedSeat}.`,
       });
 
       setRebookDialogOpen(false);
@@ -396,7 +423,7 @@ export default function ReschedulePage() {
           parsedError = JSON.parse(jsonMatch[1]);
         }
       } catch {}
-      
+
       if (parsedError?.isReturning) {
         const confirmed = window.confirm(
           `RETURNING CONTESTANT\n\n${parsedError.contestantName || 'This contestant'} previously appeared on ${parsedError.previousLabel || parsedError.previousDay || 'a completed episode'}.\n\nDo you want to rebook them as a returning contestant?`
@@ -433,7 +460,7 @@ export default function ReschedulePage() {
         }
         return;
       }
-      
+
       toast({
         title: "Rebooking failed",
         description: parsedError?.error || error?.message || "Could not rebook contestant.",
@@ -955,7 +982,9 @@ export default function ReschedulePage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Seat</label>
+                  <label className="text-sm font-medium mb-1 block">
+                    {seatGroupTogether ? "Starting Seat" : "Seat"}
+                  </label>
                   <Select 
                     value={selectedSeat} 
                     onValueChange={setSelectedSeat}
@@ -979,6 +1008,34 @@ export default function ReschedulePage() {
                 </div>
               </div>
             )}
+
+            {/* Group seat preview */}
+            {seatGroupTogether && selectedSeat && selectedBlock && (() => {
+              const partnerCount = canceledAssignments.filter((c: any) =>
+                c.contestantId !== selectedCancellation?.contestantId &&
+                (
+                  (c.contestant?.groupId && c.contestant.groupId === selectedCancellation?.contestant?.groupId) ||
+                  (selectedCancellation?.contestant?.attendingWith && c.contestant?.name &&
+                   selectedCancellation.contestant.attendingWith.toLowerCase().includes(c.contestant.name.toLowerCase())) ||
+                  (c.contestant?.attendingWith && selectedCancellation?.contestant?.name &&
+                   c.contestant.attendingWith.toLowerCase().includes(selectedCancellation.contestant.name.toLowerCase()))
+                )
+              ).length;
+              const totalMembers = partnerCount + 1;
+              const previewSeats = getConsecutiveSeatsFrom(selectedSeat, totalMembers);
+              return (
+                <div className="p-2 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 text-sm">
+                  <p className="font-medium text-blue-700 dark:text-blue-300">
+                    {totalMembers} contestants will be seated together:
+                  </p>
+                  <p className="text-blue-600 dark:text-blue-400 text-xs mt-1">
+                    Seats: {previewSeats.length >= totalMembers
+                      ? previewSeats.join(', ')
+                      : `${previewSeats.join(', ')} — not enough consecutive seats, try a different starting seat`}
+                  </p>
+                </div>
+              );
+            })()}
           </div>
 
           <DialogFooter>
