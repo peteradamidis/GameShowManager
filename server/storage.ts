@@ -303,6 +303,7 @@ export interface IStorage {
   isGmailMessageProcessed(gmailMessageId: string): Promise<boolean>;
   
   // Block Types (PB/NPB)
+  getAllBlockTypes(): Promise<BlockType[]>;
   getBlockTypesByRecordDay(recordDayId: string): Promise<BlockType[]>;
   upsertBlockType(recordDayId: string, blockNumber: number, blockType: 'PB' | 'NPB'): Promise<BlockType>;
   upsertBlockTypes(recordDayId: string, configs: Array<{blockNumber: number, blockType: 'PB' | 'NPB'}>): Promise<BlockType[]>;
@@ -1924,6 +1925,10 @@ export class DbStorage implements IStorage {
   }
 
   // Block Types (PB/NPB)
+  async getAllBlockTypes(): Promise<BlockType[]> {
+    return db.select().from(blockTypes);
+  }
+
   async getBlockTypesByRecordDay(recordDayId: string): Promise<BlockType[]> {
     return db
       .select()

@@ -7094,6 +7094,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all block types across all record days
+  app.get("/api/block-types", async (req, res) => {
+    try {
+      const allBlockTypes = await storage.getAllBlockTypes();
+      res.json(allBlockTypes);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get block types for a record day
   app.get("/api/record-days/:id/block-types", async (req, res) => {
     try {

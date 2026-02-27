@@ -1070,12 +1070,7 @@ export function ContestantTable({
     queryKey: ['/api/record-days'],
   });
 
-  // Get seat assignment for the selected contestant
-  const tempSelectedContestantSeatAssignment = selectedContestantId 
-    ? seatAssignmentMap.get(selectedContestantId) 
-    : null;
-  
-  // Fetch block types for the seat assignment's record day
+  // Fetch all block types across all record days (needed to show PB/NPB for historical appearances)
   interface BlockType {
     id: string;
     recordDayId: string;
@@ -1083,8 +1078,8 @@ export function ContestantTable({
     blockType: 'PB' | 'NPB';
   }
   const { data: blockTypes = [] } = useQuery<BlockType[]>({
-    queryKey: ['/api/record-days', tempSelectedContestantSeatAssignment?.recordDayId, 'block-types'],
-    enabled: !!tempSelectedContestantSeatAssignment?.recordDayId && detailDialogOpen,
+    queryKey: ['/api/block-types'],
+    enabled: detailDialogOpen,
   });
 
   // Get seat assignment for the selected contestant
@@ -2224,27 +2219,33 @@ export function ContestantTable({
                 {/* Seat Assignments - List all appearances */}
                 {(() => {
                   // Find all assignments for this contestant across all record days
-                  const allAssignments = Array.from(seatAssignmentMap.values()).filter(
-                    (a: any) => a.contestantId === selectedContestantId
-                  );
+                  // Use the raw seatAssignments array (not the map) so returning contestants show all appearances
+                  const allAssignments = seatAssignments
+                    .filter((a: any) => a.contestantId === selectedContestantId)
+                    .sort((a: any, b: any) => {
+                      const rdA = recordDays.find(rd => rd.id === a.recordDayId);
+                      const rdB = recordDays.find(rd => rd.id === b.recordDayId);
+                      return new Date(rdB?.date || 0).getTime() - new Date(rdA?.date || 0).getTime();
+                    });
                   
                   if (allAssignments.length === 0) return null;
 
                   return (
                     <div className="space-y-2">
-                      {allAssignments.map((assignment: any) => {
+                      {allAssignments.map((assignment: any, idx: number) => {
                         const rd = recordDays.find(rd => rd.id === assignment.recordDayId);
                         const blockType = blockTypes.find(bt => bt.recordDayId === assignment.recordDayId && bt.blockNumber === assignment.blockNumber);
+                        const isLatest = idx === 0;
                         
                         return (
-                          <div key={assignment.id} className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2">
+                          <div key={assignment.id} className={`rounded-md px-3 py-2 ${isLatest ? 'bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800' : 'bg-muted/40 border border-border'}`}>
                             <div className="flex items-center gap-6">
-                              <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+                              <div className={`flex items-center gap-2 ${isLatest ? 'text-blue-700 dark:text-blue-400' : 'text-muted-foreground'}`}>
                                 <Calendar className="h-4 w-4" />
-                                <span className="text-xs font-semibold uppercase">Seat Assignment</span>
+                                <span className="text-xs font-semibold uppercase">{isLatest ? 'Seat Assignment' : 'Previous Appearance'}</span>
                               </div>
                               <div className="flex items-center gap-4 text-sm">
-                                <span><span className="text-xs text-muted-foreground mr-1">Day:</span><span className="font-medium">{rd ? new Date(rd.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : 'Unknown'}</span></span>
+                                <span><span className="text-xs text-muted-foreground mr-1">Day:</span><span className="font-medium">{rd ? new Date(rd.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown'}</span></span>
                                 <span className="flex items-center gap-1.5">
                                   <span className="text-xs text-muted-foreground">Block:</span>
                                   <span className="font-medium">{assignment.blockNumber}</span>
