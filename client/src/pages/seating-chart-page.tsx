@@ -1661,14 +1661,23 @@ export default function SeatingChartPage() {
       if (seatGroupTogether && canSeatGroupTogether && groupMembersToSeat.length > 1) {
         const seatsToUse = adjacentSeats.slice(0, groupMembersToSeat.length);
         for (let i = 0; i < groupMembersToSeat.length; i++) {
-          await apiRequest('POST', '/api/seat-assignments', {
-            recordDayId,
-            contestantId: groupMembersToSeat[i].id,
-            blockNumber: selectedBlock,
-            seatLabel: seatsToUse[i],
-            skipPostcodeWarning,
-            allowReturning: true,
-          });
+          try {
+            await apiRequest('POST', '/api/seat-assignments', {
+              recordDayId,
+              contestantId: groupMembersToSeat[i].id,
+              blockNumber: selectedBlock,
+              seatLabel: seatsToUse[i],
+              skipPostcodeWarning,
+              allowReturning: true,
+            });
+          } catch (memberError: any) {
+            // If this member is already seated (from the previous partial attempt), skip them
+            const msg = memberError?.message || '';
+            if (msg.includes('already seated') && !msg.includes('isReturning')) {
+              continue;
+            }
+            throw memberError;
+          }
         }
       } else {
         await apiRequest('POST', '/api/seat-assignments', {
@@ -1733,7 +1742,6 @@ export default function SeatingChartPage() {
             blockNumber: selectedBlock,
             seatLabel: seatsToUse[i],
             skipPostcodeWarning,
-            allowReturning: true, // Auto-allow since we already confirmed the 3rd+ booking
           });
         }
         
@@ -1757,7 +1765,6 @@ export default function SeatingChartPage() {
           blockNumber: selectedBlock,
           seatLabel: selectedSeat,
           skipPostcodeWarning,
-          allowReturning: true, // Auto-allow since we already confirmed the 3rd+ booking
         });
         
         // Invalidate essential queries
@@ -1801,8 +1808,8 @@ export default function SeatingChartPage() {
         return;
       }
       
-      // Check if this is a returning contestant that needs confirmation (only if we haven't already confirmed the 3rd+ booking)
-      if (parsedError?.isReturning && !allowThirdBooking) {
+      // Check if this is a returning contestant that needs confirmation
+      if (parsedError?.isReturning) {
         const confirmed = window.confirm(
           `RETURNING CONTESTANT\n\n${parsedError.contestantName || 'This contestant'} previously appeared on ${parsedError.previousLabel || parsedError.previousDay || 'a completed episode'}.\n\nDo you want to rebook them as a returning contestant?`
         );
