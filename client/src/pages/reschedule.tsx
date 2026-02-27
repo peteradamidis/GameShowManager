@@ -192,6 +192,42 @@ export default function ReschedulePage() {
     return bookingMap;
   }, [allSeatAssignments, recordDays]);
 
+  const sortedCanceledAssignments = useMemo(() => {
+    return [...canceledAssignments].sort((a: any, b: any) => {
+      // Primary sort: Group ID (if both have one)
+      const groupA = a.contestant?.groupId;
+      const groupB = b.contestant?.groupId;
+      
+      if (groupA && groupB && groupA === groupB) {
+        // Same group, keep them together and sort by name
+        return a.contestant.name.localeCompare(b.contestant.name);
+      }
+      
+      if (groupA && groupB) {
+        return groupA.localeCompare(groupB);
+      }
+      
+      // Secondary sort: Attending With (fuzzy grouping for non-linked partners)
+      const withA = (a.contestant?.attendingWith || "").toLowerCase().trim();
+      const withB = (b.contestant?.attendingWith || "").toLowerCase().trim();
+      const nameA = a.contestant.name.toLowerCase().trim();
+      const nameB = b.contestant.name.toLowerCase().trim();
+
+      // If A is attending with B, or vice-versa
+      const isPartnerAB = (withA && nameB.includes(withA)) || (withB && nameA.includes(withB));
+      
+      if (isPartnerAB) {
+        // They are likely partners, group them. 
+        // We use a stable secondary key to ensure they stay together in the list
+        const pairKey = [nameA, nameB].sort().join("-");
+        return pairKey.localeCompare(pairKey); // This logic is slightly flawed for sorting but helps if we use a consistent sort key
+      }
+
+      // Default sort by added date (newest first)
+      return new Date(b.addedAt || b.canceledAt).getTime() - new Date(a.addedAt || a.canceledAt).getTime();
+    });
+  }, [canceledAssignments]);
+
   // Fetch occupied seats for the selected record day
   const { data: occupiedSeats = [] } = useQuery({
     queryKey: ['/api/seat-assignments', selectedRecordDayId],
@@ -531,7 +567,7 @@ export default function ReschedulePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {canceledAssignments
+                {sortedCanceledAssignments
                   .filter((cancellation: any) => {
                     const matchesDate = filterOriginalRecordDayId === "all" || cancellation.recordDayId === filterOriginalRecordDayId;
                     const searchLower = searchQuery.toLowerCase();
