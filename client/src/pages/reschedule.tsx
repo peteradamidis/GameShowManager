@@ -163,6 +163,9 @@ export default function ReschedulePage() {
     setIsEditMode(false);
   };
 
+  // Group booking state
+  const [seatGroupTogether, setSeatGroupTogether] = useState(false);
+
   const { data: canceledAssignments = [], isLoading, refetch } = useQuery<any[]>({
     queryKey: ['/api/canceled-assignments'],
   });
@@ -319,12 +322,53 @@ export default function ReschedulePage() {
     if (!selectedCancellation || !selectedRecordDayId || !selectedBlock || !selectedSeat) return;
 
     try {
-      // Use dedicated rebook endpoint that preserves paperwork status
-      await apiRequest('POST', `/api/canceled-assignments/${selectedCancellation.id}/rebook`, {
-        recordDayId: selectedRecordDayId,
-        blockNumber: parseInt(selectedBlock),
-        seatLabel: selectedSeat,
+      const selectedContestantId = selectedCancellation.contestantId;
+      
+      // Determine members to seat
+      let membersToSeat = [selectedContestantId];
+      if (seatGroupTogether) {
+        // Find partners in the reschedule list
+        const partners = canceledAssignments.filter((c: any) => 
+          c.contestantId !== selectedContestantId && 
+          (
+            (c.contestant?.groupId && c.contestant.groupId === selectedCancellation.contestant?.groupId) ||
+            (selectedCancellation.contestant?.attendingWith && c.contestant?.name && 
+             selectedCancellation.contestant.attendingWith.toLowerCase().includes(c.contestant.name.toLowerCase())) ||
+            (c.contestant?.attendingWith && selectedCancellation.contestant?.name && 
+             c.contestant.attendingWith.toLowerCase().includes(selectedCancellation.contestant.name.toLowerCase()))
+          )
+        );
+        membersToSeat = [selectedContestantId, ...partners.map(p => p.contestantId)];
+      }
+
+      // Check if we have enough seats for the group
+      if (membersToSeat.length > availableSeats.length) {
+        toast({
+          title: "Not enough seats",
+          description: `You need ${membersToSeat.length} seats, but only ${availableSeats.length} are available in this row.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Assign seats to each member
+      const assignments = membersToSeat.map((contestantId, index) => {
+        const cancellation = canceledAssignments.find(c => c.contestantId === contestantId);
+        return {
+          cancellationId: cancellation?.id,
+          contestantId,
+          seatLabel: availableSeats[index]
+        };
       });
+
+      // Use dedicated rebook endpoint that preserves paperwork status
+      await Promise.all(assignments.map(a => 
+        apiRequest('POST', `/api/canceled-assignments/${a.cancellationId}/rebook`, {
+          recordDayId: selectedRecordDayId,
+          blockNumber: parseInt(selectedBlock),
+          seatLabel: a.seatLabel,
+        })
+      ));
 
       // Invalidate ALL related queries for consistent state across tabs
       await Promise.all([
@@ -873,6 +917,23 @@ export default function ReschedulePage() {
                 </div>
               )}
             </div>
+
+            {selectedCancellation?.contestant?.attendingWith && (
+              <div className="flex items-center space-x-2 p-2 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50">
+                <Checkbox 
+                  id="seat-group-together" 
+                  checked={seatGroupTogether} 
+                  onCheckedChange={(checked) => setSeatGroupTogether(!!checked)}
+                />
+                <Label 
+                  htmlFor="seat-group-together" 
+                  className="text-sm font-medium leading-none cursor-pointer flex items-center gap-1"
+                >
+                  <Users className="h-4 w-4 text-amber-600" />
+                  Seat with partner(s)? (Currently attending with: {selectedCancellation.contestant.attendingWith})
+                </Label>
+              </div>
+            )}
 
             {/* Block and Seat Selection */}
             {selectedRecordDayId && (
