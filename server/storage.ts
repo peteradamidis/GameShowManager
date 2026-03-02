@@ -660,6 +660,27 @@ export class DbStorage implements IStorage {
           (assignment as any).paperworkReceivedBy = "SYSTEM (RTN)";
         }
 
+        // SAFETY NET: Check if contestant already has a seat on ANY unlocked record day
+        const existingActiveAssignment = await tx
+          .select({
+            date: recordDays.date,
+            rxNumber: recordDays.rxNumber
+          })
+          .from(seatAssignments)
+          .innerJoin(recordDays, eq(seatAssignments.recordDayId, recordDays.id))
+          .where(and(
+            eq(seatAssignments.contestantId, assignment.contestantId),
+            sql`${recordDays.lockedAt} IS NULL`
+          ))
+          .limit(1);
+
+        if (existingActiveAssignment.length > 0) {
+          const day = existingActiveAssignment[0];
+          const dateStr = day.date ? new Date(day.date).toLocaleDateString('en-AU') : 'another day';
+          const label = day.rxNumber || dateStr;
+          throw new Error(`CONTESTANT_ALREADY_ACTIVE: Contestant is already assigned to ${label}`);
+        }
+
         // Create the seat assignment
         const [created] = await tx.insert(seatAssignments).values(assignment).returning();
         

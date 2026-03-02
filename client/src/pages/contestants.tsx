@@ -207,16 +207,20 @@ export default function Contestants() {
     queryKey: ['/api/canceled-assignments'],
   });
 
-  // Create a set of contestant IDs who are standbys
+  // Create a set of contestant IDs who are ACTIVE standbys (exclude inactive/stale entries)
   const standbyContestantIds = useMemo(() => {
-    return new Set(allStandbys.map((s: any) => s.contestantId));
+    return new Set(
+      allStandbys
+        .filter((s: any) => !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled')
+        .map((s: any) => s.contestantId)
+    );
   }, [allStandbys]);
 
-  // Create a set of contestant IDs who have been moved to reschedule (from standby)
+  // Create a set of contestant IDs who have been moved to reschedule (from standby) and NOT yet rebooked
   const rescheduleContestantIds = useMemo(() => {
     return new Set(
       canceledAssignments
-        .filter((ca: any) => ca.isFromStandby)
+        .filter((ca: any) => ca.isFromStandby && !ca.rebookedToRecordDayId)
         .map((ca: any) => ca.contestantId)
     );
   }, [canceledAssignments]);

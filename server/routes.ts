@@ -4585,6 +4585,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           rebookedAt: new Date(),
           rebookedBy: rebookedBy,
         });
+
+        // Also update any partners who were rebooked together with this contestant
+        if (anyPreviousCanceled.groupId) {
+          const groupMembers = canceledAssignments.filter(
+            (c: any) => c.groupId === anyPreviousCanceled.groupId && c.id !== anyPreviousCanceled.id && !c.rebookedToRecordDayId
+          );
+          
+          for (const member of groupMembers) {
+            // Check if this member was also just seated in the same record day
+            const isSeatedInSameDay = existingAssignments.some((a: any) => a.contestantId === member.contestantId);
+            if (isSeatedInSameDay) {
+              await storage.updateCanceledAssignment(member.id, {
+                rebookedToRecordDayId: recordDayId,
+                rebookedAt: new Date(),
+                rebookedBy: rebookedBy,
+              });
+            }
+          }
+        }
+      }
+
+      // CLEANUP: If there was an active standby entry, mark it as 'seated' now
+      if (standbyAssignment && standbyAssignment.status !== 'seated') {
+        await storage.updateStandbyAssignment(standbyAssignment.id, {
+          status: 'seated'
+        });
       }
 
       res.json(assignment);
@@ -4598,6 +4624,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       if (error.message?.startsWith('CONFLICT:')) {
         return res.status(409).json({ error: 'A conflict occurred. Another user may have made changes. Please refresh and try again.' });
+      }
+      if (error.message?.startsWith('CONTESTANT_ALREADY_ACTIVE:')) {
+        return res.status(409).json({ error: error.message.split(': ')[1] });
       }
       res.status(500).json({ error: error.message });
     }
@@ -4737,6 +4766,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
           rebookedToRecordDayId: recordDayId,
           rebookedAt: new Date(),
           rebookedBy: rebookedBy,
+        });
+
+        // Also update any partners who were rebooked together with this contestant
+        // This handles cases where a group rebook was performed but the other members' 
+        // reschedule entries weren't updated yet.
+        if (anyPreviousCanceled.groupId) {
+          const groupMembers = canceledAssignments.filter(
+            (c: any) => c.groupId === anyPreviousCanceled.groupId && c.id !== anyPreviousCanceled.id && !c.rebookedToRecordDayId
+          );
+          
+          for (const member of groupMembers) {
+            // Check if this member was also just seated in the same record day
+            const isSeatedInSameDay = existingAssignments.some((a: any) => a.contestantId === member.contestantId);
+            if (isSeatedInSameDay) {
+              await storage.updateCanceledAssignment(member.id, {
+                rebookedToRecordDayId: recordDayId,
+                rebookedAt: new Date(),
+                rebookedBy: rebookedBy,
+              });
+            }
+          }
+        }
+      }
+
+      // CLEANUP: If there was an active standby entry, mark it as 'seated' now
+      // This prevents orphaned standby entries from showing stale badges or causing conflicts
+      if (standbyAssignment && standbyAssignment.status !== 'seated') {
+        await storage.updateStandbyAssignment(standbyAssignment.id, {
+          status: 'seated'
         });
       }
 
