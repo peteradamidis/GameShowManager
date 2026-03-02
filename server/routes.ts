@@ -12354,7 +12354,10 @@ Thank you.`;
       for (const assignment of allAssignments) {
         const lockedRd = lockedRecordDays.get(assignment.recordDayId);
         if (lockedRd) {
-          addReturningEntry(assignment.contestantId, assignment.recordDayId, lockedRd, 'seated', assignment.blockNumber);
+          // If they were seated FROM standby (moved from standby tab to a seat on the day),
+          // treat them as 'standby' type so the RTN-S badge shows correctly
+          const entryType = (assignment as any).seatedFromStandby ? 'standby' : 'seated';
+          addReturningEntry(assignment.contestantId, assignment.recordDayId, lockedRd, entryType, assignment.blockNumber);
         }
       }
       
