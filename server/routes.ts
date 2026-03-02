@@ -8354,25 +8354,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const canceledAssignments = await storage.getCanceledAssignments();
       const seatAssignments = await storage.getAllSeatAssignments();
       
-      // Get set of contestant IDs who currently have seat assignments
-      const seatedContestantIds = new Set(seatAssignments.map((s: any) => s.contestantId));
+      // Build map of contestantId -> their current unlocked (active) seat assignment
+      const recordDaysList = await storage.getRecordDays();
+      const lockedDayIds = new Set(
+        recordDaysList.filter((rd: any) => rd.lockedAt != null).map((rd: any) => rd.id)
+      );
+      const activeSeats: { [contestantId: string]: any } = {};
+      for (const sa of seatAssignments as any[]) {
+        if (!lockedDayIds.has(sa.recordDayId)) {
+          activeSeats[sa.contestantId] = sa;
+        }
+      }
       
-      // Find canceled assignments where the contestant is already seated
       let deletedCount = 0;
       const removedEntries: string[] = [];
       
       for (const canceled of canceledAssignments) {
-        if (seatedContestantIds.has(canceled.contestantId)) {
-          await storage.deleteCanceledAssignment(canceled.id);
+        const activeSeat = activeSeats[canceled.contestantId];
+        if (activeSeat && !canceled.rebookedToRecordDayId) {
+          // Mark as rebooked (preserves history) instead of deleting
+          await storage.updateCanceledAssignment(canceled.id, {
+            rebookedToRecordDayId: activeSeat.recordDayId,
+            rebookedAt: new Date(),
+            rebookedBy: 'cleanup',
+          });
           deletedCount++;
           removedEntries.push(canceled.contestant?.name || canceled.contestantId);
         }
       }
+
+      // Also mark stale standby entries as 'seated' for contestants who are now seated
+      const allStandbys = await storage.getStandbyAssignments();
+      for (const standby of allStandbys as any[]) {
+        if (standby.status !== 'seated' && activeSeats[standby.contestantId]) {
+          await storage.updateStandbyAssignment(standby.id, { status: 'seated' });
+        }
+      }
       
-      console.log(`[Cleanup Seated] Removed ${deletedCount} reschedule entries for contestants already seated`);
+      console.log(`[Cleanup Seated] Fixed ${deletedCount} reschedule entries for contestants already seated`);
       
       res.json({
-        message: `Removed ${deletedCount} reschedule entries for contestants who are now seated`,
+        message: `Fixed ${deletedCount} reschedule entries for contestants who are now seated`,
         deletedCount,
         removedNames: removedEntries,
       });
@@ -8605,6 +8627,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       if (error.message?.startsWith('CONFLICT:')) {
         return res.status(409).json({ error: 'A conflict occurred. Another user may have made changes. Please refresh and try again.' });
+      }
+      if (error.message?.startsWith('CONTESTANT_ALREADY_ACTIVE:')) {
+        return res.status(409).json({ error: error.message.split(': ')[1] });
       }
       res.status(500).json({ error: error.message });
     }

@@ -121,6 +121,8 @@ export default function ReschedulePage() {
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'] });
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/standbys'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
       toast({
         title: "Cleanup complete",
         description: data.deletedCount > 0 
