@@ -2952,7 +2952,6 @@ export class DbStorage implements IStorage {
   }
 
   async deleteAttendanceIssue(id: string): Promise<void> {
-    const getDb() = getDb();
     // First get the issue to know which counter to decrement
     const [issue] = await getDb()
       .select()
@@ -2981,7 +2980,6 @@ export class DbStorage implements IStorage {
   }
 
   async moveAttendanceIssueToReschedule(id: string, options?: { movedBy?: string; reason?: string }): Promise<{ attendanceIssue: AttendanceIssue; canceledAssignment: CanceledAssignment }> {
-    const getDb() = getDb();
     // Get the attendance issue
     const [issue] = await getDb()
       .select()
