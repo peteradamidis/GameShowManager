@@ -1457,9 +1457,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       //   2. Version history button stays disabled (needs existingCard.id)
       //   3. Subsequent auto-saves POST instead of PATCH
       // We only update metadata fields (not content) to avoid overwriting edits made since save fired.
-      if (result?.id && selectedContestant) {
+      // Use result.contestantId (from server) not selectedContestant.id (closure) — if the user
+      // switched contestants while the save was in flight, the closure value would be stale.
+      if (result?.id && result?.contestantId) {
         queryClient.setQueryData(
-          ['/api/casting-cards', selectedContestant.id],
+          ['/api/casting-cards', result.contestantId],
           (oldData: any) => ({
             ...(oldData || {}),
             id: result.id,
@@ -2564,14 +2566,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
   const updateField = (field: keyof CastingCardData, value: any) => {
     try {
-      if (cardData) {
+      // Use ref as source of truth (always current, even before React re-renders)
+      // Falling back to state only if the ref hasn't been set yet
+      const currentData = cardDataRef.current || cardData;
+      if (currentData) {
         // Push current state to undo history before making changes
-        setUndoHistory(prev => [...prev.slice(-(maxHistorySize - 1)), cardData]);
+        setUndoHistory(prev => [...prev.slice(-(maxHistorySize - 1)), currentData]);
         // Clear redo history on new change
         setRedoHistory([]);
         
-        // Create new state with the update
-        const newCardData = { ...cardData, [field]: value };
+        // Create new state with the update — based on ref so rapid consecutive calls don't lose data
+        const newCardData = { ...currentData, [field]: value };
         
         // CRITICAL: Also update React Query cache to prevent overwrites from refetches
         if (selectedContestant) {
@@ -2622,7 +2627,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   // This function syncs the DOM text to state BEFORE the re-render
   const updateFontSizeWithSync = (fontSizeField: keyof CastingCardData, newSize: number, textField: keyof CastingCardData, selector: string) => {
     try {
-      if (!cardData) return;
+      // Use ref as source of truth (always current, even before React re-renders)
+      const currentData = cardDataRef.current || cardData;
+      if (!currentData) return;
       
       // CRITICAL: First check our pending text refs (updated on every keystroke)
       // This is more reliable than querying DOM which may have already re-rendered
@@ -2635,17 +2642,17 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         textField,
         pendingKey,
         pendingTextValue: currentText,
-        currentStateValue: (cardData as any)[textField]
+        currentStateValue: (currentData as any)[textField]
       });
       
       // If no pending text, fall back to DOM query
       if (currentText === null) {
         const element = document.querySelector(selector) as HTMLElement;
-        currentText = element?.textContent?.trim() || (cardData as any)[textField] || '';
+        currentText = element?.textContent?.trim() || (currentData as any)[textField] || '';
         console.log('[updateFontSizeWithSync] No pending text, queried DOM:', {
           elementFound: !!element,
           domText: element?.textContent,
-          fallbackToState: currentText === (cardData as any)[textField]
+          fallbackToState: currentText === (currentData as any)[textField]
         });
       } else {
         console.log('[updateFontSizeWithSync] Using pending text:', currentText);
@@ -2657,12 +2664,12 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       }
       
       // Push current state to undo history before making changes
-      setUndoHistory(prev => [...prev.slice(-(maxHistorySize - 1)), cardData]);
+      setUndoHistory(prev => [...prev.slice(-(maxHistorySize - 1)), currentData]);
       setRedoHistory([]);
       
-      // Update BOTH the font size AND the text in a single state update
+      // Update BOTH the font size AND the text in a single state update — based on ref
       const newCardData = { 
-        ...cardData, 
+        ...currentData, 
         [fontSizeField]: newSize,
         [textField]: currentText 
       };
@@ -2756,8 +2763,16 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges.current && cardDataRef.current) {
         // Try to save synchronously using sendBeacon if available
-        const dataToSend = JSON.stringify({ ...cardDataRef.current, skipInvalidate: true });
-        navigator.sendBeacon?.(`/api/casting-cards/${cardDataRef.current.contestantId}`, 
+        // sendBeacon always sends POST, so use the upsert endpoint (/api/casting-cards)
+        // Include contestantId in the body since it's in the payload already
+        const dataToSend = JSON.stringify({
+          ...cardDataRef.current,
+          manualCompanions: cardDataRef.current.manualCompanions
+            ? JSON.stringify(cardDataRef.current.manualCompanions)
+            : null,
+          skipInvalidate: true,
+        });
+        navigator.sendBeacon?.('/api/casting-cards',
           new Blob([dataToSend], { type: 'application/json' }));
         
         e.preventDefault();
