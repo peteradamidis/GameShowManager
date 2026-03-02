@@ -1450,7 +1450,27 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         lastKnownUpdatedAtRef.current = result.updatedAt;
       }
       
-      // Only invalidate on manual saves, not auto-saves (to prevent state overwrite)
+      // ALWAYS update the query cache with server-generated metadata (id, updatedAt, createdAt).
+      // This is critical because auto-saves use skipInvalidate:true which skips invalidateQueries.
+      // Without this, existingCard remains undefined after the first save of a new card, causing:
+      //   1. Component remount (tab switch) shows blank card instead of saved data
+      //   2. Version history button stays disabled (needs existingCard.id)
+      //   3. Subsequent auto-saves POST instead of PATCH
+      // We only update metadata fields (not content) to avoid overwriting edits made since save fired.
+      if (result?.id && selectedContestant) {
+        queryClient.setQueryData(
+          ['/api/casting-cards', selectedContestant.id],
+          (oldData: any) => ({
+            ...(oldData || {}),
+            id: result.id,
+            updatedAt: result.updatedAt,
+            createdAt: result.createdAt,
+            contestantId: result.contestantId,
+          })
+        );
+      }
+      
+      // Only do a full invalidate on manual saves (triggers refetch which could overwrite local state)
       if (!result?.skipInvalidate) {
         queryClient.invalidateQueries({ queryKey: ['/api/casting-cards'] });
         if (selectedContestant) {
@@ -2753,6 +2773,38 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [saveMutation]);
+
+  // On unmount (in-app navigation away from Casting Cards tab): fire any pending auto-save immediately.
+  // The visibility handler above only fires for browser tab switches; this handles SPA navigation.
+  // Uses fetch with keepalive:true so the request survives component unmount.
+  // Uses POST (upsert) so it works even if the card hasn't been created in the DB yet.
+  useEffect(() => {
+    return () => {
+      if (hasUnsavedChanges.current && cardDataRef.current) {
+        if (autoSaveTimeoutRef.current) {
+          clearTimeout(autoSaveTimeoutRef.current);
+          autoSaveTimeoutRef.current = null;
+        }
+        const contestantId = cardDataRef.current.contestantId;
+        if (contestantId) {
+          const dataToSend = {
+            ...cardDataRef.current,
+            contestantId,
+            manualCompanions: cardDataRef.current.manualCompanions
+              ? JSON.stringify(cardDataRef.current.manualCompanions)
+              : null,
+          };
+          fetch('/api/casting-cards', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(dataToSend),
+            keepalive: true,
+          }).catch(() => {});
+        }
+      }
+    };
+  }, []);
 
   // Store the last selection for formatting operations
   const lastSelectionRef = useRef<{ range: Range; element: Element } | null>(null);
