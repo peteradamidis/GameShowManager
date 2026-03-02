@@ -451,16 +451,16 @@ export class DbStorage implements IStorage {
 
   // Contestants
   async createContestant(contestant: InsertContestant): Promise<Contestant> {
-    const [created] = await db.insert(contestants).values(contestant).returning();
+    const [created] = await getDb().insert(contestants).values(contestant).returning();
     return created;
   }
 
   async getContestants(): Promise<Contestant[]> {
-    return db.select().from(contestants);
+    return getDb().select().from(contestants);
   }
 
   async getContestantById(id: string): Promise<Contestant | undefined> {
-    const [contestant] = await db.select().from(contestants).where(eq(contestants.id, id));
+    const [contestant] = await getDb().select().from(contestants).where(eq(contestants.id, id));
     return contestant;
   }
 
@@ -503,7 +503,7 @@ export class DbStorage implements IStorage {
   }
 
   async deleteContestant(id: string): Promise<void> {
-    await db.delete(contestants).where(eq(contestants.id, id));
+    await getDb().delete(contestants).where(eq(contestants.id, id));
   }
 
   // Dedicated method to update contestant's "Attending With" field
@@ -518,31 +518,31 @@ export class DbStorage implements IStorage {
 
   // Groups
   async createGroup(group: InsertGroup): Promise<Group> {
-    const [created] = await db.insert(groups).values(group).returning();
+    const [created] = await getDb().insert(groups).values(group).returning();
     return created;
   }
 
   async getGroups(): Promise<Group[]> {
-    return db.select().from(groups);
+    return getDb().select().from(groups);
   }
 
   async getGroupById(id: string): Promise<Group | undefined> {
-    const [group] = await db.select().from(groups).where(eq(groups.id, id));
+    const [group] = await getDb().select().from(groups).where(eq(groups.id, id));
     return group;
   }
 
   // Record Days
   async createRecordDay(recordDay: InsertRecordDay): Promise<RecordDay> {
-    const [created] = await db.insert(recordDays).values(recordDay).returning();
+    const [created] = await getDb().insert(recordDays).values(recordDay).returning();
     return created;
   }
 
   async getRecordDays(): Promise<RecordDay[]> {
-    return db.select().from(recordDays);
+    return getDb().select().from(recordDays);
   }
 
   async getRecordDayById(id: string): Promise<RecordDay | undefined> {
-    const [recordDay] = await db.select().from(recordDays).where(eq(recordDays.id, id));
+    const [recordDay] = await getDb().select().from(recordDays).where(eq(recordDays.id, id));
     return recordDay;
   }
 
@@ -627,12 +627,12 @@ export class DbStorage implements IStorage {
     }
     
     // Delete related data first (block types, availability records, canceled assignments)
-    await db.delete(blockTypes).where(eq(blockTypes.recordDayId, id));
-    await db.delete(contestantAvailability).where(eq(contestantAvailability.recordDayId, id));
-    await db.delete(canceledAssignments).where(eq(canceledAssignments.recordDayId, id));
+    await getDb().delete(blockTypes).where(eq(blockTypes.recordDayId, id));
+    await getDb().delete(contestantAvailability).where(eq(contestantAvailability.recordDayId, id));
+    await getDb().delete(canceledAssignments).where(eq(canceledAssignments.recordDayId, id));
     
     // Now delete the record day
-    await db.delete(recordDays).where(eq(recordDays.id, id));
+    await getDb().delete(recordDays).where(eq(recordDays.id, id));
     
     return { success: true };
   }
@@ -641,7 +641,7 @@ export class DbStorage implements IStorage {
   async createSeatAssignment(assignment: InsertSeatAssignment): Promise<SeatAssignment> {
     // Use transaction to atomically create assignment and update contestant status
     try {
-      return await db.transaction(async (tx) => {
+      return await getDb().transaction(async (tx) => {
         // Check if contestant is returning to auto-fill paperwork
         const seatHistory = await tx
           .select({
@@ -732,7 +732,7 @@ export class DbStorage implements IStorage {
   }
 
   async getSeatAssignmentById(id: string): Promise<SeatAssignment | undefined> {
-    const [assignment] = await db.select().from(seatAssignments).where(eq(seatAssignments.id, id));
+    const [assignment] = await getDb().select().from(seatAssignments).where(eq(seatAssignments.id, id));
     return assignment;
   }
 
@@ -755,12 +755,12 @@ export class DbStorage implements IStorage {
   }
 
   async getAllSeatAssignments(): Promise<SeatAssignment[]> {
-    return db.select().from(seatAssignments);
+    return getDb().select().from(seatAssignments);
   }
 
   async deleteSeatAssignment(id: string): Promise<void> {
     // Use transaction to atomically delete assignment and update contestant status
-    await db.transaction(async (tx) => {
+    await getDb().transaction(async (tx) => {
       // Get the assignment to find the contestant
       const [assignment] = await tx
         .select()
@@ -868,7 +868,7 @@ export class DbStorage implements IStorage {
     );
 
     if (Object.keys(fieldsToUpdate).length === 0) {
-      const [existing] = await db.select().from(seatAssignments).where(eq(seatAssignments.id, id));
+      const [existing] = await getDb().select().from(seatAssignments).where(eq(seatAssignments.id, id));
       return existing;
     }
 
@@ -937,7 +937,7 @@ export class DbStorage implements IStorage {
     }
 
     if (setClauses.length === 0) {
-      const [existing] = await db.select().from(seatAssignments).where(eq(seatAssignments.id, id));
+      const [existing] = await getDb().select().from(seatAssignments).where(eq(seatAssignments.id, id));
       return existing;
     }
 
@@ -1002,7 +1002,7 @@ export class DbStorage implements IStorage {
     targetSeat?: string
   ): Promise<{ source: SeatAssignment; target?: SeatAssignment }> {
     // Use Drizzle transaction for atomic operation
-    return await db.transaction(async (tx) => {
+    return await getDb().transaction(async (tx) => {
       // Get source assignment with row-level lock
       const [source] = await tx
         .select()
@@ -1116,7 +1116,7 @@ export class DbStorage implements IStorage {
     assignment2Block: number,
     assignment2Seat: string
   ): Promise<{ assignment1: SeatAssignment; assignment2: SeatAssignment }> {
-    return await db.transaction(async (tx) => {
+    return await getDb().transaction(async (tx) => {
       // Get both assignments with row-level locks
       const [assign1] = await tx
         .select()
@@ -1211,7 +1211,7 @@ export class DbStorage implements IStorage {
     newBlockNumber: number,
     newSeatLabel: string
   ): Promise<SeatAssignment> {
-    return await db.transaction(async (tx) => {
+    return await getDb().transaction(async (tx) => {
       // Get the assignment with row-level lock
       const [assignment] = await tx
         .select()
@@ -1268,7 +1268,7 @@ export class DbStorage implements IStorage {
     blockA: number,
     blockB: number
   ): Promise<{ swappedCount: number; blockAAssignments: SeatAssignment[]; blockBAssignments: SeatAssignment[] }> {
-    return await db.transaction(async (tx) => {
+    return await getDb().transaction(async (tx) => {
       // Get all assignments for both blocks with row-level locks
       const blockAAssignments = await tx
         .select()
@@ -1371,7 +1371,7 @@ export class DbStorage implements IStorage {
     });
 
     // Delete the seat assignment
-    await db.delete(seatAssignments).where(eq(seatAssignments.id, id));
+    await getDb().delete(seatAssignments).where(eq(seatAssignments.id, id));
 
     // Update contestant status to 'rescheduled'
     await db
@@ -1380,7 +1380,7 @@ export class DbStorage implements IStorage {
       .where(eq(contestants.id, assignment.contestantId));
 
     // Log movement history
-    await db.insert(movementHistory).values({
+    await getDb().insert(movementHistory).values({
       contestantId: assignment.contestantId,
       movementType: 'added_to_reschedule',
       fromBlockNumber: assignment.blockNumber,
@@ -1584,12 +1584,12 @@ export class DbStorage implements IStorage {
   }
 
   async deleteCanceledAssignment(id: string): Promise<void> {
-    await db.delete(canceledAssignments).where(eq(canceledAssignments.id, id));
+    await getDb().delete(canceledAssignments).where(eq(canceledAssignments.id, id));
   }
 
   // Availability Tokens
   async createAvailabilityToken(token: InsertAvailabilityToken): Promise<AvailabilityToken> {
-    const [created] = await db.insert(availabilityTokens).values(token).returning();
+    const [created] = await getDb().insert(availabilityTokens).values(token).returning();
     return created;
   }
 
@@ -1631,7 +1631,7 @@ export class DbStorage implements IStorage {
 
   // Contestant Availability
   async createContestantAvailability(availability: InsertContestantAvailability): Promise<ContestantAvailability> {
-    const [created] = await db.insert(contestantAvailability).values(availability).returning();
+    const [created] = await getDb().insert(contestantAvailability).values(availability).returning();
     return created;
   }
 
@@ -1657,7 +1657,7 @@ export class DbStorage implements IStorage {
   }
 
   async getAllAvailabilityResponses(): Promise<ContestantAvailability[]> {
-    return db.select().from(contestantAvailability);
+    return getDb().select().from(contestantAvailability);
   }
 
   async updateAvailabilityResponse(id: string, responseValue: string, notes?: string): Promise<ContestantAvailability | undefined> {
@@ -1947,7 +1947,7 @@ export class DbStorage implements IStorage {
 
   // Block Types (PB/NPB)
   async getAllBlockTypes(): Promise<BlockType[]> {
-    return db.select().from(blockTypes);
+    return getDb().select().from(blockTypes);
   }
 
   async getBlockTypesByRecordDay(recordDayId: string): Promise<BlockType[]> {
@@ -2095,7 +2095,7 @@ export class DbStorage implements IStorage {
 
     if (standby) {
       // Log movement history - removed from standby
-      await db.insert(movementHistory).values({
+      await getDb().insert(movementHistory).values({
         contestantId: standby.contestantId,
         movementType: 'standby_removed',
         recordDayId: standby.recordDayId,
@@ -2149,7 +2149,7 @@ export class DbStorage implements IStorage {
   }
 
   async getStandbyAttendanceHistory(): Promise<Array<StandbyAttendanceHistory & { contestant: Contestant; recordDay: RecordDay }>> {
-    const results = await db
+    const results = await getDb()
       .select({
         history: standbyAttendanceHistory,
         contestant: contestants,
@@ -2167,7 +2167,7 @@ export class DbStorage implements IStorage {
   }
 
   async getStandbyAttendanceHistoryByRecordDay(recordDayId: string): Promise<Array<StandbyAttendanceHistory & { contestant: Contestant }>> {
-    const results = await db
+    const results = await getDb()
       .select({
         history: standbyAttendanceHistory,
         contestant: contestants,
@@ -2183,7 +2183,7 @@ export class DbStorage implements IStorage {
   }
 
   async getStandbyAttendanceHistoryByContestant(contestantId: string): Promise<Array<StandbyAttendanceHistory & { recordDay: RecordDay }>> {
-    const results = await db
+    const results = await getDb()
       .select({
         history: standbyAttendanceHistory,
         recordDay: recordDays,
@@ -2199,6 +2199,7 @@ export class DbStorage implements IStorage {
   }
 
   async getReturningStandbys(): Promise<Array<Contestant & { attendanceHistory: StandbyAttendanceHistory[] }>> {
+    const db = getDb();
     // Get all contestants with 'returning_standby' status
     const returningContestants = await db
       .select()
@@ -2223,7 +2224,7 @@ export class DbStorage implements IStorage {
   }
 
   async deleteStandbyAttendanceHistory(id: string): Promise<void> {
-    await db
+    await getDb()
       .delete(standbyAttendanceHistory)
       .where(eq(standbyAttendanceHistory.id, id));
   }
@@ -2564,7 +2565,7 @@ export class DbStorage implements IStorage {
 
   // Attendance Issues (No-Shows and Early Leavers)
   async createAttendanceIssue(issue: InsertAttendanceIssue): Promise<AttendanceIssue> {
-    return await db.transaction(async (tx) => {
+    return await getDb().transaction(async (tx) => {
       // First, get the seat assignment data to preserve history
       const [seatAssignment] = await tx
         .select()
@@ -2669,7 +2670,7 @@ export class DbStorage implements IStorage {
   }
 
   async createBulkNoShows(issues: Array<{ contestantId: string; recordDayId: string; blockNumber: number; seatLabel: string; notes?: string; markedBy?: string }>): Promise<{ success: boolean; count: number; issues: AttendanceIssue[] }> {
-    return await db.transaction(async (tx) => {
+    return await getDb().transaction(async (tx) => {
       const createdIssues: AttendanceIssue[] = [];
       
       for (const issue of issues) {
@@ -2779,7 +2780,7 @@ export class DbStorage implements IStorage {
   }
 
   async restoreAttendanceIssue(id: string): Promise<{ attendanceIssue: AttendanceIssue; seatAssignment: SeatAssignment }> {
-    return await db.transaction(async (tx) => {
+    return await getDb().transaction(async (tx) => {
       // 1. Get the attendance issue
       const [issue] = await tx
         .select()
@@ -2915,7 +2916,7 @@ export class DbStorage implements IStorage {
   }
 
   async getAttendanceIssues(): Promise<Array<AttendanceIssue & { contestant: Contestant; recordDay: RecordDay }>> {
-    const results = await db
+    const results = await getDb()
       .select({
         issue: attendanceIssues,
         contestant: contestants,
@@ -2934,7 +2935,7 @@ export class DbStorage implements IStorage {
   }
 
   async getAttendanceIssuesByRecordDay(recordDayId: string): Promise<Array<AttendanceIssue & { contestant: Contestant }>> {
-    const results = await db
+    const results = await getDb()
       .select({
         issue: attendanceIssues,
         contestant: contestants,
@@ -2951,15 +2952,16 @@ export class DbStorage implements IStorage {
   }
 
   async deleteAttendanceIssue(id: string): Promise<void> {
+    const getDb() = getDb();
     // First get the issue to know which counter to decrement
-    const [issue] = await db
+    const [issue] = await getDb()
       .select()
       .from(attendanceIssues)
       .where(eq(attendanceIssues.id, id));
     
     if (!issue) return;
     
-    await db.transaction(async (tx) => {
+    await getDb().transaction(async (tx) => {
       // Decrement the appropriate counter on the contestant
       if (issue.issueType === 'no_show') {
         await tx
@@ -2979,8 +2981,9 @@ export class DbStorage implements IStorage {
   }
 
   async moveAttendanceIssueToReschedule(id: string, options?: { movedBy?: string; reason?: string }): Promise<{ attendanceIssue: AttendanceIssue; canceledAssignment: CanceledAssignment }> {
+    const getDb() = getDb();
     // Get the attendance issue
-    const [issue] = await db
+    const [issue] = await getDb()
       .select()
       .from(attendanceIssues)
       .where(eq(attendanceIssues.id, id));
@@ -2998,7 +3001,7 @@ export class DbStorage implements IStorage {
     const reason = options?.reason || defaultReason;
     const movedBy = options?.movedBy || issue.markedBy;
     
-    return await db.transaction(async (tx) => {
+    return await getDb().transaction(async (tx) => {
       // Create a canceled assignment for the reschedule list
       const [canceledAssignment] = await tx
         .insert(canceledAssignments)
@@ -3056,7 +3059,7 @@ export class DbStorage implements IStorage {
   }
 
   async getMovementHistory(): Promise<Array<MovementHistory & { contestant: Contestant; recordDay?: RecordDay }>> {
-    const results = await db
+    const results = await getDb()
       .select({
         movementHistory: movementHistory,
         contestant: contestants,
@@ -3075,7 +3078,7 @@ export class DbStorage implements IStorage {
   }
 
   async getMovementHistoryByRecordDay(recordDayId: string): Promise<Array<MovementHistory & { contestant: Contestant }>> {
-    const results = await db
+    const results = await getDb()
       .select({
         movementHistory: movementHistory,
         contestant: contestants,
@@ -3092,7 +3095,7 @@ export class DbStorage implements IStorage {
   }
 
   async getMovementHistoryByContestant(contestantId: string): Promise<Array<MovementHistory & { recordDay?: RecordDay }>> {
-    const results = await db
+    const results = await getDb()
       .select({
         movementHistory: movementHistory,
         recordDay: recordDays,
@@ -3150,7 +3153,7 @@ export class DbStorage implements IStorage {
   }
 
   async removePrizeWinner(id: string): Promise<void> {
-    await db.delete(prizeWinners).where(eq(prizeWinners.id, id));
+    await getDb().delete(prizeWinners).where(eq(prizeWinners.id, id));
   }
 
   async removePrizeWinnerByContestant(recordDayId: string, contestantId: string): Promise<void> {
@@ -3228,7 +3231,7 @@ export class DbStorage implements IStorage {
 
   async deleteNoticeboardPost(id: string): Promise<void> {
     const db = getDb();
-    await db.delete(noticeboardPosts).where(eq(noticeboardPosts.id, id));
+    await getDb().delete(noticeboardPosts).where(eq(noticeboardPosts.id, id));
   }
 
   async togglePinPost(id: string): Promise<NoticeboardPost | undefined> {
@@ -3265,7 +3268,7 @@ export class DbStorage implements IStorage {
 
   async deleteNoticeboardComment(id: string): Promise<void> {
     const db = getDb();
-    await db.delete(noticeboardComments).where(eq(noticeboardComments.id, id));
+    await getDb().delete(noticeboardComments).where(eq(noticeboardComments.id, id));
   }
 
   // Noticeboard Likes
@@ -3282,10 +3285,10 @@ export class DbStorage implements IStorage {
     
     if (existing) {
       // Unlike
-      await db.delete(noticeboardLikes).where(eq(noticeboardLikes.id, existing.id));
+      await getDb().delete(noticeboardLikes).where(eq(noticeboardLikes.id, existing.id));
     } else {
       // Like
-      await db.insert(noticeboardLikes).values({ postId, browserId });
+      await getDb().insert(noticeboardLikes).values({ postId, browserId });
     }
     
     // Get new like count
@@ -3341,29 +3344,29 @@ export class DbStorage implements IStorage {
     
     // Get all entries
     const entries = recordDayId 
-      ? await db.select().from(postRecordTracking).where(eq(postRecordTracking.recordDayId, recordDayId)).orderBy(postRecordTracking.createdAt)
-      : await db.select().from(postRecordTracking).orderBy(postRecordTracking.createdAt);
+      ? await getDb().select().from(postRecordTracking).where(eq(postRecordTracking.recordDayId, recordDayId)).orderBy(postRecordTracking.createdAt)
+      : await getDb().select().from(postRecordTracking).orderBy(postRecordTracking.createdAt);
     
     if (entries.length === 0) return [];
     
     // Batch fetch contestants
     const contestantIds = Array.from(new Set(entries.map(e => e.contestantId).filter(Boolean)));
     const contestantsData = contestantIds.length > 0 
-      ? await db.select().from(contestants).where(inArray(contestants.id, contestantIds))
+      ? await getDb().select().from(contestants).where(inArray(contestants.id, contestantIds))
       : [];
     const contestantMap = new Map(contestantsData.map(c => [c.id, c]));
     
     // Batch fetch record days
     const recordDayIds = Array.from(new Set(entries.map(e => e.recordDayId).filter((id): id is string => !!id)));
     const recordDaysData = recordDayIds.length > 0 
-      ? await db.select().from(recordDays).where(inArray(recordDays.id, recordDayIds))
+      ? await getDb().select().from(recordDays).where(inArray(recordDays.id, recordDayIds))
       : [];
     const recordDayMap = new Map(recordDaysData.map(rd => [rd.id, rd]));
     
     // Batch fetch seat assignments
     const seatAssignmentIds = Array.from(new Set(entries.map(e => e.seatAssignmentId).filter((id): id is string => !!id)));
     const seatAssignmentsData = seatAssignmentIds.length > 0 
-      ? await db.select().from(seatAssignments).where(inArray(seatAssignments.id, seatAssignmentIds))
+      ? await getDb().select().from(seatAssignments).where(inArray(seatAssignments.id, seatAssignmentIds))
       : [];
     const seatAssignmentMap = new Map(seatAssignmentsData.map(sa => [sa.id, sa]));
     
@@ -3425,13 +3428,13 @@ export class DbStorage implements IStorage {
 
   async deletePostRecordEntry(id: string): Promise<void> {
     const db = getDb();
-    await db.delete(postRecordTracking).where(eq(postRecordTracking.id, id));
+    await getDb().delete(postRecordTracking).where(eq(postRecordTracking.id, id));
   }
 
   // Casting Cards methods
   async getCastingCards(): Promise<CastingCard[]> {
     const db = getDb();
-    return db.select().from(castingCards);
+    return getDb().select().from(castingCards);
   }
 
   async getCastingCardByContestantId(contestantId: string): Promise<CastingCard | undefined> {
@@ -3446,7 +3449,7 @@ export class DbStorage implements IStorage {
   // System Settings
   async getSystemSetting(key: string): Promise<SystemSetting | undefined> {
     const db = getDb();
-    const [setting] = await db.select().from(systemSettings).where(eq(systemSettings.key, key));
+    const [setting] = await getDb().select().from(systemSettings).where(eq(systemSettings.key, key));
     return setting;
   }
 
@@ -3499,12 +3502,12 @@ export class DbStorage implements IStorage {
 
   async deleteCastingCard(contestantId: string): Promise<void> {
     const db = getDb();
-    await db.delete(castingCards).where(eq(castingCards.contestantId, contestantId));
+    await getDb().delete(castingCards).where(eq(castingCards.contestantId, contestantId));
   }
 
   async deleteAllCastingCards(): Promise<void> {
     const db = getDb();
-    await db.delete(castingCards);
+    await getDb().delete(castingCards);
   }
 
   // Casting Card Version History methods
@@ -3539,18 +3542,18 @@ export class DbStorage implements IStorage {
 
   async deleteCastingCardVersion(id: string): Promise<void> {
     const db = getDb();
-    await db.delete(castingCardVersions).where(eq(castingCardVersions.id, id));
+    await getDb().delete(castingCardVersions).where(eq(castingCardVersions.id, id));
   }
 
   // Birthday Entries methods
   async getBirthdayEntries(): Promise<BirthdayEntry[]> {
     const db = getDb();
-    return db.select().from(birthdayEntries);
+    return getDb().select().from(birthdayEntries);
   }
 
   async createBirthdayEntry(entry: InsertBirthdayEntry): Promise<BirthdayEntry> {
     const db = getDb();
-    const [created] = await db.insert(birthdayEntries).values(entry).returning();
+    const [created] = await getDb().insert(birthdayEntries).values(entry).returning();
     return created;
   }
 
@@ -3566,7 +3569,7 @@ export class DbStorage implements IStorage {
 
   async deleteBirthdayEntry(id: string): Promise<void> {
     const db = getDb();
-    await db.delete(birthdayEntries).where(eq(birthdayEntries.id, id));
+    await getDb().delete(birthdayEntries).where(eq(birthdayEntries.id, id));
   }
 
   async getTodayBirthdays(): Promise<BirthdayEntry[]> {
@@ -3577,7 +3580,7 @@ export class DbStorage implements IStorage {
     const day = today.getDate();
     
     // Query all entries and filter in JS for date matching (simpler than complex SQL date extraction)
-    const allEntries = await db.select().from(birthdayEntries);
+    const allEntries = await getDb().select().from(birthdayEntries);
     return allEntries.filter(entry => {
       const birthDate = new Date(entry.birthdate);
       return birthDate.getMonth() + 1 === month && birthDate.getDate() === day;
@@ -3587,13 +3590,13 @@ export class DbStorage implements IStorage {
   // Block Notes methods
   async getBlockNotes(recordDayId: string): Promise<BlockNote[]> {
     const db = getDb();
-    return await db.select().from(blockNotes).where(eq(blockNotes.recordDayId, recordDayId));
+    return await getDb().select().from(blockNotes).where(eq(blockNotes.recordDayId, recordDayId));
   }
 
   async upsertBlockNote(recordDayId: string, blockNumber: number, notes: string): Promise<BlockNote> {
     const db = getDb();
     // Check if note already exists
-    const existing = await db.select().from(blockNotes)
+    const existing = await getDb().select().from(blockNotes)
       .where(and(
         eq(blockNotes.recordDayId, recordDayId),
         eq(blockNotes.blockNumber, blockNumber)
@@ -3601,14 +3604,14 @@ export class DbStorage implements IStorage {
     
     if (existing.length > 0) {
       // Update existing
-      const [updated] = await db.update(blockNotes)
+      const [updated] = await getDb().update(blockNotes)
         .set({ notes, updatedAt: new Date() })
         .where(eq(blockNotes.id, existing[0].id))
         .returning();
       return updated;
     } else {
       // Create new
-      const [created] = await db.insert(blockNotes)
+      const [created] = await getDb().insert(blockNotes)
         .values({ recordDayId, blockNumber, notes })
         .returning();
       return created;
@@ -3617,26 +3620,26 @@ export class DbStorage implements IStorage {
 
   async getRxPlanningData(recordDayId: string): Promise<RxPlanningEntry[]> {
     const db = getDb();
-    return await db.select().from(rxPlanningEntries).where(eq(rxPlanningEntries.recordDayId, recordDayId));
+    return await getDb().select().from(rxPlanningEntries).where(eq(rxPlanningEntries.recordDayId, recordDayId));
   }
 
   async getAllRxPlanningData(): Promise<RxPlanningEntry[]> {
     const db = getDb();
-    return await db.select().from(rxPlanningEntries);
+    return await getDb().select().from(rxPlanningEntries);
   }
 
   async saveRxPlanningBlock(recordDayId: string, blockNumber: number, contestantData: string): Promise<RxPlanningEntry> {
     const db = getDb();
-    const existing = await db.select().from(rxPlanningEntries)
+    const existing = await getDb().select().from(rxPlanningEntries)
       .where(and(eq(rxPlanningEntries.recordDayId, recordDayId), eq(rxPlanningEntries.blockNumber, blockNumber)));
     if (existing.length > 0) {
-      const [updated] = await db.update(rxPlanningEntries)
+      const [updated] = await getDb().update(rxPlanningEntries)
         .set({ contestantData, updatedAt: new Date() })
         .where(eq(rxPlanningEntries.id, existing[0].id))
         .returning();
       return updated;
     } else {
-      const [created] = await db.insert(rxPlanningEntries)
+      const [created] = await getDb().insert(rxPlanningEntries)
         .values({ recordDayId, blockNumber, contestantData })
         .returning();
       return created;
@@ -3645,13 +3648,13 @@ export class DbStorage implements IStorage {
 
   async deleteRxPlanningBlock(recordDayId: string, blockNumber: number): Promise<void> {
     const db = getDb();
-    await db.delete(rxPlanningEntries)
+    await getDb().delete(rxPlanningEntries)
       .where(and(eq(rxPlanningEntries.recordDayId, recordDayId), eq(rxPlanningEntries.blockNumber, blockNumber)));
   }
 
   async clearRxPlanningDay(recordDayId: string): Promise<void> {
     const db = getDb();
-    await db.delete(rxPlanningEntries).where(eq(rxPlanningEntries.recordDayId, recordDayId));
+    await getDb().delete(rxPlanningEntries).where(eq(rxPlanningEntries.recordDayId, recordDayId));
   }
 }
 
