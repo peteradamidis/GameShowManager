@@ -1450,26 +1450,47 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         lastKnownUpdatedAtRef.current = result.updatedAt;
       }
       
-      // ALWAYS update the query cache with server-generated metadata (id, updatedAt, createdAt).
+      // ALWAYS update the query cache with server-generated metadata AND status fields.
       // This is critical because auto-saves use skipInvalidate:true which skips invalidateQueries.
       // Without this, existingCard remains undefined after the first save of a new card, causing:
       //   1. Component remount (tab switch) shows blank card instead of saved data
       //   2. Version history button stays disabled (needs existingCard.id)
       //   3. Subsequent auto-saves POST instead of PATCH
-      // We only update metadata fields (not content) to avoid overwriting edits made since save fired.
+      // We only update metadata + status fields (not content) to avoid overwriting edits made since save fired.
       // Use result.contestantId (from server) not selectedContestant.id (closure) — if the user
       // switched contestants while the save was in flight, the closure value would be stale.
       if (result?.id && result?.contestantId) {
+        // Fields to merge from server: metadata + status flags that other tabs depend on
+        const serverFields = {
+          id: result.id,
+          updatedAt: result.updatedAt,
+          createdAt: result.createdAt,
+          contestantId: result.contestantId,
+          isReady: result.isReady,
+          isDraftComplete: result.isDraftComplete,
+          producerName: result.producerName,
+        };
+
+        // Update the per-contestant cache (keeps local content edits, merges server metadata)
         queryClient.setQueryData(
           ['/api/casting-cards', result.contestantId],
-          (oldData: any) => ({
-            ...(oldData || {}),
-            id: result.id,
-            updatedAt: result.updatedAt,
-            createdAt: result.createdAt,
-            contestantId: result.contestantId,
-          })
+          (oldData: any) => ({ ...(oldData || {}), ...serverFields })
         );
+
+        // ALWAYS update the all-cards list cache so Players/Backups tab shows correct badge
+        // (isReady, isDraftComplete, presence of card) without waiting for a full refetch.
+        // This runs even when skipInvalidate:true to keep the list in sync after auto-saves.
+        queryClient.setQueryData(['/api/casting-cards'], (oldList: any) => {
+          if (!Array.isArray(oldList)) return oldList;
+          const idx = oldList.findIndex((c: any) => c.contestantId === result.contestantId);
+          if (idx >= 0) {
+            const updated = [...oldList];
+            updated[idx] = { ...oldList[idx], ...serverFields };
+            return updated;
+          }
+          // Card not yet in list (just created) — append it with the full result
+          return [...oldList, result];
+        });
       }
       
       // Only do a full invalidate on manual saves (triggers refetch which could overwrite local state)
@@ -1540,18 +1561,24 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
   // Toggle RX Ready status and save immediately with the new value
   const toggleReadyAndSave = () => {
-    if (cardData) {
-      const updatedData = { ...cardData, isReady: !cardData.isReady };
+    // Use ref as source of truth so we always flip the LATEST value, not stale state
+    const current = cardDataRef.current || cardData;
+    if (current) {
+      const updatedData = { ...current, isReady: !current.isReady };
       setCardData(updatedData);
+      cardDataRef.current = updatedData;
       saveMutation.mutate(updatedData);
     }
   };
 
   // Toggle Draft Complete status and save immediately with the new value
   const toggleDraftCompleteAndSave = () => {
-    if (cardData) {
-      const updatedData = { ...cardData, isDraftComplete: !cardData.isDraftComplete };
+    // Use ref as source of truth so we always flip the LATEST value, not stale state
+    const current = cardDataRef.current || cardData;
+    if (current) {
+      const updatedData = { ...current, isDraftComplete: !current.isDraftComplete };
       setCardData(updatedData);
+      cardDataRef.current = updatedData;
       saveMutation.mutate(updatedData);
     }
   };
