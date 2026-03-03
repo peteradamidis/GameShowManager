@@ -5198,16 +5198,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get seat assignments for a record day
   app.get("/api/seat-assignments/:recordDayId", async (req, res) => {
     try {
-      const assignments = await storage.getSeatAssignmentsByRecordDay(req.params.recordDayId);
-      
-      // Get standby assignments to check who was seated from standby
-      const standbys = await storage.getStandbyAssignmentsByRecordDay(req.params.recordDayId);
+      // Fetch assignments and standbys in parallel (both filtered to this record day)
+      const [assignments, standbys] = await Promise.all([
+        storage.getSeatAssignmentsByRecordDay(req.params.recordDayId),
+        storage.getStandbyAssignmentsByRecordDay(req.params.recordDayId),
+      ]);
+
       const seatedStandbyContestantIds = new Set(
         standbys.filter(s => s.status === 'seated').map(s => s.contestantId)
       );
       
-      // Get full contestant data
-      const contestantsData = await storage.getContestants();
+      // Load only the contestants that appear in these assignments (+ their group members).
+      // Avoids fetching all 692 contestants when only a few dozen are assigned to this day.
+      const assignedContestantIds = assignments.map(a => a.contestantId);
+      const contestantsData = await storage.getContestantsForAssignments(assignedContestantIds);
       const contestantsMap = new Map(contestantsData.map((c) => [c.id, c]));
 
       // Create a groupId-to-members map for resolving group relationships
@@ -5222,10 +5226,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create a name-to-ID map ONLY for contestants assigned on THIS record day
       // This avoids false positives from duplicate names across different days
-      const assignedContestantIds = new Set(assignments.map(a => a.contestantId));
+      const assignedIdSet = new Set(assignedContestantIds);
       const nameToIdMapForThisDay = new Map<string, string[]>();
       contestantsData.forEach(c => {
-        if (c.name && assignedContestantIds.has(c.id)) {
+        if (c.name && assignedIdSet.has(c.id)) {
           const nameLower = c.name.toLowerCase();
           const existing = nameToIdMapForThisDay.get(nameLower) || [];
           existing.push(c.id);
@@ -12308,11 +12312,16 @@ Thank you.`;
   // A contestant is "returning" if they had an assignment on a locked record day or have standby attendance history
   app.get("/api/returning-contestants", requireAuth, async (req, res) => {
     try {
-      const allAssignments = await storage.getAllSeatAssignments();
-      const recordDays = await storage.getRecordDays();
-      const standbyAttendanceRecords = await storage.getStandbyAttendanceHistory();
-      const canceledAssignments = await storage.getCanceledAssignments();
-      const allStandbys = await storage.getStandbyAssignments();
+      // Run all queries in parallel — previously sequential + N+1 (one per locked day for block types)
+      const [allAssignments, recordDays, standbyAttendanceRecords, canceledAssignments, allStandbys, allBlockTypes] =
+        await Promise.all([
+          storage.getAllSeatAssignments(),
+          storage.getRecordDays(),
+          storage.getStandbyAttendanceHistory(),
+          storage.getCanceledAssignments(),
+          storage.getStandbyAssignments(),
+          storage.getAllBlockTypes(),
+        ]);
       
       // Build map of locked record days only - RTN status requires a completed (locked) episode
       const lockedRecordDays = new Map<string, RecordDay>();
@@ -12322,15 +12331,13 @@ Thank you.`;
         }
       }
       
-      // Build block type map for all locked record days: recordDayId -> { blockNumber -> 'PB'|'NPB' }
+      // Build block type map from the single bulk fetch (eliminates N+1 per locked day)
       const blockTypesByDay = new Map<string, Record<number, string>>();
-      for (const [rdId] of lockedRecordDays) {
-        const bts = await storage.getBlockTypesByRecordDay(rdId);
-        const btMap: Record<number, string> = {};
-        for (const bt of bts) {
-          btMap[bt.blockNumber] = bt.blockType;
+      for (const bt of allBlockTypes) {
+        if (!blockTypesByDay.has(bt.recordDayId)) {
+          blockTypesByDay.set(bt.recordDayId, {});
         }
-        blockTypesByDay.set(rdId, btMap);
+        blockTypesByDay.get(bt.recordDayId)![bt.blockNumber] = bt.blockType;
       }
       
       // Build returning contestants map: contestantId -> array of previous appearances on LOCKED days only

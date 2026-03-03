@@ -464,6 +464,34 @@ export class DbStorage implements IStorage {
     return contestant;
   }
 
+  // Fetch only the contestants needed for a specific set of seat assignments.
+  // Loads the directly-assigned contestants PLUS all members of their groups so
+  // attendingWith resolution works without pulling all 692 contestants.
+  async getContestantsForAssignments(contestantIds: string[]): Promise<Contestant[]> {
+    if (contestantIds.length === 0) return [];
+    const db = getDb();
+    // Step 1: get the assigned contestants
+    const assigned = await db
+      .select()
+      .from(contestants)
+      .where(inArray(contestants.id, contestantIds));
+    // Step 2: collect the groupIds of those contestants (may be empty)
+    const groupIds = [...new Set(assigned.map(c => c.groupId).filter(Boolean) as string[])];
+    if (groupIds.length === 0) return assigned;
+    // Step 3: fetch all group members not already in the assigned set
+    const assignedSet = new Set(assigned.map(c => c.id));
+    const groupMembers = await db
+      .select()
+      .from(contestants)
+      .where(inArray(contestants.groupId, groupIds));
+    // Merge, deduplicating by id
+    const merged = [...assigned];
+    for (const c of groupMembers) {
+      if (!assignedSet.has(c.id)) merged.push(c);
+    }
+    return merged;
+  }
+
   async updateContestant(id: string, data: Partial<Contestant>): Promise<Contestant | undefined> {
     // Remove id and createdAt from update data
     const { id: _, createdAt, ...updateData } = data as any;
