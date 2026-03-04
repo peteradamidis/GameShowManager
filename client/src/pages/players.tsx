@@ -1567,7 +1567,21 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       const updatedData = { ...current, isReady: !current.isReady };
       setCardData(updatedData);
       cardDataRef.current = updatedData;
-      saveMutation.mutate(updatedData);
+      saveMutation.mutate(updatedData as any, {
+        onSuccess: (result) => {
+          // Update the list cache for Players/Backups tab visibility
+          queryClient.setQueryData(['/api/casting-cards'], (old: any[] | undefined) => {
+            if (!old) return [result];
+            const existingIndex = old.findIndex(c => c.contestantId === result.contestantId);
+            if (existingIndex > -1) {
+              const next = [...old];
+              next[existingIndex] = { ...old[existingIndex], ...result };
+              return next;
+            }
+            return [...old, result];
+          });
+        }
+      });
     }
   };
 
@@ -1579,7 +1593,21 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       const updatedData = { ...current, isDraftComplete: !current.isDraftComplete };
       setCardData(updatedData);
       cardDataRef.current = updatedData;
-      saveMutation.mutate(updatedData);
+      saveMutation.mutate(updatedData as any, {
+        onSuccess: (result) => {
+          // Update the list cache for Players/Backups tab visibility
+          queryClient.setQueryData(['/api/casting-cards'], (old: any[] | undefined) => {
+            if (!old) return [result];
+            const existingIndex = old.findIndex(c => c.contestantId === result.contestantId);
+            if (existingIndex > -1) {
+              const next = [...old];
+              next[existingIndex] = { ...old[existingIndex], ...result };
+              return next;
+            }
+            return [...old, result];
+          });
+        }
+      });
     }
   };
 
