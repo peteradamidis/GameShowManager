@@ -2354,12 +2354,21 @@ export class DbStorage implements IStorage {
     return created;
   }
 
-  async getAllRebookingHistory(): Promise<Array<RebookingHistory>> {
-    const results = await getDb()
-      .select()
+  async getAllRebookingHistory(): Promise<Array<RebookingHistory & { contestant: Contestant }>> {
+    const db = getDb();
+    const results = await db
+      .select({
+        history: rebookingHistory,
+        contestant: contestants,
+      })
       .from(rebookingHistory)
+      .innerJoin(contestants, eq(rebookingHistory.contestantId, contestants.id))
       .orderBy(desc(rebookingHistory.rebookedAt));
-    return results;
+    
+    return results.map(r => ({
+      ...r.history,
+      contestant: r.contestant,
+    }));
   }
 
   async getRebookingHistoryByContestant(contestantId: string): Promise<Array<RebookingHistory & { fromRecordDay: RecordDay; toRecordDay: RecordDay }>> {

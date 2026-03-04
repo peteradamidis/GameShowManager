@@ -70,7 +70,7 @@ export default function HistoryPage() {
     const events: HistoryEvent[] = [];
 
     historyData.rebookings?.forEach((r: any) => {
-      const contestant = contestantMap.get(r.contestantId);
+      const contestant = r.contestant || contestantMap.get(r.contestantId);
       events.push({
         id: r.id,
         type: 'rebooking',
