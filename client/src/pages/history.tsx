@@ -39,14 +39,17 @@ export default function HistoryPage() {
     movements: any[];
   }>({
     queryKey: ['/api/history'],
+    retry: 1,
   });
 
   const { data: contestants } = useQuery<any[]>({
     queryKey: ['/api/contestants'],
+    retry: 1,
   });
 
   const { data: recordDays } = useQuery<any[]>({
     queryKey: ['/api/record-days'],
+    retry: 1,
   });
 
   const contestantMap = useMemo(() => {
@@ -69,7 +72,7 @@ export default function HistoryPage() {
 
     const events: HistoryEvent[] = [];
 
-    historyData.rebookings?.forEach((r: any) => {
+    (historyData.rebookings || []).forEach((r: any) => {
       const contestant = r.contestant || contestantMap.get(r.contestantId);
       events.push({
         id: r.id,
@@ -93,7 +96,7 @@ export default function HistoryPage() {
       });
     });
 
-    historyData.attendanceIssues?.forEach((a: any) => {
+    (historyData.attendanceIssues || []).forEach((a: any) => {
       // Use embedded contestant data from API, fallback to lookup
       const contestant = a.contestant || contestantMap.get(a.contestantId);
       const issueLabel = a.issueType === 'no_show' ? 'No-Show' : a.issueType === 'early_leaver' ? 'Early Leaver' : 'No Longer Wants to Attend';
@@ -118,7 +121,7 @@ export default function HistoryPage() {
       });
     });
 
-    historyData.standbyAttendance?.forEach((s: any) => {
+    (historyData.standbyAttendance || []).forEach((s: any) => {
       // Use embedded contestant data from API, fallback to lookup
       const contestant = s.contestant || contestantMap.get(s.contestantId);
       events.push({
@@ -140,7 +143,7 @@ export default function HistoryPage() {
       });
     });
 
-    historyData.movements?.forEach((m: any) => {
+    (historyData.movements || []).forEach((m: any) => {
       const movementDescriptions: Record<MovementType, string> = {
         'seat_change': `Moved from Block ${m.fromBlockNumber} ${m.fromSeatLabel} to Block ${m.toBlockNumber} ${m.toSeatLabel}${m.recordDayId ? ` on ${formatRecordDay(m.recordDayId)}` : ''}`,
         'added_to_reschedule': `Added to reschedule list from Block ${m.fromBlockNumber} ${m.fromSeatLabel}${m.recordDayId ? ` on ${formatRecordDay(m.recordDayId)}` : ''}`,

@@ -721,6 +721,9 @@ export class DbStorage implements IStorage {
         return created;
       });
     } catch (error: any) {
+      if (error.message?.startsWith('CONTESTANT_ALREADY_ACTIVE')) {
+        throw error;
+      }
       // Check for unique constraint violation (PostgreSQL error code 23505)
       if (error.code === '23505') {
         // Log the error for debugging (helps identify unexpected constraint names)

@@ -211,7 +211,7 @@ export default function Contestants() {
   const standbyContestantIds = useMemo(() => {
     return new Set(
       allStandbys
-        .filter((s: any) => !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled')
+        .filter((s: any) => !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled' && s.status !== 'attended')
         .map((s: any) => s.contestantId)
     );
   }, [allStandbys]);

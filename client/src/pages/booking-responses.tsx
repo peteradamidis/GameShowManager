@@ -268,14 +268,18 @@ export default function BookingResponses() {
     return queryString ? `/api/booking-tracker?${queryString}` : "/api/booking-tracker";
   };
     
-  const { data: trackerResponse, isLoading: loadingTracker, refetch: refetchTracker } = useQuery<BookingTrackerResponse>({
+  const { data: trackerResponse, isLoading: loadingTracker, refetch: refetchTracker, error: trackerError } = useQuery<BookingTrackerResponse>({
     queryKey: ["/api/booking-tracker", selectedRecordDay, statusFilter],
+    retry: 1,
     queryFn: async ({ queryKey }) => {
       // Use query key values to build URL, ensuring fresh values
       const [, recordDay, status] = queryKey as [string, string, StatusFilter];
-      const url = buildTrackerUrl(recordDay || "", status || "all");
+      const url = buildTrackerUrl(recordDay === "all" ? "" : (recordDay || ""), status || "all");
       const response = await fetch(url, { credentials: 'include' });
-      if (!response.ok) throw new Error('Failed to fetch booking tracker data');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to fetch booking tracker data');
+      }
       return response.json();
     },
   });
