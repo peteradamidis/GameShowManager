@@ -1560,6 +1560,23 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   };
 
   // Toggle RX Ready status and save immediately with the new value
+  // Helper: merge only safe server metadata into local card state.
+  // NEVER spread the full server result — manualCompanions comes back as a JSON
+  // string from the DB and would overwrite the correctly-parsed in-memory array,
+  // causing a "TypeError: .map is not a function" render crash.
+  const mergeServerMetadata = (local: CastingCardData, result: any): CastingCardData => {
+    if (!result || result.conflict) return local;
+    return {
+      ...local,
+      id: result.id ?? (local as any).id,
+      updatedAt: result.updatedAt ?? (local as any).updatedAt,
+      createdAt: result.createdAt ?? (local as any).createdAt,
+      isReady: result.isReady ?? local.isReady,
+      isDraftComplete: result.isDraftComplete ?? local.isDraftComplete,
+      producerName: result.producerName ?? local.producerName,
+    };
+  };
+
   const toggleReadyAndSave = () => {
     // Use ref as source of truth so we always flip the LATEST value, not stale state
     const current = cardDataRef.current || cardData;
@@ -1569,28 +1586,22 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       cardDataRef.current = updatedData;
       saveMutation.mutate(updatedData as any, {
         onSuccess: (result) => {
-          // Update the local card data with any server-side defaults
-          const finalData = { ...updatedData, ...result };
+          if (result?.conflict) return; // Handled by main saveMutation.onSuccess
+          // Only merge server metadata — do NOT spread full result (manualCompanions is a JSON string in result)
+          const finalData = mergeServerMetadata(updatedData, result);
           setCardData(finalData);
           cardDataRef.current = finalData;
 
           // Update the list cache for Players/Backups tab visibility
-          queryClient.setQueryData(['/api/casting-cards'], (old: any[] | undefined) => {
-            const updatedCard = { 
-              ...result, 
-              isReady: result.isReady, 
-              isDraftComplete: result.isDraftComplete,
-              producerName: result.producerName 
-            };
-            if (!Array.isArray(old)) return [updatedCard]; // Fix: Handle non-array or undefined old state safely
-            const existingIndex = old.findIndex(c => c.contestantId === result.contestantId);
-            if (existingIndex > -1) {
-              const next = [...old];
-              next[existingIndex] = { ...old[existingIndex], ...updatedCard };
-              return next;
-            }
-            return [...old, updatedCard];
-          });
+          if (result?.contestantId) {
+            queryClient.setQueryData(['/api/casting-cards'], (old: any[] | undefined) => {
+              const serverFields = { id: result.id, contestantId: result.contestantId, updatedAt: result.updatedAt, isReady: result.isReady, isDraftComplete: result.isDraftComplete, producerName: result.producerName };
+              if (!Array.isArray(old)) return [serverFields];
+              const idx = old.findIndex(c => c.contestantId === result.contestantId);
+              if (idx >= 0) { const next = [...old]; next[idx] = { ...old[idx], ...serverFields }; return next; }
+              return [...old, serverFields];
+            });
+          }
         }
       });
     }
@@ -1606,28 +1617,22 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       cardDataRef.current = updatedData;
       saveMutation.mutate(updatedData as any, {
         onSuccess: (result) => {
-          // Update the local card data with any server-side defaults
-          const finalData = { ...updatedData, ...result };
+          if (result?.conflict) return; // Handled by main saveMutation.onSuccess
+          // Only merge server metadata — do NOT spread full result (manualCompanions is a JSON string in result)
+          const finalData = mergeServerMetadata(updatedData, result);
           setCardData(finalData);
           cardDataRef.current = finalData;
 
           // Update the list cache for Players/Backups tab visibility
-          queryClient.setQueryData(['/api/casting-cards'], (old: any[] | undefined) => {
-            const updatedCard = { 
-              ...result, 
-              isReady: result.isReady, 
-              isDraftComplete: result.isDraftComplete,
-              producerName: result.producerName 
-            };
-            if (!Array.isArray(old)) return [updatedCard]; // Fix: Handle non-array or undefined old state safely
-            const existingIndex = old.findIndex(c => c.contestantId === result.contestantId);
-            if (existingIndex > -1) {
-              const next = [...old];
-              next[existingIndex] = { ...old[existingIndex], ...updatedCard };
-              return next;
-            }
-            return [...old, updatedCard];
-          });
+          if (result?.contestantId) {
+            queryClient.setQueryData(['/api/casting-cards'], (old: any[] | undefined) => {
+              const serverFields = { id: result.id, contestantId: result.contestantId, updatedAt: result.updatedAt, isReady: result.isReady, isDraftComplete: result.isDraftComplete, producerName: result.producerName };
+              if (!Array.isArray(old)) return [serverFields];
+              const idx = old.findIndex(c => c.contestantId === result.contestantId);
+              if (idx >= 0) { const next = [...old]; next[idx] = { ...old[idx], ...serverFields }; return next; }
+              return [...old, serverFields];
+            });
+          }
         }
       });
     }
