@@ -2499,12 +2499,13 @@ export class DbStorage implements IStorage {
       const newId = newIdResult.rows[0].id;
       
       // Create new seat assignment - carry over paperwork status from old assignment
+      // RESET invitation email (paperwork_sent) when rebooking to a new day
       const insertResult = await client.query(
         `INSERT INTO seat_assignments (id, record_day_id, contestant_id, block_number, seat_label, paperwork_sent, paperwork_sent_by, paperwork_received, paperwork_received_by, created_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
          RETURNING *`,
         [newId, params.newRecordDayId, params.contestantId, params.blockNumber, params.seatLabel, 
-         oldAssignment.paperwork_sent, oldAssignment.paperwork_sent_by, 
+         null, null, 
          oldAssignment.paperwork_received, oldAssignment.paperwork_received_by]
       );
       
