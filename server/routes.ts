@@ -13579,13 +13579,13 @@ Thank you.`;
       let recordDayFilteredAssignments = [...assignments];
       
       // Filter by record day if specified (for both data and stats)
-      if (recordDayId && typeof recordDayId === 'string' && recordDayId !== 'all') {
+      if (recordDayId && typeof recordDayId === 'string' && recordDayId !== 'all' && recordDayId !== '') {
         recordDayFilteredAssignments = recordDayFilteredAssignments.filter((a: SeatAssignment) => a.recordDayId === recordDayId);
       }
       
       // Filter canceled assignments by record day for declined count
       let recordDayFilteredCanceled = [...canceledAssignments];
-      if (recordDayId && typeof recordDayId === 'string' && recordDayId !== 'all') {
+      if (recordDayId && typeof recordDayId === 'string' && recordDayId !== 'all' && recordDayId !== '') {
         recordDayFilteredCanceled = recordDayFilteredCanceled.filter((a: any) => a.recordDayId === recordDayId);
       }
       

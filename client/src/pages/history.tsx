@@ -32,7 +32,7 @@ export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: historyData, isLoading } = useQuery<{
+  const { data: historyData, isLoading, error } = useQuery<{
     rebookings: any[];
     attendanceIssues: any[];
     standbyAttendance: any[];
@@ -49,15 +49,15 @@ export default function HistoryPage() {
     queryKey: ['/api/record-days'],
   });
 
-  const contestantMap = useMemo(() => 
-    new Map(contestants?.map(c => [c.id, c]) || []),
-    [contestants]
-  );
+  const contestantMap = useMemo(() => {
+    if (!Array.isArray(contestants)) return new Map();
+    return new Map(contestants.map(c => [c.id, c]));
+  }, [contestants]);
 
-  const recordDayMap = useMemo(() => 
-    new Map(recordDays?.map(rd => [rd.id, rd]) || []),
-    [recordDays]
-  );
+  const recordDayMap = useMemo(() => {
+    if (!Array.isArray(recordDays)) return new Map();
+    return new Map(recordDays.map(rd => [rd.id, rd]));
+  }, [recordDays]);
 
   const formatRecordDay = (recordDayId: string) => {
     const rd = recordDayMap.get(recordDayId);
@@ -299,6 +299,16 @@ export default function HistoryPage() {
           <div className="h-8 w-64 bg-muted rounded" />
           <div className="h-64 bg-muted rounded" />
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-8 text-center" data-testid="error-state">
+        <h2 className="text-xl font-semibold text-destructive mb-2">Error Loading History</h2>
+        <p className="text-muted-foreground">{(error as any).message || "An unexpected error occurred"}</p>
+        <Button className="mt-4" onClick={() => window.location.reload()}>Refresh Page</Button>
       </div>
     );
   }
