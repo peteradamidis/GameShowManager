@@ -1481,7 +1481,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         // (isReady, isDraftComplete, presence of card) without waiting for a full refetch.
         // This runs even when skipInvalidate:true to keep the list in sync after auto-saves.
         queryClient.setQueryData(['/api/casting-cards'], (oldList: any) => {
-          if (!Array.isArray(oldList)) return oldList;
+          if (!Array.isArray(oldList)) return []; // Fix: Always return an array to prevent .map() crashes
           const idx = oldList.findIndex((c: any) => c.contestantId === result.contestantId);
           if (idx >= 0) {
             const updated = [...oldList];
@@ -1582,7 +1582,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               isDraftComplete: result.isDraftComplete,
               producerName: result.producerName 
             };
-            if (!old) return [updatedCard];
+            if (!Array.isArray(old)) return [updatedCard]; // Fix: Handle non-array or undefined old state safely
             const existingIndex = old.findIndex(c => c.contestantId === result.contestantId);
             if (existingIndex > -1) {
               const next = [...old];
@@ -1619,7 +1619,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
               isDraftComplete: result.isDraftComplete,
               producerName: result.producerName 
             };
-            if (!old) return [updatedCard];
+            if (!Array.isArray(old)) return [updatedCard]; // Fix: Handle non-array or undefined old state safely
             const existingIndex = old.findIndex(c => c.contestantId === result.contestantId);
             if (existingIndex > -1) {
               const next = [...old];
@@ -7633,6 +7633,7 @@ export default function PlayersPage() {
 
   // Map of contestantId -> casting card for quick lookup
   const castingCardsMap = useMemo(() => {
+    if (!Array.isArray(allCastingCards)) return new Map(); // Extra safety net for main render
     return new Map(allCastingCards.map(card => [card.contestantId, card]));
   }, [allCastingCards]);
 
