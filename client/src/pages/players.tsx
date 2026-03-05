@@ -1569,16 +1569,27 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       cardDataRef.current = updatedData;
       saveMutation.mutate(updatedData as any, {
         onSuccess: (result) => {
+          // Update the local card data with any server-side defaults
+          const finalData = { ...updatedData, ...result };
+          setCardData(finalData);
+          cardDataRef.current = finalData;
+
           // Update the list cache for Players/Backups tab visibility
           queryClient.setQueryData(['/api/casting-cards'], (old: any[] | undefined) => {
-            if (!old) return [result];
+            const updatedCard = { 
+              ...result, 
+              isReady: result.isReady, 
+              isDraftComplete: result.isDraftComplete,
+              producerName: result.producerName 
+            };
+            if (!old) return [updatedCard];
             const existingIndex = old.findIndex(c => c.contestantId === result.contestantId);
             if (existingIndex > -1) {
               const next = [...old];
-              next[existingIndex] = { ...old[existingIndex], ...result };
+              next[existingIndex] = { ...old[existingIndex], ...updatedCard };
               return next;
             }
-            return [...old, result];
+            return [...old, updatedCard];
           });
         }
       });
@@ -1595,16 +1606,27 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       cardDataRef.current = updatedData;
       saveMutation.mutate(updatedData as any, {
         onSuccess: (result) => {
+          // Update the local card data with any server-side defaults
+          const finalData = { ...updatedData, ...result };
+          setCardData(finalData);
+          cardDataRef.current = finalData;
+
           // Update the list cache for Players/Backups tab visibility
           queryClient.setQueryData(['/api/casting-cards'], (old: any[] | undefined) => {
-            if (!old) return [result];
+            const updatedCard = { 
+              ...result, 
+              isReady: result.isReady, 
+              isDraftComplete: result.isDraftComplete,
+              producerName: result.producerName 
+            };
+            if (!old) return [updatedCard];
             const existingIndex = old.findIndex(c => c.contestantId === result.contestantId);
             if (existingIndex > -1) {
               const next = [...old];
-              next[existingIndex] = { ...old[existingIndex], ...result };
+              next[existingIndex] = { ...old[existingIndex], ...updatedCard };
               return next;
             }
-            return [...old, result];
+            return [...old, updatedCard];
           });
         }
       });
