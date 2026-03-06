@@ -27,6 +27,20 @@ export const pool = process.env.DATABASE_URL
     })
   : null;
 
+// CRITICAL: Handle idle client errors (e.g. Neon dropping idle connections).
+// Without this, an unhandled 'error' event crashes the entire Node.js process.
+if (pool) {
+  pool.on('error', (err: Error) => {
+    const code = (err as any).code;
+    // 57P01 = administrator terminating connection (Neon idle timeout) — safe to ignore
+    if (code === '57P01' || code === '57P02' || code === '57P03') {
+      console.warn('[DB Pool] Idle client terminated by server (Neon timeout) — reconnecting automatically.');
+    } else {
+      console.error('[DB Pool] Unexpected client error:', err.message);
+    }
+  });
+}
+
 export const db = pool 
   ? drizzle(pool, { schema })
   : null;

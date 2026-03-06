@@ -118,6 +118,18 @@ const pool = process.env.DATABASE_URL
     })
   : null;
 
+// CRITICAL: Handle idle client errors so Neon timeouts don't crash the process
+if (pool) {
+  pool.on('error', (err: Error) => {
+    const code = (err as any).code;
+    if (code === '57P01' || code === '57P02' || code === '57P03') {
+      console.warn('[Storage Pool] Idle client terminated by server (Neon timeout) — reconnecting automatically.');
+    } else {
+      console.error('[Storage Pool] Unexpected client error:', err.message);
+    }
+  });
+}
+
 const db = pool ? drizzle(pool) : null;
 
 // Helper to ensure db is available before operations
