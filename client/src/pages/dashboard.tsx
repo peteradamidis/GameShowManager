@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight, Clapperboard, Bell, Send, Loader2, Eye, Download, FileText, Trophy, Sparkles } from "lucide-react";
+import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight, Clapperboard, Bell, Send, Loader2, Eye, Download, FileText, Trophy, Sparkles, Armchair, UserCheck, UserX, TrendingUp } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -320,6 +320,22 @@ export default function Dashboard() {
 
   const { data: winningAssignments = [] } = useQuery<any[]>({
     queryKey: ['/api/seat-assignments/with-winning-money'],
+  });
+
+  const { data: seatingStats } = useQuery<{
+    emptySeats: number;
+    unlockedDaysCount: number;
+    unassignedTotal: number;
+    reschedulePool: number;
+    studioOnce: number;
+    studioTotal: number;
+    standbysCameInNotRebooked: number;
+    standbysStillNeeded: number;
+    totalActiveStandbys: number;
+    standbysPerDay: number;
+  }>({
+    queryKey: ['/api/dashboard/seating-stats'],
+    refetchInterval: 120000,
   });
 
   const funStats = useMemo(() => {
@@ -740,6 +756,104 @@ export default function Dashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Seating Stats Widget */}
+      <Card data-testid="card-seating-stats">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Armchair className="h-5 w-5" />
+            Series Seating Overview
+            {seatingStats && (
+              <Badge variant="outline" className="ml-2 text-xs font-normal text-muted-foreground">
+                {seatingStats.unlockedDaysCount} day{seatingStats.unlockedDaysCount !== 1 ? 's' : ''} remaining
+              </Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!seatingStats ? (
+            <div className="flex items-center gap-2 text-muted-foreground text-sm py-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading stats...
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+
+              {/* Stat 1: Empty seats */}
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40" data-testid="stat-empty-seats">
+                <div className="p-2 rounded-md bg-amber-100 dark:bg-amber-900/30 shrink-0">
+                  <Armchair className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-2xl font-bold tabular-nums">{seatingStats.emptySeats.toLocaleString()}</div>
+                  <div className="text-xs font-medium text-muted-foreground leading-tight">Empty seats left in series</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    Across {seatingStats.unlockedDaysCount} upcoming day{seatingStats.unlockedDaysCount !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              </div>
+
+              {/* Stat 2: Unassigned people */}
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40" data-testid="stat-unassigned">
+                <div className="p-2 rounded-md bg-blue-100 dark:bg-blue-900/30 shrink-0">
+                  <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-2xl font-bold tabular-nums">{seatingStats.unassignedTotal.toLocaleString()}</div>
+                  <div className="text-xs font-medium text-muted-foreground leading-tight">People not yet assigned to a day</div>
+                  {seatingStats.reschedulePool > 0 && (
+                    <div className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                      incl. {seatingStats.reschedulePool} on reschedule list
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Stat 3: Studio once */}
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40" data-testid="stat-studio-once">
+                <div className="p-2 rounded-md bg-green-100 dark:bg-green-900/30 shrink-0">
+                  <UserCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-2xl font-bold tabular-nums">{seatingStats.studioOnce.toLocaleString()}</div>
+                  <div className="text-xs font-medium text-muted-foreground leading-tight">Attended the studio once</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {seatingStats.studioTotal} total check-ins
+                  </div>
+                </div>
+              </div>
+
+              {/* Stat 4: Standbys came in, not rebooked */}
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40" data-testid="stat-standbys-unrebooked">
+                <div className="p-2 rounded-md bg-orange-100 dark:bg-orange-900/30 shrink-0">
+                  <UserX className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-2xl font-bold tabular-nums">{seatingStats.standbysCameInNotRebooked.toLocaleString()}</div>
+                  <div className="text-xs font-medium text-muted-foreground leading-tight">Standbys attended, not yet rebooked</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">Need to be placed into future episodes</div>
+                </div>
+              </div>
+
+              {/* Stat 5: Standbys still needed */}
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 sm:col-span-2 lg:col-span-2" data-testid="stat-standbys-needed">
+                <div className="p-2 rounded-md bg-purple-100 dark:bg-purple-900/30 shrink-0">
+                  <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-2xl font-bold tabular-nums">{seatingStats.standbysStillNeeded.toLocaleString()}</div>
+                  <div className="text-xs font-medium text-muted-foreground leading-tight">More standbys needed for rest of series</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    Based on {seatingStats.standbysPerDay}/day target &mdash; {seatingStats.totalActiveStandbys} already booked.
+                    <span className="ml-1 text-purple-600 dark:text-purple-400">These will also reduce empty seats once rebooked.</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* System Guide Download */}
       <Card className="border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20" data-testid="card-system-guide">

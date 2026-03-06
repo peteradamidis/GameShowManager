@@ -3469,6 +3469,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dashboard seating stats
+  app.get("/api/dashboard/seating-stats", async (req, res) => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const [allRecordDays, allAssignments, allContestants, allStandbys, allCanceled] = await Promise.all([
+        storage.getRecordDays(),
+        storage.getAllSeatAssignments(),
+        storage.getContestants(),
+        storage.getStandbyAssignments(),
+        storage.getCanceledAssignments(),
+      ]);
+
+      // Unlocked record days = days with no lockedAt (upcoming/in-progress)
+      const unlockedDays = allRecordDays.filter(rd => !rd.lockedAt);
+
+      // --- Stat 1: Empty seats for rest of series ---
+      const unlockedDayIds = new Set(unlockedDays.map(rd => rd.id));
+      const assignmentsOnUnlocked = allAssignments.filter(a => unlockedDayIds.has(a.recordDayId));
+      const assignedPerDay = assignmentsOnUnlocked.reduce((acc, a) => {
+        acc[a.recordDayId] = (acc[a.recordDayId] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      const emptySeats = unlockedDays.reduce((sum, rd) => {
+        const totalSeats = (rd as any).totalSeats || 154;
+        const filled = assignedPerDay[rd.id] || 0;
+        return sum + Math.max(0, totalSeats - filled);
+      }, 0);
+
+      // --- Stat 2: People not yet assigned to any unlocked day ---
+      const contestantIdsOnUnlockedDay = new Set(assignmentsOnUnlocked.map(a => a.contestantId));
+      const unassignedTotal = allContestants.filter(c => !contestantIdsOnUnlockedDay.has(c.id)).length;
+
+      // Also count reschedule pool separately for context
+      const reschedulePool = allCanceled.filter(ca => !ca.rebookedToRecordDayId).length;
+
+      // --- Stat 3: People who have come into studio ONCE (signed in exactly once) ---
+      const signedInAssignments = allAssignments.filter(a => (a as any).signedIn != null);
+      const signedInCount: Record<string, number> = {};
+      for (const a of signedInAssignments) {
+        signedInCount[a.contestantId] = (signedInCount[a.contestantId] || 0) + 1;
+      }
+      // Also include standbys who signed in
+      const signedInStandbys = allStandbys.filter(s => (s as any).signedIn != null);
+      for (const s of signedInStandbys) {
+        signedInCount[s.contestantId] = (signedInCount[s.contestantId] || 0) + 1;
+      }
+      const studioOnce = Object.values(signedInCount).filter(count => count === 1).length;
+      const studioTotal = Object.keys(signedInCount).length;
+
+      // --- Stat 4: Standbys who came in (checked in) but haven't been rebooked ---
+      const checkedInStandbyContestantIds = new Set(
+        allStandbys.filter(s => (s as any).signedIn != null).map(s => s.contestantId)
+      );
+      const standbysCameInNotRebooked = [...checkedInStandbyContestantIds].filter(
+        cId => !contestantIdsOnUnlockedDay.has(cId)
+      ).length;
+
+      // --- Stat 5: Standbys still needed until end of series (10 per unlocked day) ---
+      const activeStandbysPerDay = allStandbys
+        .filter(s => !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled')
+        .reduce((acc, s) => {
+          if (unlockedDayIds.has(s.recordDayId)) {
+            acc[s.recordDayId] = (acc[s.recordDayId] || 0) + 1;
+          }
+          return acc;
+        }, {} as Record<string, number>);
+
+      const STANDBYS_PER_DAY = 10;
+      let standbysStillNeeded = 0;
+      for (const rd of unlockedDays) {
+        const have = activeStandbysPerDay[rd.id] || 0;
+        standbysStillNeeded += Math.max(0, STANDBYS_PER_DAY - have);
+      }
+
+      // Total standbys still to attend (those on the list but not yet signed in)
+      const totalActiveStandbys = allStandbys.filter(
+        s => !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled' && unlockedDayIds.has(s.recordDayId)
+      ).length;
+
+      res.json({
+        emptySeats,
+        unlockedDaysCount: unlockedDays.length,
+        unassignedTotal,
+        reschedulePool,
+        studioOnce,
+        studioTotal,
+        standbysCameInNotRebooked,
+        standbysStillNeeded,
+        totalActiveStandbys,
+        standbysPerDay: STANDBYS_PER_DAY,
+      });
+    } catch (error: any) {
+      console.error("Error computing seating stats:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get all record days
   app.get("/api/record-days", async (req, res) => {
     try {
