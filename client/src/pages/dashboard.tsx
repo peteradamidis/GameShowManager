@@ -322,7 +322,7 @@ export default function Dashboard() {
     queryKey: ['/api/seat-assignments/with-winning-money'],
   });
 
-  const { data: seatingStats } = useQuery<{
+  const { data: seatingStats, isLoading: seatingStatsLoading, error: seatingStatsError } = useQuery<{
     emptySeats: number;
     unlockedDaysCount: number;
     unassignedTotal: number;
@@ -336,6 +336,7 @@ export default function Dashboard() {
   }>({
     queryKey: ['/api/dashboard/seating-stats'],
     refetchInterval: 120000,
+    retry: 2,
   });
 
   const funStats = useMemo(() => {
@@ -743,20 +744,6 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Ratings Breakdown */}
-      <div className="flex flex-wrap gap-3">
-        {sortedRatings.map(([rating, count]) => (
-          <Card key={rating} className="bg-muted/30 flex-1 min-w-[90px]">
-            <CardContent className="py-2 px-3">
-              <div className="text-center">
-                <p className="text-xs font-medium text-muted-foreground">Rating {rating}</p>
-                <div className="text-xl font-bold">{count}</div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
       {/* Seating Stats Widget */}
       <Card data-testid="card-seating-stats">
         <CardHeader className="pb-3">
@@ -771,11 +758,17 @@ export default function Dashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {!seatingStats ? (
+          {seatingStatsError ? (
+            <div className="text-sm text-destructive py-2">
+              Could not load seating stats — check that the server is running the latest build, then refresh.
+            </div>
+          ) : seatingStatsLoading ? (
             <div className="flex items-center gap-2 text-muted-foreground text-sm py-2">
               <Loader2 className="h-4 w-4 animate-spin" />
               Loading stats...
             </div>
+          ) : !seatingStats ? (
+            <div className="text-sm text-muted-foreground py-2">No data available.</div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 
@@ -854,6 +847,20 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Ratings Breakdown */}
+      <div className="flex flex-wrap gap-3">
+        {sortedRatings.map(([rating, count]) => (
+          <Card key={rating} className="bg-muted/30 flex-1 min-w-[90px]">
+            <CardContent className="py-2 px-3">
+              <div className="text-center">
+                <p className="text-xs font-medium text-muted-foreground">Rating {rating}</p>
+                <div className="text-xl font-bold">{count}</div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       {/* System Guide Download */}
       <Card className="border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20" data-testid="card-system-guide">
