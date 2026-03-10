@@ -4681,10 +4681,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         standbyMovementNotes: standbyMovementNotes || undefined,
       };
 
-      // When seating from standby, carry over all workflow fields from the standby assignment
+      // When seating from standby, carry over paperwork fields only (not email/confirmation state)
       if (standbyAssignment && seatedFromStandby) {
-        if (standbyAssignment.bookingEmailSent) assignmentData.bookingEmailSent = standbyAssignment.bookingEmailSent;
-        if (standbyAssignment.confirmedRsvp) assignmentData.confirmedRsvp = standbyAssignment.confirmedRsvp;
         if (standbyAssignment.paperworkSent) assignmentData.paperworkSent = standbyAssignment.paperworkSent;
         if (standbyAssignment.paperworkReceived) assignmentData.paperworkReceived = standbyAssignment.paperworkReceived;
         if (standbyAssignment.paperworkOnDay) assignmentData.paperworkOnDay = standbyAssignment.paperworkOnDay;
@@ -4693,10 +4691,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (standbyAssignment.attendingWithOverride) assignmentData.attendingWithOverride = standbyAssignment.attendingWithOverride;
         if (standbyAssignment.mobilityNotesOverride) assignmentData.mobilityNotesOverride = standbyAssignment.mobilityNotesOverride;
       }
-      // When rebooking from reschedule, carry over all workflow fields from the canceled assignment
+      // When rebooking from reschedule, carry over paperwork fields only (not email/confirmation state)
       else if (previousCanceledWithWorkflow) {
-        if (previousCanceledWithWorkflow.bookingEmailSent) assignmentData.bookingEmailSent = previousCanceledWithWorkflow.bookingEmailSent;
-        if (previousCanceledWithWorkflow.confirmedRsvp) assignmentData.confirmedRsvp = previousCanceledWithWorkflow.confirmedRsvp;
         if (previousCanceledWithWorkflow.paperworkSent) assignmentData.paperworkSent = previousCanceledWithWorkflow.paperworkSent;
         if (previousCanceledWithWorkflow.paperworkSentBy) assignmentData.paperworkSentBy = previousCanceledWithWorkflow.paperworkSentBy;
         if (previousCanceledWithWorkflow.paperworkReceived) assignmentData.paperworkReceived = previousCanceledWithWorkflow.paperworkReceived;
@@ -4875,10 +4871,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         seatLabel,
       };
 
-      // Carry over workflow fields from reschedule
+      // Carry over paperwork fields from reschedule only (not email/confirmation state)
       if (previousCanceledWithWorkflow) {
-        if (previousCanceledWithWorkflow.bookingEmailSent) assignmentData.bookingEmailSent = previousCanceledWithWorkflow.bookingEmailSent;
-        if (previousCanceledWithWorkflow.confirmedRsvp) assignmentData.confirmedRsvp = previousCanceledWithWorkflow.confirmedRsvp;
         if (previousCanceledWithWorkflow.paperworkSent) assignmentData.paperworkSent = previousCanceledWithWorkflow.paperworkSent;
         if (previousCanceledWithWorkflow.paperworkSentBy) assignmentData.paperworkSentBy = previousCanceledWithWorkflow.paperworkSentBy;
         if (previousCanceledWithWorkflow.paperworkReceived) assignmentData.paperworkReceived = previousCanceledWithWorkflow.paperworkReceived;
@@ -5140,8 +5134,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           seatLabel: seatLabels[i],
         };
         if (previousCanceled) {
-          if (previousCanceled.bookingEmailSent) bulkAssignData.bookingEmailSent = previousCanceled.bookingEmailSent;
-          if (previousCanceled.confirmedRsvp) bulkAssignData.confirmedRsvp = previousCanceled.confirmedRsvp;
           if (previousCanceled.paperworkSent) bulkAssignData.paperworkSent = previousCanceled.paperworkSent;
           if (previousCanceled.paperworkSentBy) bulkAssignData.paperworkSentBy = previousCanceled.paperworkSentBy;
           if (previousCanceled.paperworkReceived) bulkAssignData.paperworkReceived = previousCanceled.paperworkReceived;
@@ -7074,8 +7066,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             seatLabel: item.seatLabel,
           };
           if (previousCanceled) {
-            if (previousCanceled.bookingEmailSent) autoAssignData.bookingEmailSent = previousCanceled.bookingEmailSent;
-            if (previousCanceled.confirmedRsvp) autoAssignData.confirmedRsvp = previousCanceled.confirmedRsvp;
             if (previousCanceled.paperworkSent) autoAssignData.paperworkSent = previousCanceled.paperworkSent;
             if (previousCanceled.paperworkSentBy) autoAssignData.paperworkSentBy = previousCanceled.paperworkSentBy;
             if (previousCanceled.paperworkReceived) autoAssignData.paperworkReceived = previousCanceled.paperworkReceived;
