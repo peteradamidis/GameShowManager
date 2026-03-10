@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight, Clapperboard, Bell, Send, Loader2, Eye, Download, FileText, Trophy, Sparkles, Armchair, UserCheck, UserX, TrendingUp } from "lucide-react";
+import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight, Clapperboard, Bell, Send, Loader2, Eye, Download, FileText, Trophy, Sparkles, Armchair, UserCheck, UserX, TrendingUp, Repeat2, ArrowUpRight } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -333,6 +333,8 @@ export default function Dashboard() {
     standbysStillNeeded: number;
     totalActiveStandbys: number;
     standbysPerDay: number;
+    returnedAfterAttending: number;
+    returnedAfterStandby: number;
   }>({
     queryKey: ['/api/dashboard/seating-stats'],
     refetchInterval: 120000,
@@ -840,6 +842,30 @@ export default function Dashboard() {
                     Based on {seatingStats.standbysPerDay}/day target &mdash; {seatingStats.totalActiveStandbys} already booked.
                     <span className="ml-1 text-purple-600 dark:text-purple-400">These will also reduce empty seats once rebooked.</span>
                   </div>
+                </div>
+              </div>
+
+              {/* Stat 6: Returned after attending as regular contestant */}
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40" data-testid="stat-returned-after-attending">
+                <div className="p-2 rounded-md bg-emerald-100 dark:bg-emerald-900/30 shrink-0">
+                  <Repeat2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-2xl font-bold tabular-nums">{seatingStats.returnedAfterAttending.toLocaleString()}</div>
+                  <div className="text-xs font-medium text-muted-foreground leading-tight">Returned after attending</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">Attended as contestant on 2+ separate days</div>
+                </div>
+              </div>
+
+              {/* Stat 7: Returned after attending as standby */}
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 lg:col-span-2" data-testid="stat-returned-after-standby">
+                <div className="p-2 rounded-md bg-indigo-100 dark:bg-indigo-900/30 shrink-0">
+                  <ArrowUpRight className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-2xl font-bold tabular-nums">{seatingStats.returnedAfterStandby.toLocaleString()}</div>
+                  <div className="text-xs font-medium text-muted-foreground leading-tight">Returned after attending as standby</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">Signed in as standby, then subsequently booked as a contestant</div>
                 </div>
               </div>
 

@@ -3563,6 +3563,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         s => !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled' && unlockedDayIds.has(s.recordDayId)
       ).length;
 
+      // --- Stat 6: Returned after attending (attended as regular contestant on 2+ days) ---
+      const seatSignInCount: Record<string, number> = {};
+      for (const a of allAssignments) {
+        if (a.signedIn != null) {
+          seatSignInCount[a.contestantId] = (seatSignInCount[a.contestantId] || 0) + 1;
+        }
+      }
+      const returnedAfterAttending = Object.values(seatSignInCount).filter(count => count >= 2).length;
+
+      // --- Stat 7: Returned after attending as standby (signed in as standby, then booked as contestant) ---
+      const standbySignedInIds = new Set(
+        allStandbys.filter(s => s.signedIn != null).map(s => s.contestantId)
+      );
+      const contestantIdsWithAnyAssignment = new Set(allAssignments.map(a => a.contestantId));
+      const returnedAfterStandby = [...standbySignedInIds].filter(
+        id => contestantIdsWithAnyAssignment.has(id)
+      ).length;
+
       res.json({
         emptySeats,
         unlockedDaysCount: unlockedDays.length,
@@ -3574,6 +3592,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         standbysStillNeeded,
         totalActiveStandbys,
         standbysPerDay: STANDBYS_PER_DAY,
+        returnedAfterAttending,
+        returnedAfterStandby,
       });
     } catch (error: any) {
       console.error("Error computing seating stats:", error);
