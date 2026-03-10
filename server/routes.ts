@@ -3499,12 +3499,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return sum + Math.max(0, totalSeats - filled);
       }, 0);
 
-      // --- Stat 2: People not yet assigned to any unlocked day ---
+      // --- Stat 2: Available + reschedule pool, not yet assigned to any unlocked day ---
       const contestantIdsOnUnlockedDay = new Set(assignmentsOnUnlocked.map(a => a.contestantId));
-      const unassignedTotal = allContestants.filter(c => !contestantIdsOnUnlockedDay.has(c.id)).length;
 
-      // Also count reschedule pool separately for context
-      const reschedulePool = allCanceled.filter(ca => !ca.rebookedToRecordDayId).length;
+      // Reschedule pool: unique contestant IDs with an unbooked canceled assignment
+      const rescheduleContestantIds = new Set(
+        allCanceled.filter(ca => !ca.rebookedToRecordDayId).map(ca => ca.contestantId)
+      );
+      const reschedulePool = rescheduleContestantIds.size;
+
+      // Available contestants not yet on any unlocked day
+      const availableUnassignedIds = new Set(
+        allContestants
+          .filter(c => c.availabilityStatus === 'available' && !contestantIdsOnUnlockedDay.has(c.id))
+          .map(c => c.id)
+      );
+
+      // Union of both groups (deduped)
+      const unassignedContestantIds = new Set([...availableUnassignedIds, ...rescheduleContestantIds]);
+      const unassignedTotal = unassignedContestantIds.size;
 
       // --- Stat 3: People who have come into studio ONCE (signed in exactly once) ---
       const signedInAssignments = allAssignments.filter(a => (a as any).signedIn != null);

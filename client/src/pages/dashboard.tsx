@@ -793,7 +793,7 @@ export default function Dashboard() {
                 </div>
                 <div className="min-w-0">
                   <div className="text-2xl font-bold tabular-nums">{seatingStats.unassignedTotal.toLocaleString()}</div>
-                  <div className="text-xs font-medium text-muted-foreground leading-tight">People not yet assigned to a day</div>
+                  <div className="text-xs font-medium text-muted-foreground leading-tight">Available &amp; unassigned (incl. reschedules)</div>
                   {seatingStats.reschedulePool > 0 && (
                     <div className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
                       incl. {seatingStats.reschedulePool} on reschedule list
