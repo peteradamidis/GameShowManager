@@ -834,6 +834,11 @@ export function SeatCard({
                             TEST
                           </Badge>
                         )}
+                        {contestantDetails.availableForStandby && (
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-sky-100 text-sky-700 border-sky-300 dark:bg-sky-900/30 dark:text-sky-400 dark:border-sky-700">
+                            S
+                          </Badge>
+                        )}
                       </div>
                       {contestantDetails.auditionRating && (
                         <div className="flex flex-col items-center">
