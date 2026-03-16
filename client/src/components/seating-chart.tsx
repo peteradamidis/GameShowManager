@@ -231,6 +231,7 @@ export interface OverflowAssignment {
   availabilityNotes?: string;
   podiumStory?: boolean;
   attendingWithRaw?: string;
+  availableForStandby?: boolean;
 }
 
 interface SeatingChartProps {
@@ -627,7 +628,14 @@ function SortableStandbyItem({
               </Avatar>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold">{standby.contestant.name}</h4>
+                  <div className="flex items-center gap-1">
+                    <h4 className="text-sm font-semibold">{standby.contestant.name}</h4>
+                    {standby.contestant.availableForStandby && (
+                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-sky-100 text-sky-700 border-sky-300 dark:bg-sky-900/30 dark:text-sky-400 dark:border-sky-700">
+                        S
+                      </Badge>
+                    )}
+                  </div>
                   {standby.contestant.auditionRating && (
                     <span className={`text-sm font-bold ${
                       standby.contestant.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
@@ -2761,7 +2769,14 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                             </Avatar>
                             <div className="flex-1">
                               <div className="flex items-center justify-between">
-                                <h4 className="text-sm font-semibold">{oa.contestantName}</h4>
+                                <div className="flex items-center gap-1">
+                                  <h4 className="text-sm font-semibold">{oa.contestantName}</h4>
+                                  {oa.availableForStandby && (
+                                    <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-sky-100 text-sky-700 border-sky-300 dark:bg-sky-900/30 dark:text-sky-400 dark:border-sky-700">
+                                      S
+                                    </Badge>
+                                  )}
+                                </div>
                                 {oa.auditionRating && (
                                   <span className={`text-sm font-bold ${
                                     oa.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :

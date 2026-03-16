@@ -1296,6 +1296,7 @@ export default function SeatingChartPage() {
           availabilityNotes: c?.availabilityNotes,
           podiumStory: c?.podiumStory || a.podiumStory,
           attendingWithRaw: c?.attendingWith,
+          availableForStandby: !!(c?.availableForStandby || a.availableForStandby),
         };
       });
   }, [assignments, allContestants]);
