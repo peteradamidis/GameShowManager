@@ -2145,6 +2145,332 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ─── Survey Format Import (Microsoft Forms export) ─────────────────────────
+
+  // Helper: parse a survey-format workbook buffer into raw row objects
+  const parseSurveyWorkbook = (buffer: Buffer): any[] | null => {
+    try {
+      const workbook = xlsx.read(buffer, { type: "buffer", cellFormula: false, cellStyles: false });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const allRows = xlsx.utils.sheet_to_json(sheet, { header: 1, defval: "" }) as any[][];
+      if (!allRows || allRows.length === 0) return null;
+
+      // Find first non-empty row as header
+      let headerRowIndex = 0;
+      for (let i = 0; i < allRows.length; i++) {
+        if (allRows[i].some((cell: any) => cell && cell.toString().trim() !== "")) {
+          headerRowIndex = i;
+          break;
+        }
+      }
+      const headers = (allRows[headerRowIndex] as any[]).map((h: any) => h ? h.toString().trim() : "");
+      const dataRows = allRows.slice(headerRowIndex + 1);
+      return dataRows
+        .map((row: any[]) => {
+          const obj: any = {};
+          headers.forEach((header, index) => {
+            if (row[index] !== undefined && row[index] !== null) obj[header] = row[index];
+          });
+          return obj;
+        })
+        .filter(row => Object.keys(row).length > 0 && Object.values(row).some(v => v !== "" && v !== null && v !== undefined));
+    } catch {
+      return null;
+    }
+  };
+
+  // Helper: map a raw survey row to a normalised contestant-shaped object
+  const mapSurveyRow = (row: any): {
+    name: string; email: string | null; phone: string | null; location: string | null;
+    groupSize: number | null; attendingWith: string | null; availabilityNotes: string | null;
+    auditionRating: string;
+  } | null => {
+    // Prefer "Full name", then "Name"
+    const nameRaw = row["Full name"] ?? row["Full Name"] ?? row["FULL NAME"] ?? row["Name"] ?? row["NAME"] ?? row["name"] ?? null;
+    if (!nameRaw || nameRaw.toString().trim() === "") return null;
+
+    const emailRaw = row["Email"] ?? row["email"] ?? row["EMAIL"] ?? row["Email address"] ?? row["Email Address"] ?? null;
+
+    const phoneRaw = row["Phone number"] ?? row["Phone Number"] ?? row["PHONE NUMBER"] ?? row["Phone"] ?? row["PHONE"] ?? row["phone"] ?? null;
+    let phone: string | null = null;
+    if (phoneRaw) {
+      const phoneStr = phoneRaw.toString().trim();
+      phone = phoneStr.startsWith("4") ? "0" + phoneStr : phoneStr;
+    }
+
+    const locationRaw = row["Suburb"] ?? row["suburb"] ?? row["SUBURB"] ?? row["City"] ?? row["city"] ?? row["Location"] ?? null;
+
+    const groupSizeRaw = row["Group size"] ?? row["Group Size"] ?? row["GROUP SIZE"] ?? null;
+    const groupSize = groupSizeRaw ? parseInt(groupSizeRaw.toString()) : null;
+
+    const attendingWithRaw = row["Group Members Names"] ?? row["Group members names"] ?? row["Group Member Names"] ?? row["Group Members"] ?? null;
+
+    // Find the availability/dates column by scanning keys
+    const datesKey = Object.keys(row).find(k => {
+      const lk = k.toLowerCase();
+      return lk.includes("available to attend") || lk.includes("studio recording") || (lk.includes("date") && lk.includes("available"));
+    });
+    const availabilityNotesRaw = datesKey ? row[datesKey] : null;
+
+    return {
+      name: nameRaw.toString().trim(),
+      email: emailRaw ? emailRaw.toString().trim().toLowerCase() : null,
+      phone,
+      location: locationRaw ? locationRaw.toString().trim() : null,
+      groupSize: groupSize && !isNaN(groupSize) ? groupSize : null,
+      attendingWith: attendingWithRaw ? attendingWithRaw.toString().trim() : null,
+      availabilityNotes: availabilityNotesRaw ? availabilityNotesRaw.toString().trim() : null,
+      auditionRating: "R",
+    };
+  };
+
+  // Preview survey import - duplicate check step
+  app.post("/api/contestants/import-survey-preview", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+      const rawData = parseSurveyWorkbook(req.file.buffer);
+      if (!rawData || rawData.length === 0) {
+        return res.status(400).json({ error: "The uploaded file is empty or has no data rows." });
+      }
+
+      const importedContestants = rawData
+        .map(mapSurveyRow)
+        .filter((r): r is NonNullable<typeof r> => r !== null);
+
+      if (importedContestants.length === 0) {
+        return res.status(400).json({ error: "No valid contestant rows found. Make sure the file has a 'Full name' or 'Name' column." });
+      }
+
+      const existingContestants = await storage.getContestants();
+
+      const normalizePhone = (phone: string | null): string | null => {
+        if (!phone) return null;
+        return phone.replace(/\D/g, "");
+      };
+
+      const existingByName = new Map<string, any>();
+      const existingByEmail = new Map<string, any>();
+      const existingByPhone = new Map<string, any>();
+      existingContestants.forEach((c: any) => {
+        if (c.name) {
+          const k = c.name.toLowerCase().trim();
+          if (!existingByName.has(k) || !c.isTemporary) existingByName.set(k, c);
+        }
+        if (c.email) {
+          const k = c.email.toLowerCase().trim();
+          if (!existingByEmail.has(k) || !c.isTemporary) existingByEmail.set(k, c);
+        }
+        const np = normalizePhone(c.phone);
+        if (np && np.length >= 8) {
+          if (!existingByPhone.has(np) || !c.isTemporary) existingByPhone.set(np, c);
+        }
+      });
+
+      interface DupInfo {
+        importName: string; importEmail: string | null; importPhone: string | null;
+        matchType: "exact_name" | "email" | "phone";
+        existingContestant: { id: string; name: string; email: string | null; phone: string | null; isTemporary: boolean };
+      }
+      const duplicates: DupInfo[] = [];
+      const uniqueContestants: typeof importedContestants = [];
+      const temporaryContestantsToUpdate: Array<{ existingId: string; importName: string }> = [];
+      const seenInImport = new Set<string>();
+
+      for (const contestant of importedContestants) {
+        const normalizedName = contestant.name.toLowerCase().trim();
+        const normalizedPhone = normalizePhone(contestant.phone);
+        const nameMatch = existingByName.get(normalizedName);
+        const emailMatch = contestant.email ? existingByEmail.get(contestant.email) : null;
+        const phoneMatch = normalizedPhone ? existingByPhone.get(normalizedPhone) : null;
+
+        let match = nameMatch || emailMatch;
+        if (!match && phoneMatch) {
+          const pmName = phoneMatch.name?.toLowerCase().trim();
+          const pmEmail = phoneMatch.email?.toLowerCase().trim();
+          if (pmName === normalizedName || (contestant.email && pmEmail === contestant.email)) match = phoneMatch;
+        }
+
+        if (match) {
+          if (match.isTemporary) {
+            temporaryContestantsToUpdate.push({ existingId: match.id.toString(), importName: contestant.name });
+            continue;
+          }
+          duplicates.push({
+            importName: contestant.name,
+            importEmail: contestant.email,
+            importPhone: contestant.phone,
+            matchType: nameMatch ? "exact_name" : emailMatch ? "email" : "phone",
+            existingContestant: { id: match.id.toString(), name: match.name, email: match.email, phone: match.phone, isTemporary: !!match.isTemporary },
+          });
+          continue;
+        }
+
+        if (seenInImport.has(normalizedName)) continue;
+        seenInImport.add(normalizedName);
+        uniqueContestants.push(contestant);
+      }
+
+      res.json({
+        totalInFile: importedContestants.length,
+        uniqueCount: uniqueContestants.length,
+        duplicateCount: duplicates.length,
+        duplicates,
+        temporaryUpdatesCount: temporaryContestantsToUpdate.length,
+        temporaryUpdates: temporaryContestantsToUpdate,
+      });
+    } catch (error: any) {
+      console.error("Survey import preview error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Import contestants from survey-format Excel
+  app.post("/api/contestants/import-survey", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+      console.log(`[Survey Import] Starting import for file: ${req.file.originalname}`);
+
+      const rawData = parseSurveyWorkbook(req.file.buffer);
+      if (!rawData || rawData.length === 0) {
+        return res.status(400).json({ error: "The uploaded file is empty or has no data rows." });
+      }
+
+      const data = rawData.map(mapSurveyRow).filter((r): r is NonNullable<typeof r> => r !== null);
+      if (data.length === 0) {
+        return res.status(400).json({ error: "No valid contestant rows found. Make sure the file has a 'Full name' or 'Name' column." });
+      }
+
+      console.log(`[Survey Import] Found ${data.length} valid rows`);
+
+      const existingContestants = await storage.getContestants();
+      const normalizePhone = (phone: string | null | undefined): string | null => {
+        if (!phone) return null;
+        const n = phone.toString().replace(/\D/g, "");
+        return n.length >= 8 ? n : null;
+      };
+
+      const existingByNameMap = new Map<string, { id: string; isTemporary: boolean }>();
+      const existingByEmailMap = new Map<string, { id: string; isTemporary: boolean }>();
+      const existingByPhoneMap = new Map<string, { id: string; isTemporary: boolean; name: string; email: string | null }>();
+
+      existingContestants.forEach((c: any) => {
+        if (c.name) {
+          const k = c.name.toLowerCase().trim();
+          if (!existingByNameMap.has(k) || !c.isTemporary) existingByNameMap.set(k, { id: c.id, isTemporary: !!c.isTemporary });
+        }
+        if (c.email) {
+          const k = c.email.toLowerCase().trim();
+          if (!existingByEmailMap.has(k) || !c.isTemporary) existingByEmailMap.set(k, { id: c.id, isTemporary: !!c.isTemporary });
+        }
+        const np = normalizePhone(c.phone);
+        if (np) {
+          if (!existingByPhoneMap.has(np) || !c.isTemporary)
+            existingByPhoneMap.set(np, { id: c.id, isTemporary: !!c.isTemporary, name: c.name?.toLowerCase().trim() || "", email: c.email?.toLowerCase().trim() || null });
+        }
+      });
+
+      const processedNames = new Set<string>();
+      const processedEmails = new Set<string>();
+      const processedPhones = new Set<string>();
+
+      const createdContestants: any[] = [];
+      const updatedTemporaryContestants: any[] = [];
+      const skippedDuplicates: any[] = [];
+
+      for (const row of data) {
+        const normalizedName = row.name.toLowerCase().trim();
+        const normalizedEmail = row.email?.toLowerCase().trim() ?? null;
+        const normalizedPhone = normalizePhone(row.phone);
+
+        const nameMatch = existingByNameMap.get(normalizedName);
+        const emailMatch = normalizedEmail ? existingByEmailMap.get(normalizedEmail) : null;
+        const phoneMatch = normalizedPhone ? existingByPhoneMap.get(normalizedPhone) : null;
+
+        const tempMatch =
+          (nameMatch?.isTemporary ? nameMatch : null) ||
+          (emailMatch?.isTemporary ? emailMatch : null) ||
+          (phoneMatch?.isTemporary ? phoneMatch : null);
+
+        if (tempMatch) {
+          const updateData: Record<string, any> = { isTemporary: false, auditionRating: "R" };
+          if (row.name) updateData.name = row.name;
+          if (row.email) updateData.email = row.email;
+          if (row.phone) updateData.phone = row.phone;
+          if (row.location) updateData.location = row.location;
+          if (row.groupSize != null) updateData.groupSize = row.groupSize;
+          if (row.attendingWith) updateData.attendingWith = row.attendingWith;
+          if (row.availabilityNotes) updateData.availabilityNotes = row.availabilityNotes;
+
+          const updated = await storage.updateContestant(tempMatch.id, updateData);
+          updatedTemporaryContestants.push(updated);
+
+          if (normalizedName) { existingByNameMap.set(normalizedName, { id: tempMatch.id, isTemporary: false }); processedNames.add(normalizedName); }
+          if (normalizedEmail) { existingByEmailMap.set(normalizedEmail, { id: tempMatch.id, isTemporary: false }); processedEmails.add(normalizedEmail); }
+          if (normalizedPhone) { existingByPhoneMap.set(normalizedPhone, { id: tempMatch.id, isTemporary: false, name: normalizedName, email: normalizedEmail }); processedPhones.add(normalizedPhone); }
+          continue;
+        }
+
+        const isDuplicateName = normalizedName && ((nameMatch && !nameMatch.isTemporary) || processedNames.has(normalizedName));
+        const isDuplicateEmail = normalizedEmail && ((emailMatch && !emailMatch.isTemporary) || processedEmails.has(normalizedEmail));
+        let isDuplicatePhone = false;
+        if (normalizedPhone && !isDuplicateName && !isDuplicateEmail && phoneMatch && !phoneMatch.isTemporary) {
+          if (phoneMatch.name === normalizedName || (normalizedEmail && phoneMatch.email === normalizedEmail)) isDuplicatePhone = true;
+        }
+
+        if (isDuplicateName || isDuplicateEmail || isDuplicatePhone) {
+          skippedDuplicates.push({ name: row.name, reason: isDuplicateName ? "Name already exists" : isDuplicateEmail ? "Email already exists" : "Phone already exists" });
+          continue;
+        }
+
+        const contestant = await storage.createContestant({
+          name: row.name,
+          age: 0,
+          gender: "Not Specified",
+          auditionRating: "R",
+          email: row.email,
+          phone: row.phone,
+          location: row.location,
+          groupSize: row.groupSize,
+          attendingWith: row.attendingWith,
+          availabilityNotes: row.availabilityNotes,
+          availabilityStatus: "available",
+          availableForStandby: false,
+          podiumStory: false,
+        });
+        createdContestants.push(contestant);
+
+        if (normalizedName) processedNames.add(normalizedName);
+        if (normalizedEmail) processedEmails.add(normalizedEmail);
+        if (normalizedPhone) processedPhones.add(normalizedPhone);
+      }
+
+      let message = `Successfully imported ${createdContestants.length} contestants (all rated R)`;
+      const parts: string[] = [];
+      if (updatedTemporaryContestants.length > 0) parts.push(`updated ${updatedTemporaryContestants.length} temporary contestants`);
+      if (skippedDuplicates.length > 0) parts.push(`skipped ${skippedDuplicates.length} duplicates`);
+      if (parts.length > 0) message = `Imported ${createdContestants.length} contestants (rated R), ${parts.join(", ")}`;
+
+      console.log(`[Survey Import] ${message}`);
+      res.json({
+        message,
+        contestants: createdContestants,
+        contestantsCreated: createdContestants.length,
+        temporaryContestantsUpdated: updatedTemporaryContestants.length,
+        groupsCreated: 0,
+        skippedDuplicates: skippedDuplicates.length,
+        skippedDNU: 0,
+        duplicates: skippedDuplicates.slice(0, 20),
+        dnuContestants: [],
+      });
+    } catch (error: any) {
+      console.error("Survey import error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
+
   // PowerPoint Casting Card Import - Parse and preview
   app.post("/api/casting-cards/import-preview", requireAuth, pptxUpload.single("file"), async (req, res) => {
     try {

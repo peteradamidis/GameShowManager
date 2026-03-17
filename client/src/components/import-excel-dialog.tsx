@@ -44,9 +44,21 @@ interface PreviewData {
 
 interface ImportExcelDialogProps {
   onImport?: (file: File) => void;
+  previewEndpoint?: string;
+  triggerLabel?: string;
+  dialogTitle?: string;
+  dialogDescription?: string;
+  "data-testid"?: string;
 }
 
-export function ImportExcelDialog({ onImport }: ImportExcelDialogProps) {
+export function ImportExcelDialog({
+  onImport,
+  previewEndpoint = "/api/contestants/import-preview",
+  triggerLabel = "Import Data",
+  dialogTitle = "Import Contestant Data",
+  dialogDescription = "Upload an Excel file exported from Cast It Reach with auditioned applicants.",
+  "data-testid": testId = "button-import-data",
+}: ImportExcelDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -95,7 +107,7 @@ export function ImportExcelDialog({ onImport }: ImportExcelDialogProps) {
       const formData = new FormData();
       formData.append('file', selectedFile);
       
-      const response = await fetch('/api/contestants/import-preview', {
+      const response = await fetch(previewEndpoint, {
         method: 'POST',
         body: formData,
         credentials: 'same-origin',
@@ -164,19 +176,19 @@ export function ImportExcelDialog({ onImport }: ImportExcelDialogProps) {
       else setOpen(true);
     }}>
       <DialogTrigger asChild>
-        <Button data-testid="button-import-data">
+        <Button data-testid={testId}>
           <Upload className="h-4 w-4 mr-2" />
-          Import Data
+          {triggerLabel}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>
-            {step === 'select' && "Import Contestant Data"}
+            {step === 'select' && dialogTitle}
             {step === 'preview' && "Import Preview - Duplicate Check"}
           </DialogTitle>
           <DialogDescription>
-            {step === 'select' && "Upload an Excel file exported from Cast It Reach with auditioned applicants."}
+            {step === 'select' && dialogDescription}
             {step === 'preview' && "Review potential duplicates before importing."}
           </DialogDescription>
         </DialogHeader>

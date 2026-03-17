@@ -667,6 +667,33 @@ export default function Contestants() {
     },
   });
 
+  const importSurveyMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      const url = `${window.location.origin}/api/contestants/import-survey`;
+      const response = await fetch(url, { method: 'POST', body: formData, credentials: 'same-origin' });
+      const responseText = await response.text();
+      if (!response.ok) {
+        try { throw new Error(JSON.parse(responseText).error || 'Import failed'); }
+        catch { throw new Error(`Import failed: Server returned ${response.status} - ${responseText.substring(0, 100)}`); }
+      }
+      return JSON.parse(responseText);
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
+      broadcastContestantChange();
+      let description = `Imported ${data.contestantsCreated} contestants (all rated R)`;
+      if (data.skippedDuplicates > 0) description += `. Skipped ${data.skippedDuplicates} duplicate${data.skippedDuplicates > 1 ? 's' : ''}`;
+      description += '.';
+      toast({ title: data.skippedDuplicates > 0 ? "Survey import completed" : "Survey import successful", description });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Survey import failed", description: error.message || "Could not import the survey file.", variant: "destructive" });
+    },
+  });
+
   // Add as standby mutation
   const addStandbyMutation = useMutation({
     mutationFn: async ({ contestantIds, recordDayId }: { contestantIds: string[]; recordDayId: string }) => {
@@ -1233,6 +1260,14 @@ export default function Contestants() {
         {/* Import/Export buttons - always visible */}
         <div className="flex gap-2 justify-end flex-wrap">
           <ImportExcelDialog onImport={(file) => importMutation.mutate(file)} />
+          <ImportExcelDialog
+            onImport={(file) => importSurveyMutation.mutate(file)}
+            previewEndpoint="/api/contestants/import-survey-preview"
+            triggerLabel="Import Survey"
+            dialogTitle="Import Survey Responses"
+            dialogDescription="Upload a Microsoft Forms survey Excel export. All imported contestants will be rated R."
+            data-testid="button-import-survey"
+          />
           <Button 
             variant="outline"
             onClick={handleExportToExcel}
