@@ -2189,18 +2189,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const nameRaw = row["Full name"] ?? row["Full Name"] ?? row["FULL NAME"] ?? row["Name"] ?? row["NAME"] ?? row["name"] ?? null;
     if (!nameRaw || nameRaw.toString().trim() === "") return null;
 
-    // Try exact known keys first, then fall back to a case-insensitive scan of all
-    // keys for any column whose name contains "email" (handles custom question labels
-    // like "Your email address", "E-mail", etc.)
-    let emailRaw = row["Email"] ?? row["email"] ?? row["EMAIL"] ?? row["Email address"] ?? row["Email Address"] ?? null;
-    if (emailRaw == null) {
-      const emailKey = Object.keys(row).find(k => k.toLowerCase().includes("email"));
-      if (emailKey) emailRaw = row[emailKey];
-    }
-    // Microsoft Forms uses the literal string "anonymous" when the respondent
-    // doesn't share their email — treat that as no email to avoid false duplicate matches
-    const emailStr = emailRaw ? emailRaw.toString().trim().toLowerCase() : null;
-    const emailNormalized = emailStr && emailStr !== "anonymous" ? emailStr : null;
+    // Microsoft Forms exports include TWO email-related columns:
+    //   1. "Email" — the respondent's Microsoft account email, shown as "anonymous" for non-MS users
+    //   2. The actual survey question response (e.g. "Email address", "Your email", etc.)
+    // We scan ALL columns whose header contains "email", skip blanks and "anonymous",
+    // and require an "@" so we only pick real email addresses. The first valid hit wins.
+    const emailNormalized = Object.keys(row)
+      .filter(k => k.toLowerCase().includes("email"))
+      .map(k => (row[k] ?? "").toString().trim().toLowerCase())
+      .find(v => v && v !== "anonymous" && v.includes("@")) ?? null;
 
     const phoneRaw = row["Phone number"] ?? row["Phone Number"] ?? row["PHONE NUMBER"] ?? row["Phone"] ?? row["PHONE"] ?? row["phone"] ?? null;
     let phone: string | null = null;
