@@ -840,18 +840,22 @@ export function SeatCard({
                           </Badge>
                         )}
                       </div>
-                      {contestantDetails.auditionRating && (
+                      {(contestantDetails.auditionRating || (onRatingChange && seat.contestantId)) && (
                         <div className="flex flex-col items-center">
-                          <span className={`text-sm font-bold ${
-                            contestantDetails.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
-                            contestantDetails.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
-                            contestantDetails.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
-                            contestantDetails.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
-                            contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' :
-                            contestantDetails.auditionRating === 'P' ? 'text-purple-600 dark:text-purple-400' : ''
-                          }`}>
-                            {contestantDetails.auditionRating}
-                          </span>
+                          {contestantDetails.auditionRating ? (
+                            <span className={`text-sm font-bold ${
+                              contestantDetails.auditionRating === 'A+' ? 'text-emerald-600 dark:text-emerald-400' :
+                              contestantDetails.auditionRating === 'A' ? 'text-green-600 dark:text-green-400' :
+                              contestantDetails.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
+                              contestantDetails.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
+                              contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' :
+                              contestantDetails.auditionRating === 'P' ? 'text-purple-600 dark:text-purple-400' : ''
+                            }`}>
+                              {contestantDetails.auditionRating}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground italic">No rating</span>
+                          )}
                           {onRatingChange && seat.contestantId && (
                             <DropdownMenu modal={false}>
                               <DropdownMenuTrigger asChild>
