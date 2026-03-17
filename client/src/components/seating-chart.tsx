@@ -446,7 +446,7 @@ function SortableStandbyItem({
     'B+': 'bg-amber-500 text-white',
     'B': 'bg-orange-500 text-white',
     'C': 'bg-red-500 text-white',
-    'R': 'bg-slate-500 text-white',
+    'R': 'bg-pink-400 text-white',
   };
 
   // Group styling
@@ -782,7 +782,7 @@ function DraggableStandby({
     'B+': 'bg-amber-500 text-white',
     'B': 'bg-orange-500 text-white',
     'C': 'bg-red-500 text-white',
-    'R': 'bg-slate-500 text-white',
+    'R': 'bg-pink-400 text-white',
   };
 
   return (
@@ -1007,7 +1007,7 @@ function SeatingBlock({
                     </Badge>
                   )}
                   {stats.ratingCounts['R'] > 0 && (
-                    <Badge className="text-[10px] px-1 py-0 h-4 bg-slate-500 hover:bg-slate-600 text-white">
+                    <Badge className="text-[10px] px-1 py-0 h-4 bg-pink-400 hover:bg-pink-500 text-white">
                       R:{stats.ratingCounts['R']}
                     </Badge>
                   )}
