@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useId } from "react";
 import {
   Dialog,
   DialogContent,
@@ -66,6 +66,8 @@ export function ImportExcelDialog({
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const { toast } = useToast();
+  // Unique id per instance so two dialogs on the same page don't share the file input id
+  const fileInputId = useId();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -137,10 +139,6 @@ export function ImportExcelDialog({
       if (onImport) {
         onImport(selectedFile);
       }
-      toast({
-        title: "Import started",
-        description: `Processing ${selectedFile.name}...`,
-      });
       handleClose();
     }
   };
@@ -222,10 +220,10 @@ export function ImportExcelDialog({
                   accept=".xlsx,.xls"
                   onChange={handleFileSelect}
                   className="hidden"
-                  id="file-upload"
+                  id={fileInputId}
                   data-testid="input-file-upload"
                 />
-                <label htmlFor="file-upload">
+                <label htmlFor={fileInputId}>
                   <Button variant="outline" size="sm" asChild>
                     <span>Browse Files</span>
                   </Button>

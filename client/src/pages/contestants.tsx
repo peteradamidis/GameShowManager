@@ -625,12 +625,9 @@ export default function Contestants() {
         console.log('[Import] Response body:', responseText);
         
         if (!response.ok) {
-          try {
-            const error = JSON.parse(responseText);
-            throw new Error(error.error || 'Import failed');
-          } catch (parseError) {
-            throw new Error(`Import failed: Server returned ${response.status} - ${responseText.substring(0, 100)}`);
-          }
+          let errorMsg = `Import failed: Server returned ${response.status}`;
+          try { errorMsg = JSON.parse(responseText).error || errorMsg; } catch {}
+          throw new Error(errorMsg);
         }
         
         return JSON.parse(responseText);
@@ -675,8 +672,9 @@ export default function Contestants() {
       const response = await fetch(url, { method: 'POST', body: formData, credentials: 'same-origin' });
       const responseText = await response.text();
       if (!response.ok) {
-        try { throw new Error(JSON.parse(responseText).error || 'Import failed'); }
-        catch { throw new Error(`Import failed: Server returned ${response.status} - ${responseText.substring(0, 100)}`); }
+        let errorMsg = `Import failed: Server returned ${response.status}`;
+        try { errorMsg = JSON.parse(responseText).error || errorMsg; } catch {}
+        throw new Error(errorMsg);
       }
       return JSON.parse(responseText);
     },
@@ -684,10 +682,13 @@ export default function Contestants() {
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
       broadcastContestantChange();
-      let description = `Imported ${data.contestantsCreated} contestants (all rated R)`;
-      if (data.skippedDuplicates > 0) description += `. Skipped ${data.skippedDuplicates} duplicate${data.skippedDuplicates > 1 ? 's' : ''}`;
-      description += '.';
-      toast({ title: data.skippedDuplicates > 0 ? "Survey import completed" : "Survey import successful", description });
+      const parts: string[] = [];
+      if (data.contestantsCreated > 0) parts.push(`${data.contestantsCreated} new contestant${data.contestantsCreated !== 1 ? 's' : ''} (rated R)`);
+      if (data.temporaryContestantsUpdated > 0) parts.push(`${data.temporaryContestantsUpdated} temp contestant${data.temporaryContestantsUpdated !== 1 ? 's' : ''} updated`);
+      if (data.skippedDuplicates > 0) parts.push(`${data.skippedDuplicates} duplicate${data.skippedDuplicates !== 1 ? 's' : ''} skipped`);
+      const description = parts.length > 0 ? parts.join(', ') + '.' : 'No new contestants imported.';
+      const hasNew = data.contestantsCreated > 0 || data.temporaryContestantsUpdated > 0;
+      toast({ title: hasNew ? "Survey import successful" : "Survey import complete", description });
     },
     onError: (error: Error) => {
       toast({ title: "Survey import failed", description: error.message || "Could not import the survey file.", variant: "destructive" });
