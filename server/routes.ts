@@ -2189,7 +2189,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const nameRaw = row["Full name"] ?? row["Full Name"] ?? row["FULL NAME"] ?? row["Name"] ?? row["NAME"] ?? row["name"] ?? null;
     if (!nameRaw || nameRaw.toString().trim() === "") return null;
 
-    const emailRaw = row["Email"] ?? row["email"] ?? row["EMAIL"] ?? row["Email address"] ?? row["Email Address"] ?? null;
+    // Try exact known keys first, then fall back to a case-insensitive scan of all
+    // keys for any column whose name contains "email" (handles custom question labels
+    // like "Your email address", "E-mail", etc.)
+    let emailRaw = row["Email"] ?? row["email"] ?? row["EMAIL"] ?? row["Email address"] ?? row["Email Address"] ?? null;
+    if (emailRaw == null) {
+      const emailKey = Object.keys(row).find(k => k.toLowerCase().includes("email"));
+      if (emailKey) emailRaw = row[emailKey];
+    }
     // Microsoft Forms uses the literal string "anonymous" when the respondent
     // doesn't share their email — treat that as no email to avoid false duplicate matches
     const emailStr = emailRaw ? emailRaw.toString().trim().toLowerCase() : null;
@@ -2354,18 +2361,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return n.length >= 8 ? n : null;
       };
 
-      const existingByNameMap = new Map<string, { id: string; isTemporary: boolean }>();
-      const existingByEmailMap = new Map<string, { id: string; isTemporary: boolean }>();
+      const existingByNameMap = new Map<string, { id: string; isTemporary: boolean; email: string | null }>();
+      const existingByEmailMap = new Map<string, { id: string; isTemporary: boolean; email: string | null }>();
       const existingByPhoneMap = new Map<string, { id: string; isTemporary: boolean; name: string; email: string | null }>();
 
       existingContestants.forEach((c: any) => {
         if (c.name) {
           const k = c.name.toLowerCase().trim();
-          if (!existingByNameMap.has(k) || !c.isTemporary) existingByNameMap.set(k, { id: c.id, isTemporary: !!c.isTemporary });
+          if (!existingByNameMap.has(k) || !c.isTemporary) existingByNameMap.set(k, { id: c.id, isTemporary: !!c.isTemporary, email: c.email?.toLowerCase().trim() || null });
         }
         if (c.email) {
           const k = c.email.toLowerCase().trim();
-          if (!existingByEmailMap.has(k) || !c.isTemporary) existingByEmailMap.set(k, { id: c.id, isTemporary: !!c.isTemporary });
+          if (!existingByEmailMap.has(k) || !c.isTemporary) existingByEmailMap.set(k, { id: c.id, isTemporary: !!c.isTemporary, email: c.email?.toLowerCase().trim() || null });
         }
         const np = normalizePhone(c.phone);
         if (np) {
@@ -2422,6 +2429,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (phoneMatch.name === normalizedName || (normalizedEmail && phoneMatch.email === normalizedEmail)) isDuplicatePhone = true;
         }
 
+        // Email-patch: if we matched by name and the existing contestant has no email
+        // but the import row does, update just the email (supports re-import after bug fix)
+        if (isDuplicateName && !isDuplicateEmail && normalizedEmail && nameMatch && !nameMatch.isTemporary && !nameMatch.email) {
+          await storage.updateContestant(nameMatch.id, { email: row.email });
+          processedNames.add(normalizedName);
+          processedEmails.add(normalizedEmail);
+          existingByEmailMap.set(normalizedEmail, { id: nameMatch.id, isTemporary: false, email: normalizedEmail });
+          updatedTemporaryContestants.push({ id: nameMatch.id, name: row.name, emailPatched: true });
+          continue;
+        }
+
         if (isDuplicateName || isDuplicateEmail || isDuplicatePhone) {
           skippedDuplicates.push({ name: row.name, reason: isDuplicateName ? "Name already exists" : isDuplicateEmail ? "Email already exists" : "Phone already exists" });
           continue;
@@ -2449,9 +2467,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (normalizedPhone) processedPhones.add(normalizedPhone);
       }
 
+      const emailPatched = updatedTemporaryContestants.filter((c: any) => c.emailPatched).length;
+      const tempUpdated = updatedTemporaryContestants.filter((c: any) => !c.emailPatched).length;
       let message = `Successfully imported ${createdContestants.length} contestants (all rated R)`;
       const parts: string[] = [];
-      if (updatedTemporaryContestants.length > 0) parts.push(`updated ${updatedTemporaryContestants.length} temporary contestants`);
+      if (tempUpdated > 0) parts.push(`updated ${tempUpdated} temporary contestants`);
+      if (emailPatched > 0) parts.push(`added email to ${emailPatched} existing contestants`);
       if (skippedDuplicates.length > 0) parts.push(`skipped ${skippedDuplicates.length} duplicates`);
       if (parts.length > 0) message = `Imported ${createdContestants.length} contestants (rated R), ${parts.join(", ")}`;
 
