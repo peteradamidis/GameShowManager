@@ -1361,6 +1361,7 @@ export default function Contestants() {
                 <SelectItem value="B+">B+</SelectItem>
                 <SelectItem value="B">B</SelectItem>
                 <SelectItem value="C">C</SelectItem>
+                <SelectItem value="R">R</SelectItem>
                 <SelectItem value="DNU">DNU (Do Not Use)</SelectItem>
               </SelectContent>
             </Select>

@@ -1171,6 +1171,7 @@ export default function ReschedulePage() {
                             <SelectItem value="B+">B+</SelectItem>
                             <SelectItem value="B">B</SelectItem>
                             <SelectItem value="C">C</SelectItem>
+                            <SelectItem value="R">R</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

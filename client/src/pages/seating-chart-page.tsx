@@ -2764,6 +2764,7 @@ export default function SeatingChartPage() {
                         <SelectItem value="B+">B+</SelectItem>
                         <SelectItem value="B">B</SelectItem>
                         <SelectItem value="C">C</SelectItem>
+                        <SelectItem value="R">R</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -3186,6 +3187,7 @@ export default function SeatingChartPage() {
                         <SelectItem value="B+">B+</SelectItem>
                         <SelectItem value="B">B</SelectItem>
                         <SelectItem value="C">C</SelectItem>
+                        <SelectItem value="R">R</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

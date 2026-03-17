@@ -446,6 +446,7 @@ function SortableStandbyItem({
     'B+': 'bg-amber-500 text-white',
     'B': 'bg-orange-500 text-white',
     'C': 'bg-red-500 text-white',
+    'R': 'bg-slate-500 text-white',
   };
 
   // Group styling
@@ -781,6 +782,7 @@ function DraggableStandby({
     'B+': 'bg-amber-500 text-white',
     'B': 'bg-orange-500 text-white',
     'C': 'bg-red-500 text-white',
+    'R': 'bg-slate-500 text-white',
   };
 
   return (
@@ -1004,6 +1006,11 @@ function SeatingBlock({
                       C:{stats.ratingCounts['C']}
                     </Badge>
                   )}
+                  {stats.ratingCounts['R'] > 0 && (
+                    <Badge className="text-[10px] px-1 py-0 h-4 bg-slate-500 hover:bg-slate-600 text-white">
+                      R:{stats.ratingCounts['R']}
+                    </Badge>
+                  )}
                 </div>
                 {stats.avgAge > 0 && (
                   <Badge variant="secondary" className="text-[10px] w-fit">
@@ -1163,7 +1170,7 @@ function calculateBlockStats(block: SeatData[]) {
 
   // Audition rating breakdown
   const ratingCounts: Record<string, number> = {
-    'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'C': 0
+    'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'C': 0, 'R': 0
   };
   filled.forEach(s => {
     if (s.auditionRating && ratingCounts.hasOwnProperty(s.auditionRating)) {

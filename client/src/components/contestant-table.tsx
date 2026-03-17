@@ -1424,7 +1424,7 @@ export function ContestantTable({
           break;
         case 'auditionRating':
           // Sort ratings: A+ > A > B > C > D > DNU > P > empty
-          const ratingOrder: Record<string, number> = { 'A+': 1, 'A': 2, 'B': 3, 'C': 4, 'D': 5, 'DNU': 6, 'P': 7 };
+          const ratingOrder: Record<string, number> = { 'A+': 1, 'A': 2, 'B+': 2.5, 'B': 3, 'C': 4, 'R': 4.5, 'D': 5, 'DNU': 6, 'P': 7 };
           aVal = ratingOrder[a.auditionRating || ''] || 99;
           bVal = ratingOrder[b.auditionRating || ''] || 99;
           break;
@@ -1961,6 +1961,7 @@ export function ContestantTable({
                             <SelectItem value="B+">B+</SelectItem>
                             <SelectItem value="B">B</SelectItem>
                             <SelectItem value="C">C</SelectItem>
+                            <SelectItem value="R">R</SelectItem>
                             <SelectItem value="P">P</SelectItem>
                             <SelectItem value="DNU">DNU (Do Not Use)</SelectItem>
                           </SelectContent>

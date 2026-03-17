@@ -4709,6 +4709,7 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
                     <SelectItem value="A+">A+</SelectItem>
                     <SelectItem value="A">A</SelectItem>
                     <SelectItem value="B+">B+</SelectItem>
+                    <SelectItem value="R">R</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={genderFilter} onValueChange={setGenderFilter}>
