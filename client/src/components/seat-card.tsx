@@ -150,7 +150,7 @@ const ratingColorsLight: Record<string, { bg: string; border: string; text: stri
   'B+': { bg: '#fef3c7', border: '#f59e0b', text: '#78350f' }, // Amber - dark text
   'B': { bg: '#fed7aa', border: '#f97316', text: '#7c2d12' }, // Orange - dark text
   'C': { bg: '#fee2e2', border: '#ef4444', text: '#7f1d1d' }, // Red - dark text
-  'R': { bg: '#fce7f3', border: '#e879a0', text: '#831843' }, // Muted pink - reserve
+  'R': { bg: '#ede9fe', border: '#7c3aed', text: '#3b0764' }, // Duller violet - reserve
 };
 
 const ratingColorsDark: Record<string, { bg: string; border: string; text: string }> = {
@@ -160,7 +160,7 @@ const ratingColorsDark: Record<string, { bg: string; border: string; text: strin
   'B+': { bg: '#451a03', border: '#fbbf24', text: '#fef3c7' }, // Dark amber bg - light text
   'B': { bg: '#431407', border: '#fb923c', text: '#fed7aa' }, // Dark orange bg - light text
   'C': { bg: '#450a0a', border: '#f87171', text: '#fee2e2' }, // Dark red bg - light text
-  'R': { bg: '#4a1232', border: '#e879a0', text: '#fce7f3' }, // Dark muted pink - reserve
+  'R': { bg: '#2d1b69', border: '#8b5cf6', text: '#ede9fe' }, // Dark duller violet - reserve
 };
 
 // Standby styling - purple to distinguish from regular contestants
