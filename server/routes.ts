@@ -4949,7 +4949,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if contestant is a standby for ANY record day (not just this one)
       const allStandbys = await storage.getStandbyAssignments();
-      const standbyAssignment = allStandbys.find((s: any) => s.contestantId === contestantId);
+      // Only consider ACTIVE standbys (not already seated, rescheduled, or moved to reschedule)
+      // so stale records from past episodes don't shadow current active ones
+      const standbyAssignment = allStandbys.find((s: any) =>
+        s.contestantId === contestantId && !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled'
+      );
       
       // Allow seating if they're being seated from standby (status 'seated') or moved to reschedule
       // Otherwise, block if they have an active standby assignment anywhere
@@ -5060,11 +5064,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // CLEANUP: If there was an active standby entry, mark it as 'seated' now
-      if (standbyAssignment && standbyAssignment.status !== 'seated') {
-        await storage.updateStandbyAssignment(standbyAssignment.id, {
-          status: 'seated'
-        });
+      // CLEANUP: Mark ALL non-seated standbys for this contestant as 'seated'
+      // Using a loop over all standbys (not just the one found above) ensures stale
+      // movedToReschedule entries and any duplicates from past episodes are also cleared
+      const staleStandbys = allStandbys.filter(
+        (s: any) => s.contestantId === contestantId && s.status !== 'seated'
+      );
+      for (const sb of staleStandbys) {
+        await storage.updateStandbyAssignment(sb.id, { status: 'seated' });
       }
 
       res.json(assignment);
@@ -5145,7 +5152,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if contestant is a standby for ANY record day
       const allStandbys = await storage.getStandbyAssignments();
-      const standbyAssignment = allStandbys.find((s: any) => s.contestantId === contestantId);
+      // Only consider ACTIVE standbys so stale past-episode records don't shadow current ones
+      const standbyAssignment = allStandbys.find((s: any) =>
+        s.contestantId === contestantId && !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled'
+      );
       if (standbyAssignment && !standbyAssignment.movedToReschedule && standbyAssignment.status !== 'seated') {
         const standbyRecordDay = await storage.getRecordDayById(standbyAssignment.recordDayId);
         const isStandbyOnLockedDay = standbyRecordDay?.lockedAt != null;
@@ -5242,12 +5252,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // CLEANUP: If there was an active standby entry, mark it as 'seated' now
-      // This prevents orphaned standby entries from showing stale badges or causing conflicts
-      if (standbyAssignment && standbyAssignment.status !== 'seated') {
-        await storage.updateStandbyAssignment(standbyAssignment.id, {
-          status: 'seated'
-        });
+      // CLEANUP: Mark ALL non-seated standbys for this contestant as 'seated'
+      const staleStandbysOverflow = allStandbys.filter(
+        (s: any) => s.contestantId === contestantId && s.status !== 'seated'
+      );
+      for (const sb of staleStandbysOverflow) {
+        await storage.updateStandbyAssignment(sb.id, { status: 'seated' });
       }
 
       res.json(assignment);
@@ -5396,7 +5406,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        const standbyAssignment = allStandbys.find((s: any) => s.contestantId === contestantId);
+        // Only consider ACTIVE standbys so stale past-episode records don't shadow current ones
+        const standbyAssignment = allStandbys.find((s: any) =>
+          s.contestantId === contestantId && !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled'
+        );
         if (standbyAssignment && !standbyAssignment.movedToReschedule && standbyAssignment.status !== 'seated') {
           const standbyRecordDay = await storage.getRecordDayById(standbyAssignment.recordDayId);
           const isStandbyOnLockedDay = standbyRecordDay?.lockedAt != null;
@@ -5481,6 +5494,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             rebookedAt: new Date(),
             rebookedBy: rebookedBy,
           });
+        }
+
+        // CLEANUP: Mark ALL non-seated standbys for this contestant as 'seated'
+        const staleStandbysBulk = allStandbys.filter(
+          (s: any) => s.contestantId === contestantId && s.status !== 'seated'
+        );
+        for (const sb of staleStandbysBulk) {
+          await storage.updateStandbyAssignment(sb.id, { status: 'seated' });
         }
       }
 
