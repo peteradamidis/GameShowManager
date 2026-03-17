@@ -2190,6 +2190,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!nameRaw || nameRaw.toString().trim() === "") return null;
 
     const emailRaw = row["Email"] ?? row["email"] ?? row["EMAIL"] ?? row["Email address"] ?? row["Email Address"] ?? null;
+    // Microsoft Forms uses the literal string "anonymous" when the respondent
+    // doesn't share their email — treat that as no email to avoid false duplicate matches
+    const emailStr = emailRaw ? emailRaw.toString().trim().toLowerCase() : null;
+    const emailNormalized = emailStr && emailStr !== "anonymous" ? emailStr : null;
 
     const phoneRaw = row["Phone number"] ?? row["Phone Number"] ?? row["PHONE NUMBER"] ?? row["Phone"] ?? row["PHONE"] ?? row["phone"] ?? null;
     let phone: string | null = null;
@@ -2214,7 +2218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     return {
       name: nameRaw.toString().trim(),
-      email: emailRaw ? emailRaw.toString().trim().toLowerCase() : null,
+      email: emailNormalized,
       phone,
       location: locationRaw ? locationRaw.toString().trim() : null,
       groupSize: groupSize && !isNaN(groupSize) ? groupSize : null,
