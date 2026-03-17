@@ -197,6 +197,22 @@ export const canceledAssignments = pgTable("canceled_assignments", {
   // Standby block type tracking - when standby was originally seated
   seatedAsBlockType: blockTypeEnum("seated_as_block_type"), // PB (Case Holder) or NPB (Non Playing Block)
   standbyMovementNotes: text("standby_movement_notes"), // Notes about standby movement (e.g., "Replaced player")
+
+  // Winning money preservation - copied from seat_assignment so Winners page data is never lost
+  rxNumber: text("rx_number"),
+  rxEpNumber: text("rx_ep_number"),
+  caseNumber: text("case_number"),
+  winningMoneyRole: text("winning_money_role"), // 'player' or 'case_holder'
+  winningMoneyAmount: real("winning_money_amount"),
+  winningMoneyText: text("winning_money_text"),
+  caseAmount: real("case_amount"),
+  bankOfferTaken: boolean("bank_offer_taken"),
+  spinTheWheel: boolean("spin_the_wheel"),
+  prize: text("prize"),
+  txNumber: text("tx_number"),
+  txDate: date("tx_date"),
+  notifiedOfTx: boolean("notified_of_tx"),
+  photosSent: boolean("photos_sent"),
 });
 
 // Availability Tokens table - stores unique tokens for availability check responses

@@ -1411,6 +1411,21 @@ export class DbStorage implements IStorage {
       // Carry over standby block type (if from standby)
       seatedAsBlockType: assignment.seatedAsBlockType,
       standbyMovementNotes: assignment.standbyMovementNotes,
+      // Carry over winning money fields so Winners page data is never lost
+      rxNumber: assignment.rxNumber,
+      rxEpNumber: assignment.rxEpNumber,
+      caseNumber: assignment.caseNumber,
+      winningMoneyRole: assignment.winningMoneyRole,
+      winningMoneyAmount: assignment.winningMoneyAmount,
+      winningMoneyText: assignment.winningMoneyText,
+      caseAmount: assignment.caseAmount,
+      bankOfferTaken: assignment.bankOfferTaken,
+      spinTheWheel: assignment.spinTheWheel,
+      prize: assignment.prize,
+      txNumber: assignment.txNumber,
+      txDate: assignment.txDate,
+      notifiedOfTx: assignment.notifiedOfTx,
+      photosSent: assignment.photosSent,
     });
 
     // Delete the seat assignment
@@ -1469,6 +1484,21 @@ export class DbStorage implements IStorage {
         // Reschedule count and history
         rescheduleCount: canceledAssignments.rescheduleCount,
         declineHistory: canceledAssignments.declineHistory,
+        // Winning money preservation fields
+        rxNumber: canceledAssignments.rxNumber,
+        rxEpNumber: canceledAssignments.rxEpNumber,
+        caseNumber: canceledAssignments.caseNumber,
+        winningMoneyRole: canceledAssignments.winningMoneyRole,
+        winningMoneyAmount: canceledAssignments.winningMoneyAmount,
+        winningMoneyText: canceledAssignments.winningMoneyText,
+        caseAmount: canceledAssignments.caseAmount,
+        bankOfferTaken: canceledAssignments.bankOfferTaken,
+        spinTheWheel: canceledAssignments.spinTheWheel,
+        prize: canceledAssignments.prize,
+        txNumber: canceledAssignments.txNumber,
+        txDate: canceledAssignments.txDate,
+        notifiedOfTx: canceledAssignments.notifiedOfTx,
+        photosSent: canceledAssignments.photosSent,
         contestant: contestants,
         recordDay: recordDays,
       })

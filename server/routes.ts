@@ -5559,27 +5559,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
-      
-      // Use storage layer like all other routes
-      const allAssignments = await storage.getAllSeatAssignments();
-      
-      // Filter for winners: must have valid role AND positive amount
-      const winnersRaw = allAssignments.filter((a) => {
+
+      const isWinner = (a: any) => {
         const hasValidRole = a.winningMoneyRole && typeof a.winningMoneyRole === 'string' && a.winningMoneyRole.trim() !== '';
         const hasValidAmount = typeof a.winningMoneyAmount === 'number' && a.winningMoneyAmount >= 0;
         return hasValidRole && hasValidAmount;
-      });
+      };
+
+      // Fetch all three sources in parallel
+      const [allAssignments, allCanceled, allIssues] = await Promise.all([
+        storage.getAllSeatAssignments(),
+        storage.getCanceledAssignments(),
+        storage.getAttendanceIssues(),
+      ]);
 
       const recordDays = await storage.getRecordDays();
       const recordDaysMap = new Map(recordDays.map(rd => [rd.id, rd]));
       const contestants = await storage.getContestants();
       const contestantsMap = new Map(contestants.map(c => [c.id, c]));
 
-      const winnersData = winnersRaw.map((a) => {
+      const mapToWinner = (a: any, source: 'seat' | 'canceled' | 'issue') => {
         const contestant = contestantsMap.get(a.contestantId);
         const recordDay = recordDaysMap.get(a.recordDayId);
         return {
-          id: a.id,
+          id: `${source}:${a.id}`,
+          source,
           recordDayId: a.recordDayId,
           recordDayDate: recordDay?.date ? new Date(recordDay.date).toLocaleDateString() : '',
           recordDayDateISO: recordDay?.date ? new Date(recordDay.date).toISOString() : '',
@@ -5598,8 +5602,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           caseNumber: a.caseNumber || '',
           winningMoneyRole: a.winningMoneyRole,
           winningMoneyAmount: a.winningMoneyAmount,
+          winningMoneyText: a.winningMoneyText,
           caseAmount: a.caseAmount,
-          quickCash: a.quickCash,
+          quickCash: a.quickCash ?? null,
           bankOfferTaken: a.bankOfferTaken,
           spinTheWheel: a.spinTheWheel,
           prize: a.prize,
@@ -5608,9 +5613,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           notifiedOfTx: a.notifiedOfTx,
           photosSent: a.photosSent,
         };
-      });
+      };
 
-      res.json(winnersData);
+      // Seat assignments with winning money (contestants still in their seats)
+      const fromSeats = allAssignments.filter(isWinner).map(a => mapToWinner(a, 'seat'));
+
+      // Canceled assignments with winning money (rescheduled/rebooked contestants)
+      const fromCanceled = allCanceled.filter(isWinner).map(a => mapToWinner(a, 'canceled'));
+
+      // Attendance issues with winning money (no-shows / early leavers who won)
+      const fromIssues = allIssues.filter(isWinner).map(a => mapToWinner(a, 'issue'));
+
+      // Merge — deduplicate by contestantId + recordDayId, preferring 'seat' over 'canceled' over 'issue'
+      const seen = new Map<string, any>();
+      const priority: Record<string, number> = { seat: 0, canceled: 1, issue: 2 };
+      for (const w of [...fromSeats, ...fromCanceled, ...fromIssues]) {
+        const key = `${w.contestantId}:${w.recordDayId}`;
+        const existing = seen.get(key);
+        if (!existing || priority[w.source] < priority[existing.source]) {
+          seen.set(key, w);
+        }
+      }
+
+      res.json(Array.from(seen.values()));
     } catch (error: any) {
       console.error("Error fetching winners data:", error);
       res.status(500).json({ error: error.message });
@@ -5621,19 +5646,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // IMPORTANT: This route MUST be before :recordDayId to avoid being captured as a param
   app.get("/api/seat-assignments/with-winning-money/export", async (req, res) => {
     try {
-      // Fetch all winners data (same as /with-winning-money endpoint)
-      const allAssignments = await storage.getAllSeatAssignments();
-      
-      const winnersRaw = allAssignments.filter((a) => {
+      const isWinner = (a: any) => {
         const hasValidRole = a.winningMoneyRole && typeof a.winningMoneyRole === 'string' && a.winningMoneyRole.trim() !== '';
         const hasValidAmount = typeof a.winningMoneyAmount === 'number' && a.winningMoneyAmount >= 0;
         return hasValidRole && hasValidAmount;
-      });
+      };
+
+      // Fetch all three sources in parallel (same logic as /with-winning-money route)
+      const [allAssignments, allCanceled, allIssues] = await Promise.all([
+        storage.getAllSeatAssignments(),
+        storage.getCanceledAssignments(),
+        storage.getAttendanceIssues(),
+      ]);
 
       const recordDays = await storage.getRecordDays();
       const recordDaysMap = new Map(recordDays.map(rd => [rd.id, rd]));
       const contestants = await storage.getContestants();
       const contestantsMap = new Map(contestants.map(c => [c.id, c]));
+
+      // Merge all sources, deduplicate by contestantId + recordDayId (seat takes priority)
+      const allWinnersRaw: any[] = [
+        ...allAssignments.filter(isWinner).map(a => ({ ...a, _source: 'seat' })),
+        ...allCanceled.filter(isWinner).map(a => ({ ...a, _source: 'canceled' })),
+        ...allIssues.filter(isWinner).map(a => ({ ...a, _source: 'issue' })),
+      ];
+      const seen = new Map<string, any>();
+      const priority: Record<string, number> = { seat: 0, canceled: 1, issue: 2 };
+      for (const w of allWinnersRaw) {
+        const key = `${w.contestantId}:${w.recordDayId}`;
+        const existing = seen.get(key);
+        if (!existing || priority[w._source] < priority[existing._source]) {
+          seen.set(key, w);
+        }
+      }
+      const winnersRaw = Array.from(seen.values());
 
       const winnersData = winnersRaw.map((a) => {
         const contestant = contestantsMap.get(a.contestantId);
@@ -8179,6 +8225,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Missing required fields: oldAssignmentId, contestantId, newRecordDayId, blockNumber, seatLabel" });
       }
       
+      // Fetch old assignment BEFORE atomicRebook so we can preserve winning money data
+      const oldAssignment = await storage.getSeatAssignmentById(oldAssignmentId);
+
       // Use atomic rebooking with transaction to ensure consistency
       const result = await storage.atomicRebook({
         oldAssignmentId,
@@ -8189,7 +8238,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         reason: reason || undefined,
         rebookedBy: (req as any).user?.username || 'admin',
       });
-      
+
+      // If the old assignment had winning money data, preserve it in canceled_assignments
+      // so it remains visible on the Winners page even after being rebooked
+      if (oldAssignment?.winningMoneyRole) {
+        const rebookedBy = (req as any).user?.username || 'admin';
+        try {
+          await storage.createOrUpdateCanceledAssignment({
+            contestantId,
+            recordDayId: oldAssignment.recordDayId,
+            blockNumber: oldAssignment.blockNumber,
+            seatLabel: oldAssignment.seatLabel,
+            reason: `Rebooked to new date — winning money preserved`,
+            movedBy: rebookedBy,
+            // Mark as rebooked so it is excluded from the reschedule pool
+            rebookedToRecordDayId: newRecordDayId,
+            rebookedAt: new Date(),
+            rebookedBy,
+            // Winning money fields
+            rxNumber: oldAssignment.rxNumber,
+            rxEpNumber: oldAssignment.rxEpNumber,
+            caseNumber: oldAssignment.caseNumber,
+            winningMoneyRole: oldAssignment.winningMoneyRole,
+            winningMoneyAmount: oldAssignment.winningMoneyAmount,
+            winningMoneyText: oldAssignment.winningMoneyText,
+            caseAmount: oldAssignment.caseAmount,
+            bankOfferTaken: oldAssignment.bankOfferTaken,
+            spinTheWheel: oldAssignment.spinTheWheel,
+            prize: oldAssignment.prize,
+            txNumber: oldAssignment.txNumber,
+            txDate: oldAssignment.txDate,
+            notifiedOfTx: oldAssignment.notifiedOfTx,
+            photosSent: oldAssignment.photosSent,
+          } as any);
+        } catch (preserveError) {
+          console.error("Warning: failed to preserve winning money during rebook:", preserveError);
+        }
+      }
+
       res.json({ 
         success: true, 
         newAssignment: result.newAssignment,
