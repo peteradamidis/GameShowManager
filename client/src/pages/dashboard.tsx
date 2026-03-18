@@ -314,6 +314,8 @@ export default function Dashboard() {
   // Calculate real statistics
   const totalApplicants = contestants.length;
   const availableContestants = contestants.filter(c => c.availabilityStatus === 'available').length;
+  const availableRRated = contestants.filter(c => c.availabilityStatus === 'available' && c.auditionRating?.toUpperCase().trim() === 'R').length;
+  const availableNonR = availableContestants - availableRRated;
   const availableStandbys = contestants.filter(c => 
     c.availableForStandby && c.availabilityStatus === 'available'
   ).length;
@@ -726,17 +728,23 @@ export default function Dashboard() {
       )}
       */}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Total Contestants"
           value={totalApplicants}
           icon={Users}
         />
         <StatsCard
-          title="Total Available"
-          value={availableContestants}
+          title="Available (A–C)"
+          value={availableNonR}
           icon={CheckCircle}
-          subtitle="Contestants with available tag"
+          subtitle="Excl. R-rated contestants"
+        />
+        <StatsCard
+          title="Available (R Rating)"
+          value={availableRRated}
+          icon={CheckCircle}
+          subtitle="Survey respondents available"
         />
         <StatsCard
           title="Available Standbys"
