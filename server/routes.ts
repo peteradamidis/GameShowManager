@@ -2283,6 +2283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const duplicates: DupInfo[] = [];
       const uniqueContestants: typeof importedContestants = [];
       const temporaryContestantsToUpdate: Array<{ existingId: string; importName: string }> = [];
+      const emailPatches: Array<{ importName: string; email: string }> = [];
       const seenInImport = new Set<string>();
 
       for (const contestant of importedContestants) {
@@ -2302,6 +2303,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (match) {
           if (match.isTemporary) {
             temporaryContestantsToUpdate.push({ existingId: match.id.toString(), importName: contestant.name });
+            continue;
+          }
+          // Email patch: name matched, existing has no email, import has one
+          if (nameMatch && !nameMatch.isTemporary && !match.email && contestant.email) {
+            emailPatches.push({ importName: contestant.name, email: contestant.email });
             continue;
           }
           duplicates.push({
@@ -2326,6 +2332,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         duplicates,
         temporaryUpdatesCount: temporaryContestantsToUpdate.length,
         temporaryUpdates: temporaryContestantsToUpdate,
+        emailPatchCount: emailPatches.length,
+        emailPatches,
       });
     } catch (error: any) {
       console.error("Survey import preview error:", error);

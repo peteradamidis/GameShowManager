@@ -40,6 +40,8 @@ interface PreviewData {
   duplicates: DuplicateInfo[];
   temporaryUpdatesCount: number;
   temporaryUpdates: TemporaryUpdateInfo[];
+  emailPatchCount: number;
+  emailPatches: Array<{ importName: string; email: string }>;
 }
 
 interface ImportExcelDialogProps {
@@ -235,7 +237,7 @@ export function ImportExcelDialog({
 
         {step === 'preview' && previewData && (
           <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-5 gap-2">
               <div className="p-3 rounded-lg border bg-muted/50">
                 <p className="text-2xl font-bold">{previewData.totalInFile}</p>
                 <p className="text-sm text-muted-foreground">Total in file</p>
@@ -247,6 +249,10 @@ export function ImportExcelDialog({
               <div className="p-3 rounded-lg border bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
                 <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">{previewData.temporaryUpdatesCount}</p>
                 <p className="text-sm text-blue-600 dark:text-blue-500">Temp Updates</p>
+              </div>
+              <div className="p-3 rounded-lg border bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-800">
+                <p className="text-2xl font-bold text-violet-700 dark:text-violet-400">{previewData.emailPatchCount || 0}</p>
+                <p className="text-sm text-violet-600 dark:text-violet-500">Email Adds</p>
               </div>
               <div className="p-3 rounded-lg border bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
                 <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{previewData.duplicateCount}</p>
@@ -265,6 +271,23 @@ export function ImportExcelDialog({
                     <div key={i} className="text-xs p-1.5 rounded bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 flex justify-between items-center">
                       <span>{t.importName}</span>
                       <Badge variant="outline" className="text-[9px] bg-blue-100 text-blue-700">TEMP</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {(previewData.emailPatchCount || 0) > 0 && (
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 mb-2">
+                  <Mail className="h-4 w-4 text-violet-500" />
+                  <span className="text-sm font-medium">Email Will Be Added To Existing Contestants</span>
+                </div>
+                <div className="max-h-[150px] overflow-y-auto border border-violet-200 dark:border-violet-800 rounded-lg p-2 space-y-1">
+                  {previewData.emailPatches.map((p, i) => (
+                    <div key={i} className="text-xs p-1.5 rounded bg-violet-50/50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800 flex justify-between items-center gap-2">
+                      <span className="font-medium truncate">{p.importName}</span>
+                      <span className="text-muted-foreground truncate">{p.email}</span>
                     </div>
                   ))}
                 </div>
@@ -348,11 +371,14 @@ export function ImportExcelDialog({
               </Button>
               <Button 
                 onClick={handleImport} 
-                disabled={previewData?.uniqueCount === 0 && previewData?.temporaryUpdatesCount === 0}
+                disabled={previewData?.uniqueCount === 0 && previewData?.temporaryUpdatesCount === 0 && (previewData?.emailPatchCount || 0) === 0}
                 data-testid="button-process-import"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Import {(previewData?.uniqueCount || 0) + (previewData?.temporaryUpdatesCount || 0)} Contestants
+                {(previewData?.emailPatchCount || 0) > 0 && (previewData?.uniqueCount || 0) === 0 && (previewData?.temporaryUpdatesCount || 0) === 0
+                  ? `Add Emails to ${previewData?.emailPatchCount} Contestants`
+                  : `Import ${(previewData?.uniqueCount || 0) + (previewData?.temporaryUpdatesCount || 0) + (previewData?.emailPatchCount || 0)} Contestants`
+                }
               </Button>
             </>
           )}
