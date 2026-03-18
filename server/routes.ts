@@ -9209,6 +9209,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rebookedBy: rebookedBy,
       });
 
+      // CLEANUP: Mark ALL non-seated standbys for this contestant as 'seated'
+      // This ensures stale standby records (from movedToReschedule or past episodes) are cleared
+      const allStaleStandbys = allStandbys.filter(
+        (s: any) => s.contestantId === canceled.contestantId && s.status !== 'seated'
+      );
+      for (const sb of allStaleStandbys) {
+        await storage.updateStandbyAssignment(sb.id, { status: 'seated' });
+      }
+
       res.json({
         message: "Contestant rebooked with paperwork status preserved",
         assignment: newAssignment,
