@@ -5968,6 +5968,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (tempContestantsBefore.length > 0) {
         console.log(`[Auto-assign] Excluded ${tempContestantsBefore.length} temporary contestants`);
       }
+
+      // Exclude R-rated contestants - they must be manually assigned
+      const rRatedBefore = availableAll.filter(c => c.auditionRating?.toUpperCase().trim() === 'R');
+      availableAll = availableAll.filter(c => c.auditionRating?.toUpperCase().trim() !== 'R');
+      if (rRatedBefore.length > 0) {
+        console.log(`[Auto-assign] Excluded ${rRatedBefore.length} R-rated contestants`);
+      }
       
       // If onlyConfirmedAvailability is true, filter to only contestants who confirmed for this record day
       if (onlyConfirmedAvailability) {
