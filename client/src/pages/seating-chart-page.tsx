@@ -4037,6 +4037,12 @@ export default function SeatingChartPage() {
                           <p className="text-sm">{contestant.attendingWith}</p>
                         </div>
                       )}
+                      {contestant.availabilityNotes && (
+                        <div className="col-span-2">
+                          <label className="text-xs font-medium text-muted-foreground">Availability</label>
+                          <p className="text-sm">{contestant.availabilityNotes}</p>
+                        </div>
+                      )}
                       {contestant.groupId && (
                         <div className="overflow-hidden">
                           <label className="text-xs font-medium text-muted-foreground">Group ID</label>
