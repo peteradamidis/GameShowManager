@@ -3858,22 +3858,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // --- Stat 2: Available + reschedule pool, not yet assigned to any unlocked day ---
       const contestantIdsOnUnlockedDay = new Set(assignmentsOnUnlocked.map(a => a.contestantId));
 
-      // Reschedule pool: unique contestant IDs with an unbooked canceled assignment
-      const rescheduleContestantIds = new Set(
-        allCanceled.filter(ca => !ca.rebookedToRecordDayId).map(ca => ca.contestantId)
+      // Reschedule pool: split by R-rated vs non-R
+      const rescheduleContestantIdsNonR = new Set(
+        allCanceled
+          .filter(ca => !ca.rebookedToRecordDayId && (ca as any).contestant?.auditionRating?.toUpperCase().trim() !== 'R')
+          .map(ca => ca.contestantId)
       );
-      const reschedulePool = rescheduleContestantIds.size;
+      const rescheduleContestantIdsR = new Set(
+        allCanceled
+          .filter(ca => !ca.rebookedToRecordDayId && (ca as any).contestant?.auditionRating?.toUpperCase().trim() === 'R')
+          .map(ca => ca.contestantId)
+      );
+      const reschedulePool = rescheduleContestantIdsNonR.size;
 
-      // Available contestants not yet on any unlocked day
-      const availableUnassignedIds = new Set(
+      // Available non-R contestants not yet on any unlocked day
+      const availableUnassignedIdsNonR = new Set(
         allContestants
-          .filter(c => c.availabilityStatus === 'available' && !contestantIdsOnUnlockedDay.has(c.id))
+          .filter(c =>
+            c.availabilityStatus === 'available' &&
+            !contestantIdsOnUnlockedDay.has(c.id) &&
+            c.auditionRating?.toUpperCase().trim() !== 'R'
+          )
           .map(c => c.id)
       );
 
-      // Union of both groups (deduped)
-      const unassignedContestantIds = new Set([...availableUnassignedIds, ...rescheduleContestantIds]);
+      // Available R-rated contestants not yet on any unlocked day
+      const availableUnassignedIdsR = new Set(
+        allContestants
+          .filter(c =>
+            c.availabilityStatus === 'available' &&
+            !contestantIdsOnUnlockedDay.has(c.id) &&
+            c.auditionRating?.toUpperCase().trim() === 'R'
+          )
+          .map(c => c.id)
+      );
+
+      // Non-R total (available + reschedule, deduped)
+      const unassignedContestantIds = new Set([...availableUnassignedIdsNonR, ...rescheduleContestantIdsNonR]);
       const unassignedTotal = unassignedContestantIds.size;
+
+      // R-rated total (available + reschedule, deduped)
+      const unassignedRContestantIds = new Set([...availableUnassignedIdsR, ...rescheduleContestantIdsR]);
+      const unassignedRTotal = unassignedRContestantIds.size;
 
       // --- Stat 3: People who have come into studio ONCE (signed in exactly once) ---
       const signedInAssignments = allAssignments.filter(a => (a as any).signedIn != null);
@@ -3941,6 +3967,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         emptySeats,
         unlockedDaysCount: unlockedDays.length,
         unassignedTotal,
+        unassignedRTotal,
         reschedulePool,
         studioOnce,
         studioTotal,
