@@ -7526,6 +7526,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           assignments: createdAssignments,
           skippedACount: aRatedContestants.length,
           skippedANames: aRatedContestants.map(c => c.name),
+          skippedRCount: rRatedBefore.length,
+          skippedRNames: rRatedBefore.map(c => c.name),
           skippedBundles: skippedBundles.length > 0 ? skippedBundles : undefined,
           demographics: {
             femaleCount: globalFemaleCount,

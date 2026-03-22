@@ -1501,7 +1501,8 @@ export default function SeatingChartPage() {
       
       const assignedCount = demographics.femaleCount + demographics.maleCount;
       const skippedCount = result.skippedBundles?.length || 0;
-      const skippedAPlusCount = result.skippedAPlusCount || 0;
+      const skippedACount = result.skippedACount || 0;
+      const skippedRCount = result.skippedRCount || 0;
       
       let description = `Assigned ${assignedCount} contestants to ${blocksText}. Gender ratio: ${demographics.femalePercentage}% female (target: ${demographics.targetRange})`;
       
@@ -1509,10 +1510,13 @@ export default function SeatingChartPage() {
         description = `⚠️ ${demographics.warning}. ${description}`;
       }
       
-      if (skippedCount > 0 || skippedAPlusCount > 0) {
+      if (skippedCount > 0 || skippedACount > 0 || skippedRCount > 0) {
         const skippedParts = [];
-        if (skippedAPlusCount > 0) {
-          skippedParts.push(`${skippedAPlusCount} A+ contestants (manual only)`);
+        if (skippedACount > 0) {
+          skippedParts.push(`${skippedACount} A/A+ contestants (manual only)`);
+        }
+        if (skippedRCount > 0) {
+          skippedParts.push(`${skippedRCount} R-rated contestants (excluded)`);
         }
         if (skippedCount > 0) {
           skippedParts.push(`${skippedCount} group(s) couldn't fit`);
