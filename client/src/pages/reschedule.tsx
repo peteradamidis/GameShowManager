@@ -61,6 +61,7 @@ export default function ReschedulePage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all"); // filter by contestant state
+  const [filterRating, setFilterRating] = useState<string>("all");
 
   const handleRowClick = (cancellation: any) => {
     const contestant = cancellation.contestant;
@@ -629,6 +630,26 @@ export default function ReschedulePage() {
               </Select>
             </div>
             <div className="flex items-center gap-2">
+              <Label htmlFor="filter-rating" className="text-sm font-medium whitespace-nowrap">Rating:</Label>
+              <Select value={filterRating} onValueChange={setFilterRating}>
+                <SelectTrigger id="filter-rating" className="w-24" data-testid="select-filter-rating">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="A+">A+</SelectItem>
+                  <SelectItem value="A">A</SelectItem>
+                  <SelectItem value="B+">B+</SelectItem>
+                  <SelectItem value="B">B</SelectItem>
+                  <SelectItem value="C">C</SelectItem>
+                  <SelectItem value="R">R</SelectItem>
+                  <SelectItem value="D">D</SelectItem>
+                  <SelectItem value="DNU">DNU</SelectItem>
+                  <SelectItem value="P">P</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
               <Label htmlFor="filter-original-day" className="text-sm font-medium whitespace-nowrap">Original Date:</Label>
               <Select value={filterOriginalRecordDayId} onValueChange={setFilterOriginalRecordDayId}>
                 <SelectTrigger id="filter-original-day" className="w-64" data-testid="select-filter-original-day">
@@ -690,7 +711,9 @@ export default function ReschedulePage() {
                       (filterType === "canceled" && !cancellation.isFromStandby);
                     const contestantStatus = cancellation.contestant?.availabilityStatus?.toLowerCase() || '';
                     const matchesStatus = filterStatus === "all" || contestantStatus === filterStatus;
-                    return matchesDate && matchesSearch && matchesType && matchesStatus;
+                    const contestantRating = cancellation.contestant?.auditionRating?.toUpperCase().trim() || '';
+                    const matchesRating = filterRating === "all" || contestantRating === filterRating;
+                    return matchesDate && matchesSearch && matchesType && matchesStatus && matchesRating;
                   })
                   .map((cancellation: any) => (
                   <TableRow 
