@@ -297,6 +297,9 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const lastLoadedContestantId = useRef<string | null>(null); // Track which contestant's card we've loaded
   const isExitingFullscreen = useRef(false); // Prevent useEffect from overwriting during fullscreen exit
   const lastLocalSaveTime = useRef<number>(0); // Timestamp of last local save to prevent query overwrites
+  // Keep a ref to the contestants prop so the card-loading effect can access the latest value
+  // without making contestants a dependency (which causes spurious re-runs on every list refetch)
+  const contestantsRef = useRef<Contestant[]>(contestants);
   
   // Version history state
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
@@ -326,6 +329,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   const [pptxSearchingFor, setPptxSearchingFor] = useState<number | null>(null);
   const [block7Ep1Confirmation, setBlock7Ep1Confirmation] = useState<{ assignmentId: string; contestantName: string } | null>(null);
   const pptxFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Keep contestantsRef in sync so the card-loading effect always has fresh data
+  useEffect(() => {
+    contestantsRef.current = contestants;
+  }, [contestants]);
 
   // Debug: Log contestants with groupIds
   useEffect(() => {
@@ -1033,11 +1041,20 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
 
   // Fetch existing casting card data when contestant is selected
   // Disable refetchOnWindowFocus to prevent overwriting unsaved local edits when switching tabs
-  const { data: existingCard, isLoading: loadingCard } = useQuery<CastingCardData>({
+  // Custom queryFn: return null (not throw) for 404 so we can distinguish
+  // "no card exists" from "server error" — prevents blank template flash on network errors
+  const { data: existingCard, isLoading: loadingCard, isError: cardLoadError } = useQuery<CastingCardData | null>({
     queryKey: ['/api/casting-cards', selectedContestant?.id],
     enabled: !!selectedContestant,
     refetchOnWindowFocus: false,
     staleTime: 30000, // Consider data fresh for 30 seconds
+    queryFn: async () => {
+      if (!selectedContestant?.id) return null;
+      const res = await fetch(`/api/casting-cards/${selectedContestant.id}`, { credentials: 'include' });
+      if (res.status === 404) return null; // No card yet — not an error
+      if (!res.ok) throw new Error(`${res.status}: Failed to load casting card`);
+      return res.json();
+    },
   });
 
   // Fetch version history for the current card
@@ -1240,50 +1257,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
       });
       
       if (!isNewContestant && hasLocalData) {
-        // Already loaded this contestant, don't overwrite local edits
+        // Already loaded this contestant's data — never overwrite it with server data.
+        // This protects all local edits (body text, font sizes, companions, etc.) from
+        // being silently replaced by a background refetch or contestants-list update.
         console.log('[CardData useEffect] Skipping - already loaded this contestant');
         return;
-      }
-      
-      // ADDITIONAL CHECK: If we have local data with content that differs from existingCard, skip overwrite
-      // This catches cases where the timing checks above fail
-      const localData = cardDataRef.current || cardData;
-      if (localData && localData.contestantId === selectedContestant.id && existingCard) {
-        // Check if local data has edits that would be lost - check ALL header fields AND font sizes
-        const localTagline = localData.tagline || '';
-        const localOccupation = localData.occupation || '';
-        const localAgeState = localData.ageState || '';
-        const localFullName = localData.fullName || '';
-        const localSponsorCategory = localData.sponsorCategory || '';
-        const serverTagline = existingCard.tagline || '';
-        const serverOccupation = existingCard.occupation || '';
-        const serverAgeState = (existingCard as any).ageState || '';
-        const serverFullName = (existingCard as any).fullName || '';
-        const serverSponsorCategory = (existingCard as any).sponsorCategory || '';
-        
-        // Also check font sizes - these must be preserved too
-        const localFontSizeName = localData.fontSizeName || 0;
-        const localFontSizeOccupation = localData.fontSizeOccupation || 0;
-        const localFontSizeTagline = localData.fontSizeTagline || 0;
-        const localFontSizeAgeState = localData.fontSizeAgeState || 0;
-        const serverFontSizeName = (existingCard as any).fontSizeName || 0;
-        const serverFontSizeOccupation = (existingCard as any).fontSizeOccupation || 0;
-        const serverFontSizeTagline = (existingCard as any).fontSizeTagline || 0;
-        const serverFontSizeAgeState = (existingCard as any).fontSizeAgeState || 0;
-        
-        // If local has content or font sizes that differ from server, preserve local
-        if (localTagline !== serverTagline ||
-            localOccupation !== serverOccupation ||
-            localAgeState !== serverAgeState ||
-            localFullName !== serverFullName ||
-            localSponsorCategory !== serverSponsorCategory ||
-            localFontSizeName !== serverFontSizeName ||
-            localFontSizeOccupation !== serverFontSizeOccupation ||
-            localFontSizeTagline !== serverFontSizeTagline ||
-            localFontSizeAgeState !== serverFontSizeAgeState) {
-          console.log('[CardData useEffect] Skipping - local data differs from server (text or font sizes)');
-          return;
-        }
       }
       
       try {
@@ -1328,7 +1306,8 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
           const cardTimestamp = (existingCard as any).updatedAt || new Date().toISOString();
           setLastKnownUpdatedAt(cardTimestamp);
           lastKnownUpdatedAtRef.current = cardTimestamp;
-        } else if (!loadingCard) {
+        } else if (!loadingCard && !cardLoadError) {
+          // Query completed successfully and returned null (404) — no card in DB yet
           setCardData({
             contestantId: selectedContestant.id,
             occupation: '',
@@ -1385,14 +1364,23 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         setRenderError(`Error loading card: ${error?.message || 'Unknown error'}`);
       }
     }
-  }, [selectedContestant, existingCard, loadingCard, contestants]);
+  }, [selectedContestant, existingCard, loadingCard, cardLoadError, contestants]);
 
   // Clear undo/redo history when switching contestants
   useEffect(() => {
     setUndoHistory([]);
     setRedoHistory([]);
-    // Reset hasUnsavedChanges when switching contestants
+    // Reset hasUnsavedChanges when switching contestants so stale auto-save timeouts don't fire
     hasUnsavedChanges.current = false;
+    // Cancel any pending auto-save from the previous contestant before switching
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+      autoSaveTimeoutRef.current = null;
+    }
+    // NOTE: We deliberately do NOT reset lastLoadedContestantId here because the data-loading
+    // effect runs before this one (file order). If we reset it here, background refetches after
+    // the load would see isNewContestant=true and re-overwrite local edits.
+    // The data-loading effect correctly detects a new contestant via lastLoadedContestantId != selectedContestant.id.
   }, [selectedContestant]);
 
   // Save casting card mutation - uses PATCH for updates, POST for new cards
@@ -2877,18 +2865,34 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
   // Uses POST (upsert) so it works even if the card hasn't been created in the DB yet.
   useEffect(() => {
     return () => {
-      if (hasUnsavedChanges.current && cardDataRef.current) {
+      // Capture the latest bodyText from the DOM before unmounting.
+      // onBlur fires when the user clicks away (e.g. another tab), so cardDataRef is usually
+      // up-to-date, but this is a belt-and-suspenders guard for any in-flight edits.
+      let dataSnapshot = cardDataRef.current;
+      if (dataSnapshot) {
+        const bodyTextElement = bodyTextRef.current || bodyTextRefFs.current;
+        if (bodyTextElement) {
+          const currentHtml = bodyTextElement.innerHTML;
+          if (currentHtml && currentHtml !== dataSnapshot.bodyText) {
+            dataSnapshot = { ...dataSnapshot, bodyText: currentHtml };
+            // If bodyText changed but hasUnsavedChanges wasn't set, mark it dirty so we save
+            hasUnsavedChanges.current = true;
+          }
+        }
+      }
+
+      if (hasUnsavedChanges.current && dataSnapshot) {
         if (autoSaveTimeoutRef.current) {
           clearTimeout(autoSaveTimeoutRef.current);
           autoSaveTimeoutRef.current = null;
         }
-        const contestantId = cardDataRef.current.contestantId;
+        const contestantId = dataSnapshot.contestantId;
         if (contestantId) {
           const dataToSend = {
-            ...cardDataRef.current,
+            ...dataSnapshot,
             contestantId,
-            manualCompanions: cardDataRef.current.manualCompanions
-              ? JSON.stringify(cardDataRef.current.manualCompanions)
+            manualCompanions: dataSnapshot.manualCompanions
+              ? JSON.stringify(dataSnapshot.manualCompanions)
               : null,
           };
           fetch('/api/casting-cards', {
