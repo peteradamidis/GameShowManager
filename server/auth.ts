@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import { Pool } from "pg";
 import { storage } from "./storage";
 
 declare module "express-session" {
@@ -29,15 +31,29 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 
 export function getSessionConfig() {
   const sessionSecret = process.env.SESSION_SECRET || 'dev-secret-change-in-production';
-  
+
+  const PgSession = connectPgSimple(session);
+  const pgPool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_URL?.includes('neon.tech') || process.env.NODE_ENV === 'production'
+      ? { rejectUnauthorized: false }
+      : undefined,
+  });
+
   return session({
+    store: new PgSession({
+      pool: pgPool,
+      tableName: 'session',
+      createTableIfMissing: true,
+      ttl: 7 * 24 * 60 * 60, // 7 days in seconds
+    }),
     secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === 'production' && process.env.HTTPS === 'true',
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       sameSite: 'lax'
     }
   });
