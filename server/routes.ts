@@ -17374,8 +17374,8 @@ Thank you.`;
           const compPhoto = comp.photoUrl || comp.photo || '';
           return `
           <div style="text-align: center; width: 80px;">
-            <div style="width: 70px; height: 70px; border-radius: 4px; overflow: hidden; background: #e5e5e5; display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 1px solid #ccc;">
-              ${compPhoto ? `<img src="${compPhoto}" style="width: 100%; height: 100%; object-fit: cover;" />` : '<span style="color: #999; font-size: 24px;">?</span>'}
+            <div style="position: relative; width: 70px; height: 70px; border-radius: 4px; overflow: hidden; background: #e5e5e5; margin: 0 auto; border: 1px solid #ccc;">
+              ${compPhoto ? `<img src="${compPhoto}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top;" />` : '<div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;"><span style="color: #999; font-size: 24px;">?</span></div>'}
             </div>
             <div style="font-size: 10px; font-weight: bold; margin-top: 4px;">${comp.name || ''}</div>
             <div style="font-size: 9px; color: #666;">(${comp.relationship || ''})</div>
@@ -17429,8 +17429,8 @@ Thank you.`;
         const compPhoto = comp.photoUrl || comp.photo || '';
         return `
           <div style="text-align: center;">
-            <div style="width: 112px; height: 112px; border: 4px solid #f59e0b; border-radius: 8px; overflow: hidden; background: #e5e7eb; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-              ${compPhoto ? `<img src="${compPhoto}" style="width: 100%; height: 100%; object-fit: cover;" />` : '<span style="color: #9ca3af; font-size: 24px;">?</span>'}
+            <div style="position: relative; width: 112px; height: 112px; border: 4px solid #f59e0b; border-radius: 8px; overflow: hidden; background: #e5e7eb; margin: 0 auto;">
+              ${compPhoto ? `<img src="${compPhoto}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top;" />` : '<div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;"><span style="color: #9ca3af; font-size: 24px;">?</span></div>'}
             </div>
             <div style="font-size: 14px; font-weight: 600; margin-top: 4px;">${comp.name || ''}</div>
             <div style="font-size: 12px; color: #6b7280;">(${comp.relationship || ''})</div>
@@ -17508,8 +17508,11 @@ Thank you.`;
     <!-- Left Column: Photo + Companions -->
     <div class="left-column">
       <!-- Main Photo -->
-      <div style="border: 4px solid #f59e0b; border-radius: 8px; overflow: hidden; background: #f3f4f6; height: 224px; display: flex; align-items: center; justify-content: center;">
-        ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; height: 100%; object-fit: cover;" />` : '<span style="color: #9ca3af; font-size: 64px;">?</span>'}
+      <div style="position: relative; border: 4px solid #f59e0b; border-radius: 8px; overflow: hidden; background: #f3f4f6; height: 224px;">
+        ${photoUrl
+          ? `<img src="${photoUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top;" />`
+          : `<div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;"><span style="color: #9ca3af; font-size: 64px;">?</span></div>`
+        }
       </div>
       
       ${companionCount > 0 ? `
