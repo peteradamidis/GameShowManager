@@ -4,6 +4,16 @@ if (process.env.NODE_ENV === 'production') {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 }
 
+// Global safety net: Node 15+ crashes on unhandled rejections — catch them here
+// so a single failing async operation doesn't kill the server and log everyone out.
+process.on('unhandledRejection', (reason: any, promise) => {
+  console.error('[Server] Unhandled promise rejection — server kept alive:', reason?.message || reason);
+});
+
+process.on('uncaughtException', (err: Error) => {
+  console.error('[Server] Uncaught exception — server kept alive:', err.message);
+});
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
