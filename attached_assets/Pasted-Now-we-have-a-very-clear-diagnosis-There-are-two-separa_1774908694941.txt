@@ -1,0 +1,143 @@
+Now we have a very clear diagnosis. There are two separate problems:
+Problem 1 (the logouts): Memory leak — MemoryStore
+The logs say it clearly:
+Warning: connect.session() MemoryStore is not designed for a production 
+environment, as it will leak memory, and will not scale past a single process.
+The app is storing all user sessions in RAM. Over time this fills up and hits Node's heap limit, causing the crash you see:
+FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory
+When Node crashes, PM2 restarts the app, and all sessions are wiped — everyone gets logged out.
+Problem 2 (contributing): The app is making a huge number of individual API calls — you can see it fetching each contestant one by one at 9:07:30, dozens of them. This is hammering memory even faster.
+The fix for the logouts — the session store needs to be switched from MemoryStore to a persistent store like PostgreSQL or a file. SSH in and look at how sessions are configured:
+grep -r "MemoryStore\|session(" ~/projects/GameShowManager/server --include="*.ts" --include="*.js" -l
+Then share what you find and I can help you switch it to a proper session store. This is the root cause of everyone getting logged out.admin@GameShowManager GameShowManager % grep -r "MemoryStore\|session(" ~/projects/GameShowManager/server --include="*.ts" --include="*.js" -l
+/Users/admin/projects/GameShowManager/server/auth.ts
+admin@GameShowManager GameShowManager %09:09Perfect, one file. Let's see what's in it:
+cat ~/projects/GameShowManager/server/auth.ts
+Paste the output and I'll show you exactly what to change to fix the session store. It should be a fairly small change — we just need to swap MemoryStore for a persistent store that uses your existing PostgreSQL database.import { Request, Response, NextFunction } from "express";
+import bcrypt from "bcrypt";
+import session from "express-session";
+import { storage } from "./storage";declare module "express-session" {
+  interface SessionData {
+    userId: string;
+    username: string;
+  }
+}const SALT_ROUNDS = 12;export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, SALT_ROUNDS);
+}export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
+}export function requireAuth(req: Request, res: Response, next: NextFunction) {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: "Unauthorized - Please log in" });
+  }
+  next();
+}export function getSessionConfig() {
+  const sessionSecret = process.env.SESSION_SECRET || 'dev-secret-change-in-production';
+  
+  return session({
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production' && process.env.HTTPS === 'true',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax'
+    }
+  });
+}export async function createDefaultAdmin(): Promise<void> {
+  try {
+    const users = await storage.getAllUsers();
+    if (users.length === 0) {
+      const hashedPassword = await hashPassword("admin");
+      await storage.createUser({
+        username: "admin",
+        password: hashedPassword
+      });
+      console.log("Default admin user created (username: admin, password: admin)");
+      console.log("IMPORTANT: Change this password immediately in production!");
+    }
+  } catch (error) {
+    console.error("Error creating default admin:", error);
+  }
+}
+admin@GameShowManager GameShowManager %Show more09:09Perfect, I can see the issue — no store is specified in getSessionConfig(), so it defaults to MemoryStore. We need to add connect-pg-simple to store sessions in your existing PostgreSQL database.
+Step 1 - Install the package:
+cd ~/projects/GameShowManager && npm install connect-pg-simple
+Step 2 - Once that's done, edit auth.ts:
+nano ~/projects/GameShowManager/server/auth.ts
+Replace the entire file with this:
+typescriptimport { Request, Response, NextFunction } from "express";
+import bcrypt from "bcrypt";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import { pool } from "./db";
+import { storage } from "./storage";
+
+declare module "express-session" {
+  interface SessionData {
+    userId: string;
+    username: string;
+  }
+}
+
+const SALT_ROUNDS = 12;
+
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, SALT_ROUNDS);
+}
+
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
+}
+
+export function requireAuth(req: Request, res: Response, next: NextFunction) {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: "Unauthorized - Please log in" });
+  }
+  next();
+}
+
+export function getSessionConfig() {
+  const sessionSecret = process.env.SESSION_SECRET || 'dev-secret-change-in-production';
+  const PgSession = connectPgSimple(session);
+
+  return session({
+    store: new PgSession({
+      pool: pool,
+      tableName: 'session',
+      createTableIfMissing: true,
+    }),
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production' && process.env.HTTPS === 'true',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: 'lax'
+    }
+  });
+}
+
+export async function createDefaultAdmin(): Promise<void> {
+  try {
+    const users = await storage.getAllUsers();
+    if (users.length === 0) {
+      const hashedPassword = await hashPassword("admin");
+      await storage.createUser({
+        username: "admin",
+        password: hashedPassword
+      });
+      console.log("Default admin user created (username: admin, password: admin)");
+      console.log("IMPORTANT: Change this password immediately in production!");
+    }
+  } catch (error) {
+    console.error("Error creating default admin:", error);
+  }
+}
+```
+
+Before saving, check what your db file is called:
+```
+ls ~/projects/GameShowManager/server/db*
+That will confirm whether the import from "./db" is correct, or if it needs a different name. What does it return?

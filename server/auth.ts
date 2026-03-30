@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
-import { Pool } from "pg";
+import { pool } from "./db";
 import { storage } from "./storage";
 
 declare module "express-session" {
@@ -33,19 +33,9 @@ export function getSessionConfig() {
   const sessionSecret = process.env.SESSION_SECRET || 'dev-secret-change-in-production';
 
   const PgSession = connectPgSimple(session);
-  const pgPool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_URL?.includes('neon.tech') || process.env.NODE_ENV === 'production'
-      ? { rejectUnauthorized: false }
-      : undefined,
-  });
-
-  pgPool.on('error', (err) => {
-    console.error('[SessionStore] pg pool error:', err.message);
-  });
 
   const store = new PgSession({
-    pool: pgPool,
+    pool: pool as any,
     tableName: 'session',
     createTableIfMissing: true,
     ttl: 7 * 24 * 60 * 60, // 7 days in seconds
