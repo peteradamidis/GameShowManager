@@ -558,13 +558,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Invalid username or password" });
       }
 
-      // Set session
+      // Set session and explicitly save before responding to avoid race condition
+      // where the browser's next request arrives before the async DB write completes
       req.session.userId = user.id;
       req.session.username = user.username;
 
-      res.json({ 
-        success: true, 
-        user: { id: user.id, username: user.username } 
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error on login:", err);
+          return res.status(500).json({ error: "Login failed - could not persist session" });
+        }
+        res.json({ 
+          success: true, 
+          user: { id: user.id, username: user.username } 
+        });
       });
     } catch (error) {
       console.error("Login error:", error);

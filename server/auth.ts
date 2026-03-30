@@ -40,18 +40,27 @@ export function getSessionConfig() {
       : undefined,
   });
 
+  pgPool.on('error', (err) => {
+    console.error('[SessionStore] pg pool error:', err.message);
+  });
+
+  const store = new PgSession({
+    pool: pgPool,
+    tableName: 'session',
+    createTableIfMissing: true,
+    ttl: 7 * 24 * 60 * 60, // 7 days in seconds
+    errorLog: (err: unknown) => {
+      console.error('[SessionStore] store error:', err);
+    },
+  });
+
   return session({
-    store: new PgSession({
-      pool: pgPool,
-      tableName: 'session',
-      createTableIfMissing: true,
-      ttl: 7 * 24 * 60 * 60, // 7 days in seconds
-    }),
+    store,
     secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === 'production' && process.env.HTTPS === 'true',
+      secure: false,
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       sameSite: 'lax'
