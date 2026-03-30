@@ -1469,7 +1469,11 @@ function CastingCardsTab({ contestants, initialContestantId, onClearInitial }: {
         // (isReady, isDraftComplete, presence of card) without waiting for a full refetch.
         // This runs even when skipInvalidate:true to keep the list in sync after auto-saves.
         queryClient.setQueryData(['/api/casting-cards'], (oldList: any) => {
-          if (!Array.isArray(oldList)) return []; // Fix: Always return an array to prevent .map() crashes
+          // If the list cache hasn't loaded yet, skip the update entirely.
+          // Returning undefined in TanStack Query v5 means "don't update the cache" —
+          // the subsequent invalidateQueries will trigger a proper server fetch.
+          // (Previously returned [] which wiped all card data from the map, hiding all badges.)
+          if (!Array.isArray(oldList)) return undefined;
           const idx = oldList.findIndex((c: any) => c.contestantId === result.contestantId);
           if (idx >= 0) {
             const updated = [...oldList];
@@ -7637,8 +7641,9 @@ export default function PlayersPage() {
   });
 
   // Fetch all casting cards to show status in Players & Backups tab
-  const { data: allCastingCards = [] } = useQuery<CastingCardData[]>({
+  const { data: allCastingCards = [], isLoading: isLoadingCastingCards } = useQuery<CastingCardData[]>({
     queryKey: ['/api/casting-cards'],
+    staleTime: 0, // Always background-refetch on mount so badges use fresh isReady/isDraftComplete values
   });
 
   // Map of contestantId -> casting card for quick lookup
@@ -8404,6 +8409,10 @@ export default function PlayersPage() {
                           </>
                         );
                       } else {
+                        // While the casting cards list is loading, don't show "Create Card" —
+                        // the card may exist on the server but not yet in the local cache.
+                        // Once the query resolves, the correct badge or button will appear.
+                        if (isLoadingCastingCards) return null;
                         return (
                           <Button
                             size="sm"

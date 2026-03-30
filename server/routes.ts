@@ -5326,6 +5326,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(assignment);
     } catch (error: any) {
+      if (error.message?.startsWith('CONTESTANT_ALREADY_ACTIVE:')) {
+        return res.status(409).json({ error: error.message.split(': ')[1] });
+      }
       if (error.message?.startsWith('CONTESTANT_CONFLICT:')) {
         return res.status(409).json({ error: 'This contestant was just assigned by another user. Please refresh.' });
       }
@@ -5578,6 +5581,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle conflict errors from database constraints
       if (error.message?.startsWith('SEAT_CONFLICT:')) {
         return res.status(409).json({ error: 'A seat was just taken by another user. Please refresh and try again.' });
+      }
+      if (error.message?.startsWith('CONTESTANT_ALREADY_ACTIVE:')) {
+        return res.status(409).json({ error: error.message.split(': ')[1] });
       }
       if (error.message?.startsWith('CONTESTANT_CONFLICT:')) {
         return res.status(409).json({ error: 'A contestant was just assigned by another user. Please refresh.' });
