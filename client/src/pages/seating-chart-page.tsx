@@ -1,6 +1,6 @@
 import { cn, getNextRecordDayId } from "@/lib/utils";
 import { SeatingChart } from "@/components/seating-chart";
-import { getDistanceFromDocklands } from "@/components/contestant-table";
+import { getDistanceFromDocklands, isLocationInterstate } from "@/components/contestant-table";
 import { WinningMoneyModal } from "@/components/winning-money-modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -853,7 +853,8 @@ export default function SeatingChartPage() {
   // Filter available contestants by search term and filters
   const filteredContestants = useMemo(() => {
     // For the group-available filter we need to check against ALL record days, not just
-    // the current one. Build a set of contestant IDs who are seated or actively on standby.
+    // the current one. Build a set of contestant IDs who are unavailable for any reason:
+    // seated, on active standby, previously attended a locked day, or interstate.
     const globallyUnavailableIds = filterAllGroupAvailable
       ? (() => {
           const ids = new Set<string>();
@@ -863,11 +864,27 @@ export default function SeatingChartPage() {
           (allStandbys as any[])
             .filter((s: any) => !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled' && s.status !== 'attended')
             .forEach((s: any) => ids.add(s.contestantId));
+          // Previously attended (seated on a locked/completed record day)
+          const lockedDayIds = new Set(
+            (recordDays as any[]).filter((d: any) => d.lockedAt).map((d: any) => d.id)
+          );
+          (allSeatAssignments as any[])
+            .filter((a: any) => lockedDayIds.has(a.recordDayId))
+            .forEach((a: any) => ids.add(a.contestantId));
+          // Interstate (not from Victoria — check both postcode and location string)
+          (allContestants as any[]).forEach((c: any) => {
+            const postcodeCode = parseInt(c.postcode || '', 10);
+            const postcodeInterstate = !isNaN(postcodeCode) &&
+              !(postcodeCode >= 3000 && postcodeCode <= 3999) &&
+              !(postcodeCode >= 8000 && postcodeCode <= 8999);
+            const locationInterstate = isLocationInterstate(c.location).isInterstate;
+            if (postcodeInterstate || locationInterstate) ids.add(c.id);
+          });
           return ids;
         })()
       : null;
 
-    // Normalized name set of all contestants who are NOT seated or on standby anywhere
+    // Normalized name set of all contestants who are fully eligible
     const globallyAvailableNameSet = (filterAllGroupAvailable && globallyUnavailableIds)
       ? new Set(
           (allContestants as any[])
@@ -953,7 +970,7 @@ export default function SeatingChartPage() {
       
       return true;
     });
-  }, [availableContestants, allSeatAssignments, allStandbys, allContestants, debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km, filterOver60km, filterAllGroupAvailable]);
+  }, [availableContestants, allSeatAssignments, allStandbys, allContestants, recordDays, debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km, filterOver60km, filterAllGroupAvailable]);
 
   // Check if record day is locked (RX Day Mode)
   const isLocked = currentRecordDay?.lockedAt != null;

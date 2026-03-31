@@ -1,4 +1,4 @@
-import { ContestantTable, Contestant, getDistanceFromDocklands } from "@/components/contestant-table";
+import { ContestantTable, Contestant, getDistanceFromDocklands, isLocationInterstate } from "@/components/contestant-table";
 import { ImportExcelDialog } from "@/components/import-excel-dialog";
 import { ImportGalleryDialog } from "@/components/import-gallery-dialog";
 import { Button } from "@/components/ui/button";
@@ -502,7 +502,7 @@ export default function Contestants() {
   }
 
   // All group members available filter: only show contestants where every group partner
-  // is also not currently seated OR on active standby on any record day
+  // is also not currently seated, on active standby, previously attended, or interstate
   if (filterAllGroupAvailable) {
     const unavailableIds = new Set<string>();
     // Seated on any record day
@@ -511,6 +511,20 @@ export default function Contestants() {
     (allStandbys as any[])
       .filter((s: any) => !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled' && s.status !== 'attended')
       .forEach((s: any) => unavailableIds.add(s.contestantId));
+    // Previously attended (seated on a locked/completed record day)
+    const lockedDayIds = new Set((recordDays as any[]).filter((d: any) => d.lockedAt).map((d: any) => d.id));
+    (allSeatAssignments as any[])
+      .filter((sa: any) => lockedDayIds.has(sa.recordDayId))
+      .forEach((sa: any) => unavailableIds.add(sa.contestantId));
+    // Interstate (not from Victoria — check both postcode and location string)
+    contestants.forEach((c: any) => {
+      const postcodeCode = parseInt(c.postcode || '', 10);
+      const postcodeInterstate = !isNaN(postcodeCode) &&
+        !(postcodeCode >= 3000 && postcodeCode <= 3999) &&
+        !(postcodeCode >= 8000 && postcodeCode <= 8999);
+      const locationInterstate = isLocationInterstate(c.location).isInterstate;
+      if (postcodeInterstate || locationInterstate) unavailableIds.add(c.id);
+    });
 
     const availableNameSet = new Set(
       contestants
