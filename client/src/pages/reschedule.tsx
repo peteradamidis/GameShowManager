@@ -249,6 +249,23 @@ export default function ReschedulePage() {
     },
   });
 
+  const { data: rebookBlockTypes = [] } = useQuery<any[]>({
+    queryKey: ['/api/record-days', selectedRecordDayId, 'block-types'],
+    enabled: !!selectedRecordDayId,
+    queryFn: async () => {
+      const response = await fetch(`/api/record-days/${selectedRecordDayId}/block-types`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
+
+  // Map block number → PB | NPB | undefined for fast lookup
+  const rebookBlockTypeMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    rebookBlockTypes.forEach((bt: any) => { map[bt.blockNumber] = bt.blockType; });
+    return map;
+  }, [rebookBlockTypes]);
+
   // Generate available seats for selected block
   const availableSeats = selectedBlock ? (() => {
     const blockNum = parseInt(selectedBlock);
@@ -1036,11 +1053,28 @@ export default function ReschedulePage() {
                       <SelectValue placeholder="Select block" />
                     </SelectTrigger>
                     <SelectContent>
-                      {[1, 2, 3, 4, 5, 6, 7].map((block) => (
-                        <SelectItem key={block} value={String(block)}>
-                          Block {block}
-                        </SelectItem>
-                      ))}
+                      {[1, 2, 3, 4, 5, 6, 7].map((block) => {
+                        const blockType = rebookBlockTypeMap[block];
+                        return (
+                          <SelectItem key={block} value={String(block)}>
+                            <span className="flex items-center gap-2">
+                              Block {block}
+                              {blockType && (
+                                <Badge
+                                  variant="outline"
+                                  className={
+                                    blockType === 'PB'
+                                      ? "text-[10px] px-1 py-0 border-amber-400 bg-amber-50 text-amber-700 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300"
+                                      : "text-[10px] px-1 py-0 border-blue-400 bg-blue-50 text-blue-700 dark:border-blue-600 dark:bg-blue-900/30 dark:text-blue-300"
+                                  }
+                                >
+                                  {blockType}
+                                </Badge>
+                              )}
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
