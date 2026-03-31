@@ -12,7 +12,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { broadcastContestantChange, broadcastSeatingChange } from "@/lib/crossTabSync";
 import { useState, useMemo, useEffect } from "react";
-import { getGroupSizeFromAttendingWith, getPartnerNames, attendingWithMentionsName } from "@shared/attendingWithParser";
+import { getGroupSizeFromAttendingWith, getPartnerNames, attendingWithMentionsName, isSoloContestant, normalizeName } from "@shared/attendingWithParser";
 import {
   Dialog,
   DialogContent,
@@ -144,6 +144,7 @@ export default function Contestants() {
   const [filterPodiumStory, setFilterPodiumStory] = useState(false);
   const [filterWithin60km, setFilterWithin60km] = useState(false);
   const [filterWithin20km, setFilterWithin20km] = useState(false);
+  const [filterAllGroupAvailable, setFilterAllGroupAvailable] = useState(false);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [deleteConfirmStep, setDeleteConfirmStep] = useState<1 | 2>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -499,6 +500,23 @@ export default function Contestants() {
     });
   }
 
+  // All group members available filter: only show contestants where every group partner
+  // is also unbooked (not currently assigned/confirmed to a seat on any record day)
+  if (filterAllGroupAvailable) {
+    const unbookedNameSet = new Set(
+      contestants
+        .filter((c: any) => c.availabilityStatus !== 'assigned' && c.availabilityStatus !== 'confirmed')
+        .map((c: any) => normalizeName(c.name || ''))
+        .filter(Boolean)
+    );
+    displayedContestants = displayedContestants.filter(c => {
+      // Solo contestants always pass
+      if (isSoloContestant(c.attendingWith)) return true;
+      const partnerNames = getPartnerNames(c.attendingWith);
+      return partnerNames.every(pName => unbookedNameSet.has(normalizeName(pName)));
+    });
+  }
+
   // Apply postcode range filter
   if (postcodeFrom || postcodeTo) {
     displayedContestants = displayedContestants.filter(c => {
@@ -554,7 +572,7 @@ export default function Contestants() {
   // Reset page when filters or search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus, filterGroupSize, filterState, searchTerm]);
+  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus, filterGroupSize, filterState, filterAllGroupAvailable, searchTerm]);
 
   // Pagination calculations
   const totalPages = Math.ceil(displayedContestants.length / ITEMS_PER_PAGE);
@@ -1396,7 +1414,7 @@ export default function Contestants() {
 
           {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
             filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || 
-            filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km || filterWithin20km) && (
+            filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km || filterWithin20km || filterAllGroupAvailable) && (
             <Button 
               variant="outline" 
               onClick={() => {
@@ -1414,6 +1432,7 @@ export default function Contestants() {
                 setFilterPodiumStory(false);
                 setFilterWithin60km(false);
                 setFilterWithin20km(false);
+                setFilterAllGroupAvailable(false);
               }}
               data-testid="button-clear-filters"
             >
@@ -1639,6 +1658,23 @@ export default function Contestants() {
                     Within 60km
                   </label>
                 </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="filter-all-group-available"
+                    checked={filterAllGroupAvailable}
+                    onCheckedChange={(checked) => {
+                      setSelectedContestants([]);
+                      setFilterAllGroupAvailable(checked as boolean);
+                    }}
+                    data-testid="checkbox-filter-all-group-available"
+                  />
+                  <label 
+                    htmlFor="filter-all-group-available"
+                    className="text-sm font-medium cursor-pointer"
+                  >
+                    Full group available
+                  </label>
+                </div>
               </div>
             </div>
           </div>
@@ -1648,7 +1684,7 @@ export default function Contestants() {
       {/* Results Summary */}
       {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
         filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || 
-        filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km || filterWithin20km) && (
+        filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km || filterWithin20km || filterAllGroupAvailable) && (
         <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="secondary" data-testid="badge-filter-count">
             {displayedContestants.length} contestant{displayedContestants.length !== 1 ? 's' : ''}
@@ -1702,6 +1738,11 @@ export default function Contestants() {
           {filterWithin60km && (
             <Badge variant="outline">
               Within 60km of Docklands
+            </Badge>
+          )}
+          {filterAllGroupAvailable && (
+            <Badge variant="outline">
+              Full group available
             </Badge>
           )}
         </div>

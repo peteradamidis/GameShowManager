@@ -17,7 +17,7 @@ import { broadcastSeatingChange, broadcastRecordDayChange } from "@/lib/crossTab
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import confetti from "canvas-confetti";
 import { format } from "date-fns";
-import { getGroupSizeFromAttendingWith, getPartnerNames, attendingWithMentionsName, isSoloContestant } from "@shared/attendingWithParser";
+import { getGroupSizeFromAttendingWith, getPartnerNames, attendingWithMentionsName, isSoloContestant, normalizeName } from "@shared/attendingWithParser";
 import {
   Dialog,
   DialogContent,
@@ -383,11 +383,12 @@ export default function SeatingChartPage() {
   const [filterStandby, setFilterStandby] = useState<string>("all");
   const [filterWithin20km, setFilterWithin20km] = useState(false);
   const [filterWithin60km, setFilterWithin60km] = useState(false);
+  const [filterAllGroupAvailable, setFilterAllGroupAvailable] = useState(false);
   
   // Reset page when filters or search changes
   useEffect(() => {
     setContestantPage(1);
-  }, [debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km]);
+  }, [debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km, filterAllGroupAvailable]);
 
   useEffect(() => {
     setOverflowPage(1);
@@ -694,6 +695,21 @@ export default function SeatingChartPage() {
     return map;
   }, [canceledAssignments, recordDayId]);
 
+  // Create a map of the most recent unrebooked canceledAssignment per contestant (for View dialog reschedule info)
+  const canceledByContestantId = useMemo(() => {
+    if (!canceledAssignments) return new Map<string, any>();
+    const map = new Map<string, any>();
+    canceledAssignments
+      .filter((ca: any) => !ca.rebookedToRecordDayId)
+      .forEach((ca: any) => {
+        const existing = map.get(ca.contestantId);
+        if (!existing || new Date(ca.canceledAt) > new Date(existing.canceledAt)) {
+          map.set(ca.contestantId, ca);
+        }
+      });
+    return map;
+  }, [canceledAssignments]);
+
   // Derive available contestants from assignments and all contestants
   // This eliminates staleness issues since it's computed from latest data
   const availableContestants = useMemo(() => {
@@ -835,6 +851,11 @@ export default function SeatingChartPage() {
 
   // Filter available contestants by search term and filters
   const filteredContestants = useMemo(() => {
+    // Build a normalized name set of all available contestants for group availability checking
+    const availableNameSet = filterAllGroupAvailable
+      ? new Set(availableContestants.map((ac: any) => normalizeName(ac.name || '')).filter(Boolean))
+      : null;
+
     return availableContestants.filter((c: any) => {
       // Name search filter
       if (debouncedContestantSearch.trim()) {
@@ -895,10 +916,19 @@ export default function SeatingChartPage() {
         const distanceInfo = getDistanceFromDocklands(c.location);
         if (!distanceInfo || distanceInfo.isOver60km) return false;
       }
+
+      // All group members available filter
+      if (filterAllGroupAvailable && availableNameSet && !isSoloContestant(c.attendingWith)) {
+        const partnerNames = getPartnerNames(c.attendingWith);
+        const allPartnersAvailable = partnerNames.every(pName =>
+          availableNameSet.has(normalizeName(pName))
+        );
+        if (!allPartnersAvailable) return false;
+      }
       
       return true;
     });
-  }, [availableContestants, debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km]);
+  }, [availableContestants, debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km, filterAllGroupAvailable]);
 
   // Check if record day is locked (RX Day Mode)
   const isLocked = currentRecordDay?.lockedAt != null;
@@ -2851,7 +2881,7 @@ export default function SeatingChartPage() {
                     </Select>
                   </div>
                   
-                  {/* Distance filters */}
+                  {/* Distance + Group filters */}
                   <div className="flex items-center gap-3 ml-2 self-end pb-1">
                     <div className="flex items-center gap-1.5">
                       <Checkbox
@@ -2873,6 +2903,17 @@ export default function SeatingChartPage() {
                       />
                       <label htmlFor="filter-within-60km" className="text-xs cursor-pointer whitespace-nowrap">
                         Within 60km
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Checkbox
+                        id="filter-all-group-available"
+                        checked={filterAllGroupAvailable}
+                        onCheckedChange={(checked) => setFilterAllGroupAvailable(checked as boolean)}
+                        data-testid="checkbox-filter-all-group-available"
+                      />
+                      <label htmlFor="filter-all-group-available" className="text-xs cursor-pointer whitespace-nowrap">
+                        Full group avail.
                       </label>
                     </div>
                   </div>
@@ -4058,6 +4099,53 @@ export default function SeatingChartPage() {
                     </div>
                   </div>
                   
+                  {/* Reschedule Info - shown when contestant has a reschedule record */}
+                  {(() => {
+                    const canceledRecord = canceledByContestantId.get(contestant.id);
+                    if (!canceledRecord) return null;
+                    const fromDay = recordDays?.find((rd: any) => rd.id === canceledRecord.recordDayId);
+                    return (
+                      <div className="border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 rounded-md p-3 space-y-2">
+                        <h3 className="text-xs font-semibold text-orange-700 dark:text-orange-400 uppercase tracking-wide">Reschedule History</h3>
+                        <div className="grid grid-cols-3 gap-3 text-sm">
+                          {fromDay && (
+                            <div>
+                              <span className="text-xs text-muted-foreground block">Moved From</span>
+                              <span className="font-medium">{fromDay.label || format(new Date(fromDay.date), 'dd MMM yyyy')}</span>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-xs text-muted-foreground block">Date Moved</span>
+                            <span className="font-medium">{format(new Date(canceledRecord.canceledAt), 'dd MMM yyyy')}</span>
+                          </div>
+                          {canceledRecord.movedBy && (
+                            <div>
+                              <span className="text-xs text-muted-foreground block">Moved By</span>
+                              <span className="font-medium">{canceledRecord.movedBy}</span>
+                            </div>
+                          )}
+                        </div>
+                        {canceledRecord.reason && (
+                          <div>
+                            <span className="text-xs text-muted-foreground block">Reason</span>
+                            <p className="text-sm">{canceledRecord.reason}</p>
+                          </div>
+                        )}
+                        {canceledRecord.wasDeclined && canceledRecord.declinedAt && (
+                          <div className="pt-1 border-t border-orange-200 dark:border-orange-800">
+                            <span className="text-xs text-muted-foreground block">Declined Date</span>
+                            <p className="text-sm">{format(new Date(canceledRecord.declinedAt), 'dd MMM yyyy')}</p>
+                          </div>
+                        )}
+                        {canceledRecord.rescheduleCount > 1 && (
+                          <div className="text-xs text-muted-foreground">
+                            Rescheduled {canceledRecord.rescheduleCount} time{canceledRecord.rescheduleCount !== 1 ? 's' : ''}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   {/* Contact & Medical in 2 columns */}
                   <div className="grid grid-cols-2 gap-4 border-t pt-3">
                     {/* Contact Information */}
