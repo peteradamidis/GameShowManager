@@ -18,7 +18,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./db-init";
-import { warmupDatabaseConnection, fixPhoneNumbers } from "./storage";
+import { warmupDatabaseConnection, fixPhoneNumbers, fixContestantStatuses } from "./storage";
 import { startBackupScheduler } from "./backup-scheduler";
 import { getSessionConfig, createDefaultAdmin } from "./auth";
 
@@ -151,6 +151,10 @@ app.use((req, res, next) => {
           // Fix phone numbers with missing 0 prefix (Australian mobiles starting with 4)
           console.log('Step 5.5: Checking phone numbers...');
           await fixPhoneNumbers();
+
+          // Reconcile contestant statuses — any seated contestant must be 'assigned'
+          console.log('Step 5.6: Reconciling contestant statuses...');
+          await fixContestantStatuses();
           
           // Start automatic backup scheduler after database is ready
           console.log('Step 6: Starting automatic backup scheduler...');

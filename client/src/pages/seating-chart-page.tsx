@@ -4090,9 +4090,17 @@ export default function SeatingChartPage() {
                       </div>
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Status</label>
-                        <Badge variant="outline" className="text-xs">
-                          {contestant.availabilityStatus || 'Unknown'}
-                        </Badge>
+                        {(() => {
+                          // Derive effective status from actual seat assignment data
+                          // so stale availabilityStatus fields don't mislead
+                          const isSeated = (allSeatAssignments as any[]).some((a: any) => a.contestantId === contestant.id);
+                          const effectiveStatus = isSeated ? 'assigned' : (contestant.availabilityStatus || 'unknown');
+                          return (
+                            <Badge variant="outline" className="text-xs capitalize">
+                              {effectiveStatus}
+                            </Badge>
+                          );
+                        })()}
                       </div>
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Rating</label>

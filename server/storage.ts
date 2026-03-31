@@ -172,6 +172,39 @@ export async function warmupDatabaseConnection(): Promise<boolean> {
 }
 
 // Fix phone numbers that start with 4 (missing Australian 0 prefix)
+export async function fixContestantStatuses(): Promise<number> {
+  if (!pool) {
+    console.log('  [Fix Status] No pool available');
+    return 0;
+  }
+  try {
+    const database = getDb();
+    const allAssignments = await database.select({ contestantId: seatAssignments.contestantId }).from(seatAssignments);
+    const seatedIds = new Set(allAssignments.map(a => a.contestantId));
+    if (seatedIds.size === 0) return 0;
+    const allContestants = await database.select().from(contestants);
+    const toFix = allContestants.filter(c =>
+      seatedIds.has(c.id) && c.availabilityStatus !== 'assigned'
+    );
+    if (toFix.length === 0) {
+      console.log('  [Fix Status] All contestant statuses are correct');
+      return 0;
+    }
+    console.log(`  [Fix Status] Fixing ${toFix.length} contestants with stale status...`);
+    for (const contestant of toFix) {
+      await database
+        .update(contestants)
+        .set({ availabilityStatus: 'assigned' })
+        .where(eq(contestants.id, contestant.id));
+    }
+    console.log(`  [Fix Status] Fixed ${toFix.length} contestant statuses to 'assigned'`);
+    return toFix.length;
+  } catch (error) {
+    console.error('  [Fix Status] Error fixing contestant statuses:', error);
+    return 0;
+  }
+}
+
 export async function fixPhoneNumbers(): Promise<number> {
   if (!pool) {
     console.log('  [Fix Phone] No pool available');
