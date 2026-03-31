@@ -383,12 +383,13 @@ export default function SeatingChartPage() {
   const [filterStandby, setFilterStandby] = useState<string>("all");
   const [filterWithin20km, setFilterWithin20km] = useState(false);
   const [filterWithin60km, setFilterWithin60km] = useState(false);
+  const [filterOver60km, setFilterOver60km] = useState(false);
   const [filterAllGroupAvailable, setFilterAllGroupAvailable] = useState(false);
   
   // Reset page when filters or search changes
   useEffect(() => {
     setContestantPage(1);
-  }, [debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km, filterAllGroupAvailable]);
+  }, [debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km, filterOver60km, filterAllGroupAvailable]);
 
   useEffect(() => {
     setOverflowPage(1);
@@ -916,6 +917,10 @@ export default function SeatingChartPage() {
         const distanceInfo = getDistanceFromDocklands(c.location);
         if (!distanceInfo || distanceInfo.isOver60km) return false;
       }
+      if (filterOver60km) {
+        const distanceInfo = getDistanceFromDocklands(c.location);
+        if (!distanceInfo || !distanceInfo.isOver60km) return false;
+      }
 
       // All group members available filter
       if (filterAllGroupAvailable && availableNameSet && !isSoloContestant(c.attendingWith)) {
@@ -928,7 +933,7 @@ export default function SeatingChartPage() {
       
       return true;
     });
-  }, [availableContestants, debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km, filterAllGroupAvailable]);
+  }, [availableContestants, debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km, filterOver60km, filterAllGroupAvailable]);
 
   // Check if record day is locked (RX Day Mode)
   const isLocked = currentRecordDay?.lockedAt != null;
@@ -2903,6 +2908,17 @@ export default function SeatingChartPage() {
                       />
                       <label htmlFor="filter-within-60km" className="text-xs cursor-pointer whitespace-nowrap">
                         Within 60km
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Checkbox
+                        id="filter-over-60km"
+                        checked={filterOver60km}
+                        onCheckedChange={(checked) => setFilterOver60km(checked as boolean)}
+                        data-testid="checkbox-filter-over-60km"
+                      />
+                      <label htmlFor="filter-over-60km" className="text-xs cursor-pointer whitespace-nowrap">
+                        Over 60km
                       </label>
                     </div>
                     <div className="flex items-center gap-1.5">

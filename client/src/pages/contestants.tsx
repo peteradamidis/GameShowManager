@@ -144,6 +144,7 @@ export default function Contestants() {
   const [filterPodiumStory, setFilterPodiumStory] = useState(false);
   const [filterWithin60km, setFilterWithin60km] = useState(false);
   const [filterWithin20km, setFilterWithin20km] = useState(false);
+  const [filterOver60km, setFilterOver60km] = useState(false);
   const [filterAllGroupAvailable, setFilterAllGroupAvailable] = useState(false);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [deleteConfirmStep, setDeleteConfirmStep] = useState<1 | 2>(1);
@@ -557,6 +558,14 @@ export default function Contestants() {
     });
   }
 
+  // Apply over 60km from Docklands filter
+  if (filterOver60km) {
+    displayedContestants = displayedContestants.filter(c => {
+      const distanceInfo = getDistanceFromDocklands(c.location);
+      return distanceInfo !== null && distanceInfo.isOver60km;
+    });
+  }
+
   // Apply search filter (searches across ALL pages before pagination)
   if (searchTerm.trim()) {
     const search = searchTerm.toLowerCase();
@@ -572,7 +581,7 @@ export default function Contestants() {
   // Reset page when filters or search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus, filterGroupSize, filterState, filterAllGroupAvailable, searchTerm]);
+  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus, filterGroupSize, filterState, filterAllGroupAvailable, filterOver60km, searchTerm]);
 
   // Pagination calculations
   const totalPages = Math.ceil(displayedContestants.length / ITEMS_PER_PAGE);
@@ -1414,7 +1423,7 @@ export default function Contestants() {
 
           {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
             filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || 
-            filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km || filterWithin20km || filterAllGroupAvailable) && (
+            filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km || filterWithin20km || filterOver60km || filterAllGroupAvailable) && (
             <Button 
               variant="outline" 
               onClick={() => {
@@ -1432,6 +1441,7 @@ export default function Contestants() {
                 setFilterPodiumStory(false);
                 setFilterWithin60km(false);
                 setFilterWithin20km(false);
+                setFilterOver60km(false);
                 setFilterAllGroupAvailable(false);
               }}
               data-testid="button-clear-filters"
@@ -1660,6 +1670,23 @@ export default function Contestants() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Checkbox
+                    id="filter-over-60km"
+                    checked={filterOver60km}
+                    onCheckedChange={(checked) => {
+                      setSelectedContestants([]);
+                      setFilterOver60km(checked as boolean);
+                    }}
+                    data-testid="checkbox-filter-over-60km"
+                  />
+                  <label 
+                    htmlFor="filter-over-60km"
+                    className="text-sm font-medium cursor-pointer"
+                  >
+                    Over 60km
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
                     id="filter-all-group-available"
                     checked={filterAllGroupAvailable}
                     onCheckedChange={(checked) => {
@@ -1684,7 +1711,7 @@ export default function Contestants() {
       {/* Results Summary */}
       {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
         filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || 
-        filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km || filterWithin20km || filterAllGroupAvailable) && (
+        filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km || filterWithin20km || filterOver60km || filterAllGroupAvailable) && (
         <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="secondary" data-testid="badge-filter-count">
             {displayedContestants.length} contestant{displayedContestants.length !== 1 ? 's' : ''}
@@ -1738,6 +1765,11 @@ export default function Contestants() {
           {filterWithin60km && (
             <Badge variant="outline">
               Within 60km of Docklands
+            </Badge>
+          )}
+          {filterOver60km && (
+            <Badge variant="outline">
+              Over 60km from Docklands
             </Badge>
           )}
           {filterAllGroupAvailable && (
