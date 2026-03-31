@@ -853,16 +853,25 @@ export default function SeatingChartPage() {
   // Filter available contestants by search term and filters
   const filteredContestants = useMemo(() => {
     // For the group-available filter we need to check against ALL record days, not just
-    // the current one. Build a set of contestant IDs who are seated on ANY record day.
-    const globallySeatedIds = filterAllGroupAvailable
-      ? new Set((allSeatAssignments as any[]).map((a: any) => a.contestantId))
+    // the current one. Build a set of contestant IDs who are seated or actively on standby.
+    const globallyUnavailableIds = filterAllGroupAvailable
+      ? (() => {
+          const ids = new Set<string>();
+          // Seated on any record day
+          (allSeatAssignments as any[]).forEach((a: any) => ids.add(a.contestantId));
+          // Active standby on any record day (exclude inactive/stale entries)
+          (allStandbys as any[])
+            .filter((s: any) => !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled' && s.status !== 'attended')
+            .forEach((s: any) => ids.add(s.contestantId));
+          return ids;
+        })()
       : null;
 
-    // Normalized name set of all contestants who are NOT seated on any day at all
-    const globallyAvailableNameSet = (filterAllGroupAvailable && globallySeatedIds)
+    // Normalized name set of all contestants who are NOT seated or on standby anywhere
+    const globallyAvailableNameSet = (filterAllGroupAvailable && globallyUnavailableIds)
       ? new Set(
           (allContestants as any[])
-            .filter((c: any) => !globallySeatedIds.has(c.id))
+            .filter((c: any) => !globallyUnavailableIds.has(c.id))
             .map((c: any) => normalizeName(c.name || ''))
             .filter(Boolean)
         )
@@ -944,7 +953,7 @@ export default function SeatingChartPage() {
       
       return true;
     });
-  }, [availableContestants, allSeatAssignments, allContestants, debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km, filterOver60km, filterAllGroupAvailable]);
+  }, [availableContestants, allSeatAssignments, allStandbys, allContestants, debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km, filterOver60km, filterAllGroupAvailable]);
 
   // Check if record day is locked (RX Day Mode)
   const isLocked = currentRecordDay?.lockedAt != null;

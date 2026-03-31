@@ -502,12 +502,19 @@ export default function Contestants() {
   }
 
   // All group members available filter: only show contestants where every group partner
-  // is also not currently seated on any record day (checked against actual seat assignments)
+  // is also not currently seated OR on active standby on any record day
   if (filterAllGroupAvailable) {
-    const seatedIds = new Set((allSeatAssignments as any[]).map((sa: any) => sa.contestantId));
-    const unseatedNameSet = new Set(
+    const unavailableIds = new Set<string>();
+    // Seated on any record day
+    (allSeatAssignments as any[]).forEach((sa: any) => unavailableIds.add(sa.contestantId));
+    // Active standby on any record day (exclude stale/inactive entries)
+    (allStandbys as any[])
+      .filter((s: any) => !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled' && s.status !== 'attended')
+      .forEach((s: any) => unavailableIds.add(s.contestantId));
+
+    const availableNameSet = new Set(
       contestants
-        .filter((c: any) => !seatedIds.has(c.id))
+        .filter((c: any) => !unavailableIds.has(c.id))
         .map((c: any) => normalizeName(c.name || ''))
         .filter(Boolean)
     );
@@ -515,7 +522,7 @@ export default function Contestants() {
       // Solo contestants always pass
       if (isSoloContestant(c.attendingWith)) return true;
       const partnerNames = getPartnerNames(c.attendingWith);
-      return partnerNames.every(pName => unseatedNameSet.has(normalizeName(pName)));
+      return partnerNames.every(pName => availableNameSet.has(normalizeName(pName)));
     });
   }
 
