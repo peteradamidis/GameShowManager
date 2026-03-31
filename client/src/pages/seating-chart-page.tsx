@@ -852,9 +852,20 @@ export default function SeatingChartPage() {
 
   // Filter available contestants by search term and filters
   const filteredContestants = useMemo(() => {
-    // Build a normalized name set of all available contestants for group availability checking
-    const availableNameSet = filterAllGroupAvailable
-      ? new Set(availableContestants.map((ac: any) => normalizeName(ac.name || '')).filter(Boolean))
+    // For the group-available filter we need to check against ALL record days, not just
+    // the current one. Build a set of contestant IDs who are seated on ANY record day.
+    const globallySeatedIds = filterAllGroupAvailable
+      ? new Set((allSeatAssignments as any[]).map((a: any) => a.contestantId))
+      : null;
+
+    // Normalized name set of all contestants who are NOT seated on any day at all
+    const globallyAvailableNameSet = (filterAllGroupAvailable && globallySeatedIds)
+      ? new Set(
+          (allContestants as any[])
+            .filter((c: any) => !globallySeatedIds.has(c.id))
+            .map((c: any) => normalizeName(c.name || ''))
+            .filter(Boolean)
+        )
       : null;
 
     return availableContestants.filter((c: any) => {
@@ -922,18 +933,18 @@ export default function SeatingChartPage() {
         if (!distanceInfo || !distanceInfo.isOver60km) return false;
       }
 
-      // All group members available filter
-      if (filterAllGroupAvailable && availableNameSet && !isSoloContestant(c.attendingWith)) {
+      // All group members available filter: all partners must be unseated on every record day
+      if (filterAllGroupAvailable && globallyAvailableNameSet && !isSoloContestant(c.attendingWith)) {
         const partnerNames = getPartnerNames(c.attendingWith);
         const allPartnersAvailable = partnerNames.every(pName =>
-          availableNameSet.has(normalizeName(pName))
+          globallyAvailableNameSet.has(normalizeName(pName))
         );
         if (!allPartnersAvailable) return false;
       }
       
       return true;
     });
-  }, [availableContestants, debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km, filterOver60km, filterAllGroupAvailable]);
+  }, [availableContestants, allSeatAssignments, allContestants, debouncedContestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km, filterOver60km, filterAllGroupAvailable]);
 
   // Check if record day is locked (RX Day Mode)
   const isLocked = currentRecordDay?.lockedAt != null;

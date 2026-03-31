@@ -502,11 +502,12 @@ export default function Contestants() {
   }
 
   // All group members available filter: only show contestants where every group partner
-  // is also unbooked (not currently assigned/confirmed to a seat on any record day)
+  // is also not currently seated on any record day (checked against actual seat assignments)
   if (filterAllGroupAvailable) {
-    const unbookedNameSet = new Set(
+    const seatedIds = new Set((allSeatAssignments as any[]).map((sa: any) => sa.contestantId));
+    const unseatedNameSet = new Set(
       contestants
-        .filter((c: any) => c.availabilityStatus !== 'assigned' && c.availabilityStatus !== 'confirmed')
+        .filter((c: any) => !seatedIds.has(c.id))
         .map((c: any) => normalizeName(c.name || ''))
         .filter(Boolean)
     );
@@ -514,7 +515,7 @@ export default function Contestants() {
       // Solo contestants always pass
       if (isSoloContestant(c.attendingWith)) return true;
       const partnerNames = getPartnerNames(c.attendingWith);
-      return partnerNames.every(pName => unbookedNameSet.has(normalizeName(pName)));
+      return partnerNames.every(pName => unseatedNameSet.has(normalizeName(pName)));
     });
   }
 
