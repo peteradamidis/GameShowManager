@@ -4993,7 +4993,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : 'another day';
         
         if (isOnLockedDay && allowReturning) {
-          // Allowed - returning contestant
+          // Block returning if the contestant won money or prizes on their previous appearance
+          const sa = existingAssignment;
+          const hasWinnings =
+            (sa.winningMoneyAmount != null && sa.winningMoneyAmount > 0) ||
+            (sa.winningMoneyText && sa.winningMoneyText.trim()) ||
+            (sa.prize && sa.prize.trim());
+          let hasPrizeEntry = false;
+          if (!hasWinnings) {
+            const prizeEntries = await storage.getPrizeWinnersByContestant(contestantId);
+            hasPrizeEntry = prizeEntries.length > 0;
+          }
+          if (hasWinnings || hasPrizeEntry) {
+            return res.status(400).json({
+              error: `${contestant?.name || 'Contestant'} won money or prizes on a previous appearance and cannot be rebooked as a returning contestant.`,
+              isWinner: true,
+            });
+          }
+          // Allowed - returning contestant (no winnings)
         } else if (isOnLockedDay && !allowReturning) {
           const label = existingRecordDay?.rxNumber || dayName;
           return res.status(409).json({ 
@@ -5199,7 +5216,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : 'another day';
         
         if (isOnLockedDay && allowReturning) {
-          // Allowed - returning contestant
+          // Block returning if the contestant won money or prizes on their previous appearance
+          const sa = existingAssignment;
+          const hasWinnings =
+            (sa.winningMoneyAmount != null && sa.winningMoneyAmount > 0) ||
+            (sa.winningMoneyText && sa.winningMoneyText.trim()) ||
+            (sa.prize && sa.prize.trim());
+          let hasPrizeEntry = false;
+          if (!hasWinnings) {
+            const prizeEntries = await storage.getPrizeWinnersByContestant(contestantId);
+            hasPrizeEntry = prizeEntries.length > 0;
+          }
+          if (hasWinnings || hasPrizeEntry) {
+            return res.status(400).json({
+              error: `${contestant?.name || 'Contestant'} won money or prizes on a previous appearance and cannot be rebooked as a returning contestant.`,
+              isWinner: true,
+            });
+          }
+          // Allowed - returning contestant (no winnings)
         } else if (isOnLockedDay && !allowReturning) {
           const label = existingRecordDay?.rxNumber || dayName;
           return res.status(409).json({ 
@@ -9168,7 +9202,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : 'another day';
         
         if (isOnLockedDay && allowReturning) {
-          // Allowed - returning contestant
+          // Block returning if the contestant won money or prizes on their previous appearance
+          const sa = existingSeat;
+          const hasWinnings =
+            (sa.winningMoneyAmount != null && sa.winningMoneyAmount > 0) ||
+            (sa.winningMoneyText && sa.winningMoneyText.trim()) ||
+            (sa.prize && sa.prize.trim());
+          let hasPrizeEntry = false;
+          if (!hasWinnings) {
+            const prizeEntries = await storage.getPrizeWinnersByContestant(canceled.contestantId);
+            hasPrizeEntry = prizeEntries.length > 0;
+          }
+          if (hasWinnings || hasPrizeEntry) {
+            return res.status(400).json({
+              error: `${contestant?.name || 'Contestant'} won money or prizes on a previous appearance and cannot be rebooked as a returning contestant.`,
+              isWinner: true,
+            });
+          }
+          // Allowed - returning contestant (no winnings)
         } else if (isOnLockedDay && !allowReturning) {
           const label = existingRecordDay?.rxNumber || dayName;
           return res.status(409).json({ 
