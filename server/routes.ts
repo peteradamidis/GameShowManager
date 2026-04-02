@@ -12341,7 +12341,7 @@ Thank you.`;
       const updateData = { ...req.body };
       
       // Convert string dates to Date objects for workflow timestamp columns
-      const timestampFields = ['bookingEmailSent', 'confirmedRsvp', 'paperworkSent', 'paperworkReceived', 'paperworkOnDay', 'signedIn'];
+      const timestampFields = ['bookingEmailSent', 'confirmedRsvp', 'paperworkSent', 'paperworkReceived', 'paperworkOnDay', 'disclosureSent', 'disclosureReceived', 'signedIn'];
       for (const field of timestampFields) {
         if (updateData[field] && typeof updateData[field] === 'string') {
           updateData[field] = new Date(updateData[field]);

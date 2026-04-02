@@ -509,7 +509,8 @@ export default function BookingMaster() {
 
   const updateWorkflowMutation = useMutation({
     mutationFn: async ({ assignmentId, fields }: { assignmentId: string; fields: Partial<SeatAssignment> }) => {
-      return await apiRequest("PATCH", `/api/seat-assignments/${assignmentId}/workflow`, fields);
+      const res = await apiRequest("PATCH", `/api/seat-assignments/${assignmentId}/workflow`, fields);
+      return res.json() as Promise<SeatAssignment>;
     },
     onMutate: async ({ assignmentId, fields }) => {
       // Cancel any outgoing refetches to avoid overwriting optimistic update
@@ -533,6 +534,17 @@ export default function BookingMaster() {
       // Return context with the previous value for rollback
       return { previousAssignments };
     },
+    onSuccess: (updatedAssignment, { assignmentId }) => {
+      // Update the cache directly with the authoritative server response,
+      // bypassing any HTTP-cached 304 refetch that could serve stale data
+      queryClient.setQueryData<SeatAssignment[]>(
+        ['/api/seat-assignments', selectedRecordDay],
+        (old) => {
+          if (!Array.isArray(old)) return old;
+          return old.map(a => a.id === assignmentId ? updatedAssignment : a);
+        }
+      );
+    },
     onError: (err, variables, context) => {
       // Rollback on error
       if (context?.previousAssignments) {
@@ -548,8 +560,8 @@ export default function BookingMaster() {
       });
     },
     onSettled: () => {
-      // Invalidate ALL related queries for consistent state across tabs
-      queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false });
+      // Invalidate related queries for cross-page consistency
+      // Note: seat-assignments cache is already updated in onSuccess with the server response
       queryClient.invalidateQueries({ queryKey: ['/api/contestants'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/paperwork'], exact: false });
@@ -560,7 +572,8 @@ export default function BookingMaster() {
   // Mutation for updating standby workflow fields
   const updateStandbyWorkflowMutation = useMutation({
     mutationFn: async ({ standbyId, fields }: { standbyId: string; fields: Record<string, any> }) => {
-      return await apiRequest("PATCH", `/api/standbys/${standbyId}/workflow`, fields);
+      const res = await apiRequest("PATCH", `/api/standbys/${standbyId}/workflow`, fields);
+      return res.json() as Promise<StandbyAssignment>;
     },
     onMutate: async ({ standbyId, fields }) => {
       await queryClient.cancelQueries({ queryKey: ['/api/standbys'] });
@@ -573,6 +586,16 @@ export default function BookingMaster() {
       }
       return { previousStandbys };
     },
+    onSuccess: (updatedStandby, { standbyId }) => {
+      // Update the cache directly with the authoritative server response
+      queryClient.setQueryData<StandbyAssignment[]>(
+        ['/api/standbys'],
+        (old) => {
+          if (!Array.isArray(old)) return old;
+          return old.map(s => s.id === standbyId ? updatedStandby : s);
+        }
+      );
+    },
     onError: (err, variables, context) => {
       if (context?.previousStandbys) {
         queryClient.setQueryData(['/api/standbys'], context.previousStandbys);
@@ -584,8 +607,8 @@ export default function BookingMaster() {
       });
     },
     onSettled: () => {
-      // Invalidate all standby-related queries to sync with Paperwork Tracker
-      queryClient.invalidateQueries({ queryKey: ['/api/standbys'], exact: false });
+      // Invalidate related queries for cross-page consistency
+      // Note: standbys cache is already updated in onSuccess with the server response
       queryClient.invalidateQueries({ queryKey: ['/api/standbys/record-day'], exact: false });
       broadcastBookingChange(selectedRecordDay);
     },
