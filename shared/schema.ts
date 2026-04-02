@@ -109,6 +109,8 @@ export const seatAssignments = pgTable("seat_assignments", {
   paperworkReceived: timestamp("paperwork_received"),
   paperworkReceivedBy: text("paperwork_received_by"), // Who logged the received paperwork
   paperworkOnDay: timestamp("paperwork_on_day"),
+  disclosureSent: timestamp("disclosure_sent"),
+  disclosureReceived: timestamp("disclosure_received"),
   signedIn: timestamp("signed_in"),
   otdNotes: text("otd_notes"),
   standbyReplacementSwaps: text("standby_replacement_swaps"),
@@ -192,6 +194,8 @@ export const canceledAssignments = pgTable("canceled_assignments", {
   paperworkReceived: timestamp("paperwork_received"),
   paperworkReceivedBy: text("paperwork_received_by"),
   paperworkOnDay: timestamp("paperwork_on_day"), // Paperwork completed on the day
+  disclosureSent: timestamp("disclosure_sent"),
+  disclosureReceived: timestamp("disclosure_received"),
   hnGiftcard: boolean("hn_giftcard").default(sql`false`),
   
   // Standby block type tracking - when standby was originally seated
@@ -301,6 +305,8 @@ export const standbyAssignments = pgTable("standby_assignments", {
   paperworkReceived: timestamp("paperwork_received"),
   paperworkReceivedBy: text("paperwork_received_by"),
   paperworkOnDay: timestamp("paperwork_on_day"),
+  disclosureSent: timestamp("disclosure_sent"),
+  disclosureReceived: timestamp("disclosure_received"),
   signedIn: timestamp("signed_in"),
   otdNotes: text("otd_notes"),
   standbyMovementNotes: text("standby_movement_notes"), // Notes about standby movement (e.g., "Replaced players")

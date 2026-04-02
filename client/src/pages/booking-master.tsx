@@ -91,6 +91,8 @@ const COLUMN_CONFIG = [
   { id: "rsvp", label: "RSVP", alwaysVisible: false },
   { id: "paperSent", label: "PAPER SENT", alwaysVisible: false },
   { id: "paperReceived", label: "PAPER ✓", alwaysVisible: false },
+  { id: "disclosureSent", label: "DISCLOSURE SENT", alwaysVisible: false },
+  { id: "disclosureReceived", label: "DISCLOSURE RECV", alwaysVisible: false },
   { id: "otdHardCopy", label: "OTD PAPER WORK", alwaysVisible: false },
   { id: "signedIn", label: "SIGNED IN", alwaysVisible: false },
   { id: "otdNotes", label: "OTD NOTES", alwaysVisible: false },
@@ -117,6 +119,8 @@ const DEFAULT_VISIBLE_COLUMNS: Record<ColumnId, boolean> = {
   rsvp: true,
   paperSent: true,
   paperReceived: true,
+  disclosureSent: true,
+  disclosureReceived: true,
   otdHardCopy: true,
   signedIn: true,
   otdNotes: true,
@@ -136,6 +140,8 @@ const CHECK_IN_COLUMNS: ColumnId[] = [
   "notes",
   "paperSent",
   "paperReceived",
+  "disclosureSent",
+  "disclosureReceived",
   "otdHardCopy",
   "signedIn",
   "otdNotes",
@@ -197,6 +203,8 @@ interface SeatAssignment {
   paperworkSent?: string;
   paperworkReceived?: string;
   paperworkOnDay?: string;
+  disclosureSent?: string;
+  disclosureReceived?: string;
   signedIn?: string;
   otdNotes?: string;
   standbyReplacementSwaps?: string;
@@ -240,6 +248,8 @@ interface StandbyAssignment {
   paperworkSent: string | null;
   paperworkReceived: string | null;
   paperworkOnDay: string | null;
+  disclosureSent: string | null;
+  disclosureReceived: string | null;
   signedIn: string | null;
   otdNotes: string | null;
   standbyMovementNotes: string | null;
@@ -853,6 +863,8 @@ export default function BookingMaster() {
       paperworkSent: "Paperwork Sent",
       paperworkReceived: "Paperwork Received",
       paperworkOnDay: "OTD Paperwork",
+      disclosureSent: "Disclosure Sent",
+      disclosureReceived: "Disclosure Received",
       signedIn: "Signed In",
     };
     return labels[field] || field;
@@ -1036,6 +1048,8 @@ export default function BookingMaster() {
         row.assignment?.confirmedRsvp ? "✓" : "",
         row.assignment?.paperworkSent ? "✓" : "",
         row.assignment?.paperworkReceived ? "✓" : "",
+        row.assignment?.disclosureSent ? "✓" : "",
+        row.assignment?.disclosureReceived ? "✓" : "",
         row.assignment?.paperworkOnDay ? "✓" : "",
         row.assignment?.signedIn ? "✓" : "",
         row.assignment?.otdNotes || "",
@@ -1073,6 +1087,8 @@ export default function BookingMaster() {
           standby.confirmedRsvp ? "✓" : "",
           standby.paperworkSent ? "✓" : "",
           standby.paperworkReceived ? "✓" : "",
+          standby.disclosureSent ? "✓" : "",
+          standby.disclosureReceived ? "✓" : "",
           standby.paperworkOnDay ? "✓" : "",
           standby.signedIn ? "✓" : "",
           standby.otdNotes || "",
@@ -1390,6 +1406,8 @@ export default function BookingMaster() {
                   {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">CONFIRM<br/>ED RSVP</TableHead>}
                   {isColumnVisible("paperSent") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">PAPER<br/>WORK<br/>SENT</TableHead>}
                   {isColumnVisible("paperReceived") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">PAPER<br/>WORK<br/>RECV<br/>& LOGGED</TableHead>}
+                  {isColumnVisible("disclosureSent") && <TableHead className="sticky top-0 bg-cyan-200 dark:bg-cyan-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-cyan-900 dark:text-white font-semibold border-r border-cyan-300 dark:border-cyan-600">DISC<br/>SURE<br/>SENT</TableHead>}
+                  {isColumnVisible("disclosureReceived") && <TableHead className="sticky top-0 bg-cyan-200 dark:bg-cyan-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-cyan-900 dark:text-white font-semibold border-r border-cyan-300 dark:border-cyan-600">DISC<br/>SURE<br/>RECV</TableHead>}
                   {isColumnVisible("otdHardCopy") && <TableHead className="sticky top-0 bg-amber-400 dark:bg-amber-700 z-50 text-[10px] py-1 px-2 text-center w-14 text-amber-900 dark:text-white font-semibold border-r border-amber-500 dark:border-amber-600">OTD<br/>PAPER<br/>WORK</TableHead>}
                   {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-green-200 dark:bg-green-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-green-900 dark:text-white font-semibold border-r border-green-300 dark:border-green-600">SIGNED<br/>IN</TableHead>}
                   {isColumnVisible("otdNotes") && <TableHead className="sticky top-0 bg-purple-200 dark:bg-purple-800 z-50 text-[10px] py-1 px-2 text-center min-w-[120px] text-purple-900 dark:text-white font-semibold border-r border-purple-300 dark:border-purple-600">OTD NOTES</TableHead>}
@@ -1631,6 +1649,26 @@ export default function BookingMaster() {
                             />
                           </TableCell>
                         )}
+                        {isColumnVisible("disclosureSent") && (
+                          <TableCell className="py-0.5 h-7 text-center border-r border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950/20">
+                            <Checkbox
+                              checked={!!standby.disclosureSent}
+                              onCheckedChange={() => handleStandbyCheckboxToggle(standby.id, 'disclosureSent', standby.disclosureSent, standby.contestant.name)}
+                              className="h-4 w-4"
+                              data-testid={`checkbox-standby-disclosure-sent-${standby.id}`}
+                            />
+                          </TableCell>
+                        )}
+                        {isColumnVisible("disclosureReceived") && (
+                          <TableCell className="py-0.5 h-7 text-center border-r border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950/20">
+                            <Checkbox
+                              checked={!!standby.disclosureReceived}
+                              onCheckedChange={() => handleStandbyCheckboxToggle(standby.id, 'disclosureReceived', standby.disclosureReceived, standby.contestant.name)}
+                              className="h-4 w-4"
+                              data-testid={`checkbox-standby-disclosure-recv-${standby.id}`}
+                            />
+                          </TableCell>
+                        )}
                         {isColumnVisible("otdHardCopy") && (
                           <TableCell className="py-0.5 h-7 text-center border-r border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20">
                             <Checkbox
@@ -1712,6 +1750,8 @@ export default function BookingMaster() {
                   {isColumnVisible("rsvp") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">CONFIRM<br/>ED RSVP</TableHead>}
                   {isColumnVisible("paperSent") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">PAPER<br/>WORK<br/>SENT</TableHead>}
                   {isColumnVisible("paperReceived") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">PAPER<br/>WORK<br/>RECEIVED<br/>& LOGGED</TableHead>}
+                  {isColumnVisible("disclosureSent") && <TableHead className="sticky top-0 bg-cyan-200 dark:bg-cyan-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-cyan-900 dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">DISC<br/>SURE<br/>SENT</TableHead>}
+                  {isColumnVisible("disclosureReceived") && <TableHead className="sticky top-0 bg-cyan-200 dark:bg-cyan-800 z-50 text-[10px] py-1 px-2 text-center w-14 text-cyan-900 dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">DISC<br/>SURE<br/>RECV</TableHead>}
                   {isColumnVisible("otdHardCopy") && <TableHead className="sticky top-0 bg-[#f59e0b] dark:bg-[#b45309] z-50 text-[10px] py-1 px-2 text-center w-14 text-white font-semibold border-r border-gray-300 dark:border-gray-600">OTD<br/>PAPER<br/>WORK</TableHead>}
                   {isColumnVisible("signedIn") && <TableHead className="sticky top-0 bg-[#a8d4a8] dark:bg-[#2a5a3a] z-50 text-[10px] py-1 px-2 text-center w-14 text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">SIGNED<br/>IN</TableHead>}
                   {isColumnVisible("otdNotes") && <TableHead className="sticky top-0 bg-[#b8d4d4] dark:bg-[#2a5a5a] z-50 text-[10px] py-1 px-2 text-center text-[#00363a] dark:text-white font-semibold border-r border-gray-300 dark:border-gray-600">OTD<br/>NOTES</TableHead>}
@@ -2033,6 +2073,30 @@ export default function BookingMaster() {
                                 checked={!!row.assignment.paperworkReceived}
                                 onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "paperworkReceived", row.assignment!.paperworkReceived)}
                                 data-testid={`checkbox-paperwork-received-${row.seatId}`}
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("disclosureSent") && (
+                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-cyan-50 dark:bg-cyan-950/30 border-r border-gray-200 dark:border-gray-700">
+                            {row.assignment && (
+                              <Checkbox
+                                checked={!!row.assignment.disclosureSent}
+                                onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "disclosureSent", row.assignment!.disclosureSent)}
+                                className="border-cyan-600 data-[state=checked]:bg-cyan-600 data-[state=checked]:border-cyan-600"
+                                data-testid={`checkbox-disclosure-sent-${row.seatId}`}
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        {isColumnVisible("disclosureReceived") && (
+                          <TableCell className="text-center px-3 w-16 py-0.5 h-7 bg-cyan-50 dark:bg-cyan-950/30 border-r border-gray-200 dark:border-gray-700">
+                            {row.assignment && (
+                              <Checkbox
+                                checked={!!row.assignment.disclosureReceived}
+                                onCheckedChange={() => handleCheckboxToggle(row.assignment!.id, "disclosureReceived", row.assignment!.disclosureReceived)}
+                                className="border-cyan-600 data-[state=checked]:bg-cyan-600 data-[state=checked]:border-cyan-600"
+                                data-testid={`checkbox-disclosure-received-${row.seatId}`}
                               />
                             )}
                           </TableCell>

@@ -8183,7 +8183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'firstNations', 'rating', 'location', 'medicalQuestion', 
         'criminalBankruptcy', 'castingCategory', 'notes', 
         'bookingEmailSent', 'confirmedRsvp', 'paperworkSent', 
-        'paperworkReceived', 'paperworkOnDay', 'signedIn', 'otdNotes', 'standbyReplacementSwaps',
+        'paperworkReceived', 'paperworkOnDay', 'disclosureSent', 'disclosureReceived', 'signedIn', 'otdNotes', 'standbyReplacementSwaps',
         'rxNumber', 'rxEpNumber', 'caseNumber', 'winningMoneyRole', 'winningMoneyAmount',
         'caseAmount', 'quickCash', 'bankOfferTaken', 'spinTheWheel', 'prize',
         'txNumber', 'txDate', 'notifiedOfTx', 'photosSent',
@@ -8195,7 +8195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const timestampFields = [
         'bookingEmailSent', 'confirmedRsvp', 'paperworkSent', 
-        'paperworkReceived', 'paperworkOnDay', 'signedIn', 'emailsCopiedAt', 'calledAt'
+        'paperworkReceived', 'paperworkOnDay', 'disclosureSent', 'disclosureReceived', 'signedIn', 'emailsCopiedAt', 'calledAt'
       ];
       
       // PROTECTION: Check if bookingEmailSent is being cleared - this is NOT allowed once set
@@ -9133,11 +9133,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const allowedFields = [
         'paperworkSent', 'paperworkSentBy', 'paperworkReceived', 'paperworkReceivedBy', 'paperworkOnDay',
+        'disclosureSent', 'disclosureReceived',
         'bookingEmailSent', 'confirmedRsvp', 'wasDeclined', 'declinedAt', 'declinedBy', 'reason'
       ];
       
       // Date fields that need conversion from ISO strings to Date objects
-      const dateFields = ['paperworkSent', 'paperworkReceived', 'paperworkOnDay', 'bookingEmailSent', 'confirmedRsvp', 'declinedAt'];
+      const dateFields = ['paperworkSent', 'paperworkReceived', 'paperworkOnDay', 'disclosureSent', 'disclosureReceived', 'bookingEmailSent', 'confirmedRsvp', 'declinedAt'];
       
       const updateData: Record<string, any> = {};
       for (const field of allowedFields) {
@@ -12257,7 +12258,7 @@ Thank you.`;
         'confirmedAt', 'standbyEmailSent', 'standbyTicketSent', 
         'assignedAt', 'movedToRescheduleAt', 'bookingEmailSent', 
         'confirmedRsvp', 'paperworkSent', 'paperworkReceived', 
-        'paperworkOnDay', 'signedIn'
+        'paperworkOnDay', 'disclosureSent', 'disclosureReceived', 'signedIn'
       ];
 
       for (const field of timestampFields) {
