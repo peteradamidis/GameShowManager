@@ -938,6 +938,8 @@ export class DbStorage implements IStorage {
       emailsCopiedAt: workflowFields.emailsCopiedAt,
       called: workflowFields.called,
       calledAt: workflowFields.calledAt,
+      disclosureSent: workflowFields.disclosureSent,
+      disclosureReceived: workflowFields.disclosureReceived,
     };
 
     const fieldsToUpdate = Object.fromEntries(
@@ -969,11 +971,12 @@ export class DbStorage implements IStorage {
       mobilityNotesOverride: 'mobility_notes_override',
       emailsCopiedAt: 'emails_copied_at', called: 'called', calledAt: 'called_at',
       quickCash: 'quick_cash',
+      disclosureSent: 'disclosure_sent', disclosureReceived: 'disclosure_received',
     };
 
     const realColumns = new Set(['caseAmount', 'quickCash', 'winningMoneyAmount']);
     const booleanColumns = new Set(['bankOfferTaken', 'spinTheWheel', 'hnGiftcard', 'called', 'notifiedOfTx', 'photosSent']);
-    const timestampColumns = new Set(['bookingEmailSent', 'confirmedRsvp', 'ticketEmailSent', 'paperworkSent', 'paperworkReceived', 'paperworkOnDay', 'signedIn', 'emailsCopiedAt', 'calledAt']);
+    const timestampColumns = new Set(['bookingEmailSent', 'confirmedRsvp', 'ticketEmailSent', 'paperworkSent', 'paperworkReceived', 'paperworkOnDay', 'signedIn', 'emailsCopiedAt', 'calledAt', 'disclosureSent', 'disclosureReceived']);
 
     const setClauses: string[] = [];
     const params: any[] = [];
