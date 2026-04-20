@@ -1731,7 +1731,7 @@ export default function SeatingChartPage() {
     : [];
   const canSeatGroupTogether = adjacentSeats.length >= groupMembersToSeat.length;
 
-  const handleAssignContestantWithReturning = async (skipPostcodeWarning = false) => {
+  const handleAssignContestantWithReturning = async (skipPostcodeWarning = false, allowWinner = false) => {
     if (!selectedContestant || !selectedBlock || !selectedSeat) return;
 
     try {
@@ -1746,6 +1746,7 @@ export default function SeatingChartPage() {
               seatLabel: seatsToUse[i],
               skipPostcodeWarning,
               allowReturning: true,
+              allowWinner,
             });
           } catch (memberError: any) {
             // If this member is already seated (from the previous partial attempt), skip them
@@ -1764,6 +1765,7 @@ export default function SeatingChartPage() {
           seatLabel: selectedSeat,
           skipPostcodeWarning,
           allowReturning: true,
+          allowWinner,
         });
       }
 
@@ -1780,9 +1782,31 @@ export default function SeatingChartPage() {
       setSelectedContestant("");
       setSeatGroupTogether(false);
     } catch (error: any) {
+      // Parse JSON error body to check for isWinner flag
+      let parsedError: any = null;
+      try {
+        const errorMsg = error?.message || '';
+        const jsonMatch = errorMsg.match(/^\d+:\s*(.+)$/);
+        if (jsonMatch) parsedError = JSON.parse(jsonMatch[1]);
+      } catch (e) {}
+
+      if (parsedError?.isWinner) {
+        const name = parsedError.contestantName || 'This contestant';
+        const amount = parsedError.winnerAmount != null && parsedError.winnerAmount > 0
+          ? `$${Number(parsedError.winnerAmount).toLocaleString()}`
+          : parsedError.winnerText || 'an amount';
+        const confirmed = window.confirm(
+          `PRIZE CASE WINNER\n\n${name} previously won ${amount} in prize case winnings.\n\nDo you still want to rebook them as a returning contestant?`
+        );
+        if (confirmed) {
+          handleAssignContestantWithReturning(skipPostcodeWarning, true);
+        }
+        return;
+      }
+
       toast({
         title: "Assignment failed",
-        description: error?.message || "Could not assign returning contestant.",
+        description: parsedError?.error || error?.message || "Could not assign returning contestant.",
         variant: "destructive",
       });
     }
@@ -3629,19 +3653,72 @@ export default function SeatingChartPage() {
                         }
                         if (parsed.isReturning) {
                           if (confirm(`RETURNING CONTESTANT\n\n${parsed.contestantName || 'This contestant'} previously appeared on ${parsed.previousLabel || parsed.previousDay || 'a completed episode'}.\n\nDo you want to add them as returning overflow?`)) {
+                            try {
+                              await apiRequest("POST", "/api/seat-assignments/overflow", {
+                                recordDayId,
+                                contestantId: selectedOverflowContestant,
+                                allowReturning: true,
+                              });
+                              refetch();
+                              queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+                              queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+                              queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] });
+                              toast({
+                                title: "Returning contestant added",
+                                description: `${contestant?.name || 'Contestant'} added to overflow seating as returning contestant`,
+                              });
+                              setSelectedOverflowContestant(null);
+                              setOverflowDialogOpen(false);
+                            } catch (innerErr: any) {
+                              let innerParsed: any = null;
+                              try {
+                                const m = (innerErr?.message || '').match(/^\d+:\s*(.+)$/);
+                                if (m) innerParsed = JSON.parse(m[1]);
+                              } catch (e) {}
+                              if (innerParsed?.isWinner) {
+                                const name = innerParsed.contestantName || 'This contestant';
+                                const amount = innerParsed.winnerAmount != null && innerParsed.winnerAmount > 0
+                                  ? `$${Number(innerParsed.winnerAmount).toLocaleString()}`
+                                  : innerParsed.winnerText || 'an amount';
+                                if (confirm(`PRIZE CASE WINNER\n\n${name} previously won ${amount} in prize case winnings.\n\nDo you still want to add them as returning overflow?`)) {
+                                  await apiRequest("POST", "/api/seat-assignments/overflow", {
+                                    recordDayId,
+                                    contestantId: selectedOverflowContestant,
+                                    allowReturning: true,
+                                    allowWinner: true,
+                                  });
+                                  refetch();
+                                  queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+                                  queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
+                                  queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] });
+                                  toast({ title: "Returning contestant added", description: `${name} added to overflow seating` });
+                                  setSelectedOverflowContestant(null);
+                                  setOverflowDialogOpen(false);
+                                }
+                              } else {
+                                toast({ title: "Error", description: innerParsed?.error || innerErr?.message || "Could not add contestant.", variant: "destructive" });
+                              }
+                            }
+                          }
+                          return;
+                        }
+                        if (parsed.isWinner) {
+                          const name = parsed.contestantName || 'This contestant';
+                          const amount = parsed.winnerAmount != null && parsed.winnerAmount > 0
+                            ? `$${Number(parsed.winnerAmount).toLocaleString()}`
+                            : parsed.winnerText || 'an amount';
+                          if (confirm(`PRIZE CASE WINNER\n\n${name} previously won ${amount} in prize case winnings.\n\nDo you still want to add them as returning overflow?`)) {
                             await apiRequest("POST", "/api/seat-assignments/overflow", {
                               recordDayId,
                               contestantId: selectedOverflowContestant,
                               allowReturning: true,
+                              allowWinner: true,
                             });
                             refetch();
                             queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
                             queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'] });
                             queryClient.invalidateQueries({ queryKey: ['/api/returning-contestants'] });
-                            toast({
-                              title: "Returning contestant added",
-                              description: `${contestant?.name || 'Contestant'} added to overflow seating as returning contestant`,
-                            });
+                            toast({ title: "Returning contestant added", description: `${name} added to overflow seating` });
                             setSelectedOverflowContestant(null);
                             setOverflowDialogOpen(false);
                           }

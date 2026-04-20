@@ -469,21 +469,37 @@ export default function ReschedulePage() {
           `RETURNING CONTESTANT\n\n${names} previously appeared on ${label}.\n\nDo you want to rebook them as returning contestant(s)?`
         );
         if (confirmed) {
-          try {
-            await Promise.all(returningMembers.map(({ member, index }) =>
-              apiRequest('POST', `/api/canceled-assignments/${member.id}/rebook`, {
-                recordDayId: selectedRecordDayId,
-                blockNumber: parseInt(selectedBlock),
-                seatLabel: seatsToUse[index],
-                allowReturning: true,
-              })
-            ));
-          } catch (retryError: any) {
-            toast({
-              title: "Rebooking failed",
-              description: retryError?.message || "Could not rebook returning contestant.",
-              variant: "destructive",
-            });
+          // Re-run with allowReturning; may still bounce with isWinner
+          const retryResults = await Promise.allSettled(returningMembers.map(({ member, index }) =>
+            apiRequest('POST', `/api/canceled-assignments/${member.id}/rebook`, {
+              recordDayId: selectedRecordDayId,
+              blockNumber: parseInt(selectedBlock),
+              seatLabel: seatsToUse[index],
+              allowReturning: true,
+            })
+          ));
+
+          // Check for isWinner among the retry failures
+          const winnerMembers: Array<{ member: any; index: number; contestantName: string; amount: string }> = [];
+          const retryHardFailures: string[] = [];
+          for (let i = 0; i < retryResults.length; i++) {
+            const r = retryResults[i];
+            if (r.status === 'rejected') {
+              let p: any = null;
+              try { const m = (r.reason?.message || '').match(/^\d+:\s*(.+)$/); if (m) p = JSON.parse(m[1]); } catch {}
+              if (p?.isWinner) {
+                const amt = p.winnerAmount != null && p.winnerAmount > 0
+                  ? `$${Number(p.winnerAmount).toLocaleString()}`
+                  : p.winnerText || 'an amount';
+                winnerMembers.push({ member: returningMembers[i].member, index: returningMembers[i].index, contestantName: p.contestantName || returningMembers[i].contestantName, amount: amt });
+              } else {
+                retryHardFailures.push(p?.error || r.reason?.message || 'Unknown error');
+              }
+            }
+          }
+
+          if (retryHardFailures.length > 0) {
+            toast({ title: "Rebooking failed", description: retryHardFailures[0], variant: "destructive" });
             await Promise.all([
               queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false }),
               queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false }),
@@ -491,7 +507,39 @@ export default function ReschedulePage() {
             await refetch();
             return;
           }
+
+          if (winnerMembers.length > 0) {
+            const winnerNames = winnerMembers.map(w => `${w.contestantName} (${w.amount})`).join(', ');
+            const winnerConfirmed = window.confirm(
+              `PRIZE CASE WINNER\n\n${winnerNames} previously won prize case money.\n\nDo you still want to rebook them as returning contestant(s)?`
+            );
+            if (winnerConfirmed) {
+              try {
+                await Promise.all(winnerMembers.map(({ member, index }) =>
+                  apiRequest('POST', `/api/canceled-assignments/${member.id}/rebook`, {
+                    recordDayId: selectedRecordDayId,
+                    blockNumber: parseInt(selectedBlock),
+                    seatLabel: seatsToUse[index],
+                    allowReturning: true,
+                    allowWinner: true,
+                  })
+                ));
+              } catch (winnerError: any) {
+                toast({ title: "Rebooking failed", description: winnerError?.message || "Could not rebook contestant.", variant: "destructive" });
+                await Promise.all([
+                  queryClient.invalidateQueries({ queryKey: ['/api/seat-assignments'], exact: false }),
+                  queryClient.invalidateQueries({ queryKey: ['/api/canceled-assignments'], exact: false }),
+                ]);
+                await refetch();
+                return;
+              }
+            } else {
+              // User declined winner override
+              return;
+            }
+          }
         } else {
+          // User declined returning confirmation
           return;
         }
       }

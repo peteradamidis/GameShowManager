@@ -4938,7 +4938,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a seat assignment
   app.post("/api/seat-assignments", async (req, res) => {
     try {
-      const { recordDayId, contestantId, blockNumber, seatLabel, playerType, seatedAsBlockType, seatedFromStandby, standbyMovementNotes, skipPostcodeWarning, allowReturning } = req.body;
+      const { recordDayId, contestantId, blockNumber, seatLabel, playerType, seatedAsBlockType, seatedFromStandby, standbyMovementNotes, skipPostcodeWarning, allowReturning, allowWinner } = req.body;
 
       if (!recordDayId || !contestantId || !blockNumber || !seatLabel) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -4993,24 +4993,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : 'another day';
         
         if (isOnLockedDay && allowReturning) {
-          // Block returning if the contestant won money or prizes on their previous appearance
-          const sa = existingAssignment;
-          const hasWinnings =
-            (sa.winningMoneyAmount != null && sa.winningMoneyAmount > 0) ||
-            (sa.winningMoneyText && sa.winningMoneyText.trim()) ||
-            (sa.prize && sa.prize.trim());
-          let hasPrizeEntry = false;
-          if (!hasWinnings) {
-            const prizeEntries = await storage.getPrizeWinnersByContestant(contestantId);
-            hasPrizeEntry = prizeEntries.length > 0;
+          // Warn (but don't hard-block) if the contestant has prize case winnings on their previous appearance.
+          // Prize column (spin-the-wheel prizes) does NOT count — only cash winnings.
+          if (!allowWinner) {
+            const sa = existingAssignment;
+            const hasCashWinnings =
+              (sa.winningMoneyAmount != null && sa.winningMoneyAmount > 0) ||
+              (sa.winningMoneyText && sa.winningMoneyText.trim());
+            if (hasCashWinnings) {
+              const amountStr = sa.winningMoneyAmount != null && sa.winningMoneyAmount > 0
+                ? `$${sa.winningMoneyAmount.toLocaleString()}`
+                : sa.winningMoneyText || 'an amount';
+              return res.status(409).json({
+                error: `${contestant?.name || 'Contestant'} previously won ${amountStr} in prize case winnings.`,
+                isWinner: true,
+                contestantName: contestant?.name,
+                winnerAmount: sa.winningMoneyAmount ?? null,
+                winnerText: sa.winningMoneyText ?? null,
+              });
+            }
           }
-          if (hasWinnings || hasPrizeEntry) {
-            return res.status(400).json({
-              error: `${contestant?.name || 'Contestant'} won money or prizes on a previous appearance and cannot be rebooked as a returning contestant.`,
-              isWinner: true,
-            });
-          }
-          // Allowed - returning contestant (no winnings)
+          // Allowed - returning contestant (no cash winnings, or winner override accepted)
         } else if (isOnLockedDay && !allowReturning) {
           const label = existingRecordDay?.rxNumber || dayName;
           return res.status(409).json({ 
@@ -5177,7 +5180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create overflow seat assignment ("To Seat on Day" - not assigned to a physical seat)
   app.post("/api/seat-assignments/overflow", async (req, res) => {
     try {
-      const { recordDayId, contestantId, skipPostcodeWarning, allowReturning } = req.body;
+      const { recordDayId, contestantId, skipPostcodeWarning, allowReturning, allowWinner } = req.body;
 
       if (!recordDayId || !contestantId) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -5216,24 +5219,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : 'another day';
         
         if (isOnLockedDay && allowReturning) {
-          // Block returning if the contestant won money or prizes on their previous appearance
-          const sa = existingAssignment;
-          const hasWinnings =
-            (sa.winningMoneyAmount != null && sa.winningMoneyAmount > 0) ||
-            (sa.winningMoneyText && sa.winningMoneyText.trim()) ||
-            (sa.prize && sa.prize.trim());
-          let hasPrizeEntry = false;
-          if (!hasWinnings) {
-            const prizeEntries = await storage.getPrizeWinnersByContestant(contestantId);
-            hasPrizeEntry = prizeEntries.length > 0;
+          // Warn (but don't hard-block) if the contestant has prize case winnings.
+          // Prize column (spin-the-wheel prizes) does NOT count — only cash winnings.
+          if (!allowWinner) {
+            const sa = existingAssignment;
+            const hasCashWinnings =
+              (sa.winningMoneyAmount != null && sa.winningMoneyAmount > 0) ||
+              (sa.winningMoneyText && sa.winningMoneyText.trim());
+            if (hasCashWinnings) {
+              const amountStr = sa.winningMoneyAmount != null && sa.winningMoneyAmount > 0
+                ? `$${sa.winningMoneyAmount.toLocaleString()}`
+                : sa.winningMoneyText || 'an amount';
+              return res.status(409).json({
+                error: `${contestant?.name || 'Contestant'} previously won ${amountStr} in prize case winnings.`,
+                isWinner: true,
+                contestantName: contestant?.name,
+                winnerAmount: sa.winningMoneyAmount ?? null,
+                winnerText: sa.winningMoneyText ?? null,
+              });
+            }
           }
-          if (hasWinnings || hasPrizeEntry) {
-            return res.status(400).json({
-              error: `${contestant?.name || 'Contestant'} won money or prizes on a previous appearance and cannot be rebooked as a returning contestant.`,
-              isWinner: true,
-            });
-          }
-          // Allowed - returning contestant (no winnings)
+          // Allowed - returning contestant (no cash winnings, or winner override accepted)
         } else if (isOnLockedDay && !allowReturning) {
           const label = existingRecordDay?.rxNumber || dayName;
           return res.status(409).json({ 
@@ -9193,6 +9199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if contestant is already seated in ANY record day
       // Allow returning contestants (those only assigned on locked/completed record days)
       const allowReturning = req.body.allowReturning === true;
+      const allowWinner = req.body.allowWinner === true;
       const allSeatAssignments = await storage.getAllSeatAssignments();
       const existingSeat = allSeatAssignments.find((a: any) => a.contestantId === canceled.contestantId);
       if (existingSeat) {
@@ -9203,24 +9210,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : 'another day';
         
         if (isOnLockedDay && allowReturning) {
-          // Block returning if the contestant won money or prizes on their previous appearance
-          const sa = existingSeat;
-          const hasWinnings =
-            (sa.winningMoneyAmount != null && sa.winningMoneyAmount > 0) ||
-            (sa.winningMoneyText && sa.winningMoneyText.trim()) ||
-            (sa.prize && sa.prize.trim());
-          let hasPrizeEntry = false;
-          if (!hasWinnings) {
-            const prizeEntries = await storage.getPrizeWinnersByContestant(canceled.contestantId);
-            hasPrizeEntry = prizeEntries.length > 0;
+          // Warn (but don't hard-block) if the contestant has prize case winnings.
+          // Prize column (spin-the-wheel prizes) does NOT count — only cash winnings.
+          if (!allowWinner) {
+            const sa = existingSeat;
+            const hasCashWinnings =
+              (sa.winningMoneyAmount != null && sa.winningMoneyAmount > 0) ||
+              (sa.winningMoneyText && sa.winningMoneyText.trim());
+            if (hasCashWinnings) {
+              const amountStr = sa.winningMoneyAmount != null && sa.winningMoneyAmount > 0
+                ? `$${sa.winningMoneyAmount.toLocaleString()}`
+                : sa.winningMoneyText || 'an amount';
+              return res.status(409).json({
+                error: `${contestant?.name || 'Contestant'} previously won ${amountStr} in prize case winnings.`,
+                isWinner: true,
+                contestantName: contestant?.name,
+                winnerAmount: sa.winningMoneyAmount ?? null,
+                winnerText: sa.winningMoneyText ?? null,
+              });
+            }
           }
-          if (hasWinnings || hasPrizeEntry) {
-            return res.status(400).json({
-              error: `${contestant?.name || 'Contestant'} won money or prizes on a previous appearance and cannot be rebooked as a returning contestant.`,
-              isWinner: true,
-            });
-          }
-          // Allowed - returning contestant (no winnings)
+          // Allowed - returning contestant (no cash winnings, or winner override accepted)
         } else if (isOnLockedDay && !allowReturning) {
           const label = existingRecordDay?.rxNumber || dayName;
           return res.status(409).json({ 
