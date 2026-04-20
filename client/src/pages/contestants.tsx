@@ -564,6 +564,8 @@ export default function Contestants() {
         .filter(Boolean)
     );
     displayedContestants = displayedContestants.filter(c => {
+      if ((c as any).isTemporary) return false;
+      if (c.auditionRating?.toUpperCase() === 'R') return false;
       if (attendedIds.has(c.id)) return false;
       if (c.groupId) return !attendedGroupIds.has(c.groupId);
       if (isSoloContestant(c.attendingWith)) return true;
