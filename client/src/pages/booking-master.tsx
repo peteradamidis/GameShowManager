@@ -340,6 +340,7 @@ export default function BookingMaster() {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
   const { toast } = useToast();
+  const [exportSeriesInProgress, setExportSeriesInProgress] = useState(false);
   
   // Connect to WebSocket for real-time updates
   useBookingMasterWebSocket(selectedRecordDay || null);
@@ -1158,6 +1159,174 @@ export default function BookingMaster() {
     });
   };
 
+  const exportSeriesExcel = async () => {
+    if (recordDays.length === 0) {
+      toast({ title: "No record days", description: "There are no record days to export.", variant: "destructive" });
+      return;
+    }
+    setExportSeriesInProgress(true);
+    try {
+      const resp = await fetch('/api/seat-assignments', { credentials: 'include' });
+      if (!resp.ok) throw new Error("Failed to fetch seat assignments");
+      const allAssignments: SeatAssignment[] = await resp.json();
+
+      const contestantMap = new Map(contestants.map(c => [c.id, c]));
+      const sortedDays = [...recordDays].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      const seriesHeaders = [
+        "SEAT", "NAME", "MOBILE", "EMAIL", "AGE", "ATTENDING WITH", "LOCATION",
+        "MEDICAL - APP", "MEDICAL - AUD", "CRIMINAL / BANKRUPTCY",
+        "CASTING CATEGORY", "NOTES", "BOOKING EMAIL SENT", "CONFIRMED RSVP",
+        "PAPERWORK SENT", "PAPERWORK ✓", "DISCLOSURE SENT", "DISCLOSURE ✓",
+        "OTD PAPER WORK", "SIGNED-IN", "OTD NOTES", "STANDBY REPLACEMENT / SWAPS",
+      ];
+
+      const colWidths = [
+        { wch: 10 }, { wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 6 },
+        { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 18 },
+        { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 12 }, { wch: 14 },
+        { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 10 },
+        { wch: 20 }, { wch: 25 },
+      ];
+
+      const wb = XLSX.utils.book_new();
+      const rowOrder = ['A', 'B', 'C', 'D', 'E'];
+
+      for (const day of sortedDays) {
+        const dayAssignments = allAssignments.filter(a => a.recordDayId === day.id);
+        const dayStandbys = standbys.filter(s => s.recordDayId === day.id && s.status === 'confirmed');
+
+        if (dayAssignments.length === 0 && dayStandbys.length === 0) continue;
+
+        const dayDate = format(new Date(day.date), "d MMMM yyyy");
+        const rxLabel = (day as any).rxNumber ? `RX${(day as any).rxNumber}` : "";
+
+        const exportRows: (string | number)[][] = [];
+        exportRows.push([`Booking Master - ${rxLabel ? `${rxLabel} - ` : ""}${dayDate}`]);
+        exportRows.push([]);
+
+        // Sort assignments: overflow (block 0) last, then by block → row → seat number
+        const sorted = [...dayAssignments].sort((a, b) => {
+          if (a.blockNumber === 0 && b.blockNumber !== 0) return 1;
+          if (a.blockNumber !== 0 && b.blockNumber === 0) return -1;
+          if (a.blockNumber !== b.blockNumber) return a.blockNumber - b.blockNumber;
+          const aRowIdx = rowOrder.indexOf(a.seatLabel[0]);
+          const bRowIdx = rowOrder.indexOf(b.seatLabel[0]);
+          if (aRowIdx !== bRowIdx) return aRowIdx - bRowIdx;
+          return parseInt(a.seatLabel.slice(1)) - parseInt(b.seatLabel.slice(1));
+        });
+
+        let currentBlock = -1;
+        for (const assignment of sorted) {
+          if (assignment.blockNumber !== currentBlock) {
+            currentBlock = assignment.blockNumber;
+            const blockAssignments = sorted.filter(a => a.blockNumber === currentBlock);
+            const blockFemale = blockAssignments.filter(a => contestantMap.get(a.contestantId)?.gender === 'Female').length;
+            const blockMale = blockAssignments.filter(a => contestantMap.get(a.contestantId)?.gender === 'Male').length;
+            const blockTotal = blockAssignments.length;
+            const femalePct = blockTotal > 0 ? Math.round((blockFemale / blockTotal) * 100) : 0;
+            exportRows.push([]);
+            const blockLabel = currentBlock === 0 ? 'TO SEAT ON DAY' : `BLOCK ${currentBlock}`;
+            exportRows.push([`${blockLabel} - ${blockTotal} assigned | ${blockFemale}F / ${blockMale}M (${femalePct}% female)`]);
+            exportRows.push(seriesHeaders);
+          }
+
+          const contestant = contestantMap.get(assignment.contestantId);
+          const seatId = assignment.blockNumber === 0
+            ? `00-${assignment.seatLabel}`
+            : `${String(assignment.blockNumber).padStart(2, '0')}-${assignment.seatLabel}`;
+
+          let standbySwaps = (assignment as any).standbyReplacementSwaps || "";
+          if ((assignment as any).swappedAt && (assignment as any).originalBlockNumber && (assignment as any).originalSeatLabel) {
+            const swapInfo = `Was: ${(assignment as any).originalBlockNumber}-${(assignment as any).originalSeatLabel}`;
+            standbySwaps = standbySwaps ? `${swapInfo} | ${standbySwaps}` : swapInfo;
+          }
+
+          exportRows.push([
+            seatId,
+            contestant?.name || "",
+            contestant?.phone || "",
+            contestant?.email || "",
+            contestant?.age || "",
+            (assignment as any).attendingWithOverride || contestant?.attendingWith || "",
+            contestant?.location || "",
+            contestant?.medicalInfo || "",
+            (assignment as any).mobilityNotesOverride || contestant?.mobilityNotes || "",
+            contestant?.criminalRecord || "",
+            (assignment as any).castingCategory || getAutoCastingCategory(contestant, assignment.blockNumber, (assignment as any).playerType),
+            (assignment as any).notes || "",
+            (assignment as any).bookingEmailSent ? "✓" : "",
+            (assignment as any).confirmedRsvp ? "✓" : "",
+            (assignment as any).paperworkSent ? "✓" : "",
+            (assignment as any).paperworkReceived ? "✓" : "",
+            (assignment as any).disclosureSent ? "✓" : "",
+            (assignment as any).disclosureReceived ? "✓" : "",
+            (assignment as any).paperworkOnDay ? "✓" : "",
+            (assignment as any).signedIn ? "✓" : "",
+            (assignment as any).otdNotes || "",
+            standbySwaps,
+          ]);
+        }
+
+        if (dayStandbys.length > 0) {
+          exportRows.push([]);
+          exportRows.push([]);
+          exportRows.push([`STANDBYS - ${dayStandbys.length} total`]);
+          exportRows.push(seriesHeaders);
+          const sortedStandbys = [...dayStandbys].sort((a, b) => ((a as any).priority || 999) - ((b as any).priority || 999));
+          for (const standby of sortedStandbys) {
+            const c = contestantMap.get(standby.contestantId);
+            exportRows.push([
+              `S${(standby as any).priority || "-"}`,
+              c?.name || "",
+              c?.phone || "",
+              c?.email || "",
+              c?.age || "",
+              (standby as any).attendingWithOverride || c?.attendingWith || "",
+              c?.location || "",
+              c?.medicalInfo || "",
+              (standby as any).mobilityNotesOverride || c?.mobilityNotes || "",
+              c?.criminalRecord || "",
+              "",
+              (standby as any).notes || "",
+              (standby as any).bookingEmailSent ? "✓" : "",
+              (standby as any).confirmedRsvp ? "✓" : "",
+              (standby as any).paperworkSent ? "✓" : "",
+              (standby as any).paperworkReceived ? "✓" : "",
+              (standby as any).disclosureSent ? "✓" : "",
+              (standby as any).disclosureReceived ? "✓" : "",
+              (standby as any).paperworkOnDay ? "✓" : "",
+              (standby as any).signedIn ? "✓" : "",
+              (standby as any).otdNotes || "",
+              (standby as any).standbyMovementNotes || "",
+            ]);
+          }
+        }
+
+        const ws = XLSX.utils.aoa_to_sheet(exportRows);
+        ws['!cols'] = colWidths;
+
+        const sheetName = (rxLabel || format(new Date(day.date), "d-MMM-yy")).slice(0, 31);
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      }
+
+      if (wb.SheetNames.length === 0) {
+        toast({ title: "No data to export", description: "No record days have any bookings yet.", variant: "destructive" });
+        return;
+      }
+
+      XLSX.writeFile(wb, `Booking-Master-All-Series.xlsx`);
+      toast({
+        title: "Series export complete",
+        description: `Exported ${wb.SheetNames.length} record day${wb.SheetNames.length !== 1 ? "s" : ""} as separate sheets`,
+      });
+    } catch (error: any) {
+      toast({ title: "Export failed", description: error?.message || "Could not export series data", variant: "destructive" });
+    } finally {
+      setExportSeriesInProgress(false);
+    }
+  };
+
   return (
     <div className={isFullscreen ? "fixed inset-0 flex flex-col p-2 bg-background gap-1" : "p-6 space-y-6"}>
       <div className={`flex items-center justify-between flex-shrink-0 ${isFullscreen ? 'gap-2' : ''}`}>
@@ -1184,6 +1353,11 @@ export default function BookingMaster() {
           <Button onClick={exportToExcel} variant="outline" data-testid="button-export-excel">
             <Download className="h-4 w-4 mr-2" />
             Export to Excel
+          </Button>
+
+          <Button onClick={exportSeriesExcel} variant="outline" disabled={exportSeriesInProgress} data-testid="button-export-series-excel">
+            <Download className="h-4 w-4 mr-2" />
+            {exportSeriesInProgress ? "Exporting..." : "Export All Series"}
           </Button>
           
           <DropdownMenu>
