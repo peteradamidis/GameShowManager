@@ -668,7 +668,7 @@ export default function Contestants() {
 
       const rescheduleReasonByContestant = new Map<string, string>();
       (canceledAssignments as any[])
-        .filter((ca: any) => ca.isFromStandby && !ca.rebookedToRecordDayId)
+        .filter((ca: any) => !ca.rebookedToRecordDayId)
         .forEach((ca: any) => {
           if (!rescheduleReasonByContestant.has(ca.contestantId)) {
             rescheduleReasonByContestant.set(ca.contestantId, ca.reason || '');
@@ -754,7 +754,7 @@ export default function Contestants() {
           // Standby / Reschedule / Attendance
           'On Standby': sb ? standbyLabel : '',
           'In Reschedule': rescheduleReasonByContestant.has(c.id) ? 'Yes' : '',
-          'Reschedule Reason': rescheduleReasonByContestant.get(c.id) || '',
+          'Reschedule Reason': rescheduleReasonByContestant.get(c.id) ?? '',
           'Attendance Issue': attendanceIssueByContestant.get(c.id) || '',
         };
       });
