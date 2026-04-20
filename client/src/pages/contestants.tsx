@@ -645,36 +645,115 @@ export default function Contestants() {
     currentPage * ITEMS_PER_PAGE
   );
 
-  // Excel export for filtered contestants
+  // Excel export for filtered contestants (full info + booking status)
   const handleExportToExcel = async () => {
     try {
       const XLSX = await import('xlsx');
-      
-      const exportData = displayedContestants.map(c => ({
-        'Name': c.name,
-        'Email': c.email || '',
-        'Phone': c.phone ? `${c.phone},` : '',
-        'Age': c.age || '',
-        'Gender': c.gender || '',
-        'State': c.state || '',
-        'Suburb': c.suburb || '',
-        'Location': c.location || '',
-        'Rating': c.auditionRating || '',
-        'Status': c.availabilityStatus || '',
-        'Attending With': c.attendingWith || '',
-        'Group Size': c.groupSize || 1,
-        'Podium Story': c.podiumStory ? 'Yes' : 'No',
-        'Notes': c.notes || '',
-      }));
+
+      // Build lookup maps
+      const seatAssignmentByContestant = new Map<string, any>();
+      (allSeatAssignments as any[]).forEach((sa: any) => seatAssignmentByContestant.set(sa.contestantId, sa));
+
+      const standbyByContestant = new Map<string, any>();
+      (allStandbys as any[])
+        .filter((s: any) => !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled' && s.status !== 'attended')
+        .forEach((s: any) => { if (!standbyByContestant.has(s.contestantId)) standbyByContestant.set(s.contestantId, s); });
+
+      const rescheduleByContestant = new Set<string>(
+        (canceledAssignments as any[])
+          .filter((ca: any) => ca.isFromStandby && !ca.rebookedToRecordDayId)
+          .map((ca: any) => ca.contestantId)
+      );
+
+      const recordDayMap = new Map<string, any>(
+        (recordDays as any[]).map((d: any) => [d.id, d])
+      );
+
+      const formatDate = (d: any) => {
+        if (!d?.date) return '';
+        try { return format(new Date(d.date), 'd MMM yyyy'); } catch { return d.date; }
+      };
+
+      const tick = (val: any) => val ? '✓' : '';
+
+      const exportData = displayedContestants.map(c => {
+        const sa = seatAssignmentByContestant.get(c.id);
+        const saDay = sa ? recordDayMap.get(sa.recordDayId) : null;
+        const sb = standbyByContestant.get(c.id);
+        const sbDay = sb ? recordDayMap.get(sb.recordDayId) : null;
+
+        const seat = sa
+          ? (sa.blockNumber === 0 ? `OS-${sa.seatLabel}` : `Block ${sa.blockNumber} – ${sa.seatLabel}`)
+          : '';
+
+        const recordDayLabel = saDay
+          ? `${saDay.rxNumber ? saDay.rxNumber + ' ' : ''}${formatDate(saDay)}`
+          : '';
+
+        const standbyLabel = sb
+          ? `${sbDay ? (sbDay.rxNumber ? sbDay.rxNumber + ' ' : '') + formatDate(sbDay) : ''} (P${sb.priority || '?'})`
+          : '';
+
+        return {
+          'Name': c.name,
+          'Email': c.email || '',
+          'Phone': c.phone ? `${c.phone},` : '',
+          'Age': c.age || '',
+          'Gender': c.gender || '',
+          'State': c.state || '',
+          'Postcode': c.postcode || '',
+          'Location': c.location || '',
+          'Rating': c.auditionRating || '',
+          'Availability Status': c.availabilityStatus || '',
+          'Player Type': (c as any).playerType || '',
+          'Attending With': c.attendingWith || '',
+          'Group Size': c.groupSize || 1,
+          'Standby Available': (c as any).availableForStandby ? 'Yes' : 'No',
+          'Medical Info': (c as any).medicalInfo || '',
+          'Mobility Notes': (c as any).mobilityNotes || '',
+          'Criminal / Bankruptcy': (c as any).criminalRecord || '',
+          'Podium Story': c.podiumStory ? 'Yes' : 'No',
+          'Podium Story Note': (c as any).podiumStoryNote || '',
+          'No-Show Count': (c as any).noShowCount || 0,
+          'Early Leaver Count': (c as any).earlyLeaverCount || 0,
+          'Availability Notes': (c as any).availabilityNotes || '',
+          // Booking
+          'Booked Record Day': recordDayLabel,
+          'Seat': seat,
+          'Booking Email Sent': tick(sa?.bookingEmailSent),
+          'Confirmed RSVP': tick(sa?.confirmedRsvp),
+          'Paperwork Sent': tick(sa?.paperworkSent),
+          'Paperwork Received': tick(sa?.paperworkReceived),
+          'Disclosure Sent': tick(sa?.disclosureSent),
+          'Disclosure Received': tick(sa?.disclosureReceived),
+          'Signed In': tick(sa?.signedIn),
+          'OTD Notes': sa?.otdNotes || '',
+          // Standby / Reschedule
+          'On Standby': sb ? standbyLabel : '',
+          'In Reschedule': rescheduleByContestant.has(c.id) ? 'Yes' : '',
+        };
+      });
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+      // Set column widths
+      worksheet['!cols'] = [
+        { wch: 22 }, { wch: 28 }, { wch: 16 }, { wch: 6 }, { wch: 8 },
+        { wch: 6 }, { wch: 10 }, { wch: 18 }, { wch: 8 }, { wch: 16 },
+        { wch: 14 }, { wch: 25 }, { wch: 10 }, { wch: 14 }, { wch: 20 },
+        { wch: 20 }, { wch: 20 }, { wch: 10 }, { wch: 25 }, { wch: 8 },
+        { wch: 14 }, { wch: 20 }, { wch: 22 }, { wch: 14 }, { wch: 16 },
+        { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 10 },
+        { wch: 20 }, { wch: 24 }, { wch: 12 },
+      ];
+
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Contestants');
 
       const timestamp = format(new Date(), 'yyyy-MM-dd_HHmm');
       XLSX.writeFile(workbook, `contestants_export_${timestamp}.xlsx`);
 
-      toast({ title: "Exported", description: `${displayedContestants.length} contestants exported to Excel` });
+      toast({ title: "Exported", description: `${displayedContestants.length} contestant${displayedContestants.length !== 1 ? 's' : ''} exported to Excel` });
     } catch (error) {
       console.error('Export error:', error);
       toast({ title: "Export Failed", description: "Could not export contestants", variant: "destructive" });
