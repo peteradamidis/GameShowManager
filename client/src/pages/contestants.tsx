@@ -210,6 +210,11 @@ export default function Contestants() {
     queryKey: ['/api/canceled-assignments'],
   });
 
+  // Fetch attendance issues (for export)
+  const { data: attendanceIssues = [] } = useQuery<any[]>({
+    queryKey: ['/api/attendance-issues'],
+  });
+
   // Create a set of contestant IDs who are ACTIVE standbys (exclude inactive/stale entries)
   const standbyContestantIds = useMemo(() => {
     return new Set(
@@ -661,11 +666,27 @@ export default function Contestants() {
         .filter((s: any) => !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled' && s.status !== 'attended')
         .forEach((s: any) => { if (!standbyByContestant.has(s.contestantId)) standbyByContestant.set(s.contestantId, s); });
 
-      const rescheduleByContestant = new Set<string>(
-        (canceledAssignments as any[])
-          .filter((ca: any) => ca.isFromStandby && !ca.rebookedToRecordDayId)
-          .map((ca: any) => ca.contestantId)
-      );
+      const rescheduleReasonByContestant = new Map<string, string>();
+      (canceledAssignments as any[])
+        .filter((ca: any) => ca.isFromStandby && !ca.rebookedToRecordDayId)
+        .forEach((ca: any) => {
+          if (!rescheduleReasonByContestant.has(ca.contestantId)) {
+            rescheduleReasonByContestant.set(ca.contestantId, ca.reason || '');
+          }
+        });
+
+      const formatIssueType = (t: string) => {
+        if (t === 'no_show') return 'No Show';
+        if (t === 'early_leaver') return 'Early Leaver';
+        if (t === 'no_longer_want_to_attend') return 'No Longer Want to Attend';
+        return t || '';
+      };
+      const attendanceIssueByContestant = new Map<string, string>();
+      (attendanceIssues as any[]).forEach((ai: any) => {
+        if (!attendanceIssueByContestant.has(ai.contestantId)) {
+          attendanceIssueByContestant.set(ai.contestantId, formatIssueType(ai.issueType));
+        }
+      });
 
       const recordDayMap = new Map<string, any>(
         (recordDays as any[]).map((d: any) => [d.id, d])
@@ -730,9 +751,11 @@ export default function Contestants() {
           'Disclosure Received': tick(sa?.disclosureReceived),
           'Signed In': tick(sa?.signedIn),
           'OTD Notes': sa?.otdNotes || '',
-          // Standby / Reschedule
+          // Standby / Reschedule / Attendance
           'On Standby': sb ? standbyLabel : '',
-          'In Reschedule': rescheduleByContestant.has(c.id) ? 'Yes' : '',
+          'In Reschedule': rescheduleReasonByContestant.has(c.id) ? 'Yes' : '',
+          'Reschedule Reason': rescheduleReasonByContestant.get(c.id) || '',
+          'Attendance Issue': attendanceIssueByContestant.get(c.id) || '',
         };
       });
 
@@ -746,7 +769,7 @@ export default function Contestants() {
         { wch: 20 }, { wch: 20 }, { wch: 10 }, { wch: 25 }, { wch: 8 },
         { wch: 14 }, { wch: 20 }, { wch: 22 }, { wch: 14 }, { wch: 16 },
         { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 10 },
-        { wch: 20 }, { wch: 24 }, { wch: 12 },
+        { wch: 20 }, { wch: 24 }, { wch: 12 }, { wch: 28 }, { wch: 24 },
       ];
 
       const workbook = XLSX.utils.book_new();
