@@ -146,6 +146,7 @@ export default function Contestants() {
   const [filterWithin20km, setFilterWithin20km] = useState(false);
   const [filterOver60km, setFilterOver60km] = useState(false);
   const [filterAllGroupAvailable, setFilterAllGroupAvailable] = useState(false);
+  const [filterGroupNeverAttended, setFilterGroupNeverAttended] = useState(false);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [deleteConfirmStep, setDeleteConfirmStep] = useState<1 | 2>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -540,6 +541,37 @@ export default function Contestants() {
     });
   }
 
+  // Group never attended filter: show only contestants where NO group member
+  // has ever been seated on a completed (locked) record day
+  if (filterGroupNeverAttended) {
+    const lockedDayIds = new Set((recordDays as any[]).filter((d: any) => d.lockedAt).map((d: any) => d.id));
+    const attendedIds = new Set<string>(
+      (allSeatAssignments as any[])
+        .filter((sa: any) => lockedDayIds.has(sa.recordDayId))
+        .map((sa: any) => sa.contestantId)
+    );
+    // groupIds where at least one member has attended
+    const attendedGroupIds = new Set<string>(
+      contestants
+        .filter((c: any) => attendedIds.has(c.id) && c.groupId)
+        .map((c: any) => c.groupId)
+    );
+    // Name-based attended set (fallback for contestants without groupId)
+    const attendedNameSet = new Set<string>(
+      contestants
+        .filter((c: any) => attendedIds.has(c.id))
+        .map((c: any) => normalizeName(c.name || ''))
+        .filter(Boolean)
+    );
+    displayedContestants = displayedContestants.filter(c => {
+      if (attendedIds.has(c.id)) return false;
+      if (c.groupId) return !attendedGroupIds.has(c.groupId);
+      if (isSoloContestant(c.attendingWith)) return true;
+      const partnerNames = getPartnerNames(c.attendingWith);
+      return partnerNames.every(pName => !attendedNameSet.has(normalizeName(pName)));
+    });
+  }
+
   // Apply postcode range filter
   if (postcodeFrom || postcodeTo) {
     displayedContestants = displayedContestants.filter(c => {
@@ -604,7 +636,7 @@ export default function Contestants() {
   // Reset page when filters or search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus, filterGroupSize, filterState, filterAllGroupAvailable, filterOver60km, searchTerm]);
+  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus, filterGroupSize, filterState, filterAllGroupAvailable, filterGroupNeverAttended, filterOver60km, searchTerm]);
 
   // Pagination calculations
   const totalPages = Math.ceil(displayedContestants.length / ITEMS_PER_PAGE);
@@ -1725,6 +1757,23 @@ export default function Contestants() {
                     Full group available
                   </label>
                 </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="filter-group-never-attended"
+                    checked={filterGroupNeverAttended}
+                    onCheckedChange={(checked) => {
+                      setSelectedContestants([]);
+                      setFilterGroupNeverAttended(checked as boolean);
+                    }}
+                    data-testid="checkbox-filter-group-never-attended"
+                  />
+                  <label
+                    htmlFor="filter-group-never-attended"
+                    className="text-sm font-medium cursor-pointer"
+                  >
+                    Group never attended
+                  </label>
+                </div>
               </div>
             </div>
           </div>
@@ -1734,7 +1783,7 @@ export default function Contestants() {
       {/* Results Summary */}
       {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
         filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || 
-        filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km || filterWithin20km || filterOver60km || filterAllGroupAvailable) && (
+        filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km || filterWithin20km || filterOver60km || filterAllGroupAvailable || filterGroupNeverAttended) && (
         <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="secondary" data-testid="badge-filter-count">
             {displayedContestants.length} contestant{displayedContestants.length !== 1 ? 's' : ''}
@@ -1798,6 +1847,11 @@ export default function Contestants() {
           {filterAllGroupAvailable && (
             <Badge variant="outline">
               Full group available
+            </Badge>
+          )}
+          {filterGroupNeverAttended && (
+            <Badge variant="outline">
+              Group never attended
             </Badge>
           )}
         </div>
