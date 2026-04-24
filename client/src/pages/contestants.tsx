@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2, Users, AlertTriangle, RefreshCw, Link, Unlink, Download } from "lucide-react";
+import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2, Users, AlertTriangle, RefreshCw, Link, Unlink, Download, Layers } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -32,6 +32,8 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { format, isSameDay, parseISO } from "date-fns";
 import type { BlockType } from "@shared/schema";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const StatusBadge = ({ status }: { status: string }) => {
   const colors: Record<string, string> = {
@@ -232,6 +234,83 @@ export default function Contestants() {
         .map((ca: any) => ca.contestantId)
     );
   }, [canceledAssignments]);
+
+  // Fetch ALL block types across all record days (for Multi-Day PB report)
+  const { data: allBlockTypes = [] } = useQuery<any[]>({
+    queryKey: ['/api/block-types'],
+  });
+
+  // Build a map: recordDayId → blockNumber → 'PB' | 'NPB'
+  const allBlockTypeMap = useMemo(() => {
+    const map = new Map<string, Map<number, string>>();
+    allBlockTypes.forEach((bt: any) => {
+      if (!map.has(bt.recordDayId)) map.set(bt.recordDayId, new Map());
+      map.get(bt.recordDayId)!.set(bt.blockNumber, bt.blockType);
+    });
+    return map;
+  }, [allBlockTypes]);
+
+  // Compute contestants who have appeared on 2+ record days AND been in a PB seat 2+ times
+  const multiDayPBContestants = useMemo(() => {
+    if (!allSeatAssignments.length || !recordDays.length) return [];
+
+    const rdMap = new Map<string, any>(recordDays.map((d: any) => [d.id, d]));
+
+    // Group all seat assignments by contestantId
+    const byContestant = new Map<string, any[]>();
+    allSeatAssignments.forEach((sa: any) => {
+      if (!byContestant.has(sa.contestantId)) byContestant.set(sa.contestantId, []);
+      byContestant.get(sa.contestantId)!.push(sa);
+    });
+
+    const results: Array<{
+      contestantId: string;
+      name: string;
+      gender: string;
+      rating: string;
+      totalDays: number;
+      pbDays: number;
+      days: Array<{ rxNumber: string; date: string; blockType: string; blockNumber: number; seatLabel: string }>;
+    }> = [];
+
+    byContestant.forEach((assignments, contestantId) => {
+      if (assignments.length < 2) return;
+
+      const days = assignments.map((sa: any) => {
+        const rd = rdMap.get(sa.recordDayId);
+        // Use seatedAsBlockType if stored, otherwise look up from allBlockTypeMap
+        const blockType = sa.seatedAsBlockType
+          || allBlockTypeMap.get(sa.recordDayId)?.get(sa.blockNumber)
+          || 'NPB';
+        return {
+          rxNumber: rd?.rxNumber || '',
+          date: rd?.date ? new Date(rd.date).toLocaleDateString('en-AU') : '',
+          blockType,
+          blockNumber: sa.blockNumber,
+          seatLabel: sa.seatLabel || '',
+          recordDayId: sa.recordDayId,
+        };
+      });
+
+      const pbDays = days.filter(d => d.blockType === 'PB').length;
+      if (pbDays < 2) return;
+
+      const contestant = (contestants as any[]).find((c: any) => c.id === contestantId);
+      if (!contestant) return;
+
+      results.push({
+        contestantId,
+        name: contestant.name,
+        gender: contestant.gender || '',
+        rating: contestant.auditionRating || '',
+        totalDays: assignments.length,
+        pbDays,
+        days: [...days].sort((a, b) => a.rxNumber.localeCompare(b.rxNumber)),
+      });
+    });
+
+    return results.sort((a, b) => b.pbDays - a.pbDays || b.totalDays - a.totalDays);
+  }, [allSeatAssignments, allBlockTypeMap, contestants, recordDays]);
 
   // Create a set of contestant IDs who are standbys for the specific record day
   const standbyForRecordDayIds = useMemo(() => {
@@ -1499,6 +1578,20 @@ export default function Contestants() {
           )}
         </div>
       </div>
+
+      <Tabs defaultValue="contestants">
+      <TabsList>
+        <TabsTrigger value="contestants">All Contestants</TabsTrigger>
+        <TabsTrigger value="multiday-pb" className="flex items-center gap-1.5">
+          <Layers className="h-3.5 w-3.5" />
+          Multi-Day PB
+          {multiDayPBContestants.length > 0 && (
+            <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">{multiDayPBContestants.length}</Badge>
+          )}
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="contestants" className="space-y-4 mt-0">
 
       {/* Filter Controls */}
       <div className="space-y-4">
@@ -2812,6 +2905,91 @@ export default function Contestants() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      </TabsContent>
+
+      <TabsContent value="multiday-pb" className="mt-0">
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold">Multi-Day PB Contestants</h2>
+            <p className="text-sm text-muted-foreground">
+              Contestants who have been seated in a Player Block (PB) on two or more separate record days.
+            </p>
+          </div>
+
+          {multiDayPBContestants.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
+              <Layers className="h-10 w-10 opacity-30" />
+              <p className="text-sm">No contestants have appeared in a PB seat on more than one record day.</p>
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Gender</TableHead>
+                    <TableHead>Rating</TableHead>
+                    <TableHead className="text-center">Total Days</TableHead>
+                    <TableHead className="text-center">PB Appearances</TableHead>
+                    <TableHead>Record Days (Block / Seat)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {multiDayPBContestants.map((row) => (
+                    <TableRow key={row.contestantId}>
+                      <TableCell className="font-medium">{row.name}</TableCell>
+                      <TableCell>
+                        <span className={`text-xs font-semibold ${
+                          row.gender === 'F'
+                            ? 'text-pink-600 dark:text-pink-400'
+                            : row.gender === 'M'
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-muted-foreground'
+                        }`}>
+                          {row.gender || '—'}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs text-muted-foreground">{row.rating || '—'}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="secondary">{row.totalDays}</Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700">
+                          {row.pbDays}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1.5">
+                          {row.days.map((d, i) => (
+                            <span
+                              key={i}
+                              className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium border ${
+                                d.blockType === 'PB'
+                                  ? 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700'
+                                  : 'bg-muted text-muted-foreground border-border'
+                              }`}
+                            >
+                              <span className="font-semibold">{d.rxNumber || d.date}</span>
+                              <span className="opacity-70">Blk {d.blockNumber}</span>
+                              {d.seatLabel && <span className="opacity-70">{d.seatLabel}</span>}
+                              <span className={`font-bold ${d.blockType === 'PB' ? '' : 'opacity-50'}`}>{d.blockType}</span>
+                            </span>
+                          ))}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+      </TabsContent>
+
+      </Tabs>
 
       {/* Create Test Contestant Dialog */}
       <Dialog open={testContestantDialogOpen} onOpenChange={setTestContestantDialogOpen}>
