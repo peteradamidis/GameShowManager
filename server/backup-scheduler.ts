@@ -1,7 +1,17 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import xlsx from 'xlsx';
-import { storage } from './storage';
+import { storage, db } from './storage';
+import {
+  prizeWinners,
+  castingCardVersions,
+  systemConfig,
+  noticeboardComments,
+  availabilityTokens,
+  bookingConfirmationTokens,
+  standbyConfirmationTokens,
+  systemSettings,
+} from '../shared/schema';
 
 const BACKUP_DIR = './storage/backups';
 const BACKUP_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
@@ -36,7 +46,7 @@ export async function performBackup(): Promise<{ success: boolean; message: stri
   try {
     ensureBackupDir();
     
-    // Fetch all data
+    // Fetch all data via storage interface
     const [
       recordDays,
       contestants,
@@ -44,6 +54,16 @@ export async function performBackup(): Promise<{ success: boolean; message: stri
       seatAssignments,
       standbys,
       canceledAssignments,
+      attendanceIssues,
+      rebookingHistory,
+      standbyAttendanceHistory,
+      castingCards,
+      rxPlanningEntries,
+      postRecordTracking,
+      noticeboardPosts,
+      movementHistory,
+      contestantAvailability,
+      birthdayEntries,
     ] = await Promise.all([
       storage.getRecordDays(),
       storage.getContestants(),
@@ -51,34 +71,119 @@ export async function performBackup(): Promise<{ success: boolean; message: stri
       storage.getAllSeatAssignments(),
       storage.getStandbyAssignments(),
       storage.getCanceledAssignments(),
+      storage.getAttendanceIssues(),
+      storage.getAllRebookingHistory(),
+      storage.getStandbyAttendanceHistory(),
+      storage.getCastingCards(),
+      storage.getAllRxPlanningData(),
+      storage.getPostRecordEntries(),
+      storage.getNoticeboardPosts(),
+      storage.getMovementHistory(),
+      storage.getAllAvailabilityResponses(),
+      storage.getBirthdayEntries(),
     ]);
     
-    // Get block types for all record days
-    const blockTypesPromises = recordDays.map(rd => storage.getBlockTypesByRecordDay(rd.id));
-    const blockTypesArrays = await Promise.all(blockTypesPromises);
+    // Get block types and block notes for all record days
+    const [blockTypesArrays, blockNotesArrays] = await Promise.all([
+      Promise.all(recordDays.map(rd => storage.getBlockTypesByRecordDay(rd.id))),
+      Promise.all(recordDays.map(rd => storage.getBlockNotes(rd.id))),
+    ]);
     const blockTypes = blockTypesArrays.flat();
+    const blockNotes = blockNotesArrays.flat();
+
+    // Fetch tables that only have per-record-day or per-item DB methods — query DB directly
+    let prizeWinnersData: any[] = [];
+    let castingCardVersionsData: any[] = [];
+    let systemConfigData: any[] = [];
+    let noticeboardCommentsData: any[] = [];
+    let availabilityTokensData: any[] = [];
+    let bookingConfirmationTokensData: any[] = [];
+    let standbyConfirmationTokensData: any[] = [];
+    let systemSettingsData: any[] = [];
+
+    if (db) {
+      [
+        prizeWinnersData,
+        castingCardVersionsData,
+        systemConfigData,
+        noticeboardCommentsData,
+        availabilityTokensData,
+        bookingConfirmationTokensData,
+        standbyConfirmationTokensData,
+        systemSettingsData,
+      ] = await Promise.all([
+        db.select().from(prizeWinners),
+        db.select().from(castingCardVersions),
+        db.select().from(systemConfig),
+        db.select().from(noticeboardComments),
+        db.select().from(availabilityTokens),
+        db.select().from(bookingConfirmationTokens),
+        db.select().from(standbyConfirmationTokens),
+        db.select().from(systemSettings),
+      ]);
+    }
 
     const backupData = {
-      version: '1.0',
+      version: '2.0',
       exportedAt: new Date().toISOString(),
       automatic: true,
       data: {
+        // Core seating data
         recordDays,
         contestants,
         groups,
         seatAssignments,
-        standbys,
         blockTypes,
+        standbys,
         canceledAssignments,
+        // History & audit trails
+        attendanceIssues,
+        rebookingHistory,
+        standbyAttendanceHistory,
+        movementHistory,
+        // Booking workflow
+        contestantAvailability,
+        availabilityTokens: availabilityTokensData,
+        bookingConfirmationTokens: bookingConfirmationTokensData,
+        standbyConfirmationTokens: standbyConfirmationTokensData,
+        // Content & config
+        castingCards,
+        castingCardVersions: castingCardVersionsData,
+        rxPlanningEntries,
+        blockNotes,
+        postRecordTracking,
+        prizeWinners: prizeWinnersData,
+        birthdayEntries,
+        // Noticeboard
+        noticeboardPosts,
+        noticeboardComments: noticeboardCommentsData,
+        // System
+        systemConfig: systemConfigData,
+        systemSettings: systemSettingsData,
       },
       counts: {
         recordDays: recordDays.length,
         contestants: contestants.length,
         groups: groups.length,
         seatAssignments: seatAssignments.length,
-        standbys: standbys.length,
         blockTypes: blockTypes.length,
+        standbys: standbys.length,
         canceledAssignments: canceledAssignments.length,
+        attendanceIssues: attendanceIssues.length,
+        rebookingHistory: rebookingHistory.length,
+        standbyAttendanceHistory: standbyAttendanceHistory.length,
+        movementHistory: movementHistory.length,
+        contestantAvailability: contestantAvailability.length,
+        castingCards: castingCards.length,
+        castingCardVersions: castingCardVersionsData.length,
+        rxPlanningEntries: rxPlanningEntries.length,
+        blockNotes: blockNotes.length,
+        postRecordTracking: postRecordTracking.length,
+        prizeWinners: prizeWinnersData.length,
+        birthdayEntries: birthdayEntries.length,
+        noticeboardPosts: noticeboardPosts.length,
+        noticeboardComments: noticeboardCommentsData.length,
+        systemConfig: systemConfigData.length,
       },
     };
 
@@ -97,7 +202,7 @@ export async function performBackup(): Promise<{ success: boolean; message: stri
     consecutiveFailures = 0;
 
     console.log(`[Backup] Automatic backup completed at ${lastBackupTime.toISOString()}`);
-    console.log(`[Backup] Data: ${recordDays.length} record days, ${contestants.length} contestants, ${seatAssignments.length} assignments`);
+    console.log(`[Backup] Data: ${recordDays.length} record days, ${contestants.length} contestants, ${seatAssignments.length} assignments, ${attendanceIssues.length} attendance issues, ${rebookingHistory.length} rebookings, ${castingCards.length} casting cards`);
     console.log(`[Backup] Excel backup saved to ${excelPath}`);
 
     return { 
@@ -237,6 +342,9 @@ async function createExcelBackup(data: any, filePath: string): Promise<void> {
       RxNumber: rd.rxNumber,
       Status: rd.status,
       Notes: rd.notes,
+      ProducerId: rd.producerId,
+      ApId: rd.apId,
+      IsLocked: rd.isLocked,
     })));
     xlsx.utils.book_append_sheet(workbook, rdSheet, 'Record Days');
   }
@@ -251,12 +359,17 @@ async function createExcelBackup(data: any, filePath: string): Promise<void> {
       Email: c.email,
       Phone: c.phone,
       Location: c.location,
+      Postcode: c.postcode,
       Rating: c.auditionRating,
       Status: c.availabilityStatus,
       AttendingWith: c.attendingWith,
       GroupID: c.groupId,
       MedicalInfo: c.medicalInfo,
       MobilityNotes: c.mobilityNotes,
+      HasPhoto: c.hasPhoto,
+      ImportedAt: c.importedAt,
+      NoShowCount: c.noShowCount,
+      EarlyLeaverCount: c.earlyLeaverCount,
     })));
     xlsx.utils.book_append_sheet(workbook, cSheet, 'Contestants');
   }
@@ -269,9 +382,18 @@ async function createExcelBackup(data: any, filePath: string): Promise<void> {
       ContestantID: sa.contestantId,
       Block: sa.blockNumber,
       Seat: sa.seatLabel,
+      PlayerType: sa.playerType,
+      SeatedAsBlockType: sa.seatedAsBlockType,
+      SeatedFromStandby: sa.seatedFromStandby,
       BookingEmailSent: sa.bookingEmailSent,
       ConfirmedRSVP: sa.confirmedRsvp,
+      PaperworkSent: sa.paperworkSent,
+      PaperworkReceived: sa.paperworkReceived,
+      SignedIn: sa.signedIn,
+      OtdNotes: sa.otdNotes,
+      AttendingWithOverride: sa.attendingWithOverride,
       Notes: sa.notes,
+      AssignedAt: sa.assignedAt,
     })));
     xlsx.utils.book_append_sheet(workbook, saSheet, 'Seat Assignments');
   }
@@ -283,11 +405,145 @@ async function createExcelBackup(data: any, filePath: string): Promise<void> {
       RecordDayID: st.recordDayId,
       ContestantID: st.contestantId,
       Status: st.status,
+      MovedToReschedule: st.movedToReschedule,
       Notes: st.notes,
+      EmailSentAt: st.emailSentAt,
+      AssignedAt: st.assignedAt,
     })));
     xlsx.utils.book_append_sheet(workbook, stSheet, 'Standbys');
   }
   
+  // Canceled Assignments sheet
+  if (data.canceledAssignments && data.canceledAssignments.length > 0) {
+    const caSheet = xlsx.utils.json_to_sheet(data.canceledAssignments.map((ca: any) => ({
+      ID: ca.id,
+      RecordDayID: ca.recordDayId,
+      ContestantID: ca.contestantId,
+      Reason: ca.reason,
+      IsFromStandby: ca.isFromStandby,
+      RebookedToRecordDayId: ca.rebookedToRecordDayId,
+      RebookedAt: ca.rebookedAt,
+      RebookedBy: ca.rebookedBy,
+      CanceledAt: ca.canceledAt,
+    })));
+    xlsx.utils.book_append_sheet(workbook, caSheet, 'Canceled Assignments');
+  }
+
+  // Attendance Issues sheet
+  if (data.attendanceIssues && data.attendanceIssues.length > 0) {
+    const aiSheet = xlsx.utils.json_to_sheet(data.attendanceIssues.map((ai: any) => ({
+      ID: ai.id,
+      RecordDayID: ai.recordDayId,
+      ContestantID: ai.contestantId,
+      IssueType: ai.issueType,
+      Notes: ai.notes,
+      RecordedAt: ai.recordedAt,
+      RecordedBy: ai.recordedBy,
+    })));
+    xlsx.utils.book_append_sheet(workbook, aiSheet, 'Attendance Issues');
+  }
+
+  // Rebooking History sheet
+  if (data.rebookingHistory && data.rebookingHistory.length > 0) {
+    const rhSheet = xlsx.utils.json_to_sheet(data.rebookingHistory.map((rh: any) => ({
+      ID: rh.id,
+      ContestantID: rh.contestantId,
+      FromRecordDayID: rh.fromRecordDayId,
+      ToRecordDayID: rh.toRecordDayId,
+      Reason: rh.reason,
+      RebookedBy: rh.rebookedBy,
+      RebookedAt: rh.rebookedAt,
+    })));
+    xlsx.utils.book_append_sheet(workbook, rhSheet, 'Rebooking History');
+  }
+
+  // Standby Attendance History sheet
+  if (data.standbyAttendanceHistory && data.standbyAttendanceHistory.length > 0) {
+    const sahSheet = xlsx.utils.json_to_sheet(data.standbyAttendanceHistory.map((sah: any) => ({
+      ID: sah.id,
+      ContestantID: sah.contestantId,
+      RecordDayID: sah.recordDayId,
+      AttendedAt: sah.attendedAt,
+      Notes: sah.notes,
+    })));
+    xlsx.utils.book_append_sheet(workbook, sahSheet, 'Standby Attendance History');
+  }
+
+  // Prize Winners sheet
+  if (data.prizeWinners && data.prizeWinners.length > 0) {
+    const pwSheet = xlsx.utils.json_to_sheet(data.prizeWinners.map((pw: any) => ({
+      ID: pw.id,
+      ContestantID: pw.contestantId,
+      RecordDayID: pw.recordDayId,
+      Amount: pw.amount,
+      Notes: pw.notes,
+      RecordedAt: pw.recordedAt,
+    })));
+    xlsx.utils.book_append_sheet(workbook, pwSheet, 'Prize Winners');
+  }
+
+  // Casting Cards sheet
+  if (data.castingCards && data.castingCards.length > 0) {
+    const ccSheet = xlsx.utils.json_to_sheet(data.castingCards.map((cc: any) => ({
+      ID: cc.id,
+      ContestantID: cc.contestantId,
+      Content: JSON.stringify(cc.content),
+      UpdatedAt: cc.updatedAt,
+    })));
+    xlsx.utils.book_append_sheet(workbook, ccSheet, 'Casting Cards');
+  }
+
+  // Casting Card Versions sheet
+  if (data.castingCardVersions && data.castingCardVersions.length > 0) {
+    const ccvSheet = xlsx.utils.json_to_sheet(data.castingCardVersions.map((v: any) => ({
+      ID: v.id,
+      CastingCardID: v.castingCardId,
+      Content: JSON.stringify(v.content),
+      SavedAt: v.createdAt,
+    })));
+    xlsx.utils.book_append_sheet(workbook, ccvSheet, 'Casting Card Versions');
+  }
+
+  // RX Planning Entries sheet
+  if (data.rxPlanningEntries && data.rxPlanningEntries.length > 0) {
+    const rxSheet = xlsx.utils.json_to_sheet(data.rxPlanningEntries.map((rx: any) => ({
+      ID: rx.id,
+      RecordDayID: rx.recordDayId,
+      ContestantID: rx.contestantId,
+      EpisodeNumber: rx.episodeNumber,
+      Position: rx.position,
+      Notes: rx.notes,
+    })));
+    xlsx.utils.book_append_sheet(workbook, rxSheet, 'RX Planning');
+  }
+
+  // Block Notes sheet
+  if (data.blockNotes && data.blockNotes.length > 0) {
+    const bnSheet = xlsx.utils.json_to_sheet(data.blockNotes.map((bn: any) => ({
+      ID: bn.id,
+      RecordDayID: bn.recordDayId,
+      BlockNumber: bn.blockNumber,
+      Notes: bn.notes,
+      UpdatedAt: bn.updatedAt,
+    })));
+    xlsx.utils.book_append_sheet(workbook, bnSheet, 'Block Notes');
+  }
+
+  // Post Record Tracking sheet
+  if (data.postRecordTracking && data.postRecordTracking.length > 0) {
+    const prtSheet = xlsx.utils.json_to_sheet(data.postRecordTracking.map((prt: any) => ({
+      ID: prt.id,
+      ContestantID: prt.contestantId,
+      RecordDayID: prt.recordDayId,
+      SeatAssignmentID: prt.seatAssignmentId,
+      WonMoney: prt.wonMoney,
+      Amount: prt.amount,
+      Notes: prt.notes,
+      UpdatedAt: prt.updatedAt,
+    })));
+    xlsx.utils.book_append_sheet(workbook, prtSheet, 'Post Record Tracking');
+  }
+
   // Groups sheet
   if (data.groups && data.groups.length > 0) {
     const gSheet = xlsx.utils.json_to_sheet(data.groups.map((g: any) => ({
@@ -307,17 +563,82 @@ async function createExcelBackup(data: any, filePath: string): Promise<void> {
     })));
     xlsx.utils.book_append_sheet(workbook, btSheet, 'Block Types');
   }
-  
-  // Canceled Assignments sheet
-  if (data.canceledAssignments && data.canceledAssignments.length > 0) {
-    const caSheet = xlsx.utils.json_to_sheet(data.canceledAssignments.map((ca: any) => ({
-      ID: ca.id,
-      RecordDayID: ca.recordDayId,
-      ContestantID: ca.contestantId,
-      Reason: ca.reason,
-      CanceledAt: ca.canceledAt,
+
+  // Movement History sheet
+  if (data.movementHistory && data.movementHistory.length > 0) {
+    const mhSheet = xlsx.utils.json_to_sheet(data.movementHistory.map((mh: any) => ({
+      ID: mh.id,
+      ContestantID: mh.contestantId,
+      RecordDayID: mh.recordDayId,
+      MovementType: mh.movementType,
+      FromBlock: mh.fromBlockNumber,
+      FromSeat: mh.fromSeatLabel,
+      ToBlock: mh.toBlockNumber,
+      ToSeat: mh.toSeatLabel,
+      MovedBy: mh.movedBy,
+      MovedAt: mh.movedAt,
+      Notes: mh.notes,
     })));
-    xlsx.utils.book_append_sheet(workbook, caSheet, 'Canceled Assignments');
+    xlsx.utils.book_append_sheet(workbook, mhSheet, 'Movement History');
+  }
+
+  // Contestant Availability sheet
+  if (data.contestantAvailability && data.contestantAvailability.length > 0) {
+    const avSheet = xlsx.utils.json_to_sheet(data.contestantAvailability.map((av: any) => ({
+      ID: av.id,
+      ContestantID: av.contestantId,
+      RecordDayID: av.recordDayId,
+      Response: av.response,
+      RespondedAt: av.respondedAt,
+    })));
+    xlsx.utils.book_append_sheet(workbook, avSheet, 'Contestant Availability');
+  }
+
+  // Noticeboard Posts sheet
+  if (data.noticeboardPosts && data.noticeboardPosts.length > 0) {
+    const npSheet = xlsx.utils.json_to_sheet(data.noticeboardPosts.map((np: any) => ({
+      ID: np.id,
+      Title: np.title,
+      Content: np.content,
+      AuthorID: np.authorId,
+      IsPinned: np.isPinned,
+      CreatedAt: np.createdAt,
+    })));
+    xlsx.utils.book_append_sheet(workbook, npSheet, 'Noticeboard Posts');
+  }
+
+  // Noticeboard Comments sheet
+  if (data.noticeboardComments && data.noticeboardComments.length > 0) {
+    const ncSheet = xlsx.utils.json_to_sheet(data.noticeboardComments.map((nc: any) => ({
+      ID: nc.id,
+      PostID: nc.postId,
+      AuthorID: nc.authorId,
+      Content: nc.content,
+      CreatedAt: nc.createdAt,
+    })));
+    xlsx.utils.book_append_sheet(workbook, ncSheet, 'Noticeboard Comments');
+  }
+
+  // Birthday Entries sheet
+  if (data.birthdayEntries && data.birthdayEntries.length > 0) {
+    const beSheet = xlsx.utils.json_to_sheet(data.birthdayEntries.map((be: any) => ({
+      ID: be.id,
+      ContestantID: be.contestantId,
+      RecordDayID: be.recordDayId,
+      BirthDate: be.birthDate,
+      Notes: be.notes,
+    })));
+    xlsx.utils.book_append_sheet(workbook, beSheet, 'Birthday Entries');
+  }
+
+  // System Config sheet
+  if (data.systemConfig && data.systemConfig.length > 0) {
+    const scSheet = xlsx.utils.json_to_sheet(data.systemConfig.map((sc: any) => ({
+      Key: sc.key,
+      Value: sc.value,
+      UpdatedAt: sc.updatedAt,
+    })));
+    xlsx.utils.book_append_sheet(workbook, scSheet, 'System Config');
   }
   
   // Write the file

@@ -17,7 +17,12 @@ import {
   availabilityTokens,
   bookingConfirmationTokens,
   postRecordTracking,
-  insertPostRecordTrackingSchema
+  insertPostRecordTrackingSchema,
+  prizeWinners as prizeWinnersTable,
+  castingCardVersions as castingCardVersionsTable,
+  systemConfig as systemConfigTable,
+  noticeboardComments as noticeboardCommentsTable,
+  systemSettings as systemSettingsTable,
 } from "@shared/schema";
 import { 
   parseAttendingWith, 
@@ -16322,32 +16327,78 @@ Thank you.`;
   // Export all data as JSON backup
   app.get("/api/backup/export", async (req, res) => {
     try {
-      // Gather all data from all tables
+      // Gather all data via storage interface
+      const allRecordDays = await storage.getRecordDays();
+
       const [
-        allRecordDays,
         allContestants,
         allGroups,
         allSeatAssignments,
-        allBlockTypes,
+        allBlockTypesArrays,
+        allBlockNotesArrays,
         allStandbys,
         allCanceled,
+        allAttendanceIssues,
+        allRebookingHistory,
+        allStandbyAttendanceHistory,
+        allCastingCards,
+        allRxPlanningEntries,
+        allPostRecordTracking,
+        allNoticeboardPosts,
+        allMovementHistory,
+        allContestantAvailability,
+        allBirthdayEntries,
       ] = await Promise.all([
-        storage.getRecordDays(),
         storage.getContestants(),
         storage.getGroups(),
         storage.getAllSeatAssignments(),
-        Promise.all((await storage.getRecordDays()).map(rd => storage.getBlockTypesByRecordDay(rd.id))),
+        Promise.all(allRecordDays.map(rd => storage.getBlockTypesByRecordDay(rd.id))),
+        Promise.all(allRecordDays.map(rd => storage.getBlockNotes(rd.id))),
         storage.getStandbyAssignments(),
         storage.getCanceledAssignments(),
+        storage.getAttendanceIssues(),
+        storage.getAllRebookingHistory(),
+        storage.getStandbyAttendanceHistory(),
+        storage.getCastingCards(),
+        storage.getAllRxPlanningData(),
+        storage.getPostRecordEntries(),
+        storage.getNoticeboardPosts(),
+        storage.getMovementHistory(),
+        storage.getAllAvailabilityResponses(),
+        storage.getBirthdayEntries(),
       ]);
-      
-      // Flatten block types
-      const flatBlockTypes = allBlockTypes.flat();
+
+      const flatBlockTypes = allBlockTypesArrays.flat();
+      const flatBlockNotes = allBlockNotesArrays.flat();
+
+      // Direct DB queries for tables without bulk storage methods
+      let prizeWinnersData: any[] = [];
+      let castingCardVersionsData: any[] = [];
+      let systemConfigData: any[] = [];
+      let noticeboardCommentsData: any[] = [];
+      let systemSettingsData: any[] = [];
+
+      if (db) {
+        [
+          prizeWinnersData,
+          castingCardVersionsData,
+          systemConfigData,
+          noticeboardCommentsData,
+          systemSettingsData,
+        ] = await Promise.all([
+          db.select().from(prizeWinnersTable),
+          db.select().from(castingCardVersionsTable),
+          db.select().from(systemConfigTable),
+          db.select().from(noticeboardCommentsTable),
+          db.select().from(systemSettingsTable),
+        ]);
+      }
       
       const backupData = {
-        version: "1.0",
+        version: "2.0",
         exportedAt: new Date().toISOString(),
         data: {
+          // Core seating data
           recordDays: allRecordDays,
           contestants: allContestants,
           groups: allGroups,
@@ -16355,6 +16406,27 @@ Thank you.`;
           blockTypes: flatBlockTypes,
           standbys: allStandbys,
           canceledAssignments: allCanceled,
+          // History & audit trails
+          attendanceIssues: allAttendanceIssues,
+          rebookingHistory: allRebookingHistory,
+          standbyAttendanceHistory: allStandbyAttendanceHistory,
+          movementHistory: allMovementHistory,
+          // Booking workflow
+          contestantAvailability: allContestantAvailability,
+          // Content & config
+          castingCards: allCastingCards,
+          castingCardVersions: castingCardVersionsData,
+          rxPlanningEntries: allRxPlanningEntries,
+          blockNotes: flatBlockNotes,
+          postRecordTracking: allPostRecordTracking,
+          prizeWinners: prizeWinnersData,
+          birthdayEntries: allBirthdayEntries,
+          // Noticeboard
+          noticeboardPosts: allNoticeboardPosts,
+          noticeboardComments: noticeboardCommentsData,
+          // System
+          systemConfig: systemConfigData,
+          systemSettings: systemSettingsData,
         },
         counts: {
           recordDays: allRecordDays.length,
@@ -16364,6 +16436,21 @@ Thank you.`;
           blockTypes: flatBlockTypes.length,
           standbys: allStandbys.length,
           canceledAssignments: allCanceled.length,
+          attendanceIssues: allAttendanceIssues.length,
+          rebookingHistory: allRebookingHistory.length,
+          standbyAttendanceHistory: allStandbyAttendanceHistory.length,
+          movementHistory: allMovementHistory.length,
+          contestantAvailability: allContestantAvailability.length,
+          castingCards: allCastingCards.length,
+          castingCardVersions: castingCardVersionsData.length,
+          rxPlanningEntries: allRxPlanningEntries.length,
+          blockNotes: flatBlockNotes.length,
+          postRecordTracking: allPostRecordTracking.length,
+          prizeWinners: prizeWinnersData.length,
+          birthdayEntries: allBirthdayEntries.length,
+          noticeboardPosts: allNoticeboardPosts.length,
+          noticeboardComments: noticeboardCommentsData.length,
+          systemConfig: systemConfigData.length,
         },
       };
       
@@ -16388,6 +16475,10 @@ Thank you.`;
         allSeatAssignments,
         allStandbys,
         allCanceled,
+        allAttendanceIssues,
+        allRebookingHistory,
+        allCastingCards,
+        allRxPlanning,
       ] = await Promise.all([
         storage.getRecordDays(),
         storage.getContestants(),
@@ -16395,6 +16486,10 @@ Thank you.`;
         storage.getAllSeatAssignments(),
         storage.getStandbyAssignments(),
         storage.getCanceledAssignments(),
+        storage.getAttendanceIssues(),
+        storage.getAllRebookingHistory(),
+        storage.getCastingCards(),
+        storage.getAllRxPlanningData(),
       ]);
       
       res.json({
@@ -16404,7 +16499,11 @@ Thank you.`;
         seatAssignments: allSeatAssignments.length,
         standbys: allStandbys.length,
         canceledAssignments: allCanceled.length,
-        lastBackup: null, // Could store this in system config if needed
+        attendanceIssues: allAttendanceIssues.length,
+        rebookingHistory: allRebookingHistory.length,
+        castingCards: allCastingCards.length,
+        rxPlanningEntries: allRxPlanning.length,
+        lastBackup: null,
       });
     } catch (error: any) {
       console.error("Error getting backup summary:", error);
