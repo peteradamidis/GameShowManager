@@ -416,9 +416,6 @@ export default function RecordDays() {
                               <div className="text-xs text-muted-foreground mt-0.5">
                                 {dayInfo.recordDay.confirmedSeats}/{dayInfo.recordDay.filledSeats} confirmed
                               </div>
-                              <div className="text-xs text-muted-foreground">
-                                {dayInfo.recordDay.filledSeats}/{dayInfo.recordDay.totalSeats} seats
-                              </div>
                             </div>
                           )}
                         </>
@@ -465,18 +462,6 @@ export default function RecordDays() {
                   value={formData.rxNumber}
                   onChange={(e) => setFormData(prev => ({ ...prev, rxNumber: e.target.value }))}
                   data-testid="input-record-day-rx-number"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="totalSeats">Total Seats</Label>
-                <Input
-                  id="totalSeats"
-                  type="number"
-                  min={1}
-                  max={500}
-                  value={formData.totalSeats}
-                  onChange={(e) => setFormData(prev => ({ ...prev, totalSeats: parseInt(e.target.value) || 154 }))}
-                  data-testid="input-record-day-total-seats"
                 />
               </div>
             </div>
