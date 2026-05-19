@@ -347,65 +347,26 @@ export default function PodiumPage() {
     enabled: !!recordDayId,
   });
 
-  // Seat assignments for the selected record day — used by the Stories tab
-  const { data: assignments = [] } = useQuery<any[]>({
-    queryKey: ['/api/seat-assignments', recordDayId],
-    queryFn: async () => {
-      if (!recordDayId) return [];
-      const r = await fetch(`/api/seat-assignments/${recordDayId}`, { credentials: 'include' });
-      if (!r.ok) throw new Error('Failed to fetch seat assignments');
-      return r.json();
-    },
-    enabled: !!recordDayId,
-  });
-
-  // Contestants with podiumStory=true for this record day, as SeatData objects
+  // Contestants with podiumStory=true for this record day, derived directly from podiumData.
+  // In the CELEB workspace, contestants are placed into podium positions (not seat assignments),
+  // so podiumData is the correct source for the Stories tab.
   const storySeats: SeatData[] = useMemo(() => {
-    return assignments
-      .filter((a: any) => a.podiumStory && a.blockNumber > 0)
-      .sort((a: any, b: any) => {
-        if (a.blockNumber !== b.blockNumber) return a.blockNumber - b.blockNumber;
-        return (a.seatLabel || '').localeCompare(b.seatLabel || '', undefined, { numeric: true });
-      })
-      .map((a: any): SeatData => ({
-        id: `${recordDayId}-block${a.blockNumber - 1}-${a.seatLabel}`,
-        contestantName: a.contestantName,
-        age: a.age,
-        gender: a.gender,
-        groupId: a.groupId,
-        assignmentId: a.id,
-        contestantId: a.contestantId,
-        auditionRating: a.auditionRating,
-        playerType: a.playerType,
-        attendingWith: a.attendingWith,
-        originalBlockNumber: a.originalBlockNumber,
-        originalSeatLabel: a.originalSeatLabel,
-        swappedAt: a.swappedAt,
-        rxNumber: a.rxNumber,
-        caseNumber: a.caseNumber,
-        winningMoneyRole: a.winningMoneyRole,
-        winningMoneyAmount: a.winningMoneyAmount,
-        mobilityNotes: a.mobilityNotes,
-        medicalInfo: a.medicalInfo,
-        wasStandby: a.wasStandby,
-        isFromReschedule: a.isFromReschedule,
-        photoUrl: a.photoUrl,
-        contestantLocation: a.contestantLocation,
-        criminalRecord: a.criminalRecord,
-        isTemporary: a.isTemporary,
-        isTestSubject: a.isTestSubject,
-        notes: a.notes,
-        attendingWithOverride: a.attendingWithOverride,
-        mobilityNotesOverride: a.mobilityNotesOverride,
-        podiumStory: a.podiumStory,
-        availabilityStatus: a.availabilityStatus,
-        signedIn: a.signedIn,
-        bookingEmailSent: a.bookingEmailSent,
-        confirmedRsvp: a.confirmedRsvp || a.status === 'confirmed',
-        isReturning: !!a.isReturning,
-        returningInfo: a.returningInfo,
+    return podiumData
+      .filter((entry: PodiumEntry) => entry.contestant.podiumStory)
+      .sort((a: PodiumEntry, b: PodiumEntry) => a.position - b.position)
+      .map((entry: PodiumEntry): SeatData => ({
+        id: `podium-story-${entry.contestantId}`,
+        contestantName: entry.contestant.name,
+        age: entry.contestant.age ?? undefined,
+        gender: entry.contestant.gender as any,
+        contestantId: entry.contestantId,
+        auditionRating: entry.contestant.auditionRating ?? undefined,
+        availabilityStatus: entry.contestant.availabilityStatus ?? undefined,
+        attendingWith: entry.contestant.attendingWith ?? undefined,
+        photoUrl: entry.contestant.photoUrl ?? undefined,
+        podiumStory: true,
       }));
-  }, [assignments, recordDayId]);
+  }, [podiumData]);
 
   const positionMap = useMemo(() => {
     const map: Record<number, PodiumEntry> = {};

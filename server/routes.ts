@@ -18105,7 +18105,16 @@ Thank you.`;
       const { recordDayId, position } = req.params;
       const { contestantId } = req.body;
       if (!contestantId) return res.status(400).json({ error: "contestantId is required" });
+      // Before upserting, find any contestant currently at this position so we can revert their status
+      const existingPositions = await storage.getPodiumPositions(recordDayId);
+      const displaced = existingPositions.find(p => p.position === parseInt(position));
       const result = await storage.upsertPodiumPosition(recordDayId, parseInt(position), contestantId);
+      // Mark the newly placed contestant as assigned
+      await storage.updateContestantAvailability(contestantId, 'assigned');
+      // If someone else was bumped from this position, revert their status to available
+      if (displaced && displaced.contestantId !== contestantId) {
+        await storage.updateContestantAvailability(displaced.contestantId, 'available');
+      }
       res.json(result);
     } catch (error: any) {
       console.error("Upsert podium position error:", error);
@@ -18116,7 +18125,13 @@ Thank you.`;
   app.delete("/api/record-days/:recordDayId/podium-positions/:position", requireAuth, async (req, res) => {
     try {
       const { recordDayId, position } = req.params;
+      // Capture which contestant is there before deleting so we can revert their status
+      const existingPositions = await storage.getPodiumPositions(recordDayId);
+      const toRemove = existingPositions.find(p => p.position === parseInt(position));
       await storage.deletePodiumPosition(recordDayId, parseInt(position));
+      if (toRemove) {
+        await storage.updateContestantAvailability(toRemove.contestantId, 'available');
+      }
       res.json({ success: true });
     } catch (error: any) {
       console.error("Delete podium position error:", error);
