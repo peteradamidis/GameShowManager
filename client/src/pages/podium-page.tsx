@@ -47,7 +47,7 @@ const STATUS_LABELS: Record<string, string> = {
   'returning_standby':'RetSB',
 };
 
-type RecordDay = { id: string; date: string | null; rxNumber: string | null };
+type RecordDay = { id: string; date: string | null; rxNumber: string | null; episodeNumber?: number | null };
 type Contestant = {
   id: string; name: string; gender: string; photoUrl?: string | null;
   auditionRating?: string | null; availabilityStatus?: string | null;
@@ -223,7 +223,9 @@ export default function PodiumPage() {
           <SelectContent>
             {sortedDays.map(day => (
               <SelectItem key={day.id} value={day.id}>
-                {day.rxNumber ? `${day.rxNumber} — ` : ""}
+                {day.episodeNumber != null ? `Ep ${day.episodeNumber}` : ""}
+                {day.episodeNumber != null && day.rxNumber ? " · " : ""}
+                {day.rxNumber && !day.episodeNumber ? `${day.rxNumber} — ` : day.rxNumber ? `${day.rxNumber} — ` : ""}
                 {day.date
                   ? new Date(day.date).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short", year: "numeric" })
                   : "No date"}

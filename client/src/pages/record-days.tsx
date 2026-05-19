@@ -33,6 +33,7 @@ type ApiRecordDay = {
   id: string;
   date: string;
   rxNumber?: string | null;
+  episodeNumber?: number | null;
   totalSeats: number;
   status: string;
 };
@@ -40,6 +41,7 @@ type ApiRecordDay = {
 type RecordDayFormData = {
   date: string;
   rxNumber: string;
+  episodeNumber: number | null;
   totalSeats: number;
 };
 
@@ -52,6 +54,7 @@ export default function RecordDays() {
   const [formData, setFormData] = useState<RecordDayFormData>({
     date: "",
     rxNumber: "",
+    episodeNumber: null,
     totalSeats: 154,
   });
   const [viewMode, setViewMode] = useState<"grid" | "calendar">("calendar");
@@ -86,6 +89,7 @@ export default function RecordDays() {
       return await apiRequest('POST', '/api/record-days', {
         date: data.date,
         rxNumber: data.rxNumber || null,
+        episodeNumber: data.episodeNumber || null,
         totalSeats: data.totalSeats,
       });
     },
@@ -111,6 +115,7 @@ export default function RecordDays() {
       return await apiRequest('PATCH', `/api/record-days/${id}`, {
         date: data.date,
         rxNumber: data.rxNumber || null,
+        episodeNumber: data.episodeNumber || null,
         totalSeats: data.totalSeats,
       });
     },
@@ -154,7 +159,11 @@ export default function RecordDays() {
   });
 
   const recordDays: RecordDay[] = [...apiRecordDays]
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .sort((a, b) => {
+      const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime();
+      if (dateDiff !== 0) return dateDiff;
+      return (a.episodeNumber ?? 0) - (b.episodeNumber ?? 0);
+    })
     .map((day) => {
       const dayAssignments = allAssignments.find((a) => a.recordDayId === day.id)?.assignments || [];
       const filledSeats = dayAssignments.length;
@@ -167,6 +176,7 @@ export default function RecordDays() {
         id: day.id,
         date: localDate.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }),
         rxNumber: day.rxNumber,
+        episodeNumber: day.episodeNumber,
         totalSeats: day.totalSeats || 154,
         filledSeats,
         confirmedSeats,
@@ -178,6 +188,7 @@ export default function RecordDays() {
     setFormData({
       date: "",
       rxNumber: "",
+      episodeNumber: null,
       totalSeats: 154,
     });
     setIsDialogOpen(true);
@@ -188,6 +199,7 @@ export default function RecordDays() {
     setFormData({
       date: recordDay.date.split('T')[0],
       rxNumber: recordDay.rxNumber || "",
+      episodeNumber: recordDay.episodeNumber ?? null,
       totalSeats: recordDay.totalSeats || 154,
     });
     setIsDialogOpen(true);
@@ -199,6 +211,7 @@ export default function RecordDays() {
     setFormData({
       date: "",
       rxNumber: "",
+      episodeNumber: null,
       totalSeats: 154,
     });
   };
@@ -244,7 +257,7 @@ export default function RecordDays() {
     const daysInMonth = lastDay.getDate();
     const startDayOfWeek = firstDay.getDay(); // 0 = Sunday
     
-    const days: Array<{ date: Date | null; recordDay?: RecordDay & { rawDate: string } }> = [];
+    const days: Array<{ date: Date | null; recordDays?: Array<RecordDay & { rawDate: string; episodeNumber?: number | null }> }> = [];
     
     // Add empty slots for days before the first of the month
     for (let i = 0; i < startDayOfWeek; i++) {
@@ -257,27 +270,28 @@ export default function RecordDays() {
       // Format as YYYY-MM-DD in local timezone (don't use toISOString which converts to UTC)
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       
-      // Find if there's a record day on this date
-      const recordDay = apiRecordDays.find(rd => rd.date.split('T')[0] === dateStr);
-      let enrichedRecordDay: (RecordDay & { rawDate: string }) | undefined;
-      
-      if (recordDay) {
+      // Find ALL record days on this date (multiple episodes support)
+      const matchingApiDays = apiRecordDays
+        .filter(rd => rd.date.split('T')[0] === dateStr)
+        .sort((a, b) => (a.episodeNumber ?? 0) - (b.episodeNumber ?? 0));
+
+      const enrichedRecordDays: Array<RecordDay & { rawDate: string; episodeNumber?: number | null }> = matchingApiDays.map(recordDay => {
         const dayAssignments = allAssignments.find((a) => a.recordDayId === recordDay.id)?.assignments || [];
-        // Parse date parts from ISO string to avoid timezone issues
         const [rdYear, rdMonth, rdDay] = recordDay.date.split('T')[0].split('-').map(Number);
         const localDate = new Date(rdYear, rdMonth - 1, rdDay);
-        enrichedRecordDay = {
+        return {
           id: recordDay.id,
           date: localDate.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }),
           rawDate: recordDay.date,
           rxNumber: recordDay.rxNumber,
+          episodeNumber: recordDay.episodeNumber,
           totalSeats: recordDay.totalSeats || 154,
           filledSeats: dayAssignments.length,
           confirmedSeats: dayAssignments.filter((a: any) => a.confirmedRsvp).length,
         };
-      }
+      });
       
-      days.push({ date, recordDay: enrichedRecordDay });
+      days.push({ date, recordDays: enrichedRecordDays.length > 0 ? enrichedRecordDays : undefined });
     }
     
     return days;
@@ -404,20 +418,21 @@ export default function RecordDays() {
                           <div className={`text-sm font-medium mb-1 ${isToday ? 'text-primary' : ''}`}>
                             {dayInfo.date.getDate()}
                           </div>
-                          {dayInfo.recordDay && (
+                          {dayInfo.recordDays?.map(rd => (
                             <div
-                              className="bg-primary/10 border border-primary/30 rounded p-1 cursor-pointer hover-elevate"
-                              onClick={() => setLocation(`/seating-chart?day=${dayInfo.recordDay!.id}`)}
-                              data-testid={`calendar-day-${dayInfo.recordDay.id}`}
+                              key={rd.id}
+                              className="bg-primary/10 border border-primary/30 rounded p-1 cursor-pointer hover-elevate mb-0.5 last:mb-0"
+                              onClick={() => setLocation(`/seating-chart?day=${rd.id}`)}
+                              data-testid={`calendar-day-${rd.id}`}
                             >
                               <div className="text-xs font-medium text-primary truncate">
-                                {dayInfo.recordDay.rxNumber || 'RX Day'}
+                                {rd.episodeNumber != null ? `Ep ${rd.episodeNumber}` : ''}{rd.rxNumber ? (rd.episodeNumber != null ? ` · ${rd.rxNumber}` : rd.rxNumber) : (rd.episodeNumber == null ? 'RX Day' : '')}
                               </div>
                               <div className="text-xs text-muted-foreground mt-0.5">
-                                {dayInfo.recordDay.confirmedSeats}/{dayInfo.recordDay.filledSeats} confirmed
+                                {rd.confirmedSeats}/{rd.filledSeats} confirmed
                               </div>
                             </div>
-                          )}
+                          ))}
                         </>
                       )}
                     </div>
@@ -462,6 +477,21 @@ export default function RecordDays() {
                   value={formData.rxNumber}
                   onChange={(e) => setFormData(prev => ({ ...prev, rxNumber: e.target.value }))}
                   data-testid="input-record-day-rx-number"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="episodeNumber">Episode Number</Label>
+                <Input
+                  id="episodeNumber"
+                  type="number"
+                  min={1}
+                  placeholder="e.g. 1, 2, 3 (for multi-episode days)"
+                  value={formData.episodeNumber ?? ""}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    episodeNumber: e.target.value ? parseInt(e.target.value, 10) : null,
+                  }))}
+                  data-testid="input-record-day-episode-number"
                 />
               </div>
             </div>

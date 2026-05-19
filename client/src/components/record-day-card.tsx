@@ -7,6 +7,7 @@ export interface RecordDay {
   id: string;
   date: string;
   rxNumber?: string | null;
+  episodeNumber?: number | null;
   totalSeats: number;
   filledSeats: number;
   confirmedSeats: number;
@@ -33,7 +34,10 @@ export function RecordDayCard({ recordDay, onViewSeating, onEdit, onDelete, onSe
               <span className="truncate text-base">{recordDay.date}</span>
             </CardTitle>
             <CardDescription>
-              {recordDay.rxNumber || "Record Day"}
+              {[
+                recordDay.episodeNumber != null ? `Ep ${recordDay.episodeNumber}` : null,
+                recordDay.rxNumber || null,
+              ].filter(Boolean).join(" · ") || "Record Day"}
             </CardDescription>
           </div>
           <div className="flex gap-1 flex-shrink-0">

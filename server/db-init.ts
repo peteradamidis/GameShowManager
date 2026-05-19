@@ -165,6 +165,18 @@ export async function initializeCelebSchema(existingPool?: any) {
       if (!e.message?.includes('does not exist')) throw e;
     }
 
+    // 0b. Add episode_number column to record_days in both schemas (idempotent)
+    try {
+      await client.query(`ALTER TABLE public.record_days ADD COLUMN IF NOT EXISTS episode_number integer`);
+    } catch (e: any) {
+      if (!e.message?.includes('does not exist')) throw e;
+    }
+    try {
+      await client.query(`ALTER TABLE celeb.record_days ADD COLUMN IF NOT EXISTS episode_number integer`);
+    } catch (e: any) {
+      if (!e.message?.includes('does not exist')) throw e;
+    }
+
     // 1. Create the celeb schema
     await client.query('CREATE SCHEMA IF NOT EXISTS celeb');
 
