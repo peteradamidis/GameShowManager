@@ -51,6 +51,11 @@ const menuItems = [
     celebOnly: true,
   },
   {
+    title: "Podium Stories",
+    url: "/podium-stories",
+    icon: Mic2,
+  },
+  {
     title: "Seating Chart",
     url: "/seating-chart",
     icon: LayoutGrid,
@@ -64,11 +69,6 @@ const menuItems = [
     title: "Players",
     url: "/players",
     icon: Star,
-  },
-  {
-    title: "Podium Stories",
-    url: "/podium-stories",
-    icon: Mic2,
   },
   {
     title: "Standbys",
