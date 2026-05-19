@@ -391,7 +391,10 @@ export function SeatCard({
     ? `${String(seat.originalBlockNumber).padStart(2, '0')}-${seat.originalSeatLabel}`
     : null;
 
-  // Fetch full contestant details on hover (only for occupied seats)
+  // Gate the details fetch behind hover state — avoids N parallel requests on seating chart mount
+  const [hoverOpen, setHoverOpen] = useState(false);
+
+  // Fetch full contestant details only when the hover card is actually open
   const { data: contestantDetails } = useQuery({
     queryKey: ['/api/contestants', seat.contestantId],
     queryFn: async () => {
@@ -400,7 +403,7 @@ export function SeatCard({
       if (!response.ok) throw new Error('Failed to fetch contestant details');
       return response.json();
     },
-    enabled: !isEmpty && !!seat.contestantId,
+    enabled: hoverOpen && !isEmpty && !!seat.contestantId,
   });
 
   const handleClick = (e: React.MouseEvent) => {
@@ -792,7 +795,7 @@ export function SeatCard({
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div>
-            <HoverCard openDelay={200} closeDelay={100}>
+            <HoverCard open={hoverOpen} onOpenChange={setHoverOpen} openDelay={200} closeDelay={100}>
               <HoverCardTrigger asChild>
                 {seatContent}
               </HoverCardTrigger>

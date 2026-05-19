@@ -125,7 +125,9 @@ function PodiumPositionCard({
 }) {
   const isDark = useIsDarkMode();
   const ratingColors = isDark ? ratingColorsDark : ratingColorsLight;
+  const [hoverOpen, setHoverOpen] = useState(false);
 
+  // Only fetch when the hover card is actually open — avoids 26 parallel requests on mount
   const { data: details } = useQuery({
     queryKey: ['/api/contestants', entry?.contestantId],
     queryFn: async () => {
@@ -134,7 +136,7 @@ function PodiumPositionCard({
       if (!r.ok) throw new Error('Failed to fetch');
       return r.json();
     },
-    enabled: !!entry?.contestantId,
+    enabled: hoverOpen && !!entry?.contestantId,
   });
 
   const isEmpty = !entry;
@@ -208,7 +210,7 @@ function PodiumPositionCard({
 
   if (!isEmpty) {
     return (
-      <HoverCard openDelay={200} closeDelay={100}>
+      <HoverCard open={hoverOpen} onOpenChange={setHoverOpen} openDelay={200} closeDelay={100}>
         <HoverCardTrigger asChild>{cardContent}</HoverCardTrigger>
         <HoverCardContent
           className="w-80 z-[100] max-h-[80vh] overflow-y-auto"
