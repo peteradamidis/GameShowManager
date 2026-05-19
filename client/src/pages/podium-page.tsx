@@ -12,7 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { SeatCard, SeatData } from "@/components/seat-card";
 import { useToast } from "@/hooks/use-toast";
 import {
   X, Search, Users, User, Eye, Check, ChevronLeft, ChevronRight,
@@ -320,9 +319,14 @@ function PodiumPositionCard({
 
 export default function PodiumPage() {
   const { toast } = useToast();
+  const isDark = useIsDarkMode();
   const [recordDayId, setRecordDayId] = useState<string>("");
   const [activeTab, setActiveTab] = useState("positions");
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null);
+
+  // Stories tab search/filter state
+  const [storiesSearch, setStoriesSearch] = useState("");
+  const [storiesRxFilter, setStoriesRxFilter] = useState("all");
 
   const [contestantSearch, setContestantSearch] = useState("");
   const [filterRating, setFilterRating] = useState("all");
@@ -347,26 +351,19 @@ export default function PodiumPage() {
     enabled: !!recordDayId,
   });
 
-  // Contestants with podiumStory=true for this record day, derived directly from podiumData.
-  // In the CELEB workspace, contestants are placed into podium positions (not seat assignments),
-  // so podiumData is the correct source for the Stories tab.
-  const storySeats: SeatData[] = useMemo(() => {
-    return podiumData
-      .filter((entry: PodiumEntry) => entry.contestant.podiumStory)
-      .sort((a: PodiumEntry, b: PodiumEntry) => a.position - b.position)
-      .map((entry: PodiumEntry): SeatData => ({
-        id: `podium-story-${entry.contestantId}`,
-        contestantName: entry.contestant.name,
-        age: entry.contestant.age ?? undefined,
-        gender: entry.contestant.gender as any,
-        contestantId: entry.contestantId,
-        auditionRating: entry.contestant.auditionRating ?? undefined,
-        availabilityStatus: entry.contestant.availabilityStatus ?? undefined,
-        attendingWith: entry.contestant.attendingWith ?? undefined,
-        photoUrl: entry.contestant.photoUrl ?? undefined,
-        podiumStory: true,
-      }));
-  }, [podiumData]);
+  // All podium-story-tagged contestants across all record days
+  const { data: allPodiumStories = [], isLoading: storiesLoading } = useQuery<any[]>({
+    queryKey: ["/api/podium-stories"],
+  });
+
+  // Filtered stories based on name search and RX filter
+  const filteredStories = useMemo(() => {
+    return allPodiumStories.filter((c: any) => {
+      if (storiesSearch && !c.name?.toLowerCase().includes(storiesSearch.toLowerCase())) return false;
+      if (storiesRxFilter !== "all" && !c.episodes?.some((e: any) => e.recordDayId === storiesRxFilter)) return false;
+      return true;
+    });
+  }, [allPodiumStories, storiesSearch, storiesRxFilter]);
 
   const positionMap = useMemo(() => {
     const map: Record<number, PodiumEntry> = {};
@@ -476,8 +473,9 @@ export default function PodiumPage() {
     contestantPage * CONTESTANTS_PER_PAGE
   );
 
-  const viewedContestant = viewContestantId
-    ? (allContestants.find(c => c.id === viewContestantId) ?? null)
+  // Prefer richer podium-stories data (has episodes, phone, email) over the basic allContestants list
+  const viewedContestant: any = viewContestantId
+    ? (allPodiumStories.find((c: any) => c.id === viewContestantId) ?? allContestants.find(c => c.id === viewContestantId) ?? null)
     : null;
 
   return (
@@ -491,10 +489,10 @@ export default function PodiumPage() {
               {filledCount}/26 assigned
             </Badge>
           )}
-          {recordDayId && storySeats.length > 0 && (
+          {allPodiumStories.length > 0 && (
             <Badge variant="outline" className="text-xs bg-pink-50 dark:bg-pink-950/30 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800">
               <Heart className="h-3 w-3 mr-1" />
-              {storySeats.length} {storySeats.length === 1 ? 'story' : 'stories'}
+              {allPodiumStories.length} {allPodiumStories.length === 1 ? 'story' : 'stories'}
             </Badge>
           )}
         </div>
@@ -530,9 +528,9 @@ export default function PodiumPage() {
                 <TabsTrigger value="positions" data-testid="tab-positions">Positions</TabsTrigger>
                 <TabsTrigger value="stories" data-testid="tab-stories">
                   Podium Stories
-                  {storySeats.length > 0 && (
+                  {allPodiumStories.length > 0 && (
                     <Badge className="ml-1.5 h-4 px-1 text-[10px] bg-pink-500 text-white">
-                      {storySeats.length}
+                      {allPodiumStories.length}
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -565,29 +563,89 @@ export default function PodiumPage() {
 
             {/* ── Stories tab ── */}
             <TabsContent value="stories" className="flex-1 overflow-auto p-5 mt-0">
-              {storySeats.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
+              {/* Toolbar: name search + RX filter */}
+              <div className="flex items-center gap-3 mb-4 flex-wrap">
+                <div className="relative flex-1 min-w-[180px]">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    placeholder="Search by name..."
+                    value={storiesSearch}
+                    onChange={e => setStoriesSearch(e.target.value)}
+                    className="pl-8"
+                    data-testid="input-stories-search"
+                  />
+                </div>
+                <Select value={storiesRxFilter} onValueChange={setStoriesRxFilter}>
+                  <SelectTrigger className="w-[160px]" data-testid="select-stories-rx">
+                    <SelectValue placeholder="All RXs" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All RXs</SelectItem>
+                    {sortedDays.map(day => (
+                      <SelectItem key={day.id} value={day.id}>
+                        {day.rxNumber || (day.date ? new Date(day.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : day.id)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {storiesLoading ? (
+                <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">Loading stories...</div>
+              ) : filteredStories.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-48 text-muted-foreground gap-2">
                   <Heart className="h-10 w-10 opacity-20" />
-                  <p className="font-medium">No podium stories tagged</p>
-                  <p className="text-sm">Tag contestants as Podium Story from the seating chart to see them here.</p>
+                  <p className="font-medium">
+                    {allPodiumStories.length === 0 ? "No podium stories tagged" : "No stories match your search"}
+                  </p>
+                  {allPodiumStories.length === 0 && (
+                    <p className="text-sm">Tag contestants as Podium Story from their contestant profile to see them here.</p>
+                  )}
                 </div>
               ) : (
                 <div className="max-w-4xl mx-auto">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                    {storySeats.length} contestant{storySeats.length !== 1 ? 's' : ''} tagged for podium story
+                    {filteredStories.length} contestant{filteredStories.length !== 1 ? 's' : ''} with podium stories
                   </p>
                   <div className="flex flex-wrap gap-3">
-                    {storySeats.map((seat, i) => (
-                      <div key={seat.id} className="w-[100px]">
-                        <SeatCard
-                          seat={seat}
-                          blockIndex={seat.id.match(/block(\d+)/)?.[1] ? parseInt(seat.id.match(/block(\d+)/)![1]) : 0}
-                          seatIndex={i}
-                          isRXDayLocked={false}
-                          isGlobalDragging={false}
-                        />
-                      </div>
-                    ))}
+                    {filteredStories.map((c: any) => {
+                      const ratingColors = isDark ? ratingColorsDark : ratingColorsLight;
+                      const colorInfo = c.auditionRating ? ratingColors[c.auditionRating] : null;
+                      return (
+                        <div key={c.id} className="w-[100px]">
+                          <Card
+                            className="p-2 min-h-[70px] flex flex-col justify-center text-xs border-2 cursor-pointer hover-elevate"
+                            style={colorInfo ? { backgroundColor: colorInfo.bg, borderColor: colorInfo.border, color: colorInfo.text } : undefined}
+                            onClick={() => setViewContestantId(c.id)}
+                            data-testid={`story-card-${c.id}`}
+                          >
+                            <div className="space-y-1 overflow-hidden">
+                              {c.photoUrl && (
+                                <div className="flex justify-center mb-1">
+                                  <Avatar className="h-9 w-9">
+                                    <AvatarImage src={c.photoUrl} className="object-cover" />
+                                    <AvatarFallback className="text-[9px]">
+                                      {c.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                </div>
+                              )}
+                              <p className="font-medium text-xs truncate" title={c.name}>{c.name}</p>
+                              <div className="flex items-center gap-1.5 opacity-70 text-[10px]">
+                                <span>{c.age}</span>
+                                {c.age && c.gender && <span>•</span>}
+                                <span>{c.gender?.[0]}</span>
+                              </div>
+                              {c.episodes?.length > 0 && (
+                                <div className="text-[9px] opacity-60 truncate">
+                                  {c.episodes.map((e: any) => e.rxNumber || '?').join(', ')}
+                                </div>
+                              )}
+                            </div>
+                          </Card>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -850,7 +908,7 @@ export default function PodiumPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Quick view dialog */}
+      {/* Contestant detail dialog — used by Stories tab click and assignment dialog eye button */}
       {viewedContestant && (
         <Dialog open={!!viewContestantId} onOpenChange={open => { if (!open) setViewContestantId(null); }}>
           <DialogContent className="max-w-sm">
@@ -858,18 +916,60 @@ export default function PodiumPage() {
               <DialogTitle>{viewedContestant.name}</DialogTitle>
               <DialogDescription>Contestant details</DialogDescription>
             </DialogHeader>
-            <div className="flex items-start gap-4">
-              <Avatar className="h-16 w-16 border border-border shrink-0">
-                {viewedContestant.photoUrl ? <AvatarImage src={viewedContestant.photoUrl} alt={viewedContestant.name} className="object-cover" /> : null}
-                <AvatarFallback><User className="h-6 w-6 text-muted-foreground" /></AvatarFallback>
-              </Avatar>
-              <div className="space-y-1 text-sm">
-                <p><span className="text-muted-foreground">Gender: </span>{viewedContestant.gender}</p>
-                {viewedContestant.age && <p><span className="text-muted-foreground">Age: </span>{viewedContestant.age}</p>}
-                {viewedContestant.auditionRating && <p><span className="text-muted-foreground">Rating: </span>{viewedContestant.auditionRating}</p>}
-                {viewedContestant.availabilityStatus && <p><span className="text-muted-foreground">Status: </span>{viewedContestant.availabilityStatus}</p>}
-                {viewedContestant.attendingWith && <p><span className="text-muted-foreground">With: </span>{viewedContestant.attendingWith}</p>}
+            <div className="space-y-3">
+              <div className="flex items-start gap-4">
+                <Avatar className="h-16 w-16 border border-border shrink-0">
+                  {viewedContestant.photoUrl ? <AvatarImage src={viewedContestant.photoUrl} alt={viewedContestant.name} className="object-cover" /> : null}
+                  <AvatarFallback><User className="h-6 w-6 text-muted-foreground" /></AvatarFallback>
+                </Avatar>
+                <div className="space-y-1 text-sm flex-1">
+                  <p><span className="text-muted-foreground">Gender: </span>{viewedContestant.gender}</p>
+                  {viewedContestant.age && <p><span className="text-muted-foreground">Age: </span>{viewedContestant.age}</p>}
+                  {viewedContestant.auditionRating && <p><span className="text-muted-foreground">Rating: </span>{viewedContestant.auditionRating}</p>}
+                  {viewedContestant.availabilityStatus && <p><span className="text-muted-foreground">Status: </span>{viewedContestant.availabilityStatus}</p>}
+                  {viewedContestant.attendingWith && <p><span className="text-muted-foreground">With: </span>{viewedContestant.attendingWith}</p>}
+                </div>
               </div>
+
+              {(viewedContestant.phone || viewedContestant.email || viewedContestant.location) && (
+                <div className="space-y-1.5 text-sm border-t pt-3">
+                  {viewedContestant.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="select-all">{viewedContestant.phone}</span>
+                    </div>
+                  )}
+                  {viewedContestant.email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="select-all text-xs">{viewedContestant.email}</span>
+                    </div>
+                  )}
+                  {viewedContestant.location && (
+                    <p className="text-xs text-muted-foreground">{viewedContestant.location}</p>
+                  )}
+                </div>
+              )}
+
+              {viewedContestant.availabilityNotes && (
+                <div className="border-t pt-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Availability Notes</p>
+                  <p className="text-xs">{viewedContestant.availabilityNotes}</p>
+                </div>
+              )}
+
+              {viewedContestant.episodes?.length > 0 && (
+                <div className="border-t pt-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Episode History</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewedContestant.episodes.map((e: any, i: number) => (
+                      <Badge key={i} variant="secondary" className="text-xs">
+                        {e.rxNumber || (e.date ? new Date(e.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: '2-digit' }) : 'Unknown')}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </DialogContent>
         </Dialog>
