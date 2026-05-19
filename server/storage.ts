@@ -87,6 +87,8 @@ import {
   rxPlanningEntries,
   type RxPlanningEntry,
   type InsertRxPlanningEntry,
+  podiumPositions,
+  type PodiumPosition,
 } from "@shared/schema";
 import { eq, and, sql, inArray, desc } from "drizzle-orm";
 
@@ -522,6 +524,9 @@ export interface IStorage {
   clearRxPlanningDay(recordDayId: string): Promise<void>;
   transferContestantToCeleb(contestantId: string): Promise<{ alreadyExisted: boolean }>;
   getPodiumStoryContestants(): Promise<Array<Contestant & { episodes: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number | null; seatLabel: string | null }> }>>;
+  getPodiumPositions(recordDayId: string): Promise<Array<PodiumPosition & { contestant: Contestant }>>;
+  upsertPodiumPosition(recordDayId: string, position: number, contestantId: string): Promise<PodiumPosition>;
+  deletePodiumPosition(recordDayId: string, position: number): Promise<void>;
 }
 
 export interface SystemSetting {
@@ -3952,6 +3957,49 @@ export class DbStorage implements IStorage {
         return new Date(a.date).getTime() - new Date(b.date).getTime();
       }),
     }));
+  }
+
+  async getPodiumPositions(recordDayId: string): Promise<Array<PodiumPosition & { contestant: Contestant }>> {
+    const result = await getDb()
+      .select({
+        id: podiumPositions.id,
+        recordDayId: podiumPositions.recordDayId,
+        contestantId: podiumPositions.contestantId,
+        position: podiumPositions.position,
+        createdAt: podiumPositions.createdAt,
+        contestant: contestants,
+      })
+      .from(podiumPositions)
+      .innerJoin(contestants, eq(podiumPositions.contestantId, contestants.id))
+      .where(eq(podiumPositions.recordDayId, recordDayId))
+      .orderBy(podiumPositions.position);
+    return result as Array<PodiumPosition & { contestant: Contestant }>;
+  }
+
+  async upsertPodiumPosition(recordDayId: string, position: number, contestantId: string): Promise<PodiumPosition> {
+    return await getDb().transaction(async (tx) => {
+      // Delete any existing entry for this position OR this contestant to avoid unique conflicts
+      await tx.delete(podiumPositions).where(
+        and(
+          eq(podiumPositions.recordDayId, recordDayId),
+          sql`(${podiumPositions.position} = ${position} OR ${podiumPositions.contestantId} = ${contestantId})`
+        )
+      );
+      const [result] = await tx
+        .insert(podiumPositions)
+        .values({ recordDayId, position, contestantId })
+        .returning();
+      return result;
+    });
+  }
+
+  async deletePodiumPosition(recordDayId: string, position: number): Promise<void> {
+    await getDb()
+      .delete(podiumPositions)
+      .where(and(
+        eq(podiumPositions.recordDayId, recordDayId),
+        eq(podiumPositions.position, position)
+      ));
   }
 }
 

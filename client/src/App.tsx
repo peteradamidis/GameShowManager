@@ -26,6 +26,7 @@ import StandbysPage from "@/pages/standbys";
 import ReschedulePage from "@/pages/reschedule";
 import WinnersPage from "@/pages/winners";
 import PodiumStoriesPage from "@/pages/podium-stories";
+import PodiumPage from "@/pages/podium-page";
 import PlayersPage from "@/pages/players";
 import Settings from "@/pages/settings";
 import Backup from "@/pages/backup";
@@ -51,6 +52,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/contestants" component={Contestants} />
       <Route path="/record-days" component={RecordDays} />
+      <Route path="/podium" component={PodiumPage} />
       <Route path="/seating-chart" component={SeatingChartPage} />
       <Route path="/booking-master" component={BookingMaster} />
       <Route path="/booking-responses" component={BookingResponses} />

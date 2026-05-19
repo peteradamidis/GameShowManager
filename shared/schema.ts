@@ -953,3 +953,23 @@ export const insertRxPlanningEntrySchema = createInsertSchema(rxPlanningEntries)
 
 export type InsertRxPlanningEntry = z.infer<typeof insertRxPlanningEntrySchema>;
 export type RxPlanningEntry = typeof rxPlanningEntries.$inferSelect;
+
+// Podium Positions table — CELEB workspace only
+// Tracks which contestant holds which case position (1-26) on the podium
+export const podiumPositions = pgTable("podium_positions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  recordDayId: varchar("record_day_id").references(() => recordDays.id).notNull(),
+  contestantId: varchar("contestant_id").references(() => contestants.id).notNull(),
+  position: integer("position").notNull(), // 1-26
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  uniquePositionPerDay: unique().on(table.recordDayId, table.position),
+  uniqueContestantPerDay: unique().on(table.recordDayId, table.contestantId),
+}));
+
+export const insertPodiumPositionSchema = createInsertSchema(podiumPositions).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertPodiumPosition = z.infer<typeof insertPodiumPositionSchema>;
+export type PodiumPosition = typeof podiumPositions.$inferSelect;

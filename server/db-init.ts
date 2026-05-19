@@ -202,6 +202,19 @@ export async function initializeCelebSchema(existingPool?: any) {
     } else {
       console.log(`[Celeb Schema] All ${CELEB_TABLES.length} tables already exist in celeb schema`);
     }
+
+    // Create podium_positions directly in celeb schema (CELEB-only feature — not mirrored from public)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS celeb.podium_positions (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        record_day_id VARCHAR NOT NULL,
+        contestant_id VARCHAR NOT NULL,
+        position INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        UNIQUE(record_day_id, position),
+        UNIQUE(record_day_id, contestant_id)
+      )
+    `);
   } catch (err: any) {
     console.warn('[Celeb Schema] Error during initialization:', err.message);
   } finally {

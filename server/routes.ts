@@ -18087,6 +18087,43 @@ Thank you.`;
     }
   });
 
+  // ── Podium Positions (CELEB only) ──────────────────────────────────────────
+
+  app.get("/api/record-days/:recordDayId/podium-positions", requireAuth, async (req, res) => {
+    try {
+      const { recordDayId } = req.params;
+      const positions = await storage.getPodiumPositions(recordDayId);
+      res.json(positions);
+    } catch (error: any) {
+      console.error("Get podium positions error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/record-days/:recordDayId/podium-positions/:position", requireAuth, async (req, res) => {
+    try {
+      const { recordDayId, position } = req.params;
+      const { contestantId } = req.body;
+      if (!contestantId) return res.status(400).json({ error: "contestantId is required" });
+      const result = await storage.upsertPodiumPosition(recordDayId, parseInt(position), contestantId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Upsert podium position error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/record-days/:recordDayId/podium-positions/:position", requireAuth, async (req, res) => {
+    try {
+      const { recordDayId, position } = req.params;
+      await storage.deletePodiumPosition(recordDayId, parseInt(position));
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Delete podium position error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize WebSocket server for real-time updates

@@ -1,4 +1,4 @@
-import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList, UserCheck, MessageSquareText, FileText, Trophy, AlertTriangle, Star, Megaphone, FileCheck2, History, ArrowLeftRight, Loader2, Mic2 } from "lucide-react";
+import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList, UserCheck, MessageSquareText, FileText, Trophy, AlertTriangle, Star, Megaphone, FileCheck2, History, ArrowLeftRight, Loader2, Mic2, MonitorPlay } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -43,6 +43,12 @@ const menuItems = [
     title: "Record Days",
     url: "/record-days",
     icon: Calendar,
+  },
+  {
+    title: "Podium",
+    url: "/podium",
+    icon: MonitorPlay,
+    celebOnly: true,
   },
   {
     title: "Seating Chart",
@@ -194,7 +200,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {menuItems.filter(item => !(item as any).celebOnly || isCeleb).map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={location === item.url}>
                     <Link href={item.url} data-testid={`link-${item.title.toLowerCase().replace(' ', '-')}`}>
