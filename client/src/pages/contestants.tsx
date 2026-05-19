@@ -166,6 +166,7 @@ export default function Contestants() {
   });
   
   const ITEMS_PER_PAGE = 50;
+  const [bulkTransferConfirmOpen, setBulkTransferConfirmOpen] = useState(false);
 
   // Fetch all contestants
   const { data: contestants = [], isLoading: loadingContestants, refetch: refetchContestants } = useQuery<Contestant[]>({
@@ -1071,6 +1072,43 @@ export default function Contestants() {
     onError: (error: Error) => {
       toast({
         title: "Transfer failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Workspace query — used to conditionally show CELEB-only actions
+  const { data: workspaceData } = useQuery<{ workspace: string }>({
+    queryKey: ['/api/workspace'],
+    staleTime: Infinity,
+  });
+  const isDond = workspaceData?.workspace === 'dond';
+
+  // Bulk transfer selected contestants to CELEB workspace
+  const bulkTransferToCelebMutation = useMutation({
+    mutationFn: async (contestantIds: string[]) => {
+      const results = await Promise.allSettled(
+        contestantIds.map(id =>
+          apiRequest('POST', `/api/contestants/${id}/transfer-to-celeb`, {})
+        )
+      );
+      const failed = results.filter(r => r.status === 'rejected').length;
+      const succeeded = results.filter(r => r.status === 'fulfilled').length;
+      if (failed > 0) throw new Error(`${failed} transfer${failed !== 1 ? 's' : ''} failed, ${succeeded} succeeded`);
+      return { succeeded };
+    },
+    onSuccess: ({ succeeded }) => {
+      setSelectedContestants([]);
+      toast({
+        title: "Copied to CELEB",
+        description: `${succeeded} contestant${succeeded !== 1 ? 's' : ''} copied to the CELEB workspace.`,
+      });
+    },
+    onError: (error: Error) => {
+      setSelectedContestants([]);
+      toast({
+        title: "Transfer partially failed",
         description: error.message,
         variant: "destructive",
       });
@@ -2676,6 +2714,17 @@ export default function Contestants() {
                   </Button>
                 </>
               )}
+              {isDond && (
+                <Button
+                  variant="outline"
+                  onClick={() => setBulkTransferConfirmOpen(true)}
+                  disabled={bulkTransferToCelebMutation.isPending}
+                  data-testid="floating-button-transfer-to-celeb"
+                >
+                  <ArrowRightLeft className="h-4 w-4 mr-2" />
+                  {bulkTransferToCelebMutation.isPending ? "Copying..." : `Copy to CELEB`}
+                </Button>
+              )}
               <Button 
                 variant="destructive"
                 className="bg-red-600 hover:bg-red-700"
@@ -2692,6 +2741,40 @@ export default function Contestants() {
           </div>
         </div>
       )}
+
+      {/* Bulk Copy to CELEB Confirmation Dialog */}
+      <Dialog open={bulkTransferConfirmOpen} onOpenChange={setBulkTransferConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="h-5 w-5" />
+              Copy to CELEB Workspace
+            </DialogTitle>
+            <DialogDescription>
+              This will copy <strong>{selectedContestants.length} contestant{selectedContestants.length !== 1 ? 's' : ''}</strong> — including their profiles, groups, and casting cards — into the DOND CELEB workspace. The originals in DOND remain untouched. If any already exist in CELEB, their profiles will be updated.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setBulkTransferConfirmOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={bulkTransferToCelebMutation.isPending}
+              onClick={() => {
+                setBulkTransferConfirmOpen(false);
+                bulkTransferToCelebMutation.mutate(selectedContestants);
+              }}
+              data-testid="button-confirm-bulk-transfer"
+            >
+              <ArrowRightLeft className="h-4 w-4 mr-1" />
+              {bulkTransferToCelebMutation.isPending ? "Copying..." : `Copy ${selectedContestants.length} to CELEB`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete ALL Contestants - First Confirmation Dialog */}
       <Dialog open={deleteAllStep === 1} onOpenChange={(open) => !open && setDeleteAllStep(0)}>
